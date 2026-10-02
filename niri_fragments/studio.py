@@ -4,7 +4,10 @@ from dataclasses import asdict
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from importlib.resources import files
 import json
+import os
+from pathlib import Path
 import secrets
+import shutil
 import subprocess
 import time
 from urllib.parse import parse_qs, urlsplit
@@ -19,7 +22,33 @@ def preview_document(effect, name="balanced", connection=None):
                "templates": shader_templates(), "gravities": GRAVITIES, "rotations": ROTATIONS,
                "connection": connection}
     data = json.dumps(payload).replace("</", "<\\/")
-    return files("niri_fragments").joinpath("preview.html").read_text().replace("@EFFECT_JSON@", data)
+    root = files("niri_fragments")
+    return (root.joinpath("preview.html").read_text().replace("@EFFECT_JSON@", data)
+            .replace("@MOTION_JS@", root.joinpath("motion-preview.js").read_text()))
+
+
+def open_studio(url, browser=False):
+    """Use a separate Chromium app profile; do not borrow personal browser state."""
+    if not browser:
+        for name in ("chromium", "chromium-browser", "google-chrome", "google-chrome-stable"):
+            executable = shutil.which(name)
+            if not executable:
+                continue
+            state = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
+            profile = state / "niri-fragments/studio-profile"
+            profile.mkdir(parents=True, exist_ok=True)
+            try:
+                subprocess.Popen([executable, "--app=" + url,
+                                  "--user-data-dir=" + str(profile),
+                                  "--class=niri-fragments-studio", "--name=niri-fragments-studio",
+                                  "--window-size=1320,960", "--no-first-run",
+                                  "--no-default-browser-check"],
+                                 stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                return "app"
+            except OSError:
+                continue
+    webbrowser.open(url)
+    return "browser"
 
 
 def valid_save_request(headers, origin, token):
@@ -98,7 +127,8 @@ def serve(arguments, effect):
         print(f"Niri Fragments Studio: {server.session_url}", flush=True)
         print("Save adds a preset to iRiS; select it there to activate. Ctrl+C stops the editor.", flush=True)
         if not arguments.no_browser:
-            webbrowser.open(server.session_url)
+            mode = open_studio(server.session_url, browser=arguments.browser)
+            print(f"Opened {mode} window.", flush=True)
         try:
             server.timeout = 1
             # The open editor pings periodically. A launcher-started process

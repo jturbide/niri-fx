@@ -37,7 +37,7 @@ try{
   assert.equal(createHash('sha256').update(await evaluate('shaderFor(parameters,false)')).digest('hex'),expected[name],name+' export matches Python');
   await setProgress(0);const start=await sample();assert.equal(start.occupied,600*380,name+' reconstructs all pixels');
   await setProgress(.45);const middle=await sample();assert(middle.occupied>0&&middle.occupied<start.occupied,name+' intermediate fragments');assert.equal(middle.error,0);
-  if(['earth','black-hole','vortex','space'].includes(name)){
+  if(['balanced','explosion','implosion','earth','black-hole','vortex','space'].includes(name)){
    const capture=await rpc('Page.captureScreenshot',{format:'png'});writeFileSync(resolve('artifacts',name+'.png'),Buffer.from(capture.data,'base64'));
   }
   await setProgress(1);const end=await sample();assert.equal(end.occupied,0,name+' disappears completely');
@@ -48,17 +48,31 @@ try{
  assert(results['black-hole'].middle.occupied<results.balanced.middle.occupied/2,'Black hole contracts');
  // Check extreme controls through the real UI, then save only if explicitly requested.
  await evaluate("byId('preset').value='vortex';byId('preset').dispatchEvent(new Event('change'))");
- for(const [id,value] of Object.entries({particles:4096,gravity_strength:3,spin:720,swirl:360}))
+ for(const [id,value] of Object.entries({particles:4096,gravity_strength:3,spin:720,swirl:360,dispersion:1,stagger:.4}))
   await evaluate(`byId(${JSON.stringify(id)}).value=${JSON.stringify(value)};byId(${JSON.stringify(id)}).dispatchEvent(new Event('input'))`);
  await setProgress(.5);assert.equal((await sample()).error,0);assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
+ // Both textured windows must exchange positions intact, with a visible
+ // intermediate stream. The movement prototype must remain labelled as such.
+ await evaluate("byId('preset').value='balanced';byId('preset').dispatchEvent(new Event('change'));document.querySelector('[data-mode=swap]').click()");
+ assert.equal(await evaluate("byId('concept-note').hidden"),false);
+ const sameImage=(a,b,message)=>{let delta=0;for(let i=0;i<a.length;i++)delta=Math.max(delta,Math.abs(a[i]-b[i]));assert(delta<=2,message+' (Canvas resampling tolerance 2/255, got '+delta+')');};
+ const columns=()=>evaluate(`(()=>{const c=byId('motion-stage').getContext('2d');return [65,555].map(x=>Array.from(c.getImageData(x,250,380,240).data));})()`);
+ await setProgress(0);const before=await columns();
+ await setProgress(.5);const during=await columns();assert.notDeepEqual(during,before,'swap has intermediate fragments');
+ const swapCapture=await rpc('Page.captureScreenshot',{format:'png'});writeFileSync('artifacts/swap.png',Buffer.from(swapCapture.data,'base64'));
+ await setProgress(1);const after=await columns();sameImage(after[0],before[1],'second window arrives intact');sameImage(after[1],before[0],'first window arrives intact');
+ await evaluate("document.querySelector('[data-mode=move]').click()");
+ await setProgress(0);const moveBefore=await columns();await setProgress(1);const moveAfter=await columns();
+ sameImage(moveAfter[1],moveBefore[0],'move arrives intact');
+ await evaluate("document.querySelector('[data-mode=effect]').click()");
  if(process.argv.includes('--save-test')){
   await evaluate("byId('name').value='Browser Smoke Test';byId('save').click()");
   for(let i=0;i<100;i++){if(await evaluate("!byId('save').disabled"))break;await sleep(100);}
   assert.equal(await evaluate("byId('error').textContent"),'');assert.match(await evaluate("byId('status').textContent"),/^Saved Fragments/);
  }
  writeFileSync('artifacts/browser-checks.json',JSON.stringify(results,null,2)+'\n');
- console.log('PASS: nine GPU-rendered presets, exact endpoints, motion, shader parity, extreme controls'+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
+ console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, intact move/swap endpoints`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
 }finally{
- ws?.close();browser.kill('SIGTERM');await new Promise(resolve=>browser.once('exit',resolve));
+ ws?.close();if(browser.exitCode===null){const exited=new Promise(resolve=>browser.once('exit',resolve));browser.kill('SIGTERM');await exited;}
  rmSync(profile,{recursive:true,force:true});
 }

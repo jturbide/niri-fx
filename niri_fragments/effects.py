@@ -11,21 +11,24 @@ ROTATIONS = ("none", "random", "gravity")
 @dataclass(frozen=True)
 class Effect:
     tile_size: float = 28
-    scatter: float = 90
-    open_ms: int = 420
-    close_ms: int = 320
-    gravity: str = "none"
-    gravity_strength: float = 1.0
-    particles: int = 0
-    rotation: str = "none"
+    scatter: float = 125
+    open_ms: int = 520
+    close_ms: int = 480
+    gravity: str = "space"
+    gravity_strength: float = 0.7
+    particles: int = 720
+    rotation: str = "random"
     spin: float = 180
     swirl: float = 0
+    dispersion: float = 0.7
+    stagger: float = 0.18
 
     def __post_init__(self):
         for name, low, high in (("tile_size", 8, 128), ("scatter", 0, 240),
                                 ("open_ms", 100, 1500), ("close_ms", 100, 1500),
                                 ("gravity_strength", 0, 3), ("particles", 0, 4096),
-                                ("spin", 0, 720), ("swirl", -360, 360)):
+                                ("spin", 0, 720), ("swirl", -360, 360),
+                                ("dispersion", 0, 1), ("stagger", 0, 0.4)):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"{name} must be a finite number between {low} and {high}")
@@ -40,19 +43,22 @@ class Effect:
 
     @property
     def classic(self):
-        return self.gravity == "none" and not self.particles and self.rotation == "none" and self.swirl == 0
+        return (self.gravity == "none" and not self.particles and self.rotation == "none"
+                and self.swirl == 0 and self.dispersion == 0 and self.stagger == 0)
 
 
 PRESETS = {
-    "subtle": Effect(24, 45, 320, 240),
+    "subtle": Effect(scatter=35, open_ms=360, close_ms=300, gravity="none", particles=360, spin=55, dispersion=0.3, stagger=0.1),
     "balanced": Effect(),
-    "dramatic": Effect(36, 160, 550, 420),
-    "earth": Effect(scatter=35, open_ms=550, close_ms=650, gravity="down", particles=220, rotation="random", spin=220),
-    "black-hole": Effect(scatter=0, open_ms=650, close_ms=600, gravity="center", gravity_strength=1.3, particles=320, rotation="gravity", spin=180),
-    "space": Effect(scatter=60, open_ms=600, close_ms=650, gravity="space", gravity_strength=1.1, particles=180, rotation="random", spin=260),
-    "vortex": Effect(scatter=20, open_ms=700, close_ms=700, gravity="center", gravity_strength=1.2, particles=260, rotation="gravity", spin=240, swirl=160),
-    "confetti": Effect(scatter=100, open_ms=600, close_ms=700, gravity="down", gravity_strength=0.8, particles=700, rotation="random", spin=540),
-    "updraft": Effect(scatter=40, open_ms=550, close_ms=600, gravity="up", gravity_strength=0.9, particles=240, rotation="gravity", spin=180, swirl=-20),
+    "dramatic": Effect(scatter=180, open_ms=680, close_ms=600, gravity="space", gravity_strength=1.1, particles=1100, spin=260, dispersion=1, stagger=0.26),
+    "explosion": Effect(scatter=240, open_ms=700, close_ms=680, gravity="space", gravity_strength=1.5, particles=1200, spin=300, dispersion=1, stagger=0.12),
+    "implosion": Effect(scatter=30, open_ms=720, close_ms=680, gravity="center", gravity_strength=1.65, particles=1000, spin=260, dispersion=1, stagger=0.2),
+    "earth": Effect(scatter=65, open_ms=600, close_ms=650, gravity="down", gravity_strength=1.0, particles=600, spin=190, dispersion=0.85, stagger=0.24),
+    "black-hole": Effect(scatter=12, open_ms=680, close_ms=650, gravity="center", gravity_strength=1.3, particles=800, rotation="gravity", spin=200, swirl=30, dispersion=0.55, stagger=0.22),
+    "space": Effect(scatter=100, open_ms=650, close_ms=650, gravity="space", gravity_strength=0.9, particles=650, spin=210, dispersion=0.95, stagger=0.28),
+    "vortex": Effect(scatter=25, open_ms=720, close_ms=720, gravity="center", gravity_strength=1.15, particles=720, rotation="gravity", spin=240, swirl=160, dispersion=0.65, stagger=0.25),
+    "confetti": Effect(scatter=115, open_ms=650, close_ms=720, gravity="down", gravity_strength=0.85, particles=1600, spin=480, dispersion=1, stagger=0.3),
+    "updraft": Effect(scatter=60, open_ms=600, close_ms=640, gravity="up", gravity_strength=0.9, particles=600, rotation="gravity", spin=180, swirl=-25, dispersion=0.8, stagger=0.24),
 }
 
 
@@ -72,6 +78,8 @@ def shader(effect, opening):
             .replace("@ROTATION@", str(ROTATIONS.index(effect.rotation)))
             .replace("@SPIN@", f"{effect.spin:.6f}")
             .replace("@SWIRL@", f"{effect.swirl:.6f}")
+            .replace("@DISPERSION@", f"{effect.dispersion:.6f}")
+            .replace("@STAGGER@", f"{effect.stagger:.6f}")
             .replace("@ENTRY@", "open_color" if opening else "close_color")
             .replace("@PROGRESS@", "1.0 - niri_clamped_progress" if opening else "niri_clamped_progress"))
 

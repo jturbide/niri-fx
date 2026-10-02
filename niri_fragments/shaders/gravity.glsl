@@ -10,6 +10,8 @@ const float FRAGMENTS_STRENGTH = @STRENGTH@;
 const int FRAGMENTS_ROTATION = @ROTATION@;
 const float FRAGMENTS_SPIN = @SPIN@;
 const float FRAGMENTS_SWIRL = @SWIRL@;
+const float FRAGMENTS_DISPERSION = @DISPERSION@;
+const float FRAGMENTS_STAGGER = @STAGGER@;
 const float FRAGMENTS_PI = 3.14159265359;
 
 vec2 fragments_hash(vec2 cell) {
@@ -42,67 +44,86 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
     if (FRAGMENTS_PARTICLES > 0.0)
         tile = max(4.0, sqrt(size.x * size.y / FRAGMENTS_PARTICLES));
     float travel = breakup * breakup * (3.0 - 2.0 * breakup);
-    float scale = 1.0 + 2.0 * FRAGMENTS_SCATTER * travel / max(size.x, size.y);
     vec2 direction = vec2(0.0);
     if (FRAGMENTS_GRAVITY == 1) direction = vec2(0.0, 1.0);
     if (FRAGMENTS_GRAVITY == 2) direction = vec2(0.0, -1.0);
     if (FRAGMENTS_GRAVITY == 3) direction = vec2(-1.0, 0.0);
     if (FRAGMENTS_GRAVITY == 4) direction = vec2(1.0, 0.0);
-    // Directional displacement accelerates over time, in logical pixels.
-    vec2 drift = direction * 220.0 * FRAGMENTS_STRENGTH * breakup * breakup;
-    if (FRAGMENTS_GRAVITY == 5)
-        scale *= max(0.06, exp(-2.6 * FRAGMENTS_STRENGTH * travel));
-    if (FRAGMENTS_GRAVITY == 6)
-        scale += 2.0 * 180.0 * FRAGMENTS_STRENGTH * breakup / max(size.x, size.y);
-    float orbit = FRAGMENTS_SWIRL * (FRAGMENTS_PI / 180.0) * travel;
-    mat2 field = fragments_turn(orbit);
-    mat2 inverse_field = fragments_turn(-orbit);
-    vec2 field_center = center + drift;
     vec2 count = ceil(size / tile);
     vec2 grid_origin = (size - count * tile) * 0.5;
-    vec2 source_guess = center + inverse_field * (pixel - field_center) / scale;
-    vec2 candidate = floor((source_guess - grid_origin) / tile);
-    // Collapse fragments with the field so attraction never requires searching
-    // hundreds of overlapping cells at a singularity. The inverse stays finite.
-    float field_shrink = min(1.0, scale);
-    vec2 span = (count - 1.0) * tile * 0.5 * scale;
-    float c = abs(cos(orbit)), s = abs(sin(orbit));
-    vec2 extent = vec2(c * span.x + s * span.y, s * span.x + c * span.y)
-                  + vec2(tile * field_shrink * 0.95);
-    if (any(greaterThan(abs(pixel - field_center), extent))) return vec4(0.0);
-
     vec4 result = vec4(0.0);
-    // Rotated half-diagonal <= 0.708 tiles, inverse-rotated jitter <= 0.340.
-    // Total < 1.5 tiles: every contributor is in this 3x3 source neighborhood.
-    for (int y = -1; y <= 1; y++) {
-        for (int x = -1; x <= 1; x++) {
+    // Three interleaved velocity bands break up the expanding-sheet look.
+    // Each piece belongs to one band, with its own invertible flight field.
+    for (int band = 0; band < 3; band++) {
+        float speed = 1.0 + (float(band) - 1.0) * 0.48 * FRAGMENTS_DISPERSION;
+        float scale = 1.0 + 2.0 * FRAGMENTS_SCATTER * travel * speed / max(size.x, size.y);
+        vec2 drift = direction * 220.0 * FRAGMENTS_STRENGTH * breakup * breakup * speed;
+        if (FRAGMENTS_GRAVITY == 5)
+            scale *= max(0.06, exp(-2.8 * FRAGMENTS_STRENGTH * breakup * breakup * speed));
+        if (FRAGMENTS_GRAVITY == 6)
+            scale += 2.0 * 180.0 * FRAGMENTS_STRENGTH * breakup * speed / max(size.x, size.y);
+        float orbit = FRAGMENTS_SWIRL * (FRAGMENTS_PI / 180.0) * travel * speed;
+        mat2 field = fragments_turn(orbit);
+        mat2 inverse_field = fragments_turn(-orbit);
+        vec2 field_center = center + drift;
+        vec2 source_guess = center + inverse_field * (pixel - field_center) / scale;
+        vec2 candidate = floor((source_guess - grid_origin) / tile);
+        // Scale pieces with inward fields to bound overlap at the attractor.
+        float field_shrink = min(1.0, scale);
+        vec2 span = (count - 1.0) * tile * 0.5 * scale;
+        float c = abs(cos(orbit)), s = abs(sin(orbit));
+        vec2 extent = vec2(c * span.x + s * span.y, s * span.x + c * span.y)
+                    + vec2(tile * (0.72 * FRAGMENTS_DISPERSION * scale + 0.71 * field_shrink));
+        if (any(greaterThan(abs(pixel - field_center), extent))) continue;
+        // Inverse wander <= .72 tiles, half-diagonal <= .708. Total < 1.5:
+        // a 3x3 neighborhood per band covers all contributors (27 candidates).
+        for (int y = -1; y <= 1; y++) {
+          for (int x = -1; x <= 1; x++) {
             vec2 cell = candidate + vec2(float(x), float(y));
             if (any(lessThan(cell, vec2(0.0))) || any(greaterThanEqual(cell, count))) continue;
             vec2 random = fragments_hash(cell);
-            float delay = random.x * 0.16;
-            float local_time = clamp((breakup - delay) / (1.0 - delay), 0.0, 1.0);
-            float shrink = field_shrink * (1.0 - 0.82 * smoothstep(0.0, 1.0, local_time));
-            float opacity = 1.0 - smoothstep(0.35, 1.0, local_time);
+            if (int(floor(random.x * 3.0)) != band) continue;
             vec2 source_center = grid_origin + (cell + 0.5) * tile;
+            float wave = dot(source_center / size - 0.5, direction) + 0.5;
+            float delay = FRAGMENTS_STAGGER * (0.65 * random.x + 0.35 * wave);
+            float local_time = clamp((breakup - delay) / (1.0 - delay), 0.0, 1.0);
+            float release = smoothstep(0.0, 0.72, local_time);
+            // Keep recognizable pieces through the middle of the flight, then
+            // dissolve. Opening runs the same trajectory backwards to a seal.
+            float shrink = field_shrink * (1.0 - 0.28 * release)
+                           * (1.0 - 0.92 * smoothstep(0.58, 1.0, local_time));
+            float opacity = 1.0 - smoothstep(0.62, 1.0, local_time);
             vec2 destination = field_center + field * ((source_center - center) * scale);
+            float wander_angle = random.y * 2.0 * FRAGMENTS_PI
+                               + (random.x - 0.5) * 2.0 * sin(local_time * FRAGMENTS_PI);
+            vec2 wander = vec2(cos(wander_angle), sin(wander_angle))
+                        * sqrt(fract(random.x * 3.0)) * 0.72 * FRAGMENTS_DISPERSION * tile * release * scale;
+            destination += field * wander;
             vec2 motion = destination - source_center;
-            vec2 jitter = (random - 0.5) * tile * 0.48 * travel * field_shrink;
+            vec2 relative = pixel - destination;
+            // Cheap circular rejection before trigonometry and texture reads.
+            if (dot(relative, relative) > 0.501 * tile * tile * shrink * shrink) continue;
             float angle = 0.0;
             if (FRAGMENTS_ROTATION == 1)
-                angle = (random.y * 2.0 - 1.0) * FRAGMENTS_SPIN * (FRAGMENTS_PI / 180.0) * travel;
+                angle = (random.y * 2.0 - 1.0) * FRAGMENTS_SPIN * (FRAGMENTS_PI / 180.0)
+                      * (0.3 * local_time + 0.7 * local_time * local_time);
             if (FRAGMENTS_ROTATION == 2 && dot(motion, motion) > 0.0001) {
                 // Turn the fragment's top toward its net travel direction.
                 float heading = atan(motion.y, motion.x) + FRAGMENTS_PI * 0.5;
                 heading = mod(heading + FRAGMENTS_PI, 2.0 * FRAGMENTS_PI) - FRAGMENTS_PI;
                 float limit = FRAGMENTS_SPIN * (FRAGMENTS_PI / 180.0);
-                angle = clamp(heading, -limit, limit) * travel;
+                angle = clamp(heading, -limit, limit) * release;
             }
-            vec2 local = fragments_turn(-angle) * (pixel - destination - jitter) / shrink;
+            vec2 local = fragments_turn(-angle) * relative / shrink;
             vec2 source = source_center + local;
             if (any(lessThan(local, vec2(-tile * 0.5))) || any(greaterThanEqual(local, vec2(tile * 0.5)))) continue;
             if (any(lessThan(source, vec2(0.0))) || any(greaterThanEqual(source, size))) continue;
-            vec4 fragment = fragments_sample(source / size) * opacity;
+            vec2 edge = min(vec2(tile * 0.5) - abs(local), min(source, size - source));
+            float coverage = mix(1.0, smoothstep(0.0, 0.85, min(edge.x, edge.y) * shrink),
+                                 smoothstep(0.0, 0.12, breakup));
+            vec4 fragment = fragments_sample(source / size) * (opacity * coverage);
             result = fragment + result * (1.0 - fragment.a);
+          }
         }
     }
     return result;

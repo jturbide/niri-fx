@@ -9,10 +9,11 @@ the effect; iNiR/iRiS provides the native preset picker.
 
 ![Gravity and rotation controls in Niri Fragments Studio](docs/studio.png)
 
-**Version 0.2 prototype.** The original Subtle effect was accepted in a real
-Niri session. The new modes have shader compilation, configuration, browser
-rendering and integration checks; their desktop appearance and GPU performance
-still need acceptance on each setup. [Validation details](docs/validation.md).
+**Version 0.3 prototype.** Denser bursts, staggered release, varied flight speeds,
+later dissolution, and softer edges replace the earlier preset tuning. Balanced
+now targets 720 pieces; Explosion uses 1,200 and Implosion 1,000.
+Studio opens as an app-style window and includes move/swap design previews.
+Desktop appearance and GPU performance still need acceptance on each setup. [Validation details](docs/validation.md).
 
 ## Select a style in iRiS
 
@@ -28,7 +29,9 @@ preset. Niri animations must be enabled for the picker to appear.
 
 | Preset | Motion |
 | --- | --- |
-| Subtle / Balanced / Dramatic | The original outward square fragments, unchanged |
+| Subtle / Balanced / Dramatic | Increasingly dense bursts: 360 / 720 / 1,100 pieces |
+| Explosion | A strong outward burst of 1,200 tumbling pieces; opening implodes them back into place |
+| Implosion | Pulls 1,000 pieces into the center on close; opening reverses the collapse |
 | Earth | Falls down with acceleration and randomized spin |
 | Black Hole | Draws pieces inward, turning them toward the center |
 | Space | Drifts outward in every direction with free spin |
@@ -45,7 +48,11 @@ Other user presets, including custom Fragments styles, are preserved.
 python3 -m niri_fragments studio
 ```
 
-This opens a local browser editor with live controls for:
+This opens a dedicated Chromium app window, with no tabs or address bar and a
+separate profile. The existing application launcher opens the same window.
+The renderer is still web technology, not a native QML page. If Chromium is
+unavailable, it falls back to your browser; `studio --browser` explicitly opens
+a browser tab. Live controls include:
 
 - **Gravity direction:** none, down, up, left, right, center, or outward.
 - **Gravity strength:** 0–3×. Downward gravity accelerates; outward space motion
@@ -57,6 +64,8 @@ This opens a local browser editor with live controls for:
 - **Spin:** 0–720 degrees; the random spin range or the alignment limit.
 - **Orbit:** −360 to +360 degrees around the window center.
 - **Spread:** 0–240 logical pixels of initial radial scatter.
+- **Path dispersion:** 0–1; separates fragment speeds and curves their paths.
+- **Release stagger:** 0–0.4; varies when fragments separate and dissolve.
 - **Timing:** independent opening and closing durations, 100–1500 ms.
 
 The editor uses the same shader templates as the CLI. Click **Reconstruct** or
@@ -64,12 +73,17 @@ The editor uses the same shader templates as the CLI. Click **Reconstruct** or
 then select that named style in iRiS's existing picker. Saving does not activate
 it. Saving the same name updates that custom preset, with a backup.
 
+The **Move** and **Swap** tabs are visual concepts: textured particles cross
+between columns and reconstruct at their destinations. They are not installed
+movement effects. Saving/exporting still changes only open/close behavior.
+See [the compositor extension design](docs/movement.md) for the implementation path.
+
 The controls live in Fragments Studio. iRiS's native page lists the resulting
 presets; its stock thumbnail still shows generic timing rather than this shader.
 
 The editor binds only to loopback and uses a per-session save token and origin
 checks. It reads the installed iNiR helper and writes only the preset registry.
-It makes no external network requests. It exits within 15 minutes of the tab
+The editor page makes no external network requests. It exits within 15 minutes of the app window or tab
 closing (or immediately with Ctrl+C when launched from a terminal).
 
 For an app-launcher entry tied to this checkout:
@@ -163,7 +177,9 @@ Use `--save-test` only with a Studio process pointed at a temporary `--registry`
 The browser check uses an isolated Chromium profile and software WebGL; it is
 not a desktop GPU benchmark.
 
-The shader uses an analytic field with a bounded 3×3 source search per pixel.
+The shader uses three interleaved velocity fields, each with a bounded 3×3 source
+search: at most 27 candidate cells per pixel, independent of particle count.
+This costs more shader work than the earlier single-field effect.
 Attraction also shrinks fragments to prevent unbounded overlap at the center;
 there are no particle collisions or physical simulation. Opening reverses the
 closing trajectory, with its own duration. Niri's unspecified opening draw bounds

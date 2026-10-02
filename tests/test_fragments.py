@@ -136,7 +136,8 @@ class EffectTests(unittest.TestCase):
         for overrides in ({"tile_size": 0}, {"scatter": float("nan")}, {"scatter": float("inf")},
                           {"open_ms": 2.5}, {"close_ms": 0}, {"tile_size": True},
                           {"particles": 10}, {"particles": 100.5}, {"gravity_strength": -1},
-                          {"gravity": "bad"}, {"rotation": "bad"}, {"swirl": 400}, {"spin": float("nan")}):
+                          {"gravity": "bad"}, {"rotation": "bad"}, {"swirl": 400}, {"spin": float("nan")},
+                          {"dispersion": 1.1}, {"stagger": -0.1}, {"stagger": 0.5}):
             with self.subTest(overrides=overrides), self.assertRaises(ValueError):
                 Effect(**overrides)
 

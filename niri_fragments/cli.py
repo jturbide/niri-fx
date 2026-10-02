@@ -13,7 +13,7 @@ from .integration import default_inir_root, default_registry, make_presets, make
 
 
 EFFECT_FIELDS = ("tile_size", "scatter", "open_ms", "close_ms", "gravity",
-                 "gravity_strength", "particles", "rotation", "spin", "swirl")
+                 "gravity_strength", "particles", "rotation", "spin", "swirl", "dispersion", "stagger")
 
 
 def effect_options(command):
@@ -27,6 +27,8 @@ def effect_options(command):
     command.add_argument("--rotation", choices=ROTATIONS, help="No spin, random spin, or face the direction of travel")
     command.add_argument("--spin", type=float, help="Random spin range or alignment limit in degrees (0–720)")
     command.add_argument("--swirl", type=float, help="Orbit around the window center in degrees (-360–360)")
+    command.add_argument("--dispersion", type=float, help="Independent fragment path variation (0–1)")
+    command.add_argument("--stagger", type=float, help="Variation in fragment release time (0–0.4)")
     command.add_argument("--open-ms", type=int)
     command.add_argument("--close-ms", type=int)
 
@@ -58,6 +60,7 @@ def parser():
     studio = commands.add_parser("studio", help="Open the local editor with Save to iRiS support")
     effect_options(studio)
     studio.add_argument("--no-browser", action="store_true")
+    studio.add_argument("--browser", action="store_true", help="Open a browser tab instead of an app-style window")
     studio.add_argument("--port", type=int, default=0, help="Loopback port; default chooses an available port")
     for command in (register, studio):
         command.add_argument("--inir-root", type=Path, default=default_inir_root())

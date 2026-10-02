@@ -1,5 +1,39 @@
 # Prototype validation
 
+## Version 0.3 — denser bursts, app window and movement concepts
+
+Checked on 2026-10-02:
+
+- 19 unit tests passed, including the new dispersion/stagger bounds and actual
+  loopback save endpoint. Named custom presets remain preserved on pack update.
+- All 22 open/close shaders compiled as GLSL ES 1.00. All 11 generated configs
+  passed Niri 26.04 validation. The installed iNiR helper applied and recognized
+  each preset in an isolated config, retaining global off/slowdown settings.
+- Chromium software WebGL rendered all 11 presets with an intact starting
+  texture, visible fragmented midpoint and fully transparent end. Gravity
+  directions and inward contraction passed position/coverage checks.
+- Python and browser shader exports matched. Maximum particle count, gravity,
+  rotation, orbit, dispersion and stagger rendered without WebGL errors.
+  Saving through the UI wrote a preset into a temporary registry.
+- Move/swap concept tests verified that both textured windows arrive intact in
+  the correct columns. Canvas endpoint comparisons allow 2/255 channel rounding
+  from resampling at different screen positions; WebGL alpha endpoints are exact.
+- The wheel and source distribution built. The installed wheel loaded the GLSL,
+  editor and embedded movement resource outside the checkout. The existing
+  desktop entry still passed desktop-file-validate.
+- The live preset registry now has all 11 styles. Earth remained selected and
+  was refreshed after a scoped config backup. Niri reloaded the config without
+  shader warnings/errors in the observed journal interval. A separate Studio
+  app window was observed through Niri IPC, alongside the existing browser tab.
+- An isolated config probe confirmed that the installed Niri rejects movement
+  custom shaders. The move/swap renderer is a design preview, not desktop support.
+
+Rendering checks do not establish compositor frame time or visual preference.
+The new shader evaluates up to 27 candidates per pixel instead of the previous
+nine. GPU performance, repeated/interrupted animations, output clipping, scaling,
+transparency and real application appearance still need desktop acceptance.
+
+
 ## Version 0.2 — gravity and Studio
 
 Checked on 2026-10-02:
