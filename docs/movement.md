@@ -14,12 +14,13 @@ Changing iRiS settings alone cannot add a compositor rendering hook.
 Studio's Move and Swap tabs are a Canvas design prototype. Each fragment keeps
 its own source image coordinates. The two color streams overlap in the middle,
 then reconstruct their original contents in opposite columns. No window contents
-are captured: both images are synthetic. Saving a style still exports only the
-supported open/close shaders; no movement shader is installed or advertised.
+are captured: both images are synthetic. Saving a style exports supported open/close and enabled resize shaders.
+The v0.4 [isolated native prototype](../experimental/README.md) now demonstrates
+real column swaps with textured fragments, outside the installed compositor.
 
 ![Two synthetic windows sharing a particle stream](swap.png)
 
-## Proposed compositor extension, not an existing API
+## Prototype and longer-term compositor design
 
 The appropriate implementation belongs in Niri, developed separately from the
 installed compositor. At the inspected revision,
@@ -58,6 +59,8 @@ and style, with Studio for detailed tuning. Opening a Studio app is a small
 upstream shell change; embedding its renderer directly in QML is a separate
 integration and dependency decision.
 
-The current project does not include that Niri patch. A screenshot overlay or
-keybinding wrapper cannot faithfully replace layout rendering: it misses other
+The project now includes the first movement rendering hook, config decoder,
+shader compilation/hot reload, expanded offscreen drawing, and a nested demo.
+The full transaction and particle renderer above remains future work.
+A screenshot overlay or keybinding wrapper cannot faithfully replace layout rendering: it misses other
 movement triggers and leaves input, z-order and cancellation out of sync.

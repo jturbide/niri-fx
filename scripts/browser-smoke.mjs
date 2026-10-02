@@ -51,6 +51,19 @@ try{
  for(const [id,value] of Object.entries({particles:4096,gravity_strength:3,spin:720,swirl:360,dispersion:1,stagger:.4}))
   await evaluate(`byId(${JSON.stringify(id)}).value=${JSON.stringify(value)};byId(${JSON.stringify(id)}).dispatchEvent(new Event('input'))`);
  await setProgress(.5);assert.equal((await sample()).error,0);assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
+ // Exercise the real resize shader, two texture inputs and stable endpoints.
+ const resizeExpected=JSON.parse(execFileSync('python3',['-c','import hashlib,json;from niri_fragments.effects import PRESETS,resize_shader;print(json.dumps({k:hashlib.sha256(resize_shader(v).encode()).hexdigest() for k,v in PRESETS.items()}))'],{encoding:'utf8'}));
+ await evaluate("document.querySelector('[data-mode=resize]').click()");
+ for(const name of Object.keys(resizeExpected)){
+  await evaluate(`byId('preset').value=${JSON.stringify(name)};byId('preset').dispatchEvent(new Event('change'))`);
+  assert.equal(createHash('sha256').update(await evaluate('shaderFor(parameters,false,true)')).digest('hex'),resizeExpected[name],name+' resize export parity');
+  await setProgress(0);assert.equal((await sample()).occupied,600*380,name+' resize starts intact');
+  await setProgress(.5);const middle=await sample();assert(middle.occupied>0&&middle.occupied<700*410,name+' resize breaks into pieces');assert.equal(middle.error,0);
+  await setProgress(1);assert.equal((await sample()).occupied,800*440,name+' resize ends intact');
+ }
+ const pixel=()=>evaluate(`(()=>{const gl=byId('stage').getContext('webgl'),p=new Uint8Array(4);gl.readPixels(500,200,1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return Array.from(p);})()`);
+ await setProgress(0);const oldPixel=await pixel();await setProgress(1);assert.notDeepEqual(await pixel(),oldPixel,'resize switches to the new texture contents');
+ await setProgress(.5);const resizeCapture=await rpc('Page.captureScreenshot',{format:'png'});writeFileSync('artifacts/resize.png',Buffer.from(resizeCapture.data,'base64'));
  // Both textured windows must exchange positions intact, with a visible
  // intermediate stream. The movement prototype must remain labelled as such.
  await evaluate("byId('preset').value='balanced';byId('preset').dispatchEvent(new Event('change'));document.querySelector('[data-mode=swap]').click()");
@@ -71,7 +84,7 @@ try{
   assert.equal(await evaluate("byId('error').textContent"),'');assert.match(await evaluate("byId('status').textContent"),/^Saved Fragments/);
  }
  writeFileSync('artifacts/browser-checks.json',JSON.stringify(results,null,2)+'\n');
- console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, intact move/swap endpoints`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
+ console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, resize texture transitions, intact move/swap endpoints`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
 }finally{
  ws?.close();if(browser.exitCode===null){const exited=new Promise(resolve=>browser.once('exit',resolve));browser.kill('SIGTERM');await exited;}
  rmSync(profile,{recursive:true,force:true});

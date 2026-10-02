@@ -34,7 +34,7 @@ Built-in IDs retain the `niri-fragments-` prefix; custom IDs use
 `niri-fragments-custom-`. Updating the built-in pack replaces only incoming
 IDs, preserving named custom styles and other providers. Unregister explicitly
 removes all entries owned by this project. Saving a named style snapshots the
-recognized base preset's non-open/close settings, just like built-in registration.
+recognized base preset's other animation settings, just like built-in registration.
 
 Version 0.3 launches that same editor in Chromium app mode with a dedicated
 profile under `$XDG_STATE_HOME/niri-fragments/studio-profile` (default
@@ -50,7 +50,13 @@ styles retain their existing shaders until explicitly saved again.
 
 Move/swap controls are intentionally confined to the concept preview. The
 installed Niri rejects `custom-shader` under `window-movement`; see
-[the proposed compositor extension](movement.md).
+[the isolated compositor prototype](../experimental/README.md).
+
+Version 0.4 adds optional stock-Niri resize shaders and Studio controls. Built-in
+styles enable resize; old custom parameter documents remain opted out. With
+resize disabled, the base preset's resize settings are copied. The experimental
+movement shader is never put in this registry or stock KDL exports. Its separately
+built nested demo is the only supplied native movement entry point.
 
 ## Next steps
 

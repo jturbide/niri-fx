@@ -13,7 +13,7 @@ from .integration import default_inir_root, default_registry, make_presets, make
 
 
 EFFECT_FIELDS = ("tile_size", "scatter", "open_ms", "close_ms", "gravity",
-                 "gravity_strength", "particles", "rotation", "spin", "swirl", "dispersion", "stagger")
+                 "gravity_strength", "particles", "rotation", "spin", "swirl", "dispersion", "stagger", "resize", "resize_ms", "resize_strength")
 
 
 def effect_options(command):
@@ -31,6 +31,9 @@ def effect_options(command):
     command.add_argument("--stagger", type=float, help="Variation in fragment release time (0–0.4)")
     command.add_argument("--open-ms", type=int)
     command.add_argument("--close-ms", type=int)
+    command.add_argument("--resize", action=argparse.BooleanOptionalAction, default=None, help="Include the stock Niri resize effect")
+    command.add_argument("--resize-ms", type=int)
+    command.add_argument("--resize-strength", type=float, help="Bounded resize fragmentation (0–1)")
 
 
 def selected_effect(arguments):

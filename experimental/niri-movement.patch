@@ -1,0 +1,890 @@
+diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
+index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187cd9dd398f 100644
+--- a/niri-config/src/animations.rs
++++ b/niri-config/src/animations.rs
+@@ -209,19 +209,56 @@ impl Default for HorizontalViewMovementAnim {
+     }
+ }
+ 
+-#[derive(Debug, Clone, Copy, PartialEq)]
+-pub struct WindowMovementAnim(pub Animation);
++#[derive(Debug, Clone, PartialEq)]
++pub struct WindowMovementAnim {
++    pub anim: Animation,
++    pub custom_shader: Option<String>,
++}
+ 
+ impl Default for WindowMovementAnim {
+     fn default() -> Self {
+-        Self(Animation {
+-            off: false,
+-            kind: Kind::Spring(SpringParams {
+-                damping_ratio: 1.,
+-                stiffness: 800,
+-                epsilon: 0.0001,
+-            }),
+-        })
++        Self {
++            anim: Animation {
++                off: false,
++                kind: Kind::Spring(SpringParams {
++                    damping_ratio: 1.,
++                    stiffness: 800,
++                    epsilon: 0.0001,
++                }),
++            },
++            custom_shader: None,
++        }
++    }
++}
++
++#[cfg(test)]
++mod movement_shader_tests {
++    use super::*;
++
++    #[test]
++    fn legacy_movement_config_keeps_default_and_accepts_shader() {
++        let legacy = crate::Config::parse_mem("animations { window-movement {}; }").unwrap();
++        assert_eq!(
++            legacy.animations.window_movement,
++            WindowMovementAnim::default()
++        );
++        let config = crate::Config::parse_mem(
++            "animations { window-movement { duration-ms 900; curve \"linear\"; custom-shader \"test shader\"; }; }",
++        ).unwrap();
++        assert_eq!(
++            config.animations.window_movement.custom_shader.as_deref(),
++            Some("test shader")
++        );
++        assert_eq!(
++            config.animations.window_movement.anim.kind,
++            Kind::Easing(EasingParams {
++                duration_ms: 900,
++                curve: Curve::Linear,
++            })
++        );
++        let off = crate::Config::parse_mem("animations { window-movement { off; }; }").unwrap();
++        assert!(off.animations.window_movement.anim.off);
++        assert!(off.animations.window_movement.custom_shader.is_none());
+     }
+ }
+ 
+@@ -364,10 +401,21 @@ where
+         node: &knuffel::ast::SpannedNode<S>,
+         ctx: &mut knuffel::decode::Context<S>,
+     ) -> Result<Self, DecodeError<S>> {
+-        let default = Self::default().0;
+-        Ok(Self(Animation::decode_node(node, ctx, default, |_, _| {
+-            Ok(false)
+-        })?))
++        let default = Self::default().anim;
++        let mut custom_shader = None;
++        let anim = Animation::decode_node(node, ctx, default, |child, ctx| {
++            if &**child.node_name == "custom-shader" {
++                custom_shader = parse_arg_node("custom-shader", child, ctx)?;
++                Ok(true)
++            } else {
++                Ok(false)
++            }
++        })?;
++
++        Ok(Self {
++            anim,
++            custom_shader,
++        })
+     }
+ }
+ 
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index 329b76696d817c54c77e4f29a1ea5e4779508996..554bed226d12ae6c880ea2902c70ed2dcc22a737 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -1551,8 +1551,8 @@ mod tests {
+                         ),
+                     },
+                 ),
+-                window_movement: WindowMovementAnim(
+-                    Animation {
++                window_movement: WindowMovementAnim {
++                    anim: Animation {
+                         off: false,
+                         kind: Spring(
+                             SpringParams {
+@@ -1562,7 +1562,8 @@ mod tests {
+                             },
+                         ),
+                     },
+-                ),
++                    custom_shader: None,
++                },
+                 window_resize: WindowResizeAnim {
+                     anim: Animation {
+                         off: false,
+diff --git a/src/backend/tty.rs b/src/backend/tty.rs
+index 5368c7eca0ebd0c2876d350a7cb8f630e27519da..e61d1f553379abe2f50f6b0a89115c90be1aaf6c 100644
+--- a/src/backend/tty.rs
++++ b/src/backend/tty.rs
+@@ -843,6 +843,9 @@ impl Tty {
+             if let Some(src) = config.animations.window_open.custom_shader.as_deref() {
+                 shaders::set_custom_open_program(gles_renderer, Some(src));
+             }
++            if let Some(src) = config.animations.window_movement.custom_shader.as_deref() {
++                shaders::set_custom_move_program(gles_renderer, Some(src));
++            }
+             drop(config);
+ 
+             niri.update_shaders();
+diff --git a/src/backend/winit.rs b/src/backend/winit.rs
+index a9bcc5155145b622c0494c2c6274e2f93b2983dc..74e5212c321035d161942a270165e418da2b557d 100644
+--- a/src/backend/winit.rs
++++ b/src/backend/winit.rs
+@@ -168,6 +168,9 @@ impl Winit {
+         if let Some(src) = config.animations.window_open.custom_shader.as_deref() {
+             shaders::set_custom_open_program(renderer, Some(src));
+         }
++        if let Some(src) = config.animations.window_movement.custom_shader.as_deref() {
++            shaders::set_custom_move_program(renderer, Some(src));
++        }
+         drop(config);
+ 
+         niri.update_shaders();
+diff --git a/src/layout/mod.rs b/src/layout/mod.rs
+index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a181212880420f79f510 100644
+--- a/src/layout/mod.rs
++++ b/src/layout/mod.rs
+@@ -3155,7 +3155,7 @@ impl<W: LayoutElement> Layout<W> {
+                     move_.tile.animate_alpha(
+                         INTERACTIVE_MOVE_ALPHA,
+                         1.,
+-                        self.options.animations.window_movement.0,
++                        self.options.animations.window_movement.anim,
+                     );
+ 
+                     // Unlock the view on the workspaces.
+@@ -3167,7 +3167,7 @@ impl<W: LayoutElement> Layout<W> {
+                     move_.tile.animate_alpha(
+                         1.,
+                         INTERACTIVE_MOVE_ALPHA,
+-                        self.options.animations.window_movement.0,
++                        self.options.animations.window_movement.anim,
+                     );
+                     move_.tile.hold_alpha_animation_after_done();
+                 }
+@@ -3994,7 +3994,7 @@ impl<W: LayoutElement> Layout<W> {
+                     tile.animate_alpha(
+                         1.,
+                         INTERACTIVE_MOVE_ALPHA,
+-                        self.options.animations.window_movement.0,
++                        self.options.animations.window_movement.anim,
+                     );
+                     tile.hold_alpha_animation_after_done();
+                 }
+@@ -4146,7 +4146,7 @@ impl<W: LayoutElement> Layout<W> {
+             move_.tile.animate_alpha(
+                 INTERACTIVE_MOVE_ALPHA,
+                 1.,
+-                self.options.animations.window_movement.0,
++                self.options.animations.window_movement.anim,
+             );
+         }
+ 
+diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..230f0d5f8d28a7c2cd6ce16c70038fdd24980391 100644
+--- a/src/layout/scrolling.rs
++++ b/src/layout/scrolling.rs
+@@ -920,11 +920,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+             if target_column.active_tile_idx == tile_idx {
+                 // Fade out the previously active tile.
+                 let tile = &mut target_column.tiles[prev_active_tile_idx];
+-                tile.animate_alpha(1., 0., self.options.animations.window_movement.0);
++                tile.animate_alpha(1., 0., self.options.animations.window_movement.anim);
+             } else {
+                 // Fade out when adding into a tabbed column into the background.
+                 let tile = &mut target_column.tiles[tile_idx];
+-                tile.animate_alpha(1., 0., self.options.animations.window_movement.0);
++                tile.animate_alpha(1., 0., self.options.animations.window_movement.anim);
+             }
+         }
+ 
+@@ -993,7 +993,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+ 
+         // Animate movement of other columns.
+         let offset = self.column_x(idx + 1) - self.column_x(idx);
+-        let config = anim_config.unwrap_or(self.options.animations.window_movement.0);
++        let config = anim_config.unwrap_or(self.options.animations.window_movement.anim);
+         if self.active_column_idx <= idx {
+             for col in &mut self.columns[idx + 1..] {
+                 col.animate_move_from_with_config(-offset, config);
+@@ -1070,7 +1070,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+         let column = &mut self.columns[column_idx];
+         let prev_width = self.data[column_idx].width;
+ 
+-        let movement_config = anim_config.unwrap_or(self.options.animations.window_movement.0);
++        let movement_config = anim_config.unwrap_or(self.options.animations.window_movement.anim);
+ 
+         // Animate movement of other tiles.
+         // FIXME: tiles can move by X too, in a centered or resizing layout with one window smaller
+@@ -1165,7 +1165,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+         anim_config: Option<niri_config::Animation>,
+     ) -> Column<W> {
+         // Animate movement of the other columns.
+-        let movement_config = anim_config.unwrap_or(self.options.animations.window_movement.0);
++        let movement_config = anim_config.unwrap_or(self.options.animations.window_movement.anim);
+         let offset = self.column_x(column_idx + 1) - self.column_x(column_idx);
+         if self.active_column_idx <= column_idx {
+             for col in &mut self.columns[column_idx + 1..] {
+@@ -1711,7 +1711,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+             }
+         }
+ 
+-        self.activate_column_with_anim_config(new_idx, self.options.animations.window_movement.0);
++        self.activate_column_with_anim_config(
++            new_idx,
++            self.options.animations.window_movement.anim,
++        );
+     }
+ 
+     pub fn move_left(&mut self) -> bool {
+@@ -1825,7 +1828,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+                 source_col_idx,
+                 0,
+                 Transaction::new(),
+-                Some(self.options.animations.window_movement.0),
++                Some(self.options.animations.window_movement.anim),
+             );
+             self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
+ 
+@@ -1851,7 +1854,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+                 source_tile_was_active,
+                 removed.width,
+                 removed.is_full_width,
+-                Some(self.options.animations.window_movement.0),
++                Some(self.options.animations.window_movement.anim),
+             );
+ 
+             if source_tile_was_active {
+@@ -1921,7 +1924,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+                 source_col_idx,
+                 0,
+                 Transaction::new(),
+-                Some(self.options.animations.window_movement.0),
++                Some(self.options.animations.window_movement.anim),
+             );
+             self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
+ 
+@@ -1945,7 +1948,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+                 source_tile_was_active,
+                 removed.width,
+                 removed.is_full_width,
+-                Some(self.options.animations.window_movement.0),
++                Some(self.options.animations.window_movement.anim),
+             );
+ 
+             offset.x += if self.active_column_idx <= target_column_idx {
+@@ -2019,7 +2022,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+             false,
+             removed.width,
+             removed.is_full_width,
+-            Some(self.options.animations.window_movement.0),
++            Some(self.options.animations.window_movement.anim),
+         );
+ 
+         offset.x += cur_x - self.column_x(target_col_idx);
+@@ -2957,9 +2960,19 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+                 }
+ 
+                 let xray_pos = xray_pos.offset(tile_pos);
+-                tile.render(ctx.r(), tile_pos, xray_pos, focus_ring, &mut |elem| {
+-                    push(elem.into())
+-                });
++                tile.render_with_movement(
++                    ctx.r(),
++                    tile_pos,
++                    xray_pos,
++                    focus_ring,
++                    col.move_animation.as_ref().map(|m| {
++                        crate::render_helpers::movement::MovementState {
++                            progress: 1. - m.anim.clamped_value().clamp(0., 1.),
++                            delta: Point::from((-m.from, 0.)),
++                        }
++                    }),
++                    &mut |elem| push(elem.into()),
++                );
+             }
+         }
+     }
+@@ -3997,7 +4010,7 @@ impl<W: LayoutElement> Column<W> {
+             // Usually new columns are created together with window movement actions. For new
+             // windows, we handle that in start_open_animation().
+             rv.tab_indicator
+-                .start_open_animation(rv.clock.clone(), rv.options.animations.window_movement.0);
++                .start_open_animation(rv.clock.clone(), rv.options.animations.window_movement.anim);
+         }
+ 
+         rv
+@@ -4166,7 +4179,7 @@ impl<W: LayoutElement> Column<W> {
+     pub fn animate_move_from(&mut self, from_x_offset: f64) {
+         self.animate_move_from_with_config(
+             from_x_offset,
+-            self.options.animations.window_movement.0,
++            self.options.animations.window_movement.anim,
+         );
+     }
+ 
+@@ -5149,7 +5162,7 @@ impl<W: LayoutElement> Column<W> {
+                 } else {
+                     (0., 1.)
+                 };
+-                tile.animate_alpha(from, to, self.options.animations.window_movement.0);
++                tile.animate_alpha(from, to, self.options.animations.window_movement.anim);
+             }
+         }
+ 
+@@ -5157,7 +5170,7 @@ impl<W: LayoutElement> Column<W> {
+         if display == ColumnDisplay::Tabbed {
+             self.tab_indicator.start_open_animation(
+                 self.clock.clone(),
+-                self.options.animations.window_movement.0,
++                self.options.animations.window_movement.anim,
+             );
+         }
+ 
+diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
+index 85df548c10d78083c7bb0094fdc9421fd67e0047..b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d 100644
+--- a/src/layout/tests/animations.rs
++++ b/src/layout/tests/animations.rs
+@@ -36,7 +36,7 @@ fn make_options() -> Options {
+         ..Options::default()
+     };
+     options.animations.window_resize.anim.kind = LINEAR;
+-    options.animations.window_movement.0.kind = LINEAR;
++    options.animations.window_movement.anim.kind = LINEAR;
+ 
+     options
+ }
+@@ -859,7 +859,7 @@ fn height_resize_cancel_with_stationary_second_window() {
+     ];
+     let mut options = make_options();
+     // Window movement will happen instantly.
+-    options.animations.window_movement.0.off = true;
++    options.animations.window_movement.anim.off = true;
+     let mut layout = check_ops_with_options(options, ops);
+ 
+     // The resize is in progress.
+diff --git a/src/layout/tile.rs b/src/layout/tile.rs
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae8517eb9b63 100644
+--- a/src/layout/tile.rs
++++ b/src/layout/tile.rs
+@@ -1,4 +1,5 @@
+ use core::f64;
++use std::cell::RefCell;
+ use std::rc::Rc;
+ 
+ use niri_config::utils::MergeWith as _;
+@@ -22,9 +23,12 @@ use crate::render_helpers::background_effect::BackgroundEffectElement;
+ use crate::render_helpers::border::BorderRenderElement;
+ use crate::render_helpers::clipped_surface::{ClippedSurfaceRenderElement, RoundedCornerDamage};
+ use crate::render_helpers::damage::ExtraDamage;
++use crate::render_helpers::movement::{MovementEffect, MovementState};
+ use crate::render_helpers::offscreen::{OffscreenBuffer, OffscreenRenderElement};
+ use crate::render_helpers::renderer::NiriRenderer;
+ use crate::render_helpers::resize::ResizeRenderElement;
++use crate::render_helpers::shader_element::ShaderRenderElement;
++use crate::render_helpers::shaders::{ProgramType, Shaders};
+ use crate::render_helpers::shadow::ShadowRenderElement;
+ use crate::render_helpers::snapshot::RenderSnapshot;
+ use crate::render_helpers::solid_color::{SolidColorBuffer, SolidColorRenderElement};
+@@ -93,6 +97,9 @@ pub struct Tile<W: LayoutElement> {
+     /// The animation of a tile visually moving vertically.
+     move_y_animation: Option<MoveAnimation>,
+ 
++    /// Lazily allocated only while a movement shader is active.
++    movement_effect: RefCell<Option<MovementEffect>>,
++
+     /// The animation of the tile's opacity.
+     pub(super) alpha_animation: Option<AlphaAnimation>,
+ 
+@@ -127,6 +134,7 @@ niri_render_elements! {
+         SolidColor = SolidColorRenderElement,
+         Opening = OpeningWindowRenderElement,
+         Resize = ResizeRenderElement,
++        Movement = ShaderRenderElement,
+         Border = BorderRenderElement,
+         Shadow = ShadowRenderElement,
+         ClippedSurface = ClippedSurfaceRenderElement<R>,
+@@ -204,6 +212,7 @@ impl<W: LayoutElement> Tile<W> {
+             resize_animation: None,
+             move_x_animation: None,
+             move_y_animation: None,
++            movement_effect: RefCell::new(None),
+             alpha_animation: None,
+             interactive_move_offset: Point::from((0., 0.)),
+             unmap_snapshot: None,
+@@ -578,7 +587,7 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     pub fn animate_move_x_from(&mut self, from: f64) {
+-        self.animate_move_x_from_with_config(from, self.options.animations.window_movement.0);
++        self.animate_move_x_from_with_config(from, self.options.animations.window_movement.anim);
+     }
+ 
+     pub fn animate_move_x_from_with_config(&mut self, from: f64, config: niri_config::Animation) {
+@@ -597,7 +606,7 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     pub fn animate_move_y_from(&mut self, from: f64) {
+-        self.animate_move_y_from_with_config(from, self.options.animations.window_movement.0);
++        self.animate_move_y_from_with_config(from, self.options.animations.window_movement.anim);
+     }
+ 
+     pub fn animate_move_y_from_with_config(&mut self, from: f64, config: niri_config::Animation) {
+@@ -1315,11 +1324,25 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     pub fn render<R: NiriRenderer>(
++        &self,
++        ctx: RenderCtx<R>,
++        location: Point<f64, Logical>,
++        xray_pos: XrayPos,
++        focus_ring: bool,
++        push: &mut dyn FnMut(TileRenderElement<R>),
++    ) {
++        self.render_with_movement(ctx, location, xray_pos, focus_ring, None, push);
++    }
++
++    /// The parent supplies column movement; tile movement is combined here.
++    #[allow(clippy::too_many_arguments)]
++    pub fn render_with_movement<R: NiriRenderer>(
+         &self,
+         mut ctx: RenderCtx<R>,
+         location: Point<f64, Logical>,
+         xray_pos: XrayPos,
+         focus_ring: bool,
++        parent_motion: Option<MovementState>,
+         push: &mut dyn FnMut(TileRenderElement<R>),
+     ) {
+         let _span = tracy_client::span!("Tile::render");
+@@ -1334,6 +1357,40 @@ impl<W: LayoutElement> Tile<W> {
+         let mut pushed = false;
+         self.window().set_offscreen_data(None);
+ 
++        let mut motion = parent_motion;
++        for (movement, horizontal) in [
++            (&self.move_x_animation, true),
++            (&self.move_y_animation, false),
++        ] {
++            if let Some(movement) = movement {
++                let progress = 1. - movement.anim.clamped_value().clamp(0., 1.);
++                let delta = if horizontal {
++                    Point::from((-movement.from, 0.))
++                } else {
++                    Point::from((0., -movement.from))
++                };
++                motion = Some(match motion {
++                    Some(state) => MovementState {
++                        progress: state.progress.min(progress),
++                        delta: state.delta + delta,
++                    },
++                    None => MovementState { progress, delta },
++                });
++            }
++        }
++        let motion = motion.filter(|m| {
++            m.progress > 0.
++                && m.progress < 1.
++                && (m.delta.x.abs() + m.delta.y.abs()) > 0.01
++                && Shaders::get(ctx.renderer)
++                    .program(ProgramType::Move)
++                    .is_some()
++        });
++        // Opening has priority; live resize can be drawn into the movement texture.
++        if motion.is_none() || self.open_animation.is_some() {
++            self.movement_effect.borrow_mut().take();
++        }
++
+         if let Some(open) = &self.open_animation {
+             let mut ctx = ctx.as_gles();
+             let mut elements = Vec::new();
+@@ -1361,6 +1418,34 @@ impl<W: LayoutElement> Tile<W> {
+                     warn!("error rendering window opening animation: {err:?}");
+                 }
+             }
++        } else if let Some(motion) = motion {
++            let mut ctx = ctx.as_gles();
++            let mut elements = Vec::new();
++            self.render_inner(
++                ctx.r(),
++                Point::new(0., 0.),
++                xray_pos,
++                focus_ring,
++                &mut |elem| elements.push(elem),
++            );
++            let mut effect = self.movement_effect.borrow_mut();
++            let effect = effect.get_or_insert_with(MovementEffect::new);
++            match effect.render(
++                ctx.renderer,
++                &elements,
++                self.animated_tile_size(),
++                location,
++                scale,
++                tile_alpha,
++                motion,
++            ) {
++                Ok((elem, data)) => {
++                    self.window().set_offscreen_data(Some(data));
++                    push(elem.into());
++                    pushed = true;
++                }
++                Err(err) => warn!("error rendering movement shader: {err:?}"),
++            }
+         } else if let Some(alpha) = &self.alpha_animation {
+             let mut ctx = ctx.as_gles();
+             let mut elements = Vec::new();
+diff --git a/src/niri.rs b/src/niri.rs
+index ec40e01c140b02847fb3337df29d98b7dcc68014..604a4b9b04fcdbfb516f2c4170b3a95331f97fd0 100644
+--- a/src/niri.rs
++++ b/src/niri.rs
+@@ -1574,6 +1574,15 @@ impl State {
+             });
+             shaders_changed = true;
+         }
++        if config.animations.window_movement.custom_shader
++            != old_config.animations.window_movement.custom_shader
++        {
++            let src = config.animations.window_movement.custom_shader.as_deref();
++            self.backend.with_primary_renderer(|renderer| {
++                shaders::set_custom_move_program(renderer, src);
++            });
++            shaders_changed = true;
++        }
+ 
+         if config.cursor.hide_after_inactive_ms != old_config.cursor.hide_after_inactive_ms {
+             cursor_inactivity_timeout_changed = true;
+diff --git a/src/render_helpers/mod.rs b/src/render_helpers/mod.rs
+index 474437af4511b5d34de9aec66c2a0451949ef8b7..fe6157cd893d9d8e9414b8c3a08134fc3fc3bc3e 100644
+--- a/src/render_helpers/mod.rs
++++ b/src/render_helpers/mod.rs
+@@ -36,6 +36,7 @@ pub mod effect_buffer;
+ pub mod framebuffer_effect;
+ pub mod gradient_fade_texture;
+ pub mod memory;
++pub mod movement;
+ pub mod offscreen;
+ pub mod primary_gpu_texture;
+ pub mod render_elements;
+diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1cb7d93c6
+--- /dev/null
++++ b/src/render_helpers/movement.rs
+@@ -0,0 +1,112 @@
++//! Experimental movement shader path. The regular renderer is the fallback.
++use super::offscreen::{OffscreenBuffer, OffscreenData};
++use super::shader_element::ShaderRenderElement;
++use super::shaders::{mat3_uniform, ProgramType};
++use anyhow::Context as _;
++use glam::{Mat3, Vec2};
++use smithay::backend::renderer::element::{Element, Kind, RenderElement};
++use smithay::backend::renderer::gles::{GlesRenderer, Uniform};
++use smithay::backend::renderer::Texture;
++use smithay::utils::{Logical, Point, Rectangle, Scale, Size};
++use std::collections::HashMap;
++use std::rc::Rc;
++
++#[derive(Debug, Clone, Copy)]
++pub struct MovementState {
++    pub progress: f64,
++    pub delta: Point<f64, Logical>,
++}
++
++#[derive(Debug)]
++pub struct MovementEffect {
++    random_seed: f32,
++    buffer: OffscreenBuffer,
++}
++
++impl MovementEffect {
++    pub fn new() -> Self {
++        Self {
++            random_seed: fastrand::f32(),
++            buffer: OffscreenBuffer::default(),
++        }
++    }
++
++    #[allow(clippy::too_many_arguments)]
++    pub fn render(
++        &self,
++        renderer: &mut GlesRenderer,
++        elements: &[impl RenderElement<GlesRenderer>],
++        geo_size: Size<f64, Logical>,
++        location: Point<f64, Logical>,
++        scale: Scale<f64>,
++        alpha: f32,
++        motion: MovementState,
++    ) -> anyhow::Result<(ShaderRenderElement, OffscreenData)> {
++        let progress = motion.progress;
++        let clamped_progress = progress.clamp(0., 1.);
++        let (elem, _sync_point, mut data) = self
++            .buffer
++            .render(renderer, scale, elements)
++            .context("error rendering movement to offscreen buffer")?;
++        // OffscreenBuffer renders with Transform::Normal and the scale that we passed, so we
++        // can assume that below.
++        let offset = elem.offset();
++        let texture = elem.texture();
++        let texture_size = elem.logical_size();
++
++        let mut area = Rectangle::new(location + offset, texture_size);
++
++        // Expand the area a bit to allow for more varied effects.
++        let mut target_size = area.size.upscale(1.5);
++        target_size.w = f64::max(area.size.w + 1000., target_size.w);
++        target_size.h = f64::max(area.size.h + 1000., target_size.h);
++        let diff = (target_size.to_point() - area.size.to_point()).downscale(2.);
++        let diff = diff.to_physical_precise_round(scale).to_logical(scale);
++        area.loc -= diff;
++        area.size += diff.upscale(2.).to_size();
++
++        let area_loc = Vec2::new(area.loc.x as f32, area.loc.y as f32);
++        let area_size = Vec2::new(area.size.w as f32, area.size.h as f32);
++
++        let geo_loc = Vec2::new(location.x as f32, location.y as f32);
++        let geo_size = Vec2::new(geo_size.w as f32, geo_size.h as f32);
++
++        let input_to_geo = Mat3::from_scale(area_size / geo_size)
++            * Mat3::from_translation((area_loc - geo_loc) / area_size);
++
++        let tex_scale = Vec2::new(scale.x as f32, scale.y as f32);
++        let tex_loc = Vec2::new(offset.x as f32, offset.y as f32);
++        let tex_size = Vec2::new(texture.width() as f32, texture.height() as f32) / tex_scale;
++
++        let geo_to_tex =
++            Mat3::from_translation(-tex_loc / tex_size) * Mat3::from_scale(geo_size / tex_size);
++
++        let elem = ShaderRenderElement::new(
++            ProgramType::Move,
++            area.size,
++            None,
++            scale.x as f32,
++            alpha,
++            Rc::new([
++                mat3_uniform("niri_input_to_geo", input_to_geo),
++                Uniform::new("niri_geo_size", geo_size.to_array()),
++                mat3_uniform("niri_geo_to_tex", geo_to_tex),
++                Uniform::new("niri_progress", progress as f32),
++                Uniform::new("niri_clamped_progress", clamped_progress as f32),
++                Uniform::new("niri_random_seed", self.random_seed),
++                Uniform::new(
++                    "niri_move_delta",
++                    [motion.delta.x as f32, motion.delta.y as f32],
++                ),
++            ]),
++            HashMap::from([(String::from("niri_tex"), texture.clone())]),
++            Kind::Unspecified,
++        )
++        .with_location(area.loc);
++
++        // We're drawing the shader, not the offscreen itself.
++        data.id = elem.id().clone();
++
++        Ok((elem, data))
++    }
++}
+diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
+index 7be9b159fde97328eb11d5872ba254a36c119055..56632b90b9928b7a582d473683cfcd3e5762aeea 100644
+--- a/src/render_helpers/shaders/mod.rs
++++ b/src/render_helpers/shaders/mod.rs
+@@ -20,6 +20,7 @@ pub struct Shaders {
+     pub blur: Option<BlurProgram>,
+     pub custom_resize: RefCell<Option<ShaderProgram>>,
+     pub custom_close: RefCell<Option<ShaderProgram>>,
++    pub custom_move: RefCell<Option<ShaderProgram>>,
+     pub custom_open: RefCell<Option<ShaderProgram>>,
+ }
+ 
+@@ -30,6 +31,7 @@ pub enum ProgramType {
+     Resize,
+     Close,
+     Open,
++    Move,
+ }
+ 
+ impl Shaders {
+@@ -159,6 +161,7 @@ impl Shaders {
+             custom_resize: RefCell::new(None),
+             custom_close: RefCell::new(None),
+             custom_open: RefCell::new(None),
++            custom_move: RefCell::new(None),
+         }
+     }
+ 
+@@ -196,6 +199,13 @@ impl Shaders {
+         self.custom_open.replace(program)
+     }
+ 
++    pub fn replace_custom_move_program(
++        &self,
++        program: Option<ShaderProgram>,
++    ) -> Option<ShaderProgram> {
++        self.custom_move.replace(program)
++    }
++
+     pub fn program(&self, program: ProgramType) -> Option<ShaderProgram> {
+         match program {
+             ProgramType::Border => self.border.clone(),
+@@ -207,6 +217,7 @@ impl Shaders {
+                 .or_else(|| self.resize.clone()),
+             ProgramType::Close => self.custom_close.borrow().clone(),
+             ProgramType::Open => self.custom_open.borrow().clone(),
++            ProgramType::Move => self.custom_move.borrow().clone(),
+         }
+     }
+ }
+@@ -353,6 +364,50 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
+     }
+ }
+ 
++fn compile_move_program(
++    renderer: &mut GlesRenderer,
++    src: &str,
++) -> Result<ShaderProgram, GlesError> {
++    let mut program = include_str!("move_prelude.frag").to_string();
++    program.push_str(src);
++    program.push_str(include_str!("move_epilogue.frag"));
++
++    ShaderProgram::compile(
++        renderer,
++        &program,
++        &[
++            UniformName::new("niri_input_to_geo", UniformType::Matrix3x3),
++            UniformName::new("niri_geo_size", UniformType::_2f),
++            UniformName::new("niri_geo_to_tex", UniformType::Matrix3x3),
++            UniformName::new("niri_progress", UniformType::_1f),
++            UniformName::new("niri_clamped_progress", UniformType::_1f),
++            UniformName::new("niri_random_seed", UniformType::_1f),
++            UniformName::new("niri_move_delta", UniformType::_2f),
++        ],
++        &["niri_tex"],
++    )
++}
++
++pub fn set_custom_move_program(renderer: &mut GlesRenderer, src: Option<&str>) {
++    let program = if let Some(src) = src {
++        match compile_move_program(renderer, src) {
++            Ok(program) => Some(program),
++            Err(err) => {
++                warn!("error compiling custom move shader: {err:?}");
++                return;
++            }
++        }
++    } else {
++        None
++    };
++
++    if let Some(prev) = Shaders::get(renderer).replace_custom_move_program(program) {
++        if let Err(err) = prev.destroy(renderer) {
++            warn!("error destroying previous custom move shader: {err:?}");
++        }
++    }
++}
++
+ pub fn mat3_uniform(name: &str, mat: Mat3) -> Uniform<'_> {
+     Uniform::new(
+         name,
+diff --git a/src/render_helpers/shaders/move_epilogue.frag b/src/render_helpers/shaders/move_epilogue.frag
+new file mode 100644
+index 0000000000000000000000000000000000000000..20332ac65098cdc4202d56efa4c68005741dc548
+--- /dev/null
++++ b/src/render_helpers/shaders/move_epilogue.frag
+@@ -0,0 +1,16 @@
++
++void main() {
++    vec3 coords_geo = niri_input_to_geo * vec3(niri_v_coords, 1.0);
++    vec3 size_geo = vec3(niri_geo_size, 1.0);
++
++    vec4 color = move_color(coords_geo, size_geo);
++
++    color = color * niri_alpha;
++
++#if defined(DEBUG_FLAGS)
++    if (niri_tint == 1.0)
++        color = vec4(0.0, 0.2, 0.0, 0.2) + color * 0.8;
++#endif
++
++    gl_FragColor = color;
++}
+diff --git a/src/render_helpers/shaders/move_prelude.frag b/src/render_helpers/shaders/move_prelude.frag
+new file mode 100644
+index 0000000000000000000000000000000000000000..f62f96c65879b16c8843ce89411a9ead1ba7060a
+--- /dev/null
++++ b/src/render_helpers/shaders/move_prelude.frag
+@@ -0,0 +1,25 @@
++precision highp float;
++
++#if defined(DEBUG_FLAGS)
++uniform float niri_tint;
++#endif
++
++varying vec2 niri_v_coords;
++uniform vec2 niri_size;
++
++uniform mat3 niri_input_to_geo;
++uniform vec2 niri_geo_size;
++
++uniform sampler2D niri_tex;
++uniform mat3 niri_geo_to_tex;
++
++uniform float niri_progress;
++uniform float niri_clamped_progress;
++uniform float niri_random_seed;
++
++uniform float niri_alpha;
++uniform float niri_scale;
++
++
++// Total movement from start to destination, in logical pixels.
++uniform vec2 niri_move_delta;
+diff --git a/src/tests/animations.rs b/src/tests/animations.rs
+index 51c57f7380c47a5e51cfac0a92ff0d76c324ef62..c2cd6f5cfe51d14e6a5bba2da818e1d644b0b34a 100644
+--- a/src/tests/animations.rs
++++ b/src/tests/animations.rs
+@@ -76,7 +76,7 @@ fn set_up() -> Fixture {
+     let mut config = Config::default();
+     config.layout.gaps = 0.0;
+     config.animations.window_resize.anim.kind = LINEAR;
+-    config.animations.window_movement.0.kind = LINEAR;
++    config.animations.window_movement.anim.kind = LINEAR;
+ 
+     let mut f = Fixture::with_config(config);
+     f.niri_state().backend.headless().add_renderer().unwrap();
+diff --git a/src/ui/mru.rs b/src/ui/mru.rs
+index d8ec6de16e9f9995f6038e817415005127ff48a0..2f84334027389f47a3d9f3a69ce9b5c92b228955 100644
+--- a/src/ui/mru.rs
++++ b/src/ui/mru.rs
+@@ -1291,7 +1291,7 @@ impl Inner {
+     }
+ 
+     fn animate_view_pos_from(&mut self, from: f64) {
+-        let config = self.config.borrow().animations.window_movement.0;
++        let config = self.config.borrow().animations.window_movement.anim;
+         self.view_pos
+             .animate_from_with_config(from, config, self.clock.clone());
+     }
+@@ -1384,7 +1384,7 @@ impl Inner {
+             let prev_size = self.wmru.thumbnails[idx].preview_size(output_size, scale);
+             let delta = prev_size.w + gap;
+ 
+-            let config = self.config.borrow().animations.window_movement.0;
++            let config = self.config.borrow().animations.window_movement.anim;
+ 
+             // If the removed window is to the left of the currently selected one, we need to offset
+             // the view position to compensate for the change.
+@@ -1458,7 +1458,7 @@ impl Inner {
+         let padding = round(padding) + round(BORDER);
+         let gap = padding + round(GAP) + padding;
+ 
+-        let config = self.config.borrow().animations.window_movement.0;
++        let config = self.config.borrow().animations.window_movement.anim;
+ 
+         let mut delta = 0.;
+         for t in &mut self.wmru.thumbnails[idx + 1..] {

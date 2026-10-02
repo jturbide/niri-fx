@@ -9,10 +9,12 @@ the effect; iNiR/iRiS provides the native preset picker.
 
 ![Gravity and rotation controls in Niri Fragments Studio](docs/studio.png)
 
-**Version 0.3 prototype.** Denser bursts, staggered release, varied flight speeds,
+**Version 0.4 prototype.** Denser bursts, staggered release, varied flight speeds,
 later dissolution, and softer edges replace the earlier preset tuning. Balanced
 now targets 720 pieces; Explosion uses 1,200 and Implosion 1,000.
-Studio opens as an app-style window and includes move/swap design previews.
+Studio opens as an app-style window, now includes a real resize shader preview,
+and keeps its move/swap design previews. A separate patched Niri demo renders
+real window movement; see [the experimental build](experimental/README.md).
 Desktop appearance and GPU performance still need acceptance on each setup. [Validation details](docs/validation.md).
 
 ## Select a style in iRiS
@@ -66,7 +68,10 @@ a browser tab. Live controls include:
 - **Spread:** 0–240 logical pixels of initial radial scatter.
 - **Path dispersion:** 0–1; separates fragment speeds and curves their paths.
 - **Release stagger:** 0–0.4; varies when fragments separate and dissolve.
-- **Timing:** independent opening and closing durations, 100–1500 ms.
+- **Timing:** independent opening, closing and resizing durations, 100–1500 ms.
+- **Resize:** enable switch and breakup strength (0–1); bounded fragments
+  reconstruct the window at its new size. Resize shares particle count, gravity
+  direction and rotation; its strength is separate from open/close gravity.
 
 The editor uses the same shader templates as the CLI. Click **Reconstruct** or
 **Deconstruct**, or scrub the timeline. Set a name and choose **Save to iRiS**;
@@ -75,8 +80,9 @@ it. Saving the same name updates that custom preset, with a backup.
 
 The **Move** and **Swap** tabs are visual concepts: textured particles cross
 between columns and reconstruct at their destinations. They are not installed
-movement effects. Saving/exporting still changes only open/close behavior.
-See [the compositor extension design](docs/movement.md) for the implementation path.
+movement effects. Saving/exporting changes open/close and enabled resize behavior.
+Run `python3 scripts/nested-demo.py` after building the isolated experiment
+to try actual native movement. See [the compositor work](docs/movement.md).
 
 The controls live in Fragments Studio. iRiS's native page lists the resulting
 presets; its stock thumbnail still shows generic timing rather than this shader.
@@ -129,8 +135,10 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 ## Integration and rollback
 
 Requires an iNiR version with `NiriAnimationPresets` and external user presets.
-Registration reads the active recognized preset and copies all its non-open/close
-animation settings. If active animations are custom and unrecognized, choose an
+Registration reads the active recognized preset and copies its other animation
+settings. Built-in styles now replace open/close/resize. `--no-resize` on a named
+style or standalone export preserves the base resize behavior; old custom JSON
+documents without a `resize` field remain opted out. If active animations are custom and unrecognized, choose an
 explicit `--base`, for example `--base bouncy`; the tool refuses to approximate
 unknown timings. iNiR applies a whole preset when selected, so each saved style
 captures its base settings at creation time. Later base edits are not inherited
@@ -189,4 +197,5 @@ screen edges, and frame time before choosing an everyday style.
 
 See [integration details](docs/integration.md) and [related work](docs/related-projects.md).
 Optional installation in a virtual environment: `python3 -m pip install .`.
-MIT licensed. Independent project; not affiliated with Niri or iNiR.
+Original project code is MIT licensed; the optional Niri patch is GPL-3.0-or-later.
+Independent project; not affiliated with Niri or iNiR.

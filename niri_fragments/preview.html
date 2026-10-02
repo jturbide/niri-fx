@@ -17,8 +17,8 @@ input[type=range]{min-width:0;width:100%;accent-color:#8ed8d0}aside{background:#
 <header><h1>Niri Fragments Studio</h1><span class="badge">LOCAL STUDIO</span></header>
 <p>Shape how windows fall apart and come together. Save your own style to iRiS.</p>
 <div class="layout"><main>
-<nav class="tabs" aria-label="Preview mode"><button data-mode="effect" aria-pressed="true">Open &amp; close</button><button data-mode="move" aria-pressed="false">Move <small>concept</small></button><button data-mode="swap" aria-pressed="false">Swap <small>concept</small></button></nav>
-<p id="concept-note" hidden>Design preview only. Niri needs a compositor extension for these movements. Saving and exporting affect open/close animations only.</p>
+<nav class="tabs" aria-label="Preview mode"><button data-mode="effect" aria-pressed="true">Open &amp; close</button><button data-mode="resize" aria-pressed="false">Resize</button><button data-mode="move" aria-pressed="false">Move <small>concept</small></button><button data-mode="swap" aria-pressed="false">Swap <small>concept</small></button></nav>
+<p id="concept-note" hidden>Design preview only. Niri needs a compositor extension for these movements. Saving and exporting affect open/close and enabled resize animations. The experimental native movement demo runs separately.</p>
 <canvas id="motion-stage" width="1000" height="760" aria-label="Window move and swap concept" hidden></canvas>
 <canvas id="stage" width="1000" height="760" aria-label="Interactive preview of window gravity and rotating fragments"></canvas>
 <div class="controls"><button id="open">Reconstruct</button><button id="close">Deconstruct</button><button id="seed">New variation</button>
@@ -44,14 +44,18 @@ input[type=range]{min-width:0;width:100%;accent-color:#8ed8d0}aside{background:#
 <div><label for="swirl">Orbit around center <output id="swirl-value"></output></label><input id="swirl" type="range" min="-360" max="360" step="5"></div>
 <div><label for="open_ms">Opening time <output id="open_ms-value"></output></label><input id="open_ms" type="range" min="100" max="1500" step="10"></div>
 <div><label for="close_ms">Closing time <output id="close_ms-value"></output></label><input id="close_ms" type="range" min="100" max="1500" step="10"></div>
+<div class="wide divider"></div>
+<div class="wide"><label><input id="resize" type="checkbox"> Fragment windows when resizing</label><small>Supported animated resizes, such as changing column width. Compact fragments stay within the changing window.</small></div>
+<div><label for="resize_ms">Resize time <output id="resize_ms-value"></output></label><input id="resize_ms" type="range" min="100" max="1500" step="10"></div>
+<div><label for="resize_strength">Resize breakup <output id="resize_strength-value"></output></label><input id="resize_strength" type="range" min="0" max="1" step="0.05"></div>
 <div class="wide"><small>Count is approximate so the pieces stay square. Gravity is an artistic motion control, not a physical simulation. This preview uses the real effect shader; monitor clipping and desktop performance can differ.</small></div>
 </aside></div>
 <script>
 @MOTION_JS@
 const catalog = @EFFECT_JSON@;
 const byId=id=>document.getElementById(id);
-const numeric=['tile_size','scatter','gravity_strength','particles','spin','swirl','open_ms','close_ms','dispersion','stagger'];
-const units={tile_size:' px',scatter:' px',gravity_strength:'×',particles:'',spin:'°',swirl:'°',open_ms:' ms',close_ms:' ms',dispersion:'',stagger:''};
+const numeric=['tile_size','scatter','gravity_strength','particles','spin','swirl','open_ms','close_ms','dispersion','stagger','resize_ms','resize_strength'];
+const units={tile_size:' px',scatter:' px',gravity_strength:'×',particles:'',spin:'°',swirl:'°',open_ms:' ms',close_ms:' ms',dispersion:'',stagger:'',resize_ms:' ms',resize_strength:''};
 let parameters={...catalog.parameters}, frame=0, seed=0.37, program=null, lastSource='', mode='effect';
 const query=new URLSearchParams(location.search);
 if(catalog.presets[query.get('preset')]) parameters={...catalog.presets[query.get('preset')]};
@@ -64,22 +68,25 @@ byId('name').value='My '+title(byId('preset').value||catalog.name);
 function populate(){
  for(const key of numeric) byId(key).value=key==='particles'?(parameters.particles||240):parameters[key];
  for(const key of ['gravity','rotation']) byId(key).value=parameters[key];
+ byId('resize').checked=parameters.resize;
  byId('density').value=parameters.particles?'count':'tile'; labels();
 }
 function labels(){
  byId('count-control').hidden=byId('density').value!=='count';byId('tile-control').hidden=byId('density').value!=='tile';
  for(const key of numeric) byId(key+'-value').textContent=byId(key).value+units[key];
- byId('gravity_strength').disabled=byId('gravity').value==='none';byId('spin').disabled=byId('rotation').value==='none';
+ for(const key of ['scatter','dispersion','stagger','swirl','open_ms','close_ms'])byId(key).disabled=mode==='resize';
+ byId('seed').disabled=mode==='resize';
+ byId('gravity_strength').disabled=mode==='resize'||byId('gravity').value==='none';byId('spin').disabled=byId('rotation').value==='none';
 }
-function shaderFor(p,opening){
+function shaderFor(p,opening,resizing=false){
  const classic=p.gravity==='none'&&!p.particles&&p.rotation==='none'&&p.swirl===0&&p.dispersion===0&&p.stagger===0;
- const tokens={TILE:p.tile_size.toFixed(6),SCATTER:p.scatter.toFixed(6),PARTICLES:p.particles.toFixed(6),GRAVITY:String(catalog.gravities.indexOf(p.gravity)),STRENGTH:p.gravity_strength.toFixed(6),ROTATION:String(catalog.rotations.indexOf(p.rotation)),SPIN:p.spin.toFixed(6),SWIRL:p.swirl.toFixed(6),DISPERSION:p.dispersion.toFixed(6),STAGGER:p.stagger.toFixed(6),ENTRY:opening?'open_color':'close_color',PROGRESS:opening?'1.0 - niri_clamped_progress':'niri_clamped_progress'};
- return (classic?catalog.templates.classic:catalog.templates.gravity).replace(/@([A-Z]+)@/g,(_,key)=>tokens[key]);
+ const tokens={RESIZE:p.resize_strength.toFixed(6),TILE:p.tile_size.toFixed(6),SCATTER:p.scatter.toFixed(6),PARTICLES:p.particles.toFixed(6),GRAVITY:String(catalog.gravities.indexOf(p.gravity)),STRENGTH:p.gravity_strength.toFixed(6),ROTATION:String(catalog.rotations.indexOf(p.rotation)),SPIN:p.spin.toFixed(6),SWIRL:p.swirl.toFixed(6),DISPERSION:p.dispersion.toFixed(6),STAGGER:p.stagger.toFixed(6),ENTRY:opening?'open_color':'close_color',PROGRESS:opening?'1.0 - niri_clamped_progress':'niri_clamped_progress'};
+ return (resizing?catalog.templates.resize:classic?catalog.templates.classic:catalog.templates.gravity).replace(/@([A-Z]+)@/g,(_,key)=>tokens[key]);
 }
 function effectDocument(){return {schema:1,name:byId('name').value.trim(),effect:{...parameters}};}
 function download(name,text,type){const url=URL.createObjectURL(new Blob([text],{type}));const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
 byId('export').onclick=()=>download('niri-fragments-preset.json',JSON.stringify(effectDocument(),null,2)+'\n','application/json');
-byId('kdl').onclick=()=>{let result='// Generated by Niri Fragments Studio\nanimations {\n';for(const opening of [true,false]) result+=`    window-${opening?'open':'close'} {\n        duration-ms ${opening?parameters.open_ms:parameters.close_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,opening)}\n        "\n    }\n`;download('fragments.kdl',result+'}\n','text/plain');};
+byId('kdl').onclick=()=>{let result='// Generated by Niri Fragments Studio\nanimations {\n';for(const opening of [true,false]) result+=`    window-${opening?'open':'close'} {\n        duration-ms ${opening?parameters.open_ms:parameters.close_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,opening)}\n        "\n    }\n`;if(parameters.resize)result+=`    window-resize {\n        duration-ms ${parameters.resize_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,false,true)}\n        "\n    }\n`;download('fragments.kdl',result+'}\n','text/plain');};
 byId('save').disabled=!catalog.connection;
 if(catalog.connection)setInterval(()=>fetch('/ping?token='+encodeURIComponent(catalog.connection.token)).catch(()=>{}),45000);
 if(!catalog.connection) byId('status').textContent='Offline preview: export a preset, or run “python3 -m niri_fragments studio” to save directly to iRiS.';
@@ -104,31 +111,36 @@ try{
  for(let i=0;i<3;i++){ctx.fillStyle=['#345b70','#4c4f75','#416755'][i];ctx.fillRect(32+i*182,175,170,112);ctx.fillStyle='#d8e8f5';ctx.font='20px sans-serif';ctx.fillText(['Create','Arrange','Explore'][i],48+i*182,212);}
  ctx.fillStyle='#627991';for(let i=0;i<3;i++)ctx.fillRect(32,315+i*14,400-i*60,5);
  const motionPreview=new MotionPreview(byId('motion-stage'),sample);
- const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sample);
- gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+ const nextSample=document.createElement('canvas');nextSample.width=800;nextSample.height=440;const nextCtx=nextSample.getContext('2d');nextCtx.drawImage(sample,0,0,800,440);nextCtx.fillStyle='#264d50';nextCtx.fillRect(25,340,750,75);nextCtx.fillStyle='#a5e8dd';nextCtx.font='22px sans-serif';nextCtx.fillText('More room for what comes next.',44,386);
+ function uploadTexture(image,unit){gl.activeTexture(gl.TEXTURE0+unit);const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,image);
+ gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);}
+ uploadTexture(sample,0);uploadTexture(nextSample,1);
  function rebuild(){
-  const source=shaderFor(parameters,false);if(source===lastSource)return;
-  const fragment=`precision highp float;varying vec2 uv;uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_clamped_progress;uniform float niri_random_seed;${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*vec2(1000.0,760.0);gl_FragColor=close_color(vec3((pixel-vec2(200.0,180.0))/vec2(600.0,380.0),1.0),vec3(600.0,380.0,1.0));}`;
+  const resizing=mode==='resize',source=shaderFor(parameters,false,resizing);if(source===lastSource)return;
+  const uniforms=resizing?'uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;':'uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;';
+  const geometry=resizing?'mix(vec2(600.0,380.0),vec2(800.0,440.0),niri_clamped_progress)':'vec2(600.0,380.0)';
+  const fragment=`precision highp float;varying vec2 uv;uniform float niri_clamped_progress;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*vec2(1000.0,760.0);vec2 size=${geometry};vec2 origin=${resizing?'(vec2(1000.0,760.0)-size)*0.5':'vec2(200.0,180.0)'};gl_FragColor=${resizing?'resize_color':'close_color'}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
   const vs=compile(gl.VERTEX_SHADER,vertex),fs=compile(gl.FRAGMENT_SHADER,fragment),next=gl.createProgram();gl.attachShader(next,vs);gl.attachShader(next,fs);gl.linkProgram(next);gl.deleteShader(vs);gl.deleteShader(fs);
   if(!gl.getProgramParameter(next,gl.LINK_STATUS)){const error=gl.getProgramInfoLog(next);gl.deleteProgram(next);throw new Error(error);}
   if(program)gl.deleteProgram(program);program=next;lastSource=source;gl.useProgram(program);
   const attribute=gl.getAttribLocation(program,'position');gl.enableVertexAttribArray(attribute);gl.vertexAttribPointer(attribute,2,gl.FLOAT,false,0,0);
-  gl.uniform1i(gl.getUniformLocation(program,'niri_tex'),0);gl.uniformMatrix3fv(gl.getUniformLocation(program,'niri_geo_to_tex'),false,new Float32Array([1,0,0,0,1,0,0,0,1]));
+  for(const name of ['niri_tex','niri_tex_prev'])gl.uniform1i(gl.getUniformLocation(program,name),0);gl.uniform1i(gl.getUniformLocation(program,'niri_tex_next'),1);
+  for(const name of ['niri_geo_to_tex','niri_geo_to_tex_prev','niri_geo_to_tex_next'])gl.uniformMatrix3fv(gl.getUniformLocation(program,name),false,new Float32Array([1,0,0,0,1,0,0,0,1]));
  }
- function draw(value){progress=value;if(mode!=='effect')motionPreview.draw(value,mode,parameters,seed);else{gl.uniform1f(gl.getUniformLocation(program,'niri_clamped_progress'),value);gl.uniform1f(gl.getUniformLocation(program,'niri_random_seed'),seed);gl.drawArrays(gl.TRIANGLES,0,6);}byId('progress').value=Math.round(value*1000);byId('amount').textContent=Math.round(value*100)+'%';}
- function refresh(){try{rebuild();draw(progress);byId('error').textContent='';const tile=parameters.particles?Math.max(4,Math.sqrt(600*380/parameters.particles)):parameters.tile_size;const count=Math.ceil(600/tile)*Math.ceil(380/tile);byId('caption').textContent=`${count} pieces in this window · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;document.documentElement.dataset.shaderStatus='ready';}catch(error){byId('error').textContent=error.message;document.documentElement.dataset.shaderStatus='error';}}
- function update(){cancelAnimationFrame(frame);for(const key of numeric)parameters[key]=Number(byId(key).value);for(const key of ['gravity','rotation'])parameters[key]=byId(key).value;if(byId('density').value==='tile')parameters.particles=0;labels();refresh();}
- for(const id of [...numeric,'gravity','rotation','density'])byId(id).addEventListener('input',update);
+ function draw(value){progress=value;if(['move','swap'].includes(mode))motionPreview.draw(value,mode,parameters,seed);else{gl.uniformMatrix3fv(gl.getUniformLocation(program,'niri_curr_geo_to_next_geo'),false,new Float32Array([(600+200*value)/800,0,0,0,(380+60*value)/440,0,0,0,1]));gl.uniform1f(gl.getUniformLocation(program,'niri_clamped_progress'),value);gl.uniform1f(gl.getUniformLocation(program,'niri_random_seed'),seed);gl.drawArrays(gl.TRIANGLES,0,6);}byId('progress').value=Math.round(value*1000);byId('amount').textContent=Math.round(value*100)+'%';}
+ function refresh(){try{rebuild();draw(progress);byId('error').textContent='';const tile=parameters.particles?Math.max(4,Math.sqrt(600*380/parameters.particles)):parameters.tile_size;const count=Math.ceil(600/tile)*Math.ceil(380/tile);byId('caption').textContent=mode==='resize'?`Resize · ${parameters.resize_ms} ms · ${parameters.resize?'Included when you save':'Preview only — resize is disabled for this style'}`:`${count} pieces in this window · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;document.documentElement.dataset.shaderStatus='ready';}catch(error){byId('error').textContent=error.message;document.documentElement.dataset.shaderStatus='error';}}
+ function update(){cancelAnimationFrame(frame);parameters.resize=byId('resize').checked;for(const key of numeric)parameters[key]=Number(byId(key).value);for(const key of ['gravity','rotation'])parameters[key]=byId(key).value;if(byId('density').value==='tile')parameters.particles=0;labels();refresh();}
+ for(const id of [...numeric,'gravity','rotation','density','resize'])byId(id).addEventListener('input',update);
  byId('preset').onchange=()=>{cancelAnimationFrame(frame);parameters={...catalog.presets[byId('preset').value]};byId('name').value='My '+title(byId('preset').value);populate();refresh();};
- function animate(opening){cancelAnimationFrame(frame);const start=performance.now(),duration=mode==='effect'?(opening?parameters.open_ms:parameters.close_ms):Math.max(900,parameters.open_ms+parameters.close_ms);function tick(now){const p=Math.min(1,(now-start)/duration);draw(opening?1-p:p);if(p<1)frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);}
+ function animate(opening){cancelAnimationFrame(frame);const start=performance.now(),duration=mode==='effect'?(opening?parameters.open_ms:parameters.close_ms):mode==='resize'?parameters.resize_ms:Math.max(900,parameters.open_ms+parameters.close_ms);function tick(now){const p=Math.min(1,(now-start)/duration);draw(opening?1-p:p);if(p<1)frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);}
  byId('open').onclick=()=>animate(true);byId('close').onclick=()=>animate(false);byId('seed').onclick=()=>{seed=Math.random();draw(progress);};
  byId('progress').oninput=()=>{cancelAnimationFrame(frame);draw(Number(byId('progress').value)/1000);};
  for(const button of document.querySelectorAll('[data-mode]'))button.onclick=()=>{
   cancelAnimationFrame(frame);mode=button.dataset.mode;
   for(const tab of document.querySelectorAll('[data-mode]'))tab.setAttribute('aria-pressed',String(tab===button));
-  byId('stage').hidden=mode!=='effect';byId('motion-stage').hidden=mode==='effect';byId('concept-note').hidden=mode==='effect';
+  const concept=['move','swap'].includes(mode);byId('stage').hidden=concept;byId('motion-stage').hidden=!concept;byId('concept-note').hidden=!concept;
   byId('open').textContent=mode==='effect'?'Reconstruct':'Reverse';byId('close').textContent=mode==='effect'?'Deconstruct':'Play';byId('timeline-label').textContent=mode==='effect'?'Breakup':'Journey';
-  byId('save').textContent=mode==='effect'?'Save to iRiS':'Save open/close style';draw(progress);
+  byId('save').textContent=concept?'Save supported effects':'Save to iRiS';labels();refresh();
  };
  populate();refresh();
 }catch(error){byId('error').textContent=error.message;document.documentElement.dataset.shaderStatus='error';}

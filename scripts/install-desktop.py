@@ -1,20 +1,30 @@
 #!/usr/bin/env python3
 """Add an on-demand Studio launcher for this checkout, without starting it."""
 
+import argparse
 import os
 from pathlib import Path
 import sys
 
 root = Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--movement-demo", action="store_true", help="Install a launcher for the separately built nested experiment")
+args = parser.parse_args()
+if args.movement_demo and not (root / "artifacts/niri-movement-build.json").exists():
+    parser.error("Build the experiment first: python3 scripts/build-niri-movement.py")
 data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
-target = data / "applications/niri-fragments-studio.desktop"
+target = data / ("applications/niri-fragments-movement-demo.desktop" if args.movement_demo
+                 else "applications/niri-fragments-studio.desktop")
 python = sys.executable.replace("\\", "\\\\").replace('"', '\\"').replace("`", "\\`").replace("$", "\\$")
 working_directory = str(root).replace("\\", "\\\\").replace("\n", "\\n")
+name = "Niri Fragments Movement Demo" if args.movement_demo else "Niri Fragments Studio"
+comment = "Try experimental particle swaps in a separate Niri window" if args.movement_demo else "Customize window gravity, particles, and rotation"
+command = 'scripts/nested-demo.py' if args.movement_demo else '-m niri_fragments studio'
 content = f"""[Desktop Entry]
 Type=Application
-Name=Niri Fragments Studio
-Comment=Customize window gravity, particles, and rotation
-Exec="{python}" -m niri_fragments studio
+Name={name}
+Comment={comment}
+Exec="{python}" {command}
 Path={working_directory}
 Icon=preferences-desktop-effects
 Terminal=false

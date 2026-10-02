@@ -1,5 +1,47 @@
 # Prototype validation
 
+## Version 0.4 — resize and isolated native movement
+
+Checked on 2026-10-02:
+
+- 22 project tests passed, including loopback saving, legacy custom documents,
+  resize opt-out and exclusion of movement shaders from stock exports.
+- All 44 generated shaders (11 × open/close/resize/experimental movement)
+  compiled as GLSL ES 1.00. All 11 stock configurations passed installed Niri
+  validation and apply/recognition checks through the installed iNiR helper
+  in a temporary config. Global off/slowdown controls survived.
+- Browser rendering verified all 11 resize shaders, exact starting/ending
+  coverage, visible intermediate fragmentation, old/new texture replacement
+  and Python/browser export parity, alongside existing open/close and concept
+  movement checks. The resize preview below uses synthetic content.
+- The pinned Niri patch built with Rust 1.99.0 and no default features.
+  19 config tests, one config integration test and 12 existing layout animation
+  regression tests passed. The patch also applied to a clean pinned checkout
+  and reproduced the expected source diff.
+- A native nested session rendered two synthetic Alacritty clients. Both
+  fragmented during a real column swap, changed columns and regained their
+  original measured colored areas. Native resize and shader-removal captures
+  were inspected. No shader compilation/render/config errors were observed
+  in the final smoke runs. The demo and its clients were closed afterward.
+- The v0.4 wheel/source distribution built; the installed wheel loaded its new
+  shader and Studio resources from outside the checkout. Both desktop entries
+  passed `desktop-file-validate`.
+- The live preset pack was updated with a registry backup. Confetti remained
+  selected and gained resize; the scoped animation config backup is under
+  `~/.local/state/niri-fragments/backups/20261002T231832Z/`. Installed Niri
+  validated and reloaded the config without shader errors in the observed log.
+  No movement shader was written to the live config, and its binary was untouched.
+
+![Resize shader preview](resize.png)
+
+![Two real demo windows fragmenting during a native column swap](native-movement.png)
+
+The native build is a development prototype. GPU frame time, direct dragging,
+seamless retargeting, particle-level ordering between windows, fractional scale,
+multiple outputs and all capture/interaction cases are not accepted yet. See
+[the experiment scope](../experimental/README.md). The default debug build is
+not a production performance benchmark.
+
 ## Version 0.3 — denser bursts, app window and movement concepts
 
 Checked on 2026-10-02:

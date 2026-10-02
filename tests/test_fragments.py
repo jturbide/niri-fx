@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from niri_fragments.effects import Effect, PRESETS, render_kdl
+from niri_fragments.effects import Effect, PRESETS, render_kdl, movement_shader
 from niri_fragments.integration import custom_document, make_custom_preset, make_presets, merge_registry, update_registry
 from niri_fragments.cli import parser, selected_effect
 
@@ -24,11 +24,20 @@ class PresetTests(unittest.TestCase):
         original = deepcopy(registry)
         presets = make_presets(registry)
         for preset in presets:
-            for name in ("workspace-switch", "window-resize"):
+            for name in ("workspace-switch",):
                 self.assertEqual(preset["types"][name], original["presets"][0]["types"][name])
+            self.assertIn("resize_color", preset["types"]["window-resize"]["custom-shader"])
             self.assertIn("open_color", preset["types"]["window-open"]["custom-shader"])
             self.assertIn("close_color", preset["types"]["window-close"]["custom-shader"])
         self.assertEqual(registry, original)
+
+    def test_legacy_custom_document_keeps_base_resize(self):
+        registry = shell_registry()
+        preset = make_custom_preset(registry, {"schema": 1, "name": "Old style", "effect": {}})
+        self.assertEqual(preset["types"]["window-resize"], registry["presets"][0]["types"]["window-resize"])
+        enabled = make_custom_preset(registry, {"schema": 1, "name": "New style", "effect": {"resize": True, "resize_ms": 600}})
+        self.assertEqual(enabled["types"]["window-resize"]["duration-ms"], 600)
+        self.assertIn("resize_color", enabled["types"]["window-resize"]["custom-shader"])
 
     def test_custom_base_requires_explicit_choice(self):
         registry = shell_registry()
@@ -137,7 +146,7 @@ class EffectTests(unittest.TestCase):
                           {"open_ms": 2.5}, {"close_ms": 0}, {"tile_size": True},
                           {"particles": 10}, {"particles": 100.5}, {"gravity_strength": -1},
                           {"gravity": "bad"}, {"rotation": "bad"}, {"swirl": 400}, {"spin": float("nan")},
-                          {"dispersion": 1.1}, {"stagger": -0.1}, {"stagger": 0.5}):
+                          {"dispersion": 1.1}, {"stagger": -0.1}, {"stagger": 0.5}, {"resize": 1}, {"resize_strength": 1.1}, {"resize_ms": 0}):
             with self.subTest(overrides=overrides), self.assertRaises(ValueError):
                 Effect(**overrides)
 
@@ -145,8 +154,19 @@ class EffectTests(unittest.TestCase):
         for effect in PRESETS.values():
             kdl = render_kdl(effect)
             self.assertNotIn("@", kdl)
-            self.assertEqual(kdl.count('custom-shader r"'), 2)
+            self.assertEqual(kdl.count('custom-shader r"'), 3)
             self.assertIn("1.0 - niri_clamped_progress", kdl)
+
+    def test_movement_is_separate_from_stock_config(self):
+        for effect in PRESETS.values():
+            self.assertNotIn("window-movement", render_kdl(effect))
+            self.assertIn("move_color", movement_shader(effect))
+            self.assertNotIn("@", movement_shader(effect))
+
+    def test_disable_resize_preserves_open_close(self):
+        effect = selected_effect(parser().parse_args(["render", "--no-resize"]))
+        self.assertNotIn("window-resize", render_kdl(effect))
+        self.assertEqual(render_kdl(effect).count('custom-shader r"'), 2)
 
     def test_fixed_tile_option_replaces_preset_target_count(self):
         args = parser().parse_args(["render", "--preset", "earth", "--tile-size", "40"])

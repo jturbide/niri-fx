@@ -1,6 +1,6 @@
 """Generate the same fragment effect for standalone Niri and shell presets."""
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from importlib.resources import files
 import math
 
@@ -22,18 +22,24 @@ class Effect:
     swirl: float = 0
     dispersion: float = 0.7
     stagger: float = 0.18
+    resize: bool = False
+    resize_ms: int = 450
+    resize_strength: float = 0.65
 
     def __post_init__(self):
         for name, low, high in (("tile_size", 8, 128), ("scatter", 0, 240),
                                 ("open_ms", 100, 1500), ("close_ms", 100, 1500),
                                 ("gravity_strength", 0, 3), ("particles", 0, 4096),
                                 ("spin", 0, 720), ("swirl", -360, 360),
-                                ("dispersion", 0, 1), ("stagger", 0, 0.4)):
+                                ("dispersion", 0, 1), ("stagger", 0, 0.4),
+                                ("resize_ms", 100, 1500), ("resize_strength", 0, 1)):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"{name} must be a finite number between {low} and {high}")
             if (name.endswith("_ms") or name == "particles") and int(value) != value:
                 raise ValueError(f"{name} must be a whole number")
+        if not isinstance(self.resize, bool):
+            raise ValueError("resize must be a boolean")
         if self.particles and self.particles < 16:
             raise ValueError("particles must be 0 (tile size mode) or between 16 and 4096")
         if self.gravity not in GRAVITIES:
@@ -61,15 +67,40 @@ PRESETS = {
     "updraft": Effect(scatter=60, open_ms=600, close_ms=640, gravity="up", gravity_strength=0.9, particles=600, rotation="gravity", spin=180, swirl=-25, dispersion=0.8, stagger=0.24),
 }
 
+# Existing custom documents retain their previous resize settings unless opted in.
+PRESETS = {name: replace(effect, resize=True) for name, effect in PRESETS.items()}
+
 
 def shader_templates():
     root = files("niri_fragments").joinpath("shaders")
     return {"classic": root.joinpath("fragments.glsl").read_text(),
-            "gravity": root.joinpath("gravity.glsl").read_text()}
+            "gravity": root.joinpath("gravity.glsl").read_text(),
+            "resize": root.joinpath("resize.glsl").read_text()}
 
 
 def shader(effect, opening):
     template = shader_templates()["classic" if effect.classic else "gravity"]
+    return _expand(template, effect, opening)
+
+
+def resize_shader(effect):
+    return _expand(shader_templates()["resize"], effect, False)
+
+
+def movement_shader(effect):
+    """Experimental API: emit only for the pinned patched compositor."""
+    source = shader(effect, False)
+    source = source[:source.rfind("vec4 close_color")]
+    return source + """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
+    float p = niri_clamped_progress;
+    float breakup = 0.64 * pow(sin(3.14159265359 * p), 2.0);
+    if (p <= 0.0 || p >= 1.0) breakup = 0.0;
+    return fragments_color(coords_geo, size_geo, breakup);
+}
+"""
+
+
+def _expand(template, effect, opening):
     return (template.replace("@TILE@", f"{effect.tile_size:.6f}")
             .replace("@SCATTER@", f"{effect.scatter:.6f}")
             .replace("@PARTICLES@", f"{effect.particles:.6f}")
@@ -79,17 +110,23 @@ def shader(effect, opening):
             .replace("@SPIN@", f"{effect.spin:.6f}")
             .replace("@SWIRL@", f"{effect.swirl:.6f}")
             .replace("@DISPERSION@", f"{effect.dispersion:.6f}")
+            .replace("@RESIZE@", f"{effect.resize_strength:.6f}")
             .replace("@STAGGER@", f"{effect.stagger:.6f}")
             .replace("@ENTRY@", "open_color" if opening else "close_color")
             .replace("@PROGRESS@", "1.0 - niri_clamped_progress" if opening else "niri_clamped_progress"))
 
 
 def animation_types(effect):
-    return {
+    types = {
         name: {"duration-ms": duration, "curve": "linear", "custom-shader": shader(effect, opening)}
         for name, duration, opening in (("window-open", effect.open_ms, True),
                                         ("window-close", effect.close_ms, False))
     }
+
+    if effect.resize:
+        types["window-resize"] = {"duration-ms": effect.resize_ms, "curve": "linear",
+                                  "custom-shader": resize_shader(effect)}
+    return types
 
 
 def render_kdl(effect):
@@ -104,7 +141,7 @@ def render_kdl(effect):
 def preset_description(effect):
     density = f"~{effect.particles} pieces" if effect.particles else f"{effect.tile_size:g}px pieces"
     motion = f"{effect.gravity} {effect.gravity_strength:g}×, {effect.rotation} spin" if not effect.classic else f"{effect.scatter:g}px scatter"
-    return f"{density}, {motion}; {effect.open_ms}/{effect.close_ms}ms open/close."
+    return f"{density}, {motion}; {effect.open_ms}/{effect.close_ms}ms open/close." + (f" Resize {effect.resize_ms}ms." if effect.resize else "")
 
 
 def describe_presets():

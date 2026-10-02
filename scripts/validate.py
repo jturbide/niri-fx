@@ -9,7 +9,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from niri_fragments.effects import PRESETS, render_kdl, shader
+from niri_fragments.effects import PRESETS, render_kdl, shader, resize_shader, movement_shader
 
 HEADER = """#version 100
 precision highp float;
@@ -17,6 +17,12 @@ uniform sampler2D niri_tex;
 uniform mat3 niri_geo_to_tex;
 uniform float niri_clamped_progress;
 uniform float niri_random_seed;
+uniform vec2 niri_move_delta;
+uniform sampler2D niri_tex_prev;
+uniform sampler2D niri_tex_next;
+uniform mat3 niri_geo_to_tex_prev;
+uniform mat3 niri_geo_to_tex_next;
+uniform mat3 niri_curr_geo_to_next_geo;
 """
 
 
@@ -35,10 +41,10 @@ def main():
         root = Path(directory)
         for name, effect in PRESETS.items():
             if validator:
-                for opening in (True, False):
-                    entry = "open_color" if opening else "close_color"
+                for entry, source in (("open_color", shader(effect, True)), ("close_color", shader(effect, False)),
+                                      ("resize_color", resize_shader(effect)), ("move_color", movement_shader(effect))):
                     frag = root / f"{name}-{entry}.frag"
-                    frag.write_text(HEADER + shader(effect, opening) + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n")
+                    frag.write_text(HEADER + source + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n")
                     subprocess.run([validator, "-S", "frag", str(frag)], check=True)
             if niri:
                 config = root / f"{name}.kdl"
