@@ -1,6 +1,6 @@
 """Generate the same fragment effect for standalone Niri and shell presets."""
 
-from dataclasses import asdict, dataclass, replace
+from dataclasses import asdict, dataclass
 from importlib.resources import files
 import math
 
@@ -66,10 +66,6 @@ PRESETS = {
     "confetti": Effect(scatter=115, open_ms=650, close_ms=720, gravity="down", gravity_strength=0.85, particles=1600, spin=480, dispersion=1, stagger=0.3),
     "updraft": Effect(scatter=60, open_ms=600, close_ms=640, gravity="up", gravity_strength=0.9, particles=600, rotation="gravity", spin=180, swirl=-25, dispersion=0.8, stagger=0.24),
 }
-
-# Existing custom documents retain their previous resize settings unless opted in.
-PRESETS = {name: replace(effect, resize=True) for name, effect in PRESETS.items()}
-
 
 def shader_templates():
     root = files("niri_fragments").joinpath("shaders")

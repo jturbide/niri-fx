@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "niri-fragments"
-version = "0.4.0"
+version = "0.4.1"
 description = "Pixel deconstruction and reconstruction animations for Niri, with iNiR/iRiS presets."
 requires-python = ">=3.10"
 license = "MIT"

@@ -9,7 +9,7 @@ the effect; iNiR/iRiS provides the native preset picker.
 
 ![Gravity and rotation controls in Niri Fragments Studio](docs/studio.png)
 
-**Version 0.4 prototype.** Denser bursts, staggered release, varied flight speeds,
+**Version 0.4.1 prototype.** Denser bursts, staggered release, varied flight speeds,
 later dissolution, and softer edges replace the earlier preset tuning. Balanced
 now targets 720 pieces; Explosion uses 1,200 and Implosion 1,000.
 Studio opens as an app-style window, now includes a real resize shader preview,
@@ -69,7 +69,7 @@ a browser tab. Live controls include:
 - **Path dispersion:** 0–1; separates fragment speeds and curves their paths.
 - **Release stagger:** 0–0.4; varies when fragments separate and dissolve.
 - **Timing:** independent opening, closing and resizing durations, 100–1500 ms.
-- **Resize:** enable switch and breakup strength (0–1); bounded fragments
+- **Resize (off by default):** enable switch and breakup strength (0–1); bounded fragments
   reconstruct the window at its new size. Resize shares particle count, gravity
   direction and rotation; its strength is separate from open/close gravity.
 
@@ -136,9 +136,11 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 Requires an iNiR version with `NiriAnimationPresets` and external user presets.
 Registration reads the active recognized preset and copies its other animation
-settings. Built-in styles now replace open/close/resize. `--no-resize` on a named
-style or standalone export preserves the base resize behavior; old custom JSON
-documents without a `resize` field remain opted out. If active animations are custom and unrecognized, choose an
+settings. Built-in styles replace only open/close and preserve the base resize
+behavior. Resize fragments are opt-in: check **Fragment windows when resizing**
+in Studio, or pass `--resize` when rendering or saving a named style.
+`--no-resize` disables that override; custom JSON documents without a `resize`
+field remain opted out. If active animations are custom and unrecognized, choose an
 explicit `--base`, for example `--base bouncy`; the tool refuses to approximate
 unknown timings. iNiR applies a whole preset when selected, so each saved style
 captures its base settings at creation time. Later base edits are not inherited

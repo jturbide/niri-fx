@@ -52,9 +52,10 @@ Move/swap controls are intentionally confined to the concept preview. The
 installed Niri rejects `custom-shader` under `window-movement`; see
 [the isolated compositor prototype](../experimental/README.md).
 
-Version 0.4 adds optional stock-Niri resize shaders and Studio controls. Built-in
-styles enable resize; old custom parameter documents remain opted out. With
-resize disabled, the base preset's resize settings are copied. The experimental
+Version 0.4 adds stock-Niri resize shaders and Studio controls. Since 0.4.1,
+resize fragments are disabled by default for all built-in styles and Studio.
+Enable them explicitly in Studio or with `--resize`. Otherwise, the base preset's
+resize settings are copied. Existing named custom styles retain their saved choices. The experimental
 movement shader is never put in this registry or stock KDL exports. Its separately
 built nested demo is the only supplied native movement entry point.
 

@@ -32,7 +32,7 @@ The demo requires an existing Wayland desktop and Alacritty. It opens a separate
 Niri window with two colored synthetic clients. Click inside it, then use:
 
 - **Alt+Left / Alt+Right:** exchange adjacent columns.
-- **Alt+R:** change column width, exercising the resize shader.
+- **Alt+R:** change column width (fragment resize requires `--resize`).
 - **Alt+Q:** close the demo.
 
 For an optional app-launcher entry, run `python3 scripts/install-desktop.py --movement-demo`,
@@ -47,6 +47,8 @@ Logs and captures stay in a new `artifacts/nested-demo-*` directory each run.
 
 ```sh
 python3 scripts/nested-demo.py --preset vortex --duration-ms 1200
+# Opt into resize fragments as well:
+python3 scripts/nested-demo.py --resize
 # Optional automated native rendering check (also requires grim and Pillow):
 python3 scripts/nested-demo.py --smoke
 ```

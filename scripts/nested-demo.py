@@ -50,6 +50,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--preset", choices=PRESETS, default="explosion")
     parser.add_argument("--duration-ms", type=int, default=1100)
+    parser.add_argument("--resize", action="store_true", help="Opt into fragment resize effects in the demo")
     parser.add_argument("--smoke", action="store_true", help="Capture movement, resize and fallback, then exit; needs grim and Pillow")
     args = parser.parse_args()
     if not 100 <= args.duration_ms <= 3000:
@@ -72,7 +73,8 @@ def main():
         parser.error("The patch or binary changed; rebuild before launching the demo")
     root = Path(tempfile.mkdtemp(prefix="nested-demo-", dir=ROOT / "artifacts"))
     cfg = root / "config.kdl"
-    effect = replace(PRESETS[args.preset], resize_ms=900 if args.smoke else 550)
+    effect = replace(PRESETS[args.preset], resize=args.resize or args.smoke,
+                     resize_ms=900 if args.smoke else 550)
     source = movement_shader(effect)
     cfg.write_text(config(effect, args.duration_ms, source))
     subprocess.run([str(binary), "validate", "-c", str(cfg)], check=True)

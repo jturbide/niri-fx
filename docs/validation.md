@@ -1,5 +1,16 @@
 # Prototype validation
 
+## Version 0.4.1 — resize is opt-in
+
+- All 11 built-in presets and new Studio sessions now default to resize fragments
+  disabled. Named custom presets retain their explicit saved resize choices.
+- The active Earth style was refreshed with its base resize behavior after a
+  scoped backup. Its open/close and other animation settings were preserved.
+- 22 regression tests passed. All 44 shaders still compile; all 11 default
+  exports validate with installed Niri. Studio payloads contain resize disabled.
+- The nested demo also requires `--resize`; its explicit `--smoke` test opts in
+  to keep exercising the resize renderer.
+
 ## Version 0.4 — resize and isolated native movement
 
 Checked on 2026-10-02:

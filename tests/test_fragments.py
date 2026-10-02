@@ -24,9 +24,9 @@ class PresetTests(unittest.TestCase):
         original = deepcopy(registry)
         presets = make_presets(registry)
         for preset in presets:
-            for name in ("workspace-switch",):
+            for name in ("workspace-switch", "window-resize"):
                 self.assertEqual(preset["types"][name], original["presets"][0]["types"][name])
-            self.assertIn("resize_color", preset["types"]["window-resize"]["custom-shader"])
+            self.assertFalse(preset["effect"]["resize"])
             self.assertIn("open_color", preset["types"]["window-open"]["custom-shader"])
             self.assertIn("close_color", preset["types"]["window-close"]["custom-shader"])
         self.assertEqual(registry, original)
@@ -75,7 +75,7 @@ class PresetTests(unittest.TestCase):
         registry = shell_registry()
         builtins = make_presets(registry)
         first = make_custom_preset(registry, {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 300}})
-        second = make_custom_preset(registry, {"schema": 1, "name": "My Orbit", "effect": {"swirl": 180}})
+        second = make_custom_preset(registry, {"schema": 1, "name": "My Orbit", "effect": {"swirl": 180, "resize": True}})
         data = merge_registry({}, builtins)
         data = merge_registry(data, [first])
         data = merge_registry(data, [second])
@@ -154,7 +154,8 @@ class EffectTests(unittest.TestCase):
         for effect in PRESETS.values():
             kdl = render_kdl(effect)
             self.assertNotIn("@", kdl)
-            self.assertEqual(kdl.count('custom-shader r"'), 3)
+            self.assertEqual(kdl.count('custom-shader r"'), 2)
+            self.assertNotIn("window-resize", kdl)
             self.assertIn("1.0 - niri_clamped_progress", kdl)
 
     def test_movement_is_separate_from_stock_config(self):
@@ -163,10 +164,13 @@ class EffectTests(unittest.TestCase):
             self.assertIn("move_color", movement_shader(effect))
             self.assertNotIn("@", movement_shader(effect))
 
-    def test_disable_resize_preserves_open_close(self):
-        effect = selected_effect(parser().parse_args(["render", "--no-resize"]))
-        self.assertNotIn("window-resize", render_kdl(effect))
-        self.assertEqual(render_kdl(effect).count('custom-shader r"'), 2)
+    def test_resize_requires_explicit_opt_in(self):
+        for options in ([], ["--no-resize"]):
+            effect = selected_effect(parser().parse_args(["render", *options]))
+            self.assertNotIn("window-resize", render_kdl(effect))
+            self.assertEqual(render_kdl(effect).count('custom-shader r"'), 2)
+        enabled = selected_effect(parser().parse_args(["render", "--resize"]))
+        self.assertIn("resize_color", render_kdl(enabled))
 
     def test_fixed_tile_option_replaces_preset_target_count(self):
         args = parser().parse_args(["render", "--preset", "earth", "--tile-size", "40"])
