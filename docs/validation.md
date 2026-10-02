@@ -1,4 +1,33 @@
-# Initial prototype validation
+# Prototype validation
+
+## Version 0.2 — gravity and Studio
+
+Checked on 2026-10-02:
+
+- The user reported the original effect working well in Niri; Subtle was
+  active. All three original shader/timing pairs remain byte-for-byte equal
+  to their installed 0.1 presets.
+- 19 tests passed, including named preset preservation, parameter validation,
+  the real loopback save endpoint, and rejection of foreign-origin requests.
+- All 18 built-in open/close shaders compiled as GLSL ES 1.00; all nine KDL
+  outputs passed Niri 26.04 configuration validation.
+- All nine presets were applied and correctly recognized by the installed
+  iNiR helper in an isolated temporary configuration. Global off/slowdown
+  settings survived every application.
+- Browser rendering checked every preset's intact start, nonempty fragmented
+  midpoint and fully transparent end. Measured fragment positions confirmed
+  Earth moving downward, Updraft upward, and Black Hole contracting.
+- Browser-generated GLSL matched Python-generated GLSL for every built-in
+  preset. Extreme count, gravity, rotation and orbit controls rendered without
+  WebGL errors. The Save button wrote a named preset to an isolated registry.
+- The wheel installed and rendered KDL and the editor outside the checkout;
+  the desktop launcher passed `desktop-file-validate`.
+
+Browser checks use Chromium software WebGL. They do not establish real Niri
+GPU performance. Native visual acceptance of the new gravity modes, clipping
+at large displacements, scaling and application-specific behavior remains open.
+
+## Version 0.1 — original effect
 
 Checked on 2026-10-02:
 

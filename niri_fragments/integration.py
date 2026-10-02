@@ -1,16 +1,18 @@
 """iNiR's external preset registry; never edits or activates Niri settings."""
 
 from copy import deepcopy
+from dataclasses import asdict
 from datetime import datetime, timezone
 import fcntl
 import json
 import os
+import re
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 
-from .effects import PRESETS, animation_types, preset_description
+from .effects import Effect, PRESETS, animation_types, preset_description
 
 OWNER = "niri-fragments"
 
@@ -39,7 +41,7 @@ def read_shell_presets(inir_root):
     return registry
 
 
-def make_presets(shell_registry, base_id="auto"):
+def resolve_base(shell_registry, base_id="auto"):
     presets = {p["id"]: p for p in shell_registry["presets"] if isinstance(p, dict) and "id" in p}
     chosen = shell_registry.get("active", "") if base_id == "auto" else base_id
     if not chosen:
@@ -52,18 +54,45 @@ def make_presets(shell_registry, base_id="auto"):
         chosen = presets[chosen].get("base-preset", "")
     if chosen not in presets or not isinstance(presets[chosen].get("types"), dict) or not presets[chosen]["types"]:
         raise ValueError(f"Base preset {chosen!r} is unavailable; select another --base")
+    return chosen, presets[chosen]["types"]
+
+
+def make_preset(identifier, label, effect, chosen, base_types):
+    types = deepcopy(base_types)
+    types.update(animation_types(effect))
+    return {"id": identifier, "name": f"Fragments · {label}",
+            "description": preset_description(effect),
+            "keywords": ["fragments", "pixels", "gravity", "particles", "rotation", "reconstruct"],
+            "generator": OWNER, "schema-version": 2, "base-preset": chosen,
+            "effect": asdict(effect), "types": types}
+
+
+def make_presets(shell_registry, base_id="auto"):
+    chosen, base_types = resolve_base(shell_registry, base_id)
     generated = []
     for name, effect in PRESETS.items():
-        types = deepcopy(presets[chosen]["types"])
-        types.update(animation_types(effect))
-        generated.append({
-            "id": f"{OWNER}-{name}", "name": f"Fragments · {name.title()}",
-            "description": preset_description(effect),
-            "keywords": ["fragments", "pixels", "grid", "explode", "implode", "reconstruct"],
-            "generator": OWNER, "schema-version": 1, "base-preset": chosen,
-            "types": types,
-        })
+        generated.append(make_preset(f"{OWNER}-{name}", name.replace("-", " ").title(), effect, chosen, base_types))
     return generated
+
+
+def custom_document(data):
+    if not isinstance(data, dict) or data.get("schema") != 1 or not isinstance(data.get("effect"), dict):
+        raise ValueError("Custom preset must contain schema: 1, name, and an effect object")
+    name = data.get("name")
+    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,47}", name):
+        raise ValueError("Preset name must be 1–48 letters, numbers, spaces, hyphens or underscores")
+    slug = re.sub(r"[ _-]+", "-", name.lower()).rstrip("-")
+    try:
+        effect = Effect(**data["effect"])
+    except TypeError as error:
+        raise ValueError(f"Unsupported effect parameters: {error}") from error
+    return name, slug, effect
+
+
+def make_custom_preset(shell_registry, data, base_id="auto"):
+    name, slug, effect = custom_document(data)
+    chosen, base_types = resolve_base(shell_registry, base_id)
+    return make_preset(f"{OWNER}-custom-{slug}", name, effect, chosen, base_types)
 
 
 def merge_registry(data, generated, remove=False):
@@ -80,7 +109,10 @@ def merge_registry(data, generated, remove=False):
         if preset["id"] in generated_ids and preset.get("generator") != OWNER:
             raise ValueError(f"Preset ID {preset['id']} already belongs to another provider")
     result = deepcopy(data)
-    result["presets"] = [p for p in current if p.get("generator") != OWNER]
+    # Updating the built-in pack must preserve independently saved custom
+    # presets (and saving a custom preset must preserve the built-in pack).
+    result["presets"] = [p for p in current if not (
+        p.get("generator") == OWNER and (remove or p["id"] in generated_ids))]
     if not remove:
         result["presets"].extend(deepcopy(generated))
     if remove and result.get("default") in {p["id"] for p in current if p.get("generator") == OWNER}:

@@ -5,7 +5,8 @@ import tempfile
 import unittest
 
 from niri_fragments.effects import Effect, PRESETS, render_kdl
-from niri_fragments.integration import make_presets, merge_registry, update_registry
+from niri_fragments.integration import custom_document, make_custom_preset, make_presets, merge_registry, update_registry
+from niri_fragments.cli import parser, selected_effect
 
 
 def shell_registry():
@@ -34,7 +35,7 @@ class PresetTests(unittest.TestCase):
         registry["active"] = ""
         with self.assertRaisesRegex(ValueError, "custom"):
             make_presets(registry)
-        self.assertEqual(len(make_presets(registry, "example")), 3)
+        self.assertEqual(len(make_presets(registry, "example")), len(PRESETS))
 
     def test_reregistration_resolves_original_base(self):
         registry = shell_registry()
@@ -60,6 +61,29 @@ class PresetTests(unittest.TestCase):
         for data in ([], {"presets": {}}, {"presets": [None]}, {"presets": [{"id": "x"}, {"id": "x"}]}):
             with self.subTest(data=data), self.assertRaises(ValueError):
                 merge_registry(data, [])
+
+    def test_custom_presets_survive_pack_updates_and_each_other(self):
+        registry = shell_registry()
+        builtins = make_presets(registry)
+        first = make_custom_preset(registry, {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 300}})
+        second = make_custom_preset(registry, {"schema": 1, "name": "My Orbit", "effect": {"swirl": 180}})
+        data = merge_registry({}, builtins)
+        data = merge_registry(data, [first])
+        data = merge_registry(data, [second])
+        data = merge_registry(data, builtins)
+        self.assertEqual(len(data["presets"]), len(PRESETS) + 2)
+        self.assertIn(first, data["presets"])
+        self.assertIn(second, data["presets"])
+        self.assertEqual(merge_registry(data, [], remove=True)["presets"], [])
+
+    def test_custom_input_is_parameters_not_arbitrary_shader_code(self):
+        invalid = [[], {"schema": 1, "name": "Bad", "effect": {"shader": "arbitrary"}},
+                   {"schema": 1, "name": "../outside", "effect": {}},
+                   {"schema": 1, "name": "Bad", "effect": {"gravity": "typo"}},
+                   {"schema": 2, "name": "Future", "effect": {}}]
+        for data in invalid:
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                custom_document(data)
 
 
 class FileTests(unittest.TestCase):
@@ -93,7 +117,7 @@ class FileTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "missing" / "presets.json"
             result = update_registry(target, make_presets(shell_registry()), dry_run=True)
-            self.assertEqual(len(result["registry"]["presets"]), 3)
+            self.assertEqual(len(result["registry"]["presets"]), len(PRESETS))
             self.assertFalse(target.parent.exists())
 
     def test_symlink_target_updated_without_replacing_link(self):
@@ -104,13 +128,15 @@ class FileTests(unittest.TestCase):
             link.symlink_to(target.name)
             update_registry(link, make_presets(shell_registry()))
             self.assertTrue(link.is_symlink())
-            self.assertEqual(len(json.loads(target.read_text())["presets"]), 3)
+            self.assertEqual(len(json.loads(target.read_text())["presets"]), len(PRESETS))
 
 
 class EffectTests(unittest.TestCase):
     def test_invalid_values_rejected(self):
         for overrides in ({"tile_size": 0}, {"scatter": float("nan")}, {"scatter": float("inf")},
-                          {"open_ms": 2.5}, {"close_ms": 0}, {"tile_size": True}):
+                          {"open_ms": 2.5}, {"close_ms": 0}, {"tile_size": True},
+                          {"particles": 10}, {"particles": 100.5}, {"gravity_strength": -1},
+                          {"gravity": "bad"}, {"rotation": "bad"}, {"swirl": 400}, {"spin": float("nan")}):
             with self.subTest(overrides=overrides), self.assertRaises(ValueError):
                 Effect(**overrides)
 
@@ -120,6 +146,13 @@ class EffectTests(unittest.TestCase):
             self.assertNotIn("@", kdl)
             self.assertEqual(kdl.count('custom-shader r"'), 2)
             self.assertIn("1.0 - niri_clamped_progress", kdl)
+
+    def test_fixed_tile_option_replaces_preset_target_count(self):
+        args = parser().parse_args(["render", "--preset", "earth", "--tile-size", "40"])
+        effect = selected_effect(args)
+        self.assertEqual(effect.tile_size, 40)
+        self.assertEqual(effect.particles, 0)
+        self.assertEqual(effect.gravity, "down")
 
 
 if __name__ == "__main__":

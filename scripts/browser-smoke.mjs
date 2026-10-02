@@ -1,0 +1,64 @@
+// Run against an offline preview or an isolated studio --registry test path.
+// Requires Node 22+ and Chromium. Saves review images in the ignored artifacts/.
+import {spawn, execFileSync} from 'node:child_process';
+import {mkdtempSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync} from 'node:fs';
+import {tmpdir} from 'node:os';
+import {join, resolve} from 'node:path';
+import {createHash} from 'node:crypto';
+import assert from 'node:assert/strict';
+
+const url=process.argv[2];
+if(!url)throw new Error('Usage: node scripts/browser-smoke.mjs PREVIEW_URL [--save-test]');
+const profile=mkdtempSync(join(tmpdir(),'niri-fragments-browser-'));
+const browser=spawn('chromium',['--headless=new','--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+let ws;
+try{
+ for(let i=0;i<100&&!existsSync(join(profile,'DevToolsActivePort'));i++)await sleep(100);
+ const port=readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0];
+ const tabs=await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
+ ws=new WebSocket(tabs.find(tab=>tab.type==='page').webSocketDebuggerUrl);
+ await new Promise((resolve,reject)=>{ws.onopen=resolve;ws.onerror=reject;});
+ let sequence=0;const pending=new Map();
+ ws.onmessage=event=>{const message=JSON.parse(event.data);const p=pending.get(message.id);if(p){pending.delete(message.id);message.error?p.reject(new Error(JSON.stringify(message.error))):p.resolve(message.result);}};
+ const rpc=(method,params={})=>new Promise((resolve,reject)=>{const id=++sequence;pending.set(id,{resolve,reject});ws.send(JSON.stringify({id,method,params}));});
+ const evaluate=async expression=>{const r=await rpc('Runtime.evaluate',{expression,returnByValue:true,awaitPromise:true});if(r.exceptionDetails)throw new Error(JSON.stringify(r.exceptionDetails));return r.result.value;};
+ await rpc('Emulation.setDeviceMetricsOverride',{width:1380,height:1120,deviceScaleFactor:1,mobile:false});
+ await rpc('Page.navigate',{url});
+ for(let i=0;i<100;i++){if(await evaluate('document.documentElement.dataset.shaderStatus'))break;await sleep(100);}
+ assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
+ const expected=JSON.parse(execFileSync('python3',['-c','import hashlib,json;from niri_fragments.effects import PRESETS,shader;print(json.dumps({k:hashlib.sha256(shader(v,False).encode()).hexdigest() for k,v in PRESETS.items()}))'],{encoding:'utf8'}));
+ const sample=()=>evaluate(`(()=>{const canvas=byId('stage'),gl=canvas.getContext('webgl');const pixels=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);let alpha=0,x=0,y=0,occupied=0;for(let i=0;i<pixels.length;i+=4){const a=pixels[i+3];if(a){const px=(i/4)%canvas.width,py=canvas.height-1-Math.floor(i/4/canvas.width);alpha+=a;x+=px*a;y+=py*a;occupied++;}}return {occupied,alpha,cx:alpha?x/alpha:0,cy:alpha?y/alpha:0,error:gl.getError()};})()`);
+ const setProgress=async value=>{await evaluate(`byId('progress').value=${Math.round(value*1000)};byId('progress').dispatchEvent(new Event('input'))`);};
+ const results={};mkdirSync('artifacts',{recursive:true});
+ for(const name of Object.keys(expected)){
+  await evaluate(`byId('preset').value=${JSON.stringify(name)};byId('preset').dispatchEvent(new Event('change'))`);
+  assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready',name);
+  assert.equal(createHash('sha256').update(await evaluate('shaderFor(parameters,false)')).digest('hex'),expected[name],name+' export matches Python');
+  await setProgress(0);const start=await sample();assert.equal(start.occupied,600*380,name+' reconstructs all pixels');
+  await setProgress(.45);const middle=await sample();assert(middle.occupied>0&&middle.occupied<start.occupied,name+' intermediate fragments');assert.equal(middle.error,0);
+  if(['earth','black-hole','vortex','space'].includes(name)){
+   const capture=await rpc('Page.captureScreenshot',{format:'png'});writeFileSync(resolve('artifacts',name+'.png'),Buffer.from(capture.data,'base64'));
+  }
+  await setProgress(1);const end=await sample();assert.equal(end.occupied,0,name+' disappears completely');
+  results[name]={start,middle,end};
+ }
+ assert(results.earth.middle.cy>results.balanced.middle.cy+25,'Earth moves downward');
+ assert(results.updraft.middle.cy<results.balanced.middle.cy-20,'Updraft moves upward');
+ assert(results['black-hole'].middle.occupied<results.balanced.middle.occupied/2,'Black hole contracts');
+ // Check extreme controls through the real UI, then save only if explicitly requested.
+ await evaluate("byId('preset').value='vortex';byId('preset').dispatchEvent(new Event('change'))");
+ for(const [id,value] of Object.entries({particles:4096,gravity_strength:3,spin:720,swirl:360}))
+  await evaluate(`byId(${JSON.stringify(id)}).value=${JSON.stringify(value)};byId(${JSON.stringify(id)}).dispatchEvent(new Event('input'))`);
+ await setProgress(.5);assert.equal((await sample()).error,0);assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
+ if(process.argv.includes('--save-test')){
+  await evaluate("byId('name').value='Browser Smoke Test';byId('save').click()");
+  for(let i=0;i<100;i++){if(await evaluate("!byId('save').disabled"))break;await sleep(100);}
+  assert.equal(await evaluate("byId('error').textContent"),'');assert.match(await evaluate("byId('status').textContent"),/^Saved Fragments/);
+ }
+ writeFileSync('artifacts/browser-checks.json',JSON.stringify(results,null,2)+'\n');
+ console.log('PASS: nine GPU-rendered presets, exact endpoints, motion, shader parity, extreme controls'+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
+}finally{
+ ws?.close();browser.kill('SIGTERM');await new Promise(resolve=>browser.once('exit',resolve));
+ rmSync(profile,{recursive:true,force:true});
+}

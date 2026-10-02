@@ -1,16 +1,41 @@
 """Dependency-free command line interface."""
 
 import argparse
-from dataclasses import replace
-from importlib.resources import files
+from dataclasses import asdict, replace
 import json
 from pathlib import Path
 import subprocess
 import sys
 
 from . import __version__
-from .effects import PRESETS, describe_presets, render_kdl, shader
-from .integration import default_inir_root, default_registry, make_presets, read_shell_presets, update_registry
+from .effects import GRAVITIES, ROTATIONS, PRESETS, describe_presets, render_kdl
+from .integration import default_inir_root, default_registry, make_presets, make_custom_preset, read_shell_presets, update_registry
+
+
+EFFECT_FIELDS = ("tile_size", "scatter", "open_ms", "close_ms", "gravity",
+                 "gravity_strength", "particles", "rotation", "spin", "swirl")
+
+
+def effect_options(command):
+    command.add_argument("--preset", choices=PRESETS, default="balanced")
+    density = command.add_mutually_exclusive_group()
+    density.add_argument("--tile-size", type=float, help="Square size in logical pixels (8–128); disables target count")
+    density.add_argument("--particles", type=int, help="Approximate particle count (16–4096), or 0 for tile-size mode")
+    command.add_argument("--scatter", type=float, help="Radial scatter in logical pixels (0–240)")
+    command.add_argument("--gravity", choices=GRAVITIES)
+    command.add_argument("--gravity-strength", type=float, help="Gravity multiplier (0–3)")
+    command.add_argument("--rotation", choices=ROTATIONS, help="No spin, random spin, or face the direction of travel")
+    command.add_argument("--spin", type=float, help="Random spin range or alignment limit in degrees (0–720)")
+    command.add_argument("--swirl", type=float, help="Orbit around the window center in degrees (-360–360)")
+    command.add_argument("--open-ms", type=int)
+    command.add_argument("--close-ms", type=int)
+
+
+def selected_effect(arguments):
+    overrides = {k: getattr(arguments, k) for k in EFFECT_FIELDS if getattr(arguments, k, None) is not None}
+    if overrides.get("tile_size") is not None:
+        overrides["particles"] = 0
+    return replace(PRESETS[arguments.preset], **overrides)
 
 
 def parser():
@@ -19,21 +44,27 @@ def parser():
     commands = root.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="Print built-in effect parameters as JSON")
     for name, help_text in (("render", "Print a standalone Niri KDL animation override"),
-                            ("preview", "Write a self-contained WebGL preview; does not touch Niri")):
+                            ("preview", "Write a self-contained interactive editor; no desktop changes")):
         command = commands.add_parser(name, help=help_text)
-        command.add_argument("--preset", choices=PRESETS, default="balanced")
-        command.add_argument("--tile-size", type=float, help="Square size in logical pixels (8–128)")
-        command.add_argument("--scatter", type=float, help="Radial scatter in logical pixels (0–240)")
-        command.add_argument("--open-ms", type=int)
-        command.add_argument("--close-ms", type=int)
+        effect_options(command)
         if name == "preview":
             command.add_argument("--output", type=Path, required=True)
-    register = commands.add_parser("register", help="Add presets to iNiR/iRiS settings without activating them")
-    register.add_argument("--inir-root", type=Path, default=default_inir_root())
-    register.add_argument("--base", default="auto", help="Base movement preset; defaults to the active recognized preset")
-    unregister = commands.add_parser("unregister", help="Remove only niri-fragments entries from the user preset registry")
-    for command in (register, unregister):
+    register = commands.add_parser("register", help="Add built-in or custom presets without activating them")
+    effect_options(register)
+    custom = register.add_mutually_exclusive_group()
+    custom.add_argument("--name", help="Save these parameters as a named custom preset")
+    custom.add_argument("--custom", type=Path, help="Import a preset JSON file exported from the editor")
+    unregister = commands.add_parser("unregister", help="Remove niri-fragments entries from the user preset registry")
+    studio = commands.add_parser("studio", help="Open the local editor with Save to iRiS support")
+    effect_options(studio)
+    studio.add_argument("--no-browser", action="store_true")
+    studio.add_argument("--port", type=int, default=0, help="Loopback port; default chooses an available port")
+    for command in (register, studio):
+        command.add_argument("--inir-root", type=Path, default=default_inir_root())
+        command.add_argument("--base", default="auto", help="Base movement preset; defaults to the active recognized preset")
+    for command in (register, unregister, studio):
         command.add_argument("--registry", type=Path, default=default_registry())
+    for command in (register, unregister):
         command.add_argument("--dry-run", action="store_true", help="Print the proposed registry; write nothing")
     return root
 
@@ -43,23 +74,34 @@ def main(argv=None):
     try:
         if arguments.command == "list":
             print(json.dumps(describe_presets(), indent=2))
-        elif arguments.command in ("render", "preview"):
-            overrides = {k: getattr(arguments, k) for k in ("tile_size", "scatter", "open_ms", "close_ms")
-                         if getattr(arguments, k) is not None}
-            effect = replace(PRESETS[arguments.preset], **overrides)
+        elif arguments.command in ("render", "preview", "studio"):
+            effect = selected_effect(arguments)
             if arguments.command == "render":
                 print(render_kdl(effect), end="")
-            else:
-                document = files("niri_fragments").joinpath("preview.html").read_text()
-                payload = {"shader": shader(effect, False), "openMs": effect.open_ms,
-                           "closeMs": effect.close_ms, "name": arguments.preset}
-                document = document.replace("@EFFECT_JSON@", json.dumps(payload).replace("</", "<\\/"))
-                # Exclusive creation protects an existing preview or unrelated file.
+            elif arguments.command == "preview":
+                from .studio import preview_document
                 with arguments.output.open("x") as output:
-                    output.write(document)
+                    output.write(preview_document(effect, arguments.preset))
                 print(arguments.output.resolve())
+            else:
+                from .studio import serve
+                serve(arguments, effect)
         else:
-            generated = make_presets(read_shell_presets(arguments.inir_root), arguments.base) if arguments.command == "register" else []
+            generated = []
+            if arguments.command == "register":
+                registry = read_shell_presets(arguments.inir_root)
+                if arguments.custom:
+                    if arguments.preset != "balanced" or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS):
+                        raise ValueError("--custom uses the file's parameters; do not combine it with effect overrides")
+                    document = json.loads(arguments.custom.read_text())
+                    generated = [make_custom_preset(registry, document, arguments.base)]
+                elif arguments.name:
+                    document = {"schema": 1, "name": arguments.name, "effect": asdict(selected_effect(arguments))}
+                    generated = [make_custom_preset(registry, document, arguments.base)]
+                else:
+                    if arguments.preset != "balanced" or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS):
+                        raise ValueError("Add --name to save customized parameters, or omit overrides to register the built-in pack")
+                    generated = make_presets(registry, arguments.base)
             result = update_registry(arguments.registry, generated,
                                      remove=arguments.command == "unregister", dry_run=arguments.dry_run)
             print(json.dumps(result, indent=2, ensure_ascii=False))

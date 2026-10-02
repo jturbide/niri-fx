@@ -4,6 +4,9 @@ from dataclasses import asdict, dataclass
 from importlib.resources import files
 import math
 
+GRAVITIES = ("none", "down", "up", "left", "right", "center", "space")
+ROTATIONS = ("none", "random", "gravity")
+
 
 @dataclass(frozen=True)
 class Effect:
@@ -11,28 +14,64 @@ class Effect:
     scatter: float = 90
     open_ms: int = 420
     close_ms: int = 320
+    gravity: str = "none"
+    gravity_strength: float = 1.0
+    particles: int = 0
+    rotation: str = "none"
+    spin: float = 180
+    swirl: float = 0
 
     def __post_init__(self):
         for name, low, high in (("tile_size", 8, 128), ("scatter", 0, 240),
-                                ("open_ms", 100, 1500), ("close_ms", 100, 1500)):
+                                ("open_ms", 100, 1500), ("close_ms", 100, 1500),
+                                ("gravity_strength", 0, 3), ("particles", 0, 4096),
+                                ("spin", 0, 720), ("swirl", -360, 360)):
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"{name} must be a finite number between {low} and {high}")
-            if name.endswith("_ms") and int(value) != value:
+            if (name.endswith("_ms") or name == "particles") and int(value) != value:
                 raise ValueError(f"{name} must be a whole number")
+        if self.particles and self.particles < 16:
+            raise ValueError("particles must be 0 (tile size mode) or between 16 and 4096")
+        if self.gravity not in GRAVITIES:
+            raise ValueError(f"gravity must be one of {', '.join(GRAVITIES)}")
+        if self.rotation not in ROTATIONS:
+            raise ValueError(f"rotation must be one of {', '.join(ROTATIONS)}")
+
+    @property
+    def classic(self):
+        return self.gravity == "none" and not self.particles and self.rotation == "none" and self.swirl == 0
 
 
 PRESETS = {
     "subtle": Effect(24, 45, 320, 240),
     "balanced": Effect(),
     "dramatic": Effect(36, 160, 550, 420),
+    "earth": Effect(scatter=35, open_ms=550, close_ms=650, gravity="down", particles=220, rotation="random", spin=220),
+    "black-hole": Effect(scatter=0, open_ms=650, close_ms=600, gravity="center", gravity_strength=1.3, particles=320, rotation="gravity", spin=180),
+    "space": Effect(scatter=60, open_ms=600, close_ms=650, gravity="space", gravity_strength=1.1, particles=180, rotation="random", spin=260),
+    "vortex": Effect(scatter=20, open_ms=700, close_ms=700, gravity="center", gravity_strength=1.2, particles=260, rotation="gravity", spin=240, swirl=160),
+    "confetti": Effect(scatter=100, open_ms=600, close_ms=700, gravity="down", gravity_strength=0.8, particles=700, rotation="random", spin=540),
+    "updraft": Effect(scatter=40, open_ms=550, close_ms=600, gravity="up", gravity_strength=0.9, particles=240, rotation="gravity", spin=180, swirl=-20),
 }
 
 
+def shader_templates():
+    root = files("niri_fragments").joinpath("shaders")
+    return {"classic": root.joinpath("fragments.glsl").read_text(),
+            "gravity": root.joinpath("gravity.glsl").read_text()}
+
+
 def shader(effect, opening):
-    template = files("niri_fragments").joinpath("shaders/fragments.glsl").read_text()
+    template = shader_templates()["classic" if effect.classic else "gravity"]
     return (template.replace("@TILE@", f"{effect.tile_size:.6f}")
             .replace("@SCATTER@", f"{effect.scatter:.6f}")
+            .replace("@PARTICLES@", f"{effect.particles:.6f}")
+            .replace("@GRAVITY@", str(GRAVITIES.index(effect.gravity)))
+            .replace("@STRENGTH@", f"{effect.gravity_strength:.6f}")
+            .replace("@ROTATION@", str(ROTATIONS.index(effect.rotation)))
+            .replace("@SPIN@", f"{effect.spin:.6f}")
+            .replace("@SWIRL@", f"{effect.swirl:.6f}")
             .replace("@ENTRY@", "open_color" if opening else "close_color")
             .replace("@PROGRESS@", "1.0 - niri_clamped_progress" if opening else "niri_clamped_progress"))
 
@@ -55,7 +94,9 @@ def render_kdl(effect):
 
 
 def preset_description(effect):
-    return f"{effect.tile_size:g}px pieces, {effect.scatter:g}px scatter; {effect.open_ms}/{effect.close_ms}ms open/close."
+    density = f"~{effect.particles} pieces" if effect.particles else f"{effect.tile_size:g}px pieces"
+    motion = f"{effect.gravity} {effect.gravity_strength:g}×, {effect.rotation} spin" if not effect.classic else f"{effect.scatter:g}px scatter"
+    return f"{density}, {motion}; {effect.open_ms}/{effect.close_ms}ms open/close."
 
 
 def describe_presets():
