@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Niri Fragments — shader preview</title>
+<style>
+  :root { color-scheme: dark; font: 16px system-ui,sans-serif; background:#10151e; color:#e8ecf4 }
+  body { max-width:1000px; margin:40px auto; padding:0 20px }
+  h1 { font-size:28px; font-weight:600; letter-spacing:-.6px; margin-bottom:8px }
+  p { color:#b7c3d7; line-height:1.6 }
+  canvas { width:100%; height:auto; display:block; background:radial-gradient(ellipse at center,#263646,#151d29); border-radius:16px; border:1px solid #334155 }
+  .controls { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin:20px 0 }
+  button { font:inherit; padding:10px 18px; background:#254457; color:#d9f4ff; border:1px solid #3b657c; border-radius:8px; cursor:pointer }
+  button:hover { background:#345b70 }
+  label { display:flex; align-items:center; gap:12px; flex:1; min-width:240px }
+  input { flex:1; accent-color:#8ed8d0 }
+  #error { color:#ffb4ab; white-space:pre-wrap }
+  small { color:#98a6bb }
+</style>
+<h1>Niri Fragments</h1>
+<p>Pieces of a window scatter outward and gather back into place.</p>
+<canvas id="stage" width="1000" height="680" aria-label="Interactive demonstration of the window fragment shader"></canvas>
+<div class="controls">
+  <button id="open">Reconstruct</button>
+  <button id="close">Deconstruct</button>
+  <label>Breakup <input id="progress" type="range" min="0" max="1000" value="0"><output id="amount">0%</output></label>
+</div>
+<p id="caption"></p>
+<small>This preview uses the effect's actual GLSL with a sample window. Niri output clipping, scaling, decorations and GPU performance still require compositor testing.</small>
+<pre id="error" role="alert"></pre>
+<script>
+const effect = @EFFECT_JSON@;
+try {
+  const canvas = document.getElementById('stage');
+  const gl = canvas.getContext('webgl', {alpha:true, premultipliedAlpha:true, preserveDrawingBuffer:true});
+  if (!gl) throw new Error('WebGL is unavailable. Try a browser with hardware acceleration enabled.');
+  const vertex = 'attribute vec2 position; varying vec2 uv; void main(){ uv=(position+1.0)*0.5; gl_Position=vec4(position,0.0,1.0); }';
+  const fragment = `precision highp float;
+    varying vec2 uv;
+    uniform sampler2D niri_tex;
+    uniform mat3 niri_geo_to_tex;
+    uniform float niri_clamped_progress;
+    uniform float niri_random_seed;
+    ${effect.shader}
+    void main(){
+      vec2 pixel=vec2(uv.x,1.0-uv.y)*vec2(1000.0,680.0);
+      gl_FragColor=close_color(vec3((pixel-vec2(200.0,150.0))/vec2(600.0,380.0),1.0),vec3(600.0,380.0,1.0));
+    }`;
+  function compile(type, source) {
+    const s=gl.createShader(type); gl.shaderSource(s,source); gl.compileShader(s);
+    if (!gl.getShaderParameter(s,gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  }
+  const program=gl.createProgram();
+  gl.attachShader(program,compile(gl.VERTEX_SHADER,vertex));
+  gl.attachShader(program,compile(gl.FRAGMENT_SHADER,fragment)); gl.linkProgram(program);
+  if (!gl.getProgramParameter(program,gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(program));
+  gl.useProgram(program);
+  const buffer=gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER,buffer);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,-1,1,1,-1,1,1]),gl.STATIC_DRAW);
+  const position=gl.getAttribLocation(program,'position'); gl.enableVertexAttribArray(position); gl.vertexAttribPointer(position,2,gl.FLOAT,false,0,0);
+  const sample=document.createElement('canvas'); sample.width=600; sample.height=380;
+  const ctx=sample.getContext('2d');
+  ctx.fillStyle='#202c3b'; ctx.fillRect(0,0,600,380);
+  ctx.fillStyle='#2d3d50'; ctx.fillRect(0,0,600,44);
+  ['#f09494','#ead089','#98d4b1'].forEach((c,i)=>{ctx.fillStyle=c;ctx.beginPath();ctx.arc(22+i*23,22,5,0,Math.PI*2);ctx.fill();});
+  ctx.fillStyle='#d7e6f5';ctx.font='14px sans-serif';ctx.fillText('Fragments / workspace',210,27);
+  ctx.fillStyle='#a5e8dd';ctx.font='bold 30px sans-serif';ctx.fillText('Everything in its place.',32,104);
+  ctx.fillStyle='#9eb0c7';ctx.font='16px sans-serif';ctx.fillText('A window, taken apart. A window, put together.',32,138);
+  for(let i=0;i<3;i++){ctx.fillStyle=['#345b70','#4c4f75','#416755'][i];ctx.fillRect(32+i*182,175,170,112);ctx.fillStyle='#d8e8f5';ctx.font='20px sans-serif';ctx.fillText(['Create','Arrange','Explore'][i],48+i*182,212);}
+  ctx.fillStyle='#627991';for(let i=0;i<3;i++)ctx.fillRect(32,315+i*14,400-i*60,5);
+  const texture=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,texture);
+  gl.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL,true);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,gl.RGBA,gl.UNSIGNED_BYTE,sample);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  gl.uniform1i(gl.getUniformLocation(program,'niri_tex'),0);
+  gl.uniformMatrix3fv(gl.getUniformLocation(program,'niri_geo_to_tex'),false,new Float32Array([1,0,0,0,1,0,0,0,1]));
+  gl.uniform1f(gl.getUniformLocation(program,'niri_random_seed'),0.37);
+  const progress=gl.getUniformLocation(program,'niri_clamped_progress');
+  const slider=document.getElementById('progress'); const amount=document.getElementById('amount');
+  let frame=0;
+  function draw(value){gl.uniform1f(progress,value);gl.drawArrays(gl.TRIANGLES,0,6);slider.value=Math.round(value*1000);amount.textContent=Math.round(value*100)+'%';}
+  function animate(opening){cancelAnimationFrame(frame);const start=performance.now();const duration=opening?effect.openMs:effect.closeMs;
+    function tick(now){const p=Math.min(1,(now-start)/duration);draw(opening?1-p:p);if(p<1)frame=requestAnimationFrame(tick);}
+    frame=requestAnimationFrame(tick);
+  }
+  document.getElementById('open').onclick=()=>animate(true);
+  document.getElementById('close').onclick=()=>animate(false);
+  slider.oninput=()=>{cancelAnimationFrame(frame);draw(Number(slider.value)/1000);};
+  document.getElementById('caption').textContent=effect.name+' · '+effect.openMs+' ms opening · '+effect.closeMs+' ms closing';
+  // A deterministic frame URL supports review captures without autoplay.
+  const requested=Number(new URLSearchParams(location.search).get('breakup')||0);
+  draw(Math.max(0,Math.min(1,Number.isFinite(requested)?requested:0)));
+  document.documentElement.dataset.shaderStatus='ready';
+} catch(error) {
+  document.getElementById('error').textContent=error.message;
+  document.documentElement.dataset.shaderStatus='error';
+}
+</script>
+</html>
