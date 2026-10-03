@@ -9,6 +9,21 @@ from .documents import effect_document
 from .presets import PRESETS
 from .profiles import Profile
 
+# Editorial starting points, not another preset registry or parameter source.
+# All IDs refer to the same immutable styles used by Studio and shell pickers.
+RECOMMENDED = {
+    "balanced": "Everyday textured fragments",
+    "explosion": "A dense outward burst",
+    "implosion": "Pieces collapse toward the center",
+    "alternating-blinds": "Strips slide in alternating directions",
+    "spring-wobble": "A springy whole-window wobble",
+    "frost-vanish": "A frosted dissolve",
+    "pixel-wipe": "A progressive pixel reveal",
+    "ghost-wisps": "Soft drifting wisps",
+    "shockwave": "An expanding distortion wave",
+}
+
+
 # Opening style, closing style, and the visible intent of the pairing.
 PROFILE_RECIPES = {
     "fragment-flow": ("balanced", "implosion", "Textured assembly, then an inward collapse"),

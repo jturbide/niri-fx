@@ -1,0 +1,54 @@
+name: Compatibility report
+description: Tell us how NiriFX works on your GPU, displays and shell.
+title: "Compatibility: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Both working setups and reproducible problems help. Use Bug report for a specific defect.
+        Summarize your setup manually. Do not attach complete personal configs, environment dumps or private desktop captures.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions and setup
+      description: NiriFX version/commit, niri --version, Linux distribution, and shell if any.
+    validations:
+      required: true
+  - type: input
+    id: hardware
+    attributes:
+      label: GPU and driver
+      placeholder: GPU model and driver version
+    validations:
+      required: true
+  - type: input
+    id: displays
+    attributes:
+      label: Displays
+      description: Resolution, refresh rate, scale, and whether you use more than one output.
+    validations:
+      required: true
+  - type: textarea
+    id: tested
+    attributes:
+      label: What did you try?
+      description: Name the presets/profiles, apps and actions. State whether resize was enabled or the experimental compositor was used.
+    validations:
+      required: true
+  - type: dropdown
+    id: result
+    attributes:
+      label: Result
+      options:
+        - Works well in the tested cases
+        - Works with limitations
+        - Could not get it working
+    validations:
+      required: true
+  - type: textarea
+    id: observations
+    attributes:
+      label: Observations
+      description: Describe what you saw and how to reproduce it. If reporting timings, include the measurement method; subjective smoothness is useful too.
+    validations:
+      required: true

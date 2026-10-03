@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from niri_fx.catalog import PROFILES
+from niri_fx.catalog import PROFILES, RECOMMENDED
 from niri_fx.documents import MAX_DOCUMENT_BYTES, effect_document, load_document, parse_document
 from niri_fx.effects import FAMILIES, PRESETS, Effect
 from niri_fx.profiles import Profile
@@ -99,6 +99,12 @@ def entries():
                 kind = "concept"
             elif stem.startswith("workflow-"):
                 kind = "workflow"
+            starter = (
+                RECOMMENDED.get(stem.removeprefix("preset-"), "")
+                if stem.startswith("preset-")
+                else ""
+            )
+            pairing = stem.startswith("profile-") and stem.removeprefix("profile-") in PROFILES
             clips.append(
                 {
                     "id": stem,
@@ -108,6 +114,8 @@ def entries():
                     "kind": kind,
                     "action": action,
                     "settings": settings(clip, stem),
+                    "starter": starter,
+                    "pairing": pairing,
                 }
             )
     # Fragments first, then other effect families; workflows stay discoverable.
@@ -116,6 +124,10 @@ def entries():
         clips,
         key=lambda c: (
             min((order.index(f) for f in c["families"]), default=len(order)),
+            not bool(c["starter"]),
+            list(RECOMMENDED).index(c["id"].removeprefix("preset-"))
+            if c["starter"]
+            else len(RECOMMENDED),
             not c["id"].startswith("preset-"),
             c["title"],
         ),
@@ -151,24 +163,37 @@ def document(clips):
             controls.append(
                 f'''<div class="style-links">{label}<a href="{variant["url"]}" data-studio>{try_label}</a><a href="presets/{variant["filename"]}" download="{variant["filename"]}">Download JSON</a><button type="button" data-command="{html.escape(variant["command"], quote=True)}">Copy local command</button></div>'''
             )
-        cards.append(f'''<article data-families="{families}" data-kind="{clip["kind"]}" data-action="{clip["action"]}" data-search="{title.lower()} {families}">
+        collections = "starter" if clip["starter"] else "profiles" if clip["pairing"] else ""
+        recommendation = (
+            f'<p class="starter-note">{html.escape(clip["starter"])}</p>' if clip["starter"] else ""
+        )
+        cards.append(f'''<article data-collection="{collections}" data-families="{families}" data-kind="{clip["kind"]}" data-action="{clip["action"]}" data-search="{title.lower()} {families}">
 <img id="{name}" src="{poster_url}" data-poster="{poster_url}" data-animation="{animation_url}" alt="{title}" loading="lazy" width="400" height="280">
-<div class="card-body"><h2>{title}</h2><p>{html.escape(labels)} · {clip["kind"]}</p>
+<div class="card-body"><h2>{title}</h2>{recommendation}<p>{html.escape(labels)} · {clip["kind"]}</p>
 <button type="button" data-play="{name}" aria-controls="{name}" aria-pressed="false">Play</button> <a href="{animation_url}">Open GIF</a> <a href="#{name}" aria-label="Link to {title}">Link</a>{"".join(controls)}</div></article>''')
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Explore NiriFX window animations: fragments, slices, wobble, hexagons, ink, pixels and more. Search the gallery and play one example at a time.">
 <title>NiriFX · Effect gallery</title><link rel="stylesheet" href="gallery.css"><script src="gallery.js" defer></script></head>
-<body><header><a class="brand" href="https://github.com/jturbide/niri-fx">NiriFX</a><nav><a href="{STUDIO}">Open Studio</a> · <a href="https://github.com/jturbide/niri-fx#quick-start">Get started</a></nav></header>
-<main><p class="eyebrow">WINDOWS IN MOTION</p><h1>Find your next effect.</h1><p class="intro">Fragments, ribbons, springs and quiet ripples. Search {len(clips)} examples and play one at a time. Every preview starts paused.</p>
-<p class="legend">Shader previews use synthetic content in Studio. Stock clips run in Niri; experimental clips require the patched compositor. Concepts are simulations. Resize is always opt-in.</p>
+<body><header><a class="brand" href="https://github.com/jturbide/niri-fx">NiriFX</a><nav><a href="{STUDIO}">Open Studio</a> · <a href="#use-on-niri">Use on Niri</a></nav></header>
+<main><p class="eyebrow">WINDOWS IN MOTION</p><h1>Find your next effect.</h1><p class="intro">Preview a finished look, then use it on Niri.</p>
+<p class="legend">Stock Niri open/close. Resize is opt-in; movement needs the experimental build.</p>
+<div class="collections" role="group" aria-label="Browse collections"><button type="button" data-collection="starter">Start here ({len(RECOMMENDED)})</button><button type="button" data-collection="profiles">Open/close pairings ({len(PROFILES)})</button><button type="button" data-collection="all">All {len(clips)} examples</button></div>
 <form role="search" onsubmit="return false"><label>Search<input type="search" id="search" placeholder="Try explosion, resize, ink…"></label>
-<label>Family<select id="family"><option value="">All families</option>{options}</select></label>
+<input type="hidden" id="collection" value="starter">
+<details class="filters"><summary>Filter by family, scenario or renderer</summary><div class="filter-options"><label>Family<select id="family"><option value="">All families</option>{options}</select></label>
 <label>Scenario<select id="action"><option value="">All scenarios</option><option value="effect">Open / close</option><option value="resize">Resize</option><option value="swap">Swap</option><option value="interruption">Interruption</option><option value="workflow">Workflow</option><option value="move">Move concept</option></select></label>
-<label>Renderer<select id="kind"><option value="">All renderers</option><option value="shader">Studio shader</option><option value="stock">Stock Niri</option><option value="experimental">Experimental Niri</option><option value="workflow">Workflow</option><option value="concept">Concept</option></select></label></form>
-<p id="count" role="status" aria-live="polite">{len(clips)} examples</p><button id="pause-all" type="button">Pause playback</button> <button id="share-view" type="button">Share this view</button>
+<label>Renderer<select id="kind"><option value="">All renderers</option><option value="shader">Studio shader</option><option value="stock">Stock Niri</option><option value="experimental">Experimental Niri</option><option value="workflow">Workflow</option><option value="concept">Concept</option></select></label></div></details></form>
+<p id="count" role="status" aria-live="polite">{len(clips)} examples</p><button id="pause-all" type="button" hidden>Pause playback</button> <button id="share-view" type="button">Share this view</button>
 <div id="copy-result" hidden><label id="copy-label" for="copy-text">Copy</label><input id="copy-text" readonly><p id="copy-note" role="status"></p></div>
-<section id="gallery" aria-label="Animation examples">{"".join(cards)}</section><p id="empty" hidden>No examples match. Try a different search or filter.</p>
+<section id="gallery" aria-label="Animation examples">{"".join(cards)}</section><p id="empty" hidden>No examples match. <button type="button" data-collection="all">Show all examples</button></p>
+<p class="legend">Shader previews use synthetic content in Studio. Stock clips run in Niri; experimental clips require the patched compositor. Concepts are simulations.</p>
+<section id="use-on-niri" class="getting-started" aria-labelledby="use-heading"><h2 id="use-heading">Found a look you like?</h2>
+<p>Previewing does not change your desktop. Opening, closing and optional resize work on stock Niri. Choose the setup you already use:</p>
+<div class="setup-links"><a href="https://github.com/jturbide/niri-fx/blob/main/docs/standalone.md">Plain Niri or Waybar</a><a href="https://github.com/jturbide/niri-fx/blob/main/docs/getting-started.md#inir-and-iris">iNiR / iRiS</a><a href="https://github.com/jturbide/niri-fx/blob/main/docs/dms.md">DankMaterialShell</a><a href="https://github.com/jturbide/niri-fx/blob/main/docs/noctalia.md">Noctalia</a></div>
+<p>For a simple first try, <a href="https://github.com/jturbide/niri-fx#quick-start">get NiriFX</a> and run <code>niri-fx</code>. Choose the same preset name in the terminal guide, review the files, then apply. Run it again and choose Undo to restore your previous settings. A shell picker can manage selection instead. Quickshell is optional.</p>
+<p>For a customized look, download its JSON and use <strong>Copy local command</strong> to open it in local Studio. <a href="https://github.com/jturbide/niri-fx/blob/main/docs/web-studio.md#use-the-result-locally">Follow the download-to-desktop guide.</a></p>
+<p>Made your own? <a href="https://github.com/jturbide/niri-fx/issues/new?template=share_style.yml">Share a style</a> or <a href="https://github.com/jturbide/niri-fx/issues/new?template=compatibility_report.yml">report your setup</a> to help improve NiriFX.</p></section>
 <noscript>Use Open GIF to view an animation. Search and in-page playback require JavaScript.</noscript></main>
 <footer>Original NiriFX effects and sample artwork · <a href="https://github.com/jturbide/niri-fx">Source and documentation</a></footer></body></html>
 """

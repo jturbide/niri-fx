@@ -11,12 +11,21 @@ do not use an existing shell picker.
   older versions and other compositors are not validated.
 - A WebGL-capable browser for previews. Chromium is used for the app-style Studio;
   without it, Studio falls back to the default browser.
-- For native preset selection and saving: iNiR with `NiriAnimationPresets` and
-  external user presets. The adapter uses iNiR's installed helper; no shell QML
-  files are changed. See the [integration contract](integration.md).
+- Optional shell integration: iNiR with `NiriAnimationPresets` can use its installed
+  helper to save styles. Plain Niri needs no shell or Quickshell. DMS and Noctalia
+  have their own setup paths below. See the [integration contract](integration.md).
 
 Niri animations must be enabled. Standalone exports and offline previews do not
 need iNiR, a Rust toolchain or the experimental compositor.
+
+## Pick a look first
+
+Try [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter)
+or [seven open/close pairings](https://jturbide.github.io/niri-fx/gallery/?collection=profiles)
+in your browser. All previews start paused. Choose the same name locally after
+installation; customizing settings is optional. Start with **Balanced** for
+textured fragments, **Spring Wobble** for a playful bend, or **Pixel Wipe** for a
+pixel reveal. Built-ins leave resize effects off.
 
 ## Get the source and preview
 

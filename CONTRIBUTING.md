@@ -53,7 +53,7 @@ export parity; it is not a compositor GPU benchmark. See
 | --- | --- |
 | `niri_fx/` | Canonical implementation, module entry point and packaged assets |
 | `niri_fx/model.py`, `parameters.py`, `presets.py` | Shared parameter catalog, validation and built-in styles |
-| `niri_fx/catalog.py` | Curated open/close pairings, normalized picker documents and shared family labels |
+| `niri_fx/catalog.py` | Shared starter selection, curated open/close pairings, normalized picker documents and shared family labels |
 | `niri_fx/documents.py`, `profiles.py` | Shell-independent document validation, serialization and action choices |
 | `niri_fx/effects.py`, `shaders/` | Shader assembly and stock/experimental export boundaries |
 | `niri_fx/setup.py`, `pack.py`, `storage.py` | Setup plans, preset folders, shared atomic writes, snapshots and conflict-aware restore |

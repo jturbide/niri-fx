@@ -26,6 +26,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 
 | I want to… | Guide |
 | --- | --- |
+| Choose a first look | [Nine starter presets](https://jturbide.github.io/niri-fx/gallery/?collection=starter), [open/close pairings](https://jturbide.github.io/niri-fx/gallery/?collection=profiles) |
 | Find a look or compare settings | [Click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/), [scenario guide](showcases.md), [full catalog](catalog.md) |
 | Try effects without installation or share settings | [Web Studio](web-studio.md) |
 | Learn Studio's controls | [Studio and controls](usage.md) |

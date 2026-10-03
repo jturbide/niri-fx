@@ -36,7 +36,7 @@ a {
     color: #d6c5ef;
     font-size: 12px;
     letter-spacing: 0.14em;
-    margin-top: 38px;
+    margin-top: 18px;
 }
 h1 {
     font-size: clamp(34px, 6vw, 64px);
@@ -54,10 +54,22 @@ h1 {
     line-height: 1.6;
 }
 form {
+    margin-top: 24px;
+    max-width: 900px;
+}
+.filters {
+    margin-top: 16px;
+}
+.filters summary {
+    cursor: pointer;
+    color: #b7e8db;
+    padding: 8px 0;
+}
+.filter-options {
     display: grid;
-    grid-template-columns: 2fr repeat(3, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 14px;
-    margin-top: 32px;
+    margin-top: 12px;
 }
 label {
     display: grid;
@@ -169,7 +181,7 @@ footer {
     font-size: 14px;
 }
 @media (max-width: 760px) {
-    form {
+    .filter-options {
         grid-template-columns: 1fr 1fr;
     }
     header,
@@ -179,7 +191,60 @@ footer {
     }
 }
 @media (max-width: 440px) {
-    form {
+    .filter-options {
         grid-template-columns: 1fr;
+    }
+}
+
+.collections,
+.setup-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 24px 0;
+}
+.card-body .starter-note {
+    color: #d4e7dd;
+    min-height: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.getting-started {
+    margin-top: 48px;
+    padding: 28px;
+    border: 1px solid #40515a;
+    border-radius: 14px;
+    line-height: 1.7;
+    background: #172128;
+    scroll-margin-top: 24px;
+}
+.getting-started h2 {
+    font-size: 25px;
+}
+.getting-started p {
+    max-width: 850px;
+}
+.setup-links a {
+    padding: 10px 14px;
+    border-radius: 8px;
+    background: #243a3c;
+}
+article {
+    scroll-margin-top: 20px;
+}
+@media (max-width: 440px) {
+    .eyebrow {
+        display: none;
+    }
+    header {
+        align-items: flex-start;
+        gap: 16px;
+    }
+    header nav {
+        line-height: 1.8;
+        text-align: right;
+    }
+    .getting-started {
+        padding: 18px;
     }
 }

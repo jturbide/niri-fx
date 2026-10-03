@@ -7,7 +7,7 @@ from pathlib import Path
 
 from helpers import shell_registry
 
-from niri_fx.catalog import PROFILES, STYLES, documents
+from niri_fx.catalog import PROFILES, RECOMMENDED, STYLES, documents
 from niri_fx.cli import main, parser, selected_effect
 from niri_fx.documents import parse_document
 from niri_fx.effects import PRESETS, animation_types, render_kdl
@@ -31,6 +31,14 @@ class CuratedProfileTests(unittest.TestCase):
             self.assertNotIn("window-resize", render_kdl(profile), name)
         exported["burst-and-drift"]["actions"]["close"]["particles"] = 17
         self.assertNotEqual(documents()["burst-and-drift"]["actions"]["close"]["particles"], 17)
+
+    def test_starter_selection_is_shared_and_leaves_resize_off(self):
+        self.assertEqual(set(catalog(recommended=True)), set(RECOMMENDED))
+        for name, description in RECOMMENDED.items():
+            self.assertIn(name, PRESETS)
+            self.assertTrue(description.strip())
+            self.assertFalse(PRESETS[name].resize)
+            self.assertNotIn("window-resize", render_kdl(PRESETS[name]))
 
     def test_profiles_filter_by_either_action_family(self):
         self.assertIn("burst-and-drift", catalog(family="fragments", profiles=True))
