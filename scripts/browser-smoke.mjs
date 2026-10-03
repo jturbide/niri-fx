@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { setTimeout as sleep } from "node:timers/promises";
 import { checkResize } from "./lib/resize-checks.mjs";
+import { checkMotion } from "./lib/motion-checks.mjs";
 import { checkShapes } from "./lib/shape-checks.mjs";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 
@@ -67,6 +68,7 @@ try {
       `byId('progress').value=${Math.round(value * 1000)};byId('progress').dispatchEvent(new Event('input'))`,
     );
   };
+  await checkMotion(evaluate, setProgress, sample);
   const results = {};
   mkdirSync("artifacts", { recursive: true });
   for (const name of Object.keys(expected)) {

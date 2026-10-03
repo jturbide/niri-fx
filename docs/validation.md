@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for 0.12.0. These checks
+Evidence updated on **2026-10-03** for 0.13.0. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -8,15 +8,15 @@ See the [changelog](../CHANGELOG.md) for user-visible changes.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 111 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows and conservative CI scope selection |
-| Portable JavaScript | 66 Node checks; all 70 presets' supported stock shaders match Python, with picker transaction and profile checks |
-| Real Chromium | 70 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
+| Python | 115 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows and conservative CI scope selection |
+| Portable JavaScript | 67 Node checks; all 73 presets' supported stock shaders match Python, with picker transaction and profile checks |
+| Real Chromium | 73 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
 | Browser lifecycle and gallery | Four tests cover failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, narrow layouts, reduced-motion startup, single-GIF playback and hosted Studio share/download flows |
-| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 70 default exports, supported resize exports and 77 style/profile picker includes parse in stock Niri 26.04 |
+| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 73 default exports, supported resize exports and 80 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Fragment optimization | 1,050 reference-frame pairs across software WebGL and hardware ANGLE match byte-for-byte, including extreme settings and transparent input. Core Detonation, Mosaic Burst and Orbital Ribbons pass stock open/close checks; Core Detonation also passes native swaps, interruptions and fallback. See [measurements and reproduction](performance.md#varied-fragment-flight-bounds). |
-| Fragment shapes | Eight shapes restore translucent source coverage without an endpoint shortcut, including aspect 0.25 and 4, with stable replay and reversed opening/closing paths. Forward-transformed vertices exercise the inverse lookup bound. 240 reference-frame comparisons across software and hardware match frame hashes and alpha totals. All 66 pre-existing presets keep byte-identical stock and movement shaders. |
+| Fragment shapes | Eight shapes restore translucent source coverage without an endpoint shortcut, including aspect 0.25 and 4, with stable replay and reversed opening/closing paths. Forward-transformed vertices exercise the inverse lookup bound. 240 reference-frame comparisons across software and hardware match frame hashes and alpha totals. At the 0.12.0 release, all 66 pre-existing presets kept byte-identical stock and movement shaders. |
 | Shaped native actions | All four new presets pass transparent stock open/close and the patched movement smoke test (swaps, six interruptions, close during movement, supported resize and fallback). Triangle Shatter and Hex Swarm also pass sequential 1×/1.5×/2× interruption cases and eight rapid reversals; both have native swap recordings. |
 | Vortex distortion | Existing distortion presets match 126 reference-frame pairs against 0.10.0 byte-for-byte. Signed twist, contraction, origin, extreme geometry and transparent source pass browser checks. Both presets pass stock open/close and cleanup. Vortex Fold passes native swaps, six interrupted swaps, close during movement, resize and fallback. |
 | Resize profiles | All seven profiles (Elastic, Accordion, Ripple, plus Subtle/Expressive Edge Ripple and Torsion) grow and shrink a transparent synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
@@ -104,7 +104,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**161 GIFs**, including all **70 presets**, resize profiles and comparisons, custom
+**172 GIFs**, including all **73 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, thirteen native swaps and fourteen workflow/compositor
 scenarios. Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
@@ -216,3 +216,33 @@ they update the shared manifest. See the [recording guide](gifs/README.md#workfl
 **Remaining limits:** a single nested output at 1.5× is not true mixed-monitor
 acceptance; these synthetic clients do not cover every decoration/application.
 Native movement remains optional and experimental. See [ROADMAP.md](../ROADMAP.md).
+
+## General movement and shaped resize (0.13)
+
+Three movement presets pass native column swaps and the broader rearrangement
+harness: consume into a column, vertical reorder, expel, six reversals,
+simultaneous move/resize, inserting then closing a client during opening, and
+closing during movement. Window IDs and final layout are checked; closed windows
+leave an empty scene. An exported independent movement profile also passes the
+isolated demo's smoke test. The compositor patch itself is unchanged.
+
+The browser checks eight resize shapes at aspect 0.25, 1 and 4 and a rotated
+lattice. Near-zero progress retains every source pixel with one translucent owner;
+zero strength and endpoints are intact. Full, Edge and Soft modes match a wider
+candidate search across 72 cases per renderer: software matches exactly; hardware
+retains occupancy/ownership and differs by at most one 8-bit channel step. Replays
+are deterministic. Studio additionally exercises separate
+old/new textures through growth and shrink, hides inapplicable controls, and
+round-trips an independently edited movement slot while excluding it from stock
+KDL. Forward-transformed piece vertices test the resize lookup bound.
+
+Triangle Edge Rebuild, Hexagon Edge Rebuild and Circle Soft Reflow pass transparent
+close-during-open, repeated resize, close-during-resize and fullscreen/restore
+checks at sequential 1×, 1.5× and 2× scales. This is one nested output, not a mixed
+physical-monitor test. Native checks establish endpoints and cleanup; they do not
+prove velocity continuity across interrupted resize.
+
+Recordings reject movement IPC calls of 150 ms or more while capture drives
+regular frames. Idle nested winit scheduling is recorded separately and is not a
+frame-time measurement. Synthetic test clients and their outer window are owned
+by the harness; the installed compositor and active desktop effect are preserved.

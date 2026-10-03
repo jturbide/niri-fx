@@ -14,10 +14,11 @@ const { catalog, expected } = JSON.parse(
       `
 import json
 from niri_fx.preview import preview_catalog
-from niri_fx.effects import PRESETS, FAMILIES, Effect, shader, resize_shader
+from niri_fx.effects import PRESETS, FAMILIES, Effect, shader, resize_shader, movement_shader
 print(json.dumps({"catalog": preview_catalog(Effect()), "expected": {
     name: {"open": shader(effect, True), "close": shader(effect, False),
-           "resize": resize_shader(effect) if FAMILIES[effect.family]["resize"] else None}
+           "resize": resize_shader(effect) if FAMILIES[effect.family]["resize"] else None,
+           "movement": movement_shader(effect) if FAMILIES[effect.family]["movement"] else None}
     for name, effect in PRESETS.items()}}))
 `,
     ],
@@ -36,6 +37,15 @@ const create = (catalog) =>
 const core = create(catalog);
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const cases = JSON.parse(readFileSync(new URL("fixtures/documents.json", import.meta.url)));
+
+test("movement shader previews match the native exports and reject unsupported families", () => {
+  for (const [name, effect] of Object.entries(catalog.presets)) {
+    if (expected[name].movement)
+      assert.equal(core.shaderFor(effect, false, false, true), expected[name].movement, name);
+    else
+      assert.throws(() => core.shaderFor(effect, false, false, true), /does not support movement/);
+  }
+});
 
 test("shaped lookup bounds and shaders match Python at extreme controls", () => {
   const shapes = catalog.specifications.fragment_shape.choices;

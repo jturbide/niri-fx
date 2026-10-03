@@ -9,7 +9,7 @@ This reference keeps every preset and control comparison together.
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
-All **70 presets** have a recording. The [visual scenario index](showcases.md)
+All **73 presets** have a recording. The [visual scenario index](showcases.md)
 also helps you compare controls and choose a combination for everyday use,
 strong explosions, drifting dust, subtle distortion or different open/close actions.
 

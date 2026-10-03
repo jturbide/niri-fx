@@ -1702,6 +1702,54 @@
           }
         }
       ]
+    },
+    {
+      "name": "triangle-edge-rebuild",
+      "mode": "resize",
+      "title": "Triangle Edge Rebuild",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "TRIANGLE EDGE REBUILD",
+          "source": "examples/profiles/triangle-edge-rebuild.json"
+        }
+      ]
+    },
+    {
+      "name": "hexagon-edge-rebuild",
+      "mode": "resize",
+      "title": "Hexagon Edge Rebuild",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "HEXAGON EDGE REBUILD",
+          "source": "examples/profiles/hexagon-edge-rebuild.json"
+        }
+      ]
+    },
+    {
+      "name": "circle-soft-reflow",
+      "mode": "resize",
+      "title": "Circle Soft Reflow",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "CIRCLE SOFT REFLOW",
+          "source": "examples/profiles/circle-soft-reflow.json"
+        }
+      ]
+    },
+    {
+      "name": "movement-fragment-wake",
+      "mode": "movement",
+      "title": "Fragment Wake movement shader",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "FRAGMENT WAKE / MOVEMENT SHADER",
+          "source": "examples/profiles/fragment-wake-motion.json"
+        }
+      ]
     }
   ]
 }

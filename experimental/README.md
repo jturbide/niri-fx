@@ -134,3 +134,10 @@ This is not the complete transaction/particle engine described in
 Stock Studio saves only supported open, close and optional resize settings.
 Movement settings should be exposed in iRiS only after capability detection and
 the compositor contract are settled.
+
+Portable profiles with an explicit movement slot are accepted by
+`python3 scripts/nested-demo.py --custom PATH.json`. The demo uses owned synthetic
+Quickshell cards and isolated configuration, state and D-Bus directories. It uses
+the selected movement duration unless `--duration-ms` overrides it. General
+rearrangement checks run with `python3 scripts/test-movement.py`; see the
+[movement guide](../docs/movement.md#movement-presets-and-general-rearrangement).

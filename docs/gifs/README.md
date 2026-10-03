@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **161 GIFs**, including all **70 presets**. The earlier eight
+The gallery contains **172 GIFs**, including all **73 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -321,7 +321,7 @@ mixed-monitor behavior.
 
 Edge Ripple and Torsion Resize each have `subtle` and `expressive` profile clips,
 plus `compare-edge-ripple-resize.gif` and `compare-torsion-resize.gif`. See the
-[resize guide](../resize.md). The gallery contains 161 clips.
+[resize guide](../resize.md). The gallery contains 172 clips.
 
 ```sh
 node scripts/render-readme-gifs.mjs --only=edge-ripple-subtle,edge-ripple-expressive,torsion-subtle,torsion-expressive,compare-edge-ripple-resize,compare-torsion-resize
@@ -344,3 +344,18 @@ python3 scripts/record-native-gif.py --preset hex-swarm --name native-swap-hex-s
 
 See [fragment shapes](../fragment-shapes.md) for importable presets, supported
 controls and the distinction between source partitions and emerging silhouettes.
+
+## Movement and shaped resize recordings
+
+```sh
+node scripts/render-readme-gifs.mjs --only=preset-fragment-wake,preset-ribbon-transfer,preset-momentum-glide,triangle-edge-rebuild,hexagon-edge-rebuild,circle-soft-reflow,movement-fragment-wake
+python3 scripts/record-native-gif.py --preset fragment-wake --name native-swap-fragment-wake --duration-ms 850
+python3 scripts/record-native-gif.py --preset ribbon-transfer --name native-swap-ribbon-transfer --duration-ms 900
+python3 scripts/record-native-gif.py --preset momentum-glide --name native-swap-momentum-glide --duration-ms 750
+python3 scripts/test-movement.py --record
+python3 scripts/build-gallery.py
+```
+
+The movement shader preview is a synthetic directional path. Native swaps and
+rearrangement clips use the compositor's layout paths. See the
+[movement and resize showcases](../showcases.md#general-movement-and-shaped-resize).

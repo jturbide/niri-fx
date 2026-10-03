@@ -1,22 +1,20 @@
 #!/usr/bin/env python3
-"""Run two synthetic clients in a separate Niri window, never a login session."""
+"""Run synthetic clients in an isolated Niri window, never a login session."""
 
 import argparse
-import hashlib
-import json
-import os
-import re
-import shutil
-import subprocess
 import sys
-import tempfile
 import time
 from dataclasses import replace
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from lib.movement import color_counts, experiment, launch_cards
+from lib.nested import NestedSession
+
+from niri_fx.documents import load_document, parse_document
 from niri_fx.effects import FAMILIES, PRESETS, movement_shader, render_kdl
+from niri_fx.profiles import Profile
 
 BASE = """layout {
     gaps 24
@@ -53,273 +51,116 @@ def config(effect, duration, source):
     )
 
 
+def selection(args):
+    """Resolve one action document before starting a compositor or any clients."""
+    document = (
+        parse_document(load_document(args.custom))[2]
+        if args.custom
+        else PRESETS[args.preset or "explosion"]
+    )
+    movement = document.movement if isinstance(document, Profile) else document
+    if movement is None:
+        raise ValueError("The profile must explicitly include a movement action")
+    if not FAMILIES[movement.family]["movement"]:
+        raise ValueError("This family does not support experimental movement")
+    if args.movement_strength is not None:
+        movement = replace(movement, movement_strength=args.movement_strength)
+    # A profile already names its resize action; no override may silently replace it.
+    if args.resize and not FAMILIES[movement.family]["resize"]:
+        raise ValueError("This family does not support resize")
+    if args.resize and isinstance(document, Profile):
+        raise ValueError(
+            "Set the profile's resize action instead of combining --custom with --resize"
+        )
+    if not isinstance(document, Profile):
+        document = replace(movement, resize=args.resize)
+    return document, movement
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument(
+    choices = parser.add_mutually_exclusive_group()
+    choices.add_argument(
         "--preset",
         choices=[name for name, effect in PRESETS.items() if FAMILIES[effect.family]["movement"]],
-        default="explosion",
     )
-    parser.add_argument("--duration-ms", type=int, default=1100)
-    parser.add_argument(
-        "--movement-strength", type=float, help="Override native deformation intensity (0–1)"
+    choices.add_argument(
+        "--custom", type=Path, help="Portable effect or profile with an explicit movement action"
     )
     parser.add_argument(
-        "--resize", action="store_true", help="Opt into fragment resize effects in the demo"
+        "--duration-ms", type=int, help="Override the selected movement time (100 to 3000 ms)"
+    )
+    parser.add_argument(
+        "--movement-strength", type=float, help="Override native deformation intensity (0 to 1)"
+    )
+    parser.add_argument(
+        "--resize",
+        action="store_true",
+        help="Explicitly enable resize for a single style in this demo",
     )
     parser.add_argument(
         "--smoke",
         action="store_true",
-        help="Capture movement, resize and fallback, then exit; needs grim and Pillow",
+        help="Check swaps, repeated reversals, fallback and cleanup, then exit",
     )
     args = parser.parse_args()
-    if not 100 <= args.duration_ms <= 3000:
-        parser.error("duration must be 100–3000 ms")
-    if args.movement_strength is not None and not 0 <= args.movement_strength <= 1:
-        parser.error("movement strength must be 0–1")
-    if not os.environ.get("WAYLAND_DISPLAY"):
-        parser.error(
-            "Run inside the existing Wayland desktop; this launcher will not start a TTY session"
+    if args.duration_ms is not None and not 100 <= args.duration_ms <= 3000:
+        parser.error("duration must be 100 to 3000 ms")
+    try:
+        document, movement = selection(args)
+    except (ValueError, OSError) as error:
+        parser.error(str(error))
+    duration = args.duration_ms or movement.movement_ms
+    binary, _, _ = experiment()
+    source = movement_shader(movement)
+    with NestedSession(config(document, duration, source), binary=binary) as session:
+        windows = launch_cards(session)
+        print(
+            "Nested demo: Alt+Left/Right to swap columns, Alt+R to resize, Alt+Q to close.\nLogs: "
+            + str(session.root),
+            flush=True,
         )
-    if not shutil.which("alacritty"):
-        parser.error("alacritty is required for the synthetic demo clients")
-    if args.smoke:
-        if not shutil.which("grim"):
-            parser.error("grim is required for --smoke")
-        from PIL import Image  # Optional test dependency, not required by the demo.
-    manifest_file = ROOT / "artifacts/niri-movement-build.json"
-    if not manifest_file.exists():
-        parser.error("Build first: python3 scripts/build-niri-movement.py")
-    manifest = json.loads(manifest_file.read_text())
-    binary = Path(manifest["binary"])
-    if (
-        hashlib.sha256((ROOT / "experimental/niri-movement.patch").read_bytes()).hexdigest()
-        != manifest["patch_sha256"]
-        or hashlib.sha256(binary.read_bytes()).hexdigest() != manifest["binary_sha256"]
-    ):
-        parser.error("The patch or binary changed; rebuild before launching the demo")
-    root = Path(tempfile.mkdtemp(prefix="nested-demo-", dir=ROOT / "artifacts"))
-    cfg = root / "config.kdl"
-    effect = replace(
-        PRESETS[args.preset],
-        resize=args.resize or (args.smoke and FAMILIES[PRESETS[args.preset].family]["resize"]),
-        resize_ms=900 if args.smoke else 550,
-        movement_strength=(
-            PRESETS[args.preset].movement_strength
-            if args.movement_strength is None
-            else args.movement_strength
-        ),
-    )
-    source = movement_shader(effect)
-    cfg.write_text(config(effect, args.duration_ms, source))
-    subprocess.run([str(binary), "validate", "-c", str(cfg)], check=True)
-    env = os.environ.copy()
-    env.pop("NIRI_SOCKET", None)
-    env.pop("DISPLAY", None)  # Force nesting on the existing Wayland display.
-    clients = []
-    with (root / "niri.log").open("w") as log:
-        # Deliberately no --session, no user config and no startup shell/bar.
-        process = subprocess.Popen([str(binary), "-c", str(cfg)], env=env, stdout=log, stderr=log)
-        try:
-            deadline = time.monotonic() + 15
-            while time.monotonic() < deadline:
-                text = (root / "niri.log").read_text()
-                ipc = re.search(r"IPC listening on: (\S+)", text)
-                display = re.search(r"listening on Wayland socket: (\S+)", text)
-                if ipc and display:
-                    break
-                if process.poll() is not None:
-                    raise RuntimeError(f"Nested compositor exited; inspect {root / 'niri.log'}")
-                time.sleep(0.1)
-            else:
-                raise RuntimeError("Nested compositor did not become ready")
-            env.update(NIRI_SOCKET=ipc[1], WAYLAND_DISPLAY=display[1])
-            (root / "session.json").write_text(
-                json.dumps({"pid": process.pid, "socket": ipc[1], "display": display[1]})
-            )
-
-            def msg(*arguments):
-                return subprocess.check_output([str(binary), "msg", *arguments], env=env, text=True)
-
-            for name, color in (("blue", "#245d8a"), ("orange", "#985235")):
-                terminal = root / f"{name}.toml"
-                terminal.write_text(f'''[window]
-decorations = "None"
-[colors.primary]
-background = "{color}"
-foreground = "#ffffff"
-[font]
-size = 16
-[cursor.style]
-blinking = "Never"
-''')
-                content = (
-                    f"\033[2J\033[H\033[?25l\n  NIRIFX / {args.preset.upper()} / {name.upper()}\n\n  Alt + Left / Right: move\n  Alt + R: resize\n  Alt + Q: exit demo\n\n"
-                    + (f"\n  {name.upper()} WINDOW\n" * 6)
-                )
-                code = f"print({content!r}, flush=True); input()"
-                clients.append(
-                    subprocess.Popen(
-                        [
-                            "alacritty",
-                            "--config-file",
-                            str(terminal),
-                            "--title",
-                            f"NiriFX demo / {name}",
-                            "-e",
-                            "python3",
-                            "-c",
-                            code,
-                        ],
-                        env=env,
-                        stdout=log,
-                        stderr=log,
-                    )
-                )
-            print(
-                f"Nested demo: Alt+Left/Right to swap columns, Alt+R to resize, Alt+Q to close.\nLogs: {root}",
-                flush=True,
-            )
-            if args.smoke:
-                time.sleep(2.5)
-
-                def capture(name):
-                    dest = root / f"{name}.png"
-                    subprocess.run(["grim", str(dest)], env=env, check=True)
-                    return dest
-
-                def colors(filename):
-                    with Image.open(filename) as image:
-                        counts = image.convert("RGB").getcolors(image.width * image.height)
-                        blue = sum(
-                            n for n, (r, g, b) in counts if b > r * 1.6 and g > r * 1.3 and b > 80
-                        )
-                        orange = sum(
-                            n for n, (r, g, b) in counts if r > b * 1.8 and r > g * 1.4 and r > 100
-                        )
-                        return blue, orange
-
-                before = colors(capture("before"))
-                windows_before = json.loads(msg("-j", "windows"))
-                assert len(windows_before) == 2, "Both demo clients must be mapped"
-                # Ensure the right column is active regardless of client startup order.
-                right = max(windows_before, key=lambda w: w["layout"]["pos_in_scrolling_layout"][0])
-                msg("action", "focus-window", "--id", str(right["id"]))
-                msg("action", "move-column-left")
-                time.sleep(args.duration_ms / 2000)
-                middle = colors(capture("movement"))
-                time.sleep(args.duration_ms / 1000 + 0.3)
-                after = colors(capture("after"))
-                windows_after = json.loads(msg("-j", "windows"))
-                for old in windows_before:
-                    new = next(w for w in windows_after if w["id"] == old["id"])
-                    assert (
-                        new["layout"]["pos_in_scrolling_layout"][0]
-                        != old["layout"]["pos_in_scrolling_layout"][0]
-                    )
-                for initial, fragmented, final in zip(before, middle, after, strict=True):
-                    assert initial > 1000 and fragmented > 0, (before, middle, after)
-                    if effect.family == "fragments":
-                        assert fragmented < initial * 0.85, (before, middle, after)
-                    assert abs(final - initial) < initial * 0.02, (before, after)
-                if effect.family == "elastic":
-                    # Whole windows retain opacity. Verify bent edges rather than
-                    # expecting the pixel loss appropriate to fragmentation.
-                    with Image.open(root / "movement.png") as image:
-                        pixels = image.convert("RGB")
-                        edges = []
-                        for y in range(pixels.height):
-                            row = [
-                                x
-                                for x in range(pixels.width)
-                                if (
-                                    lambda c: c[2] > c[0] * 1.6 and c[1] > c[0] * 1.3 and c[2] > 80
-                                )(pixels.getpixel((x, y)))
-                            ]
-                            if len(row) > 40:
-                                edges.append(row[0])
-                        interior = edges[len(edges) // 4 : len(edges) * 3 // 4]
-                        assert interior and max(interior) - min(interior) > 5, (
-                            "Elastic window edge must visibly bend"
-                        )
-                # Retarget while movement is still running. An even number of
-                # swaps must return both windows intact to their starting slots.
-                for index in range(6):
-                    msg("action", "move-column-right" if index % 2 == 0 else "move-column-left")
-                    time.sleep(0.12)
-                time.sleep(args.duration_ms / 1000 + 0.3)
-                repeated = colors(capture("repeated"))
-                repeated_windows = json.loads(msg("-j", "windows"))
-                assert {
-                    w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in repeated_windows
-                } == {w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in windows_after}
-                for initial, final in zip(after, repeated, strict=True):
-                    assert abs(final - initial) < initial * 0.02, (after, repeated)
-                msg("action", "set-column-width", "60%")
-                time.sleep(0.43)
-                capture("resize")
-                time.sleep(1)
-                capture("resized")
-                # Removing the shader must recover ordinary movement on hot reload.
-                cfg.write_text(config(effect, args.duration_ms, None))
-                time.sleep(0.6)
-                msg("action", "move-column-right")
-                time.sleep(args.duration_ms / 2000)
-                capture("fallback")
-                time.sleep(args.duration_ms / 1000)
-                # Re-enable, swap, then close the moving client. After closing
-                # and layout settlement, no fragments from it may remain.
-                cfg.write_text(config(effect, args.duration_ms, source))
-                time.sleep(0.6)
-                msg("action", "move-column-left")
-                time.sleep(0.15)
-                msg("action", "close-window", "--id", str(right["id"]))
-                time.sleep(max(effect.close_ms, args.duration_ms) / 1000 + 1)
-                closed = colors(capture("close-during-movement"))
-                remaining = json.loads(msg("-j", "windows"))
-                assert len(remaining) == 1 and remaining[0]["id"] != right["id"]
-                victim_index = 0 if "blue" in right["title"] else 1
-                assert closed[victim_index] == 0 and closed[1 - victim_index] > 1000, closed
-                assert process.poll() is None
-                errors = re.findall(
-                    r".*(?:error compiling|error rendering|panicked|error loading config).*",
-                    (root / "niri.log").read_text(),
-                )
-                assert not errors, errors
-                (root / "checks.json").write_text(
-                    json.dumps(
-                        {
-                            "before": before,
-                            "movement": middle,
-                            "after": after,
-                            "repeated": repeated,
-                            "close_during_movement": closed,
-                            "errors": errors,
-                        },
-                        indent=2,
-                    )
-                )
-                print(
-                    "PASS: real swap, six interrupted swaps, close during movement, supported resize and shader-removal fallback."
-                )
-            else:
-                process.wait()
-        finally:
-            for client in clients:
-                if client.poll() is None:
-                    client.terminate()
-                try:
-                    client.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    client.kill()
-                    client.wait()
-            if process.poll() is None:
-                process.terminate()
-                try:
-                    process.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    process.kill()
-                    process.wait()
+        if not args.smoke:
+            session.compositor.wait()
+            return
+        time.sleep(1.5)
+        right = max(windows, key=lambda w: w["layout"]["pos_in_scrolling_layout"][0])
+        session.msg("action", "focus-window", "--id", str(right["id"]))
+        before = color_counts(session.capture("before"))
+        session.msg("action", "move-column-left")
+        time.sleep(duration / 2000)
+        middle = color_counts(session.capture("middle"))
+        assert all(count > 0 for count in middle.values()), middle
+        time.sleep(duration / 1000 + 0.3)
+        for index in range(7):
+            session.msg("action", "move-column-right" if index % 2 == 0 else "move-column-left")
+            time.sleep(0.12)
+        time.sleep(duration / 1000 + 0.3)
+        after = color_counts(session.capture("settled"))
+        assert {w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in session.windows()} == {
+            w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in windows
+        }
+        for label, initial in before.items():
+            assert initial > 1000 and abs(initial - after[label]) < initial * 0.02
+        session.reload(config(document, duration, None))
+        session.msg("action", "move-column-left")
+        time.sleep(duration / 1000 + 0.3)
+        session.capture("fallback")
+        session.reload(config(document, duration, source))
+        session.msg("action", "move-column-right")
+        time.sleep(0.15)
+        session.msg("action", "close-window", "--id", str(right["id"]))
+        close = document.close if isinstance(document, Profile) else document
+        time.sleep(max(close.close_ms, duration) / 1000 + 1)
+        remaining = session.windows()
+        assert len(remaining) == 1 and remaining[0]["id"] != right["id"]
+        counts = color_counts(session.capture("close-during-movement"))
+        victim = right["title"].split(" / ")[-1]
+        assert counts[victim] == 0 and sum(counts.values()) > 1000
+        session.check_render_log()
+        print(
+            "PASS: native swap, seven interrupted reversals, fallback and close cleanup", flush=True
+        )
 
 
 if __name__ == "__main__":

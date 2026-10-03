@@ -30,7 +30,7 @@ try {
   // Capture-only layout: keep the actual canvas and synthetic window textures.
   await evaluate(`(()=>{
   const style=document.createElement('style');style.textContent=
-   'html,body{width:720px;height:616px;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,#concept-note,#caption,#status,main>small,.motion-preference,#error{display:none!important}.layout{display:block;margin:0 14px}canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
+   'html,body{width:720px;height:616px;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,#concept-note,#movement-preview-controls,#caption,#status,main>small,.motion-preference,#error{display:none!important}.layout{display:block;margin:0 14px}canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
   document.head.append(style);
   const heading=document.createElement('div');heading.id='gif-heading';document.body.prepend(heading);
   const note=document.createElement('div');note.id='gif-note';document.body.append(note);
@@ -146,9 +146,10 @@ try {
         ? JSON.parse(readFileSync(join(root, panel.source), "utf8"))
         : null;
       let openingEffect =
-        sourceDoc?.kind === "profile" && spec.mode !== "resize" ? sourceDoc.actions.open : null;
+        sourceDoc?.kind === "profile" && spec.mode === "effect" ? sourceDoc.actions.open : null;
       let effect = sourceDoc
-        ? sourceDoc.effect || sourceDoc.actions[spec.mode === "resize" ? "resize" : "close"]
+        ? sourceDoc.effect ||
+          sourceDoc.actions[["resize", "movement"].includes(spec.mode) ? spec.mode : "close"]
         : { ...presets[panel.preset], ...panel.overrides };
       // Python validation and shader parity keep the examples faithful to CLI exports.
       const generated = JSON.parse(
@@ -156,7 +157,7 @@ try {
           "python3",
           [
             "-c",
-            'import json,sys;from dataclasses import asdict;from niri_fx.effects import Effect,shader,resize_shader,FAMILIES;p=Effect(**json.load(sys.stdin));print(json.dumps({"effect":asdict(p),"sources":[shader(p,True),shader(p,False)],"resize":resize_shader(p) if FAMILIES[p.family]["resize"] else None}))',
+            'import json,sys;from dataclasses import asdict;from niri_fx.effects import Effect,shader,resize_shader,movement_shader,FAMILIES;p=Effect(**json.load(sys.stdin));print(json.dumps({"effect":asdict(p),"sources":[shader(p,True),shader(p,False)],"resize":resize_shader(p) if FAMILIES[p.family]["resize"] else None,"movement":movement_shader(p) if FAMILIES[p.family]["movement"] else None}))',
           ],
           { input: JSON.stringify(effect), encoding: "utf8" },
         ),
@@ -184,13 +185,22 @@ try {
       }
       const concept = ["move", "swap"].includes(spec.mode);
       // Show actual preset durations, sampled at 20 fps; a hold separates endpoints.
-      const forward = spec.mode === "resize" ? effect.resize_ms : concept ? 1100 : effect.close_ms;
+      const forward =
+        spec.mode === "resize"
+          ? effect.resize_ms
+          : spec.mode === "movement"
+            ? effect.movement_ms
+            : concept
+              ? 1100
+              : effect.close_ms;
       const backward =
         spec.mode === "resize"
           ? effect.resize_ms
-          : concept
-            ? 1100
-            : (openingEffect || effect).open_ms;
+          : spec.mode === "movement"
+            ? effect.movement_ms
+            : concept
+              ? 1100
+              : (openingEffect || effect).open_ms;
       const pause = 450,
         fps = 20;
       const duration =
@@ -201,13 +211,15 @@ try {
         ? "Synthetic windows · design preview, not installed movement"
         : spec.mode === "resize"
           ? "Real resize shader · disabled by default"
-          : comparison
-            ? "Real shader · same timing, texture and seed"
-            : panel.source
-              ? "Custom settings · real shader · resize off"
-              : "Real open/close shader · " + panel.preset + " preset · synthetic window";
+          : spec.mode === "movement"
+            ? "Experimental movement shader · synthetic directional path"
+            : comparison
+              ? "Real shader · same timing, texture and seed"
+              : panel.source
+                ? "Custom settings · real shader · resize off"
+                : "Real open/close shader · " + panel.preset + " preset · synthetic window";
       await evaluate(`byId('preset').value=${JSON.stringify(panel.preset || "balanced")};byId('preset').dispatchEvent(new Event('change'));
-    byId('resize-direction').value='grow';parameters=normalizePreset({schema:3,name:'Recording',effect:${JSON.stringify(effect)}}).effect;populate();document.querySelector('[data-mode=${spec.mode}]').click();refresh();
+    byId('resize-direction').value='grow';byId('movement-direction').value='right';parameters=normalizePreset({schema:3,name:'Recording',effect:${JSON.stringify(effect)}}).effect;populate();document.querySelector('[data-mode=${spec.mode}]').click();refresh();
     byId('gif-heading').textContent=${JSON.stringify(panel.label)};byId('gif-note').textContent=${JSON.stringify(note)};
     byId('gif-heading').style.fontSize=${JSON.stringify(comparison ? "28px" : spec.panels ? "24px" : "18px")};byId('gif-note').style.fontSize=${JSON.stringify(spec.panels ? "18px" : "12px")};`);
       assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
@@ -218,6 +230,8 @@ try {
       );
       if (spec.mode === "resize")
         assert.equal(await evaluate("shaderFor(parameters,false,true)"), generated.resize);
+      if (spec.mode === "movement")
+        assert.equal(await evaluate("shaderFor(parameters,false,false,true)"), generated.movement);
       const panelFrames = Math.ceil((duration * fps) / 1000);
       if (index) assert.equal(panelFrames, count, "Comparison panels must have matching timing");
       count = panelFrames;
@@ -237,6 +251,10 @@ try {
           // A new resize has exchanged textures and matrices, and time starts at zero.
           p = Math.max(0, Math.min(1, (t - 2 * pause - forward) / backward));
           await evaluate("byId('resize-direction').value='shrink'");
+        }
+        if (spec.mode === "movement" && spec.direction === "round" && t >= 2 * pause + forward) {
+          p = Math.max(0, Math.min(1, (t - 2 * pause - forward) / backward));
+          await evaluate("byId('movement-direction').value='left'");
         }
         await evaluate(
           `byId('progress').value=${Math.round(p * 1000)};byId('progress').dispatchEvent(new Event('input'));`,

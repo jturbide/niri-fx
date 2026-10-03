@@ -1027,6 +1027,24 @@ class Effect:
         group="movement",
         limits=(0, 1),
         token="MOVEMENT_STRENGTH",
+        basic=True,
+    )
+    movement_focus: float = parameter(
+        0,
+        label="Trailing edge emphasis",
+        families=("fragments", "slices", "pixels", "distortion"),
+        group="movement",
+        limits=(0, 1),
+        token="MOVEMENT_FOCUS",
+    )
+    movement_ms: int = parameter(
+        900,
+        label="Movement time",
+        families=("fragments", "slices", "elastic", "pixels", "distortion"),
+        group="movement",
+        limits=(100, 2000),
+        integer=True,
+        unit=" ms",
     )
 
     def __post_init__(self):
@@ -1043,6 +1061,13 @@ class Effect:
             self.fragment_shape != "square"
             or self.fragment_orientation != 0
             or (self.fragment_roundness > 0 and self.fragment_transition != 0.28)
+        )
+
+    @property
+    def shaped_resize(self):
+        """Use geometry when an explicitly enabled resize needs piece controls."""
+        return self.shaped or bool(
+            self.fragment_shrink or self.fragment_roundness or self.size_variation
         )
 
     @property

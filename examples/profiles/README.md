@@ -58,3 +58,34 @@ python3 -m niri_fx preview --custom examples/profiles/edge-ripple-expressive.jso
 python3 -m niri_fx preview --custom examples/profiles/torsion-subtle.json --output /tmp/torsion-subtle.html
 python3 -m niri_fx preview --custom examples/profiles/torsion-expressive.json --output /tmp/torsion-expressive.html
 ```
+
+## Shaped resize and experimental movement
+
+These examples require NiriFX 0.13 or newer. The resize profiles deliberately
+enable resize; the movement profile leaves resize unset and needs the pinned
+experimental compositor. None is enabled by importing or previewing it.
+
+| Profile | Action | Showcase |
+| --- | --- | --- |
+| [Triangle Edge Rebuild](triangle-edge-rebuild.json) | Resize | [GIF](../../docs/gifs/triangle-edge-rebuild.gif) |
+| [Hexagon Edge Rebuild](hexagon-edge-rebuild.json) | Resize | [GIF](../../docs/gifs/hexagon-edge-rebuild.gif) |
+| [Circle Soft Reflow](circle-soft-reflow.json) | Resize | [GIF](../../docs/gifs/circle-soft-reflow.gif) |
+| [Fragment Wake Motion](fragment-wake-motion.json) | Movement | [GIF](../../docs/gifs/native-swap-fragment-wake.gif) |
+
+```sh
+python3 -m niri_fx studio --custom examples/profiles/triangle-edge-rebuild.json
+python3 -m niri_fx studio --custom examples/profiles/fragment-wake-motion.json
+python3 scripts/nested-demo.py --custom examples/profiles/fragment-wake-motion.json
+```
+
+The movement shader preview uses a synthetic directional path;
+[native recordings](../../docs/movement.md) show compositor-owned trajectories.
+
+![Movement shader preview](../../docs/gifs/movement-fragment-wake.gif)
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/triangle-edge-rebuild.json --output /tmp/triangle-edge-rebuild.html
+python3 -m niri_fx preview --custom examples/profiles/hexagon-edge-rebuild.json --output /tmp/hexagon-edge-rebuild.html
+python3 -m niri_fx preview --custom examples/profiles/circle-soft-reflow.json --output /tmp/circle-soft-reflow.html
+python3 -m niri_fx preview --custom examples/profiles/fragment-wake-motion.json --output /tmp/fragment-wake-motion.html
+```

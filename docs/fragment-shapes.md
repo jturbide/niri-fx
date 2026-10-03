@@ -78,8 +78,10 @@ the native recordings to judge shaped swaps.
 | --- | --- |
 | ![Native triangular swap in the experimental compositor](gifs/native-swap-triangle-shatter.gif) | ![Native hexagonal swap in the experimental compositor](gifs/native-swap-hex-swarm.gif) |
 
-Shape controls do not change the separate resize shader or enable resize.
-Existing explicit resize effects still work independently.
+NiriFX 0.13 adds shaped resize: the same joined geometry supports Full, Edge
+Rebuild and Soft Reflow. Resize uses bounded interior motion and a stable border;
+open/close scatter and waves do not apply. Choosing a shape never enables resize.
+See the [explicit resize profiles](resize.md#shaped-resize).
 
 Triangles draw two pieces per cell. Wide or tall pieces, travelling waves and
 multiple release groups increase the bounded search work. A lower particle count
