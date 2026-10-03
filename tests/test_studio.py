@@ -71,6 +71,7 @@ class ServerTests(unittest.TestCase):
             html = response.read().decode()
             self.assertIn("NiriFX Studio", html)
             self.assertNotIn("@EFFECT_JSON@", html)
+            self.assertIn('"save_target": "standalone"', html)
         with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
             document = {
                 "schema": 3,

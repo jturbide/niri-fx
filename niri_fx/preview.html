@@ -68,7 +68,7 @@
         ><button id="save">Save to iRiS</button>
       </div>
       <p id="status" role="status" aria-live="polite"></p>
-      <small
+      <small id="save-help"
         >Saving adds a style to Settings → Windows → Movement → Style. Your current animation stays
         active until you select another style there.</small
       >
@@ -78,11 +78,7 @@
       <div class="wide">
         <label for="family">Effect family</label
         ><select id="family">
-          <option value="fragments">Fragments</option>
-          <option value="slices">Slices</option>
-          <option value="elastic">Elastic</option>
-          <option value="dissolve">Dissolve</option>
-          <option value="iris">Iris</option></select
+          @FAMILY_OPTIONS@</select
         ><small id="family-note"></small>
       </div>
       <div class="wide profile-controls">

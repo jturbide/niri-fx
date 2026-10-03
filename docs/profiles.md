@@ -55,3 +55,8 @@ Profiles do not add application-specific rules or interactive dragging hooks.
   in the picker's configured preset folder; see [Noctalia setup](noctalia.md).
 - Detailed wave controls are collapsible. Each family shows applicable controls
   using the same parameter definitions as the CLI and Python validation.
+
+Launch with `python3 -m niri_fx studio --target standalone` to start with file
+downloads, or choose `--target inir` / `--target noctalia`. The default `auto`
+selects iNiR when its helper is installed, otherwise standalone. Offline previews
+also default to standalone. The target changes the save UI, not your active effect.

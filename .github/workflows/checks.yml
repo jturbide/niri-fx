@@ -68,6 +68,9 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx render --preset crosswind > varied.kdl
           /tmp/niri-fx-package/bin/niri-fx render --preset noise-dissolve > dissolve.kdl
           /tmp/niri-fx-package/bin/niri-fx render --preset iris-bloom > iris.kdl
+          /tmp/niri-fx-package/bin/niri-fx render --preset dust-drift > pixels.kdl
+          /tmp/niri-fx-package/bin/niri-fx render --preset ghost-wisps > wisps.kdl
+          /tmp/niri-fx-package/bin/niri-fx render --preset shockwave > distortion.kdl
           /tmp/niri-fx-package/bin/niri-fx profile --open-preset spring-wobble --close-preset ember-erosion > profile.json
           /tmp/niri-fx-package/bin/niri-fx render --custom profile.json > profile.kdl
           /tmp/niri-fx-package/bin/niri-fx preview --custom profile.json --output profile.html

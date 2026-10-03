@@ -63,11 +63,20 @@ def main():
                 ],
                 cwd=ROOT,
                 check=True,
-                timeout=300,
+                timeout=420,
             )
             presets = json.loads(registry.read_text())["presets"]
             assert unrelated in presets, "Saving replaced an unrelated preset"
-            for family in ("fragments", "slices", "elastic", "dissolve", "iris"):
+            for family in (
+                "fragments",
+                "slices",
+                "elastic",
+                "dissolve",
+                "iris",
+                "pixels",
+                "wisps",
+                "distortion",
+            ):
                 saved = next(p for p in presets if p["id"] == f"niri-fx-custom-browser-{family}")
                 assert saved["effect"]["family"] == family
                 assert not saved["effect"]["resize"]

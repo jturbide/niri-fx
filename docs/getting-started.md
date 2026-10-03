@@ -1,5 +1,9 @@
 # Getting started
 
+**Standalone Niri is fully supported; Quickshell is optional.** Start with the
+[scenario guide](scenarios.md) or [standalone walkthrough](standalone.md) if you
+do not use an existing shell picker.
+
 ## Requirements
 
 - Linux and Python 3.10 or newer. The application has no Python runtime dependencies.
@@ -69,7 +73,7 @@ unrecognized custom timings. Later base changes are not inherited automatically.
 For visual editing and saving:
 
 ```sh
-python3 -m niri_fx studio
+python3 -m niri_fx studio --target inir
 # Optional launcher, tied to this checkout's current path:
 python3 scripts/install-desktop.py
 ```

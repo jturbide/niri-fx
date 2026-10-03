@@ -93,10 +93,10 @@ try {
   });
   await rpc("Page.navigate", { url: pathToFileURL(preview).href });
   for (let i = 0; i < 100; i++) {
-    if (await evaluate("document.documentElement.dataset.shaderStatus")) break;
+    if (await evaluate("document.documentElement?.dataset.shaderStatus")) break;
     await sleep(100);
   }
-  assert.equal(await evaluate("document.documentElement.dataset.shaderStatus"), "ready");
+  assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
   // Capture-only layout: keep the actual canvas and synthetic window textures.
   await evaluate(`(()=>{
   const style=document.createElement('style');style.textContent=
@@ -274,7 +274,7 @@ try {
     parameters=normalizePreset({schema:3,name:'Recording',effect:${JSON.stringify(effect)}}).effect;populate();document.querySelector('[data-mode=${spec.mode}]').click();refresh();
     byId('gif-heading').textContent=${JSON.stringify(panel.label)};byId('gif-note').textContent=${JSON.stringify(note)};
     byId('gif-heading').style.fontSize=${JSON.stringify(comparison ? "28px" : spec.panels ? "24px" : "18px")};byId('gif-note').style.fontSize=${JSON.stringify(spec.panels ? "18px" : "12px")};`);
-      assert.equal(await evaluate("document.documentElement.dataset.shaderStatus"), "ready");
+      assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
       assert.deepEqual(await evaluate("parameters"), effect);
       assert.deepEqual(
         await evaluate("[shaderFor(parameters,true),shaderFor(parameters,false)]"),

@@ -158,10 +158,10 @@ function labels() {
     capabilities = catalog.families[parameters.family];
   byId("fragment-controls").hidden = !fragment;
   byId("fragment-note").hidden = !fragment;
-  byId("slice-controls").hidden = parameters.family !== "slices";
-  byId("elastic-controls").hidden = parameters.family !== "elastic";
-  byId("dissolve-controls").hidden = parameters.family !== "dissolve";
-  byId("iris-controls").hidden = parameters.family !== "iris";
+  for (const family of Object.keys(catalog.families)) {
+    const group = { fragments: "fragment", slices: "slice" }[family] || family;
+    byId(group + "-controls").hidden = parameters.family !== family;
+  }
   for (const wrapper of document.querySelectorAll("[data-parameter]")) {
     const families = specs[wrapper.dataset.parameter].families;
     if (wrapper.id !== "count-control" && wrapper.id !== "tile-control")
@@ -170,8 +170,8 @@ function labels() {
   byId("resize-controls").hidden = !capabilities.resize;
   byId("family-note").textContent = fragment
     ? "Open, close and optional resize. Move/swap previews are experimental concepts."
-    : ["dissolve", "iris"].includes(parameters.family)
-      ? "Open and close reveal effects. Resize and native movement are unavailable."
+    : !["slices", "elastic"].includes(parameters.family)
+      ? "Stock Niri open/close effects. Resize and native movement are unavailable."
       : parameters.family === "elastic"
         ? "Whole-window wobble. Open/close on stock Niri; native movement requires the patched compositor."
         : "Open and close. Slice resize and movement are not supported in this release.";
@@ -218,7 +218,15 @@ function labels() {
     "wave_span",
   ])
     byId(key).disabled = mode === "resize";
-  byId("seed").disabled = mode === "resize" || ["elastic", "iris"].includes(parameters.family);
+  byId("seed").disabled =
+    mode === "resize" || ["elastic", "iris", "distortion"].includes(parameters.family);
+  byId("edge_hue").disabled = parameters.edge_saturation === 0;
+  for (const id of ["pixel_travel", "pixel_wind"])
+    byId(id).disabled = parameters.pixel_mode !== "dust";
+  byId("pixel_direction").disabled = parameters.pixel_mode === "pixelate";
+  byId("distortion_width").disabled = parameters.distortion_mode !== "shockwave";
+  byId("distortion_fade").disabled = parameters.distortion_mode === "shockwave";
+  byId("distortion_angle").disabled = parameters.distortion_mode !== "wave";
   byId("wave_span").disabled = mode === "resize" || parameters.release === "together";
   byId("gravity_strength").disabled = mode === "resize" || byId("gravity").value === "none";
   byId("spin").disabled = byId("rotation").value === "none";
@@ -375,9 +383,16 @@ function saveTarget() {
   const target = byId("save-target").value;
   byId("save").disabled = target === "inir" && !catalog.connection;
   byId("save").textContent = target === "inir" ? "Save to iRiS" : "Download preset file";
+  byId("save-help").textContent =
+    target === "inir"
+      ? "Saving adds a style to iRiS Settings → Windows → Movement → Style. Select it there to activate."
+      : target === "noctalia"
+        ? "Download the preset into your Noctalia Niri Animations folder, then select it in the picker."
+        : "Download a Niri config include or export editable JSON. Apply it through standalone setup when ready.";
 }
 byId("save-target").onchange = saveTarget;
-byId("save").disabled = !catalog.connection;
+byId("save-target").value = catalog.save_target;
+saveTarget();
 if (catalog.connection)
   setInterval(
     () => fetch("/ping?token=" + encodeURIComponent(catalog.connection.token)).catch(() => {}),
@@ -385,7 +400,7 @@ if (catalog.connection)
   );
 if (!catalog.connection)
   byId("status").textContent =
-    "Offline preview: export a preset, or run “python3 -m niri_fx studio” to save directly to iRiS.";
+    "Offline preview: download a Niri preset or export editable JSON. Previewing does not activate effects.";
 byId("save").onclick = async () => {
   const target = byId("save-target").value;
   if (target !== "inir") {

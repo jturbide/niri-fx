@@ -95,8 +95,8 @@ new native demos display NiriFX and the preset name.
 
 ## Piece shapes, hinges and spring transforms
 
-The gallery has 75 GIFs, including all 41 presets. The latest addition contains
-12 preset loops, five comparisons and three native swaps. Shape comparisons
+The shape/hinge/spring expansion added 12 preset loops, five comparisons and
+three native swaps. Shape comparisons
 change corner rounding or shrink from the same baseline; hinge and collapse
 comparisons change one scalar; release comparisons change the spatial sequence;
 elastic comparisons add either twist or spatial ripples.
@@ -116,6 +116,23 @@ Unknown/empty names fail before any frames are recorded. Use one selection optio
 at a time. Recordings use exact current parameters with resize off except the
 explicit resize examples.
 
-The current gallery has 84 GIFs. New reveals include six preset loops, two controlled
-comparisons and `profile-spring-and-ember.gif`: its source profile records separate
-opening and closing effects. Metadata includes both parameter sets.
+The 0.7.0 reveals added six preset loops, two controlled comparisons and
+`profile-spring-and-ember.gif`: its source profile records separate opening and
+closing effects. Metadata includes both parameter sets.
+
+## Pixels, wisps, distortion and configurable erosion
+
+The current gallery has **95 GIFs**, including all **55 presets**. Eight new
+preset loops and three comparisons show pixel modes, curling wisps, distortion
+patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
+comparison and the Spring/Ember profile were regenerated for the revised shaders.
+
+```sh
+node scripts/render-readme-gifs.mjs --only=preset-pixel-wipe,preset-pixelate,preset-dust-drift
+node scripts/render-readme-gifs.mjs --only=preset-ghost-wisps,preset-ink-current
+node scripts/render-readme-gifs.mjs --only=preset-shockwave,preset-ripple-collapse,preset-wave-fold
+node scripts/render-readme-gifs.mjs --only=compare-ember-palette,compare-pixel-modes,compare-distortion-patterns
+```
+
+These are original implementations inspired by broad visual ideas, not captures
+or ports of Burn My Windows. Upstream reference media is not bundled.

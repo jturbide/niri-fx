@@ -1,6 +1,6 @@
 # Noctalia and preset folders
 
-NiriFX can export a reversible folder of all 47 open/close presets for the
+NiriFX can export a reversible folder of all 55 open/close presets for the
 existing Noctalia **Niri Animations** picker. This support is included in 0.7.0. It adds no daemon and does not modify Noctalia source.
 
 The [community plugin](https://noctalia.dev/plugins/community/niri-animations)
@@ -13,7 +13,7 @@ plugin, not an interchangeable plugin for both versions.
 
 The exported configs and picker-style include chain have been validated with
 stock Niri. **Noctalia 5.2.1 with Niri Animations 0.2.0 passed an isolated UI test:**
-the picker found all 47 styles, keyboard dropdown selection applied Iris Bloom
+the 0.7.0 picker test found all 47 then-current styles, keyboard dropdown selection applied Iris Bloom
 and Ember Erosion, and selecting the base pack removed the preset include.
 Niri validated the resulting configurations. For legacy
 Noctalia or a picker without this contract, use [standalone setup](setup.md).

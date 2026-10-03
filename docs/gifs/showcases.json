@@ -818,6 +818,111 @@
           "source": "examples/profiles/spring-and-ember.json"
         }
       ]
+    },
+    {
+      "name": "compare-ember-palette",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "CHARCOAL / WHITE",
+          "preset": "ember-erosion",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "edge_saturation": 0,
+            "edge_brightness": 1
+          }
+        },
+        {
+          "label": "BLACK EDGE",
+          "preset": "ember-erosion",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "edge_saturation": 0,
+            "edge_brightness": 0
+          }
+        },
+        {
+          "label": "WARM EDGE",
+          "preset": "ember-erosion",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "edge_saturation": 0.9,
+            "edge_brightness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-pixel-modes",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "PIXEL WIPE",
+          "preset": "pixel-wipe",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_mode": "wipe"
+          }
+        },
+        {
+          "label": "PIXELATE",
+          "preset": "pixel-wipe",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_mode": "pixelate"
+          }
+        },
+        {
+          "label": "DRIFTING DUST",
+          "preset": "pixel-wipe",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_mode": "dust"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-distortion-patterns",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "SHOCK FRONT",
+          "preset": "shockwave",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_mode": "shockwave"
+          }
+        },
+        {
+          "label": "RADIAL RIPPLES",
+          "preset": "shockwave",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_mode": "ripple"
+          }
+        },
+        {
+          "label": "PLANAR WAVES",
+          "preset": "shockwave",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_mode": "wave"
+          }
+        }
+      ]
     }
   ]
 }

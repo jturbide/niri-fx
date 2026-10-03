@@ -93,12 +93,12 @@ try {
   await rpc("Page.navigate", { url: pathToFileURL(page).href });
   for (
     let i = 0;
-    i < 100 && !(await evaluate("document.documentElement.dataset.shaderStatus"));
+    i < 100 && !(await evaluate("document.documentElement?.dataset.shaderStatus"));
     i++
   )
     await delay(100);
   assert.equal(
-    await evaluate("document.documentElement.dataset.shaderStatus"),
+    await evaluate("document.documentElement?.dataset.shaderStatus"),
     "ready",
     await evaluate("document.getElementById('error').textContent"),
   );

@@ -202,3 +202,55 @@ python3 -m niri_fx preview --preset portal-out --output /tmp/portal-out.html
 
 An [independent Spring and Ember profile](profiles/spring-and-ember.json) opens with
 Spring Wobble and closes with Ember Erosion. See the [profile guide](../docs/profiles.md).
+
+## Pixel, wisp and distortion examples
+
+These styles use stock Niri open/close shaders. Resize stays off.
+
+[Pixel Wipe](pixel-wipe.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/pixel-wipe.json --output /tmp/pixel-wipe.html
+```
+
+[Pixelate](pixelate.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/pixelate.json --output /tmp/pixelate.html
+```
+
+[Dust Drift](dust-drift.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/dust-drift.json --output /tmp/dust-drift.html
+```
+
+[Ghost Wisps](ghost-wisps.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/ghost-wisps.json --output /tmp/ghost-wisps.html
+```
+
+[Ink Current](ink-current.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/ink-current.json --output /tmp/ink-current.html
+```
+
+[Shockwave](shockwave.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/shockwave.json --output /tmp/shockwave.html
+```
+
+[Ripple Collapse](ripple-collapse.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/ripple-collapse.json --output /tmp/ripple-collapse.html
+```
+
+[Wave Fold](wave-fold.json)
+
+```sh
+python3 -m niri_fx preview --custom examples/wave-fold.json --output /tmp/wave-fold.html
+```
