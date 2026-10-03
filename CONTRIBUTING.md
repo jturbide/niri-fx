@@ -85,9 +85,10 @@ export parity; it is not a compositor GPU benchmark. See
   pixels, compare Python exports and save all families through the real Studio CLI.
   `npm test` also runs the DOM-free browser core with the same document cases as
   Python and compares all supported stock action shaders. `npm run test:browser`
-  tests real Chromium launch/error/timeout/cleanup before the full editor E2E.
+  tests real Chromium launch/error/timeout/cleanup and gallery filtering/playback before the full editor E2E.
   Avoid duplicating these with a separate framework just to increase test counts.
-- GitHub Actions runs lint, Python 3.10/3.14 tests, GLSL compilation, docs/media
+- GitHub Actions classifies changes conservatively: an explicit docs/media allowlist skips unit, GLSL, package and browser work. Lint and docs checks still run. Unknown paths, missing history, manual runs and failed selection require full checks or fail the required jobs. Required job names remain unchanged.
+- Full GitHub Actions runs lint, Python 3.10/3.14 tests, GLSL compilation, docs/media
   checks, wheel installation and browser E2E. The optional DMS adapter test requires Quickshell; the [GPU harness](docs/performance.md) requires hardware timer queries. Stock Niri parsing and patched native
   smoke checks also run locally where the compositor is available. CI is not GPU
   performance certification or a desktop deployment pipeline.
@@ -111,6 +112,8 @@ reports, planning conversations and outreach drafts out of commits and PR bodies
 Use sample content in media. Inspect representative frames of each recording,
 including menus and status messages; text inside images is not covered by a
 source secret scan. Keep local investigations under ignored `artifacts/`.
+
+After changing recordings or gallery metadata, run `python3 scripts/build-gallery.py` (Pillow required), then `python3 scripts/build-gallery.py --check`. GitHub Pages publishes the checked static gallery after changes reach main. Posters load first; playback is explicit and limited to one GIF.
 
 Before submitting, inspect `git diff --cached`, check new files for private data
 and run the documentation check. A clean scanner result complements manual review;

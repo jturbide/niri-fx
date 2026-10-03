@@ -28,7 +28,7 @@ uniform sampler2D niri_tex;
 uniform mat3 niri_geo_to_tex;
 uniform float niri_clamped_progress;
 uniform float niri_random_seed;
-uniform vec2 niri_move_delta;
+uniform vec2 niri_move_delta; uniform vec2 niri_move_impulse;
 uniform sampler2D niri_tex_prev;
 uniform sampler2D niri_tex_next;
 uniform mat3 niri_geo_to_tex_prev;

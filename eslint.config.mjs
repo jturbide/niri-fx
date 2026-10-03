@@ -9,7 +9,7 @@ export default [
     languageOptions: { globals: globals.node },
   },
   {
-    files: ["niri_fx/*.js"],
+    files: ["niri_fx/*.js", "docs/gallery/*.js"],
     languageOptions: { sourceType: "script", globals: { ...globals.browser } },
   },
   {

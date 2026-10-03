@@ -4,7 +4,7 @@ from argparse import Namespace
 from pathlib import Path
 
 from niri_fx.cli import parser, selected_effect
-from niri_fx.effects import PRESETS, movement_shader, resize_shader
+from niri_fx.effects import FAMILIES, PRESETS, movement_shader, resize_shader
 from niri_fx.preview import preview_document
 from niri_fx.studio import make_server
 
@@ -44,7 +44,10 @@ class RevealTests(unittest.TestCase):
         for name in ("pixel-wipe", "ghost-wisps", "shockwave"):
             effect = PRESETS[name]
             self.assertFalse(effect.resize)
-            for render in (resize_shader, movement_shader):
+            for action, render in (("resize", resize_shader), ("movement", movement_shader)):
+                if FAMILIES[effect.family][action]:
+                    self.assertTrue(render(effect))
+                    continue
                 with (
                     self.subTest(preset=name),
                     self.assertRaisesRegex(ValueError, "does not support"),

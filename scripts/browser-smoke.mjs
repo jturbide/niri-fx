@@ -16,6 +16,35 @@ const browser = await launchBrowser();
 try {
   const { rpc, evaluate } = browser;
   await browser.navigate(url, { width: 1380, height: 1120 });
+  const initialDocument = await evaluate("effectDocument()");
+  assert.equal(
+    await evaluate("getComputedStyle(byId('spin').closest('.parameter')).display"),
+    "none",
+  );
+  await evaluate(
+    "byId('advanced').checked=true;byId('advanced').dispatchEvent(new Event('change'))",
+  );
+  assert.notEqual(
+    await evaluate("getComputedStyle(byId('spin').closest('.parameter')).display"),
+    "none",
+  );
+  assert.deepEqual(
+    await evaluate("effectDocument()"),
+    initialDocument,
+    "view changes preserve all settings",
+  );
+  await evaluate("byId('reduced-motion').checked=true;byId('close').click()");
+  assert.equal(await evaluate("progress"), 1, "reduced motion shows the endpoint without playback");
+  await evaluate("byId('open').click()");
+  assert.equal(await evaluate("progress"), 0);
+  assert.deepEqual(
+    await evaluate("effectDocument()"),
+    initialDocument,
+    "preview motion preference does not alter exports",
+  );
+  await evaluate(
+    "byId('reduced-motion').checked=false;byId('advanced').checked=false;byId('advanced').dispatchEvent(new Event('change'))",
+  );
   const expected = JSON.parse(
     execFileSync(
       "python3",
@@ -120,7 +149,7 @@ try {
       "python3",
       [
         "-c",
-        'import hashlib,json;from niri_fx.effects import PRESETS,resize_shader;print(json.dumps({k:hashlib.sha256(resize_shader(v).encode()).hexdigest() for k,v in PRESETS.items() if v.family=="fragments"}))',
+        'import hashlib,json;from niri_fx.effects import PRESETS,FAMILIES,resize_shader;print(json.dumps({k:hashlib.sha256(resize_shader(v).encode()).hexdigest() for k,v in PRESETS.items() if FAMILIES[v.family]["resize"]}))',
       ],
       { encoding: "utf8" },
     ),
@@ -143,7 +172,10 @@ try {
     assert.equal((await sample()).occupied, 600 * 380, name + " resize starts intact");
     await setProgress(0.5);
     const middle = await sample();
-    assert(middle.occupied > 0 && middle.occupied < 700 * 410, name + " resize breaks into pieces");
+    assert(
+      middle.occupied > 0 && middle.occupied <= 700 * 410,
+      name + " resize retains visible content",
+    );
     assert.equal(middle.error, 0);
     await setProgress(1);
     assert.equal((await sample()).occupied, 800 * 440, name + " resize ends intact");
@@ -304,18 +336,19 @@ try {
   assert.equal(imported.error, "");
   assert.equal(imported.effect.schema, 3);
   assert.equal(imported.effect.effect.family, "slices");
-  assert.equal(await evaluate("mode"), "effect", "import exits an unsupported resize preview");
+  assert.equal(await evaluate("mode"), "resize", "slice import retains supported resize preview");
   assert.equal(await evaluate("byId('fragment-controls').hidden"), true);
   assert.equal(await evaluate("byId('slice-controls').hidden"), false);
   assert(
     await evaluate(
-      "[...document.querySelectorAll('[data-mode]')].filter(b=>b.dataset.mode!=='effect').every(b=>b.disabled)",
+      "[...document.querySelectorAll('[data-mode]')].filter(b=>['move','swap'].includes(b.dataset.mode)).every(b=>b.disabled)",
     ),
     "unsupported modes disabled",
   );
+  await evaluate("document.querySelector('[data-mode=effect]').click()");
   const sliceSaved = await evaluate("effectDocument()");
   for (const effect of [
-    { family: "slices", resize: true },
+    { family: "wisps", resize: true },
     { family: "slices", slice_count: 1 },
     { family: "unknown" },
     { family: "slices", slice_direction: "typo" },
@@ -654,6 +687,20 @@ try {
       distortion_y: 0.1,
     },
     "wave-fold": { distortion_angle: -45, distortion_fade: 0.8 },
+    "hexagon-burst": {
+      hex_size: 42,
+      hex_spread: 0.2,
+      hex_spin: 330,
+      hex_direction: "inward",
+      hex_stagger: 0.65,
+    },
+    "ink-spread": {
+      dissolve_mode: "noise",
+      dissolve_turbulence: 0.1,
+      dissolve_x: 0.1,
+      dissolve_y: 0.1,
+    },
+    "signal-glitch": { glitch_bands: 8, glitch_chroma: 1 },
     "diamond-turn": {
       iris_shape: "square",
       iris_direction: "outward",
@@ -692,7 +739,7 @@ try {
   await evaluate("byId('compare').click()");
   assert.equal(await pixelHash(), editedHash);
   await evaluate(
-    "byId('preset').value='iris-bloom';byId('preset').dispatchEvent(new Event('change'));byId('favorite').click();byId('search').value='bloom';byId('search').dispatchEvent(new Event('input'))",
+    "byId('preset').value='iris-bloom';byId('preset').dispatchEvent(new Event('change'));byId('favorite').click();byId('search').value='iris bloom';byId('search').dispatchEvent(new Event('input'))",
   );
   assert.deepEqual(
     await evaluate(
@@ -738,6 +785,12 @@ try {
     "shockwave",
     "ripple-collapse",
     "wave-fold",
+    "hexagon-burst",
+    "hive-collapse",
+    "signal-glitch",
+    "chromatic-glitch",
+    "ink-spread",
+    "ink-bloom",
   ]) {
     await evaluate(
       `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
@@ -758,6 +811,7 @@ try {
       pixels: "dust-drift",
       wisps: "ghost-wisps",
       distortion: "shockwave",
+      hexagons: "hexagon-burst",
     })) {
       await evaluate(
         `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'));byId('name').value=${JSON.stringify("Browser " + family)};byId('save').click()`,

@@ -51,38 +51,46 @@ __all__ = [
 
 # Family names map directly to files. Fragments has three implementations with
 # different bounded lookup costs; resize has its own two-texture interface.
+RESIZE_TEMPLATES = {
+    "fragments": "resize",
+    **{name: f"resize-{name}" for name in ("elastic", "slices", "distortion")},
+}
+
 TEMPLATE_FILES = {
     "classic": "fragments",
     "gravity": "gravity",
     "varied": "varied",
-    "resize": "resize",
+    **{name: name for name in RESIZE_TEMPLATES.values()},
     **{name: name for name in FAMILIES if name != "fragments"},
 }
 
 
-def shader_templates():
-    """Assemble readable GLSL parts, leaving only parameter/action tokens.
-
-    Shared helpers and action entry points expand first. Python and the browser
-    then substitute the same catalog constants into these exact template strings.
-    Read fresh resources so a source-checkout Studio can pick up shader edits.
-    """
+def _template(filename, entry=None):
+    """Resolve shared GLSL first, then substitute action and parameter tokens."""
     root = files("niri_fx").joinpath("shaders")
-    snippets = {
-        "NOISE": root.joinpath("noise.glsl").read_text().rstrip(),
-        "EDGE_COLOR": root.joinpath("edge-color.glsl").read_text().rstrip(),
-    }
-    result = {}
-    for name, filename in TEMPLATE_FILES.items():
-        source = root.joinpath(f"{filename}.glsl").read_text()
-        if "@ACTION_ENTRY@" in source:
+    source = root.joinpath(f"{filename}.glsl").read_text()
+    if "@ACTION_ENTRY@" in source:
+        source = source.replace(
+            "@ACTION_ENTRY@",
+            root.joinpath(f"{filename}-entry.glsl").read_text().rstrip()
+            if entry is None
+            else entry,
+        )
+    for token, snippet in {
+        "NOISE": "noise",
+        "EDGE_COLOR": "edge-color",
+        "RESIZE_COMMON": "resize-common",
+    }.items():
+        if f"@{token}@" in source:
             source = source.replace(
-                "@ACTION_ENTRY@", root.joinpath(f"{filename}-entry.glsl").read_text().rstrip()
+                f"@{token}@", root.joinpath(f"{snippet}.glsl").read_text().rstrip()
             )
-        for token, snippet in snippets.items():
-            source = source.replace(f"@{token}@", snippet)
-        result[name] = source
-    return result
+    return source
+
+
+def shader_templates():
+    """Python and offline Studio expand the same assembled template strings."""
+    return {name: _template(filename) for name, filename in TEMPLATE_FILES.items()}
 
 
 def renderer_name(effect):
@@ -102,7 +110,7 @@ def shader(effect, opening):
 def resize_shader(effect):
     if not FAMILIES[effect.family]["resize"]:
         raise ValueError(f"The {effect.family} family does not support resize")
-    return _expand(shader_templates()["resize"], effect, False)
+    return _expand(shader_templates()[RESIZE_TEMPLATES[effect.family]], effect, False)
 
 
 def movement_shader(effect):
@@ -110,40 +118,34 @@ def movement_shader(effect):
     if not FAMILIES[effect.family]["movement"]:
         raise ValueError(f"The {effect.family} family does not support experimental movement")
     renderer = TEMPLATE_FILES[renderer_name(effect)]
-    source = _expand(
-        files("niri_fx")
-        .joinpath(f"shaders/{renderer}.glsl")
-        .read_text()
-        .replace("@ACTION_ENTRY@", ""),
-        effect,
-        False,
-    )
     if effect.family == "elastic":
-        return (
-            source
-            + """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
-    vec2 impulse = vec2(niri_move_delta.x < 0.0 ? -1.0 : 1.0,
-                        niri_move_delta.y < 0.0 ? -1.0 : 1.0);
+        entry = """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
+    vec2 impulse = niri_move_impulse * (@MOVEMENT_STRENGTH@ / 0.64);
     return elastic_color(coords_geo, size_geo, niri_clamped_progress, 0.0, impulse);
 }
 """
-        )
-    return (
-        source
-        + """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
+    else:
+        function = {
+            "fragments": "fragments",
+            "slices": "slices",
+            "pixels": "pixels",
+            "distortion": "distortion",
+        }[effect.family]
+        entry = """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
     float p = niri_clamped_progress;
-    float breakup = 0.64 * pow(sin(3.14159265359 * p), 2.0);
+    float breakup = @MOVEMENT_STRENGTH@ * pow(sin(3.14159265359 * p), 2.0);
     if (p <= 0.0 || p >= 1.0) breakup = 0.0;
-    return fragments_color(coords_geo, size_geo, breakup);
+    return FUNCTION_color(coords_geo, size_geo, breakup);
 }
-"""
-    )
+""".replace("FUNCTION", function)
+    return _expand(_template(renderer, entry), effect, False)
 
 
 def _expand(template, effect, opening):
     tokens = shader_tokens(effect, PARAMETERS)
     tokens.update(
         {
+            "VARIED_RADIUS": "2" if effect.wave_strength == 0 else "3",
             "ELASTIC_ORIGIN_X": glsl_number(ELASTIC_ANCHORS[effect.elastic_anchor][0]),
             "ELASTIC_ORIGIN_Y": glsl_number(ELASTIC_ANCHORS[effect.elastic_anchor][1]),
             "ENTRY": "open_color" if opening else "close_color",

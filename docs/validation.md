@@ -1,135 +1,95 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for main after 0.7.0. This is a prototype validation record, not a GPU performance certification.
-For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
+Evidence updated on **2026-10-03** for development after 0.7.0. These checks
+establish behavior on the tested setups; they do not certify every GPU or desktop.
+See the [changelog](../CHANGELOG.md) for user-visible changes.
 
 ## Stock effects and editor
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 64 tests passed locally (the real-Niri parser case skips when Niri is unavailable): validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
-| Portable JavaScript core | 28 Node checks, including shared valid/invalid documents and all 55 presets’ supported stock shaders matched against Python |
-| Browser tool lifecycle | Two real Chromium checks cover failed launch, request timeout, page error, in-flight disconnect and profile cleanup |
-| GLSL ES 1.00 compilation | All 209 shaders compiled: 138 fragment variants, 22 slice, 21 elastic and 28 reveal variants |
-| Stock Niri config parsing | All 55 default and 69 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
-| iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves all eight families and independent profiles through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
-| Noctalia file contract | All 55 exported files validated through picker-style relative includes with stock Niri; the 0.7.0 pack passed Noctalia 5.2.1 / Niri Animations 0.2.0 UI selection of Iris Bloom, Ember Erosion and return to base. |
-| Code conventions | Ruff, ESLint and Prettier pass; Actions runs them with pinned development dependencies. |
-| Setup / restore | Real standalone setup, repeat apply and exact restoration passed with Niri, relative includes and a Unicode config path; conflict, failure and symlink cases covered in tests |
-| JSON import | Current documents and rejected obsolete schemas, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
-| Current API | One module/CLI, schema 3 for single styles and kind `profile` schema 1 for action profiles; obsolete style schemas rejected; registry ownership and resize preservation tested |
-| Resize defaults | All built-ins and new editor sessions opt out; explicit custom choices preserved |
-| Browser shader endpoints | Intact initial texture, fragmented midpoint and transparent final frame for open/close |
-| Resize preview | All three modes have intact endpoints and correct texture replacement; Edge Rebuild retains the center and Soft Reflow reduces breakup |
-| Browser / Python parity | Generated shader exports matched across built-ins; extreme controls rendered without WebGL errors |
-| Gravity checks | Earth moved downward, Updraft upward and Black Hole contracted |
-| Concept move / swap | Synthetic windows arrived intact in their correct columns; these are not compositor movement checks |
-| Packaging | Clean wheel/source builds; installed current CLI, icon and offline Studio checked outside the checkout; obsolete namespace/entry point absent; all exported presets restored exactly |
-| Branding and local registration | Canonical Studio/demo launchers installed; iNiR recognizes renamed preset ownership/IDs while the selected shader and resize settings remain unchanged |
+| Python | 72 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities and conservative CI scope selection |
+| Portable JavaScript | 28 Node checks; all 64 presets' supported stock shaders match Python |
+| Real Chromium | 64 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
+| New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
+| Browser lifecycle and gallery | Three tests cover failed startup, bounded requests, disconnect/cleanup, gallery filtering, reduced-motion startup and single-GIF playback |
+| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 64 default exports, supported resize exports and 64 picker-style includes parse in stock Niri 26.04 |
+| Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
+| Resize profiles | Elastic, Accordion and Ripple grow and shrink a synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
+| Resize defaults | Every built-in leaves resize off; viewing controls never enables it; explicit profile slots and custom choices round-trip |
+| Packaging | Wheel and source distribution build; installed CLI, shader resources, icon, offline Studio and profile exports work outside the checkout |
+| Documentation | Local links, example commands, preset/profile recordings, native source hashes and generated gallery/poster hashes are checked |
 
-Current browser checks exercised all 55 presets, exact endpoints, extreme
-parameters, all family controls/capability limits, schema 3 round trips and rejected schema 1/2 imports and three
-fragment resize styles. Each new shape/hinge/elastic control independently changes
-rendered pixels and survives an import round trip. Shrink, rounding and strip
-collapse reduce occupied area. Four spatial release modes produce distinct
-patterns. Extreme rounded/unequal Canvas pieces remain drawable at texture edges.
-Every new Pixels/Wisps/Distortion and erosion control visibly changes rendered
-pixels. New/revised shaders preserve fully transparent input. Standalone and
-Noctalia downloads match the generated KDL exactly, with target-specific help;
-all eight families and a profile save through the real Studio HTTP path into
-isolated iNiR state. Browser parity and behavioral checks validate current effects.
+Browser rendering uses software WebGL for deterministic behavior checks. Native
+checks use synthetic clients, fresh config directories and separate nested Niri
+windows. They do not replace or alter the login compositor.
 
-The three original 0.6 slice effects also opened and closed a synthetic Alacritty client in
-an isolated **stock Niri 26.04** session. Intermediate captures differed from the
-intact window, the opening completed intact, and closing left no window-colored
-pixels. No shader/render/config errors appeared. These are functional checks,
-not performance certification across hardware.
+The earlier transparency, window-shape and fractional-scale cases below remain
+useful regression evidence. Adapter UI recordings describe the versions and
+catalog size actually exercised; new family support is checked through the current
+file contract and Studio save flow, not assumed from those older recordings.
 
-The revised Ember Erosion and Frost Vanish, plus all eight new Pixels, Wisps and
-Distortion presets, also passed actual opening and closing in isolated stock Niri
-on 2026-10-03. Intermediate frames visibly changed, opening settled intact and
-closing left no window-colored pixels; shader/render/config logs stayed clean.
-The login compositor and its active settings were not changed.
+## Native movement and continuity
 
-## Native movement experiment
+The experimental patch applies to Niri revision
+`8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 19 config tests,
+one config integration test, 12 layout-animation tests and three new continuity
+state tests for uninterrupted motion, reversal and repeated retargets/render passes.
 
-The pinned Niri patch built with Rust 1.99.0 and no default features. It applied
-to a clean checkout of `8ed0da44d974c32c6877d2f4630c314da0717ecb` and reproduced
-the expected source diff. Niri's 19 config tests, one config integration test and
-12 existing layout animation regression tests passed.
+Ten native swap recordings passed final-position and intact-color checks with
+clean render logs. Interrupted swapping, closing during movement and closing
+during opening also passed visible-transition and final-cleanup checks. Recording
+commands must arrive within the bounded interruption window.
 
-A nested session rendered two synthetic Alacritty clients during a real column
-swap. Both fragmented, exchanged columns and regained their original measured
-colored areas. Native resize and shader-removal captures were inspected; no
-shader compilation/render/config errors appeared in the observed smoke logs.
-The 0.5.0 nested smoke also passed six swaps interrupted by subsequent moves,
-confirmed both windows' final positions/colored areas, and closed a moving
-window without leaving its fragments behind. This checks eventual settlement,
-not seamless visual continuity; interrupted movements can restart their phase.
-The TTY path compiled but was not activated. The normal login compositor was
-not replaced. See [the experiment scope](../experimental/README.md).
+Retargets retain the deformation phase and seed, with smoothly blended direction
+impulses. Close interruptions continue the original effect while fading. This is
+visual-state continuity, not a claim of continuous physical velocity or acceleration
+across every layout change. Windows remain separate render elements. Mixed-output
+handoffs, capture/block-out combinations, shader removal during close continuation,
+fullscreen and graphics-reset interactions need broader testing.
 
-Crosswind, Orbital Ribbons and Spring Wobble also passed the nested movement
-smoke: real swaps, six interrupted swaps, intact settlement, close during movement
-and shader-removal fallback. Elastic checks visibly bent edges rather than
-fragment pixel loss. The shader change reuses the existing pinned compositor
-binary; no additional compositor patch was required.
+The older smoke checks covered resize and shader-removal fallback, repeated swaps
+and closure of moving windows. The current recordings are described in
+[the experiment guide](../experimental/README.md). The TTY path was not activated.
 
-Bubble Burst, Core Detonation and Twist Snap also passed the native smoke:
-real swap, six interrupted swaps, intact settlement, close during movement,
-supported resize and shader-removal fallback. The new shape/twist recordings
-use the same separately built compositor; the compositor patch is unchanged.
+## Performance evidence
+
+A tighter candidate search for varied fragments without waves produced byte-identical
+results in **231 software-WebGL frame pairs** against the previous shader: seven
+varied presets and four maximum-size/randomness uniform-grid cases, each at three
+seeds and seven animation positions. Waved presets keep the previous search bounds.
+
+Hardware shader measurements and a release-built nested capture diagnostic are
+reported in [Performance](performance.md). Neither measures physical presentation
+latency. The varied renderer searches 75–147 candidates for together release, up
+to 441 for staged release; particle count alone does not predict cost.
 
 ## Documentation recordings
 
-The gallery contains 117 GIFs: all 55 presets, open/close and opt-in resize,
-control/style comparisons, custom recipes, labelled Canvas movement concepts,
-seven actual nested Niri swaps and eleven workflow/compositor scenarios. Earlier
-additions cover eight new preset loops, eleven comparisons for Pixels, Wisps, Distortion and Ember controls, and
-three mixed-action profiles, plus five regenerated clips for revised Dissolve
-behavior. Earlier additions
-cover piece shapes, spatial release, slice hinges/collapse and elastic transforms.
-All dedicated preset loops, comparisons, recipes, profiles and newer native swaps
-include exact parameter metadata. Fourteen early preset loops were refreshed to
-complete that coverage. The introductory open/close/resize clips, two original
-Canvas concepts and original native swap retain their historical recording metadata.
-Synthetic content only; see [reproduction details](gifs/README.md).
+The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
+**134 GIFs**, including all **64 presets**, resize profiles and comparisons, custom
+recipes, labelled Canvas concepts, ten native swaps and twelve workflow/compositor
+scenarios. Fragments appear first. Static posters load initially, and only one
+animation plays after an explicit click.
 
-The comparison/custom recorder checks browser/Python shader parity for every
-panel. The docs check verifies that preview commands, importable JSON, comparison
-definitions and recorded parameter metadata still agree. It also requires a
-dedicated recording for each preset and profile example, and links for all GIFs.
-
-Shader-gallery and earlier native GIFs use 20 fps; the Studio UI workflow uses
-10 fps. The two native interruption scenarios use 50 fps and an optimized release
-build of the pinned experiment. Output is scaled and palette-reduced. Browser checks use Chromium
-software WebGL. Neither measures compositor GPU frame time or guarantees exact
-appearance on every desktop. The experimental build script defaults to an unoptimized build unless passed
-`--release`.
+Shader previews use 20 fps, the Studio workflow 10 fps, and current native swaps
+and interruption scenarios 50 fps from an optimized release build. GIF timing and
+palette reduction affect appearance; recordings are not performance measurements.
+All content is synthetic. See [recording commands](gifs/README.md).
 
 ## Remaining acceptance work
 
-- Real GPU frame time and responsiveness at different window/output sizes. The original fragment
-  shader evaluates up to 27 candidate cells per pixel for simultaneous release,
-  or 81 for directional release. New varied Fragments uses up to 147/441 candidates,
-  independent of particle count. Expanded
-  draw area adds cost; lower particle count alone does not guarantee faster rendering.
-  Slices evaluates at most its configured 2–48 strips per pixel; strip count,
-  window size and expanded draw bounds affect work.
-- Broader fractional scaling and transparency beyond the synthetic cases below;
-  mixed monitors, decorations, fullscreen,
-  output-edge clipping and different applications. Client-side shadows outside
-  window geometry are omitted during breakup.
-- Broader repeated/interrupted-animation coverage, simultaneous resize/close
-  interactions and graphics reset behavior beyond the nested smoke cases.
-- Direct dragging, seamless retargeting and per-particle ordering across windows
-  are not implemented by the current movement hook.
-- Full DMS/iRiS desktop sessions across versions. The real launcher/gallery
-  component hosts now pass the visual workflows described below.
+- Physical presentation timing and responsiveness on integrated GPUs, larger windows,
+  multiple outputs and mixed scaling; capture/encoder timing cannot substitute for it.
+- Broader transparency, decorations, fullscreen and output-edge clipping. Client-side
+  shadows outside the window geometry are omitted during breakup.
+- Continuous physical velocity across retargets, direct dragging, simultaneous
+  resize/close, shared per-particle ordering and graphics-reset behavior.
+- Full iRiS, DMS and Noctalia desktop sessions across versions beyond the controlled
+  component/picker workflows documented below.
 
-Reproduce checks through [Contributing](../CONTRIBUTING.md), report issues with
-minimal synthetic examples, and distinguish successful automated checks from
-visual preference or desktop performance claims.
+Reproduce checks through [Contributing](../CONTRIBUTING.md). Distinguish successful
+automation, visual preference and hardware performance when reporting results.
 
 ## Earlier 0.7.0 acceptance: profiles and integrations
 

@@ -143,7 +143,7 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
-The current checkout has 55 built-ins across eight families. The original styles are listed below;
+The current checkout has 64 built-ins across nine families. The original styles are listed below;
 [new styles and controls](effect-controls.md) cover five varied Fragments, four
 additional Fragments, Slices and Elastic presets, including piece shapes, hinges and spring transforms.
 
@@ -172,10 +172,11 @@ a physical simulation. There are no particle collisions.
 
 ## Resize is opt-in
 
-Resize effects are available for **Fragments only**.
+Resize effects are available for **Fragments, Elastic, Slices and Distortion**.
+See the [resize guide](resize.md) for profiles, controls and supported Niri actions.
 
 All built-in presets and fresh Studio sessions start with fragment resize
-disabled. Imported custom presets retain their explicit choice. Enable **Fragment windows when resizing**, or pass `--resize`:
+disabled. Imported custom presets retain their explicit choice. Enable **Resize**, or pass `--resize`:
 
 ```sh
 python3 -m niri_fx register --name "Resize experiment" --preset balanced --resize
@@ -193,3 +194,15 @@ exports. The CLI's `--help` and subcommand `--help` list every available option.
 See [independent profiles and Studio workflow](profiles.md) for action selection,
 undo/redo, favorites, A/B comparison and shell save targets. The [effect controls](effect-controls.md)
 also cover Dissolve, Iris, Pixels, Wisps and Distortion; the [GPU harness](performance.md) measures shader draw cost.
+
+## Basic and Advanced views
+
+Studio starts with the main controls visible. Enable **Advanced controls** for
+variation, origins, palettes and detailed motion settings. Hiding a control never
+resets its value. **Pause** stops playback; the timeline always supports manual
+inspection. **Reduced motion** shows endpoints when Play is pressed, respects
+the system preference and changes only the preview, not exported settings.
+
+Native movement strength appears in Advanced view for supported families.
+It controls the experimental compositor export; the stock open/close and resize
+shaders ignore it. Use the nested demo to evaluate native movement.

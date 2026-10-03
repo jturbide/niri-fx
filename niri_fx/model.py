@@ -33,41 +33,28 @@ ELASTIC_ANCHORS = {
     "bottom-right": (1.0, 1.0),
 }
 PRESET_SCHEMA = 3
+# Capabilities describe renderer support, never activation. Resize requires an
+# explicit flag or profile slot even when a family has a resize renderer.
 FAMILIES = {
-    "fragments": {
-        "label": "Fragments",
+    name: {
+        "label": name.title(),
         "open_close": True,
-        "resize": True,
-        "movement": True,
-        "concept": True,
-    },
-    "slices": {
-        "label": "Slices",
-        "open_close": True,
-        "resize": False,
-        "movement": False,
-        "concept": False,
-    },
-    "elastic": {
-        "label": "Elastic",
-        "open_close": True,
-        "resize": False,
-        "movement": True,
-        "concept": False,
-    },
-}
-FAMILIES.update(
-    {
-        name: {
-            "label": name.title(),
-            "open_close": True,
-            "resize": False,
-            "movement": False,
-            "concept": False,
-        }
-        for name in ("dissolve", "iris", "pixels", "wisps", "distortion")
+        "resize": name in {"fragments", "slices", "elastic", "distortion"},
+        "movement": name in {"fragments", "slices", "elastic", "pixels", "distortion"},
+        "concept": name == "fragments",
     }
-)
+    for name in (
+        "fragments",
+        "slices",
+        "elastic",
+        "dissolve",
+        "iris",
+        "pixels",
+        "wisps",
+        "distortion",
+        "hexagons",
+    )
+}
 
 
 @dataclass(frozen=True)
@@ -84,6 +71,7 @@ class Effect:
     )
     slice_count: int = parameter(
         12,
+        basic=True,
         label="Slice count",
         families=("slices",),
         group="slices",
@@ -94,6 +82,7 @@ class Effect:
     )
     slice_angle: float = parameter(
         0,
+        basic=True,
         label="Slice angle",
         families=("slices",),
         group="slices",
@@ -103,6 +92,7 @@ class Effect:
     )
     slice_distance: float = parameter(
         220,
+        basic=True,
         label="Travel distance",
         families=("slices",),
         group="slices",
@@ -129,6 +119,7 @@ class Effect:
     )
     slice_direction: str = parameter(
         "outward",
+        basic=True,
         label="Travel direction",
         families=("slices",),
         group="slices",
@@ -235,6 +226,7 @@ class Effect:
     )
     elastic_strength: float = parameter(
         0.7,
+        basic=True,
         label="Wobble strength",
         families=("elastic",),
         group="elastic",
@@ -243,6 +235,7 @@ class Effect:
     )
     elastic_frequency: float = parameter(
         2,
+        basic=True,
         label="Spring oscillations",
         families=("elastic",),
         group="elastic",
@@ -252,6 +245,7 @@ class Effect:
     )
     elastic_damping: float = parameter(
         2,
+        basic=True,
         label="Damping",
         families=("elastic",),
         group="elastic",
@@ -301,6 +295,7 @@ class Effect:
     )
     tile_size: float = parameter(
         28,
+        basic=True,
         label="Square size",
         families=("fragments",),
         group="fragments",
@@ -310,6 +305,7 @@ class Effect:
     )
     scatter: float = parameter(
         125,
+        basic=True,
         label="Initial spread",
         families=("fragments",),
         group="fragments",
@@ -319,6 +315,7 @@ class Effect:
     )
     open_ms: int = parameter(
         520,
+        basic=True,
         label="Opening time",
         families=(),
         group="timing",
@@ -328,6 +325,7 @@ class Effect:
     )
     close_ms: int = parameter(
         480,
+        basic=True,
         label="Closing time",
         families=(),
         group="timing",
@@ -337,6 +335,7 @@ class Effect:
     )
     gravity: str = parameter(
         "space",
+        basic=True,
         label="Gravity direction",
         families=("fragments",),
         group="fragments",
@@ -345,6 +344,7 @@ class Effect:
     )
     gravity_strength: float = parameter(
         0.7,
+        basic=True,
         label="Gravity strength",
         families=("fragments",),
         group="fragments",
@@ -354,6 +354,7 @@ class Effect:
     )
     particles: int = parameter(
         720,
+        basic=True,
         label="Particles, approximately",
         families=("fragments",),
         group="fragments",
@@ -403,11 +404,12 @@ class Effect:
         limits=(0, 0.4),
         token="STAGGER",
     )
-    resize: bool = parameter(False, label="Resize", families=(), group="resize")
+    resize: bool = parameter(False, basic=True, label="Resize", families=(), group="resize")
     resize_ms: int = parameter(
         450,
+        basic=True,
         label="Resize time",
-        families=("fragments",),
+        families=("fragments", "slices", "elastic", "distortion"),
         group="resize",
         limits=(100, 1500),
         unit=" ms",
@@ -415,8 +417,9 @@ class Effect:
     )
     resize_strength: float = parameter(
         0.65,
-        label="Resize breakup",
-        families=("fragments",),
+        basic=True,
+        label="Resize strength",
+        families=("fragments", "slices", "elastic", "distortion"),
         group="resize",
         limits=(0, 1),
         token="RESIZE",
@@ -455,6 +458,7 @@ class Effect:
     )
     resize_mode: str = parameter(
         "full",
+        basic=True,
         label="Resize style",
         families=("fragments",),
         group="resize",
@@ -464,6 +468,7 @@ class Effect:
 
     dissolve_scale: float = parameter(
         24,
+        basic=True,
         label="Noise size",
         families=("dissolve",),
         group="dissolve",
@@ -514,6 +519,7 @@ class Effect:
     )
     iris_shape: str = parameter(
         "circle",
+        basic=True,
         label="Reveal shape",
         families=("iris",),
         group="iris",
@@ -522,6 +528,7 @@ class Effect:
     )
     iris_direction: str = parameter(
         "inward",
+        basic=True,
         label="Closing direction",
         families=("iris",),
         group="iris",
@@ -588,6 +595,7 @@ class Effect:
     )
     edge_brightness: float = parameter(
         1,
+        basic=True,
         label="Edge brightness",
         families=("dissolve", "wisps"),
         group="color",
@@ -604,6 +612,7 @@ class Effect:
     )
     pixel_mode: str = parameter(
         "wipe",
+        basic=True,
         label="Pixel motion",
         families=("pixels",),
         group="pixels",
@@ -612,6 +621,7 @@ class Effect:
     )
     pixel_size: float = parameter(
         12,
+        basic=True,
         label="Pixel size",
         families=("pixels",),
         group="pixels",
@@ -621,6 +631,7 @@ class Effect:
     )
     pixel_direction: str = parameter(
         "center",
+        basic=True,
         label="Wipe direction",
         families=("pixels",),
         group="pixels",
@@ -694,6 +705,7 @@ class Effect:
     )
     wisp_curl: float = parameter(
         0.65,
+        basic=True,
         label="Curl strength",
         families=("wisps",),
         group="wisps",
@@ -702,6 +714,7 @@ class Effect:
     )
     wisp_drift: float = parameter(
         110,
+        basic=True,
         label="Drift distance",
         families=("wisps",),
         group="wisps",
@@ -744,14 +757,16 @@ class Effect:
     )
     distortion_mode: str = parameter(
         "shockwave",
+        basic=True,
         label="Distortion pattern",
         families=("distortion",),
         group="distortion",
-        choices=("shockwave", "ripple", "wave"),
+        choices=("shockwave", "ripple", "wave", "glitch"),
         token="DISTORTION_MODE",
     )
     distortion_strength: float = parameter(
         28,
+        basic=True,
         label="Displacement",
         families=("distortion",),
         group="distortion",
@@ -825,6 +840,111 @@ class Effect:
         group="distortion",
         limits=(0, 1),
         token="DISTORTION_Y",
+    )
+
+    hex_size: float = parameter(
+        24,
+        basic=True,
+        label="Hexagon radius",
+        families=("hexagons",),
+        group="hexagons",
+        limits=(6, 80),
+        unit=" px",
+        token="HEX_SIZE",
+    )
+    hex_spread: float = parameter(
+        0.9,
+        basic=True,
+        label="Hexagon spread",
+        families=("hexagons",),
+        group="hexagons",
+        limits=(0, 2),
+        token="HEX_SPREAD",
+    )
+    hex_spin: float = parameter(
+        140,
+        label="Hexagon spin",
+        families=("hexagons",),
+        group="hexagons",
+        limits=(0, 360),
+        unit="°",
+        token="HEX_SPIN",
+    )
+    hex_direction: str = parameter(
+        "outward",
+        basic=True,
+        label="Hexagon direction",
+        families=("hexagons",),
+        group="hexagons",
+        choices=("outward", "inward"),
+        token="HEX_DIRECTION",
+    )
+    hex_stagger: float = parameter(
+        0.3,
+        label="Hexagon stagger",
+        families=("hexagons",),
+        group="hexagons",
+        limits=(0, 0.7),
+        token="HEX_STAGGER",
+    )
+    dissolve_mode: str = parameter(
+        "noise",
+        basic=True,
+        label="Dissolve pattern",
+        families=("dissolve",),
+        group="dissolve",
+        choices=("noise", "ink"),
+        token="DISSOLVE_MODE",
+    )
+    dissolve_turbulence: float = parameter(
+        0.6,
+        basic=True,
+        label="Ink turbulence",
+        families=("dissolve",),
+        group="dissolve",
+        limits=(0, 1),
+        token="DISSOLVE_TURBULENCE",
+    )
+    dissolve_x: float = parameter(
+        0.5,
+        label="Ink origin · horizontal",
+        families=("dissolve",),
+        group="dissolve",
+        limits=(0, 1),
+        token="DISSOLVE_X",
+    )
+    dissolve_y: float = parameter(
+        0.5,
+        label="Ink origin · vertical",
+        families=("dissolve",),
+        group="dissolve",
+        limits=(0, 1),
+        token="DISSOLVE_Y",
+    )
+    glitch_bands: int = parameter(
+        24,
+        label="Signal bands",
+        families=("distortion",),
+        group="distortion",
+        limits=(4, 96),
+        integer=True,
+        token="GLITCH_BANDS",
+    )
+    glitch_chroma: float = parameter(
+        0,
+        label="Color separation",
+        families=("distortion",),
+        group="distortion",
+        limits=(0, 1),
+        token="GLITCH_CHROMA",
+    )
+    movement_strength: float = parameter(
+        0.64,
+        label="Native movement strength",
+        families=("fragments", "slices", "elastic", "pixels", "distortion"),
+        group="movement",
+        limits=(0, 1),
+        token="MOVEMENT_STRENGTH",
     )
 
     def __post_init__(self):

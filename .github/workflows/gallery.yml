@@ -1,0 +1,52 @@
+name: Gallery
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/gallery/**"
+      - "docs/gifs/**"
+      - "scripts/build-gallery.py"
+      - ".github/workflows/gallery.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - name: Verify generated gallery
+        run: python3 scripts/build-gallery.py --check
+      - name: Stage public assets
+        run: |
+          mkdir -p _site/gallery _site/gifs
+          cp docs/gallery/index.html docs/gallery/gallery.js docs/gallery/gallery.css _site/gallery/
+          cp -r docs/gallery/posters _site/gallery/
+          cp docs/gifs/*.gif _site/gifs/
+          printf '%s\n' '<!doctype html><html lang="en"><meta charset="utf-8"><meta http-equiv="refresh" content="0;url=gallery/"><title>NiriFX Gallery</title><a href="gallery/">Open the NiriFX gallery</a></html>' > _site/index.html
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
+        with:
+          path: _site
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy gallery
+        id: deployment
+        uses: actions/deploy-pages@d6db90164ac5ed86f2b6aed7e0febac5b3c0c03e # v4

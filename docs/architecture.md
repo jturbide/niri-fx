@@ -50,7 +50,7 @@ capabilities and templates; the browser consumes that contract.
 `integer` means a user value must be whole. `glsl_type` describes emitted GLSL
 syntax: slice-loop bounds need integers, while whole particle counts participate
 in float arithmetic. Number formatting uses six decimals with the same tie and
-negative-zero behavior in both languages. Unknown shader tokens fail explicitly.
+negative-zero behavior in both languages. Unknown shader tokens fail explicitly. `basic` controls initial editor visibility; it never removes values from saved documents. Family-specific resize templates share the two-texture sampling contract. The varied fragment search radius is derived from wave strength in both generators, with its coverage proof beside the shader loop.
 
 Node checks compare every preset's opening, closing and supported resize source
 against Python. Browser checks then exercise actual compiled pixels and the real
@@ -75,7 +75,7 @@ both validators and those cases together.
 - Bound loops independently of window area. When changing a motion field, prove
   that the candidate neighborhood still covers every contributor. Document the
   bound beside the loop; fewer particles alone need not reduce shader cost.
-- Preserve the distinction between stock open/close, opt-in fragment resize,
+- Preserve the distinction between stock open/close, opt-in resize,
   Canvas concepts and the separately patched native movement interface.
 
 The renderer-specific comments explain the applicable coordinate frames, search

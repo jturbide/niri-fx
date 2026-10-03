@@ -23,16 +23,17 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 
 | I want to… | Guide |
 | --- | --- |
-| Find a look or compare settings | [Effect gallery](showcases.md) |
+| Find a look or compare settings | [Click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/), [scenario guide](showcases.md), [full catalog](catalog.md) |
 | Learn Studio's controls | [Studio and controls](usage.md) |
 | Adjust waves, randomness, colors and motion | [Effect controls](effect-controls.md) |
+| Enable a resize effect | [Resize styles and profiles](resize.md) |
 | Combine different opening and closing effects | [Profiles](profiles.md) |
 | Import a ready-made custom style | [Examples](../examples/README.md) |
 | Try experimental movement and swaps | [Experimental build](../experimental/README.md) |
 | Understand performance and known limits | [GPU measurements](performance.md), [testing](validation.md) |
 | See planned improvements | [Roadmap](../ROADMAP.md), [integration plans](roadmap.md) |
 
-Opening and closing use stock Niri shaders. Fragment resize is opt-in. Native
+Opening and closing use stock Niri shaders. Resize is opt-in for Fragments, Elastic, Slices and Distortion. Native
 movement requires the experimental compositor patch; Studio's Move/Swap tabs
 show concepts and do not install movement effects.
 

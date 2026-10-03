@@ -14,6 +14,25 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  changes:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      full: ${{ steps.scope.outputs.full }}
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 2
+      - name: Select checks
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if [[ "$BASE_SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            git fetch --no-tags --depth=1 origin "$BASE_SHA" || true
+          fi
+          python3 scripts/ci_scope.py --base "$BASE_SHA" --head "$GITHUB_SHA" --event "$GITHUB_EVENT_NAME"
+
   lint:
     runs-on: ubuntu-latest
     timeout-minutes: 10
@@ -33,28 +52,41 @@ jobs:
       - run: npm test
 
   validate:
+    needs: changes
+    if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 10
     strategy:
       matrix:
         python: ["3.10", "3.14"]
     steps:
+      - name: Require successful check selection
+        env:
+          SELECTION_RESULT: ${{ needs.changes.result }}
+          FULL_CHECKS: ${{ needs.changes.outputs.full }}
+        run: |
+          test "$SELECTION_RESULT" = success
+          [[ "$FULL_CHECKS" == true || "$FULL_CHECKS" == false ]]
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: ${{ matrix.python }}
       - name: Install GLSL validator and package builder
+        if: needs.changes.outputs.full == 'true'
         run: |
           sudo apt-get update
           sudo apt-get install -y glslang-tools
           python -m pip install -r requirements-dev.txt
       - name: Test registry safety and effect generation
+        if: needs.changes.outputs.full == 'true'
         run: python -m unittest discover -s tests -v
       - name: Check documentation, media and changelog
         run: python scripts/check-docs.py
       - name: Compile all shader variants
+        if: needs.changes.outputs.full == 'true'
         run: python scripts/validate.py --require-glsl
       - name: Build and smoke-test installed package
+        if: needs.changes.outputs.full == 'true'
         run: |
           python -m build
           python -m venv /tmp/niri-fx-package
@@ -72,6 +104,7 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx render --preset dust-drift > pixels.kdl
           /tmp/niri-fx-package/bin/niri-fx render --preset ghost-wisps > wisps.kdl
           /tmp/niri-fx-package/bin/niri-fx render --preset shockwave > distortion.kdl
+          /tmp/niri-fx-package/bin/niri-fx render --preset hexagon-burst > hexagons.kdl
           /tmp/niri-fx-package/bin/niri-fx profile --open-preset spring-wobble --close-preset ember-erosion > profile.json
           /tmp/niri-fx-package/bin/niri-fx render --custom profile.json > profile.kdl
           /tmp/niri-fx-package/bin/niri-fx preview --custom profile.json --output profile.html
@@ -79,19 +112,35 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx restore --state /tmp/nirifx-pack-state --apply
 
   browser:
+    needs: changes
+    if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
-      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+      - name: Require successful check selection
+        env:
+          SELECTION_RESULT: ${{ needs.changes.result }}
+          FULL_CHECKS: ${{ needs.changes.outputs.full }}
+        run: |
+          test "$SELECTION_RESULT" = success
+          [[ "$FULL_CHECKS" == true || "$FULL_CHECKS" == false ]]
+      - if: needs.changes.outputs.full == 'true'
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - if: needs.changes.outputs.full == 'true'
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: "3.14"
-      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+      - if: needs.changes.outputs.full == 'true'
+        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
           node-version: "22"
       - name: Test Studio rendering, import and real save flow
+        if: needs.changes.outputs.full == 'true'
         env:
           CHROME_BIN: google-chrome
         run: |
           npm run test:browser
           python scripts/studio-e2e.py
+      - name: Explain skipped browser checks
+        if: needs.changes.outputs.full == 'false'
+        run: echo "Documentation/media only; browser tests were not needed." >> "$GITHUB_STEP_SUMMARY"

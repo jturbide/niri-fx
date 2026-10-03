@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.nested import NestedSession, encode_gif, record, save_clips, stop, wait_for
 
+from niri_fx.documents import load_document, parse_document
 from niri_fx.effects import PRESETS, render_kdl
 
 BASE = """hotkey-overlay { skip-at-startup; }
@@ -39,6 +40,12 @@ def changed_pixels(path, baseline):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--record", action="store_true", help="Write the verified synthetic GIFs")
+    parser.add_argument(
+        "--presets", help="Check a comma-separated preset selection without recording"
+    )
+    parser.add_argument(
+        "--resize-profiles", action="store_true", help="Also check the three resize examples"
+    )
     args = parser.parse_args()
     cases = (
         ("stock-transparent-fragments", "explosion", 600, 400, 1.0),
@@ -47,6 +54,11 @@ def main():
         ("stock-tall-pixels", "pixel-wipe", 300, 660, 1.0),
         ("stock-fractional-frost", "frost-vanish", 600, 400, 1.5),
     )
+    if args.presets:
+        names = args.presets.split(",")
+        if args.record or any(name not in PRESETS for name in names):
+            parser.error("--presets requires known presets and cannot be combined with --record")
+        cases = tuple((f"stock-{name}", name, 600, 400, 1.0) for name in names)
     results = []
     with NestedSession(BASE + render_kdl(PRESETS["balanced"])) as session:
         for name, preset, width, height, scale in cases:
@@ -90,8 +102,8 @@ def main():
                 )
             }
             assert counts["intact"] > 1000 and counts["gone"] == 0, counts
-            assert 0 < counts["opening"] < counts["intact"], counts
-            assert 0 < counts["closing"] < counts["intact"], counts
+            assert counts["opening"] > 0 and changed_pixels(opening, intact) > 100, counts
+            assert counts["closing"] > 0 and changed_pixels(closing, intact) > 100, counts
             assert not session.windows()
             result = {
                 "name": name,
@@ -115,6 +127,43 @@ def main():
                 result.update(file=str(dest.relative_to(ROOT)), bytes=dest.stat().st_size)
             results.append(result)
             print(f"PASS {name}: {counts}", flush=True)
+        if args.resize_profiles:
+            for name in ("elastic-resize", "accordion-resize", "ripple-resize"):
+                profile = parse_document(load_document(ROOT / f"examples/profiles/{name}.json"))[2]
+                session.reload(BASE + render_kdl(profile))
+                empty = session.capture(name + "-empty")
+                client = session.launch(
+                    ["qs", "-p", str(ROOT / "scripts/fixtures/window.qml")],
+                    name,
+                    env=session.env | {"NIRIFX_LABEL": name},
+                    private_bus=True,
+                )
+                window = wait_for(session.windows, "resize fixture")[0]
+                time.sleep(1.6)
+                widths = []
+                for width in (900, 400):
+                    before = session.capture(f"{name}-{width}-before")
+                    session.msg("action", "set-window-width", "--id", str(window["id"]), str(width))
+                    time.sleep(0.3)
+                    middle = session.capture(f"{name}-{width}-middle")
+                    time.sleep(1.1)
+                    settled = session.capture(f"{name}-{width}-settled")
+                    actual = session.windows()[0]["layout"]["window_size"][0]
+                    assert actual == width, (actual, width)
+                    assert changed_pixels(middle, before) > 100
+                    assert changed_pixels(middle, settled) > 100
+                    widths.append(actual)
+                session.msg("action", "close-window", "--id", str(window["id"]))
+                time.sleep(1.6)
+                assert (
+                    not session.windows()
+                    and changed_pixels(session.capture(name + "-gone"), empty) == 0
+                )
+                stop(client)
+                print(
+                    f"PASS {name}: grow/shrink to {widths}, intermediate frames, empty close",
+                    flush=True,
+                )
         session.check_render_log()
         (session.root / "checks.json").write_text(json.dumps(results, indent=2) + "\n")
         print(f"Evidence: {session.root}", flush=True)

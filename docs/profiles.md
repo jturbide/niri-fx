@@ -10,7 +10,7 @@ Other ready-to-import combinations are **Burst and Drift** (Explosion opening,
 Dust Drift closing), **Frost and Fragments** (Frost Vanish opening, Pixel Dust
 closing), and **Ghost and Shockwave** (Ghost Wisps opening, Shockwave closing).
 See [all four JSON files and preview commands](../examples/profiles/README.md)
-or [their gallery loops](../README.md#combine-different-actions). Resize stays
+or [their gallery loops](catalog.md#combine-different-actions). Resize stays
 off in every example.
 
 In Studio, enable **Independent action effects**, choose **Editing action**, and

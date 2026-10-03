@@ -1,0 +1,151 @@
+:root {
+    color-scheme: dark;
+    font-family: system-ui, sans-serif;
+    color: #e5edea;
+    background: #11171c;
+}
+* {
+    box-sizing: border-box;
+}
+body {
+    margin: 0;
+}
+header,
+main,
+footer {
+    max-width: 1320px;
+    padding: 24px;
+    margin: auto;
+}
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #2d373c;
+}
+a {
+    color: #b7e8db;
+    text-underline-offset: 4px;
+}
+.brand {
+    font-size: 26px;
+    font-weight: 800;
+    text-decoration: none;
+}
+.eyebrow {
+    color: #d6c5ef;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    margin-top: 38px;
+}
+h1 {
+    font-size: clamp(34px, 6vw, 64px);
+    letter-spacing: -0.04em;
+    margin: 8px 0 16px;
+}
+.intro {
+    font-size: 20px;
+    line-height: 1.5;
+    max-width: 740px;
+}
+.legend {
+    color: #a2b3bb;
+    max-width: 850px;
+    line-height: 1.6;
+}
+form {
+    display: grid;
+    grid-template-columns: 2fr repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 32px;
+}
+label {
+    display: grid;
+    gap: 8px;
+    font-size: 14px;
+}
+input,
+select,
+button {
+    font: inherit;
+    color: inherit;
+    border: 1px solid #40515a;
+    border-radius: 8px;
+    background: #1b262d;
+    padding: 10px 12px;
+}
+button {
+    cursor: pointer;
+}
+button:hover,
+button[aria-pressed="true"] {
+    background: #2d4947;
+    border-color: #b7e8db;
+}
+:focus-visible {
+    outline: 3px solid #d6c5ef;
+    outline-offset: 3px;
+}
+#count {
+    display: inline-block;
+    margin: 26px 18px 26px 0;
+    color: #a2b3bb;
+}
+#gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 22px;
+}
+article {
+    border: 1px solid #2d3b44;
+    border-radius: 14px;
+    overflow: hidden;
+    background: #172128;
+}
+article[hidden],
+[hidden] {
+    display: none !important;
+}
+article img {
+    display: block;
+    width: 100%;
+    height: 230px;
+    object-fit: contain;
+    background: #10151e;
+}
+.card-body {
+    padding: 18px;
+}
+h2 {
+    font-size: 19px;
+    margin: 0 0 10px;
+}
+.card-body p {
+    color: #a2b3bb;
+    font-size: 13px;
+    min-height: 32px;
+}
+.card-body a {
+    margin-left: 10px;
+    font-size: 14px;
+}
+footer {
+    margin-top: 35px;
+    color: #a2b3bb;
+    font-size: 14px;
+}
+@media (max-width: 760px) {
+    form {
+        grid-template-columns: 1fr 1fr;
+    }
+    header,
+    main,
+    footer {
+        padding: 18px;
+    }
+}
+@media (max-width: 440px) {
+    form {
+        grid-template-columns: 1fr;
+    }
+}

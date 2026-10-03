@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The current gallery has **117 GIFs**, including all **55 presets**. Eight new
+The gallery contains **134 GIFs**, including all **64 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -159,12 +159,12 @@ with separate shader parameters recorded for both actions. Resize remains off.
 The documentation check enforces a recording for each preset and profile example,
 and a documentation link for each GIF, as well as parameter and file-size agreement.
 Fourteen early preset loops were also refreshed to complete parameter metadata
-for all 55 built-ins. The introductory clips and original movement concepts retain
-their older, smaller metadata records; the original native swap is documented separately.
+for every built-in. The introductory clips and original movement concepts retain
+their older, smaller metadata records; native swaps use their own checked manifest.
 
 ## Workflow and compositor recordings
 
-These eleven clips use real controls/clients, with metadata separate from the
+These twelve clips use real controls/clients, with metadata separate from the
 shader-comparison manifest in [scenario-manifest.json](scenario-manifest.json).
 Run them sequentially; each preserves other entries in that shared file.
 
@@ -240,3 +240,28 @@ rejects the capture. Action offsets are saved in the manifest. Pixel checks run
 after recording stops to avoid adding machine-dependent idle holds. These are
 capture timing checks, not a GPU benchmark. The script does not replace the login
 compositor or prove seamless retargeting. [Acceptance scope](../validation.md#workflow-and-compositor-scenarios).
+
+
+## Expanded styles, resize and native continuity
+
+```sh
+node scripts/render-readme-gifs.mjs --only=preset-hexagon-burst,preset-hive-collapse,preset-signal-glitch,preset-chromatic-glitch,preset-ink-spread,preset-ink-bloom
+node scripts/render-readme-gifs.mjs --only=preset-slice-exchange,preset-pixel-transfer,preset-soft-phase
+node scripts/render-readme-gifs.mjs --only=elastic-resize,accordion-resize,ripple-resize,compare-resize-families
+python3 scripts/build-niri-movement.py --release --test
+python3 scripts/record-native-gif.py --all
+python3 scripts/record-movement-scenarios.py --record
+python3 scripts/build-gallery.py
+python3 scripts/check-docs.py
+```
+
+Native clips use the mint/violet app-card fixture at 50 fps. Their manifests record
+preset values, fixture and patch hashes, release profile and acceptance checks.
+The three interruption scenarios cover retargeted swaps, closing during movement
+and closing during opening. Stock Niri cannot reproduce the state handoff.
+
+The [hosted gallery](https://jturbide.github.io/niri-fx/gallery/) uses generated WebP
+posters. It loads a GIF only after Play, pauses the previous GIF and stops playback
+when filtering, pressing Escape or hiding the tab. It also works by opening
+`docs/gallery/index.html` locally. Run `build-gallery.py --check` to verify the
+catalog and poster hashes without Pillow.

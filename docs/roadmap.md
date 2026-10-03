@@ -1,20 +1,15 @@
-# Shell integration plans
+# Shell integration design notes
 
 NiriFX already works with standalone Niri, iNiR/iRiS, DMS and Noctalia.
 The next integrations aim to make browsing, applying and restoring styles
 convenient in more desktop setups. See the [project roadmap](../ROADMAP.md)
-for overall priorities.
+for priorities. This page describes the integration contract.
 
-The order below reflects current priorities; release dates are not set.
-
-| Priority | Integration | Planned experience |
-| --- | --- | --- |
-| 1 | Existing integrations | More testing across shell versions, complete desktop sessions, GPUs and display setups. |
-| 2 | Reusable custom Quickshell example | A reusable picker with search, custom profiles and reversible apply/undo. |
-| 3 | AGS / Astal example | A GTK-based picker with the same search, profile and restore workflow. |
-| 4 | Caelestia integration assessment | Explore a picker once a maintained Niri-compatible setup and suitable extension point are established. |
-| 5 | ML4W workflow assessment | Start with guidance for a separate Niri session, then assess a settings adapter for an appropriate Niri target. |
-| Separate research | Another compositor renderer | Hyprland/KWin/GNOME need their own shader hooks and adapters, not just a shell plugin. Consider user demand and maintenance cost before a backend project. |
+Existing adapters cover iNiR/iRiS, DMS and Noctalia. Future examples should build
+on the same standalone apply/restore API. The roadmap prioritizes a custom
+Quickshell picker, then AGS/Astal, followed by Caelestia and ML4W assessments.
+An adapter needs a maintained Niri-compatible target and a stable UI extension
+point; installing a different shell cannot add compositor shader hooks.
 
 **Waybar works with standalone NiriFX.** Standalone NiriFX already supplies the
 animation configuration. An optional Studio launcher button is a small convenience,

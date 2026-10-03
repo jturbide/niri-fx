@@ -17,6 +17,7 @@ from .effects import (
     LIMITS,
     PARAMETERS,
     PRESET_SCHEMA,
+    RESIZE_TEMPLATES,
     Effect,
     describe_presets,
     shader_templates,
@@ -50,7 +51,7 @@ def parameter_controls():
             else ""
         )
         groups.setdefault(spec["group"], []).append(
-            f'<div{wrapper} class="parameter" data-parameter="{key}"><label for="{key}">{escape(spec["label"])}{output}</label>{control}<button type="button" class="reset-parameter" data-reset="{key}" aria-label="Reset {escape(spec["label"])}">Reset</button></div>'
+            f'<div{wrapper} class="parameter{"" if spec["basic"] else " advanced"}" data-parameter="{key}"><label for="{key}">{escape(spec["label"])}{output}</label>{control}<button type="button" class="reset-parameter" data-reset="{key}" aria-label="Reset {escape(spec["label"])}">Reset</button></div>'
         )
     result = []
     for group, controls in groups.items():
@@ -65,7 +66,7 @@ def parameter_controls():
         # Basic family settings stay visible; detailed variation is collapsible.
         if group == "variation":
             result.append(
-                '<details id="variation-controls" class="wide"><summary>Advanced waves and variation</summary>'
+                '<details id="variation-controls" class="wide advanced"><summary>Advanced waves and variation</summary>'
                 + "".join(controls)
                 + '<small id="variation-note"></small><span id="slice-variation"></span></details>'
             )
@@ -95,6 +96,7 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None):
         "name": name,
         "presets": describe_presets(),
         "templates": shader_templates(),
+        "resize_templates": RESIZE_TEMPLATES,
         "limits": LIMITS,
         "defaults": asdict(Effect()),
         "families": FAMILIES,

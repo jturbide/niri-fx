@@ -43,8 +43,9 @@
       ></canvas>
       <div class="controls">
         <button id="open">Reconstruct</button><button id="close">Deconstruct</button
-        ><button id="seed">New variation</button><button id="undo" disabled>Undo</button
-        ><button id="redo" disabled>Redo</button><button id="pin">Pin A</button
+        ><button id="pause">Pause</button><button id="seed">New variation</button
+        ><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button
+        ><button id="pin">Pin A</button
         ><button id="compare" disabled aria-pressed="false">Show A</button>
         <label
           ><span id="timeline-label">Breakup</span>
@@ -53,6 +54,11 @@
           ></label
         >
       </div>
+      <label class="motion-preference"
+        ><input id="reduced-motion" type="checkbox" /> Reduced motion: show endpoints without
+        playback</label
+      >
+      <small>Preview preference only. Use the timeline to inspect individual frames.</small>
       <p id="caption"></p>
       <div class="controls">
         <button id="import">Import preset</button
@@ -74,7 +80,13 @@
       >
       <pre id="error" role="alert"></pre>
     </main>
-    <aside>
+    <aside data-view="basic">
+      <div class="wide">
+        <label><input id="advanced" type="checkbox" /> Advanced controls</label
+        ><small
+          >Basic view keeps the main settings visible. All values remain in your preset.</small
+        >
+      </div>
       <div class="wide">
         <label for="family">Effect family</label
         ><select id="family">

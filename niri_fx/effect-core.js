@@ -40,6 +40,7 @@ function createEffectCore(catalog) {
         ]),
     );
     Object.assign(tokens, {
+      VARIED_RADIUS: p.wave_strength === 0 ? "2" : "3",
       ELASTIC_ORIGIN_X: glslNumber(catalog.elastic_anchors[p.elastic_anchor][0]),
       ELASTIC_ORIGIN_Y: glslNumber(catalog.elastic_anchors[p.elastic_anchor][1]),
       ENTRY: opening ? "open_color" : "close_color",
@@ -47,7 +48,7 @@ function createEffectCore(catalog) {
     });
     return (
       resizing
-        ? catalog.templates.resize
+        ? catalog.templates[catalog.resize_templates[p.family]]
         : p.family !== "fragments"
           ? catalog.templates[p.family]
           : p.size_variation || p.direction_variation || p.wave_strength

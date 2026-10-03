@@ -76,6 +76,7 @@ def main():
                 "pixels",
                 "wisps",
                 "distortion",
+                "hexagons",
             ):
                 saved = next(p for p in presets if p["id"] == f"niri-fx-custom-browser-{family}")
                 assert saved["effect"]["family"] == family

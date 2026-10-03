@@ -58,10 +58,10 @@ class VariationTests(unittest.TestCase):
         )
         self.assertIn("fragments_wave", movement_shader(PRESETS["crosswind"]))
         wobble = movement_shader(PRESETS["spring-wobble"])
-        self.assertIn("niri_move_delta", wobble)
+        self.assertIn("niri_move_impulse", wobble)
         self.assertIn("niri_clamped_progress, 0.0, impulse", wobble)
         self.assertNotIn("fragments_color", wobble)
-        self.assertNotIn("niri_move_delta", shader(PRESETS["spring-wobble"], False))
+        self.assertNotIn("niri_move_impulse", shader(PRESETS["spring-wobble"], False))
 
 
 class PackTests(unittest.TestCase):

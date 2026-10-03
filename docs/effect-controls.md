@@ -239,3 +239,36 @@ and transparent image at the animation endpoints.
 Dissolve, Iris, Pixels, Wisps and Distortion support stock opening and closing
 only. Use an independent [profile](profiles.md) to combine families. None adds
 resize or native movement support. [GPU benchmark scope](performance.md).
+
+## Hexagons
+
+Hexagon Burst and Hive Collapse use a hexagonal texture lattice. `--hex-size`
+sets the circumradius in logical pixels (6–80); `--hex-spread` controls flight
+(0–2), `--hex-direction` selects outward or inward, `--hex-spin` controls seeded
+rotation (0–360°), and `--hex-stagger` delays individual cells (0–0.7).
+These styles support stock opening and closing.
+
+## Ink and signal glitch
+
+Dissolve's `--dissolve-mode ink` spreads a turbulent edge from
+`--dissolve-x` / `--dissolve-y`. `--dissolve-turbulence` is 0–1; noise size,
+detail, flow and the existing edge palette remain adjustable. Ink Spread uses a
+dark edge, while Ink Bloom starts pale.
+
+Distortion's `--distortion-mode glitch` produces seeded horizontal signal bands.
+`--glitch-bands` accepts 4–96 and `--glitch-chroma` controls color separation
+from 0 (monochrome) to 1. Displacement and travel cycles adjust shift distance
+and signal changes. Its stepped cadence is intentional; the seed remains fixed
+within an animation. The Distortion resize renderer always uses smooth ripples.
+
+## Native movement and resize
+
+`--movement-strength` (0–1) controls the experimental movement deformation.
+Pass it to `scripts/nested-demo.py` to try an override in the isolated compositor.
+Studio also stores this value in exported JSON; its Canvas concept does not
+preview this native control.
+The standard export never emits a movement hook. Slice Exchange, Pixel Transfer
+and Soft Phase supply three new starting points for the patched compositor.
+
+Resize time and strength are shared by all four supported resize families.
+See [Resize effects](resize.md) for the parameters used by each renderer.

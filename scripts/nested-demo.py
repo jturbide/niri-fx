@@ -62,6 +62,9 @@ def main():
     )
     parser.add_argument("--duration-ms", type=int, default=1100)
     parser.add_argument(
+        "--movement-strength", type=float, help="Override native deformation intensity (0–1)"
+    )
+    parser.add_argument(
         "--resize", action="store_true", help="Opt into fragment resize effects in the demo"
     )
     parser.add_argument(
@@ -72,6 +75,8 @@ def main():
     args = parser.parse_args()
     if not 100 <= args.duration_ms <= 3000:
         parser.error("duration must be 100–3000 ms")
+    if args.movement_strength is not None and not 0 <= args.movement_strength <= 1:
+        parser.error("movement strength must be 0–1")
     if not os.environ.get("WAYLAND_DISPLAY"):
         parser.error(
             "Run inside the existing Wayland desktop; this launcher will not start a TTY session"
@@ -99,6 +104,11 @@ def main():
         PRESETS[args.preset],
         resize=args.resize or (args.smoke and FAMILIES[PRESETS[args.preset].family]["resize"]),
         resize_ms=900 if args.smoke else 550,
+        movement_strength=(
+            PRESETS[args.preset].movement_strength
+            if args.movement_strength is None
+            else args.movement_strength
+        ),
     )
     source = movement_shader(effect)
     cfg.write_text(config(effect, args.duration_ms, source))
