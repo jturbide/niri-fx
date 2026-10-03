@@ -11,7 +11,7 @@ feeds Noctalia’s existing animation picker. Independent action profiles combin
 opening and closing styles; the optional DMS launcher adapter offers preset selection and undo.
 
 [Get started](docs/getting-started.md) · [Studio & controls](docs/usage.md) ·
-[Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
+[Compatibility](docs/compatibility.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md) · [GPU measurements](docs/performance.md)
 
 **Development checkout after the 0.7.0 prerelease.** Includes independent profiles,
@@ -50,7 +50,7 @@ second manager: [iNiR / iRiS](docs/getting-started.md#inir-and-iris) ·
 
 [Fragments](#twenty-three-fragment-styles) · [Slices](#eleven-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
-[Movement](#experimental-movement-and-swaps) · [Install](#try-it)
+[Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](#try-it)
 
 All **55 presets** have a recording. The [visual scenario index](docs/showcases.md)
 also helps you compare controls and choose a combination for everyday use,
@@ -486,6 +486,50 @@ future work. The standard installation uses stock Niri.
 All clips use synthetic content; GIF scaling and palette reduction affect fine
 edges. [Recording details and reproduction commands](docs/gifs/README.md).
 
+### Real desktop workflows
+
+**Studio: import → tune one action → compare A/B → Undo/Redo → export.**
+This recording uses the actual controls and download buttons with the
+[Burst and Drift profile](examples/profiles/burst-and-drift.json).
+
+![Studio imports a profile, edits its closing wind, compares the original, undoes and exports](docs/gifs/workflow-studio-profile.gif)
+
+**Existing shell pickers.** These run inside isolated stock Niri with temporary
+settings. iRiS uses its real gallery/service; DMS uses its real launcher modal and
+PluginService in a small test host. Noctalia runs its full shell with the existing
+Niri Animations plugin. These clips demonstrate selection and restore, not shader
+previews inside the shell's cards. [Versions and acceptance scope](docs/validation.md#workflow-and-compositor-scenarios).
+
+| iRiS · mixed profiles and return to Snappy | DMS · search, apply, Undo and Studio |
+| --- | --- |
+| ![iRiS selects Burst and Drift, Frost and Fragments, then restores Snappy](docs/gifs/workflow-iris.gif) | ![DMS searches Balanced, applies it, undoes it and launches Studio](docs/gifs/workflow-dms.gif) |
+
+![Noctalia selects a custom mixed-action profile and returns to the base configuration](docs/gifs/workflow-noctalia.gif)
+
+**Actual stock Niri, transparent synthetic windows.** Fragments come first;
+wisps demonstrate the same separated tile and transparent gutter. Both clips
+open and close a real client, with resize left off.
+
+| Fragment explosion | Ghost Wisps |
+| --- | --- |
+| ![Stock Niri reconstructs and explodes a window with transparent margins](docs/gifs/stock-transparent-fragments.gif) | ![Stock Niri wisps preserve a synthetic window's transparent gutter](docs/gifs/stock-transparent-wisps.gif) |
+
+More cases: [wide Shockwave](docs/gifs/stock-wide-shockwave.gif),
+[tall Pixel Wipe](docs/gifs/stock-tall-pixels.gif), and
+[Frost at 1.5× scale](docs/gifs/stock-fractional-frost.gif).
+The single scaled output does not demonstrate mixed-monitor behavior.
+
+**Experimental movement under interruption.** These are actual captures of the
+pinned patched Niri: repeated left/right moves finish reconstructed; closing one
+moving client leaves the other intact. Seamless retargeting remains research.
+
+| Reverse direction during movement | Close during movement |
+| --- | --- |
+| ![Two fragmenting windows reverse direction and finish reconstructed](docs/gifs/native-interrupted.gif) | ![One moving window closes while its neighbor finishes reconstructing](docs/gifs/native-close-during-move.gif) |
+
+The [scenario index](docs/showcases.md) maps the **117-GIF gallery** to practical
+choices. The [roadmap](ROADMAP.md) tracks remaining acceptance and future features.
+
 ## Try it
 
 Requires Linux, Python 3.10+ and Niri for desktop effects. There are no Python
@@ -536,7 +580,7 @@ niri validate -c /tmp/fragments.kdl
 Then follow the [standalone installation guide](docs/getting-started.md#standalone-niri)
 to include it after your existing animation settings. The Niri configuration
 path is shell-independent; a DMS-native picker has **not** been implemented or
-runtime-tested. See [DMS setup and the roadmap](docs/compatibility.md).
+runtime-tested. See [DMS setup](docs/dms.md) and the [roadmap](ROADMAP.md).
 For Noctalia’s existing picker, use the [preset-pack setup guide](docs/noctalia.md).
 
 ## Make it yours

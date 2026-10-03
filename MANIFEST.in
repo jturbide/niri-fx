@@ -1,4 +1,4 @@
-include LICENSE README.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY.md
+include LICENSE README.md ROADMAP.md CHANGELOG.md CONTRIBUTING.md SECURITY.md THIRD_PARTY.md
 recursive-include docs *.md
 recursive-include docs *.png
 recursive-include docs *.gif
@@ -8,6 +8,7 @@ recursive-include experimental *.md *.patch
 include experimental/COPYING-NIRI
 recursive-include scripts *.py
 recursive-include scripts *.mjs
+recursive-include scripts *.qml *.c
 recursive-include tests *.py *.mjs
 recursive-include tests *.json
 include requirements-dev.txt package.json package-lock.json eslint.config.mjs .prettierrc.json .editorconfig

@@ -9,7 +9,7 @@ do not need iNiR installed.
 | --- | --- | --- |
 | Niri + iNiR/iRiS | Native preset registration and Studio save | Tested locally. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
-| Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | Real QML/CLI apply/restore tested; full DMS launcher UI acceptance pending. |
+| Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher modal and PluginService passed isolated visual selection/apply/undo; full desktop session not claimed. |
 | Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 55 files validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
 | Niri + Waybar, custom Quickshell or AGS/Astal | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering; custom picker UI not tested. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
@@ -73,7 +73,8 @@ Choose the standalone save target for a KDL download; iRiS registration requires
 
 The optional [DMS launcher adapter](dms.md) now provides searchable built-in
 styles, Studio and reversible apply/undo. Its real QML component passed an
-isolated Quickshell/CLI test; full launcher UI acceptance is tracked separately.
+isolated Quickshell/CLI test and the actual DMS 1.6.2 launcher modal passed visual
+search, selection, Undo and Studio launch in a test host. See [workflow acceptance](validation.md#workflow-and-compositor-scenarios).
 Noctalia reuses its existing picker through [export-pack](noctalia.md). Studio's
 save-target selector also downloads individual Noctalia or standalone KDL files,
 including independent profiles. Only the iNiR target writes its native registry.

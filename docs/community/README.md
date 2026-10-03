@@ -49,7 +49,8 @@ elastic open/close effects, with a local visual editor and KDL export.
 The ordinary effects use stock niri shaders. Resize remains opt-in. Native
 move/swap effects are a separate compositor experiment, and the Studio concepts
 are labelled separately from native recordings. iNiR/iRiS has a preset adapter;
-Noctalia can consume an exported KDL folder, with UI acceptance still pending.
+Noctalia consumes an exported KDL folder; its 5.2.1 picker passed isolated profile
+selection and return to base. DMS also has an optional launcher adapter.
 
 Feedback on visual quality and GPU behavior with synthetic examples would help.
 This is an independent early project, not an official niri or shell component.

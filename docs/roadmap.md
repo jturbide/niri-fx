@@ -1,5 +1,8 @@
 # Integration priorities
 
+The root [ROADMAP.md](../ROADMAP.md) tracks overall progress and milestones.
+This page supplies the integration-specific order and rationale.
+
 Reviewed on **2026-10-03**. The current scope is standalone Niri plus iNiR/iRiS,
 DMS and Noctalia. This is a priority order, not a release-date promise.
 The [development phases](next-phases.md) turn these priorities into scoped deliverables
@@ -7,7 +10,7 @@ and acceptance gates; [architecture](architecture.md) defines the implementation
 
 | Priority | Work | Why / acceptance gate |
 | --- | --- | --- |
-| 1 | Polish and validate existing paths | Finish full DMS launcher visual acceptance; exercise profiles and restore in each existing picker; test more GPUs, display scales and interrupted effects. |
+| 1 | Polish and validate existing paths | Maintain the versioned picker workflow checks; broaden acceptance beyond isolated component hosts and test more GPUs, display scales and interrupted effects. |
 | 2 | Reusable custom Quickshell example | A small picker using the shared CLI, with search, custom profiles and reversible apply/undo. Test it in an isolated Niri session before calling it supported. |
 | 3 | AGS / Astal example | Reuse the same CLI contract in a GTK-based shell; useful beyond Quickshell. Choose a maintained API/version and verify a real shell workflow first. |
 | 4 | Caelestia integration assessment | Its current documented compositor is Hyprland. First establish a maintained Niri-capable setup and an appropriate extension point; then consider a picker. Do not label a Hyprland configuration as NiriFX-compatible. |

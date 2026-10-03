@@ -2,7 +2,7 @@
 
 Small, focused contributions are welcome. For a larger feature or compositor
 backend, open an issue describing the intended behavior before implementing it.
-Check the [compatibility roadmap](docs/compatibility.md) and
+Check the [project roadmap](ROADMAP.md) and [compatibility](docs/compatibility.md) and
 [movement limits](experimental/README.md) first. Read the [architecture](docs/architecture.md),
 [effect contribution guide](docs/adding-effects.md) and [next phases](docs/next-phases.md)
 for implementation boundaries and acceptance criteria.
@@ -91,6 +91,9 @@ export parity; it is not a compositor GPU benchmark. See
   checks, wheel installation and browser E2E. The optional DMS adapter test requires Quickshell; the [GPU harness](docs/performance.md) requires hardware timer queries. Stock Niri parsing and patched native
   smoke checks also run locally where the compositor is available. CI is not GPU
   performance certification or a desktop deployment pipeline.
+- Reproduce [picker and compositor workflows](docs/gifs/README.md#workflow-and-compositor-recordings)
+  in owned nested sessions. Keep the [roadmap](ROADMAP.md) status and
+  [validation record](docs/validation.md) aligned with actual evidence.
 
 Tool configurations: [Ruff](https://docs.astral.sh/ruff/configuration/),
 [ESLint](https://eslint.org/docs/latest/use/configure/configuration-files),

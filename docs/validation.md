@@ -7,7 +7,7 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 63 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| Python regression suite | 64 tests passed locally (the real-Niri parser case skips when Niri is unavailable): validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
 | Portable JavaScript core | 28 Node checks, including shared valid/invalid documents and all 55 presets’ supported stock shaders matched against Python |
 | Browser tool lifecycle | Two real Chromium checks cover failed launch, request timeout, page error, in-flight disconnect and profile cleanup |
 | GLSL ES 1.00 compilation | All 209 shaders compiled: 138 fragment variants, 22 slice, 21 elastic and 28 reveal variants |
@@ -82,10 +82,10 @@ use the same separately built compositor; the compositor patch is unchanged.
 
 ## Documentation recordings
 
-The gallery contains 106 GIFs: all 55 presets, open/close and opt-in resize,
+The gallery contains 117 GIFs: all 55 presets, open/close and opt-in resize,
 control/style comparisons, custom recipes, labelled Canvas movement concepts,
-and seven actual nested Niri swaps. The latest additions cover eight new preset
-loops, eleven comparisons for Pixels, Wisps, Distortion and Ember controls, and
+seven actual nested Niri swaps and eleven workflow/compositor scenarios. Earlier
+additions cover eight new preset loops, eleven comparisons for Pixels, Wisps, Distortion and Ember controls, and
 three mixed-action profiles, plus five regenerated clips for revised Dissolve
 behavior. Earlier additions
 cover piece shapes, spatial release, slice hinges/collapse and elastic transforms.
@@ -100,7 +100,8 @@ panel. The docs check verifies that preview commands, importable JSON, compariso
 definitions and recorded parameter metadata still agree. It also requires a
 dedicated recording for each preset and profile example, and links for all GIFs.
 
-GIFs use 20 fps, scaled output and palette reduction. Browser checks use Chromium
+Effect/native GIFs use 20 fps; the Studio UI workflow uses 10 fps. Output is
+scaled and palette-reduced. Browser checks use Chromium
 software WebGL. Neither measures compositor GPU frame time or guarantees exact
 appearance on every desktop. The experimental default build is unoptimized.
 
@@ -113,15 +114,16 @@ appearance on every desktop. The experimental default build is unoptimized.
   draw area adds cost; lower particle count alone does not guarantee faster rendering.
   Slices evaluates at most its configured 2–48 strips per pixel; strip count,
   window size and expanded draw bounds affect work.
-- Fractional scaling, mixed monitors, transparency, decorations, fullscreen,
+- Broader fractional scaling and transparency beyond the synthetic cases below;
+  mixed monitors, decorations, fullscreen,
   output-edge clipping and different applications. Client-side shadows outside
   window geometry are omitted during breakup.
 - Broader repeated/interrupted-animation coverage, simultaneous resize/close
   interactions and graphics reset behavior beyond the nested smoke cases.
 - Direct dragging, seamless retargeting and per-particle ordering across windows
   are not implemented by the current movement hook.
-- Full DMS launcher visual acceptance remains pending. Its actual 1.6.2 PluginService
-  passed discovery, launcher instantiation, search, apply and restore in isolation.
+- Full DMS/iRiS desktop sessions across versions. The real launcher/gallery
+  component hosts now pass the visual workflows described below.
 
 Reproduce checks through [Contributing](../CONTRIBUTING.md), report issues with
 minimal synthetic examples, and distinguish successful automated checks from
@@ -170,3 +172,36 @@ The installed desktop config and preset registry are outside the hygiene change.
 No active effects, resize choices, shell integrations or compositor binaries are
 changed by this maintenance work. See [architecture](architecture.md) and the
 [next-phase gates](next-phases.md).
+
+## Workflow and compositor scenarios
+
+Recorded on 2026-10-03. The new harness owns a nested Niri window, synthetic
+clients, fresh HOME/XDG directories and a private session bus. It sends input and
+captures only the nested output, stops its process groups and retains logs,
+PNGs, source video and JSON evidence under ignored `artifacts/scenario-*`.
+The installed desktop configuration is not edited. A private session bus does
+not hide system D-Bus information; the published Noctalia clip crops out its bar.
+
+| Check | Result and scope |
+| --- | --- |
+| Stock Niri 26.04 | Explosion/Ghost Wisps with transparent margins and gutter; wide Shockwave (900×280), tall Pixel Wipe (300×660), Frost Vanish at 1.5× (600×400). Five cases show partial open/close, intact surfaces and zero changed pixels after closing. Recorded actions use 1400 ms; preset defaults are unchanged. |
+| Studio | Actual profile import, independent closing-wind edit, pinned A/B, Undo/Redo, JSON/KDL download equality, stock Niri validation and absent resize. Chromium software WebGL; 10 fps UI recording. |
+| iNiR/iRiS c08bb92 / Quickshell 0.3.1 | Unmodified `IrisNiriMotionGallery` and `NiriAnimationPresets` in a small host. Real virtual-pointer selection of Burst and Drift, Frost and Fragments, then Snappy; helper reports each active profile, resulting configs validate, base resize is preserved and prior animation file is restored exactly. The card previews are iRiS timing illustrations. |
+| DMS 1.6.2 / Quickshell 0.3.1 | Unmodified `DankLauncherV2Modal` and `PluginService` in a small host load the NiriFX adapter. Real keyboard search/selection applies Balanced, Undo restores exact config bytes, Studio opens as an app window. A separate check proves Undo refuses an externally edited config. This is launcher-component acceptance, not a full DMS daemon/session test. |
+| Noctalia 5.2.1 / Niri Animations 0.2.0 | Full isolated shell, 55 exported styles plus Burst and Drift. Real keyboard dropdown selection applies the independent profile, returns to base and validates both configs; fragment resize remains absent. |
+| Pinned native movement patch | Explosion at 1200 ms: left/right/left interruption leaves both window IDs in the expected final columns and solid color populations within 2% of the original; closing one moving client removes it and leaves the survivor intact. These checks do not assert seamless retargeting. |
+
+The shell workflow found a standalone preflight bug with an existing inline
+`animations` block. Validation now uses a separate generated include, matching
+installation. The regression test uses the real Niri parser for plan/apply/restore;
+CI skips only that test where Niri is not installed.
+
+[Scenario metadata](gifs/scenario-manifest.json) records parameters, scales, source
+profile hashes, tested shell source fingerprints and native patch revision/hash.
+The docs check detects stale source profiles, preset overrides, patch metadata,
+file sizes and missing gallery links. Run recording commands sequentially because
+they update the shared manifest. See the [recording guide](gifs/README.md#workflow-and-compositor-recordings).
+
+**Remaining limits:** a single nested output at 1.5× is not true mixed-monitor
+acceptance; these synthetic clients do not cover every decoration/application.
+Native movement remains optional and experimental. See [ROADMAP.md](../ROADMAP.md).

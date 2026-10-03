@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The current gallery has **106 GIFs**, including all **55 presets**. Eight new
+The current gallery has **117 GIFs**, including all **55 presets**. Eight new
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -161,3 +161,72 @@ and a documentation link for each GIF, as well as parameter and file-size agreem
 Fourteen early preset loops were also refreshed to complete parameter metadata
 for all 55 built-ins. The introductory clips and original movement concepts retain
 their older, smaller metadata records; the original native swap is documented separately.
+
+## Workflow and compositor recordings
+
+These eleven clips use real controls/clients, with metadata separate from the
+shader-comparison manifest in [scenario-manifest.json](scenario-manifest.json).
+Run them sequentially; each preserves other entries in that shared file.
+
+For the Studio UI, install the browser tooling from [Contributing](../../CONTRIBUTING.md),
+plus `ffmpeg` and stock Niri for exported KDL validation:
+
+```sh
+node scripts/record-studio-workflow.mjs
+```
+
+The following tools run **inside an existing Niri desktop** and create their own
+nested compositor. They require stock `niri`, `qs`, `grim`, `wf-recorder`, `wtype`,
+`ffmpeg`, `dbus-run-session`, and Python with Pillow. Test mode leaves the gallery
+alone; `--record` writes verified GIFs. Each run retains temporary settings, logs,
+PNGs and checks in `artifacts/scenario-*` and closes its owned clients/compositor.
+The fixture has transparent margins and a gutter between two colored shapes.
+
+```sh
+python3 scripts/test-stock-scenarios.py
+python3 scripts/test-stock-scenarios.py --record
+```
+
+Stock clips use five fixed scenarios at 1400 ms opening/closing: transparent
+Explosion and Ghost Wisps, 900×280 Shockwave, 300×660 Pixel Wipe, and 600×400 Frost
+at 1.5× output scale. This slower recording timing does not change preset defaults.
+The test checks partial frames, intact content and an empty close endpoint, plus
+compositor error logs. One scaled output does not test mixed monitors.
+
+To record pickers, supply your **actual release source/binary paths**. The examples
+below use placeholder paths; `--version` labels the tested release, while metadata
+also fingerprints the source components or binary. Sources are read/symlinked into
+a temporary test host; the installed shell and registry are not modified.
+
+```sh
+python3 scripts/test-shell-workflows.py dms --source /path/to/DankMaterialShell \
+  --version 'DMS 1.6.2 / Quickshell 0.3.1' --record
+python3 scripts/test-shell-workflows.py noctalia --binary /path/to/noctalia \
+  --assets /path/to/noctalia/assets --plugin /path/to/niri-animations \
+  --version 'Noctalia 5.2.1 / Niri Animations 0.2.0' --record
+python3 scripts/test-shell-workflows.py iris --source /path/to/inir \
+  --pointer-protocol /path/to/wlr-virtual-pointer-unstable-v1.xml \
+  --version 'iNiR/iRiS c08bb92 / Quickshell 0.3.1' --record
+```
+
+DMS requires Chromium for its actual Studio launch. iRiS additionally needs a C
+compiler, `pkg-config`, Wayland client headers, `wayland-scanner` and the wlr virtual
+pointer protocol XML. The small input fixture builds bindings under `artifacts`
+and connects only to the owned nested socket. DMS/iRiS use their real launcher/
+gallery and services inside minimal hosts; Noctalia runs the full shell. These
+are workflow checks, not a claim of full DMS/iRiS desktop-session coverage.
+The Noctalia publication crop excludes the surrounding bar, which may read system
+services even with a private session bus. Do not publish uncropped raw recordings.
+
+For actual movement interruption, first follow the
+[pinned build instructions](../../experimental/README.md), then run:
+
+```sh
+python3 scripts/record-movement-scenarios.py
+```
+
+The script verifies the binary and patch hashes, records repeated movement and
+close-during-movement with two synthetic clients, and checks final IDs/positions
+and reconstructed color populations. It writes `native-interrupted.gif` and
+`native-close-during-move.gif`. It does not replace the login compositor or prove
+seamless retargeting. [Acceptance scope](../validation.md#workflow-and-compositor-scenarios).

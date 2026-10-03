@@ -1,5 +1,6 @@
 import json
 import os
+import shutil
 import tempfile
 import unittest
 from argparse import Namespace
@@ -11,6 +12,8 @@ from helpers import shell_registry
 from niri_fx import setup
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import PRESETS
+
+REAL_VALIDATE_CONFIG = setup.validate_config
 
 
 class SetupTests(unittest.TestCase):
@@ -66,6 +69,22 @@ class SetupTests(unittest.TestCase):
         self.assertFalse((self.config.parent / "nirifx/animations.kdl").exists())
         with self.assertRaisesRegex(ValueError, "No applied"):
             setup.restore(self.state)
+
+    @unittest.skipUnless(shutil.which("niri"), "requires the real Niri config parser")
+    def test_inline_base_animations_plan_apply_and_restore_with_real_niri(self):
+        self.validator.side_effect = REAL_VALIDATE_CONFIG
+        original = b"animations { window-resize { duration-ms 170; }; }\n"
+        self.config.write_bytes(original)
+        plan = self.plan()
+        self.assertEqual(self.config.read_bytes(), original)
+        self.assertFalse(list(self.config.parent.glob(".nirifx-*.kdl")))
+        result = setup.apply_plan(plan, self.state)
+        self.assertTrue(self.config.read_bytes().startswith(original))
+        self.assertNotIn(
+            "window-resize", (self.config.parent / "nirifx/animations.kdl").read_text()
+        )
+        setup.restore(self.state, result["transaction"], True)
+        self.assertEqual(self.config.read_bytes(), original)
 
     def test_post_install_edits_block_all_restore_writes(self):
         setup.apply_plan(self.plan(), self.state)

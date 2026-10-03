@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Check local documentation links, release versions and recorded GIF metadata."""
 
+import hashlib
 import json
 import re
 import shlex
@@ -158,9 +159,35 @@ def main():
             errors.append(f"Native GIF manifest size differs: {clip['file']}")
         if asdict(Effect(**clip["effect"])) != asdict(PRESETS[clip["preset"]]):
             errors.append(f"Native preset settings changed: {clip['preset']}")
+    scenarios = json.loads((ROOT / "docs/gifs/scenario-manifest.json").read_text())["clips"]
+    if len({clip["name"] for clip in scenarios}) != len(scenarios):
+        errors.append("Scenario manifest has duplicate names")
+    for clip in scenarios:
+        dest = ROOT / clip["file"]
+        if clip["file"] != f"docs/gifs/{clip['name']}.gif":
+            errors.append(f"Scenario file/name mismatch: {clip['name']}")
+        if not dest.is_file() or dest.stat().st_size != clip["bytes"]:
+            errors.append(f"Scenario GIF manifest size differs: {clip['file']}")
+        if not clip.get("backend") or not clip.get("checks"):
+            errors.append(f"Scenario needs renderer and acceptance metadata: {clip['name']}")
+        if "preset" in clip:
+            expected = replace(PRESETS[clip["preset"]], **clip.get("overrides", {}))
+            if asdict(Effect(**clip["effect"])) != asdict(expected):
+                errors.append(f"Scenario settings changed; regenerate {clip['name']}.gif")
+        for source, digest in clip.get("sources", {}).items():
+            path = ROOT / source
+            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+                errors.append(f"Scenario source changed; regenerate {clip['name']}.gif: {source}")
+        if "patch_sha256" in clip:
+            digest = hashlib.sha256(
+                (ROOT / "experimental/niri-movement.patch").read_bytes()
+            ).hexdigest()
+            if digest != clip["patch_sha256"]:
+                errors.append(f"Native patch changed; regenerate {clip['name']}.gif")
     gifs = list((ROOT / "docs/gifs").glob("*.gif"))
     listed = {clip["file"] for clip in manifest["clips"]} | {"docs/gifs/native-swap.gif"}
     listed |= {clip["file"] for clip in native}
+    listed |= {clip["file"] for clip in scenarios}
     if {str(gif.relative_to(ROOT)) for gif in gifs} != listed:
         errors.append("GIF files and manifest differ (native swap is recorded separately)")
     for path in sorted(listed - referenced_gifs):
