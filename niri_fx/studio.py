@@ -16,6 +16,7 @@ from urllib.parse import parse_qs, urlsplit
 
 from .branding import APP_ID
 from .effects import (
+    ELASTIC_ANCHORS,
     ELASTIC_AXES,
     FAMILIES,
     GRAVITIES,
@@ -50,6 +51,7 @@ def preview_document(effect, name="balanced", connection=None):
         "slice_directions": SLICE_DIRECTIONS,
         "slice_orders": SLICE_ORDERS,
         "elastic_axes": ELASTIC_AXES,
+        "elastic_anchors": ELASTIC_ANCHORS,
         "connection": connection,
     }
     data = json.dumps(payload).replace("</", "<\\/")

@@ -9,6 +9,7 @@ from pathlib import Path
 
 from . import __version__
 from .effects import (
+    ELASTIC_ANCHORS,
     ELASTIC_AXES,
     ELASTIC_FIELDS,
     FAMILIES,
@@ -60,15 +61,15 @@ EFFECT_FIELDS = (
         "origin_x",
         "origin_y",
         "resize_mode",
+        "fragment_shrink",
+        "fragment_roundness",
     )
 )
 
 
 def effect_options(command):
     command.add_argument("--preset", choices=PRESETS, default="balanced")
-    command.add_argument(
-        "--family", choices=FAMILIES, help="Effect family; old presets default to fragments"
-    )
+    command.add_argument("--family", choices=FAMILIES, help="Effect family")
     command.add_argument("--slice-count", type=int, help="Number of strips (2–48)")
     command.add_argument(
         "--slice-angle", type=float, help="Strip angle: 0 horizontal, ±90 vertical"
@@ -88,6 +89,16 @@ def effect_options(command):
         "--slice-travel-variation", type=float, help="Random strip travel distance (0–1)"
     )
     command.add_argument("--slice-rotation-variation", type=float, help="Random strip spin (0–1)")
+    command.add_argument("--slice-pivot", type=float, help="Strip hinge along its length (-1–1)")
+    command.add_argument(
+        "--slice-collapse", type=float, help="Strip width collapse during flight (0–1)"
+    )
+    command.add_argument(
+        "--fragment-shrink", type=float, help="Extra fragment shrink during flight (0–1)"
+    )
+    command.add_argument(
+        "--fragment-roundness", type=float, help="Square-to-rounded fragment corners (0–1)"
+    )
     command.add_argument(
         "--size-variation", type=float, help="Unequal strip widths or fragment grid cells (0–1)"
     )
@@ -105,6 +116,16 @@ def effect_options(command):
     command.add_argument("--elastic-frequency", type=float, help="Spring oscillations (1–5)")
     command.add_argument("--elastic-damping", type=float, help="Spring settling rate (0–8)")
     command.add_argument("--elastic-axis", choices=ELASTIC_AXES)
+    command.add_argument("--elastic-twist", type=float, help="Spring rotation (-90–90 degrees)")
+    command.add_argument("--elastic-stretch", type=float, help="Additional spring stretching (0–1)")
+    command.add_argument(
+        "--elastic-ripple", type=float, help="Spatial bend frequency multiplier (0.5–4)"
+    )
+    command.add_argument(
+        "--elastic-anchor",
+        choices=ELASTIC_ANCHORS,
+        help="Rotation/stretch/collapse origin; not a pinned edge",
+    )
     density = command.add_mutually_exclusive_group()
     density.add_argument(
         "--tile-size",
@@ -145,7 +166,7 @@ def effect_options(command):
     command.add_argument("--resize-ms", type=int)
     command.add_argument("--resize-strength", type=float, help="Bounded resize fragmentation (0–1)")
     command.add_argument(
-        "--release", choices=RELEASES, help="Release together or in three directional waves"
+        "--release", choices=RELEASES, help="Spatial release sequence across the window"
     )
     command.add_argument(
         "--wave-span", type=float, help="Fraction of time separating first/last wave (0–0.7)"

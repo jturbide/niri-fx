@@ -212,7 +212,7 @@ class EffectTests(unittest.TestCase):
             {"origin_x": True},
             {"wave_span": 0.71},
             {"wave_span": float("nan")},
-            {"release": "diagonal"},
+            {"release": "spiral"},
             {"resize_mode": "typo"},
         ):
             with self.subTest(overrides=overrides), self.assertRaises(ValueError):

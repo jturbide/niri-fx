@@ -4,7 +4,7 @@
 
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
-NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **29 presets across Fragments, Slices and Elastic**, preview the
+NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **41 presets across Fragments, Slices and Elastic**, preview the
 actual shaders, and tune the controls for each family. The optional iNiR/iRiS
 adapter adds your styles to its settings picker. A preset-folder export also
 feeds Noctalia’s existing animation picker.
@@ -13,7 +13,7 @@ feeds Noctalia’s existing animation picker.
 [Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md)
 
-**Development checkout after 0.6.0.** The new waves, variation, wobble and Noctalia
+**Development checkout after 0.6.0.** The new shapes, hinges, waves, wobble and Noctalia
 pack below are not in the published 0.6.0 prerelease. Opening and closing work on
 stock Niri 26.04.
 Resize fragments are **off by default and strictly opt-in**. Native move/swap
@@ -22,7 +22,7 @@ appearance still need testing across GPUs, applications and display scales.
 
 ## See it in motion
 
-[Fragments](#nineteen-fragment-styles) · [Slices](#seven-slice-styles) · [Wobble](#three-elastic-styles) · [Compare the controls](#one-control-at-a-time) ·
+[Fragments](#twenty-three-fragment-styles) · [Slices](#eleven-slice-styles) · [Wobble](#seven-elastic-styles) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
@@ -34,7 +34,7 @@ These clips use Studio's real shader renderer with synthetic content at 20 fps.
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](docs/gifs/opening.gif) | ![Closing explodes a window into fragments](docs/gifs/closing.gif) |
 
-### Nineteen fragment styles
+### Twenty-three fragment styles
 
 Every loop closes and opens at that preset's configured timing. Start with
 **Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
@@ -81,6 +81,30 @@ motion. These controls also feed the separate native movement experiment.
 size variation and wave motion are shown separately.
 
 ![Comparison of uniform fragments, unequal cells and a travelling wave](docs/gifs/compare-fragment-variation.gif)
+
+### Piece shapes and spatial releases
+
+**Pixel Dust** shrinks into fine debris; **Bubble Burst** rounds the textured
+pieces. **Core Detonation** spreads outward from the burst origin, while
+**Checker Scatter** releases alternating spatial groups. Each rebuilds an intact window.
+
+| Pixel Dust | Bubble Burst |
+| --- | --- |
+| ![Tiny fragments shrink and rise](docs/gifs/preset-pixel-dust.gif) | ![Rounded texture fragments burst outward](docs/gifs/preset-bubble-burst.gif) |
+| [Settings JSON](examples/pixel-dust.json) | [Settings JSON](examples/bubble-burst.json) |
+| **Core Detonation** | **Checker Scatter** |
+| ![A staged explosion spreads from the center](docs/gifs/preset-core-detonation.gif) | ![Checkerboard groups break apart in sequence](docs/gifs/preset-checker-scatter.gif) |
+| [Settings JSON](examples/core-detonation.json) | [Settings JSON](examples/checker-scatter.json) |
+
+**Square / rounded / extra shrink.** Same timing, density, seed and trajectory;
+only the named shape control changes.
+
+![Fragment corner rounding and shrink comparison](docs/gifs/compare-fragment-shapes.gif)
+
+**Core / outer regions / diagonal.** Compare three spatial release sequences.
+The Checker Scatter preset above demonstrates the fourth new sequence.
+
+![Center-out, inward and diagonal release comparison](docs/gifs/compare-fragment-release.gif)
 
 ### One control at a time
 
@@ -135,7 +159,7 @@ Use the other JSON filenames to add those styles too. Registration does not
 activate an effect. [Preview commands and standalone export instructions](examples/README.md)
 let you try the same examples without iNiR or any desktop configuration changes.
 
-### Seven slice styles
+### Eleven slice styles
 
 Whole strips slide, rotate and reassemble. **Slide Apart now alternates adjacent
 horizontal strips**, while **Split Curtain** keeps the original outward split.
@@ -153,6 +177,26 @@ Slices uses stock Niri open/close shaders; resize and movement are unsupported.
 | ![Venetian Sweep releases vertical strips from the center](docs/gifs/preset-venetian-sweep.gif) | | |
 | [Settings JSON](examples/venetian-sweep.json) | | |
 
+**Hinges and shutters.** Rotate around either end, compress strip width, or
+combine both with travelling waves and staggered release. These are 2D strip
+transforms, not a 3D page-turn simulation.
+
+| Hinged Fan | Venetian Shutter |
+| --- | --- |
+| ![Strips rotate around one end like a fan](docs/gifs/preset-hinged-fan.gif) | ![Strips narrow into a center-first shutter](docs/gifs/preset-venetian-shutter.gif) |
+| [Settings JSON](examples/hinged-fan.json) | [Settings JSON](examples/venetian-shutter.json) |
+| **Ribbon Fold** | **Zipper** |
+| ![Vertical ribbons rotate and narrow](docs/gifs/preset-ribbon-fold.gif) | ![Alternating strips separate in a zipper sequence](docs/gifs/preset-zipper.gif) |
+| [Settings JSON](examples/ribbon-fold.json) | [Settings JSON](examples/zipper.json) |
+
+**Hinge position — first end / center / other end.** Same strip rotation and travel.
+
+![Three slice hinge positions compared](docs/gifs/compare-slice-hinges.gif)
+
+**Width collapse — none / half / full.** Watch shutter strips become progressively thinner.
+
+![Three slice width-collapse strengths compared](docs/gifs/compare-slice-collapse.gif)
+
 **Direction — split halves / alternate / random.** Each random strip chooses its
 own direction; there is no forced 50/50 distribution.
 
@@ -166,7 +210,7 @@ own direction; there is no forced 50/50 distribution.
 
 ![Comparison of four, twelve and thirty-two slices](docs/gifs/compare-slice-count.gif)
 
-### Three elastic styles
+### Seven elastic styles
 
 A Compiz-inspired spring feel: bend the whole window, let it oscillate, then
 settle. Tune strength, frequency, damping and axis. These are timed open/close
@@ -177,6 +221,23 @@ and resize wobble are not implemented.
 | --- | --- | --- |
 | ![Spring Wobble bends and settles](docs/gifs/preset-spring-wobble.gif) | ![Rubber Band stretches sideways](docs/gifs/preset-rubber-band.gif) | ![Jelly oscillates in both axes](docs/gifs/preset-jelly.gif) |
 | [Settings JSON](examples/spring-wobble.json) | [Settings JSON](examples/rubber-band.json) | [Settings JSON](examples/jelly.json) |
+
+Twist around the center or a corner, add spatial ripples, and exaggerate spring
+stretching. **Transform origin** controls rotation, stretching and collapse;
+it does not pin an edge to the pointer or simulate cloth.
+
+| Twist Snap | Flag Wave |
+| --- | --- |
+| ![A window twists and springs back](docs/gifs/preset-twist-snap.gif) | ![Whole-window ripples resemble a waving flag](docs/gifs/preset-flag-wave.gif) |
+| [Settings JSON](examples/twist-snap.json) | [Settings JSON](examples/flag-wave.json) |
+| **Corner Spring** | **Accordion** |
+| ![Rotation and stretching use a lower-corner origin](docs/gifs/preset-corner-spring.gif) | ![Repeated bends combine with strong elastic stretching](docs/gifs/preset-accordion.gif) |
+| [Settings JSON](examples/corner-spring.json) | [Settings JSON](examples/accordion.json) |
+
+**Simple bend / twist / ripple.** Matched timing and spring settings, with one
+added control in each comparison panel.
+
+![Elastic twist and spatial ripple comparison](docs/gifs/compare-elastic-transforms.gif)
 
 **Same duration, different springs:** compare all three at matched timing.
 
@@ -220,6 +281,13 @@ Three more **actual native swaps**, each recorded in the isolated patched Niri:
 | --- | --- | --- |
 | ![Native Crosswind swap](docs/gifs/native-swap-crosswind.gif) | ![Native Orbital Ribbons swap](docs/gifs/native-swap-orbital-ribbons.gif) | ![Native Spring Wobble swap](docs/gifs/native-swap-spring-wobble.gif) |
 | Sideways fragment wave | Curved fragment streams | Continuous elastic windows |
+
+Three additional **actual native swaps** show the new geometry controls:
+
+| Bubble Burst | Core Detonation | Twist Snap |
+| --- | --- | --- |
+| ![Rounded fragments swap in native Niri](docs/gifs/native-swap-bubble-burst.gif) | ![Center-released fragments exchange columns](docs/gifs/native-swap-core-detonation.gif) | ![Twisting elastic windows swap columns](docs/gifs/native-swap-twist-snap.gif) |
+| Rounded texture pieces | Staged breakup | Opaque spring rotation |
 
 **Studio concept comparison — Crosswind / Orbital Ribbons / Tidal Fragments.**
 This is the Canvas choreography preview, separate from the native recordings.
@@ -325,7 +393,7 @@ removed. Read [the update policy](docs/upgrading.md) when upgrading a checkout.
 
 | Feature | Stock Niri | Extra requirement |
 | --- | --- | --- |
-| Open / close effects, 29 presets in three families | Yes; validated on 26.04 | Enable Niri animations |
+| Open / close effects, 41 presets in three families | Yes; validated on 26.04 | Enable Niri animations |
 | Optional resize (Fragments family only) | Yes; disabled by default | Studio checkbox or `--resize` |
 | Studio preview and KDL / JSON export | Yes | WebGL browser |
 | Preset registration and Studio save | Yes | iNiR external preset support |

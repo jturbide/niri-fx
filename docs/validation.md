@@ -8,10 +8,10 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 | Check | Observed result |
 | --- | --- |
 | Python regression suite | 48 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
-| GLSL ES 1.00 compilation | All 137 shaders compiled: 114 fragment variants, 14 slice and nine elastic variants |
-| Stock Niri config parsing | All 29 default and 57 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
+| GLSL ES 1.00 compilation | All 181 shaders compiled: 138 fragment variants, 22 slice and 21 elastic variants |
+| Stock Niri config parsing | All 41 default and 69 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
 | iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves schema 3 Fragments, Slices and Elastic through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
-| Noctalia file contract | All 29 exported files validated through picker-style relative includes with stock Niri; Noctalia UI not run. |
+| Noctalia file contract | All 41 exported files validated through picker-style relative includes with stock Niri; Noctalia UI not run. |
 | Code conventions | Ruff, ESLint and Prettier pass; Actions runs them with pinned development dependencies. |
 | Setup / restore | Real standalone setup, repeat apply and exact restoration passed with Niri, relative includes and a Unicode config path; conflict, failure and symlink cases covered in tests |
 | JSON import | Current documents and rejected obsolete schemas, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
@@ -22,14 +22,16 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 | Browser / Python parity | Generated shader exports matched across built-ins; extreme controls rendered without WebGL errors |
 | Gravity checks | Earth moved downward, Updraft upward and Black Hole contracted |
 | Concept move / swap | Synthetic windows arrived intact in their correct columns; these are not compositor movement checks |
-| Packaging | Clean wheel/source builds; installed current CLI, icon and offline Studio checked outside the checkout; obsolete namespace/entry point absent; all 29 exported presets restored exactly |
+| Packaging | Clean wheel/source builds; installed current CLI, icon and offline Studio checked outside the checkout; obsolete namespace/entry point absent; all 41 exported presets restored exactly |
 | Branding and local registration | Canonical Studio/demo launchers installed; iNiR recognizes renamed preset ownership/IDs while the selected shader and resize settings remain unchanged |
 
-Current browser checks exercised all 29 presets, exact endpoints, extreme
+Current browser checks exercised all 41 presets, exact endpoints, extreme
 parameters, all family controls/capability limits, schema 3 round trips and rejected schema 1/2 imports and three
-fragment resize styles. Application identity and serialization changes do not
-alter the GLSL renderer. Historical release hashes are no longer compatibility
-requirements; browser parity and behavioral checks validate current effects.
+fragment resize styles. Each new shape/hinge/elastic control independently changes
+rendered pixels and survives an import round trip. Shrink, rounding and strip
+collapse reduce occupied area. Four spatial release modes produce distinct
+patterns. Extreme rounded/unequal Canvas pieces remain drawable at texture edges.
+Browser parity and behavioral checks validate current effects.
 
 The three original 0.6 slice effects also opened and closed a synthetic Alacritty client in
 an isolated **stock Niri 26.04** session. Intermediate captures differed from the
@@ -61,15 +63,20 @@ and shader-removal fallback. Elastic checks visibly bent edges rather than
 fragment pixel loss. The shader change reuses the existing pinned compositor
 binary; no additional compositor patch was required.
 
+Bubble Burst, Core Detonation and Twist Snap also passed the native smoke:
+real swap, six interrupted swaps, intact settlement, close during movement,
+supported resize and shader-removal fallback. The new shape/twist recordings
+use the same separately built compositor; the compositor patch is unchanged.
+
 ## Documentation recordings
 
-The gallery contains 55 GIFs: all 29 presets, open/close and opt-in resize,
-control and style comparisons, custom recipes, labelled Canvas movement concepts,
-and four actual nested Niri swaps. The 12 new preset loops and five comparisons
-ship with exact parameter metadata; three new native recordings add Crosswind,
-Orbital Ribbons and Spring Wobble. Slide Apart and its count comparison were
-regenerated for alternating horizontal strips. Synthetic content only; see
-[reproduction details](gifs/README.md).
+The gallery contains 75 GIFs: all 41 presets, open/close and opt-in resize,
+control/style comparisons, custom recipes, labelled Canvas movement concepts,
+and seven actual nested Niri swaps. The latest addition is 12 preset loops,
+five comparisons and three native recordings for piece shapes, spatial release,
+slice hinges/collapse and elastic transforms. All current clips include exact
+parameter metadata, apart from the separately documented original native swap.
+Synthetic content only; see [reproduction details](gifs/README.md).
 
 The comparison/custom recorder checks browser/Python shader parity for every
 panel. The docs check verifies that preview commands, importable JSON, comparison

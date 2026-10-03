@@ -19,8 +19,13 @@ const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
 process.chdir(root);
 const args = process.argv.slice(2);
 assert(
-  args.every((arg) => ["--showcase-only", "--slices-only", "--new-only"].includes(arg)),
-  "Supported options: --showcase-only, --slices-only or --new-only",
+  args.length <= 1 &&
+    args.every(
+      (arg) =>
+        ["--showcase-only", "--slices-only", "--new-only"].includes(arg) ||
+        arg.startsWith("--only="),
+    ),
+  "Use one of: --showcase-only, --slices-only, --new-only, --only=clip-name,clip-name",
 );
 mkdirSync(join(root, "artifacts"), { recursive: true });
 const scratch = mkdtempSync(join(root, "artifacts/readme-gifs-"));
@@ -173,7 +178,7 @@ try {
     "rubber-band",
     "jelly",
   ]);
-  const specs = args.includes("--new-only")
+  let specs = args.includes("--new-only")
     ? [
         ...originalSpecs.filter((spec) => additions.has(spec.preset)),
         ...showcases.filter((spec) => spec.name === "compare-slice-count" || spec.new),
@@ -186,6 +191,15 @@ try {
       : args.includes("--showcase-only")
         ? showcases
         : [...originalSpecs, ...showcases];
+  if (args[0]?.startsWith("--only=")) {
+    const names = new Set(args[0].slice("--only=".length).split(","));
+    const all = [...originalSpecs, ...showcases];
+    assert(
+      [...names].every((name) => all.some((spec) => spec.name === name)),
+      "Unknown clip in --only selection",
+    );
+    specs = all.filter((spec) => names.has(spec.name));
+  }
   const previous = existsSync(join(out, "manifest.json"))
     ? JSON.parse(readFileSync(join(out, "manifest.json"), "utf8")).clips
     : [];

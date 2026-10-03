@@ -14,6 +14,8 @@ const float SL_ROTATION_VARIATION = @SLICE_ROTATION_VARIATION@;
 const float SL_WAVE = @WAVE_STRENGTH@;
 const float SL_FREQUENCY = @WAVE_FREQUENCY@;
 const float SL_SPEED = @WAVE_SPEED@;
+const float SL_PIVOT = @SLICE_PIVOT@;
+const float SL_COLLAPSE = @SLICE_COLLAPSE@;
 
 float slices_hash(float index, float salt) {
     return fract(sin(index * 127.1 + niri_random_seed * 43.7 + salt) * 43758.5453);
@@ -59,7 +61,8 @@ vec4 slices_color(vec3 coords_geo, vec3 size_geo, float progress) {
         if (SL_DIRECTION == 3) direction = -1.0;
         if (SL_DIRECTION == 4) direction = slices_hash(ordinal, 81.3) < 0.5 ? -1.0 : 1.0;
         float random = slices_hash(ordinal, 0.0);
-        vec2 pivot = normal * ((position - 0.5) * span);
+        vec2 pivot = normal * ((position - 0.5) * span)
+                   + tangent * (SL_PIVOT * dot(abs(tangent), size) * 0.5);
         float heading = (slices_hash(ordinal, 37.9) * 2.0 - 1.0) * 3.14159265359 * SL_DIRECTION_VARIATION;
         vec2 heading_axis = tangent * cos(heading) + normal * sin(heading);
         vec2 travel = heading_axis * direction * SL_DISTANCE * flight * (1.0 + SL_TRAVEL_VARIATION * (2.0 * random - 1.0));
@@ -70,13 +73,19 @@ vec4 slices_color(vec3 coords_geo, vec3 size_geo, float progress) {
         float c = cos(angle), s = sin(angle);
         // Inverse rotation and translation recover the stationary source point.
         vec2 relative = pixel - pivot - travel;
-        vec2 source = vec2(c * relative.x + s * relative.y, -s * relative.x + c * relative.y) + pivot;
+        vec2 unturned = vec2(c * relative.x + s * relative.y, -s * relative.x + c * relative.y);
+        // Compress only the strip width, then invert it in the unrotated frame.
+        // The positive scale floor prevents a singular lookup near disappearance.
+        float width_scale = 1.0 - 0.94 * SL_COLLAPSE * flight;
+        vec2 source = unturned + pivot;
+        if (SL_COLLAPSE > 0.0)
+            source += normal * dot(unturned, normal) * (1.0 / width_scale - 1.0);
         float stripe = dot(source, normal) + span * 0.5;
         if (stripe < low || stripe >= high) continue;
         vec2 geo = source / size + 0.5;
         float fade = 1.0 - smoothstep(0.35, 1.0, t);
         // Reveal a subpixel edge only as strips move, preserving the intact image.
-        float edge = mix(1.0, smoothstep(0.0, 0.75, min(stripe - low, high - stripe)), flight);
+        float edge = mix(1.0, smoothstep(0.0, 0.75, min(stripe - low, high - stripe) * width_scale), flight);
         vec4 color = slices_sample(geo) * fade * edge;
         result = color + result * (1.0 - color.a);
     }

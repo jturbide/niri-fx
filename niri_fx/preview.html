@@ -150,6 +150,10 @@
             <option value="right">Wave from right</option>
             <option value="up">Wave from top</option>
             <option value="down">Wave from bottom</option>
+            <option value="center">Burst origin outward</option>
+            <option value="edges">Outer regions inward</option>
+            <option value="diagonal">Diagonal sweep</option>
+            <option value="checkerboard">Checkerboard groups</option>
           </select>
         </div>
         <div>
@@ -168,6 +172,19 @@
         <div>
           <label for="swirl">Orbit around center <output id="swirl-value"></output></label
           ><input id="swirl" type="range" min="-360" max="360" step="5" />
+        </div>
+        <div>
+          <label for="fragment_shrink"
+            >Extra piece shrink <output id="fragment_shrink-value"></output
+          ></label>
+          <input id="fragment_shrink" type="range" min="0" max="1" step="0.05" />
+        </div>
+        <div>
+          <label for="fragment_roundness"
+            >Rounded corners <output id="fragment_roundness-value"></output
+          ></label>
+          <input id="fragment_roundness" type="range" min="0" max="1" step="0.05" />
+          <small>These shape controls affect open/close and native movement, not resize.</small>
         </div>
       </div>
       <div id="slice-controls" class="wide" hidden>
@@ -217,6 +234,19 @@
             >Strip rotation <output id="slice_rotation-value"></output></label
           ><input id="slice_rotation" type="range" min="-60" max="60" step="1" />
         </div>
+        <div>
+          <label for="slice_pivot">Hinge position <output id="slice_pivot-value"></output></label>
+          <input id="slice_pivot" type="range" min="-1" max="1" step="0.05" />
+          <small
+            >Along the strip: −1 first end, 0 center, +1 other end. Combine with rotation.</small
+          >
+        </div>
+        <div>
+          <label for="slice_collapse"
+            >Width collapse <output id="slice_collapse-value"></output
+          ></label>
+          <input id="slice_collapse" type="range" min="0" max="1" step="0.05" />
+        </div>
       </div>
       <div id="elastic-controls" class="wide" hidden>
         <div>
@@ -240,6 +270,38 @@
             <option value="horizontal">Horizontal</option>
             <option value="vertical">Vertical</option>
           </select>
+        </div>
+        <div>
+          <label for="elastic_twist">Spring twist <output id="elastic_twist-value"></output></label>
+          <input id="elastic_twist" type="range" min="-90" max="90" step="0.05" />
+        </div>
+        <div>
+          <label for="elastic_stretch"
+            >Extra stretching <output id="elastic_stretch-value"></output
+          ></label>
+          <input id="elastic_stretch" type="range" min="0" max="1" step="0.05" />
+        </div>
+        <div>
+          <label for="elastic_ripple"
+            >Spatial bend frequency <output id="elastic_ripple-value"></output
+          ></label>
+          <input id="elastic_ripple" type="range" min="0.5" max="4" step="0.05" />
+        </div>
+        <div>
+          <label for="elastic_anchor">Transform origin</label
+          ><select id="elastic_anchor">
+            <option value="center">Center</option>
+            <option value="top">Top</option>
+            <option value="bottom">Bottom</option>
+            <option value="left">Left</option>
+            <option value="right">Right</option>
+            <option value="top-left">Top Left</option>
+            <option value="top-right">Top Right</option>
+            <option value="bottom-left">Bottom Left</option>
+            <option value="bottom-right">Bottom Right</option></select
+          ><small
+            >Origin for rotation, stretch and collapse; this does not pin the window edge.</small
+          >
         </div>
         <small
           >Timed spring motion. Interactive drag physics requires additional compositor

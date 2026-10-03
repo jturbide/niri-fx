@@ -302,6 +302,20 @@ try {
   await setProgress(1);
   const moveAfter = await columns();
   sameImage(moveAfter[1], moveBefore[0], "move arrives intact");
+  assert(
+    await evaluate(`(()=>{
+      const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=760;
+      const preview=new MotionPreview(canvas,canvas);
+      const p={...catalog.defaults,particles:4096,size_variation:1,fragment_roundness:1,fragment_shrink:1,release:'checkerboard'};
+      for(const seed of [0,0.37,0.99]) {
+        const parts=preview.particles(0.5,'swap',p,seed);
+        if(!parts.length || parts.some(part=>part.sw<=0 || part.sh<=0 || part.scale<=0)) return false;
+        preview.draw(0.5,'swap',p,seed);
+      }
+      return true;
+    })()`),
+    "unequal rounded concept pieces remain drawable at texture boundaries",
+  );
   await evaluate("document.querySelector('[data-mode=effect]').click()");
   // Import through the real file input; failed imports leave the editor untouched.
   const importFile = async (text) =>
@@ -465,6 +479,61 @@ try {
       );
     }
   }
+  // Each new control must independently change real pixels, survive an export/
+  // import round trip, and retain intact/transparent endpoints.
+  for (const [preset, changes] of [
+    ["balanced", { fragment_shrink: 0.9, fragment_roundness: 1 }],
+    ["hinged-fan", { slice_pivot: 1, slice_collapse: 1 }],
+    [
+      "spring-wobble",
+      { elastic_twist: 80, elastic_stretch: 1, elastic_ripple: 4, elastic_anchor: "bottom-right" },
+    ],
+  ]) {
+    for (const [field, value] of Object.entries(changes)) {
+      await evaluate(
+        `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
+      );
+      await setProgress(0.37);
+      const before = await pixelHash(),
+        area = (await sample()).occupied;
+      await evaluate(
+        `byId(${JSON.stringify(field)}).value=${JSON.stringify(value)};byId(${JSON.stringify(field)}).dispatchEvent(new Event('input'))`,
+      );
+      assert.notEqual(await pixelHash(), before, field + " visibly changes the shader");
+      if (["fragment_shrink", "fragment_roundness", "slice_collapse"].includes(field))
+        assert((await sample()).occupied < area, field + " reduces visible piece area");
+      const doc = await evaluate("effectDocument()");
+      assert.equal((await importFile(JSON.stringify(doc))).error, "");
+      assert.deepEqual(await evaluate("effectDocument()"), doc);
+      for (const p of [0.001, 0.99]) {
+        await setProgress(p);
+        assert.equal((await sample()).error, 0);
+      }
+      await setProgress(0);
+      assert.equal((await sample()).occupied, 600 * 380);
+      await setProgress(1);
+      assert.equal((await sample()).occupied, 0);
+    }
+  }
+  const releaseImages = new Set();
+  for (const release of ["center", "edges", "diagonal", "checkerboard"]) {
+    assert.equal(
+      (
+        await importFile(
+          JSON.stringify({
+            schema: 3,
+            name: "Spatial release",
+            effect: { release, scatter: 100, stagger: 0 },
+          }),
+        )
+      ).error,
+      "",
+    );
+    await setProgress(0.23);
+    releaseImages.add(await pixelHash());
+    assert.equal((await sample()).error, 0);
+  }
+  assert.equal(releaseImages.size, 4, "each spatial release has a distinct pattern");
   for (const family of ["fragments", "slices"]) {
     const doc = {
       schema: 3,
@@ -484,12 +553,16 @@ try {
               slice_travel_variation: 1,
               slice_rotation_variation: 1,
               slice_rotation: 60,
+              slice_pivot: -1,
+              slice_collapse: 1,
             }
           : {
               gravity: "center",
               gravity_strength: 3,
               particles: 4096,
-              release: "right",
+              release: "edges",
+              fragment_roundness: 1,
+              fragment_shrink: 1,
               wave_span: 0.7,
             }),
       },
@@ -517,6 +590,10 @@ try {
     elastic_frequency: 5,
     elastic_damping: 0,
     elastic_axis: "vertical",
+    elastic_twist: -90,
+    elastic_stretch: 1,
+    elastic_ripple: 4,
+    elastic_anchor: "top-left",
   }))
     await evaluate(
       `byId(${JSON.stringify(id)}).value=${JSON.stringify(value)};byId(${JSON.stringify(id)}).dispatchEvent(new Event('input'))`,
@@ -532,9 +609,9 @@ try {
   );
   if (process.argv.includes("--save-test")) {
     for (const [family, preset] of Object.entries({
-      fragments: "crosswind",
-      slices: "shuffled-slats",
-      elastic: "spring-wobble",
+      fragments: "bubble-burst",
+      slices: "hinged-fan",
+      elastic: "corner-spring",
     })) {
       await evaluate(
         `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'));byId('name').value=${JSON.stringify("Browser " + family)};byId('save').click()`,
@@ -550,7 +627,7 @@ try {
   }
   writeFileSync("artifacts/browser-checks.json", JSON.stringify(results, null, 2) + "\n");
   console.log(
-    `PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, slice controls, elastic wobble, visible/reproducible variation, capabilities and current schema validation` +
+    `PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, piece shapes, hinges, elastic transforms, spatial releases, visible/reproducible variation, capabilities and current schema validation` +
       (process.argv.includes("--save-test") ? ", and save to isolated registry." : "."),
   );
 } finally {

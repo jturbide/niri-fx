@@ -538,6 +538,207 @@
           }
         }
       ]
+    },
+    {
+      "name": "compare-fragment-shapes",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Square pieces",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "particles": 240,
+            "rotation": "none"
+          }
+        },
+        {
+          "label": "Rounded corners",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "particles": 240,
+            "rotation": "none",
+            "fragment_roundness": 1
+          }
+        },
+        {
+          "label": "Extra shrink",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "particles": 240,
+            "rotation": "none",
+            "fragment_shrink": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-fragment-release",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Core outward",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "particles": 500,
+            "scatter": 150,
+            "gravity_strength": 0.5,
+            "spin": 90,
+            "stagger": 0,
+            "wave_span": 0.6,
+            "release": "center"
+          }
+        },
+        {
+          "label": "Outer regions inward",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "particles": 500,
+            "scatter": 150,
+            "gravity_strength": 0.5,
+            "spin": 90,
+            "stagger": 0,
+            "wave_span": 0.6,
+            "release": "edges"
+          }
+        },
+        {
+          "label": "Diagonal sweep",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "particles": 500,
+            "scatter": 150,
+            "gravity_strength": 0.5,
+            "spin": 90,
+            "stagger": 0,
+            "wave_span": 0.6,
+            "release": "diagonal"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-slice-hinges",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "First end",
+          "preset": "hinged-fan",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "slice_pivot": -1
+          }
+        },
+        {
+          "label": "Center",
+          "preset": "hinged-fan",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "slice_pivot": 0
+          }
+        },
+        {
+          "label": "Other end",
+          "preset": "hinged-fan",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "slice_pivot": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-slice-collapse",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "No collapse",
+          "preset": "venetian-shutter",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "slice_collapse": 0
+          }
+        },
+        {
+          "label": "Half collapse",
+          "preset": "venetian-shutter",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "slice_collapse": 0.5
+          }
+        },
+        {
+          "label": "Full collapse",
+          "preset": "venetian-shutter",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "slice_collapse": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-elastic-transforms",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Simple bend",
+          "preset": "spring-wobble",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "elastic_strength": 1,
+            "elastic_damping": 1,
+            "elastic_frequency": 1.25
+          }
+        },
+        {
+          "label": "Spring twist",
+          "preset": "spring-wobble",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "elastic_strength": 1,
+            "elastic_damping": 1,
+            "elastic_frequency": 1.25,
+            "elastic_twist": 70
+          }
+        },
+        {
+          "label": "Threefold ripple",
+          "preset": "spring-wobble",
+          "overrides": {
+            "open_ms": 950,
+            "close_ms": 950,
+            "elastic_strength": 1,
+            "elastic_damping": 1,
+            "elastic_frequency": 1.25,
+            "elastic_ripple": 3
+          }
+        }
+      ]
     }
   ]
 }

@@ -12,6 +12,19 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
+- Twelve additional presets: Pixel Dust, Bubble Burst, Core Detonation, Checker
+  Scatter, Hinged Fan, Venetian Shutter, Ribbon Fold, Zipper, Twist Snap, Flag Wave,
+  Corner Spring and Accordion. The pack now has 41 styles: 23 Fragments, 11 Slices
+  and seven Elastic, all with resize off.
+- Fragment corner rounding and extra shrink; four spatial release patterns;
+  slice hinge position and width collapse; elastic twist, stretch, spatial bend
+  frequency and nine transform origins. Controls work in Studio, JSON and CLI.
+- Twelve importable examples and preset GIFs, five controlled comparisons, and
+  three actual native swap recordings. Keep Fragments first in the 75-GIF gallery.
+- Targeted GIF regeneration through `--only=clip-name,clip-name` and browser
+  regressions for visible control changes, reduced piece area, distinct release
+  sequences, round trips, endpoints and maximum control combinations.
+
 - Five varied Fragment presets: Tidal Fragments, Mosaic Burst, Chaotic Confetti,
   Crosswind and Orbital Ribbons. Shared controls add unequal cell sizes, seeded
   heading variation and travelling waves with strength/frequency/speed.
