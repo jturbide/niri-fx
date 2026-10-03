@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "Meteor Shower",
+  "effect": {
+    "tile_size": 28,
+    "scatter": 100,
+    "open_ms": 760,
+    "close_ms": 820,
+    "gravity": "down",
+    "gravity_strength": 1.7,
+    "particles": 1800,
+    "rotation": "random",
+    "spin": 540,
+    "swirl": 0,
+    "dispersion": 1,
+    "stagger": 0.28,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65
+  }
+}

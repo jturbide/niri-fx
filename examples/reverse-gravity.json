@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "Reverse Gravity",
+  "effect": {
+    "tile_size": 28,
+    "scatter": 85,
+    "open_ms": 750,
+    "close_ms": 800,
+    "gravity": "up",
+    "gravity_strength": 1.55,
+    "particles": 1000,
+    "rotation": "random",
+    "spin": 360,
+    "swirl": -70,
+    "dispersion": 0.9,
+    "stagger": 0.22,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65
+  }
+}

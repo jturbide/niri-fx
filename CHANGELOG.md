@@ -14,6 +14,9 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 - GIF gallery for open, close, opt-in resize, all 11 presets, Studio movement
   concepts and an actual nested-compositor column swap; reproducible recorders.
+- Four synchronized control comparisons for particle count, gravity direction,
+  gravity strength and rotation, plus Meteor Shower, Orbit Burst and Reverse
+  Gravity examples with importable JSON and matching preview commands.
 - Installation, update, removal, troubleshooting, contributor, security and
   release guides, with issue/PR templates and a documentation check in CI.
 - Compatibility guide for standalone Niri and DankMaterialShell, with an explicit
@@ -23,6 +26,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 ### Changed
 
 - Reorganized the README around previews, onboarding and supported capabilities.
+- Expanded the main README with visible preset, control and movement showcases;
+  the gallery no longer requires opening collapsed sections.
 - Added package project links and made the source archive include its demo assets,
   experimental patch and corresponding license notices.
 

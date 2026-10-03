@@ -4,6 +4,7 @@
 | --- | --- |
 | Preview, install, update or remove Fragments | [Getting started](getting-started.md) |
 | Tune gravity, particles, rotation or optional resize | [Studio and controls](usage.md) |
+| Try the custom styles shown in the README | [Showcase examples](../examples/README.md) |
 | Use DankMaterialShell or another shell | [Compatibility](compatibility.md) |
 | Fix an installation or rendering problem | [Troubleshooting](troubleshooting.md) |
 | Understand the iNiR registry adapter | [Integration contract](integration.md) |

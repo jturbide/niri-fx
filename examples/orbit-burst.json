@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "name": "Orbit Burst",
+  "effect": {
+    "tile_size": 28,
+    "scatter": 150,
+    "open_ms": 900,
+    "close_ms": 900,
+    "gravity": "space",
+    "gravity_strength": 0.85,
+    "particles": 1500,
+    "rotation": "random",
+    "spin": 240,
+    "swirl": 180,
+    "dispersion": 0.8,
+    "stagger": 0.16,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65
+  }
+}

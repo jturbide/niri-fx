@@ -1,0 +1,267 @@
+{
+  "clips": [
+    {
+      "name": "compare-density",
+      "title": "Particle count",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "180 \u00b7 Chunky",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 180,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180
+          }
+        },
+        {
+          "label": "720 \u00b7 Balanced",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180
+          }
+        },
+        {
+          "label": "2,400 \u00b7 Fine",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 2400,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-gravity",
+      "title": "Gravity direction",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Down \u00b7 Earth",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180,
+            "gravity": "down"
+          }
+        },
+        {
+          "label": "Center \u00b7 Black hole",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180,
+            "gravity": "center"
+          }
+        },
+        {
+          "label": "Outward \u00b7 Space",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180,
+            "gravity": "space"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-strength",
+      "title": "Gravity strength",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "0.3\u00d7 \u00b7 Gentle",
+          "preset": "earth",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 0.3,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180
+          }
+        },
+        {
+          "label": "1.0\u00d7 \u00b7 Earth",
+          "preset": "earth",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180
+          }
+        },
+        {
+          "label": "2.0\u00d7 \u00b7 Heavy",
+          "preset": "earth",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 720,
+            "gravity_strength": 2,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 180
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-rotation",
+      "title": "Particle rotation",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "No rotation",
+          "preset": "earth",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 180,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "none",
+            "spin": 360
+          }
+        },
+        {
+          "label": "Random spin",
+          "preset": "earth",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 180,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "random",
+            "spin": 360
+          }
+        },
+        {
+          "label": "Follow travel",
+          "preset": "earth",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "particles": 180,
+            "gravity_strength": 1,
+            "scatter": 75,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "swirl": 0,
+            "rotation": "gravity",
+            "spin": 360
+          }
+        }
+      ]
+    },
+    {
+      "name": "recipe-meteor-shower",
+      "title": "Meteor Shower",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Meteor Shower",
+          "source": "examples/meteor-shower.json"
+        }
+      ]
+    },
+    {
+      "name": "recipe-orbit-burst",
+      "title": "Orbit Burst",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Orbit Burst",
+          "source": "examples/orbit-burst.json"
+        }
+      ]
+    },
+    {
+      "name": "recipe-reverse-gravity",
+      "title": "Reverse Gravity",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Reverse Gravity",
+          "source": "examples/reverse-gravity.json"
+        }
+      ]
+    }
+  ]
+}

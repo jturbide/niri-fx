@@ -18,52 +18,121 @@ appearance still need testing across GPUs, applications and display scales.
 
 ## See it in motion
 
-Opening and closing use the **Explosion** preset. These are recordings of
-Studio's real shader renderer with synthetic content, sampled at 20 fps.
+[Presets](#eleven-starting-styles) · [Compare the controls](#one-control-at-a-time) ·
+[Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
+[Movement](#experimental-movement-and-swaps) · [Install](#try-it)
+
+Opening and closing use the **Explosion** preset. Fragments keep pieces of the
+window's actual texture, then reconstruct those pieces in their original places.
+These clips use Studio's real shader renderer with synthetic content at 20 fps.
 
 | Open · reconstruct | Close · explode |
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](docs/gifs/opening.gif) | ![Closing explodes a window into fragments](docs/gifs/closing.gif) |
 
-**Resize — opt-in, disabled by default.** This uses the actual resize shader.
+### Eleven starting styles
 
-<img src="docs/gifs/resize.gif" alt="Opt-in resize breaks the window into fragments and reconstructs it at its new size" width="560">
-
-<details>
-<summary>Compare all 11 styles — each loop closes and opens</summary>
+Every loop closes and opens at that preset's configured timing. Start with
+**Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
+or **Implosion** for an inward collapse.
 
 | Subtle | Balanced | Dramatic |
 | --- | --- | --- |
-| ![Subtle](docs/gifs/preset-subtle.gif) | ![Balanced](docs/gifs/preset-balanced.gif) | ![Dramatic](docs/gifs/preset-dramatic.gif) |
+| ![Subtle: compact fragments separate and return](docs/gifs/preset-subtle.gif) | ![Balanced: a medium-density outward burst](docs/gifs/preset-balanced.gif) | ![Dramatic: a wider, denser burst](docs/gifs/preset-dramatic.gif) |
+| Compact · 360 pieces | Everyday · 720 pieces | Wide burst · 1,100 pieces |
 | **Explosion** | **Implosion** | **Earth** |
-| ![Explosion](docs/gifs/preset-explosion.gif) | ![Implosion](docs/gifs/preset-implosion.gif) | ![Earth](docs/gifs/preset-earth.gif) |
+| ![Explosion: a dense outward blast and reconstruction](docs/gifs/preset-explosion.gif) | ![Implosion: pieces collapse into the center and return](docs/gifs/preset-implosion.gif) | ![Earth: falling fragments with randomized spin](docs/gifs/preset-earth.gif) |
+| Outward blast · 1,200 pieces | Inward collapse · 1,000 pieces | Downward gravity · 600 pieces |
 | **Black Hole** | **Space** | **Vortex** |
-| ![Black Hole](docs/gifs/preset-black-hole.gif) | ![Space](docs/gifs/preset-space.gif) | ![Vortex](docs/gifs/preset-vortex.gif) |
+| ![Black Hole: fragments turn toward the center](docs/gifs/preset-black-hole.gif) | ![Space: freely spinning fragments drift outward](docs/gifs/preset-space.gif) | ![Vortex: fragments orbit into the center](docs/gifs/preset-vortex.gif) |
+| Center pull + turning | Outward drift + free spin | Center pull + orbit |
 | **Confetti** | **Updraft** | |
-| ![Confetti](docs/gifs/preset-confetti.gif) | ![Updraft](docs/gifs/preset-updraft.gif) | |
+| ![Confetti: a shower of small tumbling fragments](docs/gifs/preset-confetti.gif) | ![Updraft: fragments rise and turn along their travel](docs/gifs/preset-updraft.gif) | |
+| Tumbling shower · 1,600 pieces | Upward pull + gentle orbit | |
 
-</details>
+Counts are targets, not exact totals; square tiles adapt to each window's shape.
 
-<details>
-<summary>Experimental movement: native recording and design previews</summary>
+### One control at a time
 
-**Native column swap — requires the patched Niri build.** These are two real
-synthetic demo clients in a nested compositor, not an overlay on the desktop.
+These synchronized comparisons use the **same texture, seed, timing and other
+settings within each row**. Each closes, pauses and reconstructs; only the named
+control changes. They are examples of settings, not additional built-in presets.
+
+**Particle count — 180 / 720 / 2,400.** Fewer pieces give a chunky breakup;
+more pieces produce a finer cloud. This is a visual comparison, not a benchmark.
+
+![Synchronized comparison of 180, 720 and 2400 target particles with otherwise identical settings](docs/gifs/compare-density.gif)
+
+**Gravity direction — down / center / outward.** Fall like debris, collapse
+into a central point, or spread in every direction.
+
+![Same fragments under downward gravity, center attraction and outward space motion](docs/gifs/compare-gravity.gif)
+
+**Gravity strength — 0.3× / 1× / 2×.** The same downward direction ranges from
+a gentle fall to a stronger pull. Strength is an artistic multiplier.
+
+![Same downward gravity at strengths 0.3, 1 and 2](docs/gifs/compare-strength.gif)
+
+**Rotation — none / random / follow travel.** Larger pieces make the change in
+orientation easier to see; all three use the same 180-particle target.
+
+![Larger fragments with no rotation, random spin and orientation following travel](docs/gifs/compare-rotation.gif)
+
+### Three custom examples
+
+Combine the controls to create your own style. These downloadable examples use
+existing capabilities; they are separate from the 11 built-ins. **Resize is off
+in all three.** The JSON files contain the exact parameters used for the GIFs.
+
+| Meteor Shower | Orbit Burst | Reverse Gravity |
+| --- | --- | --- |
+| ![Meteor Shower: dense tumbling fragments accelerate downward](docs/gifs/recipe-meteor-shower.gif) | ![Orbit Burst: outward fragments sweep around the window center](docs/gifs/recipe-orbit-burst.gif) | ![Reverse Gravity: spinning fragments rise and arc upward](docs/gifs/recipe-reverse-gravity.gif) |
+| 1,800 pieces · 1.7× down · 540° spin | 1,500 pieces · outward drift · 180° orbit | 1,000 pieces · 1.55× up · −70° orbit |
+| [Settings JSON](examples/meteor-shower.json) | [Settings JSON](examples/orbit-burst.json) | [Settings JSON](examples/reverse-gravity.json) |
+
+From the checkout, add an example to iRiS and then select it in Settings:
+
+```sh
+python3 -m niri_fragments register --custom examples/meteor-shower.json
+```
+
+Use the other JSON filenames to add those styles too. Registration does not
+activate an effect. [Preview commands and standalone export instructions](examples/README.md)
+let you try the same examples without iNiR or any desktop configuration changes.
+
+### Resize — opt-in
+
+**Disabled by default.** When explicitly enabled, the actual resize shader breaks
+up the old window texture and rebuilds the contents at the new size.
+
+<img src="docs/gifs/resize.gif" alt="Opt-in resize breaks the window into fragments and reconstructs it at its new size" width="560">
+
+Enable **Fragment windows when resizing** in Studio or pass `--resize` when
+saving/rendering a style. Ordinary resizing stays in place unless you opt in.
+
+### Experimental movement and swaps
+
+**Native column swap — requires the patched Niri build.** Two real synthetic
+demo clients deconstruct, exchange columns and reconstruct inside a nested
+compositor. Both streams overlap during the swap; particles are still rendered
+per window, with no shared collision simulation or particle-level interleaving.
 
 ![Two real demo windows fragment, exchange columns and reconstruct in patched Niri](docs/gifs/native-swap.gif)
 
-The two clips below are **Studio design concepts**, not recordings of the native
-prototype. Their trajectories and particle ordering differ from the current patch.
+**Studio design concepts:** the two clips below show the intended move/swap
+choreography. They are Canvas previews, with different trajectories and particle
+ordering from the native patch. Saving them does not install movement effects.
 
 | Move concept | Swap concept |
 | --- | --- |
 | ![Studio concept of one fragmented window moving between columns](docs/gifs/move-concept.gif) | ![Studio concept of two fragment streams swapping columns](docs/gifs/swap-concept.gif) |
 
-See [the experimental build and limitations](experimental/README.md).
+See [the experimental build and limitations](experimental/README.md) before
+trying native movement. Direct dragging and seamless interrupted swaps remain
+future work. The standard installation uses stock Niri.
 
-</details>
-
-[Recording details and reproduction commands](docs/gifs/README.md).
+All clips use synthetic content; GIF scaling and palette reduction affect fine
+edges. [Recording details and reproduction commands](docs/gifs/README.md).
 
 ## Try it
 

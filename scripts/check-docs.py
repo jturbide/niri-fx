@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 """Check local documentation links, release versions and recorded GIF metadata."""
 import json
+from dataclasses import asdict, replace
 from pathlib import Path
 import re
+import shlex
 import sys
 from urllib.parse import unquote, urlsplit
 
@@ -27,6 +29,7 @@ def anchors(text):
 def main():
     errors = []
     docs = sorted(set(ROOT.glob("*.md")) | set((ROOT / "docs").rglob("*.md"))
+                  | set((ROOT / "examples").rglob("*.md"))
                   | set((ROOT / "experimental").glob("*.md"))
                   | set((ROOT / ".github").rglob("*.md")))
     links = 0
@@ -56,6 +59,39 @@ def main():
         errors.append(f"Changelog needs a dated entry for {__version__}")
 
     manifest = json.loads((ROOT / "docs/gifs/manifest.json").read_text())
+    from niri_fragments.effects import Effect, PRESETS
+    from niri_fragments.cli import parser, selected_effect
+    examples = {}
+    for source in sorted((ROOT / "examples").glob("*.json")):
+        document = json.loads(source.read_text())
+        if document.get("schema") != 1 or not document.get("name"):
+            errors.append(f"Invalid example document: {source.relative_to(ROOT)}")
+        examples[source.stem] = asdict(Effect(**document["effect"]))
+    commands = (ROOT / "examples/README.md").read_text().replace("\\\n", "")
+    checked_examples = set()
+    for command in re.findall(r"^python3 -m niri_fragments preview .+$", commands, re.M):
+        args = parser().parse_args(shlex.split(command)[3:])
+        name = args.output.stem
+        if name not in examples or asdict(selected_effect(args)) != examples[name]:
+            errors.append(f"Example preview command differs from saved JSON: {name}")
+        checked_examples.add(name)
+    if checked_examples != set(examples):
+        errors.append("Every example needs a matching documented preview command")
+    recorded = {clip["file"]: clip for clip in manifest["clips"]}
+    showcases = json.loads((ROOT / "docs/gifs/showcases.json").read_text())["clips"]
+    for spec in showcases:
+        expected = []
+        for panel in spec["panels"]:
+            if "source" in panel:
+                effect = Effect(**json.loads((ROOT / panel["source"]).read_text())["effect"])
+                origin = {"source": panel["source"]}
+            else:
+                effect = replace(PRESETS[panel["preset"]], **panel["overrides"])
+                origin = {"preset": panel["preset"]}
+            expected.append({"effect": asdict(effect), **origin, "label": panel["label"]})
+        actual = recorded.get(f"docs/gifs/{spec['name']}.gif", {}).get("panels")
+        if actual != expected:
+            errors.append(f"Showcase settings changed; regenerate {spec['name']}.gif")
     for clip in manifest["clips"]:
         dest = ROOT / clip["file"]
         if not dest.exists() or dest.stat().st_size != clip["bytes"]:

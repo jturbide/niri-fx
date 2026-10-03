@@ -42,11 +42,17 @@ not replaced. See [the experiment scope](../experimental/README.md).
 
 ## Documentation recordings
 
-The gallery contains 17 GIFs: real Studio shader recordings for opening, closing,
-optional resize and all 11 presets; two labelled Canvas movement concepts; and
-one actual nested Niri swap recording. The clips use synthetic content. Frame
+The gallery contains 24 GIFs: real Studio shader recordings for opening, closing,
+optional resize and all 11 presets; four synchronized control comparisons; three
+custom examples; two labelled Canvas movement concepts; and one actual nested
+Niri swap recording. The custom examples ship with their recorded JSON settings.
+The clips use synthetic content. Frame
 sequences, loop metadata and file references were checked, and representative
 frames were inspected. See [reproduction details](gifs/README.md).
+
+The comparison/custom recorder checks browser/Python shader parity for every
+panel. The docs check verifies that preview commands, importable JSON, comparison
+definitions and recorded parameter metadata still agree.
 
 GIFs use 20 fps, scaled output and palette reduction. Browser checks use Chromium
 software WebGL. Neither measures compositor GPU frame time or guarantees exact

@@ -8,7 +8,7 @@ has been changed.
 ## Prepared content
 
 - README with quick starts, feature/compatibility boundaries, Studio screenshot
-  and 17 GIFs covering every preset and supplied scenario.
+  and GIFs covering every preset and supplied scenario.
 - Installation, updating, rollback, controls, troubleshooting, integration,
   compatibility and experimental movement guides.
 - Changelog reconstructed from versioned history, plus an Unreleased section and
@@ -33,7 +33,10 @@ bounded checks, not proof that every possible secret pattern is detectable.
 All six historical image blobs and the new recording sources/representative
 frames were inspected. They contain synthetic window content. Raw recordings,
 test reports, toolchains and built binaries remain ignored under `artifacts/`.
-The GIF gallery totals about 15 MiB; the largest clip is the native swap.
+The initial 17-GIF gallery totaled about 15 MiB. The follow-up showcase expands
+it to 24 GIFs (about 25 MiB), adding synchronized comparisons and three importable
+custom examples. Their synthetic sources and representative frames were also
+inspected. The largest clip remains the native swap.
 
 At inspection, GitHub contained no issues/PRs (including closed), releases or
 repository Actions secrets. Five completed project Checks runs were successful;

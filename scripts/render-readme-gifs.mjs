@@ -9,6 +9,8 @@ import assert from 'node:assert/strict';
 
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 process.chdir(root);
+const args=process.argv.slice(2);
+assert(args.every(arg=>arg==='--showcase-only'),'Supported option: --showcase-only');
 mkdirSync(join(root,'artifacts'),{recursive:true});
 const scratch=mkdtempSync(join(root,'artifacts/readme-gifs-'));
 const preview=join(scratch,'preview.html');
@@ -43,7 +45,7 @@ try{
  })()`);
  const presets=JSON.parse(execFileSync('python3',['-c','import json;from niri_fragments.effects import describe_presets;print(json.dumps(describe_presets()))'],{encoding:'utf8'}));
  const out=join(root,'docs/gifs');mkdirSync(out,{recursive:true});
- const specs=[
+ const originalSpecs=[
   {name:'opening',preset:'explosion',mode:'effect',title:'OPEN · Reconstruction',direction:'open'},
   {name:'closing',preset:'explosion',mode:'effect',title:'CLOSE · Explosion',direction:'close'},
   {name:'resize',preset:'balanced',mode:'resize',title:'RESIZE · Opt-in fragments',direction:'round'},
@@ -51,35 +53,61 @@ try{
   {name:'swap-concept',preset:'balanced',mode:'swap',title:'SWAP · Studio design concept',direction:'round'},
   ...Object.keys(presets).map(preset=>({name:'preset-'+preset,preset,mode:'effect',title:preset.replaceAll('-',' ').toUpperCase(),direction:'round',small:true}))
  ];
- const manifest=[];
+ const showcases=JSON.parse(readFileSync(join(out,'showcases.json'),'utf8')).clips;
+ const specs=args.includes('--showcase-only')?showcases:[...originalSpecs,...showcases];
+ const previous=existsSync(join(out,'manifest.json'))?JSON.parse(readFileSync(join(out,'manifest.json'),'utf8')).clips:[];
+ const replaced=new Set(specs.map(spec=>'docs/gifs/'+spec.name+'.gif'));
+ const manifest=previous.filter(clip=>!replaced.has(clip.file));
  for(const spec of specs){
-  const directory=join(scratch,spec.name);mkdirSync(directory);
-  const effect=presets[spec.preset],concept=['move','swap'].includes(spec.mode);
-  // Show actual preset durations, sampled at 20 fps; a hold separates endpoints.
-  const forward=spec.mode==='resize'?effect.resize_ms:concept?1100:effect.close_ms;
-  const backward=spec.mode==='resize'?effect.resize_ms:concept?1100:effect.open_ms;
-  const pause=450,fps=20;
-  const duration=spec.direction==='round'?pause*3+forward+backward:pause*2+(spec.direction==='open'?backward:forward);
-  const note=concept?'Synthetic windows · design preview, not installed movement':spec.mode==='resize'?'Real resize shader · disabled by default':'Real open/close shader · '+spec.preset+' preset · synthetic window';
-  await evaluate(`byId('preset').value=${JSON.stringify(spec.preset)};byId('preset').dispatchEvent(new Event('change'));document.querySelector('[data-mode=${spec.mode}]').click();byId('gif-heading').textContent=${JSON.stringify(spec.title)};byId('gif-note').textContent=${JSON.stringify(note)};`);
-  const count=Math.ceil(duration*fps/1000);
-  for(let frame=0;frame<count;frame++){
-   const t=frame*1000/fps;
-   let p;
-   if(spec.direction==='open')p=1-Math.max(0,Math.min(1,(t-pause)/backward));
-   else if(spec.direction==='close')p=Math.max(0,Math.min(1,(t-pause)/forward));
-   else if(t<pause+forward)p=Math.max(0,Math.min(1,(t-pause)/forward));
-   else p=1-Math.max(0,Math.min(1,(t-2*pause-forward)/backward));
-   await evaluate(`byId('progress').value=${Math.round(p*1000)};byId('progress').dispatchEvent(new Event('input'));`);
-   const capture=await rpc('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
-   writeFileSync(join(directory,String(frame).padStart(4,'0')+'.png'),Buffer.from(capture.data,'base64'));
+  const panels=spec.panels||[{label:spec.title,preset:spec.preset}];
+  const comparison=panels.length>1,recorded=[];
+  let count;
+  for(const [index,panel] of panels.entries()){
+   const directory=join(scratch,spec.name+'-'+index);mkdirSync(directory);
+   const effect=panel.source?JSON.parse(readFileSync(join(root,panel.source),'utf8')).effect:{...presets[panel.preset],...panel.overrides};
+   // Python validation and shader parity keep the examples faithful to CLI exports.
+   const sources=JSON.parse(execFileSync('python3',['-c','import json,sys;from niri_fragments.effects import Effect,shader;p=Effect(**json.load(sys.stdin));print(json.dumps([shader(p,True),shader(p,False)]))'],{input:JSON.stringify(effect),encoding:'utf8'}));
+   const concept=['move','swap'].includes(spec.mode);
+   // Show actual preset durations, sampled at 20 fps; a hold separates endpoints.
+   const forward=spec.mode==='resize'?effect.resize_ms:concept?1100:effect.close_ms;
+   const backward=spec.mode==='resize'?effect.resize_ms:concept?1100:effect.open_ms;
+   const pause=450,fps=20;
+   const duration=spec.direction==='round'?pause*3+forward+backward:pause*2+(spec.direction==='open'?backward:forward);
+   const note=concept?'Synthetic windows · design preview, not installed movement':spec.mode==='resize'?'Real resize shader · disabled by default':comparison?'Real shader · same timing, texture and seed':panel.source?'Custom settings · real shader · resize off':'Real open/close shader · '+panel.preset+' preset · synthetic window';
+   await evaluate(`byId('preset').value=${JSON.stringify(panel.preset||'balanced')};byId('preset').dispatchEvent(new Event('change'));document.querySelector('[data-mode=${spec.mode}]').click();
+    for(const [key,value] of Object.entries(${JSON.stringify(effect)})){if(key==='resize')byId(key).checked=value;else byId(key).value=value;}
+    byId('density').value=${JSON.stringify(effect.particles?'count':'tile')};byId('density').dispatchEvent(new Event('input'));
+    byId('gif-heading').textContent=${JSON.stringify(panel.label)};byId('gif-note').textContent=${JSON.stringify(note)};
+    byId('gif-heading').style.fontSize=${JSON.stringify(comparison?'28px':spec.panels?'24px':'18px')};byId('gif-note').style.fontSize=${JSON.stringify(spec.panels?'18px':'12px')};`);
+   assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
+   assert.deepEqual(await evaluate('effectDocument().effect'),effect);
+   assert.deepEqual(await evaluate('[shaderFor(parameters,true),shaderFor(parameters,false)]'),sources);
+   const panelFrames=Math.ceil(duration*fps/1000);
+   if(index)assert.equal(panelFrames,count,'Comparison panels must have matching timing');
+   count=panelFrames;
+   for(let frame=0;frame<count;frame++){
+    const t=frame*1000/fps;
+    let p;
+    if(spec.direction==='open')p=1-Math.max(0,Math.min(1,(t-pause)/backward));
+    else if(spec.direction==='close')p=Math.max(0,Math.min(1,(t-pause)/forward));
+    else if(t<pause+forward)p=Math.max(0,Math.min(1,(t-pause)/forward));
+    else p=1-Math.max(0,Math.min(1,(t-2*pause-forward)/backward));
+    await evaluate(`byId('progress').value=${Math.round(p*1000)};byId('progress').dispatchEvent(new Event('input'));`);
+    const capture=await rpc('Page.captureScreenshot',{format:'png',captureBeyondViewport:false});
+    writeFileSync(join(directory,String(frame).padStart(4,'0')+'.png'),Buffer.from(capture.data,'base64'));
+   }
+   recorded.push({directory,effect,...(panel.source?{source:panel.source}:{preset:panel.preset}),label:panel.label});
   }
-  const target=join(out,spec.name+'.gif'),width=spec.small?360:640;
-  execFileSync('ffmpeg',['-v','error','-y','-framerate',String(fps),'-i',join(directory,'%04d.png'),
-   '-filter_complex',`scale=${width}:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=192:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`,
+  const fps=20,target=join(out,spec.name+'.gif'),width=comparison||spec.small?360:spec.panels?480:640;
+  const inputs=recorded.flatMap(panel=>['-framerate',String(fps),'-i',join(panel.directory,'%04d.png')]);
+  const scale=recorded.map((_,i)=>`[${i}:v]scale=${width}:-1:flags=lanczos[v${i}]`).join(';');
+  const stack=comparison?recorded.map((_,i)=>`[v${i}]`).join('')+`hstack=inputs=${panels.length}[stack];[stack]`:'[v0]';
+  execFileSync('ffmpeg',['-v','error','-y',...inputs,
+   '-filter_complex',`${scale};${stack}split[a][b];[a]palettegen=max_colors=192:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`,
    '-loop','0',target]);
   assert(statSync(target).size>1000);
-  manifest.push({file:'docs/gifs/'+spec.name+'.gif',preset:spec.preset,mode:spec.mode,frames:count,fps,bytes:statSync(target).size});
+  manifest.push({file:'docs/gifs/'+spec.name+'.gif',...(spec.preset?{preset:spec.preset}:{}),mode:spec.mode,frames:count,fps,bytes:statSync(target).size,
+   ...(spec.panels?{panels:recorded.map(({directory,...panel})=>panel)}:{})});
   console.log(`Rendered ${spec.name}: ${count} frames, ${Math.round(statSync(target).size/1024)} KiB`);
  }
  writeFileSync(join(out,'manifest.json'),JSON.stringify({renderer:'Studio WebGL shaders / labelled Canvas movement concepts',fps:20,clips:manifest},null,2)+'\n');

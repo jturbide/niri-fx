@@ -129,6 +129,384 @@
       "frames": 52,
       "fps": 20,
       "bytes": 464718
+    },
+    {
+      "file": "docs/gifs/compare-density.gif",
+      "mode": "effect",
+      "frames": 57,
+      "fps": 20,
+      "bytes": 2059371,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 1,
+            "particles": 180,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "balanced",
+          "label": "180 · Chunky"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 1,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "balanced",
+          "label": "720 · Balanced"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 1,
+            "particles": 2400,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "balanced",
+          "label": "2,400 · Fine"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/compare-gravity.gif",
+      "mode": "effect",
+      "frames": 57,
+      "fps": 20,
+      "bytes": 1533846,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 1,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "balanced",
+          "label": "Down · Earth"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "center",
+            "gravity_strength": 1,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "balanced",
+          "label": "Center · Black hole"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 1,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "balanced",
+          "label": "Outward · Space"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/compare-strength.gif",
+      "mode": "effect",
+      "frames": 57,
+      "fps": 20,
+      "bytes": 1604587,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 0.3,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "earth",
+          "label": "0.3× · Gentle"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 1,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "earth",
+          "label": "1.0× · Earth"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 2,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "earth",
+          "label": "2.0× · Heavy"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/compare-rotation.gif",
+      "mode": "effect",
+      "frames": 57,
+      "fps": 20,
+      "bytes": 1282382,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 1,
+            "particles": 180,
+            "rotation": "none",
+            "spin": 360,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "earth",
+          "label": "No rotation"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 1,
+            "particles": 180,
+            "rotation": "random",
+            "spin": 360,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "earth",
+          "label": "Random spin"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 75,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "down",
+            "gravity_strength": 1,
+            "particles": 180,
+            "rotation": "gravity",
+            "spin": 360,
+            "swirl": 0,
+            "dispersion": 0.6,
+            "stagger": 0.15,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "preset": "earth",
+          "label": "Follow travel"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/recipe-meteor-shower.gif",
+      "mode": "effect",
+      "frames": 59,
+      "fps": 20,
+      "bytes": 1115222,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 100,
+            "open_ms": 760,
+            "close_ms": 820,
+            "gravity": "down",
+            "gravity_strength": 1.7,
+            "particles": 1800,
+            "rotation": "random",
+            "spin": 540,
+            "swirl": 0,
+            "dispersion": 1,
+            "stagger": 0.28,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "source": "examples/meteor-shower.json",
+          "label": "Meteor Shower"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/recipe-orbit-burst.gif",
+      "mode": "effect",
+      "frames": 63,
+      "fps": 20,
+      "bytes": 1650941,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 150,
+            "open_ms": 900,
+            "close_ms": 900,
+            "gravity": "space",
+            "gravity_strength": 0.85,
+            "particles": 1500,
+            "rotation": "random",
+            "spin": 240,
+            "swirl": 180,
+            "dispersion": 0.8,
+            "stagger": 0.16,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "source": "examples/orbit-burst.json",
+          "label": "Orbit Burst"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/recipe-reverse-gravity.gif",
+      "mode": "effect",
+      "frames": 58,
+      "fps": 20,
+      "bytes": 959247,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 85,
+            "open_ms": 750,
+            "close_ms": 800,
+            "gravity": "up",
+            "gravity_strength": 1.55,
+            "particles": 1000,
+            "rotation": "random",
+            "spin": 360,
+            "swirl": -70,
+            "dispersion": 0.9,
+            "stagger": 0.22,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65
+          },
+          "source": "examples/reverse-gravity.json",
+          "label": "Reverse Gravity"
+        }
+      ]
     }
   ]
 }
