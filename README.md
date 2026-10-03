@@ -22,7 +22,7 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.13.0](https://github.com/jturbide/niri-fx/releases/tag/v0.13.0)
+release. [Download v0.13.1](https://github.com/jturbide/niri-fx/releases/tag/v0.13.1)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
@@ -32,7 +32,7 @@ or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-f
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0130-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0131-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh

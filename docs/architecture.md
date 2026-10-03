@@ -26,6 +26,7 @@ import-boundary test enforces that separation.
 | Module | Responsibility and boundary |
 | --- | --- |
 | [parameters.py](../niri_fx/parameters.py), [model.py](../niri_fx/model.py) | Parameter types, limits, labels, family applicability, GLSL tokens and capability flags. No I/O. |
+| [capabilities.py](../niri_fx/capabilities.py) | Read-only movement parser probes and running IPC executable identification. Does not certify rendering or activate effects. |
 | [presets.py](../niri_fx/presets.py) | Named built-in values. All built-ins leave resize off. |
 | [catalog.py](../niri_fx/catalog.py) | Curated opening/closing recipes reference existing presets. Shared normalized documents and family labels feed every picker. No I/O. |
 | [profiles.py](../niri_fx/profiles.py) | Immutable choices for separate actions. A null resize/movement slot means inherit existing behavior. |

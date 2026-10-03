@@ -1,0 +1,205 @@
+import json
+import os
+import socket
+import struct
+import subprocess
+import sys
+import tempfile
+import threading
+import unittest
+from contextlib import contextmanager
+from pathlib import Path
+from unittest.mock import patch
+
+from niri_fx.capabilities import MAX_REPLY, movement_capability
+
+
+@contextmanager
+def ipc_reply(payload):
+    """One local read-only IPC exchange, including kernel peer identification."""
+    with tempfile.TemporaryDirectory() as directory:
+        path = str(Path(directory) / "ipc.sock")
+        with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as listener:
+            listener.bind(path)
+            listener.listen(1)
+            listener.settimeout(2)
+            requests = []
+
+            def serve():
+                with listener.accept()[0] as client:
+                    client.settimeout(2)
+                    requests.append(client.recv(128))
+                    try:
+                        client.sendall(payload)
+                    except BrokenPipeError:
+                        pass
+
+            worker = threading.Thread(target=serve, daemon=True)
+            worker.start()
+            try:
+                yield path, requests
+            finally:
+                worker.join(timeout=3)
+
+
+class MovementCapabilityTests(unittest.TestCase):
+    def probe(self, results):
+        with patch("niri_fx.capabilities.subprocess.run", side_effect=results):
+            return movement_capability(sys.executable)
+
+    def test_validates_only_temporary_configs_and_cleans_up(self):
+        paths, configs = [], []
+
+        def validate(command, **kwargs):
+            self.assertEqual(command[:3], [os.path.abspath(sys.executable), "validate", "-c"])
+            self.assertEqual(kwargs["timeout"], 5)
+            paths.append(Path(command[3]))
+            configs.append(paths[-1].read_text())
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        report = self.probe(validate)
+        self.assertEqual(report["status"], "supported")
+        self.assertEqual(report["scope"], "configuration-parser")
+        self.assertNotIn("custom-shader", configs[0])
+        self.assertIn("custom-shader", configs[1])
+        self.assertEqual(paths[0], paths[1])
+        self.assertFalse(paths[0].exists())
+        self.assertEqual(report["session"]["status"], "unknown")
+
+    def test_only_specific_shader_rejection_means_unsupported(self):
+        success = subprocess.CompletedProcess([], 0, "", "")
+        rejection = subprocess.CompletedProcess([], 1, "", "unexpected node `custom-shader`")
+        failure = subprocess.CompletedProcess([], 1, "", "error loading config")
+        for results, expected in (
+            ([success, rejection], "unsupported"),
+            ([rejection], "unknown"),
+            ([success, failure], "unknown"),
+            ([failure], "unknown"),
+            (subprocess.TimeoutExpired("niri", 5), "unknown"),
+            (OSError("cannot execute"), "unknown"),
+        ):
+            with self.subTest(expected=expected, results=results):
+                self.assertEqual(self.probe(results)["status"], expected)
+
+    def test_missing_or_replaced_binary_is_unknown(self):
+        with patch("niri_fx.capabilities.shutil.which", return_value=None):
+            report = movement_capability("/missing/niri")
+        self.assertIsNone(report["binary"])
+        self.assertEqual(report["status"], "unknown")
+        with (
+            patch("niri_fx.capabilities._identity", side_effect=[(1, 2, 3, 4), (1, 5, 3, 4)]),
+            patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+        ):
+            report = movement_capability(sys.executable)
+        self.assertEqual(report["status"], "unknown")
+        self.assertIn("changed", report["detail"])
+
+    def test_no_socket_does_not_attempt_a_connection(self):
+        with (
+            patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            patch("niri_fx.capabilities.socket.socket") as connection,
+        ):
+            report = movement_capability(sys.executable)
+        connection.assert_not_called()
+        self.assertFalse(report["session"]["connected"])
+
+    def test_explicit_relative_path_is_not_reinterpreted_as_a_path_search(self):
+        with patch("niri_fx.capabilities.shutil.which", return_value=None) as which:
+            movement_capability(Path("./niri"))
+        which.assert_called_once_with(str(Path.cwd() / "niri"))
+
+    def test_running_support_requires_same_executable_not_same_version(self):
+        payload = b'{"Ok":{"Version":"same-version"}}\n'
+        for binary, same, expected in (
+            (sys.executable, True, "supported"),
+            ("/bin/sh", False, "unknown"),
+        ):
+            with (
+                self.subTest(binary=binary),
+                ipc_reply(payload) as (path, requests),
+                patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            ):
+                session = movement_capability(binary, socket_path=path)["session"]
+            self.assertEqual(requests, [b'"Version"\n'])
+            self.assertTrue(session["connected"])
+            self.assertEqual(session["same_binary"], same)
+            self.assertEqual(session["status"], expected)
+            self.assertEqual(session["version"], "same-version")
+
+    def test_rejected_parser_result_applies_to_matching_session(self):
+        with (
+            ipc_reply(b'{"Ok":{"Version":"stock"}}\n') as (path, _),
+            patch("niri_fx.capabilities._probe", return_value=("unsupported", "Rejected")),
+        ):
+            report = movement_capability(sys.executable, socket_path=path)
+        self.assertEqual(report["session"]["status"], "unsupported")
+
+    def test_unreadable_process_identity_does_not_inherit_support(self):
+        with (
+            ipc_reply(b'{"Ok":{"Version":"test"}}\n') as (path, _),
+            patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            patch("niri_fx.capabilities._identity", side_effect=[(1,), (1,), PermissionError()]),
+        ):
+            session = movement_capability(sys.executable, socket_path=path)["session"]
+        self.assertTrue(session["connected"])
+        self.assertIsNone(session["same_binary"])
+        self.assertEqual(session["status"], "unknown")
+
+    def test_invalid_oversized_and_incomplete_replies_remain_unknown(self):
+        replies = [
+            b"not-json\n",
+            b"[]\n",
+            b'{"Err":"unavailable"}\n',
+            b'{"Ok":{"Version":null}}\n',
+            b'{"Ok":{"Version":""}}\n',
+            json.dumps({"Ok": {"Version": "x" * MAX_REPLY}}).encode() + b"\n",
+            b'{"Ok":{"Version":"missing-newline"}}',
+        ]
+        for payload in replies:
+            with (
+                self.subTest(payload=payload[:50]),
+                ipc_reply(payload) as (path, _),
+                patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            ):
+                session = movement_capability(sys.executable, socket_path=path)["session"]
+            self.assertFalse(session["connected"])
+            self.assertIsNone(session["same_binary"])
+            self.assertEqual(session["status"], "unknown")
+
+    def test_foreign_user_socket_is_not_queried(self):
+        with (
+            patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            patch("niri_fx.capabilities.socket.socket") as factory,
+        ):
+            connection = factory.return_value.__enter__.return_value
+            connection.getsockopt.return_value = struct.pack("3i", 1, os.geteuid() + 1, 1)
+            report = movement_capability(sys.executable, socket_path="/socket")
+        connection.sendall.assert_not_called()
+        self.assertFalse(report["session"]["connected"])
+
+    def test_unreachable_and_slow_sessions_remain_optional(self):
+        for error in (FileNotFoundError(), TimeoutError("timed out")):
+            with (
+                self.subTest(error=error),
+                patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+                patch("niri_fx.capabilities.socket.socket") as factory,
+            ):
+                factory.return_value.__enter__.return_value.connect.side_effect = error
+                report = movement_capability(sys.executable, socket_path="/socket")
+            self.assertEqual(report["status"], "supported")
+            self.assertEqual(report["session"]["status"], "unknown")
+
+        with (
+            patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            patch("niri_fx.capabilities.socket.socket") as factory,
+        ):
+            connection = factory.return_value.__enter__.return_value
+            connection.getsockopt.return_value = struct.pack("3i", os.getpid(), os.geteuid(), 1)
+            connection.recv.side_effect = TimeoutError("reply timed out")
+            report = movement_capability(sys.executable, socket_path="/socket")
+        self.assertFalse(report["session"]["connected"])
+        self.assertEqual(report["session"]["status"], "unknown")
+
+
+if __name__ == "__main__":
+    unittest.main()

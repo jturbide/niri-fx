@@ -162,4 +162,5 @@ def print_diagnostics(report, write=print):
         status = "OK" if check["ok"] else "FAIL" if check["ok"] is False else "INFO"
         write(f"{status:4} {check['check']}: {check['detail']}")
     write(report["resize"])
+    write(report["movement"])
     write(report["next"])
