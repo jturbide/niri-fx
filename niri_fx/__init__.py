@@ -1,3 +1,3 @@
-"""NiriFX public entry point; legacy niri_fragments imports remain supported."""
+"""NiriFX: configurable window effects, a visual Studio and shell adapters."""
 
-from niri_fragments import __version__
+__version__ = "0.6.0"

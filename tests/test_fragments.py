@@ -1,21 +1,39 @@
-from copy import deepcopy
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from copy import deepcopy
+from pathlib import Path
 
-from niri_fragments.effects import Effect, PRESETS, render_kdl, movement_shader
-from niri_fragments.integration import custom_document, make_custom_preset, make_presets, merge_registry, update_registry
-from niri_fragments.cli import parser, selected_effect
+from niri_fx.cli import parser, selected_effect
+from niri_fx.effects import PRESETS, Effect, movement_shader, render_kdl
+from niri_fx.integration import (
+    custom_document,
+    make_custom_preset,
+    make_presets,
+    merge_registry,
+    update_registry,
+)
 
 
 def shell_registry():
-    return {"active": "example", "presets": [{"id": "example", "types": {
-        "workspace-switch": {"spring": [0.9, 700, 0.0001]},
-        "window-resize": {"duration-ms": 210, "curve": "ease-out-cubic", "custom-shader": "existing resize shader"},
-        "window-open": {"duration-ms": 170, "curve": "ease-out-expo"},
-        "window-close": {"duration-ms": 130, "curve": "ease-out-quad"},
-    }}]}
+    return {
+        "active": "example",
+        "presets": [
+            {
+                "id": "example",
+                "types": {
+                    "workspace-switch": {"spring": [0.9, 700, 0.0001]},
+                    "window-resize": {
+                        "duration-ms": 210,
+                        "curve": "ease-out-cubic",
+                        "custom-shader": "existing resize shader",
+                    },
+                    "window-open": {"duration-ms": 170, "curve": "ease-out-expo"},
+                    "window-close": {"duration-ms": 130, "curve": "ease-out-quad"},
+                },
+            }
+        ],
+    }
 
 
 class PresetTests(unittest.TestCase):
@@ -34,8 +52,13 @@ class PresetTests(unittest.TestCase):
     def test_legacy_custom_document_keeps_base_resize(self):
         registry = shell_registry()
         preset = make_custom_preset(registry, {"schema": 1, "name": "Old style", "effect": {}})
-        self.assertEqual(preset["types"]["window-resize"], registry["presets"][0]["types"]["window-resize"])
-        enabled = make_custom_preset(registry, {"schema": 1, "name": "New style", "effect": {"resize": True, "resize_ms": 600}})
+        self.assertEqual(
+            preset["types"]["window-resize"], registry["presets"][0]["types"]["window-resize"]
+        )
+        enabled = make_custom_preset(
+            registry,
+            {"schema": 1, "name": "New style", "effect": {"resize": True, "resize_ms": 600}},
+        )
         self.assertEqual(enabled["types"]["window-resize"]["duration-ms"], 600)
         self.assertIn("resize_color", enabled["types"]["window-resize"]["custom-shader"])
 
@@ -53,13 +76,18 @@ class PresetTests(unittest.TestCase):
         self.assertTrue(all(p["base-preset"] == "example" for p in make_presets(registry)))
 
     def test_cycle_rejected(self):
-        registry = {"active": "a", "presets": [{"id": "a", "generator": "niri-fragments", "base-preset": "a"}]}
+        registry = {
+            "active": "a",
+            "presets": [{"id": "a", "generator": "niri-fragments", "base-preset": "a"}],
+        }
         with self.assertRaisesRegex(ValueError, "cycle"):
             make_presets(registry)
 
     def test_foreign_id_collision_rejected(self):
         with self.assertRaisesRegex(ValueError, "another provider"):
-            merge_registry({"presets": [{"id": "niri-fragments-balanced"}]}, make_presets(shell_registry()))
+            merge_registry(
+                {"presets": [{"id": "niri-fragments-balanced"}]}, make_presets(shell_registry())
+            )
 
     def test_unrelated_entries_metadata_and_defaults_preserved(self):
         data = {"default": "mine", "note": {"keep": True}, "presets": [{"id": "mine", "extra": 7}]}
@@ -67,15 +95,25 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(merge_registry(updated, [], remove=True), data)
 
     def test_bad_and_duplicate_registry_entries_rejected(self):
-        for data in ([], {"presets": {}}, {"presets": [None]}, {"presets": [{"id": "x"}, {"id": "x"}]}):
+        for data in (
+            [],
+            {"presets": {}},
+            {"presets": [None]},
+            {"presets": [{"id": "x"}, {"id": "x"}]},
+        ):
             with self.subTest(data=data), self.assertRaises(ValueError):
                 merge_registry(data, [])
 
     def test_custom_presets_survive_pack_updates_and_each_other(self):
         registry = shell_registry()
         builtins = make_presets(registry)
-        first = make_custom_preset(registry, {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 300}})
-        second = make_custom_preset(registry, {"schema": 1, "name": "My Orbit", "effect": {"swirl": 180, "resize": True}})
+        first = make_custom_preset(
+            registry,
+            {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 300}},
+        )
+        second = make_custom_preset(
+            registry, {"schema": 1, "name": "My Orbit", "effect": {"swirl": 180, "resize": True}}
+        )
         data = merge_registry({}, builtins)
         data = merge_registry(data, [first])
         data = merge_registry(data, [second])
@@ -86,11 +124,14 @@ class PresetTests(unittest.TestCase):
         self.assertEqual(merge_registry(data, [], remove=True)["presets"], [])
 
     def test_custom_input_is_parameters_not_arbitrary_shader_code(self):
-        invalid = [[], {"schema": 1, "name": "Bad", "effect": {"shader": "arbitrary"}},
-                   {"schema": 1, "name": "../outside", "effect": {}},
-                   {"schema": 1, "name": "Bad", "effect": {"gravity": "typo"}},
-                   {"schema": 3, "name": "Future", "effect": {}},
-                   {"schema": True, "name": "Boolean schema", "effect": {}}]
+        invalid = [
+            [],
+            {"schema": 1, "name": "Bad", "effect": {"shader": "arbitrary"}},
+            {"schema": 1, "name": "../outside", "effect": {}},
+            {"schema": 1, "name": "Bad", "effect": {"gravity": "typo"}},
+            {"schema": 4, "name": "Future", "effect": {}},
+            {"schema": True, "name": "Boolean schema", "effect": {}},
+        ]
         for data in invalid:
             with self.subTest(data=data), self.assertRaises(ValueError):
                 custom_document(data)
@@ -113,7 +154,10 @@ class FileTests(unittest.TestCase):
             current["presets"].append({"id": "added-later"})
             target.write_text(json.dumps(current))
             update_registry(target, remove=True)
-            self.assertEqual(json.loads(target.read_text()), {"presets": [{"id": "other"}, {"id": "added-later"}], "keep": 42})
+            self.assertEqual(
+                json.loads(target.read_text()),
+                {"presets": [{"id": "other"}, {"id": "added-later"}], "keep": 42},
+            )
 
     def test_malformed_json_is_never_overwritten(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -143,14 +187,34 @@ class FileTests(unittest.TestCase):
 
 class EffectTests(unittest.TestCase):
     def test_invalid_values_rejected(self):
-        for overrides in ({"tile_size": 0}, {"scatter": float("nan")}, {"scatter": float("inf")},
-                          {"open_ms": 2.5}, {"close_ms": 0}, {"tile_size": True},
-                          {"particles": 10}, {"particles": 100.5}, {"gravity_strength": -1},
-                          {"gravity": "bad"}, {"rotation": "bad"}, {"swirl": 400}, {"spin": float("nan")},
-                          {"dispersion": 1.1}, {"stagger": -0.1}, {"stagger": 0.5}, {"resize": 1}, {"resize_strength": 1.1}, {"resize_ms": 0},
-                          {"origin_x": -0.1}, {"origin_y": 1.1}, {"origin_x": True},
-                          {"wave_span": 0.71}, {"wave_span": float("nan")},
-                          {"release": "diagonal"}, {"resize_mode": "typo"}):
+        for overrides in (
+            {"tile_size": 0},
+            {"scatter": float("nan")},
+            {"scatter": float("inf")},
+            {"open_ms": 2.5},
+            {"close_ms": 0},
+            {"tile_size": True},
+            {"particles": 10},
+            {"particles": 100.5},
+            {"gravity_strength": -1},
+            {"gravity": "bad"},
+            {"rotation": "bad"},
+            {"swirl": 400},
+            {"spin": float("nan")},
+            {"dispersion": 1.1},
+            {"stagger": -0.1},
+            {"stagger": 0.5},
+            {"resize": 1},
+            {"resize_strength": 1.1},
+            {"resize_ms": 0},
+            {"origin_x": -0.1},
+            {"origin_y": 1.1},
+            {"origin_x": True},
+            {"wave_span": 0.71},
+            {"wave_span": float("nan")},
+            {"release": "diagonal"},
+            {"resize_mode": "typo"},
+        ):
             with self.subTest(overrides=overrides), self.assertRaises(ValueError):
                 Effect(**overrides)
 

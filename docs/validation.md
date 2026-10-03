@@ -1,16 +1,18 @@
 # Validation and known limits
 
-Evidence recorded on **2026-10-02**, for 0.6.0. This is a prototype validation record, not a GPU performance certification.
+Evidence recorded on **2026-10-02**, updated for the post-0.6 development checkout. This is a prototype validation record, not a GPU performance certification.
 For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 
 ## Stock effects and editor
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 45 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
-| GLSL ES 1.00 compilation | All 90 shaders compiled: 84 fragment variants and six slice open/close shaders |
-| Stock Niri config parsing | All 17 default and 42 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
-| iNiR adapter | All 17 presets plus a named slice preset registered, applied, validated and recognized by the installed helper in temporary config; exact registry restoration passed |
+| Python regression suite | 54 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| GLSL ES 1.00 compilation | All 137 shaders compiled: 114 fragment variants, 14 slice and nine elastic variants |
+| Stock Niri config parsing | All 29 default and 57 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
+| iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves schema 3 Fragments, Slices and Elastic through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
+| Noctalia file contract | All 29 exported files validated through picker-style relative includes with stock Niri; Noctalia UI not run. |
+| Code conventions | Ruff, ESLint and Prettier pass; Actions runs them with pinned development dependencies. |
 | Setup / restore | Real standalone setup, repeat apply and exact restoration passed with Niri, relative includes and a Unicode config path; conflict, failure and symlink cases covered in tests |
 | JSON import | Valid/legacy documents, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
 | Rebrand / migration | Legacy module/CLI aliases, schema 1 import/export, stable registry IDs and every 0.5 fragment shader fingerprint checked |
@@ -22,12 +24,12 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 | Concept move / swap | Synthetic windows arrived intact in their correct columns; these are not compositor movement checks |
 | Packaging | Wheel/source builds and installed CLI resource checks; see the public preparation record for archive scope |
 
-The 0.6 browser checks exercised all 17 presets, exact endpoints, extreme
-parameters, slice family controls/capability limits, schema 1/2 imports and three
+Current browser checks exercised all 29 presets, exact endpoints, extreme
+parameters, all family controls/capability limits, schema 1/2/3 imports and three
 fragment resize styles. The 14 existing fragment presets retain exactly the 0.5
 open/close/resize/movement shader source, verified against historical hashes.
 
-All three slice effects also opened and closed a synthetic Alacritty client in
+The three original 0.6 slice effects also opened and closed a synthetic Alacritty client in
 an isolated **stock Niri 26.04** session. Intermediate captures differed from the
 intact window, the opening completed intact, and closing left no window-colored
 pixels. No shader/render/config errors appeared. These are functional checks,
@@ -51,15 +53,21 @@ not seamless visual continuity; interrupted movements can restart their phase.
 The TTY path compiled but was not activated. The normal login compositor was
 not replaced. See [the experiment scope](../experimental/README.md).
 
+Crosswind, Orbital Ribbons and Spring Wobble also passed the nested movement
+smoke: real swaps, six interrupted swaps, intact settlement, close during movement
+and shader-removal fallback. Elastic checks visibly bent edges rather than
+fragment pixel loss. The shader change reuses the existing pinned compositor
+binary; no additional compositor patch was required.
+
 ## Documentation recordings
 
-The gallery contains 35 GIFs: real Studio shader recordings for opening, closing,
-optional resize and all 17 presets; six synchronized control comparisons; three
-custom recipes and three opt-in resize styles; two labelled Canvas movement concepts; and one actual nested
-Niri swap recording. The custom examples ship with their recorded JSON settings.
-The clips use synthetic content. Frame
-sequences, loop metadata and file references were checked, and representative
-frames were inspected. See [reproduction details](gifs/README.md).
+The gallery contains 55 GIFs: all 29 presets, open/close and opt-in resize,
+control and style comparisons, custom recipes, labelled Canvas movement concepts,
+and four actual nested Niri swaps. The 12 new preset loops and five comparisons
+ship with exact parameter metadata; three new native recordings add Crosswind,
+Orbital Ribbons and Spring Wobble. Slide Apart and its count comparison were
+regenerated for alternating horizontal strips. Synthetic content only; see
+[reproduction details](gifs/README.md).
 
 The comparison/custom recorder checks browser/Python shader parity for every
 panel. The docs check verifies that preview commands, importable JSON, comparison
@@ -71,9 +79,10 @@ appearance on every desktop. The experimental default build is unoptimized.
 
 ## Remaining acceptance work
 
-- Real GPU frame time and responsiveness at different window/output sizes. The
+- Real GPU frame time and responsiveness at different window/output sizes. The original fragment
   shader evaluates up to 27 candidate cells per pixel for simultaneous release,
-  or 81 for three directional waves, independent of particle count. Expanded
+  or 81 for directional release. New varied Fragments uses up to 147/441 candidates,
+  independent of particle count. Expanded
   draw area adds cost; lower particle count alone does not guarantee faster rendering.
   Slices evaluates at most its configured 2–48 strips per pixel; strip count,
   window size and expanded draw bounds affect work.
@@ -84,7 +93,7 @@ appearance on every desktop. The experimental default build is unoptimized.
   interactions and graphics reset behavior beyond the nested smoke cases.
 - Direct dragging, seamless retargeting and per-particle ordering across windows
   are not implemented by the current movement hook.
-- DMS runtime acceptance and native picker integration are pending; the documented
+- Noctalia picker UI and DMS runtime acceptance and native picker integration are pending; the documented
   include ordering was checked with an isolated Niri config, not a DMS session.
 
 Reproduce checks through [Contributing](../CONTRIBUTING.md), report issues with

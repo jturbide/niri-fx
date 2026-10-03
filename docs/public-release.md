@@ -99,7 +99,7 @@ and final inspection. No history rewrite was needed based on the audit results.
 During private preparation the branch-protection API returned HTTP 403 because
 of the account plan. Branch protection and public security features must be
 configured and verified once visibility permits them. Required checks are
-`validate (3.10)`, `validate (3.14)` and `browser`; force pushes and deletion must
+`lint`, `validate (3.10)`, `validate (3.14)` and `browser` for the current checkout; force pushes and deletion must
 be blocked. The owner/admin retains a recovery bypass for emergency maintenance;
 normal changes should use pull requests and successful checks.
 

@@ -6,18 +6,22 @@ content is captured.
 - `opening.gif`, `closing.gif`, `resize.gif`: Studio's actual GLSL shader renderer.
   Resize is shown as an opt-in feature; recording it does not change a preset.
 - `preset-*.gif`: each built-in style closes and opens at its configured timing.
-  Slide Apart, Alternating Blinds and Diagonal Shear use the Slices shader.
+  Each family uses its own real shader.
 - `compare-slice-count.gif`: four, twelve and thirty-two strips, with the same
   seed, texture and other settings.
 - `compare-*.gif`: synchronized three-panel comparisons of density, gravity
-  direction, gravity strength, rotation and burst origin. Within each clip only the named
-  control changes; texture, seed, other parameters and timing match.
+  direction, gravity strength, rotation and burst origin. Single-control comparisons keep other settings fixed. New variation and
+  Elastic comparisons explicitly compare combinations/styles at matched timing.
 - `recipe-*.gif`: custom Meteor Shower, Orbit Burst and Reverse Gravity settings
   from the importable JSON in [examples](../../examples/README.md).
 - `resize-full.gif`, `resize-edge.gif`, `resize-soft.gif`: opt-in resize styles
   using the corresponding example JSON files.
 - `move-concept.gif`, `swap-concept.gif`: Studio's labelled Canvas design previews.
   These are not recordings of compositor movement or promises of its appearance.
+- `compare-swap-styles.gif`: three labelled Canvas swap concepts.
+- `native-swap-crosswind.gif`, `native-swap-orbital-ribbons.gif`,
+  `native-swap-spring-wobble.gif`: actual native swaps for the new styles.
+  Parameters, byte sizes and backend are recorded in `native-manifest.json`.
 - `native-swap.gif`: actual recording of two synthetic Alacritty windows inside
   the separately built, patched Niri compositor. This remains experimental.
 
@@ -40,7 +44,7 @@ frames with FFmpeg. Sources remain under ignored `artifacts/`; the browser
 profile is removed. `manifest.json` records the Studio clips' frame counts,
 modes and file sizes.
 
-To render just the six comparisons, three custom recipes and three resize styles:
+To render only the comparison, custom recipe and resize showcase clips:
 
 ```sh
 node scripts/render-readme-gifs.mjs --showcase-only
@@ -53,7 +57,7 @@ records resolved parameters in `manifest.json`. This allows the documentation
 check to catch a changed recipe whose recording has not been regenerated.
 The partial render preserves manifest entries for the other existing clips.
 
-To regenerate only the three slice presets and their count comparison:
+To regenerate the slice presets and their count comparison:
 
 ```sh
 node scripts/render-readme-gifs.mjs --slices-only
@@ -75,3 +79,16 @@ floating at 1280×800. It verifies the nested sockets and synthetic clients,
 records that compositor's `winit` output, then closes its own demo. No audio or
 parent desktop output is recorded. The source video and logs remain under
 `artifacts/native-gif-*`.
+
+To reproduce the new post-0.6 presets/comparisons and native recordings:
+
+```sh
+node scripts/render-readme-gifs.mjs --new-only
+python3 scripts/record-native-gif.py --preset crosswind --name native-swap-crosswind
+python3 scripts/record-native-gif.py --preset orbital-ribbons --name native-swap-orbital-ribbons
+python3 scripts/record-native-gif.py --preset spring-wobble --name native-swap-spring-wobble
+```
+
+`--new-only` also regenerates Slide Apart and its count comparison after the
+default direction change. The original native swap remains a historical recording;
+new native demos display NiriFX and the preset name.

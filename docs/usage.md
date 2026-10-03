@@ -1,6 +1,6 @@
 # Studio and controls
 
-![Slice controls in NiriFX Studio](studio-slices.png)
+![Fragment controls in NiriFX Studio](studio.png)
 
 ```sh
 python3 -m niri_fx studio
@@ -10,7 +10,7 @@ This opens a dedicated Chromium app window, with no tabs or address bar and a
 separate profile. The optional application launcher opens the same window.
 The renderer is still web technology, not a native QML page. If Chromium is
 unavailable, it falls back to your browser; `studio --browser` explicitly opens
-a browser tab. Choose **Fragments** or **Slices** first. The starting styles and
+a browser tab. Choose **Fragments**, **Slices** or **Elastic** first. The starting styles and
 controls follow the selected family. Switching families starts with that family's
 first preset; export a custom style before switching if you want to keep it.
 
@@ -24,7 +24,7 @@ family in 0.6. Opening reverses the closing path with its own duration.
 | --- | --- |
 | Slice count | 2–48 strips; more strips also increase shader work |
 | Slice angle | −90° to 90°; 0° horizontal, ±90° vertical |
-| Travel direction | Split outward, alternating strips, along the angle, against the angle |
+| Travel direction | Split outward, alternating strips, along the angle, against the angle, or independent random signs |
 | Travel distance | 0–600 logical pixels |
 | Release stagger | 0–0.75; delay between first and last strip |
 | Strip rotation | −60° to 60° during travel |
@@ -36,8 +36,10 @@ python3 -m niri_fx render --family slices --slice-count 20 --slice-angle 30 \
   --slice-direction alternate --slice-rotation 8 > /tmp/slices.kdl
 ```
 
-Every preset leaves resize off. Slice JSON uses schema 2 and requires NiriFX 0.6+.
-Fragment exports retain schema 1 and remain readable by the old 0.5 editor.
+Every preset leaves resize off. Legacy slice JSON uses schema 2; legacy Fragments
+uses schema 1. New controls and Elastic use schema 3 and need the development
+checkout after 0.6. See [waves, variation and wobble](effect-controls.md) for all
+new controls, presets, examples and rendering costs.
 
 ## Fragments
 
@@ -142,6 +144,11 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
+The current checkout has 29 built-ins. The original styles are listed below;
+[new styles and controls](effect-controls.md) cover five varied Fragments, four
+additional Slices and three Elastic presets.
+
+
 | Preset | Motion |
 | --- | --- |
 | Subtle / Balanced / Dramatic | Increasingly dense bursts: 360 / 720 / 1,100 pieces |
@@ -156,7 +163,7 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 | Directional Wave | Three stages release from left to right, with upward drift |
 | Corner Burst | 1,200 pieces scatter from a lower-left origin |
 | Orbital Collapse | 1,400 pieces spiral inward with 300° orbit |
-| Slide Apart (Slices) | 12 horizontal strips split outward |
+| Slide Apart (Slices) | 12 horizontal strips travel alternately |
 | Alternating Blinds (Slices) | 16 vertical strips travel alternately and rotate |
 | Diagonal Shear (Slices) | 10 diagonal strips travel alternately |
 

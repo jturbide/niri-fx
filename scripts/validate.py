@@ -2,15 +2,25 @@
 """Compile GLSL ES 1.00 and parse generated KDL when native tools are present."""
 
 import argparse
-from dataclasses import replace
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tempfile
+from dataclasses import replace
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from niri_fragments.effects import FAMILIES, PRESETS, RESIZE_MODES, render_kdl, shader, resize_shader, movement_shader
+from niri_fx.effects import (
+    FAMILIES,
+    PRESETS,
+    RESIZE_MODES,
+    movement_shader,
+    render_kdl,
+    resize_shader,
+    shader,
+)
+from niri_fx.pack import plan_pack
+from niri_fx.setup import apply_plan
 
 HEADER = """#version 100
 precision highp float;
@@ -33,7 +43,10 @@ def main():
     parser.add_argument("--require-niri", action="store_true")
     args = parser.parse_args()
     validator, niri = shutil.which("glslangValidator"), shutil.which("niri")
-    for binary, required, name in ((validator, args.require_glsl, "glslangValidator"), (niri, args.require_niri, "niri")):
+    for binary, required, name in (
+        (validator, args.require_glsl, "glslangValidator"),
+        (niri, args.require_niri, "niri"),
+    ):
         if not binary:
             if required:
                 raise SystemExit(f"Required tool missing: {name}")
@@ -42,24 +55,53 @@ def main():
         root = Path(directory)
         for name, effect in PRESETS.items():
             if validator:
-                sources = [("open_color", shader(effect, True)), ("close_color", shader(effect, False))]
+                sources = [
+                    ("open_color", shader(effect, True)),
+                    ("close_color", shader(effect, False)),
+                ]
                 if FAMILIES[effect.family]["movement"]:
                     sources.append(("move_color", movement_shader(effect)))
                 if FAMILIES[effect.family]["resize"]:
-                    sources.extend(("resize_color", resize_shader(replace(effect, resize_mode=mode))) for mode in RESIZE_MODES)
+                    sources.extend(
+                        ("resize_color", resize_shader(replace(effect, resize_mode=mode)))
+                        for mode in RESIZE_MODES
+                    )
                 for index, (entry, source) in enumerate(sources):
                     frag = root / f"{name}-{entry}-{index}.frag"
-                    frag.write_text(HEADER + source + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n")
+                    frag.write_text(
+                        HEADER
+                        + source
+                        + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n"
+                    )
                     subprocess.run([validator, "-S", "frag", str(frag)], check=True)
             if niri:
                 config = root / f"{name}.kdl"
                 variants = [effect]
                 if FAMILIES[effect.family]["resize"]:
-                    variants.extend(replace(effect, resize=True, resize_mode=mode) for mode in RESIZE_MODES)
+                    variants.extend(
+                        replace(effect, resize=True, resize_mode=mode) for mode in RESIZE_MODES
+                    )
                 for variant in variants:
                     config.write_text(render_kdl(variant))
-                    subprocess.run([niri, "validate", "-c", str(config)], check=True, capture_output=True)
+                    subprocess.run(
+                        [niri, "validate", "-c", str(config)], check=True, capture_output=True
+                    )
             print(f"OK {name}")
+        if niri:
+            # Mirror the existing Noctalia picker's two-level include contract.
+            pack = root / "nirifx-presets"
+            apply_plan(plan_pack(pack), root / "state")
+            selector = root / "animations.kdl"
+            config = root / "main.kdl"
+            config.write_text('include "animations.kdl"\n')
+            for name in PRESETS:
+                selector.write_text(
+                    f'include "./nirifx-presets/nirifx-{name}.kdl"\nanimations {{ slowdown 1.0; }}\n'
+                )
+                subprocess.run(
+                    [niri, "validate", "-c", str(config)], check=True, capture_output=True
+                )
+            print(f"OK {len(PRESETS)} exported preset files through picker-style includes")
     print("Validation does not prove compositor GPU performance or visual acceptance.")
 
 

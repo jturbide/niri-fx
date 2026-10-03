@@ -1,5 +1,5 @@
-"""Run NiriFX while retaining the original module and executable aliases."""
+"""Run the NiriFX command line interface."""
 
-from niri_fragments.cli import main
+from niri_fx.cli import main
 
 raise SystemExit(main())

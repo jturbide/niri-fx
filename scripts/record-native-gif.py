@@ -1,28 +1,54 @@
 #!/usr/bin/env python3
 """Record only the isolated, synthetic two-window Niri demo as a looping GIF."""
+
+import argparse
 import json
 import os
-from pathlib import Path
 import re
 import signal
 import subprocess
 import sys
 import tempfile
 import time
+from dataclasses import asdict
+from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+from niri_fx.effects import FAMILIES, PRESETS
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--preset",
+        choices=[name for name, effect in PRESETS.items() if FAMILIES[effect.family]["movement"]],
+        default="explosion",
+    )
+    parser.add_argument("--name", default="native-swap")
+    args = parser.parse_args()
+    if not re.fullmatch(r"native-swap(?:-[a-z0-9-]+)?", args.name):
+        parser.error("name must be native-swap or native-swap-NAME")
     if not os.environ.get("NIRI_SOCKET") or not os.environ.get("WAYLAND_DISPLAY"):
         raise SystemExit("Run from a Niri desktop with the experimental build already prepared")
     (ROOT / "artifacts").mkdir(exist_ok=True)
     scratch = Path(tempfile.mkdtemp(prefix="native-gif-", dir=ROOT / "artifacts"))
     recorder = None
     with (scratch / "launcher.log").open("w") as log:
-        demo = subprocess.Popen([sys.executable, str(ROOT / "scripts/nested-demo.py"),
-                                 "--duration-ms", "1200"], cwd=ROOT, stdout=log, stderr=log,
-                                start_new_session=True)
+        demo = subprocess.Popen(
+            [
+                sys.executable,
+                str(ROOT / "scripts/nested-demo.py"),
+                "--duration-ms",
+                "1200",
+                "--preset",
+                args.preset,
+            ],
+            cwd=ROOT,
+            stdout=log,
+            stderr=log,
+            start_new_session=True,
+        )
         nested_pid = None
         try:
             deadline = time.monotonic() + 20
@@ -39,8 +65,14 @@ def main():
             else:
                 raise RuntimeError("Nested demo startup timed out")
             host = os.environ.copy()
-            nested = host | {"NIRI_SOCKET": session["socket"], "WAYLAND_DISPLAY": session["display"]}
-            if nested["NIRI_SOCKET"] == host["NIRI_SOCKET"] or nested["WAYLAND_DISPLAY"] == host["WAYLAND_DISPLAY"]:
+            nested = host | {
+                "NIRI_SOCKET": session["socket"],
+                "WAYLAND_DISPLAY": session["display"],
+            }
+            if (
+                nested["NIRI_SOCKET"] == host["NIRI_SOCKET"]
+                or nested["WAYLAND_DISPLAY"] == host["WAYLAND_DISPLAY"]
+            ):
                 raise RuntimeError("Refusing to record the parent desktop")
 
             def msg(env, *args):
@@ -61,15 +93,33 @@ def main():
             msg(host, "action", "set-window-height", "--id", identifier, "800")
             time.sleep(2)
             windows = json.loads(msg(nested, "-j", "windows"))
-            if len(windows) != 2 or not all(w["title"].startswith("Fragments demo /") for w in windows):
+            if len(windows) != 2 or not all(
+                w["title"].startswith("NiriFX demo /") for w in windows
+            ):
                 raise RuntimeError("Refusing to record unexpected nested clients")
             right = max(windows, key=lambda w: w["layout"]["pos_in_scrolling_layout"][0])
             msg(nested, "action", "focus-window", "--id", str(right["id"]))
             video = scratch / "swap.mkv"
             with (scratch / "recorder.log").open("w") as record_log:
-                recorder = subprocess.Popen(["wf-recorder", "-o", "winit", "-r", "20", "--no-damage",
-                    "-c", "libx264", "-p", "crf=16", "-f", str(video)], env=nested,
-                    stdout=record_log, stderr=record_log)
+                recorder = subprocess.Popen(
+                    [
+                        "wf-recorder",
+                        "-o",
+                        "winit",
+                        "-r",
+                        "20",
+                        "--no-damage",
+                        "-c",
+                        "libx264",
+                        "-p",
+                        "crf=16",
+                        "-f",
+                        str(video),
+                    ],
+                    env=nested,
+                    stdout=record_log,
+                    stderr=record_log,
+                )
                 time.sleep(0.8)
                 if recorder.poll() is not None:
                     raise RuntimeError((scratch / "recorder.log").read_text())
@@ -80,11 +130,39 @@ def main():
                 recorder.send_signal(signal.SIGINT)
                 recorder.wait(timeout=10)
                 recorder = None
-            dest = ROOT / "docs/gifs/native-swap.gif"
+            dest = ROOT / "docs/gifs" / (args.name + ".gif")
             dest.parent.mkdir(parents=True, exist_ok=True)
-            subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(video), "-filter_complex",
-                "fps=20,scale=560:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64:stats_mode=full[p];[b][p]paletteuse=dither=none:diff_mode=rectangle",
-                "-loop", "0", str(dest)], check=True)
+            subprocess.run(
+                [
+                    "ffmpeg",
+                    "-v",
+                    "error",
+                    "-y",
+                    "-i",
+                    str(video),
+                    "-filter_complex",
+                    "fps=20,scale=560:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64:stats_mode=full[p];[b][p]paletteuse=dither=none:diff_mode=rectangle",
+                    "-loop",
+                    "0",
+                    str(dest),
+                ],
+                check=True,
+            )
+            metadata = ROOT / "docs/gifs/native-manifest.json"
+            clips = json.loads(metadata.read_text())["clips"] if metadata.exists() else []
+            filename = str(dest.relative_to(ROOT))
+            clips = [clip for clip in clips if clip["file"] != filename]
+            clips.append(
+                {
+                    "file": filename,
+                    "preset": args.preset,
+                    "effect": asdict(PRESETS[args.preset]),
+                    "duration_ms": 1200,
+                    "bytes": dest.stat().st_size,
+                    "backend": "isolated patched Niri; synthetic clients",
+                }
+            )
+            metadata.write_text(json.dumps({"clips": clips}, indent=2) + "\n")
             print(f"Recorded {dest} ({dest.stat().st_size // 1024} KiB)\nSource video: {video}")
         finally:
             if recorder and recorder.poll() is None:

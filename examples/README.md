@@ -121,3 +121,23 @@ GIFs. The renderer validates the parameters, compares browser/Python shader outp
 and records the resolved settings in the GIF manifest. The documentation check
 detects mismatches between this page's preview commands, the JSON and recorded
 settings. See the [recording guide](../docs/gifs/README.md) for dependencies.
+
+## Waves, variation and elastic styles
+
+These schema 3 examples need the current checkout. Split Curtain uses schema 2.
+Resize stays off in all of them. See [effect controls](../docs/effect-controls.md).
+
+```sh
+python3 -m niri_fx preview --custom examples/tidal-fragments.json --output /tmp/tidal-fragments.html
+python3 -m niri_fx preview --custom examples/mosaic-burst.json --output /tmp/mosaic-burst.html
+python3 -m niri_fx preview --custom examples/chaotic-confetti.json --output /tmp/chaotic-confetti.html
+python3 -m niri_fx preview --custom examples/crosswind.json --output /tmp/crosswind.html
+python3 -m niri_fx preview --custom examples/orbital-ribbons.json --output /tmp/orbital-ribbons.html
+python3 -m niri_fx preview --custom examples/split-curtain.json --output /tmp/split-curtain.html
+python3 -m niri_fx preview --custom examples/ribbon-wave.json --output /tmp/ribbon-wave.html
+python3 -m niri_fx preview --custom examples/shuffled-slats.json --output /tmp/shuffled-slats.html
+python3 -m niri_fx preview --custom examples/venetian-sweep.json --output /tmp/venetian-sweep.html
+python3 -m niri_fx preview --custom examples/spring-wobble.json --output /tmp/spring-wobble.html
+python3 -m niri_fx preview --custom examples/rubber-band.json --output /tmp/rubber-band.html
+python3 -m niri_fx preview --custom examples/jelly.json --output /tmp/jelly.html
+```

@@ -9,7 +9,7 @@ Documentation-only work does not require an immediate package version bump.
 
 When releasing, choose `MAJOR.MINOR.PATCH`, replace Unreleased's populated section
 with the version/date, and leave a new empty Unreleased heading above it. Keep
-`pyproject.toml` and `niri_fragments/__init__.py` in sync. Historical private
+`pyproject.toml` and `niri_fx/__init__.py` in sync. Historical private
 milestones in the changelog do not imply published tags; do not create backdated
 releases just to fill the list.
 
@@ -17,7 +17,7 @@ releases just to fill the list.
 
 1. Review the complete diff and changelog. Keep resize opt-in and distinguish
    stock support, browser concepts and patched compositor capabilities.
-2. Run the [contributor checks](../CONTRIBUTING.md), including docs, unit tests,
+2. Run the [contributor checks](../CONTRIBUTING.md), including lint/format, docs, unit/integration/browser E2E tests,
    GLSL compilation and installed Niri validation. Require the GitHub Checks
    workflow to pass on the exact proposed commit.
 3. Build with `python3 -m build`. Inspect the wheel and source archive, including
@@ -30,16 +30,19 @@ releases just to fill the list.
 5. For new public content, scan history and the proposed tree for credentials;
    inspect binary assets for private content. Keep raw reports in ignored
    artifacts. Review attribution and imported code separately.
-6. Create a focused, **signed** release commit, verify its signature and push.
-   Never disable configured signing to work around a signing failure.
+6. Create a focused, **signed** version commit on a branch, verify its signature
+   and open a pull request. Merge only after the exact head passes `lint`,
+   `validate (3.10)`, `validate (3.14)` and `browser`. Never bypass signing or
+   branch protections to work around a failure.
 
-Commands after the version commit is ready (replace `X.Y.Z`):
+Commands after that pull request is merged (replace `X.Y.Z`):
 
 ```sh
+git switch main
+git pull --ff-only
 git verify-commit HEAD
 git tag -s vX.Y.Z -m "NiriFX X.Y.Z"
 git verify-tag vX.Y.Z
-git push origin main
 git push origin vX.Y.Z
 ```
 

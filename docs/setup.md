@@ -33,7 +33,7 @@ Existing launchers are preserved. Nothing starts at login.
 
 | Target | Changes | Activation |
 | --- | --- | --- |
-| iNiR | Merge the 17 built-ins into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
+| iNiR | Merge the 29 built-ins into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
 | Standalone | Generate `fragments/niri-fragments.kdl` beside the root config; append one marked include | Niri hot reloads the validated include |
 
 All built-ins leave resize fragments off. To save an iNiR custom style, use
