@@ -1,0 +1,134 @@
+{
+  "renderer": "Studio WebGL shaders / labelled Canvas movement concepts",
+  "fps": 20,
+  "clips": [
+    {
+      "file": "docs/gifs/opening.gif",
+      "preset": "explosion",
+      "mode": "effect",
+      "frames": 32,
+      "fps": 20,
+      "bytes": 976681
+    },
+    {
+      "file": "docs/gifs/closing.gif",
+      "preset": "explosion",
+      "mode": "effect",
+      "frames": 32,
+      "fps": 20,
+      "bytes": 922510
+    },
+    {
+      "file": "docs/gifs/resize.gif",
+      "preset": "balanced",
+      "mode": "resize",
+      "frames": 45,
+      "fps": 20,
+      "bytes": 1038293
+    },
+    {
+      "file": "docs/gifs/move-concept.gif",
+      "preset": "balanced",
+      "mode": "move",
+      "frames": 71,
+      "fps": 20,
+      "bytes": 1000604
+    },
+    {
+      "file": "docs/gifs/swap-concept.gif",
+      "preset": "balanced",
+      "mode": "swap",
+      "frames": 71,
+      "fps": 20,
+      "bytes": 2045740
+    },
+    {
+      "file": "docs/gifs/preset-subtle.gif",
+      "preset": "subtle",
+      "mode": "effect",
+      "frames": 41,
+      "fps": 20,
+      "bytes": 222667
+    },
+    {
+      "file": "docs/gifs/preset-balanced.gif",
+      "preset": "balanced",
+      "mode": "effect",
+      "frames": 47,
+      "fps": 20,
+      "bytes": 491436
+    },
+    {
+      "file": "docs/gifs/preset-dramatic.gif",
+      "preset": "dramatic",
+      "mode": "effect",
+      "frames": 53,
+      "fps": 20,
+      "bytes": 767997
+    },
+    {
+      "file": "docs/gifs/preset-explosion.gif",
+      "preset": "explosion",
+      "mode": "effect",
+      "frames": 55,
+      "fps": 20,
+      "bytes": 810464
+    },
+    {
+      "file": "docs/gifs/preset-implosion.gif",
+      "preset": "implosion",
+      "mode": "effect",
+      "frames": 55,
+      "fps": 20,
+      "bytes": 217267
+    },
+    {
+      "file": "docs/gifs/preset-earth.gif",
+      "preset": "earth",
+      "mode": "effect",
+      "frames": 52,
+      "fps": 20,
+      "bytes": 460233
+    },
+    {
+      "file": "docs/gifs/preset-black-hole.gif",
+      "preset": "black-hole",
+      "mode": "effect",
+      "frames": 54,
+      "fps": 20,
+      "bytes": 213449
+    },
+    {
+      "file": "docs/gifs/preset-space.gif",
+      "preset": "space",
+      "mode": "effect",
+      "frames": 53,
+      "fps": 20,
+      "bytes": 634408
+    },
+    {
+      "file": "docs/gifs/preset-vortex.gif",
+      "preset": "vortex",
+      "mode": "effect",
+      "frames": 56,
+      "fps": 20,
+      "bytes": 249237
+    },
+    {
+      "file": "docs/gifs/preset-confetti.gif",
+      "preset": "confetti",
+      "mode": "effect",
+      "frames": 55,
+      "fps": 20,
+      "bytes": 646512
+    },
+    {
+      "file": "docs/gifs/preset-updraft.gif",
+      "preset": "updraft",
+      "mode": "effect",
+      "frames": 52,
+      "fps": 20,
+      "bytes": 464718
+    }
+  ]
+}

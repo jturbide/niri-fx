@@ -1,0 +1,39 @@
+name: Bug report
+description: Report a reproducible problem with Fragments or its integration.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check docs/troubleshooting.md first. For vulnerabilities, follow SECURITY.md.
+        Use synthetic captures; remove private data and Studio session tokens.
+  - type: input
+    id: versions
+    attributes:
+      label: Versions
+      description: Fragments version/commit, niri --version, shell version/commit and Linux distribution.
+    validations:
+      required: true
+  - type: dropdown
+    id: setup
+    attributes:
+      label: Setup
+      options:
+        - Stock Niri + iNiR/iRiS
+        - Stock Niri + DankMaterialShell
+        - Stock Niri + another shell / standalone
+        - Experimental patched Niri (nested demo)
+        - Studio / offline preview only
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps, expected behavior and actual behavior
+      description: Include the preset or minimal effect parameters and whether resize was explicitly enabled.
+    validations:
+      required: true
+  - type: textarea
+    id: graphics
+    attributes:
+      label: Graphics and evidence
+      description: For rendering bugs, include GPU/driver, scale, window size and relevant errors. Avoid whole personal configs or desktop recordings.

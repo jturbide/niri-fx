@@ -26,6 +26,8 @@ jobs:
           python -m pip install build
       - name: Test registry safety and effect generation
         run: python -m unittest discover -s tests -v
+      - name: Check documentation, media and changelog
+        run: python scripts/check-docs.py
       - name: Compile all shader variants
         run: python scripts/validate.py --require-glsl
       - name: Build and smoke-test installed package

@@ -7,10 +7,25 @@ name = "niri-fragments"
 version = "0.4.1"
 description = "Pixel deconstruction and reconstruction animations for Niri, with iNiR/iRiS presets."
 requires-python = ">=3.10"
-license = "MIT"
+license = "MIT AND GPL-3.0-or-later"
+license-files = ["LICENSE", "THIRD_PARTY.md", "experimental/COPYING-NIRI"]
 authors = [{name = "Julien Turbide"}]
 readme = "README.md"
 dependencies = []
+keywords = ["niri", "wayland", "shaders", "animation", "particles", "inir"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Topic :: Desktop Environment",
+]
+
+[project.urls]
+Homepage = "https://github.com/jturbide/niri-fragments"
+Documentation = "https://github.com/jturbide/niri-fragments/blob/main/docs/README.md"
+Changelog = "https://github.com/jturbide/niri-fragments/blob/main/CHANGELOG.md"
+Issues = "https://github.com/jturbide/niri-fragments/issues"
+Source = "https://github.com/jturbide/niri-fragments"
 
 [project.scripts]
 niri-fragments = "niri_fragments.cli:main"

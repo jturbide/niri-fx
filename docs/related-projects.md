@@ -15,6 +15,9 @@ The GLSL and adapter in this repository are original. No shader collection is
 vendored. If an existing effect is imported later, retain its specific license
 and attribution and document any changes.
 
+The separate Niri-derived movement patch is GPL-3.0-or-later; see
+[third-party notices](../THIRD_PARTY.md) for its source and license scope.
+
 Official references:
 
 - [Niri animations](https://niri-wm.github.io/niri/Configuration:-Animations.html)

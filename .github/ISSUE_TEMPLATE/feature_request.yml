@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest an effect, control or integration.
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this help you do?
+      description: Describe the use case, desired behavior and relevant shell/compositor.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested approach or references
+      description: Check docs/compatibility.md and docs/movement.md for the current roadmap and limits.

@@ -22,11 +22,10 @@ It refuses unrelated source changes. `--release` builds
 an optimized binary; the default debug build is for development, not benchmarking.
 The launcher rejects a changed binary or patch until rebuilt.
 
-The prototype was built here with Rust 1.99.0. This machine's system `rustc`
-had a shared-library symbol error; an official minimal rustup toolchain was
-installed at `artifacts/toolchain/{cargo,rustup}`, without editing shell startup
-or system packages. The build script detects that optional project-local
-toolchain. On another machine, a working toolchain on `PATH` is sufficient.
+The prototype was validated with Rust 1.99.0. A working toolchain on `PATH` is
+sufficient. For an isolated toolchain, the build script also detects rustup under
+`artifacts/toolchain/{cargo,rustup}`. Toolchain installation is separate from the
+build helper; it does not change system packages or shell startup files.
 
 The demo requires an existing Wayland desktop and Alacritty. It opens a separate
 Niri window with two colored synthetic clients. Click inside it, then use:

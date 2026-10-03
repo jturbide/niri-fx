@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Documentation and troubleshooting
+    url: https://github.com/jturbide/niri-fragments/blob/main/docs/README.md
+    about: Installation, controls, compatibility and troubleshooting.
+  - name: Security policy
+    url: https://github.com/jturbide/niri-fragments/blob/main/SECURITY.md
+    about: Arrange private disclosure instead of posting vulnerability details.

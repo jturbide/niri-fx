@@ -1,203 +1,159 @@
 # Niri Fragments
 
-Pixel deconstruction and reconstruction animations for Niri, with configurable
-presets and native iNiR/iRiS settings integration.
+**Explode windows into pixels. Pull them back together.**
 
-Closing a window scatters pieces of its contents; opening reconstructs it.
-Choose falling, drifting, spinning, or inward-spiraling fragments. Niri renders
-the effect; iNiR/iRiS provides the native preset picker.
+Niri Fragments gives application windows textured particle animations: outward
+bursts, inward collapses, gravity, orbit and rotation. Choose from 11 presets or
+build your own in Fragments Studio. Niri renders the effects; the optional
+iNiR/iRiS adapter adds them to your existing settings picker.
 
-![Gravity and rotation controls in Niri Fragments Studio](docs/studio.png)
+[Get started](docs/getting-started.md) · [Studio & controls](docs/usage.md) ·
+[Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
+[Contributing](CONTRIBUTING.md)
 
-**Version 0.4.1 prototype.** Denser bursts, staggered release, varied flight speeds,
-later dissolution, and softer edges replace the earlier preset tuning. Balanced
-now targets 720 pieces; Explosion uses 1,200 and Implosion 1,000.
-Studio opens as an app-style window, now includes a real resize shader preview,
-and keeps its move/swap design previews. A separate patched Niri demo renders
-real window movement; see [the experimental build](experimental/README.md).
-Desktop appearance and GPU performance still need acceptance on each setup. [Validation details](docs/validation.md).
+**Early prototype · 0.4.1.** Opening and closing work on stock Niri 26.04.
+Resize fragments are **off by default and strictly opt-in**. Native move/swap
+fragmentation requires the separate experimental Niri patch. Performance and
+appearance still need testing across GPUs, applications and display scales.
 
-## Select a style in iRiS
+## See it in motion
 
-Run from the checkout with Python 3.10+ (no Python runtime dependencies):
+Opening and closing use the **Explosion** preset. These are recordings of
+Studio's real shader renderer with synthetic content, sampled at 20 fps.
+
+| Open · reconstruct | Close · explode |
+| --- | --- |
+| ![Opening reconstructs an intact window from fragments](docs/gifs/opening.gif) | ![Closing explodes a window into fragments](docs/gifs/closing.gif) |
+
+**Resize — opt-in, disabled by default.** This uses the actual resize shader.
+
+<img src="docs/gifs/resize.gif" alt="Opt-in resize breaks the window into fragments and reconstructs it at its new size" width="560">
+
+<details>
+<summary>Compare all 11 styles — each loop closes and opens</summary>
+
+| Subtle | Balanced | Dramatic |
+| --- | --- | --- |
+| ![Subtle](docs/gifs/preset-subtle.gif) | ![Balanced](docs/gifs/preset-balanced.gif) | ![Dramatic](docs/gifs/preset-dramatic.gif) |
+| **Explosion** | **Implosion** | **Earth** |
+| ![Explosion](docs/gifs/preset-explosion.gif) | ![Implosion](docs/gifs/preset-implosion.gif) | ![Earth](docs/gifs/preset-earth.gif) |
+| **Black Hole** | **Space** | **Vortex** |
+| ![Black Hole](docs/gifs/preset-black-hole.gif) | ![Space](docs/gifs/preset-space.gif) | ![Vortex](docs/gifs/preset-vortex.gif) |
+| **Confetti** | **Updraft** | |
+| ![Confetti](docs/gifs/preset-confetti.gif) | ![Updraft](docs/gifs/preset-updraft.gif) | |
+
+</details>
+
+<details>
+<summary>Experimental movement: native recording and design previews</summary>
+
+**Native column swap — requires the patched Niri build.** These are two real
+synthetic demo clients in a nested compositor, not an overlay on the desktop.
+
+![Two real demo windows fragment, exchange columns and reconstruct in patched Niri](docs/gifs/native-swap.gif)
+
+The two clips below are **Studio design concepts**, not recordings of the native
+prototype. Their trajectories and particle ordering differ from the current patch.
+
+| Move concept | Swap concept |
+| --- | --- |
+| ![Studio concept of one fragmented window moving between columns](docs/gifs/move-concept.gif) | ![Studio concept of two fragment streams swapping columns](docs/gifs/swap-concept.gif) |
+
+See [the experimental build and limitations](experimental/README.md).
+
+</details>
+
+[Recording details and reproduction commands](docs/gifs/README.md).
+
+## Try it
+
+Requires Linux, Python 3.10+ and Niri for desktop effects. There are no Python
+runtime dependencies. Chromium provides the app-style editor; other WebGL-capable
+browsers can open the offline preview.
+
+```sh
+git clone https://github.com/jturbide/niri-fragments.git
+cd niri-fragments
+python3 -m niri_fragments preview --output /tmp/fragments-preview.html
+xdg-open /tmp/fragments-preview.html
+```
+
+The offline preview changes no desktop settings. Use a new output filename if
+you already have that file; existing previews are never overwritten.
+
+### Niri + iNiR/iRiS
 
 ```sh
 python3 -m niri_fragments register --dry-run
 python3 -m niri_fragments register
 ```
 
-Open **iRiS Settings → Windows → Movement → Style** and choose a Fragments
-preset. Niri animations must be enabled for the picker to appear.
+Choose a Fragments style in **iRiS Settings → Windows → Movement → Style**.
+Registration adds presets without activating them. Your other presets and named
+custom styles are preserved. Requires iNiR's external animation preset support.
 
-| Preset | Motion |
-| --- | --- |
-| Subtle / Balanced / Dramatic | Increasingly dense bursts: 360 / 720 / 1,100 pieces |
-| Explosion | A strong outward burst of 1,200 tumbling pieces; opening implodes them back into place |
-| Implosion | Pulls 1,000 pieces into the center on close; opening reverses the collapse |
-| Earth | Falls down with acceleration and randomized spin |
-| Black Hole | Draws pieces inward, turning them toward the center |
-| Space | Drifts outward in every direction with free spin |
-| Vortex | Spirals inward while fragments turn along their travel |
-| Confetti | Hundreds of small tumbling pieces with downward gravity |
-| Updraft | Rises with a slight orbit and direction-following rotation |
+### Standalone Niri, DankMaterialShell, or another Niri shell
 
-Registration adds or updates the built-in pack without activating anything.
-Other user presets, including custom Fragments styles, are preserved.
+```sh
+python3 -m niri_fragments render --preset explosion > /tmp/fragments.kdl
+niri validate -c /tmp/fragments.kdl
+```
 
-## Tune and save your own style
+Then follow the [standalone installation guide](docs/getting-started.md#standalone-niri)
+to include it after your existing animation settings. The Niri configuration
+path is shell-independent; a DMS-native picker has **not** been implemented or
+runtime-tested. See [DMS setup and the roadmap](docs/compatibility.md).
+
+## Make it yours
 
 ```sh
 python3 -m niri_fragments studio
 ```
 
-This opens a dedicated Chromium app window, with no tabs or address bar and a
-separate profile. The existing application launcher opens the same window.
-The renderer is still web technology, not a native QML page. If Chromium is
-unavailable, it falls back to your browser; `studio --browser` explicitly opens
-a browser tab. Live controls include:
+![Particle controls in Fragments Studio](docs/studio.png)
 
-- **Gravity direction:** none, down, up, left, right, center, or outward.
-- **Gravity strength:** 0–3×. Downward gravity accelerates; outward space motion
-  drifts at a constant radial rate. Strength is artistic, not an SI unit.
-- **Particles:** a target of 16–4096 pieces, or a fixed square size of 8–128
-  logical pixels. Target counts are approximate so fragments remain square;
-  very small windows also have a four-pixel minimum tile size.
-- **Rotation:** none, random spin, or orientation toward the travel direction.
-- **Spin:** 0–720 degrees; the random spin range or the alignment limit.
-- **Orbit:** −360 to +360 degrees around the window center.
-- **Spread:** 0–240 logical pixels of initial radial scatter.
-- **Path dispersion:** 0–1; separates fragment speeds and curves their paths.
-- **Release stagger:** 0–0.4; varies when fragments separate and dissolve.
-- **Timing:** independent opening, closing and resizing durations, 100–1500 ms.
-- **Resize (off by default):** enable switch and breakup strength (0–1); bounded fragments
-  reconstruct the window at its new size. Resize shares particle count, gravity
-  direction and rotation; its strength is separate from open/close gravity.
+Tune particle count, gravity direction and strength, spin, orbit, scatter,
+release stagger and timing. Studio opens as a dedicated Chromium app window,
+with a browser fallback. Export JSON/KDL anywhere, or **Save to iRiS** and then
+select your custom style in Settings. Saving does not activate it.
 
-The editor uses the same shader templates as the CLI. Click **Reconstruct** or
-**Deconstruct**, or scrub the timeline. Set a name and choose **Save to iRiS**;
-then select that named style in iRiS's existing picker. Saving does not activate
-it. Saving the same name updates that custom preset, with a backup.
+The default Balanced preset targets 720 pieces; Explosion uses 1,200 and
+Implosion uses 1,000. Resize stays off until you enable it. The controls and
+CLI examples are in the [usage guide](docs/usage.md).
 
-The **Move** and **Swap** tabs are visual concepts: textured particles cross
-between columns and reconstruct at their destinations. They are not installed
-movement effects. Saving/exporting changes open/close and enabled resize behavior.
-Run `python3 scripts/nested-demo.py` after building the isolated experiment
-to try actual native movement. See [the compositor work](docs/movement.md).
+## What works where?
 
-The controls live in Fragments Studio. iRiS's native page lists the resulting
-presets; its stock thumbnail still shows generic timing rather than this shader.
+| Feature | Stock Niri | Extra requirement |
+| --- | --- | --- |
+| Open / close fragments, 11 presets | Yes; validated on 26.04 | Enable Niri animations |
+| Optional resize fragments | Yes; disabled by default | Studio checkbox or `--resize` |
+| Studio preview and KDL / JSON export | Yes | WebGL browser |
+| Preset registration and Studio save | Yes | iNiR external preset support |
+| Native movement / column swaps | No | [Pinned experimental Niri build](experimental/README.md) |
+| Studio Move / Swap tabs | Visual concepts | Do not activate desktop movement |
+| Hyprland, KWin, GNOME | No current backend | Separate compositor work |
 
-The editor binds only to loopback and uses a per-session save token and origin
-checks. It reads the installed iNiR helper and writes only the preset registry.
-The editor page makes no external network requests. It exits within 15 minutes of the app window or tab
-closing (or immediately with Ctrl+C when launched from a terminal).
+## Documentation and development
 
-For an app-launcher entry tied to this checkout:
-
-```sh
-python3 scripts/install-desktop.py
-```
-
-Search for **Niri Fragments Studio** in your application launcher. This is
-on-demand; nothing is added to session startup. Keep the checkout at its current
-path, or recreate the launcher after moving it.
-
-An offline editor is also available:
-
-```sh
-python3 -m niri_fragments preview --preset earth --output /tmp/fragments.html
-xdg-open /tmp/fragments.html
-```
-
-Offline mode can export a preset JSON file or standalone KDL. Import JSON with:
-
-```sh
-python3 -m niri_fragments register --custom ~/Downloads/niri-fragments-preset.json
-```
-
-## Command-line options
-
-```sh
-# Save a custom option alongside the built-in pack.
-python3 -m niri_fragments register --name "Heavy Meteor" --preset earth \
-  --gravity-strength 1.8 --particles 400 --rotation random --spin 360
-
-# Render a standalone override; includes no shell integration or activation.
-python3 -m niri_fragments render --preset black-hole --gravity-strength 0.8 \
-  --swirl 120 --rotation gravity --particles 300 > fragments.kdl
-niri validate -c fragments.kdl
-```
-
-`--tile-size` switches off target-count mode. `--particles 0` also selects fixed
-sizing. `list` prints the built-in parameters as JSON. `--preset` chooses the
-starting values for `render`, `preview`, `studio`, or a named `register`.
-
-## Integration and rollback
-
-Requires an iNiR version with `NiriAnimationPresets` and external user presets.
-Registration reads the active recognized preset and copies its other animation
-settings. Built-in styles replace only open/close and preserve the base resize
-behavior. Resize fragments are opt-in: check **Fragment windows when resizing**
-in Studio, or pass `--resize` when rendering or saving a named style.
-`--no-resize` disables that override; custom JSON documents without a `resize`
-field remain opted out. If active animations are custom and unrecognized, choose an
-explicit `--base`, for example `--base bouncy`; the tool refuses to approximate
-unknown timings. iNiR applies a whole preset when selected, so each saved style
-captures its base settings at creation time. Later base edits are not inherited
-automatically; re-register or save again to capture them.
-
-Existing registries are backed up beside their resolved target and updated
-atomically. Bad JSON, duplicate IDs, and foreign ID collisions are rejected.
-Custom presets survive built-in pack updates. Existing symlinks are preserved.
-The command prints the target and backup paths. `--inir-root` and `--registry`
-support nonstandard installations; defaults follow XDG and iNiR's legacy path.
-
-To remove all Fragments entries, select your original style in iRiS, then run:
-
-```sh
-python3 -m niri_fragments unregister
-```
-
-Unregister leaves the animation currently embedded in Niri's configuration and
-retains backups. To remove the optional launcher, delete
-`~/.local/share/applications/niri-fragments-studio.desktop` (or its XDG equivalent).
-
-For standalone Niri, include generated KDL after your base animations. Remove
-that include to revert. Niri live-reloads included KDL. **Use either a standalone
-late override or the iNiR registry approach:** a later override otherwise keeps
-winning over choices made in Settings. Inline GLSL works with Niri 26.04.
-
-## Development and limits
+Start with the [documentation index](docs/README.md) for installation, updating,
+rollback, troubleshooting, integration details and the movement experiment.
+[Validation results](docs/validation.md) distinguish automated checks from
+remaining desktop acceptance. [Related projects](docs/related-projects.md)
+cover other Niri shader collections and integrations.
 
 ```sh
 python3 -m unittest discover -s tests -v
 python3 scripts/validate.py --require-glsl --require-niri
-python3 -m build
+python3 scripts/check-docs.py
 ```
 
-The tests include a temporary loopback server, so they need local socket access.
-A dependency-free Node 22+/Chromium browser check can render all styles, compare
-shader exports, check exact endpoints and gravity motion, and capture previews:
+See [Contributing](CONTRIBUTING.md) for dependencies and the full development
+workflow. Report reproducible bugs in [Issues](https://github.com/jturbide/niri-fragments/issues);
+use the [security policy](SECURITY.md) for vulnerabilities.
 
-```sh
-node scripts/browser-smoke.mjs file:///absolute/path/to/fragments.html
-```
+## License
 
-Use `--save-test` only with a Studio process pointed at a temporary `--registry`.
-The browser check uses an isolated Chromium profile and software WebGL; it is
-not a desktop GPU benchmark.
-
-The shader uses three interleaved velocity fields, each with a bounded 3×3 source
-search: at most 27 candidate cells per pixel, independent of particle count.
-This costs more shader work than the earlier single-field effect.
-Attraction also shrinks fragments to prevent unbounded overlap at the center;
-there are no particle collisions or physical simulation. Opening reverses the
-closing trajectory, with its own duration. Niri's unspecified opening draw bounds
-can clip large excursions. Client-side shadows outside the window geometry are
-omitted during breakup. Check real applications, transparency, fractional scale,
-screen edges, and frame time before choosing an everyday style.
-
-See [integration details](docs/integration.md) and [related work](docs/related-projects.md).
-Optional installation in a virtual environment: `python3 -m pip install .`.
-Original project code is MIT licensed; the optional Niri patch is GPL-3.0-or-later.
-Independent project; not affiliated with Niri or iNiR.
+Original Fragments code, shaders and demo assets are [MIT licensed](LICENSE).
+The optional Niri movement patch is **GPL-3.0-or-later** and ships with
+[its license](experimental/COPYING-NIRI). See [third-party notices](THIRD_PARTY.md)
+for the exact scope. Independent project, not affiliated with Niri, iNiR or DMS.
