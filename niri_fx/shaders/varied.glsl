@@ -109,11 +109,25 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
         mat2 field = fragments_turn(orbit);
         mat2 inverse_field = fragments_turn(-orbit);
         vec2 field_center = center + drift;
+        // Bound the entire band before searching cells. Boundary jitter shifts
+        // source centers by at most .2 * FX_SIZE tiles; the horizontal wave is
+        // bounded by its amplitude. Rotate that center box, then expand by the
+        // wander radius and the largest possible rotated piece (.99 tiles).
+        // Inward fields also shrink pieces, so this remains valid near the core.
+        float field_shrink = min(1.0, scale);
+        float wave_extent = FX_WAVE * size.y * 0.45 / (2.0 * FRAGMENTS_PI * FX_FREQUENCY)
+                          * abs(sin(FRAGMENTS_PI * breakup));
+        vec2 span = ((count - 1.0) * 0.5 + 0.2 * FX_SIZE) * tile;
+        span.x += wave_extent;
+        span *= scale;
+        float c = abs(cos(orbit)), s = abs(sin(orbit));
+        vec2 extent = vec2(c * span.x + s * span.y, s * span.x + c * span.y)
+                    + vec2(tile * (0.72 * FRAGMENTS_DISPERSION * scale + 0.99 * field_shrink));
+        vec2 bounds_center = field_center + field * ((size * 0.5 - center) * scale);
+        if (any(greaterThan(abs(pixel - bounds_center), extent))) continue;
         vec2 source_guess = center + inverse_field * (pixel - field_center) / scale;
         source_guess.x -= fragments_wave(source_guess.y, size.y, breakup);
         vec2 candidate = floor((source_guess - grid_origin) / tile);
-        // Scale pieces with inward fields to bound overlap at the attractor.
-        float field_shrink = min(1.0, scale);
         // Inverse lookup: variable centers <= .2 tiles, half-diagonal <= .99,
         // wander <= .72, wave inverse error <= .45 * (.99 + .72).
         // Including the .5 cell-center offset gives < 3.2 with waves (±3).
@@ -123,14 +137,16 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
           for (int x = -@VARIED_RADIUS@; x <= @VARIED_RADIUS@; x++) {
             vec2 cell = candidate + vec2(float(x), float(y));
             if (any(lessThan(cell, vec2(0.0))) || any(greaterThanEqual(cell, count))) continue;
+            // Band ownership depends only on the cell's existing seeded hash.
+            // Reject other bands before evaluating four jittered boundaries.
+            vec2 random = fragments_hash(cell);
+            if (int(floor(random.x * 3.0)) != band) continue;
             vec2 low = fragments_boundary(cell), high = fragments_boundary(cell + 1.0);
             low = mix(low, vec2(0.0), vec2(1.0) - step(vec2(0.5), cell));
             high = mix(high, count, step(count - 0.5, cell + 1.0));
             vec2 source_center = grid_origin + (low + high) * 0.5 * tile;
             vec2 half_size = (high - low) * 0.5 * tile;
             if (fragments_phase_index(source_center / size) != phase) continue;
-            vec2 random = fragments_hash(cell);
-            if (int(floor(random.x * 3.0)) != band) continue;
             float wave = dot(source_center / size - 0.5, direction) + 0.5;
             float delay = FRAGMENTS_STAGGER * (0.65 * random.x + 0.35 * wave);
             float local_time = clamp((breakup - delay) / (1.0 - delay), 0.0, 1.0);

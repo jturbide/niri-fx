@@ -28,6 +28,11 @@ on distinct looks and useful timing, with resize kept explicitly opt-in.
 - **Clearer performance choices.** Explore quality options where measurements show
   a useful tradeoff, while retaining recognizable textures and smooth endpoints.
 
+Varied fragments now skip empty flight regions and reject cells assigned to other
+velocity groups before calculating their shapes. This reduces shader work without
+changing preset settings. Further optimization should include reproducible cost
+measurements and rendered-reference checks, as described in the [performance guide](docs/performance.md).
+
 The [performance guide](docs/performance.md) and [validation record](docs/validation.md)
 show what has already been measured and what remains untested.
 

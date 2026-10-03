@@ -206,6 +206,8 @@ Effect cost depends on the renderer, window size and settings. The
 [performance guide](docs/performance.md) includes reproducible shader benchmarks;
 the [validation record](docs/validation.md) describes native tests and remaining
 hardware limits. Particle count is a visual control, not a universal quality setting.
+The [fragment optimization results](docs/performance.md#varied-fragment-flight-bounds)
+compare shader costs while keeping the same particles and motion.
 
 | Feature | Requirement |
 | --- | --- |

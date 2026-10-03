@@ -107,6 +107,10 @@ case; forced process termination remains outside that guarantee.
 - Bound loops independently of window area. When changing a motion field, prove
   that the candidate neighborhood still covers every contributor. Document the
   bound beside the loop; fewer particles alone need not reduce shader cost.
+  The varied fragment renderer also bounds each complete velocity group before
+  searching it. Its envelope includes jittered centers, wave amplitude, field
+  rotation/scale, wandering and the maximum rotated piece radius. Early rejection
+  must preserve iteration/compositing order for every surviving fragment.
 - Preserve the distinction between stock open/close, opt-in resize,
   Canvas concepts and the separately patched native movement interface.
 

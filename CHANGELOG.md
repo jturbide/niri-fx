@@ -31,6 +31,10 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Changed
 
+- Reduce varied-fragment shader work with conservative flight bounds and earlier
+  velocity-group rejection. Preset settings, trajectories and particle density
+  are unchanged; hardware results and reference-frame checks are documented in
+  the performance guide.
 - Experimental movement now carries tile and column position velocity through
   interrupted swaps, with a cubic path that settles at the new destination.
   Initial moves retain their configured easing/spring, and the change requires
