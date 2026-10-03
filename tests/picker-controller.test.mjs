@@ -29,7 +29,12 @@ function harness(handler = () => ({})) {
     },
     launch: (argv) => launches.push(argv),
   });
-  controller.presets = structuredClone(catalog);
+  controller.presets = Object.fromEntries(
+    Object.entries(catalog).map(([id, effect]) => [
+      id,
+      { schema: 3, name: id, effect: structuredClone(effect) },
+    ]),
+  );
   controller.select("balanced");
   return { controller, calls, launches };
 }
@@ -37,6 +42,31 @@ const plan = (effect, changes = [{ path: "/config.kdl", action: "update" }]) => 
   effect,
   changes,
   plan_sha256: hash,
+});
+
+test("built-in profiles keep both actions and dispatch --profile through review and Studio", async () => {
+  const doc = { ...profile, actions: { ...profile.actions, resize: null } };
+  const {
+    controller: c,
+    calls,
+    launches,
+  } = harness((args) => (args[0] === "setup" ? plan(doc.actions) : {}));
+  c.presets["paired"] = doc;
+  c.filter("profile", "distortion");
+  assert.deepEqual(
+    c.items.map((row) => row.id),
+    ["paired"],
+  );
+  c.select("paired");
+  assert.equal(c.actions.close.family, "distortion");
+  assert.equal(c.actions.resize, null);
+  assert(await c.review());
+  assert(c.canApply);
+  assert(calls[0].includes("--profile"));
+  c.openStudio();
+  assert.deepEqual(launches[0].slice(-2), ["--profile", "paired"]);
+  c.select("balanced");
+  assert.equal(c.reviewPlan, null);
 });
 
 test("search and selection cannot activate settings or execute unknown IDs", async () => {

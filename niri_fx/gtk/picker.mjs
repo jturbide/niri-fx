@@ -197,7 +197,11 @@ export function createPicker(options = {}) {
         content.append(label(item.name, "heading"));
         content.append(
           label(
-            item.id === "custom" ? "Loaded JSON" : item.families.map(title).join(" · "),
+            item.id === "custom"
+              ? "Loaded JSON"
+              : item.kind === "profile"
+                ? "Open / close profile · " + item.families.map(title).join(" · ")
+                : item.families.map(title).join(" · "),
             "nirifx-muted",
           ),
         );

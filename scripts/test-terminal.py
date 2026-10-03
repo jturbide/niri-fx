@@ -20,9 +20,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.nested import NestedSession, encode_gif, record, save_clips, source_hashes, stop, wait_for
 
-from niri_fx.effects import PRESETS, render_kdl
+from niri_fx.catalog import STYLES
+from niri_fx.effects import render_kdl
 
 BASE = """hotkey-overlay { skip-at-startup; }
+input { keyboard { repeat-rate 0; }; }
 layout { background-color "#11171c"; gaps 18; }
 animations { window-resize { duration-ms 170; curve "ease-out-cubic"; }; }
 """
@@ -123,7 +125,8 @@ foreground = "#b7e8db"
 
     def send(value):
         if recording:
-            session.keys("-d", "80", value)
+            session.focus()
+            session.keys(value)
             session.keys("-k", "Return")
         else:
             process.stdin.write((value + "\n").encode())
@@ -135,7 +138,7 @@ foreground = "#b7e8db"
         if recording:
             recorder, video = record(session, "workflow-terminal")
             time.sleep(1)
-        send("explosion")
+        send("fragment-flow")
         wait_for(lambda: "Type apply" in content(), "review prompt")
         assert session.config.read_text() == BASE and not include.exists()
         if recording:
@@ -143,7 +146,7 @@ foreground = "#b7e8db"
             session.capture("terminal-review")
         send("apply")
         wait_for((root / "completed-1").exists, "terminal apply")
-        assert include.read_text().endswith(render_kdl(PRESETS["explosion"]))
+        assert include.read_text().endswith(render_kdl(STYLES["fragment-flow"]))
         assert "window-resize" not in include.read_text()
         wait_for(lambda: content().count("Choose a style") == 2, "second prompt")
         send("undo")

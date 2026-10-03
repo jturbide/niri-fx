@@ -86,6 +86,18 @@ class TerminalTests(unittest.TestCase):
         self.assertEqual(list(self.args.state.glob("*/manifest.json")), manifests)
         self.assertIn("Already matches. No files need changing.", self.output)
 
+    def test_profile_menu_applies_both_actions_and_undo_restores(self):
+        from niri_fx.catalog import PROFILES
+        from niri_fx.effects import render_kdl
+
+        self.run_guide(["profiles", "burst-and-drift", "apply"])
+        include = self.root / "nirifx/animations.kdl"
+        self.assertTrue(include.read_text().endswith(render_kdl(PROFILES["burst-and-drift"])))
+        self.assertNotIn("window-resize", include.read_text())
+        self.run_guide(["undo", "undo"])
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse(include.exists())
+
     def test_cancel_at_selection_and_at_review_writes_nothing(self):
         for answers in (["q"], ["explosion", ""], ["explosion", "yes"]):
             self.run_guide(answers)

@@ -118,6 +118,24 @@ test("hosted gallery settings load, edit, share and download without local endpo
     await browser.navigate(base + "/studio/?preset=__proto__");
     assert.equal(await browser.evaluate("parameters.family"), "fragments");
     assert.equal(await browser.evaluate('byId("preset").value'), "balanced");
+    const beforePairing = await browser.evaluate("effectDocument()");
+    await browser.evaluate("document.querySelector('[data-mode=\"resize\"]').click()");
+    await browser.evaluate(
+      'byId("profile").value="burst-and-drift";byId("profile").dispatchEvent(new Event("change"))',
+    );
+    const pairing = await browser.evaluate("effectDocument()");
+    assert.equal(pairing.kind, "profile");
+    assert.equal(pairing.actions.open.family, "fragments");
+    assert.equal(pairing.actions.close.family, "pixels");
+    assert.equal(pairing.actions.resize, null);
+    assert.equal(await browser.evaluate("mode"), "effect");
+    assert.equal(await browser.evaluate("editingAction"), "open");
+    await browser.evaluate('byId("undo").click()');
+    assert.deepEqual(await browser.evaluate("effectDocument()"), beforePairing);
+    await browser.evaluate('byId("redo").click();byId("share").click()');
+    const pairingLink = await browser.evaluate('byId("share-url").value');
+    await browser.navigate(base + "/studio/" + new URL(pairingLink).hash);
+    assert.deepEqual(await browser.evaluate("effectDocument()"), pairing);
     // Browser tests use software rendering: a load batch must still refuse to
     // report it as hardware performance, and malformed counts fail explicitly.
     const timing = await browser.evaluate("window.niriFxBenchmark({draws: 4, samples: 10})");

@@ -22,10 +22,12 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.nested import NestedSession, encode_gif, record, save_clips, source_hashes, stop, wait_for
 
+from niri_fx.catalog import STYLES
 from niri_fx.documents import load_document, parse_document
-from niri_fx.effects import PRESETS, render_kdl
+from niri_fx.effects import render_kdl
 
 BASE = """hotkey-overlay { skip-at-startup; }
+input { keyboard { repeat-rate 0; }; }
 layout { background-color "#11171c"; gaps 18; }
 animations { window-resize { duration-ms 170; curve "ease-out-cubic"; }; }
 """
@@ -142,7 +144,7 @@ def exercise(session, recording):
 
     try:
         data = settled(
-            lambda data: data["count"] == len(PRESETS) and "Checking" not in data["undoStatus"]
+            lambda data: data["count"] == len(STYLES) and "Checking" not in data["undoStatus"]
         )
         assert not data["review"] and not data["canApply"] and not data["undo"]
         assert config.read_bytes() == original and not include.exists()
@@ -160,16 +162,17 @@ def exercise(session, recording):
             time.sleep(0.5)
             recorder, video = record(session, "workflow-quickshell-picker")
             time.sleep(1)
-            key("f")
-            session.keys("-d", "90", "explosion")
-            session.keys("-k", "Return")
-            settled(lambda d: d["selected"] == "explosion")
+            session.focus()
+            session.keys(
+                "-M", "ctrl", "-k", "f", "-k", "a", "-m", "ctrl", "fragment-flow", "-k", "Return"
+            )
+            settled(lambda d: d["selected"] == "fragment-flow")
             time.sleep(1)
             key("r")
         else:
-            data = action("query", "explosion")
-            assert any(row["id"] == "explosion" for row in data["items"])
-            action("select", "explosion")
+            data = action("query", "fragment-flow")
+            assert any(row["id"] == "fragment-flow" for row in data["items"])
+            action("select", "fragment-flow")
             action("review")
         data = settled(lambda d: d["canApply"])
         assert len(data["review"]["changes"]) == 2
@@ -181,7 +184,7 @@ def exercise(session, recording):
         else:
             action("apply")
         data = settled(lambda d: bool(d["undo"]))
-        assert include.read_text().endswith(render_kdl(PRESETS["explosion"]))
+        assert include.read_text().endswith(render_kdl(STYLES["fragment-flow"]))
         assert "window-resize" not in include.read_text()
         assert config.read_bytes().startswith(original)
         if recording:
@@ -203,7 +206,7 @@ def exercise(session, recording):
         assert data["items"] and all("fragments" in row["families"] for row in data["items"])
         action("family", "")
         data = action("select", "../../invalid")
-        assert data["selected"] == "explosion" and "Unknown style" in data["error"]
+        assert data["selected"] == "fragment-flow" and "Unknown style" in data["error"]
         action("select", "balanced")
         action("openStudio")
         wait_for(studio_log.exists, "Studio dispatch")
@@ -275,7 +278,7 @@ def exercise(session, recording):
         first = include.read_bytes()
         data = action("review")
         assert not data["review"]["changes"] and not data["canApply"]
-        action("select", "explosion")
+        action("select", "fragment-flow")
         action("review")
         action("apply")
         settled(lambda d: bool(d["undo"]))
@@ -300,7 +303,7 @@ def exercise(session, recording):
         data = action("command", json.dumps({"argv": command}))
         assert data["command"] == command, data["command"]
         action("reload")
-        settled(lambda d: d["count"] == len(PRESETS) and not d["error"])
+        settled(lambda d: d["count"] == len(STYLES) and not d["error"])
         output = log_file.read_text()
         assert not any(
             error in output

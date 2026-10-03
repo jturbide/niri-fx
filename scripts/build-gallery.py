@@ -12,6 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
+from niri_fx.catalog import PROFILES
 from niri_fx.documents import MAX_DOCUMENT_BYTES, effect_document, load_document, parse_document
 from niri_fx.effects import FAMILIES, PRESETS, Effect
 from niri_fx.profiles import Profile
@@ -58,7 +59,9 @@ def settings(clip, stem):
         encoded = base64.urlsafe_b64encode(raw).decode().rstrip("=")
         preview = "&mode=resize&action=resize" if clip.get("mode") == "resize" else ""
         filename = f"nirifx-{identifier}.json"
-        command = f"python3 -m niri_fx studio --custom ./{filename} --target standalone"
+        builtin = next((name for name, value in PROFILES.items() if value == effect), None)
+        selection = f"--profile {builtin}" if builtin else f"--custom ./{filename}"
+        command = f"python3 -m niri_fx studio {selection} --target standalone"
         variants.append(
             {
                 "name": name,
@@ -126,6 +129,11 @@ def document(clips):
     cards = []
     for clip in clips:
         name, title = clip["id"], html.escape(clip["title"])
+        # Stable content URLs refresh regenerated GIFs/posters through browser
+        # caches while unchanged examples remain cacheable across deployments.
+        version = digest(ROOT / clip["file"])[:16]
+        poster_url = f"posters/{name}.webp?v={version}"
+        animation_url = f"../gifs/{name}.gif?v={version}"
         families = " ".join(clip["families"])
         labels = " · ".join(FAMILIES[f]["label"] for f in clip["families"]) or "Workflow"
         controls = []
@@ -144,9 +152,9 @@ def document(clips):
                 f'''<div class="style-links">{label}<a href="{variant["url"]}" data-studio>{try_label}</a><a href="presets/{variant["filename"]}" download="{variant["filename"]}">Download JSON</a><button type="button" data-command="{html.escape(variant["command"], quote=True)}">Copy local command</button></div>'''
             )
         cards.append(f'''<article data-families="{families}" data-kind="{clip["kind"]}" data-action="{clip["action"]}" data-search="{title.lower()} {families}">
-<img id="{name}" src="posters/{name}.webp" data-poster="posters/{name}.webp" data-animation="../gifs/{name}.gif" alt="{title}" loading="lazy" width="400" height="280">
+<img id="{name}" src="{poster_url}" data-poster="{poster_url}" data-animation="{animation_url}" alt="{title}" loading="lazy" width="400" height="280">
 <div class="card-body"><h2>{title}</h2><p>{html.escape(labels)} · {clip["kind"]}</p>
-<button type="button" data-play="{name}" aria-controls="{name}" aria-pressed="false">Play</button> <a href="../gifs/{name}.gif">Open GIF</a> <a href="#{name}" aria-label="Link to {title}">Link</a>{"".join(controls)}</div></article>''')
+<button type="button" data-play="{name}" aria-controls="{name}" aria-pressed="false">Play</button> <a href="{animation_url}">Open GIF</a> <a href="#{name}" aria-label="Link to {title}">Link</a>{"".join(controls)}</div></article>''')
     return f"""<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="description" content="Explore NiriFX window animations: fragments, slices, wobble, hexagons, ink, pixels and more. Search the gallery and play one example at a time.">

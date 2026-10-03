@@ -99,6 +99,10 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
           /tmp/niri-fx-package/bin/python -m niri_fx --version
           /tmp/niri-fx-package/bin/niri-fx list --text --recommended
+          /tmp/niri-fx-package/bin/niri-fx list --profiles --text
+          /tmp/niri-fx-package/bin/niri-fx list --documents > catalog.json
+          /tmp/niri-fx-package/bin/niri-fx inspect --profile fragment-flow > builtin-profile.json
+          /tmp/niri-fx-package/bin/niri-fx render --profile burst-and-drift > builtin-profile.kdl
           /tmp/niri-fx-package/bin/niri-fx picker --qml-dir
           /tmp/niri-fx-package/bin/niri-fx picker --gtk-dir
           /tmp/niri-fx-package/bin/python -c "from niri_fx.picker import qml_directory; assert all((qml_directory() / name).is_file() for name in ('shell.qml', 'NiriFXController.qml', 'NiriFXPicker.qml'))"

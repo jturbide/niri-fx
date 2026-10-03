@@ -23,7 +23,11 @@ const include = `${GLib.path_get_dirname(options.configPath)}/nirifx/animations.
 const profilePath = GLib.getenv("NIRIFX_TEST_PROFILE");
 const profile = read(profilePath);
 await c.reload();
-check(Object.keys(c.presets).length === 64 && !c.undoTransaction, "Catalog/history");
+check(
+  Object.keys(c.presets).length === Number(GLib.getenv("NIRIFX_TEST_CATALOG_SIZE")) &&
+    !c.undoTransaction,
+  "Catalog/history",
+);
 c.filter("explosion");
 check(
   c.items.some((row) => row.id === "explosion"),
@@ -45,6 +49,14 @@ await c.review();
 await c.apply();
 check((await c.undo()) && read(options.configPath) === installed, "Undo newest transaction");
 check((await c.undo()) && read(options.configPath) === original && !exists(include), "Exact Undo");
+c.select("burst-and-drift");
+check((await c.review()) && c.canApply && !c.actions.resize, "Built-in profile review");
+check(await c.apply(), c.error);
+check(
+  read(include).endsWith(read(GLib.getenv("NIRIFX_TEST_BUILTIN"))),
+  "Both built-in actions applied",
+);
+check((await c.undo()) && read(options.configPath) === original, "Built-in profile Undo");
 check(await c.loadFile(profilePath), c.error);
 check(!!c.actions.resize && !c.allowResize, "Profile consent defaults");
 await c.review();

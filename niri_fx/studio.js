@@ -39,6 +39,12 @@ byId("preset").value = Object.hasOwn(catalog.presets, initialPreset) ? initialPr
 byId("name").value = catalog.presets[catalog.name]
   ? "My " + title(byId("preset").value)
   : catalog.name;
+for (const [id, doc] of Object.entries(catalog.profiles)) {
+  const option = document.createElement("option");
+  option.value = id;
+  option.textContent = doc.name;
+  byId("profile").append(option);
+}
 let actions = catalog.profile ? structuredClone(catalog.profile.actions) : null;
 let editingAction = "open",
   pinned = null,
@@ -79,6 +85,9 @@ function loadDocument(doc, action = "open") {
   byId("name").value = doc.name;
 }
 function recordHistory() {
+  // This chooser starts a document; edits and Undo must never leave a stale
+  // pairing selected after the current settings have diverged from it.
+  byId("profile").value = "";
   const snapshot = JSON.stringify({
     document: effectDocument(),
     preset: byId("preset").value,
@@ -778,6 +787,20 @@ try {
     } finally {
       if (epoch === importEpoch) byId("import-file").value = "";
     }
+  };
+  byId("profile").onchange = () => {
+    const id = byId("profile").value;
+    if (!Object.hasOwn(catalog.profiles, id)) return;
+    cancelAnimationFrame(frame);
+    comparing = false;
+    loadDocument(normalizePreset(catalog.profiles[id]));
+    byId("preset").value = "";
+    populate();
+    document.querySelector('[data-mode="effect"]').click();
+    recordHistory();
+    byId("status").textContent =
+      catalog.profile_descriptions[id] +
+      ". Resize stays off. Previewing does not activate effects.";
   };
   byId("independent").onchange = () => {
     if (byId("independent").checked) {

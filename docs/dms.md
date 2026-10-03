@@ -1,6 +1,6 @@
 # DankMaterialShell launcher adapter
 
-Use the `fx` launcher command to search built-in presets, open **NiriFX Studio**
+Use the `fx` launcher command to search built-in presets and open/close pairings, open **NiriFX Studio**
 and **Undo last NiriFX change**. This optional adapter works with DMS on **Niri**.
 
 Install the current NiriFX checkout using [getting started](getting-started.md),
@@ -28,7 +28,8 @@ animation manager: an active standalone override takes precedence over iRiS or
 Noctalia's earlier animation includes. Remove the override through Undo/restore
 before switching to another picker. Disabling the plugin alone does not undo a
 Niri configuration change. Studio's standalone save target downloads a file;
-the DMS launcher currently lists built-in styles, not saved custom profiles.
+the DMS launcher lists the built-in styles and seven curated profiles. Saved custom
+JSON profiles can be opened in Studio or the reusable desktop pickers.
 
 ## Tested versions
 

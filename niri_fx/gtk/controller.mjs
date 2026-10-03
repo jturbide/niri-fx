@@ -7,6 +7,12 @@ export const title = (value) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
+function documentFamilies(doc) {
+  const effects =
+    doc.kind === "profile" ? Object.values(doc.actions).filter(Boolean) : [doc.effect];
+  return [...new Set(effects.map((effect) => effect.family))];
+}
+
 function canonical(value) {
   if (Array.isArray(value)) return value.map(canonical);
   if (value && typeof value === "object")
@@ -61,7 +67,7 @@ export class PickerController {
     return this.selectedId === "custom"
       ? this.customDocument
       : this.presets[this.selectedId]
-        ? { schema: 3, name: title(this.selectedId), effect: this.presets[this.selectedId] }
+        ? this.presets[this.selectedId]
         : null;
   }
 
@@ -86,16 +92,20 @@ export class PickerController {
   }
 
   get families() {
-    return ["", ...new Set(Object.values(this.presets).map((p) => p.family))].sort((a, b) =>
+    return [
+      "",
+      ...new Set(Object.values(this.presets).flatMap((doc) => documentFamilies(doc))),
+    ].sort((a, b) =>
       !a ? -1 : !b ? 1 : a === "fragments" ? -1 : b === "fragments" ? 1 : a.localeCompare(b),
     );
   }
 
   get items() {
-    const rows = Object.entries(this.presets).map(([id, effect]) => ({
+    const rows = Object.entries(this.presets).map(([id, doc]) => ({
       id,
-      name: title(id),
-      families: [effect.family],
+      name: doc.name,
+      families: documentFamilies(doc),
+      kind: doc.kind === "profile" ? "profile" : "style",
     }));
     if (this.customDocument) {
       const doc = this.customDocument;
@@ -111,7 +121,9 @@ export class PickerController {
     return rows.filter(
       (row) =>
         (!this.family || row.families.includes(this.family)) &&
-        `${row.name} ${row.families.join(" ")}`.toLowerCase().includes(query),
+        `${row.id} ${row.name} ${row.kind || ""} ${row.families.join(" ")}`
+          .toLowerCase()
+          .includes(query),
     );
   }
 
@@ -146,7 +158,7 @@ export class PickerController {
   selectionArguments() {
     return this.selectedId === "custom"
       ? ["--custom", this.customPath]
-      : ["--preset", this.selectedId];
+      : [this.document.kind === "profile" ? "--profile" : "--preset", this.selectedId];
   }
 
   setupArguments() {
@@ -196,10 +208,10 @@ export class PickerController {
   async reload(startupFile = "") {
     if (this.busy) return false;
     this.reviewPlan = null;
-    const ok = await this.request("catalog", ["list"], (data) => {
+    const ok = await this.request("catalog", ["list", "--documents"], (data) => {
       this.presets = data;
       if (!this.document) this.selectedId = "balanced";
-      this.status = `${Object.keys(data).length} built-in styles available.`;
+      this.status = `${Object.keys(data).length} styles and profiles available.`;
     });
     if (ok && startupFile) await this.loadFile(startupFile);
     else await this.refreshUndo();

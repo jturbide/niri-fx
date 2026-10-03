@@ -378,8 +378,10 @@ search, favorites and a pinned A/B comparison. [Profile guide](profiles.md).
 
 ![One profile opens with spring motion and closes with ember erosion](gifs/profile-spring-and-ember.gif)
 
-Three more combinations are ready to import into Studio. These loops close,
-then open, using each action's own timing. **Resize remains off in all four profiles.**
+Seven built-in pairings can be selected by name with `--profile`, through the
+terminal guide's `profiles` menu, or in Studio and the existing pickers. These loops
+close, then open, using each action's own timing. **Resize stays off.**
+See the [complete pairing table](profiles.md#choose-a-finished-pairing).
 
 | Burst and Drift | Frost and Fragments | Ghost and Shockwave |
 | --- | --- | --- |

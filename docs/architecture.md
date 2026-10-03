@@ -27,6 +27,7 @@ import-boundary test enforces that separation.
 | --- | --- |
 | [parameters.py](../niri_fx/parameters.py), [model.py](../niri_fx/model.py) | Parameter types, limits, labels, family applicability, GLSL tokens and capability flags. No I/O. |
 | [presets.py](../niri_fx/presets.py) | Named built-in values. All built-ins leave resize off. |
+| [catalog.py](../niri_fx/catalog.py) | Curated opening/closing recipes reference existing presets. Shared normalized documents and family labels feed every picker. No I/O. |
 | [profiles.py](../niri_fx/profiles.py) | Immutable choices for separate actions. A null resize/movement slot means inherit existing behavior. |
 | [documents.py](../niri_fx/documents.py) | Named JSON validation, bounded reads and serialization. Independent of a shell registry. |
 | [effects.py](../niri_fx/effects.py), [shaders/](../niri_fx/shaders/) | GLSL assembly and stock KDL exports. Movement generation is a separate explicit API. |
@@ -67,7 +68,11 @@ the plan before confirmed Apply and pins the reviewed transaction for Undo.
 Recommended choices reference the existing preset registry; they introduce no
 new parameter defaults. The CLI preserves JSON output for integrations.
 
-The QML picker and GTK/GJS picker consume the CLI's catalog and normalized documents.
+The QML picker and GTK/GJS picker consume `list --documents`: each catalog entry is
+a complete, normalized style or profile document. `list` retains the single-effect
+parameter map; `list --profiles` returns only pairings. A profile belongs to both
+of its action families for filtering. Adapters dispatch `--profile` for a built-in
+pairing and `--preset` for a single effect; both resolve through the same catalog.
 GTK separates a toolkit-independent controller, Gio subprocess transport and ordinary
 widgets. Controller tests run under Node; local runtime tests exercise the same
 state transitions through GJS and the real Python CLI. AGS imports the packaged

@@ -145,7 +145,7 @@ try {
       const sourceDoc = panel.source
         ? JSON.parse(readFileSync(join(root, panel.source), "utf8"))
         : null;
-      const openingEffect =
+      let openingEffect =
         sourceDoc?.kind === "profile" && spec.mode !== "resize" ? sourceDoc.actions.open : null;
       let effect = sourceDoc
         ? sourceDoc.effect || sourceDoc.actions[spec.mode === "resize" ? "resize" : "close"]
@@ -164,6 +164,11 @@ try {
       effect = generated.effect;
       const sources = generated.sources;
       if (openingEffect) {
+        // Older example documents can omit settings added since they were
+        // written. Normalize opening just like closing before shader expansion.
+        openingEffect = await evaluate(
+          `normalizePreset({schema:3,name:"Recording",effect:${JSON.stringify(openingEffect)}}).effect`,
+        );
         const openingShader = execFileSync(
           "python3",
           [
@@ -273,8 +278,7 @@ try {
       target,
     ]);
     assert(statSync(target).size > 1000);
-    manifest = manifest.filter((clip) => clip.file !== "docs/gifs/" + spec.name + ".gif");
-    manifest.push({
+    const entry = {
       file: "docs/gifs/" + spec.name + ".gif",
       ...(spec.preset ? { preset: spec.preset, effect: recorded[0].effect } : {}),
       mode: spec.mode,
@@ -288,7 +292,11 @@ try {
             ),
           }
         : {}),
-    });
+    };
+    // Re-recording an existing clip should not reorder unrelated manifest rows.
+    const existing = manifest.findIndex((clip) => clip.file === entry.file);
+    if (existing < 0) manifest.push(entry);
+    else manifest[existing] = entry;
     writeFileSync(
       join(out, "manifest.json"),
       JSON.stringify(

@@ -21,7 +21,7 @@ After installing a version containing the picker, use `niri-fx picker`.
 No shell plugin installation or autostart is required. NiriFX Studio and the CLI
 continue to work without Quickshell.
 
-1. Search by style or family, or choose **Load JSON** for a downloaded style/profile.
+1. Search by style, profile name or either action family, or choose **Load JSON** for a downloaded style/profile.
 2. **Preview in Studio** opens the selected settings for editing. Export your
    edited JSON and load it into the picker when ready.
 3. **Review changes** validates the selection and your Niri config, then lists
@@ -30,7 +30,8 @@ continue to work without Quickshell.
 5. **Undo last change** restores the previous file bytes. Repeat to step back
    through changes made with this picker's state directory.
 
-Resize stays unchanged for built-in styles. A custom style/profile that specifies
+The catalog includes 64 single styles and seven ready-made open/close profiles.
+Search `profile` to show the pairings. Resize stays unchanged for all built-ins. A custom style/profile that specifies
 resize requires the visible **Allow this selection to change resize effects**
 checkbox before Apply. Experimental movement data can be loaded and sent to
 Studio, but this picker activates stock Niri actions only.

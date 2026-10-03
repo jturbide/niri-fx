@@ -150,6 +150,7 @@ node scripts/render-readme-gifs.mjs --only=compare-pixel-directions,compare-dust
 node scripts/render-readme-gifs.mjs --only=compare-wisp-curl,compare-wisp-palette
 node scripts/render-readme-gifs.mjs --only=compare-distortion-strength,compare-shockwave-origin,compare-dissolve-flow
 node scripts/render-readme-gifs.mjs --only=profile-burst-and-drift,profile-frost-and-fragments,profile-ghost-and-shockwave
+node scripts/render-readme-gifs.mjs --only=profile-fragment-flow,profile-pixel-shuffle,profile-ribbon-exit
 ```
 
 All new comparisons use 1100 ms for each action. They change the labelled control

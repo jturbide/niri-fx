@@ -1307,6 +1307,39 @@
           }
         }
       ]
+    },
+    {
+      "name": "profile-fragment-flow",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "FRAGMENT FLOW",
+          "source": "examples/profiles/fragment-flow.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-pixel-shuffle",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "PIXEL SHUFFLE",
+          "source": "examples/profiles/pixel-shuffle.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-ribbon-exit",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "RIBBON EXIT",
+          "source": "examples/profiles/ribbon-exit.json"
+        }
+      ]
     }
   ]
 }
