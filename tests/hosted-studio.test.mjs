@@ -65,7 +65,7 @@ test("hosted gallery settings load, edit, share and download without local endpo
     await browser.evaluate('document.getElementById("share-view").click()');
     assert.equal(
       await browser.evaluate('document.getElementById("copy-text").value'),
-      "https://jturbide.github.io/niri-fx/gallery/?family=hexagons",
+      "https://jturbide.github.io/niri-fx/gallery/?family=hexagons&collection=all",
     );
     const settings = await browser.evaluate(
       `(()=>{const card=document.querySelector('article:not([hidden])');return {url:card.querySelector('[data-studio]').href,json:card.querySelector('[download]').getAttribute('href'),command:card.querySelector('[data-command]').dataset.command};})()`,

@@ -9,23 +9,9 @@ import os
 from copy import copy
 from pathlib import Path
 
-from .catalog import PROFILE_RECIPES, PROFILES, STYLES, families
+from .catalog import PROFILE_RECIPES, PROFILES, RECOMMENDED, STYLES, families
 from .effects import FAMILIES, PRESETS
 from .setup import apply_plan, plan_setup, restore, summarize
-
-# Editorial starting points, not another preset registry or parameter source.
-# All IDs refer to the same immutable styles used by Studio and shell pickers.
-RECOMMENDED = {
-    "balanced": "Everyday textured fragments",
-    "explosion": "A dense outward burst",
-    "implosion": "Pieces collapse toward the center",
-    "alternating-blinds": "Strips slide in alternating directions",
-    "spring-wobble": "A springy whole-window wobble",
-    "frost-vanish": "A frosted dissolve",
-    "pixel-wipe": "A progressive pixel reveal",
-    "ghost-wisps": "Soft drifting wisps",
-    "shockwave": "An expanding distortion wave",
-}
 
 
 def catalog(query="", family=None, recommended=False, *, profiles=False, all_styles=False):

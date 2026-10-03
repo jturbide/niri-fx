@@ -27,7 +27,7 @@ for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
 
-**Try without installing:** open [Web Studio](https://jturbide.github.io/niri-fx/studio/),
+**Try without installing:** choose from [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter), open [Web Studio](https://jturbide.github.io/niri-fx/studio/),
 or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-fx/gallery/).
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
@@ -59,8 +59,10 @@ The [scenario guide](docs/scenarios.md) helps choose the right setup and restore
 
 ## See it in motion
 
-The [interactive gallery](https://jturbide.github.io/niri-fx/gallery/) has search,
-family/scenario filters and click-to-play previews. It starts paused and loads one
+The [interactive gallery](https://jturbide.github.io/niri-fx/gallery/) starts with
+nine recommended looks, with Fragments first. Choose **Open/close pairings** for
+finished combinations or **All examples** to explore the whole collection. Search,
+family/scenario filters and click-to-play previews help narrow it down. It starts paused and loads one
 animation at a time. Style cards link to editable settings, JSON downloads and
 a local Studio command. Share a filtered view or a customized Studio link.
 The [full catalog](docs/catalog.md) includes every preset,

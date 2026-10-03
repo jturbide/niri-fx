@@ -7,8 +7,11 @@ window content. It cannot change desktop settings or capture your windows.
 
 ## Start from a showcase
 
-1. Browse the [gallery](https://jturbide.github.io/niri-fx/gallery/). Filter by family,
-   scenario or renderer, then press **Play**. Only one animation plays at a time.
+1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
+   nine recommended looks. **Open/close pairings** shows seven finished combinations;
+   **All examples** opens the full collection. Searching from Start here explores
+   the full catalog. Filter by family, scenario or renderer, then press **Play**.
+   Only one animation plays at a time.
 2. Choose **Try in Studio** to load that example's recorded settings. Comparisons
    offer a separate link and JSON file for each style. Experimental movement and
    concept cards say **Edit open/close style**: Web Studio does not run a compositor.
@@ -23,7 +26,12 @@ style settings. Their setup guides describe the corresponding integration.
 
 ## Use the result locally
 
-Install NiriFX using [Getting started](getting-started.md). Download a gallery
+For an unchanged built-in look, use its name in the terminal guide or your shell's
+picker. You do not need to download JSON or open an editor. The gallery's **Use on
+Niri** section links to setup instructions for plain Niri/Waybar, iNiR/iRiS, DMS
+and Noctalia.
+
+For customized settings, install NiriFX using [Getting started](getting-started.md). Download a gallery
 style's JSON, then use **Copy local command** from that card. Run it from the folder
 containing the downloaded file, in the environment where NiriFX is installed.
 
@@ -42,7 +50,7 @@ restoring the prior configuration.
 ## Share settings or a gallery view
 
 **Share settings** creates a public Studio link containing the style/profile,
-selected action, preview mode, random seed and timeline position. It never copies
+selected action, preview mode, resize direction, random seed and timeline position. It never copies
 local save tokens. The link preserves values, not playback, history or favorites.
 If clipboard access is unavailable, select and copy the displayed URL.
 
@@ -53,7 +61,9 @@ data only, with the same 16 KiB document limit as JSON imports. Malformed links
 show an error without replacing the current settings. Keep a JSON export as your
 editable copy; development versions may change the format or defaults.
 
-**Share this view** in the gallery keeps its filters and current example anchor.
+**Share this view** in the gallery keeps its collection, filters and current example
+anchor. Direct links to examples outside the starter selection still reveal the
+requested card.
 Previews start paused when someone opens the link.
 
 ## Hosted, local and offline

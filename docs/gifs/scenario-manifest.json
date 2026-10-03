@@ -1258,24 +1258,6 @@
       ]
     },
     {
-      "name": "workflow-terminal",
-      "backend": "real CLI terminal workflow in stock nested Niri",
-      "version": "niri 26.04 (8ed0da4)",
-      "checks": [
-        "preset selection",
-        "read-only review",
-        "confirmed apply",
-        "exact Undo",
-        "resize preserved"
-      ],
-      "sources": {
-        "niri_fx/terminal.py": "2ebdb6a3fd7ea110a658077dfbde54a56f1d42ae29ba0a9eb5a3e30644d7cd21",
-        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
-      },
-      "file": "docs/gifs/workflow-terminal.gif",
-      "bytes": 2539563
-    },
-    {
       "name": "workflow-gtk-picker",
       "backend": "packaged GTK 4 picker UI in stock nested Niri",
       "version": "gjs 1.88.1",
@@ -1335,6 +1317,24 @@
       },
       "file": "docs/gifs/workflow-quickshell-picker.gif",
       "bytes": 429593
+    },
+    {
+      "name": "workflow-terminal",
+      "backend": "real CLI terminal workflow in stock nested Niri",
+      "version": "niri 26.04 (8ed0da4)",
+      "checks": [
+        "preset selection",
+        "read-only review",
+        "confirmed apply",
+        "exact Undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/terminal.py": "15a4c866437b8f6c5ba6ffcfd0af71e8047d4853e54dc7ad91583b5597ebfece",
+        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
+      },
+      "file": "docs/gifs/workflow-terminal.gif",
+      "bytes": 2179240
     }
   ]
 }

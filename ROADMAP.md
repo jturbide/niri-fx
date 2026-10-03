@@ -14,6 +14,10 @@ Finished presets and smooth effects are the main product. The terminal guide,
 graphical pickers and Studio serve that workflow: choose a look, apply it, and
 customize when useful. New interface work should address a demonstrated need.
 
+The [gallery](https://jturbide.github.io/niri-fx/gallery/) starts with the same nine
+recommended looks as the terminal guide. Shareable collection views, setup links
+and community forms support trying effects and reporting results.
+
 Seven [ready-made action profiles](docs/profiles.md) now pair opening and closing
 styles across the existing CLI, Studio and pickers. Further curation should focus
 on distinct looks and useful timing, with resize kept explicitly opt-in.

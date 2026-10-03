@@ -6,7 +6,7 @@ Feedback, presets, documentation improvements and code contributions are welcome
 ## Share a preset
 
 Export your style or profile as JSON from Studio and share it in a
-[GitHub issue](https://github.com/jturbide/niri-fx/issues) or pull request.
+[Share a style form](https://github.com/jturbide/niri-fx/issues/new?template=share_style.yml) or pull request.
 Include a short description, a demo with sample content, and whether it enables
 resize. The [examples](../../examples/README.md) show the expected format.
 
@@ -21,6 +21,19 @@ first. Remove personal information from screenshots and logs; use
 Describe the motion or workflow you want when suggesting a feature. A small
 example is more useful than a preset name alone. The [roadmap](../../ROADMAP.md)
 shows current priorities, and [Contributing](../../CONTRIBUTING.md) covers development.
+
+## Tell us about your setup
+
+Use the [Compatibility report form](https://github.com/jturbide/niri-fx/issues/new?template=compatibility_report.yml)
+for working setups as well as limitations. Include GPU/driver, NiriFX and Niri
+versions, resolution, refresh rate, scale and the effects/actions you tried.
+Integrated GPUs and mixed-monitor setups are especially helpful. A report that
+something feels smooth is useful; timing claims should also name the measurement
+method. Community reports describe their tested setup, not universal support.
+
+For a reproducible defect, use the [Bug report form](https://github.com/jturbide/niri-fx/issues/new?template=bug_report.yml).
+There is no automatic telemetry or report upload. Review the details you choose
+to share and omit personal configuration, session tokens and private windows.
 
 ## Share NiriFX
 

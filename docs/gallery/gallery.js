@@ -2,7 +2,10 @@
 // Only one GIF loads/plays at a time; hidden results never keep animating.
 const cards = [...document.querySelectorAll("article")];
 const filters = Object.fromEntries(
-  ["search", "family", "action", "kind"].map((id) => [id, document.getElementById(id)]),
+  ["search", "family", "action", "kind", "collection"].map((id) => [
+    id,
+    document.getElementById(id),
+  ]),
 );
 let playing = null;
 function pause() {
@@ -12,6 +15,7 @@ function pause() {
   playing.textContent = "Play";
   playing.setAttribute("aria-pressed", "false");
   playing = null;
+  document.getElementById("pause-all").hidden = true;
 }
 for (const button of document.querySelectorAll("[data-play]"))
   button.addEventListener("click", () => {
@@ -19,6 +23,7 @@ for (const button of document.querySelectorAll("[data-play]"))
     pause();
     if (same) return;
     playing = button;
+    document.getElementById("pause-all").hidden = false;
     const image = document.getElementById(button.dataset.play);
     image.src = image.dataset.animation;
     button.textContent = "Pause";
@@ -30,6 +35,8 @@ function filter() {
   let count = 0;
   for (const card of cards) {
     card.hidden =
+      (filters.collection.value !== "all" &&
+        card.dataset.collection !== filters.collection.value) ||
       !card.dataset.search.includes(query) ||
       (filters.family.value && !card.dataset.families.split(" ").includes(filters.family.value)) ||
       (filters.action.value && card.dataset.action !== filters.action.value) ||
@@ -38,6 +45,41 @@ function filter() {
   }
   document.getElementById("count").textContent = `${count} ${count === 1 ? "example" : "examples"}`;
   document.getElementById("empty").hidden = count > 0;
+  for (const button of document.querySelectorAll(".collections button"))
+    button.setAttribute(
+      "aria-pressed",
+      String(button.dataset.collection === filters.collection.value),
+    );
+}
+function writeFilters() {
+  const query = new URLSearchParams();
+  for (const [key, control] of Object.entries(filters))
+    if (control.value) query.set(key, control.value);
+  const url = new URL(location.href);
+  url.search = query.toString();
+  url.hash = "";
+  // file:// previews can deny history changes; filtering must still work.
+  try {
+    history.replaceState(null, "", url);
+  } catch {
+    /* Local preview. */
+  }
+}
+function revealAnchor() {
+  let target;
+  try {
+    target = document.getElementById(decodeURIComponent(location.hash.slice(1)));
+  } catch {
+    return; // A malformed fragment is not a filter or a script.
+  }
+  const card = target?.closest("article");
+  if (!card?.hidden) return;
+  for (const [key, control] of Object.entries(filters))
+    control.value = key === "collection" ? "all" : "";
+  filter();
+  // Keep the incoming URL stable; sharing uses the revealed collection state.
+  // Filtering changes layout after the browser's initial anchor scroll.
+  requestAnimationFrame(() => card.scrollIntoView({ block: "start" }));
 }
 function readFilters() {
   const query = new URLSearchParams(location.search);
@@ -46,24 +88,39 @@ function readFilters() {
     filters[key].value = [...filters[key].options].some((option) => option.value === query.get(key))
       ? query.get(key)
       : "";
+  document.querySelector(".filters").open = ["family", "action", "kind"].some(
+    (key) => filters[key].value,
+  );
+  const collection = query.get("collection");
+  // Existing filtered links still explore the full catalog. Only a fresh visit
+  // starts with the curated selection; an explicit collection is shareable.
+  filters.collection.value = ["starter", "profiles", "all"].includes(collection)
+    ? collection
+    : collection || ["search", "family", "action", "kind"].some((key) => filters[key].value)
+      ? "all"
+      : "starter";
   filter();
+  revealAnchor();
 }
-for (const input of Object.values(filters))
+for (const [key, input] of Object.entries(filters))
   input.addEventListener("input", () => {
+    // A first search should find every style, including ones outside Start here.
+    // Explicit pairing searches remain scoped to that collection.
+    if (key !== "collection" && filters.collection.value === "starter")
+      filters.collection.value = "all";
     filter();
-    const query = new URLSearchParams();
+    writeFilters();
+  });
+for (const button of document.querySelectorAll("button[data-collection]"))
+  button.addEventListener("click", () => {
     for (const [key, control] of Object.entries(filters))
-      if (control.value) query.set(key, control.value);
-    const url = new URL(location.href);
-    url.search = query.toString();
-    // file:// previews can deny history changes; filtering must still work.
-    try {
-      history.replaceState(null, "", url);
-    } catch {
-      /* Local preview. */
-    }
+      control.value = key === "collection" ? button.dataset.collection : "";
+    document.querySelector(".filters").open = false;
+    filter();
+    writeFilters();
   });
 addEventListener("popstate", readFilters);
+addEventListener("hashchange", revealAnchor);
 readFilters();
 async function copy(text, label, note) {
   document.getElementById("copy-result").hidden = false;

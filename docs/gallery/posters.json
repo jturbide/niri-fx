@@ -3,6 +3,14 @@
     "source": "15e0791c36491567118f01db6b65a9a39c7e79dc22baf0096bd2d7ccce3c41cd",
     "poster": "a787fd5972834d27124a9aca961b9c47efe010a5d4df7e77291d86a869f68df2"
   },
+  "preset-explosion": {
+    "source": "b5d1f28777e11860c5e149086d146e649edda758977ea322c156e1e3e402f0e7",
+    "poster": "ed09d5a864c7885372cc82a72e5bee657a81f7522e848e41c1a741f9c8841dde"
+  },
+  "preset-implosion": {
+    "source": "d1b6d9bb3d83770592252fcbb48372c07f894cb197d37a0eb8492d32bfb04059",
+    "poster": "eb0f601060c73fa08b90a9acfd779765d6fcbbfdf6319e677caef1d2b8fdc8f5"
+  },
   "preset-black-hole": {
     "source": "cbd7605ed2cb7611396f91934452641b4cc9d3f697ee5ce740661ebfbf48a193",
     "poster": "13100353db78ca15d95f57a9ad8b62efc7a9ab0dbbfcaf13d97e5f8ad6f0b2ad"
@@ -46,14 +54,6 @@
   "preset-earth": {
     "source": "03c16797006d26679f997a784d029c070fd9fa15dd7108c04bd623243071ba0e",
     "poster": "6b33447d4e1a176353c70a8e9d740661dda516d7d140f74e33527b39726ef842"
-  },
-  "preset-explosion": {
-    "source": "b5d1f28777e11860c5e149086d146e649edda758977ea322c156e1e3e402f0e7",
-    "poster": "ed09d5a864c7885372cc82a72e5bee657a81f7522e848e41c1a741f9c8841dde"
-  },
-  "preset-implosion": {
-    "source": "d1b6d9bb3d83770592252fcbb48372c07f894cb197d37a0eb8492d32bfb04059",
-    "poster": "eb0f601060c73fa08b90a9acfd779765d6fcbbfdf6319e677caef1d2b8fdc8f5"
   },
   "preset-mosaic-burst": {
     "source": "9c4839c6bb7745762eb8c792158108ed9a6809ee5747a1b1a7eb149e2fd97796",
@@ -287,6 +287,10 @@
     "source": "e680e0b235ae50d947f42ad71005cb9eacd17f253f874a5626970c5615559bd7",
     "poster": "5752bdb43f5ff9fcb4b36d10160650ce25910548e537eaf7db19c1ec8f72f0c2"
   },
+  "preset-spring-wobble": {
+    "source": "87a104f46f014f771401a1ccb9d9f7b6e5124626bebd9307470111a02f8f3fed",
+    "poster": "d7734949f83181602b4b963490b3428f18396204d13535b3f3d88c3629543f2c"
+  },
   "preset-accordion": {
     "source": "6c76c84fb4102dcd8571371e02577b08724dfe61fbede53851f1ac30a3533cab",
     "poster": "322ae59c9ae1dcb0b0b6d7e69dc127267fcdd8a16a4a7f2bcc8c6cb4397835d7"
@@ -306,10 +310,6 @@
   "preset-rubber-band": {
     "source": "c9b8485000e3f9eca3a57b9fb3560a03f6b07a9912976d0e3326f33e24cf03e8",
     "poster": "d46e321a288496aed2d7200b94e46b6db9b1bfe94598e7afd3438e65d95fc333"
-  },
-  "preset-spring-wobble": {
-    "source": "87a104f46f014f771401a1ccb9d9f7b6e5124626bebd9307470111a02f8f3fed",
-    "poster": "d7734949f83181602b4b963490b3428f18396204d13535b3f3d88c3629543f2c"
   },
   "preset-twist-snap": {
     "source": "2a3a9a4ff88ef51579e85aa8e3015a17f04e622e3aa53b7396e638f26b26270c",
@@ -343,13 +343,13 @@
     "source": "bad5052309b57ca79be3288cac1f254690b28c8fb30dca1e71b70816de64f5f3",
     "poster": "5c2e69e5602d426e078e16000596790721dfb49b9a9df5b2034a61bfc4e7d395"
   },
-  "preset-ember-erosion": {
-    "source": "f8c46ee3054270f6c495e6174439bc20cee83f41431a1d9bf157020821ac9a78",
-    "poster": "b6248f9bbc49e5069eb9bebaf51f3cb53ae468c626230f9ff4532139cab63a2f"
-  },
   "preset-frost-vanish": {
     "source": "a5ab1173cd9d41f8904d8e24e095abb71dada4142c4b95e407ff7f95ccf05bc0",
     "poster": "41d23062c14c8469a517d311486aff98e77de3a382e720c4155e39c617034145"
+  },
+  "preset-ember-erosion": {
+    "source": "f8c46ee3054270f6c495e6174439bc20cee83f41431a1d9bf157020821ac9a78",
+    "poster": "b6248f9bbc49e5069eb9bebaf51f3cb53ae468c626230f9ff4532139cab63a2f"
   },
   "preset-ink-bloom": {
     "source": "cee6e97048fe55b158931850bd6743707cb33efd3ef47c672b32189f50a330d3",
@@ -395,6 +395,10 @@
     "source": "62dbf68865d9427063408fd1fc3ba67d9a2132bbb6940551981d4815159d4ccf",
     "poster": "1c86899c1124a46b2a4ffc8724ecb387db736c08fb49f3f02ef1cfbddb345c3b"
   },
+  "preset-pixel-wipe": {
+    "source": "a6b39c6fbab50e7b30969db2c8044c09362298e5d8548c4c189f34328193a3de",
+    "poster": "515f9b2cd0b770cec01881868905cddcf310c11a04116ea91877453250833c87"
+  },
   "preset-dust-drift": {
     "source": "a7e80a99fb8a4104b67e57d9f05b4d4e4e132d333a3a1d28194c39f6627c6d61",
     "poster": "05280adfb0882b481c05010cb8f27143547d01c75b6d790751dde1ce48263100"
@@ -402,10 +406,6 @@
   "preset-pixel-transfer": {
     "source": "9948acbbeb31c571229c307ab43394adfc362eec06caf632d37513b64f47947c",
     "poster": "1d3925788fc7fd71ff6123a10a22f8e028bcd3e0fad20e54b9ccf5c4e5533e3e"
-  },
-  "preset-pixel-wipe": {
-    "source": "a6b39c6fbab50e7b30969db2c8044c09362298e5d8548c4c189f34328193a3de",
-    "poster": "515f9b2cd0b770cec01881868905cddcf310c11a04116ea91877453250833c87"
   },
   "preset-pixelate": {
     "source": "351684aeea1d4f17c1bc3fccec37f7c6d0df9e6475cf2a10427c41102263d6dd",
@@ -463,6 +463,10 @@
     "source": "331825e6112767a793cf94fb9722b6c8436fe3d19ccef81d8948cccf9dcc800a",
     "poster": "2372dfec72c0617bdbb5bcc6712ecd2a51ab4bb44258c9e7c0732fad58f5de1f"
   },
+  "preset-shockwave": {
+    "source": "b65dffacc60e3bb91a744f5c0129e03dde8cf11d4c351b3268401fd60eb30b12",
+    "poster": "7209e1cc0337254a5f9906f61589f3c4284f450b46956f005b3ab55e2735e3e0"
+  },
   "preset-chromatic-glitch": {
     "source": "63a64400ed9fb16ff137ca154db91e8dec2728fe7805beb3443a918f88bae2c6",
     "poster": "8b492624680c6362fe0d50937f3c83ed10d99ff0b32986229b204349d1530c33"
@@ -470,10 +474,6 @@
   "preset-ripple-collapse": {
     "source": "f462aba48f09c52780ed5d544bbaf4ac4b8e292ca7f85ba3df2eeaef049b3473",
     "poster": "ceb9888d4c53a4d81e808cf731e139de079079eeb88f61938d45bdea3cececbd"
-  },
-  "preset-shockwave": {
-    "source": "b65dffacc60e3bb91a744f5c0129e03dde8cf11d4c351b3268401fd60eb30b12",
-    "poster": "7209e1cc0337254a5f9906f61589f3c4284f450b46956f005b3ab55e2735e3e0"
   },
   "preset-signal-glitch": {
     "source": "27db03d8dddbd39d1737d8b4d11f6c40ce53d5f2ea3cb44ce50ff8b41c62a48f",
@@ -600,7 +600,7 @@
     "poster": "9a5e8c1ef9838e2d5773198bb3bab60cb7b3a797c97f0dc3893a45e09732da1d"
   },
   "workflow-terminal": {
-    "source": "a617f5e422e36371c317c099796a57a4d082102b3bcfa51df16fdadba0be0f2c",
-    "poster": "3062249e6b1cfe60eea0bb2f86bce95ff4d745b7899afc1831051765f0a2b0fa"
+    "source": "344a41e5a8be7c8e24ea378962e287b7f18f207987a245e19a1e6053f4e47e1e",
+    "poster": "1e15f1e37016862637541ea9df012bd51b1d68af87f86c35391b757baddc66da"
   }
 }

@@ -10,6 +10,13 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+- The gallery starts with the same nine recommended looks as the terminal guide,
+  with separate views for open/close pairings and the full collection. Search and
+  existing filtered links still reach every example; collection links are shareable.
+- Setup links beside the gallery explain how to use a chosen style on plain Niri,
+  iNiR/iRiS, DMS or Noctalia. Community forms collect shared styles and compatibility
+  reports without automatic telemetry.
+
 - Edge Ripple and Torsion Resize modes, each with separate Subtle and Expressive
   opt-in profiles, dedicated recordings and side-by-side comparisons. All built-in
   styles and open/close pairings still leave resize disabled.

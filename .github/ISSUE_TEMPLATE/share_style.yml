@@ -1,0 +1,45 @@
+name: Share a style
+description: Share a finished preset or open/close pairing for others to try.
+title: "Style: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Export JSON from Studio or use Share settings. Use synthetic window content for demos.
+        Shared links contain the preset name and settings; review them before posting.
+  - type: input
+    id: look
+    attributes:
+      label: Name and look
+      description: Give it a short name and describe the motion.
+      placeholder: Soft Orbit, a gentle spiral with a quick fade
+    validations:
+      required: true
+  - type: textarea
+    id: settings
+    attributes:
+      label: Studio link or exported JSON
+      description: Paste a Share settings link, attach a JSON file or paste its contents. No local Studio session URLs or personal config files.
+    validations:
+      required: true
+  - type: dropdown
+    id: resize
+    attributes:
+      label: Does it enable a resize effect?
+      options:
+        - "No"
+        - "Yes, explicitly enabled"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: NiriFX version or commit
+      description: For Web Studio, say Web Studio and the date. For a local install, use niri-fx --version and include the commit when using main.
+    validations:
+      required: true
+  - type: textarea
+    id: demo
+    attributes:
+      label: Demo and experience
+      description: Optional synthetic GIF or screenshot, where you tried it, and anything others should know about timing or performance.
