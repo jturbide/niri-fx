@@ -35,8 +35,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
-- Root roadmap with milestone status, priorities, completion gates and a separate
-  release checklist; detailed integration and engineering plans link back to it.
+- Root roadmap with current work, planned improvements and contribution paths;
+  detailed integration and engineering plans link back to it.
 - Eleven workflow/scenario GIFs: Studio editing/export, iRiS/DMS/Noctalia pickers,
   transparent stock-Niri clients, tall/wide windows, fractional scale and two
   interrupted native movement cases. The gallery now contains 117 GIFs.
@@ -61,6 +61,15 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Changed
 
+- Rewrite the README, roadmap and setup guides around user workflows and supported
+  features. Add release/download guidance, refresh issue forms and correct stale
+  DMS/Noctalia descriptions. Remove historical launch notes and unsubmitted
+  outreach drafts from the current documentation.
+- Refresh interrupted-movement recordings with mint/violet sample app cards,
+  50 fps capture and an optimized compositor build. Raise the nested recording
+  window and reject delayed interruption commands; keep verification outside the
+  recorded timeline. Refresh shell demos with neutral labels and paths, and make
+  gallery pointer input use monotonic timestamps and bounded scroll positions.
 - Ember Erosion defaults to a white rim and charcoal band. Hue, saturation and
   brightness are configurable; Frost retains its cool palette. Dissolve gains
   layered detail and flowing noise.

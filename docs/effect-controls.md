@@ -41,12 +41,12 @@ only the native experiment uses the actual movement shader.
 
 A travelling wave changes pieces' paths. The existing **release direction / wave
 span** controls instead delay three sections' departure. They can be combined.
-The new controls affect opening, closing and the separate movement experiment;
+These controls affect opening, closing and the separate movement experiment;
 **they do not change the resize shader**.
 
 ## Slices
 
-**Slide Apart now alternates adjacent horizontal strips left and right.**
+**Slide Apart alternates adjacent horizontal strips left and right.**
 **Split Curtain** retains the former outward split. Choose the direction explicitly when tuning a custom style.
 
 | Control / CLI flag | Meaning |
@@ -127,7 +127,7 @@ necessarily make a shader faster. See [validation limits](validation.md).
 
 ## Dissolve
 
-Noise Dissolve erodes the texture with layered noise. Ember Erosion now defaults
+Noise Dissolve erodes the texture with layered noise. Ember Erosion defaults
 to a **white rim and charcoal band**; Frost Vanish retains its cool blue edge.
 The window contents keep their original colors. These are procedural masks,
 not simulated flames or ice. Highlights preserve the source texture's alpha.

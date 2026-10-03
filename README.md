@@ -4,24 +4,28 @@
 
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
-NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **55 presets across eight effect families**, preview the
-actual shaders, and tune the controls for each family. The optional iNiR/iRiS
-adapter adds your styles to its settings picker. A preset-folder export also
-feeds Noctalia’s existing animation picker. Independent action profiles combine different
-opening and closing styles; the optional DMS launcher adapter offers preset selection and undo.
+NiriFX brings customizable opening and closing animations to the **niri Wayland
+compositor**. Choose from **55 presets across eight effect families**, then use
+Studio to adjust the motion, preview your changes and save your own styles.
+Combine different effects for opening and closing, from a quiet ripple to a
+full window explosion.
+
+Use NiriFX on its own or with **iNiR/iRiS, DankMaterialShell or Noctalia**.
+Quickshell is optional. Studio opens as an app-style window or a browser tab.
 
 [Get started](docs/getting-started.md) · [Studio & controls](docs/usage.md) ·
 [Compatibility](docs/compatibility.md) · [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md) · [GPU measurements](docs/performance.md)
 
-**Development checkout after the 0.7.0 prerelease.** Includes independent profiles,
-eight effect families, shell adapters and GPU measurements. See [Unreleased](CHANGELOG.md)
-for changes newer than the tagged release. Opening and closing work on stock Niri 26.04.
-Resize fragments are **off by default and strictly opt-in**. Native move/swap
-fragmentation requires the separate experimental Niri patch. Performance and
-appearance still need testing across GPUs, applications and display scales.
+**Opening and closing work on stock Niri**, tested with 26.04. Fragment resize
+is **off by default**. Movement and swaps require an optional
+[experimental compositor build](experimental/README.md).
 
-## TL;DR — try it or install it
+NiriFX is in early development. This README describes `main`, which includes
+changes newer than the latest tagged release. See the [changelog](CHANGELOG.md)
+and [release guide for users](docs/releases.md) when choosing a version.
+
+## Quick start
 
 **Works standalone on Niri. Quickshell and desktop-shell plugins are optional.**
 Linux, Python 3.10+ and a WebGL browser are enough to try Studio:
@@ -86,7 +90,7 @@ or **Implosion** for an inward collapse.
 
 Counts are targets, not exact totals; square tiles adapt to each window's shape.
 
-**New in 0.5: release waves, movable burst origins and a deeper orbital collapse.**
+**Release pieces in waves, move the burst origin, or spiral into a central collapse.**
 
 | Directional Wave | Corner Burst | Orbital Collapse |
 | --- | --- | --- |
@@ -94,7 +98,7 @@ Counts are targets, not exact totals; square tiles adapt to each window's shape.
 | 900 pieces · staged release | 1,200 pieces · lower-left origin | 1,400 pieces · 300° orbit |
 | [Settings JSON](examples/directional-wave.json) | [Settings JSON](examples/corner-burst.json) | [Settings JSON](examples/orbital-collapse.json) |
 
-### Five new fragment variations
+### Waves and varied fragments
 
 Unequal pieces, travelling waves and seeded direction variation add more organic
 motion. These controls also feed the separate native movement experiment.
@@ -132,7 +136,7 @@ only the named shape control changes.
 ![Fragment corner rounding and shrink comparison](docs/gifs/compare-fragment-shapes.gif)
 
 **Core / outer regions / diagonal.** Compare three spatial release sequences.
-The Checker Scatter preset above demonstrates the fourth new sequence.
+The Checker Scatter preset above releases alternating groups of pieces.
 
 ![Center-out, inward and diagonal release comparison](docs/gifs/compare-fragment-release.gif)
 
@@ -191,8 +195,8 @@ let you try the same examples without iNiR or any desktop configuration changes.
 
 ### Eleven slice styles
 
-Whole strips slide, rotate and reassemble. **Slide Apart now alternates adjacent
-horizontal strips**, while **Split Curtain** keeps the original outward split.
+Whole strips slide, rotate and reassemble. **Slide Apart alternates adjacent
+horizontal strips**; **Split Curtain** separates the window into outward-moving halves.
 Choose random directions, release order, unequal widths and travelling waves.
 Slices uses stock Niri open/close shaders; resize and movement are unsupported.
 
@@ -201,7 +205,7 @@ Slices uses stock Niri open/close shaders; resize and movement are unsupported.
 | ![Adjacent horizontal strips slide in alternating directions](docs/gifs/preset-slide-apart.gif) | ![Vertical strips travel alternately and rotate](docs/gifs/preset-alternating-blinds.gif) | ![Diagonal strips shear away](docs/gifs/preset-diagonal-shear.gif) |
 | [Settings JSON](examples/slide-apart.json) | [Settings JSON](examples/alternating-blinds.json) | [Settings JSON](examples/diagonal-shear.json) |
 | **Split Curtain** | **Ribbon Wave** | **Shuffled Slats** |
-| ![Split Curtain retains the outward split](docs/gifs/preset-split-curtain.gif) | ![Ribbon Wave moves alternating strips along a wave](docs/gifs/preset-ribbon-wave.gif) | ![Shuffled Slats uses unequal sizes and random directions](docs/gifs/preset-shuffled-slats.gif) |
+| ![Split Curtain separates strips outward](docs/gifs/preset-split-curtain.gif) | ![Ribbon Wave moves alternating strips along a wave](docs/gifs/preset-ribbon-wave.gif) | ![Shuffled Slats uses unequal sizes and random directions](docs/gifs/preset-shuffled-slats.gif) |
 | [Settings JSON](examples/split-curtain.json) | [Settings JSON](examples/ribbon-wave.json) | [Settings JSON](examples/shuffled-slats.json) |
 | **Venetian Sweep** | | |
 | ![Venetian Sweep releases vertical strips from the center](docs/gifs/preset-venetian-sweep.gif) | | |
@@ -273,8 +277,8 @@ added control in each comparison panel.
 
 ![Synchronized Spring Wobble, Rubber Band and Jelly comparison](docs/gifs/compare-elastic.gif)
 
-[Controls, CLI examples and costs](docs/effect-controls.md) explain the new
-parameters. Resize remains off in all built-ins.
+[Controls and CLI examples](docs/effect-controls.md) explain how to tune these
+styles. Resize remains off in all built-ins.
 
 ### Dissolve and iris reveals
 
@@ -297,9 +301,8 @@ These are stock Niri open/close shaders. Resize stays off.
 
 ![Three iris mask shapes compared](docs/gifs/compare-iris-shapes.gif)
 
-**Ember now defaults to charcoal and white.** Saturation and brightness are
-configurable alongside hue: choose white, black or bring back a warm edge.
-Layered noise, flowing detail and a narrower rim improve the transition.
+**Ember defaults to charcoal and white.** Adjust hue, saturation and brightness
+for a white, black or warm edge. Layered noise and flowing detail shape the erosion.
 Frost keeps its cool, fine-grained look.
 
 ![White, black and warm Ember edge palettes](docs/gifs/compare-ember-palette.gif)
@@ -407,7 +410,7 @@ original implementations; no upstream shaders or preview assets are bundled.
 ### Combine different actions
 
 Open with Spring Wobble and close with Ember Erosion in the same profile.
-Studio now includes independent action editing, undo/redo, parameter reset,
+Studio includes independent action editing, undo/redo, parameter reset,
 search, favorites and a pinned A/B comparison. [Profile guide](docs/profiles.md).
 
 ![One profile opens with spring motion and closes with ember erosion](docs/gifs/profile-spring-and-ember.gif)
@@ -452,14 +455,14 @@ per window, with no shared collision simulation or particle-level interleaving.
 
 ![Two real demo windows fragment, exchange columns and reconstruct in patched Niri](docs/gifs/native-swap.gif)
 
-Three more **actual native swaps**, each recorded in the isolated patched Niri:
+**Wave and spring styles**, recorded with the experimental Niri build:
 
 | Crosswind | Orbital Ribbons | Spring Wobble |
 | --- | --- | --- |
 | ![Native Crosswind swap](docs/gifs/native-swap-crosswind.gif) | ![Native Orbital Ribbons swap](docs/gifs/native-swap-orbital-ribbons.gif) | ![Native Spring Wobble swap](docs/gifs/native-swap-spring-wobble.gif) |
 | Sideways fragment wave | Curved fragment streams | Continuous elastic windows |
 
-Three additional **actual native swaps** show the new geometry controls:
+**Rounded fragments, staged bursts and twisting windows:**
 
 | Bubble Burst | Core Detonation | Twist Snap |
 | --- | --- | --- |
@@ -494,11 +497,11 @@ This recording uses the actual controls and download buttons with the
 
 ![Studio imports a profile, edits its closing wind, compares the original, undoes and exports](docs/gifs/workflow-studio-profile.gif)
 
-**Existing shell pickers.** These run inside isolated stock Niri with temporary
-settings. iRiS uses its real gallery/service; DMS uses its real launcher modal and
-PluginService in a small test host. Noctalia runs its full shell with the existing
-Niri Animations plugin. These clips demonstrate selection and restore, not shader
-previews inside the shell's cards. [Versions and acceptance scope](docs/validation.md#workflow-and-compositor-scenarios).
+**Choose a style from your shell.** Select mixed-action profiles in iRiS, search
+presets and Undo changes in DMS, or use Noctalia's Niri Animations picker.
+The iRiS and DMS clips use the shells' real UI components in isolated demo windows;
+the Noctalia clip uses its running shell. The iRiS cards show timing previews.
+[Setup guides](docs/scenarios.md) · [Tested versions and details](docs/validation.md#workflow-and-compositor-scenarios)
 
 | iRiS · mixed profiles and return to Snappy | DMS · search, apply, Undo and Studio |
 | --- | --- |
@@ -506,9 +509,9 @@ previews inside the shell's cards. [Versions and acceptance scope](docs/validati
 
 ![Noctalia selects a custom mixed-action profile and returns to the base configuration](docs/gifs/workflow-noctalia.gif)
 
-**Actual stock Niri, transparent synthetic windows.** Fragments come first;
-wisps demonstrate the same separated tile and transparent gutter. Both clips
-open and close a real client, with resize left off.
+**See how transparent windows break apart.** These stock Niri recordings show
+fragments and wisps around transparent margins and a gap between two shapes.
+Resize is off in both examples.
 
 | Fragment explosion | Ghost Wisps |
 | --- | --- |
@@ -517,18 +520,18 @@ open and close a real client, with resize left off.
 More cases: [wide Shockwave](docs/gifs/stock-wide-shockwave.gif),
 [tall Pixel Wipe](docs/gifs/stock-tall-pixels.gif), and
 [Frost at 1.5× scale](docs/gifs/stock-fractional-frost.gif).
-The single scaled output does not demonstrate mixed-monitor behavior.
+The Frost example uses a single scaled output; mixed-monitor testing is still planned.
 
-**Experimental movement under interruption.** These are actual captures of the
-pinned patched Niri: repeated left/right moves finish reconstructed; closing one
-moving client leaves the other intact. Seamless retargeting remains research.
+**Change direction or close a moving window.** These experimental Niri recordings
+show windows reconstructing after repeated moves and after one window closes.
+Smooth redirection while an effect is playing is still under development.
 
 | Reverse direction during movement | Close during movement |
 | --- | --- |
 | ![Two fragmenting windows reverse direction and finish reconstructed](docs/gifs/native-interrupted.gif) | ![One moving window closes while its neighbor finishes reconstructing](docs/gifs/native-close-during-move.gif) |
 
 The [scenario index](docs/showcases.md) maps the **117-GIF gallery** to practical
-choices. The [roadmap](ROADMAP.md) tracks remaining acceptance and future features.
+choices. See the [roadmap](ROADMAP.md) for planned improvements.
 
 ## Try it
 
@@ -578,9 +581,8 @@ niri validate -c /tmp/fragments.kdl
 ```
 
 Then follow the [standalone installation guide](docs/getting-started.md#standalone-niri)
-to include it after your existing animation settings. The Niri configuration
-path is shell-independent; a DMS-native picker has **not** been implemented or
-runtime-tested. See [DMS setup](docs/dms.md) and the [roadmap](ROADMAP.md).
+to include it after your existing animation settings. The same Niri configuration works with any shell. DMS users can also choose
+presets, open Studio and undo changes through the optional [launcher adapter](docs/dms.md).
 For Noctalia’s existing picker, use the [preset-pack setup guide](docs/noctalia.md).
 
 ## Make it yours
@@ -604,11 +606,11 @@ The default Balanced preset targets 720 pieces; Explosion uses 1,200 and
 Implosion uses 1,000. Resize stays off until you enable it. The controls and
 CLI examples are in the [usage guide](docs/usage.md).
 
-## Development status
+## Updates
 
-NiriFX is moving quickly and maintains one current API: `niri-fx`, the `niri_fx`
-Python package, effect schema 3 and independent profile schema 1. Obsolete command aliases and formats are
-removed. Read [the update policy](docs/upgrading.md) when upgrading a checkout.
+Review the [changelog](CHANGELOG.md) before updating: early releases can change
+commands and preset formats. The [update guide](docs/upgrading.md) explains how
+to refresh your installation and active effects while keeping your saved styles.
 
 ## What works where?
 
@@ -637,26 +639,22 @@ Built for [niri](https://github.com/niri-wm/niri), using **Python**, **GLSL** an
 - **Quickshell:** the toolkit behind iNiR and DMS; NiriFX itself uses a web editor.
 
 Explore [related shader projects](docs/related-projects.md), [brand assets](docs/branding.md)
-and [community contribution opportunities](docs/community/README.md). NiriFX is
-independent of these upstream projects.
+and [ways to contribute](docs/community/README.md). NiriFX is an independent project.
 
-## Documentation and development
+## Help and contributing
 
-Start with the [documentation index](docs/README.md) for installation, updating,
-rollback, troubleshooting, integration details and the movement experiment.
-[Validation results](docs/validation.md) distinguish automated checks from
-remaining desktop acceptance. [Related projects](docs/related-projects.md)
-cover other Niri shader collections and integrations.
+Find installation, customization, updates and troubleshooting in the
+[documentation](docs/README.md). [Known limits and testing](docs/validation.md)
+cover hardware and experimental features.
 
-```sh
-python3 -m unittest discover -s tests -v
-python3 scripts/validate.py --require-glsl --require-niri
-python3 scripts/check-docs.py
-```
+Report bugs or suggest features in [Issues](https://github.com/jturbide/niri-fx/issues).
+Include your Niri version, effect settings and steps to reproduce a problem;
+remove personal information from screenshots and logs. Report security issues
+through the [security policy](SECURITY.md).
 
-See [Contributing](CONTRIBUTING.md) for dependencies and the full development
-workflow. Report reproducible bugs in [Issues](https://github.com/jturbide/niri-fx/issues);
-use the [security policy](SECURITY.md) for vulnerabilities.
+Contributions are welcome: share a preset, improve a guide, test a different setup
+or work on a [roadmap item](ROADMAP.md). See [Contributing](CONTRIBUTING.md) for the
+development environment, checks and review process.
 
 ## License
 

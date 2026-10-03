@@ -1,20 +1,23 @@
 # Compatibility and next integrations
 
-Checked on 2026-10-03. NiriFX (formerly Niri Fragments) targets **Niri**. A desktop shell
+NiriFX targets the **Niri Wayland compositor**. A desktop shell
 provides settings and launchers; it does not render these application windows.
 The iNiR/iRiS preset adapter is optional: `render` and the offline Studio preview
 do not need iNiR installed.
 
-| Setup | Current path | Validation / limitation |
+| Setup | Current path | Tested setup and limitations |
 | --- | --- | --- |
-| Niri + iNiR/iRiS | Native preset registration and Studio save | Tested locally. |
+| Niri + iNiR/iRiS | Native preset registration and Studio save | iNiR/iRiS c08bb92 gallery selection, apply and restore tested with Quickshell 0.3.1. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
-| Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher modal and PluginService passed isolated visual selection/apply/undo; full desktop session not claimed. |
+| Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher selection, apply and undo tested in a component host. |
 | Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 55 files validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
 | Niri + Waybar, custom Quickshell or AGS/Astal | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering; custom picker UI not tested. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
 | Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
+
+See [tested versions and reproduction details](validation.md#workflow-and-compositor-scenarios)
+for the scope of each integration check.
 
 Resize fragments are **opt-in everywhere**. The standard preset pack and KDL
 exports change only opening and closing. Enable resize deliberately with
@@ -32,15 +35,15 @@ From this checkout:
 
 ```sh
 python3 -m niri_fx render --preset explosion \
-  > /tmp/fragments.kdl
-niri validate -c /tmp/fragments.kdl
+  > /tmp/nirifx.kdl
+niri validate -c /tmp/nirifx.kdl
 ```
 
 After validation succeeds, copy it with a backup:
 
 ```sh
 mkdir -p ~/.config/niri/nirifx
-cp --backup=numbered /tmp/fragments.kdl ~/.config/niri/nirifx/animations.kdl
+cp --backup=numbered /tmp/nirifx.kdl ~/.config/niri/nirifx/animations.kdl
 ```
 
 Back up your main config before editing it.
@@ -61,8 +64,8 @@ same open/close settings.
 For visual tuning without the iNiR save adapter:
 
 ```sh
-python3 -m niri_fx preview --output /tmp/fragments-preview.html
-xdg-open /tmp/fragments-preview.html
+python3 -m niri_fx preview --output /tmp/nirifx-preview.html
+xdg-open /tmp/nirifx-preview.html
 ```
 
 Use **Export Niri config**, then put the exported contents in the NiriFX
@@ -71,7 +74,7 @@ Choose the standalone save target for a KDL download; iRiS registration requires
 
 ## Shell adapters
 
-The optional [DMS launcher adapter](dms.md) now provides searchable built-in
+The optional [DMS launcher adapter](dms.md) provides searchable built-in
 styles, Studio and reversible apply/undo. Its real QML component passed an
 isolated Quickshell/CLI test and the actual DMS 1.6.2 launcher modal passed visual
 search, selection, Undo and Studio launch in a test host. See [workflow acceptance](validation.md#workflow-and-compositor-scenarios).

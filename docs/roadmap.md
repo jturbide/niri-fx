@@ -1,23 +1,22 @@
-# Integration priorities
+# Shell integration plans
 
-The root [ROADMAP.md](../ROADMAP.md) tracks overall progress and milestones.
-This page supplies the integration-specific order and rationale.
+NiriFX already works with standalone Niri, iNiR/iRiS, DMS and Noctalia.
+The next integrations aim to make browsing, applying and restoring styles
+convenient in more desktop setups. See the [project roadmap](../ROADMAP.md)
+for overall priorities.
 
-Reviewed on **2026-10-03**. The current scope is standalone Niri plus iNiR/iRiS,
-DMS and Noctalia. This is a priority order, not a release-date promise.
-The [development phases](next-phases.md) turn these priorities into scoped deliverables
-and acceptance gates; [architecture](architecture.md) defines the implementation boundaries.
+The order below reflects current priorities; release dates are not set.
 
-| Priority | Work | Why / acceptance gate |
+| Priority | Integration | Planned experience |
 | --- | --- | --- |
-| 1 | Polish and validate existing paths | Maintain the versioned picker workflow checks; broaden acceptance beyond isolated component hosts and test more GPUs, display scales and interrupted effects. |
-| 2 | Reusable custom Quickshell example | A small picker using the shared CLI, with search, custom profiles and reversible apply/undo. Test it in an isolated Niri session before calling it supported. |
-| 3 | AGS / Astal example | Reuse the same CLI contract in a GTK-based shell; useful beyond Quickshell. Choose a maintained API/version and verify a real shell workflow first. |
-| 4 | Caelestia integration assessment | Its current documented compositor is Hyprland. First establish a maintained Niri-capable setup and an appropriate extension point; then consider a picker. Do not label a Hyprland configuration as NiriFX-compatible. |
-| 5 | ML4W workflow assessment | Its documented focus is Hyprland. Start with coexistence/documentation for separate Niri sessions. A native settings adapter needs a supported Niri target and clear config ownership. |
+| 1 | Existing integrations | More testing across shell versions, complete desktop sessions, GPUs and display setups. |
+| 2 | Reusable custom Quickshell example | A reusable picker with search, custom profiles and reversible apply/undo. |
+| 3 | AGS / Astal example | A GTK-based picker with the same search, profile and restore workflow. |
+| 4 | Caelestia integration assessment | Explore a picker once a maintained Niri-compatible setup and suitable extension point are established. |
+| 5 | ML4W workflow assessment | Start with guidance for a separate Niri session, then assess a settings adapter for an appropriate Niri target. |
 | Separate research | Another compositor renderer | Hyprland/KWin/GNOME need their own shader hooks and adapters, not just a shell plugin. Consider user demand and maintenance cost before a backend project. |
 
-**Waybar needs no compatibility project.** Standalone NiriFX already supplies the
+**Waybar works with standalone NiriFX.** Standalone NiriFX already supplies the
 animation configuration. An optional Studio launcher button is a small convenience,
 not a prerequisite or a new effects backend. The same applies to simple bars/widgets.
 

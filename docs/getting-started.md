@@ -1,6 +1,6 @@
 # Getting started
 
-**Standalone Niri is fully supported; Quickshell is optional.** Start with the
+**Use NiriFX on its own or with a shell integration.** Start with the
 [scenario guide](scenarios.md) or [standalone walkthrough](standalone.md) if you
 do not use an existing shell picker.
 
@@ -39,8 +39,7 @@ python3 -m venv .venv
 ```
 
 Use `.venv/bin/niri-fx` in place of `python3 -m niri_fx` when running
-the installed package. Source installation is the documented distribution path;
-there is no official PyPI, AUR or Flatpak release yet.
+the installed package. See [Releases and downloads](releases.md) for version choices and package contents.
 
 ## iNiR and iRiS
 
@@ -53,14 +52,14 @@ python3 -m niri_fx register --dry-run
 python3 -m niri_fx register
 ```
 
-Registration backs up and updates the user preset registry atomically. It adds
-the built-in pack, preserves named custom presets and other providers, and does
-not activate a style. Choose one in **iRiS Settings → Windows → Movement → Style**.
+Registration adds the built-in styles and keeps a backup of your preset file.
+Your other presets and named custom styles are preserved. Choose one in **iRiS Settings → Windows → Movement → Style**.
 Enable animations if the picker is hidden.
 
-Each entry snapshots the recognized active preset's other animation settings.
-Open and close are replaced; ordinary resize is preserved unless you explicitly
-opt into fragments. If the current preset is unrecognized, select a known base:
+Each NiriFX style keeps the other animation settings from your current recognized
+shell preset. Only opening and closing change; resize changes only when you
+explicitly enable fragment resize. If your current settings are custom, choose
+a built-in shell preset as the base:
 
 ```sh
 python3 -m niri_fx register --base bouncy --dry-run
@@ -132,9 +131,8 @@ override settings selected through a shell preset manager. See the
 
 ## Update
 
-Read the [development update policy](upgrading.md) before updating an older
-checkout. NiriFX uses one current API and preset format; obsolete interfaces
-are removed during development.
+Read [Updating NiriFX](upgrading.md) before updating an older installation.
+Early releases may change commands or preset formats.
 
 Review the [changelog](../CHANGELOG.md), then update a clean checkout:
 

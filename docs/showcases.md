@@ -47,7 +47,7 @@ Undo/Redo and pinned A/B comparisons.
 
 ## Resize, movement and swaps
 
-| Scenario | Evidence | Requirement |
+| Scenario | Demo | Requirement |
 | --- | --- | --- |
 | Whole-window resize breakup | [Full Breakup](gifs/resize-full.gif) | Stock Niri; explicitly enable fragment resize |
 | Resize with the center readable | [Edge Rebuild](gifs/resize-edge.gif), [Soft Reflow](gifs/resize-soft.gif) | Stock Niri; explicitly enable fragment resize |
@@ -56,20 +56,19 @@ Undo/Redo and pinned A/B comparisons.
 | Move/swap design exploration | [Move concept](gifs/move-concept.gif), [Swap concept](gifs/swap-concept.gif), [Three swap concepts](gifs/compare-swap-styles.gif) | Labelled Canvas simulations in Studio; these are not compositor recordings |
 
 See [resize controls](usage.md), [movement limits](movement.md) and the
-[nested compositor experiment](../experimental/README.md). New Pixels, Wisps,
+[nested compositor experiment](../experimental/README.md). Pixels, Wisps,
 Dissolve, Iris and Distortion families currently support opening/closing only.
 
 ## Workflows and real compositor scenarios
 
-The gallery now contains **117 GIFs**. The following recordings use real UI or
-compositor actions, with synthetic content and temporary settings. They complement
-Studio shader comparisons rather than replacing them.
+Watch common workflows and see effects on different window shapes. These
+recordings use sample content in Studio, shell interfaces and Niri.
 
-| Scenario | Recording | Acceptance scope |
+| Try this | Watch | What the demo shows |
 | --- | --- | --- |
-| Import, edit one action, A/B, Undo/Redo, export | [Studio workflow](gifs/workflow-studio-profile.gif) | Actual controls and JSON/KDL downloads; resize absent |
-| Select mixed profiles and restore Snappy | [iRiS gallery](gifs/workflow-iris.gif) | iNiR/iRiS c08bb92 gallery and service in an isolated host; two profiles, exact prior style |
-| Search, select, Undo, launch Studio | [DMS launcher](gifs/workflow-dms.gif) | DMS 1.6.2 launcher modal and PluginService in an isolated host; separate external-edit refusal check |
+| Import, edit one action, A/B, Undo/Redo, export | [Studio workflow](gifs/workflow-studio-profile.gif) | Import, edit, compare and export a profile; resize off |
+| Select mixed profiles and restore Snappy | [iRiS gallery](gifs/workflow-iris.gif) | Two mixed-action profiles and return to the previous style in the iRiS gallery |
+| Search, select, Undo, launch Studio | [DMS launcher](gifs/workflow-dms.gif) | Preset search, selection, Undo and Studio launch in the DMS launcher |
 | Select a profile and return to base | [Noctalia picker](gifs/workflow-noctalia.gif) | Noctalia 5.2.1 / Niri Animations 0.2.0; 55 presets plus a custom profile |
 | Transparent margins and separated tile | [Fragments](gifs/stock-transparent-fragments.gif), [Wisps](gifs/stock-transparent-wisps.gif) | Stock Niri 26.04 with a real transparent Quickshell client |
 | Wide and tall geometry | [Wide Shockwave](gifs/stock-wide-shockwave.gif), [Tall Pixel Wipe](gifs/stock-tall-pixels.gif) | 900×280 and 300×660 logical client sizes |
@@ -77,18 +76,16 @@ Studio shader comparisons rather than replacing them.
 | Repeated movement interruption | [Reverse direction](gifs/native-interrupted.gif) | Pinned experimental Niri; both clients finish reconstructed |
 | Close while moving | [Close during movement](gifs/native-close-during-move.gif) | Pinned experimental Niri; closed client disappears and survivor reconstructs |
 
-The iRiS gallery cards use the shell's timing preview, not NiriFX's shader renderer.
-DMS/iRiS component-host acceptance does not imply their complete desktop sessions
-were exercised. [Validation details](validation.md#workflow-and-compositor-scenarios)
-and [reproduction commands](gifs/README.md#workflow-and-compositor-recordings) record
-the exact boundaries.
+The iRiS cards show the shell's timing preview. The iRiS and DMS clips use real
+UI components in isolated demo windows; the Noctalia clip uses the running shell.
+See [tested versions and details](validation.md#workflow-and-compositor-scenarios)
+or [record your own demo](gifs/README.md#workflow-and-compositor-recordings).
 
-## What still needs recording
+## Known limits
 
-- Real mixed-scale monitors and output transitions.
-- Decorations, fullscreen, output-edge clipping and a wider range of applications.
-- Interrupted stock open/close and overlapping resize/close cases.
-- Broader full-shell and hardware acceptance across versions and GPUs.
+Mixed-scale monitors, output-edge clipping, decorations, fullscreen applications
+and overlapping resize/close animations need broader testing. See
+[testing and known limits](validation.md) for the current coverage and the
+[roadmap](../ROADMAP.md) for planned improvements.
 
-Track priorities and completion gates in [ROADMAP.md](../ROADMAP.md). GIFs
-show appearance; they do not measure GPU cost, seamless retargeting or input latency.
+GIFs demonstrate appearance. For shader timing data, see [GPU measurements](performance.md).

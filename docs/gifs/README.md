@@ -25,7 +25,7 @@ content is captured.
 - `native-swap.gif`: actual recording of two synthetic Alacritty windows inside
   the separately built, patched Niri compositor. This remains experimental.
 
-All loops are sampled at 20 fps, with holds at endpoints. GIF palette reduction
+Shader-gallery loops are sampled at 20 fps, with holds at endpoints. GIF palette reduction
 and scaling affect fine edges. These clips demonstrate appearance, not GPU frame
 time. The move/swap concepts use a 1.1-second journey; the native recording uses
 a 1.2-second movement duration.
@@ -215,8 +215,9 @@ pointer protocol XML. The small input fixture builds bindings under `artifacts`
 and connects only to the owned nested socket. DMS/iRiS use their real launcher/
 gallery and services inside minimal hosts; Noctalia runs the full shell. These
 are workflow checks, not a claim of full DMS/iRiS desktop-session coverage.
-The Noctalia publication crop excludes the surrounding bar, which may read system
-services even with a private session bus. Do not publish uncropped raw recordings.
+The Noctalia preset folder uses a generic temporary path. The publication crop
+excludes the surrounding bar, which may read system services even with a private
+session bus. Do not publish uncropped raw recordings.
 
 For actual movement interruption, first follow the
 [pinned build instructions](../../experimental/README.md), then run:
@@ -226,7 +227,16 @@ python3 scripts/record-movement-scenarios.py
 ```
 
 The script verifies the binary and patch hashes, records repeated movement and
-close-during-movement with two synthetic clients, and checks final IDs/positions
+close-during-movement with two synthetic app cards, and checks final IDs/positions
 and reconstructed color populations. It writes `native-interrupted.gif` and
-`native-close-during-move.gif`. It does not replace the login compositor or prove
-seamless retargeting. [Acceptance scope](../validation.md#workflow-and-compositor-scenarios).
+`native-close-during-move.gif` at 50 fps using mint/violet cards and a compact 32-color
+palette at 720 px wide. Use `python3 scripts/build-niri-movement.py --release` for an optimized
+build; these two recordings use that profile.
+
+The harness raises its owned nested window so host occlusion cannot stall frame
+callbacks and IPC. Each interruption must be acknowledged within 600 ms of the
+previous action in the 1200 ms movement; an IPC call taking 150 ms or longer
+rejects the capture. Action offsets are saved in the manifest. Pixel checks run
+after recording stops to avoid adding machine-dependent idle holds. These are
+capture timing checks, not a GPU benchmark. The script does not replace the login
+compositor or prove seamless retargeting. [Acceptance scope](../validation.md#workflow-and-compositor-scenarios).

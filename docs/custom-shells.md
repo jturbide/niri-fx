@@ -55,5 +55,5 @@ dotfiles as a Hyprland setup. A new settings button would not make Niri shaders
 work in Hyprland. If you run a separate Niri session, use its standalone NiriFX
 configuration and keep the Hyprland configuration separate.
 
-We do not currently claim a Caelestia/ML4W native integration. See the
+Dedicated Caelestia and ML4W integrations are not available. See the
 [prioritized roadmap](roadmap.md) for the prerequisites and next steps.

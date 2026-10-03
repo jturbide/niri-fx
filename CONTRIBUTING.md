@@ -2,7 +2,7 @@
 
 Small, focused contributions are welcome. For a larger feature or compositor
 backend, open an issue describing the intended behavior before implementing it.
-Check the [project roadmap](ROADMAP.md) and [compatibility](docs/compatibility.md) and
+Check the [project roadmap](ROADMAP.md), [compatibility](docs/compatibility.md) and
 [movement limits](experimental/README.md) first. Read the [architecture](docs/architecture.md),
 [effect contribution guide](docs/adding-effects.md) and [next phases](docs/next-phases.md)
 for implementation boundaries and acceptance criteria.
@@ -98,6 +98,23 @@ export parity; it is not a compositor GPU benchmark. See
 Tool configurations: [Ruff](https://docs.astral.sh/ruff/configuration/),
 [ESLint](https://eslint.org/docs/latest/use/configure/configuration-files),
 [Prettier](https://prettier.io/docs/configuration).
+
+## Public documentation and media
+
+Write user guides for someone discovering NiriFX for the first time: explain
+what a feature does, how to use it and which setups it supports. Use the changelog
+for release history and the engineering/testing guides for implementation details.
+Keep limitations explicit, especially stock Niri versus experimental movement.
+
+Keep personal configurations, local workspace paths, session URLs, raw audit
+reports, planning conversations and outreach drafts out of commits and PR bodies.
+Use sample content in media. Inspect representative frames of each recording,
+including menus and status messages; text inside images is not covered by a
+source secret scan. Keep local investigations under ignored `artifacts/`.
+
+Before submitting, inspect `git diff --cached`, check new files for private data
+and run the documentation check. A clean scanner result complements manual review;
+it does not replace it. Examples should use generic paths and names.
 
 ## Review expectations
 
