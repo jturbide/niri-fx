@@ -28,12 +28,14 @@ show what has already been measured and what remains untested.
 Standalone NiriFX already works with any bar or shell running on Niri. These
 integrations would add convenient browsing and settings interfaces:
 
-1. **Custom Quickshell:** a reusable picker with search, profiles and Undo.
-2. **AGS/Astal:** an equivalent example for GTK-based shells.
-3. **Caelestia:** assess a maintained Niri setup and a suitable extension point.
-4. **ML4W:** document a separate Niri session, then assess an appropriate settings adapter.
+The [Quickshell picker](docs/quickshell.md) now provides search, profile loading,
+reviewed activation and Undo, with reusable QML components. Further work includes:
 
-The existing iNiR/iRiS, DMS and Noctalia paths remain the supported integrations.
+1. **AGS/Astal:** an equivalent example for GTK-based shells.
+2. **Caelestia:** assess a maintained Niri setup and a suitable extension point.
+3. **ML4W:** document a separate Niri session, then assess an appropriate settings adapter.
+
+The iNiR/iRiS, DMS and Noctalia paths remain available alongside the reusable picker.
 Waybar uses [standalone setup](docs/standalone.md) and needs no separate effects
 backend. See the [integration design notes](docs/roadmap.md).
 

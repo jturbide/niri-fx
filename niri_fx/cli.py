@@ -86,6 +86,10 @@ def parser():
     commands = root.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="Print built-in effect parameters as JSON")
     commands.add_parser("families", help="Print supported effect families and capabilities as JSON")
+    inspect = commands.add_parser(
+        "inspect", help="Validate and print normalized style/profile JSON"
+    )
+    inspect.add_argument("--custom", type=Path, required=True)
     profile = commands.add_parser("profile", help="Create an independent action profile as JSON")
     profile.add_argument("--name", default="My Profile")
     profile.add_argument("--open-preset", choices=PRESETS, default="spring-wobble")
@@ -134,6 +138,13 @@ def parser():
     )
     from .setup import default_config, default_state
 
+    picker = commands.add_parser("picker", help="Open the optional Quickshell style/profile picker")
+    picker.add_argument("--config", type=Path, default=default_config())
+    picker.add_argument("--state", type=Path, default=default_state().parent / "quickshell")
+    picker.add_argument("--custom", type=Path, help="Start with an exported style or profile")
+    picker.add_argument(
+        "--qml-dir", action="store_true", help="Print the reusable QML component directory"
+    )
     studio.add_argument(
         "--state", type=Path, default=default_state().parent, help="Studio preferences directory"
     )
@@ -154,6 +165,7 @@ def parser():
     setup.add_argument("--custom", type=Path)
     setup.add_argument("--name", help="Name customized settings for iNiR")
     setup.add_argument("--launcher", action=argparse.BooleanOptionalAction, default=True)
+    setup.add_argument("--expect-plan", help="Apply only if the reviewed plan_sha256 still matches")
     diagnose = commands.add_parser(
         "doctor", help="Check Niri, configuration and Studio prerequisites"
     )
@@ -192,6 +204,16 @@ def main(argv=None):
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "list":
             print(json.dumps(describe_presets(), indent=2))
+        elif arguments.command == "inspect":
+            name, _, effect = parse_document(load_document(arguments.custom))
+            print(json.dumps(effect_document(name, effect), indent=2))
+        elif arguments.command == "picker":
+            from .picker import launch_picker, qml_directory
+
+            if arguments.qml_dir:
+                print(qml_directory())
+            else:
+                launch_picker(arguments)
         elif arguments.command == "profile":
             from .profiles import Profile
 
@@ -232,6 +254,8 @@ def main(argv=None):
 
             if arguments.custom and arguments.name:
                 raise ValueError("--custom already supplies a name; omit --name")
+            if arguments.expect_plan and not arguments.apply:
+                raise ValueError("--expect-plan is only used with --apply")
             plan = plan_setup(
                 arguments,
                 selected_effect(arguments),
@@ -249,7 +273,7 @@ def main(argv=None):
                     "Use --name to save customized iNiR settings; built-in registration leaves resize off"
                 )
             result = (
-                apply_plan(plan, arguments.state)
+                apply_plan(plan, arguments.state, arguments.expect_plan)
                 if arguments.apply
                 else {**summarize(plan), "dry_run": True}
             )

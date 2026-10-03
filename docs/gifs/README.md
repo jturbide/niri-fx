@@ -193,7 +193,18 @@ at 1.5× output scale. This slower recording timing does not change preset defau
 The test checks partial frames, intact content and an empty close endpoint, plus
 compositor error logs. One scaled output does not test mixed monitors.
 
-To record pickers, supply your **actual release source/binary paths**. The examples
+The reusable NiriFX picker ships with the project:
+
+```sh
+python3 scripts/test-quickshell-picker.py
+python3 scripts/test-quickshell-picker.py --record
+```
+
+The first command uses offscreen Qt and temporary configs. The second records
+keyboard search, Review, Apply and Undo in a nested compositor, then checks failure
+paths. It never captures the parent output or edits installed settings.
+
+To record other shell pickers, supply your **actual release source/binary paths**. The examples
 below use placeholder paths; `--version` labels the tested release, while metadata
 also fingerprints the source components or binary. Sources are read/symlinked into
 a temporary test host; the installed shell and registry are not modified.

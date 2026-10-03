@@ -5,9 +5,9 @@ The next integrations aim to make browsing, applying and restoring styles
 convenient in more desktop setups. See the [project roadmap](../ROADMAP.md)
 for priorities. This page describes the integration contract.
 
-Existing adapters cover iNiR/iRiS, DMS and Noctalia. Future examples should build
-on the same standalone apply/restore API. The roadmap prioritizes a custom
-Quickshell picker, then AGS/Astal, followed by Caelestia and ML4W assessments.
+Existing adapters cover iNiR/iRiS, DMS and Noctalia. The [reusable Quickshell
+picker](quickshell.md) adds reviewed Apply, profiles and Undo using the same
+standalone API. The next UI example is AGS/Astal, followed by Caelestia and ML4W assessments.
 An adapter needs a maintained Niri-compatible target and a stable UI extension
 point; installing a different shell cannot add compositor shader hooks.
 

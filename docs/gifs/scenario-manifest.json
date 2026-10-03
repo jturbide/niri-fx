@@ -1276,6 +1276,25 @@
         "no surviving surface",
         "shader render log"
       ]
+    },
+    {
+      "name": "workflow-quickshell-picker",
+      "backend": "packaged Quickshell picker UI in stock nested Niri",
+      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/qml/NiriFXController.qml": "40d873e2cb383eaad7764e3dbcbc8fbdab99c158ad6882c8fe8a22928759527c",
+        "niri_fx/qml/NiriFXPicker.qml": "b1a3e02ea2134037fb098c16fbee2a48b9e02e7c67b1d241cd315ffd4f48f8cb",
+        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
+      },
+      "file": "docs/gifs/workflow-quickshell-picker.gif",
+      "bytes": 429009
     }
   ]
 }

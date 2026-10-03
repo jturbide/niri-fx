@@ -178,6 +178,7 @@ def plan_setup(args, effect, custom=None):
             changes.append(launcher)
         else:
             notes.append("The existing Studio launcher is preserved.")
+    observed = changes
     changes = [c for c in changes if c["before"] != c["after"]]
     from dataclasses import asdict
 
@@ -185,6 +186,7 @@ def plan_setup(args, effect, custom=None):
         "target": target,
         "notes": notes,
         "changes": changes,
+        "observed": observed,
         "selection": [p["name"] for p in generated]
         if target == "inir"
         else (custom["name"] if custom else args.preset),
@@ -196,6 +198,7 @@ def plan_setup(args, effect, custom=None):
 
 def summarize(plan):
     return {
+        "plan_sha256": plan_fingerprint(plan),
         "target": plan["target"],
         "notes": plan["notes"],
         "selection": plan.get("selection"),
@@ -213,26 +216,49 @@ def summarize(plan):
     }
 
 
+def plan_fingerprint(plan):
+    """Bind a UI's review to its exact selection, paths, bytes and permissions.
+
+    The plan is rebuilt before applying, not loaded from an editable cache.
+    Existing per-write checks still protect changes during the apply operation.
+    """
+    value = {
+        "target": plan["target"],
+        "selection": plan.get("selection"),
+        "effect": plan.get("effect"),
+        "changes": [
+            {k: item[k] for k in ("logical", "target", "mode")}
+            | {side: digest(item[side]) for side in ("before", "after")}
+            for item in plan.get("observed", plan["changes"])
+        ],
+    }
+    return digest(json.dumps(value, sort_keys=True, separators=(",", ":")).encode())
+
+
 def check_unchanged(item, expected):
     logical, target = Path(item["logical"]), Path(item["target"])
     if logical.resolve() != target or read_bytes(target) != expected:
         raise ValueError(f"File changed since the plan/snapshot; leaving it untouched: {logical}")
 
 
-def apply_plan(plan, state):
+def apply_plan(plan, state, expected=None):
     """Snapshot, compare, write and validate; roll back only bytes still owned.
 
     The lock coordinates NiriFX writers sharing this state directory. Editors
     and other tools do not honor it, so every write also checks current bytes.
     Multi-file writes are sequential, not crash-atomic; snapshots aid recovery.
     """
+    if expected is not None and expected != plan_fingerprint(plan):
+        raise ValueError(
+            "The setup plan changed. Review the selection and files again before applying."
+        )
     if not plan["changes"]:
         return {**summarize(plan), "changed": False, "transaction": None}
     state = Path(state).expanduser().resolve()
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (state / ".lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
-        for item in plan["changes"]:
+        for item in plan.get("observed", plan["changes"]):
             check_unchanged(item, item["before"])
         identifier = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ-") + uuid.uuid4().hex[:8]
         folder = state / identifier
