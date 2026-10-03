@@ -1,6 +1,6 @@
 # Custom showcase examples
 
-For independent opening/closing combinations, see the [four action profiles](profiles/README.md).
+For independent opening/closing combinations, see the [action profiles](profiles/README.md).
 For a visual starting point, use the [scenario index](../docs/showcases.md).
 
 The checked-in JSON supplies the exact settings used in the README recordings.
@@ -31,8 +31,8 @@ resize examples explicitly enable it.
 | [Alternating Blinds](alternating-blinds.json) | 16 vertical strips, alternating travel and rotation | Open / close |
 | [Diagonal Shear](diagonal-shear.json) | 10 strips at −35°, alternating travel | Open / close |
 
-These use schema 2. Fragment examples retain schema 1 for compatibility. Slice
-presets cannot enable resize or native movement. Import them into Studio first,
+All single-style examples use schema 3. Slices supports stock open/close,
+opt-in Accordion Resize and experimental movement. Import into Studio to preview,
 then save/apply when ready.
 
 ```sh
@@ -282,4 +282,15 @@ These profiles use Balanced for open/close and a separate resize effect. Importi
 python3 -m niri_fx preview --custom examples/profiles/elastic-resize.json --output /tmp/elastic-resize.html
 python3 -m niri_fx preview --custom examples/profiles/accordion-resize.json --output /tmp/accordion-resize.html
 python3 -m niri_fx preview --custom examples/profiles/ripple-resize.json --output /tmp/ripple-resize.html
+```
+
+## Vortex distortion
+
+[Vortex Fold](vortex-fold.json) contracts into a pronounced clockwise spiral.
+[Soft Swirl](soft-swirl.json) uses a shorter, gentler counterclockwise warp.
+Both leave resize off.
+
+```sh
+python3 -m niri_fx preview --custom examples/vortex-fold.json --output /tmp/vortex-fold.html
+python3 -m niri_fx preview --custom examples/soft-swirl.json --output /tmp/soft-swirl.html
 ```

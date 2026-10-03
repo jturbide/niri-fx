@@ -761,7 +761,7 @@ class Effect:
         label="Distortion pattern",
         families=("distortion",),
         group="distortion",
-        choices=("shockwave", "ripple", "wave", "glitch"),
+        choices=("shockwave", "ripple", "wave", "glitch", "vortex"),
         token="DISTORTION_MODE",
     )
     distortion_strength: float = parameter(
@@ -773,6 +773,25 @@ class Effect:
         limits=(0, 80),
         token="DISTORTION_STRENGTH",
         unit=" px",
+    )
+    distortion_twist: float = parameter(
+        270,
+        basic=True,
+        label="Vortex twist",
+        families=("distortion",),
+        group="distortion",
+        limits=(-720, 720),
+        token="DISTORTION_TWIST",
+        unit="°",
+    )
+    distortion_contract: float = parameter(
+        0.8,
+        basic=True,
+        label="Vortex contraction",
+        families=("distortion",),
+        group="distortion",
+        limits=(0, 0.95),
+        token="DISTORTION_CONTRACT",
     )
     distortion_wavelength: float = parameter(
         70,
@@ -827,7 +846,7 @@ class Effect:
     )
     distortion_x: float = parameter(
         0.5,
-        label="Wave origin · horizontal",
+        label="Distortion origin · horizontal",
         families=("distortion",),
         group="distortion",
         limits=(0, 1),
@@ -835,7 +854,7 @@ class Effect:
     )
     distortion_y: float = parameter(
         0.5,
-        label="Wave origin · vertical",
+        label="Distortion origin · vertical",
         families=("distortion",),
         group="distortion",
         limits=(0, 1),

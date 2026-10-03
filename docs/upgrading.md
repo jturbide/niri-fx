@@ -4,6 +4,18 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## Current development version (after 0.10)
+
+Vortex Fold, Soft Swirl and the vortex twist/contraction controls require current
+`main`. They are not in the 0.10.0 release assets. The existing schema remains 3;
+older files receive defaults for the new, vortex-only controls. Update the CLI
+before importing a vortex document. Existing preset values and appearance are
+unchanged. Re-register or re-export a shell pack to add the new styles.
+
+The experimental compositor patch is unchanged from 0.10. Regenerate its movement
+shader to try Vortex Fold. Resize continues to use Ripple Resize and remains off
+in all built-ins.
+
 ## From 0.9 to 0.10
 
 The seven [curated pairings](profiles.md#choose-a-finished-pairing) and `--profile`

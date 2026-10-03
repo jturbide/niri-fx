@@ -5,7 +5,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **64 presets across nine effect families and seven ready-made open/close pairings**. For further
+Pick a finished style from **66 presets across nine effect families and seven ready-made open/close pairings**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -101,6 +101,19 @@ These clips use Studio's real shaders with synthetic window content.
 Also explore [dust, wisps, iris reveals and shockwaves](docs/catalog.md).
 Ember Erosion and Signal Glitch start monochrome; their colors are configurable.
 Original NiriFX shaders are inspired by the wider [desktop-effects community](docs/related-projects.md).
+
+### Vortex distortion
+
+**Vortex Fold** curls the window into its center; **Soft Swirl** gives it a quicker,
+gentler counterclockwise turn. Change twist direction, contraction, falloff and
+origin in Studio. Available on `main` after v0.10.0.
+
+| Vortex Fold | Soft Swirl |
+| --- | --- |
+| ![The window curls inward and unwinds intact](docs/gifs/preset-vortex-fold.gif) | ![A gentle counterclockwise warp fades and returns](docs/gifs/preset-soft-swirl.gif) |
+
+[Compare spin directions](docs/gifs/compare-vortex-twist.gif) ·
+[Controls and settings](docs/catalog.md#vortex-and-swirl)
 
 ## Pick an opening and closing pair
 

@@ -209,6 +209,31 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-fragment-culling.json \
 Re-render or re-register your effects to use the optimized shader. Updating NiriFX
 alone does not rewrite shaders already saved in your compositor configuration.
 
+## Vortex distortion
+
+Vortex Fold and Soft Swirl use one inverse texture lookup per output pixel,
+without a particle search. Measured on 2026-10-03 with an RTX 4070 Ti through
+Chromium ANGLE/OpenGL ES 3.2, 120 samples after 12 warmups per case:
+
+| Preset | 1080p, one draw | 4K, one draw | 4K, four draws |
+| --- | ---: | ---: | ---: |
+| Balanced | 0.244 ms | 0.808 ms | 2.178 ms |
+| Shockwave | 0.095 ms | 0.443 ms | 0.647 ms |
+| Vortex Fold | 0.111 ms | 0.451 ms | 0.654 ms |
+| Soft Swirl | 0.094 ms | 0.349 ms | 0.486 ms |
+
+Values are p95 synthetic GPU draw costs, including framebuffer clears. Each
+window occupies 60% of the output width and 50% of its height. Four-draw batches
+use staggered phases; their work differs from repeating one fixed frame four
+times. These are not compositor frame times or results for integrated GPUs.
+[Raw samples and exact settings](benchmarks/vortex.json).
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-vortex.json \
+  --presets=balanced,shockwave,vortex-fold,soft-swirl \
+  --sizes=1920x1080,3840x2160 --samples=120 --draws=1,4
+```
+
 ## Native capture-delivery diagnostic
 
 ```sh

@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **135 GIFs**, including all **64 presets**. The earlier eight
+The gallery contains **145 GIFs**, including all **66 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.

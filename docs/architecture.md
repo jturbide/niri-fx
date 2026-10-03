@@ -92,6 +92,12 @@ case; forced process termination remains outside that guarantee.
 
 ## Shader contract
 
+- Vortex distortion combines uniform contraction with radius-dependent rotation
+  in logical pixels. Its inverse first divides by the positive scale, then uses
+  that source radius to undo rotation. Rotation preserves radius, so no iterative
+  lookup is needed. The validated contraction bound keeps scale at least 0.05;
+  one premultiplied texture sample supplies the result. Resize retains its separate
+  ripple renderer.
 - `coords_geo` is window-relative geometry; `size_geo` provides logical-pixel size.
   Convert before measuring angles, distances or circular masks on wide windows.
 - Use the supplied geometry-to-texture matrices for sampling. Return transparent

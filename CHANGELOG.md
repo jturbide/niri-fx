@@ -10,6 +10,22 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- Vortex distortion with signed twist, contraction, falloff and origin controls.
+  Vortex Fold makes a pronounced spiral collapse; Soft Swirl is a shorter, gentler
+  counterclockwise warp. Both support stock open/close and experimental movement.
+  Resize remains opt-in and uses the separate ripple renderer.
+- Preset loops, a twist-direction comparison and a native vortex swap showcase,
+  with importable settings and measured shader costs.
+
+### Changed
+
+- Standardize GitHub release titles as `NiriFX X.Y.Z`; feature summaries belong
+  in the release notes.
+- Disable irrelevant distortion controls in Studio's resize preview. Switching
+  views preserves values and never enables resize.
+
 ## 0.10.0 — 2026-10-03
 
 ### Added

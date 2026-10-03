@@ -232,13 +232,20 @@ function labels() {
   for (const id of ["pixel_travel", "pixel_wind"])
     byId(id).disabled = parameters.pixel_mode !== "dust";
   byId("pixel_direction").disabled = parameters.pixel_mode === "pixelate";
+  const resizeDistortion = mode === "resize" || (actions && editingAction === "resize");
+  const vortex = parameters.distortion_mode === "vortex" && !resizeDistortion;
+  for (const id of ["distortion_twist", "distortion_contract"]) byId(id).disabled = !vortex;
+  for (const id of ["distortion_strength", "distortion_wavelength", "distortion_cycles"])
+    byId(id).disabled = vortex;
+  byId("distortion_mode").disabled = !!resizeDistortion;
   for (const id of ["glitch_bands", "glitch_chroma"])
-    byId(id).disabled = parameters.distortion_mode !== "glitch";
+    byId(id).disabled = resizeDistortion || parameters.distortion_mode !== "glitch";
   for (const id of ["dissolve_x", "dissolve_y", "dissolve_turbulence"])
     byId(id).disabled = parameters.dissolve_mode !== "ink";
-  byId("distortion_width").disabled = parameters.distortion_mode !== "shockwave";
-  byId("distortion_fade").disabled = parameters.distortion_mode === "shockwave";
-  byId("distortion_angle").disabled = parameters.distortion_mode !== "wave";
+  byId("distortion_width").disabled =
+    resizeDistortion || parameters.distortion_mode !== "shockwave";
+  byId("distortion_fade").disabled = resizeDistortion || parameters.distortion_mode === "shockwave";
+  byId("distortion_angle").disabled = resizeDistortion || parameters.distortion_mode !== "wave";
   byId("wave_span").disabled = mode === "resize" || parameters.release === "together";
   byId("gravity_strength").disabled = mode === "resize" || byId("gravity").value === "none";
   byId("spin").disabled = byId("rotation").value === "none";

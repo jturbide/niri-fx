@@ -479,6 +479,14 @@
     "source": "05f1438eec6a68587963a6c6f59ff822d3774093e2dc7affebcb6636429589af",
     "poster": "9aa1179677b6c3e1321a148eb6d8acfffba3e757d77bfc9db51dfdcae1f7de25"
   },
+  "preset-soft-swirl": {
+    "source": "e3cf76771da00d3181d76665dfb52a50da1a8bc6023bcf0f1b56f46c1441ce30",
+    "poster": "7c13825a291f795ef72edc2b82910635a228ee625bbe00532925258cdb1d52db"
+  },
+  "preset-vortex-fold": {
+    "source": "a2f22f6fd1de381e086ebabb426213b8e495c06312c2c3acdbcb77eb98144adb",
+    "poster": "9624bae380e112760fbb7d297932c2fa79e3413b953752381feef57e30168a58"
+  },
   "preset-wave-fold": {
     "source": "8ad542fcc537f2caf7bb0444876c6c405fb567304606331f47600406f6603cbc",
     "poster": "f2e479aace8644a290b6421c318e93474b1ce99600f4d2a4d9ca8f4e35c12c39"
@@ -495,9 +503,17 @@
     "source": "194912784459dbe26ee2c2a7bae8073ab25a31ddc4dc60f3ba56896fc48ea353",
     "poster": "ca37b939593c791b8f4c3d02d91a84b33f55a9d2401fad8955aa31e03709dbbc"
   },
+  "compare-vortex-twist": {
+    "source": "437bbc6291ddbef9c6584778b3de7d0cf1da3ccf736652ce1155f6a001bbaa00",
+    "poster": "8be33abe6ed54bb6f10432976b20f711f3174734433a7d6db596c2cc23b548f8"
+  },
   "native-swap-soft-phase": {
     "source": "c9ba3b133d9d9639c6066c1de26b1d628ef6f28870d753175f8a8af452e2c37f",
     "poster": "6074bf6c40bbea51ded4aefdcffc200325574fd00977798f6afbd660c7823f28"
+  },
+  "native-swap-vortex-fold": {
+    "source": "b4e9e4ff3a8f443dd55153458a5109adfe087aa1a378e039a4c9809d8c1a5cf0",
+    "poster": "61aac784ffeb47d70a3a8ca58267d0ae9aafc600268949ec6bbf82c870621cf4"
   },
   "ripple-resize": {
     "source": "3e3a5dea9c1d6740d144bf794328e69f898673c8d555d2e1a50b85828944d5d6",

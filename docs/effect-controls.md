@@ -1,6 +1,6 @@
 # Effect controls
 
-This guide follows **main**, including the additions after 0.7.0 listed in
+This guide follows **main**, including the additions after the latest release listed in
 [Unreleased](../CHANGELOG.md#unreleased). All built-ins leave resize disabled.
 
 ## Fragments
@@ -223,22 +223,38 @@ the window image; they do not move the actual window or affect neighboring apps.
 
 | CLI flag | Range / meaning |
 | --- | --- |
-| `--distortion-mode` | shockwave, ripple, wave |
-| `--distortion-strength` | 0–80 logical pixels of displacement |
+| `--distortion-mode` | shockwave, ripple, wave, glitch, vortex |
+| `--distortion-strength` | 0–80 logical pixels of displacement; inactive for vortex |
+| `--distortion-twist` | −720–720° at the vortex center; positive turns clockwise, negative counterclockwise |
+| `--distortion-contract` | 0–0.95; fraction of scale removed by the end of the vortex path |
 | `--distortion-wavelength` | 12–240 logical pixels between waves |
 | `--distortion-width` | 10–240 logical pixels; shockwave front width |
 | `--distortion-cycles` | 0.25–4; temporal wave cycles |
-| `--distortion-falloff` | 0–4; radial attenuation |
+| `--distortion-falloff` | 0–4; radial attenuation; vortex uses it to concentrate twist toward the origin |
 | `--distortion-angle` | −180–180°; planar wave direction only |
-| `--distortion-fade` | 0.15–0.85; fade timing for ripple/wave |
-| `--distortion-x`, `--distortion-y` | 0–1; wave origin |
+| `--distortion-fade` | 0.15–0.85; fade timing except shockwave |
+| `--distortion-x`, `--distortion-y` | 0–1; distortion origin |
 
-Distortion uses no random seed. All three modes return the exact intact texture
-and transparent image at the animation endpoints.
+**Vortex Fold** contracts strongly with a clockwise spiral; **Soft Swirl** uses
+a shorter, gentler counterclockwise turn. Zero twist leaves contraction and fade;
+zero contraction leaves rotation and fade. Falloff zero rotates the window rigidly,
+while higher values curl the center more than the outer texture. Wave displacement,
+wavelength and cycles do not affect vortex. These additions require `main` after 0.10.0.
 
-Dissolve, Iris, Pixels, Wisps and Distortion support stock opening and closing
-only. Use an independent [profile](profiles.md) to combine families. None adds
-resize or native movement support. [GPU benchmark scope](performance.md).
+```sh
+python3 -m niri_fx studio --preset vortex-fold
+python3 -m niri_fx render --preset vortex-fold --distortion-twist -360 \
+  --distortion-contract 0.7 --distortion-x 0.3 > /tmp/vortex.kdl
+```
+
+All modes return the exact intact texture and transparent image at the endpoints.
+Only Glitch uses a random seed. Vortex preserves source alpha and uses one texture
+sample with no particle search; see [measured costs](performance.md#vortex-distortion).
+
+Distortion also supports experimental movement and a separate opt-in Ripple
+Resize. Twist and contraction do not alter resize. Studio disables controls that
+do not affect the selected action. Use an independent [profile](profiles.md) to
+combine families. [GPU benchmark scope](performance.md).
 
 ## Hexagons
 

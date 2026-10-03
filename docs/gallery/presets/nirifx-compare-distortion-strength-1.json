@@ -85,6 +85,8 @@
     "wisp_softness": 0.1,
     "distortion_mode": "ripple",
     "distortion_strength": 0,
+    "distortion_twist": 270,
+    "distortion_contract": 0.8,
     "distortion_wavelength": 95,
     "distortion_width": 100,
     "distortion_cycles": 2,
