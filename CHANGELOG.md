@@ -10,6 +10,38 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.14.0 — 2026-10-03
+
+### Added
+
+- Seven curated preset collections shared by the CLI, Studio and gallery:
+  Everyday, Explosions and Gravity, Geometric Pieces, Slices and Ribbons,
+  Wobble and Bounce, Soft and Atmospheric, and Pixels and Glitches.
+- Geometric Flow, Ribbon Current and Soft Landing open/close pairings, with
+  portable settings, dedicated showcases and preset-picker registration.
+- `list --collections`, `list --collection NAME`, and group browsing in the
+  terminal guide. Collection filtering does not activate or edit an effect.
+
+### Fixed
+
+- Profile family metadata now includes explicit resize and movement actions,
+  matching the desktop pickers. iNiR keywords include every action family and
+  curated collection, so mixed-family profiles can be found by either effect.
+- Isolated native test startup no longer depends on the desktop's logging level;
+  socket announcements remain available when `RUST_LOG=warn` is set. Warning
+  module names no longer cause false compositor-error reports.
+
+### Changed
+
+- Simplify preset filtering and keep collection metadata separate from portable
+  effect documents. Built-in profiles continue to leave resize and movement unset.
+
+### Upgrade
+
+Re-register or re-export shell packs to add the three pairings and updated search
+keywords. Existing effect values, schemas and the experimental compositor patch
+are unchanged. Package updates do not select a style or enable resize.
+
 ## 0.13.1 — 2026-10-03
 
 ### Added

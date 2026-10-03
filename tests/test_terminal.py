@@ -98,6 +98,18 @@ class TerminalTests(unittest.TestCase):
         self.assertEqual(self.config.read_bytes(), self.original)
         self.assertFalse(include.exists())
 
+    def test_group_browsing_selects_a_profile_without_applying_the_filter(self):
+        from niri_fx.catalog import PROFILES
+        from niri_fx.effects import render_kdl
+
+        self.run_guide(["groups", "@missing", "@shapes", "geometric-flow", "apply"])
+        include = self.root / "nirifx/animations.kdl"
+        self.assertTrue(any("Unknown group" in line for line in self.output))
+        self.assertTrue(include.read_text().endswith(render_kdl(PROFILES["geometric-flow"])))
+        self.assertNotIn("window-resize", include.read_text())
+        self.run_guide(["undo", "undo"])
+        self.assertEqual(self.config.read_bytes(), self.original)
+
     def test_cancel_at_selection_and_at_review_writes_nothing(self):
         for answers in (["q"], ["explosion", ""], ["explosion", "yes"]):
             self.run_guide(answers)

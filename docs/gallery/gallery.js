@@ -36,7 +36,8 @@ function filter() {
   for (const card of cards) {
     card.hidden =
       (filters.collection.value !== "all" &&
-        card.dataset.collection !== filters.collection.value) ||
+        card.dataset.collection !== filters.collection.value &&
+        !card.dataset.groups.split(" ").includes(filters.collection.value)) ||
       !card.dataset.search.includes(query) ||
       (filters.family.value && !card.dataset.families.split(" ").includes(filters.family.value)) ||
       (filters.action.value && card.dataset.action !== filters.action.value) ||
@@ -94,7 +95,9 @@ function readFilters() {
   const collection = query.get("collection");
   // Existing filtered links still explore the full catalog. Only a fresh visit
   // starts with the curated selection; an explicit collection is shareable.
-  filters.collection.value = ["starter", "profiles", "all"].includes(collection)
+  filters.collection.value = [...filters.collection.options].some(
+    (option) => option.value === collection,
+  )
     ? collection
     : collection || ["search", "family", "action", "kind"].some((key) => filters[key].value)
       ? "all"

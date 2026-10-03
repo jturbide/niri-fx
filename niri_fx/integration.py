@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .branding import APP_ID
-from .catalog import PROFILES, STYLES, title
+from .catalog import PROFILES, STYLES, collection_names, families, title
 from .documents import parse_document
 from .effects import animation_types, preset_description
 from .profiles import Profile
@@ -83,7 +83,8 @@ def make_preset(identifier, label, effect, chosen, base_types):
         "description": preset_description(effect),
         "keywords": [
             "nirifx",
-            family,
+            *dict.fromkeys((family, *families(effect))),
+            *collection_names(identifier.removeprefix(f"{OWNER}-")),
             "animation",
             "reconstruct",
             {"fragments": "particles", "slices": "strips", "elastic": "wobble"}.get(family, family),

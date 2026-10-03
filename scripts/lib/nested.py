@@ -69,6 +69,9 @@ class NestedSession:
             parent = self.host.copy()
             for key in ("DISPLAY", "NIRI_SOCKET"):
                 parent.pop(key, None)
+            # Readiness comes from Niri's INFO socket announcements. A desktop
+            # RUST_LOG=warn must not hide those messages and cause a false timeout.
+            parent["RUST_LOG"] = "warn,niri=info"
             self.compositor = self.launch([self.binary, "-c", str(self.config)], "niri", env=parent)
 
             def sockets():
@@ -216,7 +219,9 @@ class NestedSession:
     def check_render_log(self):
         """Treat compositor errors as failures, including shader compile failures."""
         log = (self.root / "niri.log").read_text()
-        if re.search(r"\bERROR\b|panicked at|error compiling|error linking", log, re.I):
+        # A WARN from smithay::backend::egl::error is not an ERROR record.
+        # Match the log level as a whitespace-delimited field, not a module name.
+        if re.search(r"(?:^|\s)ERROR(?:\s|$)|panicked at|error compiling|error linking", log, re.I):
             raise RuntimeError(f"Compositor reported errors; inspect {self.root / 'niri.log'}")
 
     def __exit__(self, exc_type, *_):

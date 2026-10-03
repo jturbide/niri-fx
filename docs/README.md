@@ -34,6 +34,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Enable a resize effect | [Resize styles and profiles](resize.md) |
 | Combine different opening and closing effects | [Profiles](profiles.md) |
 | Import a ready-made custom style | [Examples](../examples/README.md) |
+| Browse presets by look | [Preset collections](collections.md) |
 | Try experimental movement and swaps | [Experimental build](../experimental/README.md) |
 | Understand performance and known limits | [GPU measurements](performance.md), [testing](validation.md) |
 | See planned improvements | [Roadmap](../ROADMAP.md), [integration plans](roadmap.md) |

@@ -7,12 +7,12 @@ import { join } from "node:path";
 import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
 test("gallery starts paused, filters examples and plays only one animation", async () => {
-  const recommended = JSON.parse(
+  const catalog = JSON.parse(
     execFileSync(
       "python3",
       [
         "-c",
-        "import json;from niri_fx.catalog import RECOMMENDED;print(json.dumps(list(RECOMMENDED)))",
+        'import json;from niri_fx.catalog import RECOMMENDED,PROFILES,COLLECTIONS;print(json.dumps({"recommended":list(RECOMMENDED),"profiles":len(PROFILES),"shapes":len(COLLECTIONS["shapes"]["styles"])}))',
       ],
       { cwd: projectRoot, encoding: "utf8" },
     ),
@@ -40,7 +40,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       await browser.evaluate(
         "[...document.querySelectorAll('article:not([hidden]) img')].map(image=>image.id.replace('preset-',''))",
       ),
-      recommended,
+      catalog.recommended,
     );
     assert.equal(
       await browser.evaluate(
@@ -58,7 +58,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
     );
     assert.equal(
       await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
-      7,
+      catalog.profiles,
     );
     assert(
       await browser.evaluate(
@@ -70,7 +70,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
     );
     assert.equal(
       await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
-      1,
+      2,
     );
     await browser.evaluate(
       "document.querySelector('.collections [data-collection=starter]').click()",
@@ -138,10 +138,20 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       ),
       false,
     );
+    await browser.navigate(url + "?collection=shapes", { readySelector: "[data-gallery-ready]" });
+    assert.equal(
+      await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
+      catalog.shapes,
+    );
+    assert(
+      await browser.evaluate(
+        "[...document.querySelectorAll('article:not([hidden])')].every(card=>card.dataset.groups.split(' ').includes('shapes'))",
+      ),
+    );
     await browser.navigate(url + "?collection=profiles", { readySelector: "[data-gallery-ready]" });
     assert.equal(
       await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
-      7,
+      catalog.profiles,
     );
     await browser.evaluate("location.hash='preset-pixelate'");
     assert.equal(
@@ -160,7 +170,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
     );
     assert.equal(
       await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
-      7,
+      catalog.profiles,
     );
     await browser.evaluate(
       "history.pushState(null,'','?collection=invalid&family=hexagons');dispatchEvent(new PopStateEvent('popstate'))",

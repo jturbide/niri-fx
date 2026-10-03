@@ -322,3 +322,13 @@ python3 -m niri_fx preview --preset fragment-wake --output /tmp/fragment-wake.ht
 python3 -m niri_fx preview --preset ribbon-transfer --output /tmp/ribbon-transfer.html
 python3 -m niri_fx preview --preset momentum-glide --output /tmp/momentum-glide.html
 ```
+
+## More finished pairings
+
+These match the named built-ins and their [showcases](../docs/profiles.md).
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/geometric-flow.json --output /tmp/geometric-flow.html
+python3 -m niri_fx preview --custom examples/profiles/ribbon-current.json --output /tmp/ribbon-current.html
+python3 -m niri_fx preview --custom examples/profiles/soft-landing.json --output /tmp/soft-landing.html
+```

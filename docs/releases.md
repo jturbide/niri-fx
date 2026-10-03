@@ -16,15 +16,14 @@ Read the notes for the version you install.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
-## 0.13.1 prerelease
+## 0.14.0 prerelease
 
-[Download v0.13.1](https://github.com/jturbide/niri-fx/releases/tag/v0.13.1) for 73
-presets across nine families and seven open/close pairings. The 0.13 series adds
-three movement looks, actual movement shader preview, independent movement
-editing and shaped resize profiles. The 0.13.1 update adds read-only
-[movement diagnostics](setup.md#movement-support) and corrects setup guidance.
-All built-ins keep resize off. Read
-[upgrading from 0.12](upgrading.md#from-012-to-013).
+[Download v0.14.0](https://github.com/jturbide/niri-fx/releases/tag/v0.14.0) for 73
+presets across nine families and ten open/close pairings. Seven
+[curated collections](collections.md) group styles by look in the CLI, Studio and
+gallery. Geometric Flow, Ribbon Current and Soft Landing add finished combinations
+with their own previews and portable settings. All built-ins leave resize and
+movement unset. Read [upgrading from 0.13](upgrading.md#from-013-to-014).
 
 Choose the **wheel** for normal use. It includes the command, shaders and Studio
 without downloading the source gallery. Choose the source archive for development,
@@ -41,7 +40,7 @@ Install the verified wheel into a dedicated environment, then browse the pairing
 
 ```sh
 python3 -m venv .venv
-.venv/bin/python -m pip install ./niri_fx-0.13.1-py3-none-any.whl
+.venv/bin/python -m pip install ./niri_fx-0.14.0-py3-none-any.whl
 .venv/bin/niri-fx list --profiles --text
 .venv/bin/niri-fx
 ```

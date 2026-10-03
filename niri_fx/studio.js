@@ -25,6 +25,12 @@ if (Object.hasOwn(catalog.presets, initialPreset))
 let progress = Number(query.get("breakup") ?? 0.45);
 progress = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0.45;
 const title = (s) => s.replaceAll("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
+for (const [id, collection] of Object.entries(catalog.collections)) {
+  const option = document.createElement("option");
+  option.value = id;
+  option.textContent = collection.label;
+  byId("preset-collection").append(option);
+}
 const customOption = document.createElement("option");
 customOption.value = "";
 customOption.textContent = "Custom / imported";
@@ -106,19 +112,29 @@ function historyButtons() {
 }
 function filterPresets() {
   const query = byId("search").value.toLowerCase().trim();
+  const collection = catalog.collections[byId("preset-collection").value];
   for (const option of byId("preset").options) {
     if (!option.value) continue;
     option.hidden =
-      catalog.presets[option.value].family !== parameters.family ||
+      (collection
+        ? !collection.styles.includes(option.value)
+        : catalog.presets[option.value].family !== parameters.family) ||
       !option.textContent.toLowerCase().includes(query) ||
       (byId("favorites-only").checked && !favorites.includes(option.value));
+  }
+  for (const option of byId("profile").options) {
+    if (!option.value) continue;
+    option.hidden = !!collection && !collection.styles.includes(option.value);
   }
   const favorite = favorites.includes(byId("preset").value);
   byId("favorite").disabled = !byId("preset").value;
   byId("favorite").textContent = favorite ? "Remove favorite" : "Favorite this style";
   byId("favorite").setAttribute("aria-pressed", String(favorite));
 }
-byId("search").oninput = byId("favorites-only").onchange = filterPresets;
+byId("preset-collection").onchange =
+  byId("search").oninput =
+  byId("favorites-only").onchange =
+    filterPresets;
 byId("favorite").onclick = () => {
   const name = byId("preset").value;
   if (!name) return;
@@ -751,6 +767,7 @@ try {
   for (const id of [...numeric, ...choices, "density", "resize"])
     byId(id).addEventListener("input", update);
   byId("family").onchange = () => {
+    byId("preset-collection").value = "";
     byId("preset").value = Object.keys(catalog.presets).find(
       (name) => catalog.presets[name].family === byId("family").value,
     );

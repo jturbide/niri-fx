@@ -9,22 +9,47 @@ import os
 from copy import copy
 from pathlib import Path
 
-from .catalog import PROFILE_RECIPES, PROFILES, RECOMMENDED, STYLES, families
+from .catalog import (
+    COLLECTIONS,
+    PROFILE_RECIPES,
+    PROFILES,
+    RECOMMENDED,
+    STYLES,
+    collection_names,
+    families,
+)
 from .effects import FAMILIES, PRESETS
 from .setup import apply_plan, plan_setup, restore, summarize
 
 
-def catalog(query="", family=None, recommended=False, *, profiles=False, all_styles=False):
+def catalog(
+    query="", family=None, recommended=False, *, profiles=False, all_styles=False, collection=None
+):
     query = query.casefold().replace("-", " ").strip()
-    source = PROFILES if profiles else STYLES if all_styles else PRESETS
-    return [
-        key
-        for key, style in source.items()
-        if (not recommended or key in RECOMMENDED or key in PROFILES)
-        and (not family or family in families(style))
-        and query
-        in f"{key.replace('-', ' ')} {' '.join(families(style))} {PROFILE_RECIPES[key][2] if key in PROFILES else RECOMMENDED.get(key, '')}".casefold()
-    ]
+    if collection and collection not in COLLECTIONS:
+        raise ValueError(f"Unknown collection: {collection}")
+    source = PROFILES if profiles else STYLES if all_styles or collection else PRESETS
+    members = COLLECTIONS[collection]["styles"] if collection else None
+    matches = []
+    for key, style in source.items():
+        if recommended and key not in RECOMMENDED and key not in PROFILES:
+            continue
+        if members is not None and key not in members:
+            continue
+        style_families = families(style)
+        if family and family not in style_families:
+            continue
+        groups = collection_names(key)
+        words = (
+            key.replace("-", " "),
+            " ".join(style_families),
+            " ".join(groups),
+            " ".join(COLLECTIONS[group]["label"] for group in groups),
+            PROFILE_RECIPES[key][2] if key in PROFILES else RECOMMENDED.get(key, ""),
+        )
+        if query in " ".join(words).casefold():
+            matches.append(key)
+    return matches
 
 
 def describe(key):
@@ -40,6 +65,13 @@ def print_catalog(keys, write=print, numbered=False):
     write(("    " if numbered else "") + "Style                  Look (open → close)")
     for index, key in enumerate(keys, 1):
         write(f"{index:2}. {describe(key)}" if numbered else describe(key))
+
+
+def print_collections(write=print):
+    for name, collection in COLLECTIONS.items():
+        write(
+            f"{name:<14} {collection['label']} ({len(collection['styles'])}) · {collection['description']}"
+        )
 
 
 def display_path(value):
@@ -74,7 +106,7 @@ def choose(default, read=input, write=print):
     while True:
         write("")
         print_catalog(keys, write, numbered=True)
-        write("Use profiles for open/close pairings, all, /search, a name, undo, or q.")
+        write("Use groups then @group, profiles, all, /search, a name, undo, or q.")
         answer = read(f"Choose a style [{default}]: ").strip().lower()
         if answer in ("q", "quit", "undo"):
             return answer
@@ -82,6 +114,13 @@ def choose(default, read=input, write=print):
             return default
         if answer == "all":
             keys = catalog(all_styles=True)
+        elif answer == "groups":
+            print_collections(write)
+        elif answer.startswith("@"):
+            if answer[1:] in COLLECTIONS:
+                keys = catalog(collection=answer[1:])
+            else:
+                write("Unknown group. Type groups to see the collection names.")
         elif answer == "profiles":
             keys = catalog(profiles=True)
         elif answer.startswith("/"):

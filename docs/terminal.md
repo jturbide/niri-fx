@@ -73,10 +73,16 @@ the ordinary JSON setup/restore commands.
 ```sh
 niri-fx list --text --recommended
 niri-fx list --profiles --text
+niri-fx list --collections --text
+niri-fx list --collection shapes --text
 niri-fx list --text --family slices
 niri-fx list --text --search pixel
 niri-fx doctor --text
 ```
+
+Type **groups** in the guide, then **@shapes**, **@ribbons** or another collection ID.
+Filtering only changes the choices shown. Pick a name or number to review a setup.
+See [all collections](collections.md).
 
 Plain `list` and `doctor` retain JSON output for integrations. Filters also work
 with JSON. The diagnostic report checks Niri/config health and optional picker

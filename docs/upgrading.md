@@ -4,6 +4,23 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.13 to 0.14
+
+Seven curated collections and three new pairings require 0.14 or newer. Update the
+CLI, then re-register the iNiR pack or re-export your shell pack to expose Geometric
+Flow, Ribbon Current and Soft Landing. Existing preset values, document schemas
+and the experimental compositor patch are unchanged. Updating does not select a
+style or enable resize. Collection filters only change which choices are shown.
+
+## From 0.12 to 0.13
+
+The 0.13 series adds Fragment Wake, Ribbon Transfer and Momentum Glide, shaped
+fragment resize, independent movement editing and read-only movement diagnostics.
+Update the CLI before importing documents with those movement controls. Re-register
+or re-export to expose the three presets in shell pickers. Stock exports continue
+to omit experimental movement, and every built-in keeps resize off. Explicit
+fragment resize now honors shape, rounding, shrink and size variation.
+
 ## From 0.11 to 0.12
 
 Fragment shapes and their four new presets require 0.12 or newer. Update the CLI

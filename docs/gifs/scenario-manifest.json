@@ -1473,11 +1473,11 @@
         "resize preserved"
       ],
       "sources": {
-        "niri_fx/terminal.py": "f96cd67c3adc60d54377d9c0b7170aff9f75da77c147f7a90bb440bef5920b5c",
+        "niri_fx/terminal.py": "898f57c9b47455b920004ad839b73ea06521725a955564f753b2d549e9e0840d",
         "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
       },
       "file": "docs/gifs/workflow-terminal.gif",
-      "bytes": 2249283
+      "bytes": 2548662
     }
   ]
 }
