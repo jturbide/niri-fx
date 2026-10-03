@@ -6,9 +6,8 @@ checkout for the examples below; all built-ins still leave resize disabled.
 
 ## Fragments
 
-The original 14 presets retain their exact shader sources. New effects use a
-separate renderer when size variation, direction variation or a travelling wave
-is nonzero. Set all three to zero to return to the original renderer.
+Ordinary fragments use a compact renderer. Effects use a separate renderer when size variation, direction variation or a travelling wave
+is nonzero. Set all three to zero to return to the compact renderer.
 
 | Control / CLI flag | Meaning |
 | --- | --- |
@@ -41,8 +40,7 @@ The new controls affect opening, closing and the separate movement experiment;
 ## Slices
 
 **Slide Apart now alternates adjacent horizontal strips left and right.**
-**Split Curtain** retains the former outward split. Existing imported schema 2
-files keep their saved direction and are not silently converted.
+**Split Curtain** retains the former outward split. Choose the direction explicitly when tuning a custom style.
 
 | Control / CLI flag | Meaning |
 | --- | --- |
@@ -94,13 +92,12 @@ an actual nested compositor recording. Elastic does not use a random seed.
 
 ## Saved presets and rendering cost
 
-New parameters and Elastic use **schema 3**. Older files remain readable; exports
-with only legacy fragment controls stay schema 1, and legacy slice controls stay
-schema 2. Older releases reject schema 3 explicitly. Existing IDs, state paths,
-setup snapshots and command aliases remain compatible.
+All families use **schema 3**. Older formats and command aliases have been removed.
+Omitted parameters use current defaults, and resize stays off unless explicitly
+requested. See the [update policy](upgrading.md).
 
 The varied fragment renderer checks up to **147 candidate cells per output pixel**,
-or **441** with directional release. The original renderer uses 27/81. These are
+or **441** with directional release. The compact renderer uses 27/81. These are
 bounded lookup counts, not benchmark results. Slices checks up to its configured
 2–48 strips; Elastic uses a whole-window warp without particle searches. Window
 area and expanded drawing bounds matter, and fewer particles alone do not

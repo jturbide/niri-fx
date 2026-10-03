@@ -124,7 +124,7 @@ settings. See the [recording guide](../docs/gifs/README.md) for dependencies.
 
 ## Waves, variation and elastic styles
 
-These schema 3 examples need the current checkout. Split Curtain uses schema 2.
+These schema 3 examples need the current checkout. Every example uses schema 3.
 Resize stays off in all of them. See [effect controls](../docs/effect-controls.md).
 
 ```sh

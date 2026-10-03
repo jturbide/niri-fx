@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Julien Turbide
 // Variation renderer: shared jittered grid boundaries and an invertible wave
-// field. Legacy presets continue using gravity.glsl without changes.
+// field. Compact presets use the lower-cost gravity.glsl renderer.
 const float FRAGMENTS_TILE = @TILE@;
 const float FRAGMENTS_SCATTER = @SCATTER@;
 const float FRAGMENTS_PARTICLES = @PARTICLES@;

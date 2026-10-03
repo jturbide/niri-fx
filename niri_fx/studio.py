@@ -1,5 +1,6 @@
 """Local effect editor. Only validated named presets can be saved to iNiR."""
 
+import base64
 import json
 import os
 import secrets
@@ -13,19 +14,18 @@ from importlib.resources import files
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
+from .branding import APP_ID
 from .effects import (
     ELASTIC_AXES,
     FAMILIES,
-    FAMILY_FIELDS,
     GRAVITIES,
     LIMITS,
-    MOTION_FIELDS,
+    PRESET_SCHEMA,
     RELEASES,
     RESIZE_MODES,
     ROTATIONS,
     SLICE_DIRECTIONS,
     SLICE_ORDERS,
-    VARIATION_FIELDS,
     Effect,
     describe_presets,
     shader_templates,
@@ -35,6 +35,7 @@ from .integration import make_custom_preset, read_shell_presets, update_registry
 
 def preview_document(effect, name="balanced", connection=None):
     payload = {
+        "schema": PRESET_SCHEMA,
         "parameters": asdict(effect),
         "name": name,
         "presets": describe_presets(),
@@ -46,10 +47,7 @@ def preview_document(effect, name="balanced", connection=None):
         "limits": LIMITS,
         "defaults": asdict(Effect()),
         "families": FAMILIES,
-        "family_fields": FAMILY_FIELDS,
         "slice_directions": SLICE_DIRECTIONS,
-        "variation_fields": VARIATION_FIELDS,
-        "motion_fields": MOTION_FIELDS,
         "slice_orders": SLICE_ORDERS,
         "elastic_axes": ELASTIC_AXES,
         "connection": connection,
@@ -60,6 +58,10 @@ def preview_document(effect, name="balanced", connection=None):
         root.joinpath("preview.html")
         .read_text()
         .replace("@EFFECT_JSON@", data)
+        .replace(
+            "@APP_ICON@",
+            base64.b64encode(root.joinpath("assets/niri-fx.svg").read_bytes()).decode(),
+        )
         .replace(
             "<!--@MOTION_JS@-->",
             "<script>" + root.joinpath("motion-preview.js").read_text() + "</script>",
@@ -81,7 +83,7 @@ def open_studio(url, browser=False):
             if not executable:
                 continue
             state = Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
-            profile = state / "niri-fragments/studio-profile"
+            profile = state / APP_ID / "studio-profile"
             profile.mkdir(parents=True, exist_ok=True)
             try:
                 subprocess.Popen(
@@ -89,8 +91,8 @@ def open_studio(url, browser=False):
                         executable,
                         "--app=" + url,
                         "--user-data-dir=" + str(profile),
-                        "--class=niri-fragments-studio",
-                        "--name=niri-fragments-studio",
+                        f"--class={APP_ID}-studio",
+                        f"--name={APP_ID}-studio",
                         "--window-size=1320,960",
                         "--no-first-run",
                         "--no-default-browser-check",
@@ -110,7 +112,7 @@ def valid_save_request(headers, origin, token):
         headers.get("Host") == urlsplit(origin).netloc
         and headers.get("Origin") == origin
         and headers.get("Content-Type", "").split(";")[0].strip() == "application/json"
-        and secrets.compare_digest(headers.get("X-Fragments-Token", "").encode(), token.encode())
+        and secrets.compare_digest(headers.get("X-NiriFX-Token", "").encode(), token.encode())
     )
 
 

@@ -34,7 +34,7 @@ Existing launchers are preserved. Nothing starts at login.
 | Target | Changes | Activation |
 | --- | --- | --- |
 | iNiR | Merge the 29 built-ins into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
-| Standalone | Generate `fragments/niri-fragments.kdl` beside the root config; append one marked include | Niri hot reloads the validated include |
+| Standalone | Generate `nirifx/animations.kdl` beside the root config; append one marked include | Niri hot reloads the validated include |
 
 All built-ins leave resize fragments off. To save an iNiR custom style, use
 `--name`; custom options cannot silently modify the whole built-in pack.
@@ -59,10 +59,10 @@ the root config may need their own include ordering adjustments.
 ## Restore a setup
 
 Each changed file gets its original bytes, permissions and hashes recorded under
-`$XDG_STATE_HOME/niri-fragments/setup` (normally `~/.local/state/...`). Setup prints
+`$XDG_STATE_HOME/niri-fx/setup` (normally `~/.local/state/...`). Setup prints
 the snapshot ID and an exact restore command, including a custom state path.
 Run it from the same checkout/environment; it uses your current Python interpreter
-and does not require a separately installed `niri-fragments` executable.
+and does not require a separately installed `niri-fx` executable.
 Reapplying identical settings is a no-op and creates no new snapshot.
 
 ```sh

@@ -15,7 +15,7 @@ const executable =
     (name) => spawnSync(name, ["--version"], { stdio: "ignore" }).status === 0,
   );
 if (!executable) throw new Error("Install Chromium/Chrome or set CHROME_BIN");
-const profile = mkdtempSync(join(tmpdir(), "niri-fragments-browser-"));
+const profile = mkdtempSync(join(tmpdir(), "niri-fx-browser-"));
 const browser = spawn(
   executable,
   [
@@ -309,7 +309,7 @@ try {
       `(async()=>{const transfer=new DataTransfer();transfer.items.add(new File([${JSON.stringify(text)}],'preset.json',{type:'application/json'}));byId('import-file').files=transfer.files;await byId('import-file').onchange();return {effect:effectDocument(),error:byId('error').textContent,status:byId('status').textContent};})()`,
     );
   const importedDoc = {
-    schema: 1,
+    schema: 3,
     name: "Imported Exact",
     effect: {
       gravity: "up",
@@ -336,9 +336,9 @@ try {
   for (const invalid of [
     "{broken",
     JSON.stringify({ schema: true, name: "Bad", effect: {} }),
-    JSON.stringify({ schema: 1, name: "Bad", effect: { gravity: "typo" } }),
-    JSON.stringify({ schema: 1, name: "Bad", effect: { shader: "injection" } }),
-    JSON.stringify({ schema: 1, name: "Bad", effect: { resize: 1 } }),
+    JSON.stringify({ schema: 3, name: "Bad", effect: { gravity: "typo" } }),
+    JSON.stringify({ schema: 3, name: "Bad", effect: { shader: "injection" } }),
+    JSON.stringify({ schema: 3, name: "Bad", effect: { resize: 1 } }),
     " ".repeat(16385),
   ]) {
     const result = await importFile(invalid);
@@ -347,32 +347,28 @@ try {
   }
   imported = await importFile(
     JSON.stringify({
-      schema: 1,
+      schema: 3,
       name: "Resize import",
       effect: { resize: true, resize_mode: "soft" },
     }),
   );
   assert.equal(imported.error, "");
   assert.equal(imported.effect.effect.resize, true);
-  await importFile(JSON.stringify({ schema: 1, name: "Legacy import", effect: {} }));
+  await importFile(JSON.stringify({ schema: 3, name: "Default import", effect: {} }));
   assert.equal(await evaluate("parameters.resize"), false);
   // Family-specific UI, versioned slice imports and bounded extreme controls.
-  assert.equal(await evaluate("parameters.family"), "fragments", "legacy imports select fragments");
-  assert.equal(
-    await evaluate("effectDocument().schema"),
-    1,
-    "fragment exports remain readable by 0.5",
-  );
+  assert.equal(await evaluate("parameters.family"), "fragments", "default family is fragments");
+  assert.equal(await evaluate("effectDocument().schema"), 3, "all exports use the current schema");
   await evaluate("document.querySelector('[data-mode=resize]').click()");
   imported = await importFile(
     JSON.stringify({
-      schema: 2,
+      schema: 3,
       name: "Sliced Test",
       effect: { family: "slices", slice_count: 13, slice_angle: -33.25, slice_rotation: 12.5 },
     }),
   );
   assert.equal(imported.error, "");
-  assert.equal(imported.effect.schema, 2);
+  assert.equal(imported.effect.schema, 3);
   assert.equal(imported.effect.effect.family, "slices");
   assert.equal(await evaluate("mode"), "effect", "import exits an unsupported resize preview");
   assert.equal(await evaluate("byId('fragment-controls').hidden"), true);
@@ -390,14 +386,17 @@ try {
     { family: "unknown" },
     { family: "slices", slice_direction: "typo" },
   ]) {
-    const rejected = await importFile(JSON.stringify({ schema: 2, name: "Invalid Slice", effect }));
+    const rejected = await importFile(JSON.stringify({ schema: 3, name: "Invalid Slice", effect }));
     assert.match(rejected.error, /Import failed/);
     assert.deepEqual(rejected.effect, sliceSaved);
   }
-  const oldSchema = await importFile(
-    JSON.stringify({ schema: 1, name: "Wrong version", effect: { family: "slices" } }),
-  );
-  assert.match(oldSchema.error, /schema: 2/);
+  for (const schema of [1, 2, 4]) {
+    const unsupported = await importFile(
+      JSON.stringify({ schema, name: "Unsupported format", effect: {} }),
+    );
+    assert.match(unsupported.error, /schema: 3/);
+    assert.deepEqual(unsupported.effect, sliceSaved);
+  }
   for (const [id, value] of Object.entries({
     slice_count: 48,
     slice_angle: -90,
@@ -551,7 +550,7 @@ try {
   }
   writeFileSync("artifacts/browser-checks.json", JSON.stringify(results, null, 2) + "\n");
   console.log(
-    `PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, slice controls, elastic wobble, visible/reproducible variation, capabilities and schema compatibility` +
+    `PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, slice controls, elastic wobble, visible/reproducible variation, capabilities and current schema validation` +
       (process.argv.includes("--save-test") ? ", and save to isolated registry." : "."),
   );
 } finally {

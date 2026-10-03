@@ -233,21 +233,12 @@ function normalizePreset(doc) {
   if (
     !doc ||
     Array.isArray(doc) ||
-    ![1, 2, 3].includes(doc.schema) ||
+    doc.schema !== catalog.schema ||
     !doc.effect ||
     typeof doc.effect !== "object" ||
     Array.isArray(doc.effect)
   )
-    throw new Error("Expected schema: 1, 2 or 3, name and an effect object.");
-  if (doc.schema === 1 && (doc.effect.family ?? "fragments") !== "fragments")
-    throw new Error("Non-fragment families require preset schema: 2.");
-  if (
-    doc.schema < 3 &&
-    (doc.effect.family === "elastic" ||
-      catalog.variation_fields.some((key) => Object.hasOwn(doc.effect, key)) ||
-      doc.effect.slice_direction === "random")
-  )
-    throw new Error("Wave and variation parameters require preset schema: 3.");
+    throw new Error(`Expected schema: ${catalog.schema}, name and an effect object.`);
   if (typeof doc.name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 _-]{0,47}$/.test(doc.name))
     throw new Error("Name must be 1–48 letters, numbers, spaces, hyphens or underscores.");
   for (const key of Object.keys(doc.effect))
@@ -284,15 +275,7 @@ function normalizePreset(doc) {
 }
 byId("import").onclick = () => byId("import-file").click();
 function effectDocument() {
-  const effect = { ...parameters },
-    extended =
-      effect.family === "elastic" ||
-      catalog.variation_fields.some((key) => effect[key] !== catalog.defaults[key]) ||
-      effect.slice_direction === "random",
-    schema = extended ? 3 : effect.family === "fragments" ? 1 : 2;
-  if (schema < 3) for (const key of catalog.variation_fields) delete effect[key];
-  if (schema === 1) for (const key of catalog.family_fields) delete effect[key];
-  return { schema, name: byId("name").value.trim(), effect };
+  return { schema: catalog.schema, name: byId("name").value.trim(), effect: { ...parameters } };
 }
 function download(name, text, type) {
   const url = URL.createObjectURL(new Blob([text], { type }));
@@ -333,7 +316,7 @@ byId("save").onclick = async () => {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-Fragments-Token": catalog.connection.token,
+        "X-NiriFX-Token": catalog.connection.token,
       },
       body: JSON.stringify(effectDocument()),
     });

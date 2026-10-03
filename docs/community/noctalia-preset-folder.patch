@@ -1,0 +1,21 @@
+--- a/niri-animations/README.md
++++ b/niri-animations/README.md
+@@ -71 +71,18 @@
++## NiriFX preset folder
++
++[NiriFX](https://github.com/jturbide/niri-fx) exports configurable fragment, slice
++and elastic open/close shaders for niri. From a current NiriFX checkout:
++
++```sh
++python3 -m niri_fx export-pack --output ~/.config/niri/nirifx-presets --apply
++```
++
++Set `presets_dir` to `~/.config/niri/nirifx-presets` and `include_prefix` to
++`./nirifx-presets` when `target_file` is `~/.config/niri/animations.kdl`.
++Select a preset here to activate it. Exporting the folder does not change the
++active desktop, and the generated presets leave resize effects off.
++
++The [NiriFX setup guide](https://github.com/jturbide/niri-fx/blob/main/docs/noctalia.md)
++explains include ordering, ownership, updates and restore.
++
+ ## Notes

@@ -19,11 +19,7 @@ MOTION_FIELDS = (
     "wave_frequency",
     "wave_speed",
 )
-VARIATION_FIELDS = (
-    MOTION_FIELDS
-    + ("slice_order", "slice_travel_variation", "slice_rotation_variation")
-    + ELASTIC_FIELDS
-)
+PRESET_SCHEMA = 3
 FAMILIES = {
     "fragments": {
         "label": "Fragments",
@@ -681,19 +677,5 @@ def describe_presets():
 
 
 def effect_document(name, effect):
-    """Use the oldest schema that preserves every configured parameter."""
-    parameters = asdict(effect)
-    defaults = Effect()
-    extended = (
-        effect.family == "elastic"
-        or any(getattr(effect, key) != getattr(defaults, key) for key in VARIATION_FIELDS)
-        or effect.slice_direction == "random"
-    )
-    schema = 3 if extended else 1 if effect.family == "fragments" else 2
-    if schema < 3:
-        for key in VARIATION_FIELDS:
-            parameters.pop(key)
-    if schema == 1:
-        for key in FAMILY_FIELDS:
-            parameters.pop(key, None)
-    return {"schema": schema, "name": name, "effect": parameters}
+    """Serialize the current preset format; older formats are not supported."""
+    return {"schema": PRESET_SCHEMA, "name": name, "effect": asdict(effect)}

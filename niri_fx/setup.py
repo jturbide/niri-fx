@@ -14,12 +14,13 @@ import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 
+from .branding import APP_ID, desktop_entry
 from .effects import effect_document, render_kdl
 from .integration import make_custom_preset, make_presets, merge_registry, read_shell_presets
 
-BEGIN = "// BEGIN niri-fragments managed include"
-END = "// END niri-fragments managed include"
-OWNED = "// Managed by niri-fragments setup."
+BEGIN = "// BEGIN niri-fx managed include"
+END = "// END niri-fx managed include"
+OWNED = "// Managed by niri-fx setup."
 
 
 def default_config():
@@ -27,10 +28,7 @@ def default_config():
 
 
 def default_state():
-    return (
-        Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state"))
-        / "niri-fragments/setup"
-    )
+    return Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / APP_ID / "setup"
 
 
 def read_bytes(path):
@@ -50,7 +48,7 @@ def atomic_write(path, data, mode=0o600):
     temporary = None
     try:
         with tempfile.NamedTemporaryFile(
-            dir=path.parent, prefix=".fragments-", delete=False
+            dir=path.parent, prefix=".nirifx-", delete=False
         ) as output:
             temporary = Path(output.name)
             os.fchmod(output.fileno(), mode)
@@ -78,7 +76,7 @@ def without_managed_block(text):
     if BEGIN not in text and END not in text:
         return text
     if text.count(BEGIN) != 1 or text.count(END) != 1:
-        raise ValueError("Ambiguous Fragments include markers; inspect the config before setup")
+        raise ValueError("Ambiguous NiriFX include markers; inspect the config before setup")
     pattern = re.compile(
         r"(?m)^" + re.escape(BEGIN) + r"\ninclude [^\n]+\n" + re.escape(END) + r"\n?"
     )
@@ -107,35 +105,10 @@ def change(path, data, expected_before=...):
 
 def launcher_change():
     data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
-    target = data / "applications/niri-fragments-studio.desktop"
-    # Preserve existing launchers, including the older checkout-based helper.
+    target = data / "applications" / f"{APP_ID}-studio.desktop"
     if target.exists() or target.is_symlink():
         return None
-
-    def quote(value):
-        return (
-            '"'
-            + str(value)
-            .replace("\\", "\\\\")
-            .replace('"', '\\"')
-            .replace("`", "\\`")
-            .replace("$", "\\$")
-            .replace("%", "%%")
-            + '"'
-        )
-
-    root = str(Path(__file__).resolve().parents[1])
-    if any(c in root + sys.executable for c in "\n\r"):
-        raise ValueError("Launcher paths cannot contain newlines")
-    content = (
-        "[Desktop Entry]\nType=Application\nName=NiriFX Studio\n"
-        "Comment=Customize Niri window animations\n"
-        f"Exec={quote(sys.executable)} -m niri_fx studio\n"
-        f"Path={root.replace(chr(92), chr(92) * 2)}\n"
-        "Icon=preferences-desktop-effects\nTerminal=false\nCategories=Settings;DesktopSettings;\n"
-        "StartupNotify=false\n"
-    )
-    return change(target, content.encode())
+    return change(target, desktop_entry())
 
 
 def plan_setup(args, effect, custom=None):
@@ -186,20 +159,20 @@ def plan_setup(args, effect, custom=None):
         original_bytes = config.read_bytes()
         original = original_bytes.decode()
         base = without_managed_block(original)
-        # Avoid silently stacking over the project's previous manual install path.
-        if re.search(r"(?m)^\s*include\s+[^\n]*fragments[^\n]*", base, re.I):
+        # Avoid silently stacking over the documented manual install path.
+        if re.search(r"(?m)^\s*include\s+[^\n]*nirifx[^\n]*", base, re.I):
             raise ValueError(
-                "An unmanaged Fragments include already exists; remove/review it before setup."
+                "An unmanaged NiriFX include already exists; remove/review it before setup."
             )
         generated = render_kdl(effect)
         # Sibling validation keeps relative includes valid without activating a file.
         with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".kdl", prefix=".fragments-check-", dir=config.parent
+            mode="w", suffix=".kdl", prefix=".nirifx-check-", dir=config.parent
         ) as probe:
             probe.write(base.rstrip() + "\n" + generated)
             probe.flush()
             validate_config(probe.name)
-        include = config.parent / "fragments/niri-fragments.kdl"
+        include = config.parent / "nirifx/animations.kdl"
         existing = read_bytes(include)
         if existing is not None and not existing.startswith((OWNED + "\n").encode()):
             raise ValueError(f"Refusing to replace an unowned file: {include}")
@@ -369,7 +342,7 @@ def restore(state, identifier=None, apply=False):
             "transaction": data["id"],
             "dry_run": not apply,
             "paths": [item["logical"] for item, _, _ in work],
-            "note": "For iNiR, select your previous non-Fragments style first; restoring the registry does not rewrite the active shader.",
+            "note": "For iNiR, select your previous non-NiriFX style first; restoring the registry does not rewrite the active shader.",
         }
         if apply:
             restored = []

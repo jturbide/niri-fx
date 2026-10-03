@@ -22,7 +22,7 @@ class RequestTests(unittest.TestCase):
             "Host": "127.0.0.1:12345",
             "Origin": origin,
             "Content-Type": "application/json",
-            "X-Fragments-Token": token,
+            "X-NiriFX-Token": token,
         }
         self.assertTrue(valid_save_request(good, origin, token))
         for key, value in (
@@ -30,8 +30,8 @@ class RequestTests(unittest.TestCase):
             ("Origin", "https://example.com"),
             ("Origin", "null"),
             ("Content-Type", "text/plain"),
-            ("X-Fragments-Token", ""),
-            ("X-Fragments-Token", "é"),
+            ("X-NiriFX-Token", ""),
+            ("X-NiriFX-Token", "é"),
         ):
             with self.subTest(key=key, value=value):
                 self.assertFalse(valid_save_request(dict(good, **{key: value}), origin, token))
@@ -59,7 +59,7 @@ class ServerTests(unittest.TestCase):
         headers = {
             "Content-Type": "application/json",
             "Origin": self.server.origin,
-            "X-Fragments-Token": self.token,
+            "X-NiriFX-Token": self.token,
         }
         headers.update(overrides)
         return Request(
@@ -73,13 +73,13 @@ class ServerTests(unittest.TestCase):
             self.assertNotIn("@EFFECT_JSON@", html)
         with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
             document = {
-                "schema": 1,
+                "schema": 3,
                 "name": "My Meteor",
                 "effect": {"gravity": "down", "particles": 500, "rotation": "random"},
             }
             with urlopen(self.request(document), timeout=5) as response:
                 saved = json.load(response)
-        self.assertEqual(saved["id"], "niri-fragments-custom-my-meteor")
+        self.assertEqual(saved["id"], "niri-fx-custom-my-meteor")
         registered = json.loads(self.registry.read_text())["presets"][0]
         self.assertEqual(registered["effect"]["particles"], 500)
         self.assertEqual(
@@ -89,7 +89,7 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(list(Path(self.directory.name).glob("*.kdl")), [])
 
     def test_cross_origin_save_and_parameter_injection_do_not_write(self):
-        document = {"schema": 1, "name": "Test", "effect": {}}
+        document = {"schema": 3, "name": "Test", "effect": {}}
         with self.assertRaises(HTTPError) as caught:
             urlopen(self.request(document, Origin="https://example.com"), timeout=5)
         self.assertEqual(caught.exception.code, 403)
@@ -103,12 +103,12 @@ class ServerTests(unittest.TestCase):
         caught.exception.close()
         self.assertFalse(self.registry.exists())
 
-    def test_slice_schema_two_is_saved_without_replacing_base_resize(self):
-        document = {"schema": 2, "name": "Sliced", "effect": {"family": "slices", "slice_count": 9}}
+    def test_slice_schema_three_is_saved_without_replacing_base_resize(self):
+        document = {"schema": 3, "name": "Sliced", "effect": {"family": "slices", "slice_count": 9}}
         with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
             with urlopen(self.request(document), timeout=5) as response:
                 saved = json.load(response)
-        self.assertEqual(saved["id"], "niri-fragments-custom-sliced")
+        self.assertEqual(saved["id"], "niri-fx-custom-sliced")
         registered = json.loads(self.registry.read_text())["presets"][0]
         self.assertIn("slices_color", registered["types"]["window-close"]["custom-shader"])
         self.assertEqual(

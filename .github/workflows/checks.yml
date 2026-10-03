@@ -55,19 +55,18 @@ jobs:
       - name: Build and smoke-test installed package
         run: |
           python -m build
-          python -m venv /tmp/niri-fragments-package
-          /tmp/niri-fragments-package/bin/pip install --no-deps dist/*.whl
+          python -m venv /tmp/niri-fx-package
+          /tmp/niri-fx-package/bin/pip install --no-deps dist/*.whl
           cd /tmp
-          /tmp/niri-fragments-package/bin/niri-fragments render --preset balanced > fragments.kdl
-          /tmp/niri-fragments-package/bin/niri-fragments preview --output fragments.html
-          /tmp/niri-fragments-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
-          /tmp/niri-fragments-package/bin/niri-fragments render --preset diagonal-shear > slices-legacy.kdl
-          cmp slices.kdl slices-legacy.kdl
-          /tmp/niri-fragments-package/bin/python -m niri_fx --version
-          /tmp/niri-fragments-package/bin/niri-fx render --preset spring-wobble > elastic.kdl
-          /tmp/niri-fragments-package/bin/niri-fx render --preset crosswind > varied.kdl
-          /tmp/niri-fragments-package/bin/niri-fx export-pack --output /tmp/nirifx-pack --state /tmp/nirifx-pack-state --apply
-          /tmp/niri-fragments-package/bin/niri-fx restore --state /tmp/nirifx-pack-state --apply
+          /tmp/niri-fx-package/bin/niri-fx render --preset balanced > fragments.kdl
+          /tmp/niri-fx-package/bin/niri-fx preview --output fragments.html
+          /tmp/niri-fx-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
+          /tmp/niri-fx-package/bin/python -m niri_fx --version
+          /tmp/niri-fx-package/bin/python -c "from importlib import metadata, resources, util; assert util.find_spec('niri_fragments') is None; assert [e.name for e in metadata.distribution('niri-fx').entry_points] == ['niri-fx']; assert b'<svg' in resources.files('niri_fx').joinpath('assets/niri-fx.svg').read_bytes()"
+          /tmp/niri-fx-package/bin/niri-fx render --preset spring-wobble > elastic.kdl
+          /tmp/niri-fx-package/bin/niri-fx render --preset crosswind > varied.kdl
+          /tmp/niri-fx-package/bin/niri-fx export-pack --output /tmp/nirifx-pack --state /tmp/nirifx-pack-state --apply
+          /tmp/niri-fx-package/bin/niri-fx restore --state /tmp/nirifx-pack-state --apply
 
   browser:
     runs-on: ubuntu-24.04

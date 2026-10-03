@@ -51,7 +51,7 @@ def main():
             if required:
                 raise SystemExit(f"Required tool missing: {name}")
             print(f"SKIP {name}: not installed")
-    with tempfile.TemporaryDirectory(prefix="niri-fragments-validate-") as directory:
+    with tempfile.TemporaryDirectory(prefix="niri-fx-validate-") as directory:
         root = Path(directory)
         for name, effect in PRESETS.items():
             if validator:

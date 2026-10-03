@@ -5,14 +5,18 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "niri-fx"
 version = "0.6.0"
-description = "Custom window animations for Niri, with a visual studio and desktop shell integrations."
+description = "Fragment, slice and elastic window animations for niri, with a visual Studio, CLI and optional shell integrations."
 requires-python = ">=3.10"
 license = "MIT AND GPL-3.0-or-later"
 license-files = ["LICENSE", "THIRD_PARTY.md", "experimental/COPYING-NIRI"]
 authors = [{name = "Julien Turbide"}]
 readme = "README.md"
 dependencies = []
-keywords = ["niri", "wayland", "shaders", "animation", "particles", "inir"]
+keywords = [
+    "niri", "wayland", "linux", "shaders", "glsl", "webgl", "animations",
+    "window-effects", "fragments", "pixels", "particles", "slices", "wobble",
+    "inir", "iris", "quickshell", "dank", "dankmaterialshell", "dms", "noctalia",
+]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Operating System :: POSIX :: Linux",
@@ -29,13 +33,12 @@ Source = "https://github.com/jturbide/niri-fx"
 
 [project.scripts]
 niri-fx = "niri_fx.cli:main"
-niri-fragments = "niri_fx.cli:main"
 
 [tool.setuptools.packages.find]
-include = ["niri_fragments*", "niri_fx*"]
+include = ["niri_fx*"]
 
 [tool.setuptools.package-data]
-niri_fx = ["shaders/*.glsl", "preview.html", "*.js", "*.css"]
+niri_fx = ["shaders/*.glsl", "preview.html", "*.js", "*.css", "assets/*.svg"]
 
 [tool.ruff]
 target-version = "py310"

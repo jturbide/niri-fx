@@ -12,3 +12,5 @@ recursive-include tests *.py
 recursive-include tests *.json
 include requirements-dev.txt package.json package-lock.json eslint.config.mjs .prettierrc.json .editorconfig
 recursive-include .github *.md *.yml
+recursive-include docs *.svg
+recursive-include docs *.patch
