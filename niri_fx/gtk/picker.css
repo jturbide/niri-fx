@@ -1,0 +1,51 @@
+.nirifx-picker {
+    background: #11171c;
+    color: #e5edea;
+    padding: 24px;
+}
+.nirifx-picker .nirifx-title {
+    font-size: 26px;
+    font-weight: bold;
+}
+.nirifx-picker .nirifx-muted {
+    color: #a2b3bb;
+}
+.nirifx-picker .nirifx-accent {
+    color: #b7e8db;
+}
+.nirifx-picker .nirifx-error {
+    color: #f3b6c5;
+}
+.nirifx-picker entry,
+.nirifx-picker button,
+.nirifx-picker dropdown {
+    background: #24343d;
+    color: #e5edea;
+}
+.nirifx-picker button.suggested-action {
+    background: #b7e8db;
+    color: #102820;
+}
+.nirifx-picker button:disabled {
+    opacity: 0.45;
+}
+.nirifx-picker list {
+    background: transparent;
+}
+.nirifx-picker list row {
+    border-radius: 6px;
+    padding: 12px;
+    margin-bottom: 6px;
+}
+.nirifx-picker list row:selected {
+    background: #b7e8db;
+    color: #102820;
+}
+.nirifx-picker list row:selected .nirifx-muted {
+    color: #244639;
+}
+.nirifx-picker .nirifx-plan {
+    border: 1px solid #40515a;
+    border-radius: 6px;
+    padding: 12px;
+}

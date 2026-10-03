@@ -36,6 +36,7 @@ import-boundary test enforces that separation.
 | [motion-preview.js](../niri_fx/motion-preview.js) | Labelled Canvas move/swap concepts. Not a compositor renderer. |
 | [studio.py](../niri_fx/studio.py) | On-demand app launch and authenticated loopback HTTP transport. Delegates validation and writes. |
 | [integration.py](../niri_fx/integration.py) | iNiR base inheritance, ownership-aware registration and backups. Never selects a style. |
+| [picker.py](../niri_fx/picker.py), [qml/](../niri_fx/qml/), [gtk/](../niri_fx/gtk/) | Optional desktop launchers and reusable pickers. Toolkit views call the CLI through argument arrays; no shader renderer or configuration writer is duplicated in the UI. |
 | [setup.py](../niri_fx/setup.py), [pack.py](../niri_fx/pack.py) | Inspectable plans, apply/restore snapshots, standalone includes and picker folders. |
 | [storage.py](../niri_fx/storage.py) | Staged, flushed file writes and atomic replacement. Callers decide ownership, locking and symlink policy. |
 | [scripts/lib/browser.mjs](../scripts/lib/browser.mjs) | Isolated Chromium lifecycle and bounded CDP requests for tests, recording and measurement. Not a runtime dependency. |
@@ -57,6 +58,26 @@ against Python. Browser checks then exercise actual compiled pixels and the real
 HTTP save path. Shared [document cases](../tests/fixtures/documents.json) cover
 accepted and rejected input on both sides. Changing a schema requires updating
 both validators and those cases together.
+
+## Desktop picker state and lifetime
+
+The QML picker and GTK/GJS picker consume the CLI's catalog and normalized documents.
+GTK separates a toolkit-independent controller, Gio subprocess transport and ordinary
+widgets. Controller tests run under Node; local runtime tests exercise the same
+state transitions through GJS and the real Python CLI. AGS imports the packaged
+GTK view, retaining its resource paths and avoiding a second implementation.
+
+Selection invalidates a review and resets resize consent. Review compares the
+normalized settings with what the UI displays; Apply passes the plan fingerprint
+back to the CLI, which revalidates the files. A single busy operation prevents
+overlapping actions. Undo names its reviewed transaction and uses a dedicated
+history directory. Neither controller writes config files itself.
+
+Standalone windows wait for in-flight operations when closed. Embedding shells
+must retain the controller and application until it is idle, then disconnect and
+dispose the view. Do not add cancellation timers that can terminate a writer
+halfway through a multi-file transaction. Tests cover the GTK close-during-Apply
+case; forced process termination remains outside that guarantee.
 
 ## Shader contract
 

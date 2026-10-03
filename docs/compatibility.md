@@ -12,7 +12,8 @@ do not need iNiR installed.
 | Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher selection, apply and undo tested in a component host. |
 | Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 64 files validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
 | Niri + custom Quickshell | [Reusable picker](quickshell.md), or standalone config | Quickshell 0.3.1 controller/view and real keyboard workflow tested in isolated hosts; shell-specific embedding remains the integrator's responsibility. |
-| Niri + Waybar or AGS/Astal | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering; AGS/Astal picker UI not tested. |
+| Niri + GTK 4 / AGS 3 | [GTK picker and reusable widget](gtk.md) | GJS 1.88.1 / GTK 4.22.5 and AGS source v3.1.2 keyboard Apply/Undo tested in isolated hosts. Full Astal shell embedding and GTK 3 are not covered. |
+| Niri + Waybar | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
 | Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
@@ -88,4 +89,4 @@ there is no universal settings registry shared by every shell. Native movement
 still needs Niri rendering support regardless of shell.
 
 Choose a [setup scenario](scenarios.md). The [roadmap](roadmap.md) ranks future
-Quickshell, AGS/Astal, Caelestia and ML4W work; Waybar needs no shader adapter.
+full-shell embedding, Caelestia and ML4W work; Waybar needs no shader adapter.

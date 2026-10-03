@@ -150,17 +150,26 @@ Import one of the [JSON examples](examples/README.md), edit it and export a pres
 or Niri config. [Studio guide](docs/usage.md) · [Profiles](docs/profiles.md) ·
 [Control reference](docs/effect-controls.md).
 
-## A desktop picker for Quickshell
+## Desktop pickers
 
 Run `python3 -m niri_fx picker` from the checkout to browse styles and load JSON
 profiles. Review the affected files before Apply; Undo restores the previous
-settings. Resize requires explicit consent. The controller and view can also
-be embedded in a custom Quickshell settings page.
+settings. Custom resize effects require explicit consent. Choose a toolkit:
+
+| Toolkit | Command from a checkout | Integration guide |
+| --- | --- | --- |
+| Quickshell | `python3 -m niri_fx picker` | [Reusable QML picker](docs/quickshell.md) |
+| GTK 4 / GJS | `python3 -m niri_fx picker --toolkit gtk` | [Standalone GTK and AGS 3 example](docs/gtk.md) |
+
+Both provide reusable components for custom settings pages.
 
 ![Quickshell picker search, reviewed Apply and Undo](docs/gifs/workflow-quickshell-picker.gif)
 
-[Picker guide and embedding example](docs/quickshell.md). Requires Quickshell;
-Studio and standalone setup remain independent of it. Available on `main` after v0.8.0.
+![GTK picker search, reviewed Apply and Undo](docs/gifs/workflow-gtk-picker.gif)
+
+Only the chosen UI's toolkit is needed; the GTK picker also works without AGS.
+Studio and standalone setup remain independent of both toolkits.
+Available on `main` after v0.8.0.
 
 ## Performance and compatibility
 

@@ -28,10 +28,12 @@ show what has already been measured and what remains untested.
 Standalone NiriFX already works with any bar or shell running on Niri. These
 integrations would add convenient browsing and settings interfaces:
 
-The [Quickshell picker](docs/quickshell.md) now provides search, profile loading,
-reviewed activation and Undo, with reusable QML components. Further work includes:
+The [Quickshell picker](docs/quickshell.md) and [GTK picker with an AGS 3 example](docs/gtk.md)
+provide search, profile loading, reviewed activation and Undo, with reusable
+components. Further work includes:
 
-1. **AGS/Astal:** an equivalent example for GTK-based shells.
+1. **Full shell embedding:** validate the reusable components in maintained
+   Quickshell and GTK 4/Astal settings pages, beyond isolated component hosts.
 2. **Caelestia:** assess a maintained Niri setup and a suitable extension point.
 3. **ML4W:** document a separate Niri session, then assess an appropriate settings adapter.
 

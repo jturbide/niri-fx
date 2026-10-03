@@ -21,7 +21,14 @@ includes an example and documents reviewed Apply, JSON profiles, resize consent
 and dedicated Undo history. Existing iRiS, DMS and Noctalia users can keep their
 own pickers; choose one owner for Niri's animation configuration.
 
-## AGS/Astal and other custom UIs
+## GTK 4, AGS and Astal
+
+Use `niri-fx picker --toolkit gtk` for a standalone GJS/GTK window, or embed its
+ordinary GTK 4 widget in a settings page. The [GTK guide](gtk.md) includes a tested
+AGS 3 entry point, lifecycle rules, resize consent and dedicated Undo history.
+GTK 3 and older AGS APIs can use the standalone launcher or CLI instead.
+
+## Other custom UIs
 
 [Quickshell](https://quickshell.org/), [AGS](https://aylur.github.io/ags/) and
 [Astal](https://aylur.github.io/astal/) provide tools for building desktop UIs.
@@ -52,8 +59,8 @@ binds {
 ```
 
 Merge the binding into your existing `binds` block and choose an unused shortcut.
-It only opens Studio. An AGS/Astal picker example remains future work;
-the generic CLI/config path does not imply that UI has been tested.
+It only opens Studio. The generic CLI/config path does not imply that every
+shell-specific UI has been tested.
 
 ## Caelestia and ML4W
 

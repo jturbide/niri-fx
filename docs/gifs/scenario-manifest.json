@@ -1295,6 +1295,28 @@
       },
       "file": "docs/gifs/workflow-quickshell-picker.gif",
       "bytes": 429009
+    },
+    {
+      "name": "workflow-gtk-picker",
+      "backend": "packaged GTK 4 picker UI in stock nested Niri",
+      "version": "gjs 1.88.1",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved",
+        "close during apply"
+      ],
+      "sources": {
+        "niri_fx/gtk/controller.mjs": "9bfa150a1c1c4dfe806c3903f64866e60297512a435df669cb6917201fbb42df",
+        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
+        "niri_fx/gtk/picker.mjs": "e635dbd221ee477a43b3244c7da1b5b92e7bd38090273fc941fa484857f0ca4b",
+        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
+        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
+      },
+      "file": "docs/gifs/workflow-gtk-picker.gif",
+      "bytes": 554818
     }
   ]
 }
