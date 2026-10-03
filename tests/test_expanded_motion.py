@@ -52,6 +52,7 @@ class ExpandedMotionTests(unittest.TestCase):
             ("ink-spread", "--dissolve-turbulence", "0.8", "dissolve_turbulence"),
             ("signal-glitch", "--glitch-chroma", "0.5", "glitch_chroma"),
             ("pixel-transfer", "--movement-strength", "0.4", "movement_strength"),
+            ("ripple-collapse", "--resize-twist", "-45", "resize_twist"),
             ("vortex-fold", "--distortion-twist", "-720", "distortion_twist"),
             ("soft-swirl", "--distortion-contract", "0.95", "distortion_contract"),
         ):
@@ -62,3 +63,25 @@ class ExpandedMotionTests(unittest.TestCase):
                 self.assertEqual(getattr(effect, field), float(value))
                 with self.assertRaises(ValueError):
                     replace(effect, **{field: float("nan")})
+
+    def test_resize_distortion_mode_does_not_enable_resize(self):
+        for mode in ("ripple", "edge-ripple", "torsion"):
+            effect = selected_effect(
+                parser().parse_args(
+                    [
+                        "render",
+                        "--preset",
+                        "ripple-collapse",
+                        "--distortion-resize-mode",
+                        mode,
+                    ]
+                )
+            )
+            self.assertFalse(effect.resize)
+            self.assertEqual(effect.distortion_resize_mode, mode)
+            self.assertNotIn("window-resize", animation_types(effect))
+        with self.assertRaises(ValueError):
+            replace(effect, distortion_resize_mode="unknown")
+        for twist in (-46, 46, float("inf")):
+            with self.assertRaises(ValueError):
+                replace(effect, resize_twist=twist)

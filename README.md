@@ -135,10 +135,10 @@ python3 -m niri_fx studio --profile fragment-flow
 [All seven pairings, commands and downloads](docs/profiles.md) ·
 [Ghost and Shockwave](docs/gifs/profile-ghost-and-shockwave.gif)
 
-## Resize — opt-in
+## Resize (opt-in)
 
-Choose fragment breakup, **Elastic Stretch**, **Accordion Resize** or **Ripple
-Resize**. These work on stock Niri's animated size changes, such as cycling column
+Choose fragment breakup, **Elastic Stretch**, **Accordion Resize**, **Ripple
+Resize**, **Edge Ripple** or **Torsion Resize**. These work on stock Niri's animated size changes, such as cycling column
 widths. They do not add pointer-driven wobble while dragging an edge.
 
 ![Elastic stretch, accordion folds and radial ripples compared](docs/gifs/compare-resize-families.gif)
@@ -146,6 +146,15 @@ widths. They do not add pointer-driven wobble while dragging an edge.
 [Resize guide](docs/resize.md) · [Elastic profile](examples/profiles/elastic-resize.json) ·
 [Accordion profile](examples/profiles/accordion-resize.json) ·
 [Ripple profile](examples/profiles/ripple-resize.json)
+
+**Edge Ripple** and **Torsion Resize** each offer Subtle and Expressive profiles
+on current `main` after v0.10.0. Compare both strengths below, then download a
+profile from the [resize guide](docs/resize.md#edge-ripple-and-torsion-resize).
+
+| Edge Ripple | Torsion Resize |
+| --- | --- |
+| ![Subtle and expressive edge ripple resize](docs/gifs/compare-edge-ripple-resize.gif) | ![Subtle and expressive torsion resize](docs/gifs/compare-torsion-resize.gif) |
+
 
 ## Experimental movement and swaps
 

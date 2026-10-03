@@ -1,6 +1,6 @@
 // Shader GPU timings, not compositor frame times. No software fallback claims.
 import { execFileSync } from "node:child_process";
-import { mkdtempSync, writeFileSync, existsSync, rmSync } from "node:fs";
+import { mkdtempSync, writeFileSync, readFileSync, existsSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -10,13 +10,14 @@ import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 const options = Object.fromEntries(
   process.argv.slice(2).map((arg) => {
     assert(
-      /^--(output|presets|sizes|samples|draws|software)=.+$/.test(arg),
-      "Use --output=report.json --presets=balanced,iris-bloom --sizes=1920x1080,2560x1440 --samples=60 --draws=1,2,4 [--software=true for rejection testing]",
+      /^--(output|presets|resize-profiles|sizes|samples|draws|software)=.+$/.test(arg),
+      "Use --output=report.json --presets=balanced,iris-bloom --sizes=1920x1080,2560x1440 --samples=60 --draws=1,2,4 [--resize-profiles=PROFILE instead of --presets] [--software=true for rejection testing]",
     );
     const split = arg.indexOf("=");
     return [arg.slice(2, split), arg.slice(split + 1)];
   }),
 );
+assert(!(options.presets && options["resize-profiles"]), "Choose presets or resize profiles");
 assert(options.output, "--output is required");
 const output = resolve(options.output);
 assert(!existsSync(output), "Use a fresh report filename");
@@ -30,7 +31,9 @@ try {
   const { evaluate } = browser;
   await browser.navigate(pathToFileURL(page).href);
   const presets = (
-    options.presets || "balanced,core-detonation,spring-wobble,noise-dissolve,iris-bloom"
+    options["resize-profiles"] ||
+    options.presets ||
+    "balanced,core-detonation,spring-wobble,noise-dissolve,iris-bloom"
   ).split(",");
   const sizes = (options.sizes || "1920x1080,2560x1440,3840x2160").split(",").map((value) => {
     assert(/^\d+x\d+$/.test(value), "Sizes must use WIDTHxHEIGHT");
@@ -43,18 +46,30 @@ try {
     "Draw counts must be integers from 1 to 8",
   );
   for (const preset of presets) {
-    assert(
-      await evaluate(`Object.hasOwn(catalog.presets, ${JSON.stringify(preset)})`),
-      "Unknown preset: " + preset,
-    );
-    await evaluate(
-      `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
-    );
+    if (options["resize-profiles"]) {
+      assert(/^[a-z0-9-]+$/.test(preset), "Use a profile name from examples/profiles");
+      const document = JSON.parse(
+        readFileSync(join(root, "examples/profiles", preset + ".json"), "utf8"),
+      );
+      assert(document.kind === "profile" && document.actions.resize, "Profile must enable resize");
+      await evaluate(
+        `byId('preset').value='';loadDocument(normalizePreset(${JSON.stringify(document)}),'resize');populate();document.querySelector('[data-mode=resize]').click();byId('resize-direction').value='grow';refresh()`,
+      );
+    } else {
+      assert(
+        await evaluate(`Object.hasOwn(catalog.presets, ${JSON.stringify(preset)})`),
+        "Unknown preset: " + preset,
+      );
+      await evaluate(
+        `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
+      );
+    }
     for (const [width, height] of sizes) {
       for (const draws of batches) {
         const result = await evaluate(
           `window.niriFxBenchmark(${JSON.stringify({ width, height, draws, samples: Number(options.samples || 60) })})`,
         );
+        if (options["resize-profiles"]) result.profile = preset;
         results.push(result);
         console.log(
           `${preset} ${width}x${height} ${draws} draw(s): ${result.status}${result.p95 ? " p95=" + result.p95.toFixed(3) + "ms" : " (" + result.reason + ")"}`,

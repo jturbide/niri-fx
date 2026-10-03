@@ -6,6 +6,7 @@ import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { setTimeout as sleep } from "node:timers/promises";
+import { checkResize } from "./lib/resize-checks.mjs";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 
 process.chdir(projectRoot);
@@ -222,6 +223,7 @@ try {
   }
   assert(resizeModes.edge.alpha > resizeModes.full.alpha, "edge mode retains more content");
   assert(resizeModes.soft.alpha > resizeModes.full.alpha, "soft mode retains more content");
+  await checkResize(evaluate, setProgress, sample);
   // Both textured windows must exchange positions intact, with a visible
   // intermediate stream. The movement prototype must remain labelled as such.
   await evaluate(

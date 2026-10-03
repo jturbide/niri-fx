@@ -8,8 +8,8 @@ See the [changelog](../CHANGELOG.md) for user-visible changes.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 106 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows and conservative CI scope selection |
-| Portable JavaScript | 43 Node checks; all 66 presets' supported stock shaders match Python, with picker transaction and profile checks |
+| Python | 107 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows and conservative CI scope selection |
+| Portable JavaScript | 52 Node checks; all 66 presets' supported stock shaders match Python, with picker transaction and profile checks |
 | Real Chromium | 66 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
 | Browser lifecycle and gallery | Four tests cover failed startup, bounded requests, disconnect/cleanup, gallery filtering, reduced-motion startup, single-GIF playback and hosted Studio share/download flows |
@@ -17,7 +17,8 @@ See the [changelog](../CHANGELOG.md) for user-visible changes.
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Fragment optimization | 1,050 reference-frame pairs across software WebGL and hardware ANGLE match byte-for-byte, including extreme settings and transparent input. Core Detonation, Mosaic Burst and Orbital Ribbons pass stock open/close checks; Core Detonation also passes native swaps, interruptions and fallback. See [measurements and reproduction](performance.md#varied-fragment-flight-bounds). |
 | Vortex distortion | Existing distortion presets match 126 reference-frame pairs against 0.10.0 byte-for-byte. Signed twist, contraction, origin, extreme geometry and transparent source pass browser checks. Both presets pass stock open/close and cleanup. Vortex Fold passes native swaps, six interrupted swaps, close during movement, resize and fallback. |
-| Resize profiles | Elastic, Accordion and Ripple grow and shrink a synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
+| Resize profiles | All seven profiles (Elastic, Accordion, Ripple, plus Subtle/Expressive Edge Ripple and Torsion) grow and shrink a transparent synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
+| Resize rendering | Edge Ripple and Torsion pass forward-time grow/shrink, exact texture endpoints, signed and zero controls, filled bounds at extreme aspect ratios and Python/JavaScript shader parity checks |
 | Resize defaults | Every built-in leaves resize off; viewing controls never enables it; explicit profile slots and custom choices round-trip |
 | Packaging | Wheel and source distribution build; installed CLI, shader resources, icon, offline Studio and profile exports work outside the checkout |
 | Documentation | Local links, example commands, preset/profile recordings, native source hashes and generated gallery/poster hashes are checked |
@@ -74,6 +75,18 @@ These checks use transparent synthetic Quickshell clients in one nested output.
 They establish state and cleanup, not perceptual seamlessness or physical mixed-output
 behavior. Timing and shader-state tests complement the recordings.
 
+The Expressive Edge Ripple and Torsion profiles each passed the same 15 stock
+interruption cases across 1×, 1.5× and 2×. All endpoints were empty after close,
+restored widths matched and render logs were clean. Their size-dependent shader
+phase restarts with Niri's resize animation; this does not establish continuous
+velocity across interrupted resizes.
+
+```sh
+python3 scripts/test-stock-scenarios.py --presets balanced --resize-profiles
+python3 scripts/test-interruptions.py --resize-profile examples/profiles/edge-ripple-expressive.json
+python3 scripts/test-interruptions.py --resize-profile examples/profiles/torsion-expressive.json
+```
+
 ## Performance evidence
 
 A tighter candidate search for varied fragments without waves produced byte-identical
@@ -89,7 +102,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**145 GIFs**, including all **66 presets**, resize profiles and comparisons, custom
+**151 GIFs**, including all **66 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, eleven native swaps and fourteen workflow/compositor
 scenarios. Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

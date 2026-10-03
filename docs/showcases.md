@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **145 GIFs**, including all **66 built-in presets**. Use this
+The gallery has **151 GIFs**, including all **66 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -113,9 +113,10 @@ GIFs demonstrate appearance. For shader timing data, see [GPU measurements](perf
 | Spreading ink | [Ink Spread](gifs/preset-ink-spread.gif), [Ink Bloom](gifs/preset-ink-bloom.gif) |
 | Signal distortion | [Signal Glitch](gifs/preset-signal-glitch.gif), [Chromatic Glitch](gifs/preset-chromatic-glitch.gif) |
 | Movement styles used for open/close | [Slice Exchange](gifs/preset-slice-exchange.gif), [Pixel Transfer](gifs/preset-pixel-transfer.gif), [Soft Phase](gifs/preset-soft-phase.gif) |
+| Edge Ripple and Torsion | [Edge Ripple comparison](gifs/compare-edge-ripple-resize.gif), [Torsion comparison](gifs/compare-torsion-resize.gif); [profiles and controls](resize.md) |
 | Optional continuous resize | [Elastic](gifs/elastic-resize.gif), [Accordion](gifs/accordion-resize.gif), [Ripple](gifs/ripple-resize.gif), [Compare](gifs/compare-resize-families.gif) |
 | Experimental native swaps | [Slice Exchange](gifs/native-swap-slice-exchange.gif), [Pixel Transfer](gifs/native-swap-pixel-transfer.gif), [Soft Phase](gifs/native-swap-soft-phase.gif) |
 | Close before opening completes | [Continued opening trajectory](gifs/native-close-during-open.gif) · requires the experimental compositor |
 
-All new styles have [JSON examples](../examples/README.md). The three resize
+All new styles have [JSON examples](../examples/README.md). The seven resize
 profiles explicitly enable resize; the built-in presets do not.

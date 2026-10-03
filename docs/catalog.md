@@ -363,7 +363,7 @@ The same shader can deform a native swap in the optional experimental compositor
 
 Bend the actual window texture with an expanding shock front, concentric ripples
 or travelling planar waves. Control displacement, wavelength, falloff and origin.
-Distortion uses stock Niri open/close, optional Ripple Resize and experimental native movement.
+Distortion uses stock Niri open/close, optional Ripple, Edge Ripple or Torsion Resize and experimental native movement.
 
 | Shockwave | Ripple Collapse | Wave Fold |
 | --- | --- | --- |
@@ -564,3 +564,12 @@ monochrome by default; Chromatic Glitch adds adjustable color separation.
 | ![Dark ink spreads through a window](gifs/preset-ink-spread.gif) | ![A pale ink reveal grows from an offset origin](gifs/preset-ink-bloom.gif) |
 | **Signal Glitch** | **Chromatic Glitch** |
 | ![Monochrome horizontal signal distortion](gifs/preset-signal-glitch.gif) | ![Signal distortion with color separation](gifs/preset-chromatic-glitch.gif) |
+
+
+### Edge Ripple and Torsion Resize
+
+Both modes have separate Subtle and Expressive profiles. They keep Balanced
+opening/closing and opt into resize on stock Niri. [Controls and JSON downloads](resize.md#edge-ripple-and-torsion-resize).
+
+![Edge Ripple strength comparison](gifs/compare-edge-ripple-resize.gif)
+![Torsion strength comparison](gifs/compare-torsion-resize.gif)

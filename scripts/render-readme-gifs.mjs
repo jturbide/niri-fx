@@ -156,7 +156,7 @@ try {
           "python3",
           [
             "-c",
-            'import json,sys;from dataclasses import asdict;from niri_fx.effects import Effect,shader;p=Effect(**json.load(sys.stdin));print(json.dumps({"effect":asdict(p),"sources":[shader(p,True),shader(p,False)]}))',
+            'import json,sys;from dataclasses import asdict;from niri_fx.effects import Effect,shader,resize_shader,FAMILIES;p=Effect(**json.load(sys.stdin));print(json.dumps({"effect":asdict(p),"sources":[shader(p,True),shader(p,False)],"resize":resize_shader(p) if FAMILIES[p.family]["resize"] else None}))',
           ],
           { input: JSON.stringify(effect), encoding: "utf8" },
         ),
@@ -207,7 +207,7 @@ try {
               ? "Custom settings · real shader · resize off"
               : "Real open/close shader · " + panel.preset + " preset · synthetic window";
       await evaluate(`byId('preset').value=${JSON.stringify(panel.preset || "balanced")};byId('preset').dispatchEvent(new Event('change'));
-    parameters=normalizePreset({schema:3,name:'Recording',effect:${JSON.stringify(effect)}}).effect;populate();document.querySelector('[data-mode=${spec.mode}]').click();refresh();
+    byId('resize-direction').value='grow';parameters=normalizePreset({schema:3,name:'Recording',effect:${JSON.stringify(effect)}}).effect;populate();document.querySelector('[data-mode=${spec.mode}]').click();refresh();
     byId('gif-heading').textContent=${JSON.stringify(panel.label)};byId('gif-note').textContent=${JSON.stringify(note)};
     byId('gif-heading').style.fontSize=${JSON.stringify(comparison ? "28px" : spec.panels ? "24px" : "18px")};byId('gif-note').style.fontSize=${JSON.stringify(spec.panels ? "18px" : "12px")};`);
       assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
@@ -216,6 +216,8 @@ try {
         await evaluate("[shaderFor(parameters,true),shaderFor(parameters,false)]"),
         sources,
       );
+      if (spec.mode === "resize")
+        assert.equal(await evaluate("shaderFor(parameters,false,true)"), generated.resize);
       const panelFrames = Math.ceil((duration * fps) / 1000);
       if (index) assert.equal(panelFrames, count, "Comparison panels must have matching timing");
       count = panelFrames;
@@ -231,6 +233,11 @@ try {
         else if (spec.direction === "close") p = Math.max(0, Math.min(1, (t - pause) / forward));
         else if (t < pause + forward) p = Math.max(0, Math.min(1, (t - pause) / forward));
         else p = 1 - Math.max(0, Math.min(1, (t - 2 * pause - forward) / backward));
+        if (spec.mode === "resize" && spec.direction === "round" && t >= 2 * pause + forward) {
+          // A new resize has exchanged textures and matrices, and time starts at zero.
+          p = Math.max(0, Math.min(1, (t - 2 * pause - forward) / backward));
+          await evaluate("byId('resize-direction').value='shrink'");
+        }
         await evaluate(
           `byId('progress').value=${Math.round(p * 1000)};byId('progress').dispatchEvent(new Event('input'));`,
         );

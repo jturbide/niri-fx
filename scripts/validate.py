@@ -35,6 +35,7 @@ uniform sampler2D niri_tex_next;
 uniform mat3 niri_geo_to_tex_prev;
 uniform mat3 niri_geo_to_tex_next;
 uniform mat3 niri_curr_geo_to_next_geo;
+uniform mat3 niri_curr_geo_to_prev_geo;
 """
 
 
@@ -52,6 +53,15 @@ def main():
             if required:
                 raise SystemExit(f"Required tool missing: {name}")
             print(f"SKIP {name}: not installed")
+
+    def resize_variants(effect):
+        if effect.family == "distortion":
+            return [
+                replace(effect, distortion_resize_mode=mode)
+                for mode in ("ripple", "edge-ripple", "torsion")
+            ]
+        return [replace(effect, resize_mode=mode) for mode in RESIZE_MODES]
+
     with tempfile.TemporaryDirectory(prefix="niri-fx-validate-") as directory:
         root = Path(directory)
         for name, effect in PRESETS.items():
@@ -64,8 +74,8 @@ def main():
                     sources.append(("move_color", movement_shader(effect)))
                 if FAMILIES[effect.family]["resize"]:
                     sources.extend(
-                        ("resize_color", resize_shader(replace(effect, resize_mode=mode)))
-                        for mode in RESIZE_MODES
+                        ("resize_color", resize_shader(variant))
+                        for variant in resize_variants(effect)
                     )
                 for index, (entry, source) in enumerate(sources):
                     frag = root / f"{name}-{entry}-{index}.frag"
@@ -80,7 +90,7 @@ def main():
                 variants = [effect]
                 if FAMILIES[effect.family]["resize"]:
                     variants.extend(
-                        replace(effect, resize=True, resize_mode=mode) for mode in RESIZE_MODES
+                        replace(variant, resize=True) for variant in resize_variants(effect)
                     )
                 for variant in variants:
                     config.write_text(render_kdl(variant))

@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **145 GIFs**, including all **66 presets**. The earlier eight
+The gallery contains **151 GIFs**, including all **66 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -315,3 +315,18 @@ open/close, close during resize and fullscreen transitions. The experimental
 run also checks eight rapid swaps and movement-shader removal. They verify
 state, cleanup and logs; they do not measure physical presentation or certify
 mixed-monitor behavior.
+
+
+## Direction-aware resize previews
+
+Edge Ripple and Torsion Resize each have `subtle` and `expressive` profile clips,
+plus `compare-edge-ripple-resize.gif` and `compare-torsion-resize.gif`. See the
+[resize guide](../resize.md). The gallery contains 151 clips.
+
+```sh
+node scripts/render-readme-gifs.mjs --only=edge-ripple-subtle,edge-ripple-expressive,torsion-subtle,torsion-expressive,compare-edge-ripple-resize,compare-torsion-resize
+```
+
+All resize previews now run growth and shrink as separate forward-time transitions,
+exchanging old/new sizes and textures. They no longer play growth frames backward.
+These are Studio shader captures of synthetic content, not desktop recordings.

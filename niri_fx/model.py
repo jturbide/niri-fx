@@ -774,6 +774,25 @@ class Effect:
         token="DISTORTION_STRENGTH",
         unit=" px",
     )
+    distortion_resize_mode: str = parameter(
+        "ripple",
+        basic=True,
+        label="Resize distortion",
+        families=("distortion",),
+        group="resize",
+        choices=("ripple", "edge-ripple", "torsion"),
+        token="DISTORTION_RESIZE_MODE",
+    )
+    resize_twist: float = parameter(
+        18,
+        basic=True,
+        label="Resize twist",
+        families=("distortion",),
+        group="resize",
+        limits=(-45, 45),
+        token="RESIZE_TWIST",
+        unit="°",
+    )
     distortion_twist: float = parameter(
         270,
         basic=True,
