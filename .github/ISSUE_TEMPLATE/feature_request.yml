@@ -12,4 +12,4 @@ body:
     id: proposal
     attributes:
       label: Suggested approach or references
-      description: Check docs/compatibility.md and docs/movement.md for the current roadmap and limits.
+      description: Check ROADMAP.md for planned work and docs/compatibility.md for current support.

@@ -8,9 +8,8 @@ python3 -m niri_fx studio
 
 This opens a dedicated Chromium app window, with no tabs or address bar and a
 separate profile. The optional application launcher opens the same window.
-The renderer is still web technology, not a native QML page. If Chromium is
-unavailable, it falls back to your browser; `studio --browser` explicitly opens
-a browser tab. Choose **Fragments**, **Slices** or **Elastic** first. The starting styles and
+If Chromium is unavailable, Studio opens in your default browser; use
+`studio --browser` to request a browser tab. Choose an **Effect family** first. The starting styles and
 controls follow the selected family. Switching families starts with that family's
 first preset; export a custom style before switching if you want to keep it.
 
@@ -18,7 +17,7 @@ first preset; export a custom style before switching if you want to keep it.
 
 Slices preserve broad strips of the actual window texture. They support opening
 and closing on stock Niri; resize and movement controls are unavailable for this
-family in 0.6. Opening reverses the closing path with its own duration.
+family. Opening reverses the closing path with its own duration.
 
 | Control | Range / meaning |
 | --- | --- |
@@ -36,9 +35,8 @@ python3 -m niri_fx render --family slices --slice-count 20 --slice-angle 30 \
   --slice-direction alternate --slice-rotation 8 > /tmp/slices.kdl
 ```
 
-Every preset leaves resize off. All families use preset schema 3; earlier formats
-are unsupported. See [waves, variation and wobble](effect-controls.md) for new
-controls, examples and rendering costs.
+Built-in presets leave resize off. See [effect controls](effect-controls.md) for
+waves, variation, wobble, colors and distortion, with examples and performance notes.
 
 ## Fragments
 
@@ -174,7 +172,7 @@ a physical simulation. There are no particle collisions.
 
 ## Resize is opt-in
 
-Resize effects are available for **Fragments only** in this release.
+Resize effects are available for **Fragments only**.
 
 All built-in presets and fresh Studio sessions start with fragment resize
 disabled. Imported custom presets retain their explicit choice. Enable **Fragment windows when resizing**, or pass `--resize`:

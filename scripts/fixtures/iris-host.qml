@@ -17,7 +17,7 @@ ShellRoot {
         color: IrisStyle.surface
         Text {
             x: 28; y: 20
-            text: "iRiS animation styles / isolated integration test"
+            text: "NiriFX styles in iRiS"
             color: IrisStyle.text
             font.pixelSize: 24
         }
@@ -42,7 +42,10 @@ ShellRoot {
                 }
                 const tile = find(gallery);
                 if (!tile) return "null";
-                scroll.contentItem.contentY = Math.max(0, tile.y - 40);
+                // Stay within the scrollable range. Overscrolling can rebound
+                // between locating a card and delivering the pointer click.
+                const maximum = Math.max(0, gallery.height - scroll.availableHeight);
+                scroll.contentItem.contentY = Math.max(0, Math.min(tile.y - 40, maximum));
                 const point = tile.mapToItem(window.contentItem, tile.width / 2, 35);
                 return JSON.stringify({x: point.x, y: point.y});
             }

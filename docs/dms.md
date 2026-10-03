@@ -1,9 +1,7 @@
 # DankMaterialShell launcher adapter
 
-Included in 0.7.0, the optional adapter provides an `fx` launcher provider with searchable built-in
-presets, **Open NiriFX Studio**, and **Undo last NiriFX change**. It uses NiriFX's
-existing CLI and reversible setup; no renderer or shader logic is duplicated in
-QML. It targets DMS on **Niri**.
+Use the `fx` launcher command to search built-in presets, open **NiriFX Studio**
+and **Undo last NiriFX change**. This optional adapter works with DMS on **Niri**.
 
 Install the current NiriFX checkout using [getting started](getting-started.md),
 and verify `niri-fx --version` works in your shell. Then copy the plugin:
@@ -32,19 +30,13 @@ before switching to another picker. Disabling the plugin alone does not undo a
 Niri configuration change. Studio's standalone save target downloads a file;
 the DMS launcher currently lists built-in styles, not saved custom profiles.
 
-## Validation scope
+## Tested versions
 
-The real QML component passed catalog loading/search, rejection of unknown preset
-actions, CLI apply and exact restore in offscreen Quickshell 0.3.1 with temporary
-Niri configs. Reproduce with `python3 scripts/test-dms-adapter.py`. The adapter
-also passed discovery and launcher instantiation through the actual **DMS 1.6.2
-PluginService**, followed by search, apply and exact restore. Reproduce that check
-with `python3 scripts/test-dms-service.py --source /path/to/dms-qml`. It uses a
-private D-Bus session and temporary XDG directories; no running shell is replaced.
-The newer [visual workflow](gifs/workflow-dms.gif) also renders the unmodified
-DMS 1.6.2 launcher modal and PluginService in a small isolated host. It passes
-keyboard search/selection, apply, exact Undo, Studio app launch and a separate
-external-edit refusal check. Reproduce with
-`python3 scripts/test-shell-workflows.py dms --source /path/to/dms-qml --version 'DMS 1.6.2 / Quickshell 0.3.1'`;
-add `--record` to regenerate the GIF. This exercises the actual launcher, not the
-complete DMS daemon/desktop session. See the [recording guide](gifs/README.md#workflow-and-compositor-recordings).
+The adapter has been tested with **DMS 1.6.2 and Quickshell 0.3.1** using the
+real launcher and plugin service in an isolated host. Search, preset selection,
+Undo and Studio launch pass; Undo also preserves externally edited configs.
+Testing a complete DMS desktop session across releases remains planned.
+
+[Watch the workflow](gifs/workflow-dms.gif). Contributor details and reproduction
+commands are in [testing](validation.md#workflow-and-compositor-scenarios) and the
+[recording guide](gifs/README.md#workflow-and-compositor-recordings).

@@ -1,22 +1,20 @@
 # Noctalia and preset folders
 
 NiriFX can export a reversible folder of all 55 open/close presets for the
-existing Noctalia **Niri Animations** picker. This support is included in 0.7.0. It adds no daemon and does not modify Noctalia source.
+existing Noctalia **Niri Animations** picker. Export the pack, connect the picker
+and select a style. No additional daemon is required.
 
 The [community plugin](https://noctalia.dev/plugins/community/niri-animations)
 reads `.kdl` files from `presets_dir` and writes a dedicated `target_file` containing
 an include plus animation slowdown. Its
 [source and settings](https://github.com/noctalia-dev/community-plugins/tree/main/niri-animations)
-define this file contract. Current Noctalia 5 uses Luau plugins; legacy Noctalia
-Shell 4 uses a different QML plugin system. These instructions target the current
-plugin, not an interchangeable plugin for both versions.
+define this file contract. These instructions target **Noctalia 5 / Niri Animations 0.2.0**. Noctalia Shell 4
+uses a different plugin system; use [standalone setup](standalone.md) with that version.
 
-The exported configs and picker-style include chain have been validated with
-stock Niri. **Noctalia 5.2.1 with Niri Animations 0.2.0 passed an isolated UI test:**
-the 0.7.0 picker test found all 47 then-current styles, keyboard dropdown selection applied Iris Bloom
-and Ember Erosion, and selecting the base pack removed the preset include.
-Niri validated the resulting configurations. For legacy
-Noctalia or a picker without this contract, use [standalone setup](setup.md).
+Tested with **Noctalia 5.2.1 and Niri Animations 0.2.0**: the picker loads all
+55 presets, applies a custom mixed-action profile and returns to the base settings.
+[Watch the workflow](gifs/workflow-noctalia.gif) or read the
+[test details](validation.md#workflow-and-compositor-scenarios).
 
 ## Export without changing the active desktop
 

@@ -5,7 +5,7 @@ For a visual starting point, use the [scenario index](../docs/showcases.md).
 
 The checked-in JSON supplies the exact settings used in the README recordings.
 Use **Import preset** in Studio to inspect any file without applying it. The
-three recipes and three new built-in examples leave resize off; the three
+three recipes and three built-in examples leave resize off; the three
 resize examples explicitly enable it.
 
 | Example | Starting preset | Main changes |
@@ -14,7 +14,7 @@ resize examples explicitly enable it.
 | [Orbit Burst](orbit-burst.json) | Explosion | 1,500 pieces, an outward sweep and 180° orbit |
 | [Reverse Gravity](reverse-gravity.json) | Updraft | 1,000 pieces, stronger lift and randomized spin |
 
-| New example | Behavior | Resize |
+| Example | Behavior | Resize |
 | --- | --- | --- |
 | [Directional Wave](directional-wave.json) | Three sections release from left to right | Off |
 | [Corner Burst](corner-burst.json) | Burst from a lower-left origin | Off |
@@ -97,7 +97,7 @@ the preview and follow the [standalone guide](../docs/getting-started.md#standal
 You can also replace `preview` with `render`, remove `--output`, and redirect
 stdout to a KDL file. Validate the generated file before including it.
 
-## New preset and resize previews
+## Preset and resize previews
 
 The same JSON works with `preview`, `studio`, `render`, `register` and `setup`.
 These commands only create offline editors. Importing a resize example does not
@@ -127,7 +127,7 @@ settings. See the [recording guide](../docs/gifs/README.md) for dependencies.
 
 ## Waves, variation and elastic styles
 
-These schema 3 examples need the current checkout. Every example uses schema 3.
+These examples use preset schema 3; use them with a version that supports that format.
 Resize stays off in all of them. See [effect controls](../docs/effect-controls.md).
 
 ```sh

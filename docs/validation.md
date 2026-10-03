@@ -100,10 +100,12 @@ panel. The docs check verifies that preview commands, importable JSON, compariso
 definitions and recorded parameter metadata still agree. It also requires a
 dedicated recording for each preset and profile example, and links for all GIFs.
 
-Effect/native GIFs use 20 fps; the Studio UI workflow uses 10 fps. Output is
-scaled and palette-reduced. Browser checks use Chromium
+Shader-gallery and earlier native GIFs use 20 fps; the Studio UI workflow uses
+10 fps. The two native interruption scenarios use 50 fps and an optimized release
+build of the pinned experiment. Output is scaled and palette-reduced. Browser checks use Chromium
 software WebGL. Neither measures compositor GPU frame time or guarantees exact
-appearance on every desktop. The experimental default build is unoptimized.
+appearance on every desktop. The experimental build script defaults to an unoptimized build unless passed
+`--release`.
 
 ## Remaining acceptance work
 
@@ -175,12 +177,13 @@ changed by this maintenance work. See [architecture](architecture.md) and the
 
 ## Workflow and compositor scenarios
 
-Recorded on 2026-10-03. The new harness owns a nested Niri window, synthetic
+Recorded on 2026-10-03. The workflow harness owns a nested Niri window, synthetic
 clients, fresh HOME/XDG directories and a private session bus. It sends input and
 captures only the nested output, stops its process groups and retains logs,
 PNGs, source video and JSON evidence under ignored `artifacts/scenario-*`.
 The installed desktop configuration is not edited. A private session bus does
-not hide system D-Bus information; the published Noctalia clip crops out its bar.
+not hide system D-Bus information; the published Noctalia clip crops out its bar
+and uses a generic temporary preset path.
 
 | Check | Result and scope |
 | --- | --- |
@@ -189,7 +192,7 @@ not hide system D-Bus information; the published Noctalia clip crops out its bar
 | iNiR/iRiS c08bb92 / Quickshell 0.3.1 | Unmodified `IrisNiriMotionGallery` and `NiriAnimationPresets` in a small host. Real virtual-pointer selection of Burst and Drift, Frost and Fragments, then Snappy; helper reports each active profile, resulting configs validate, base resize is preserved and prior animation file is restored exactly. The card previews are iRiS timing illustrations. |
 | DMS 1.6.2 / Quickshell 0.3.1 | Unmodified `DankLauncherV2Modal` and `PluginService` in a small host load the NiriFX adapter. Real keyboard search/selection applies Balanced, Undo restores exact config bytes, Studio opens as an app window. A separate check proves Undo refuses an externally edited config. This is launcher-component acceptance, not a full DMS daemon/session test. |
 | Noctalia 5.2.1 / Niri Animations 0.2.0 | Full isolated shell, 55 exported styles plus Burst and Drift. Real keyboard dropdown selection applies the independent profile, returns to base and validates both configs; fragment resize remains absent. |
-| Pinned native movement patch | Explosion at 1200 ms: left/right/left interruption leaves both window IDs in the expected final columns and solid color populations within 2% of the original; closing one moving client removes it and leaves the survivor intact. These checks do not assert seamless retargeting. |
+| Pinned native movement patch | Explosion at 1200 ms, release build, 50 fps recording: left/right/left interruption leaves both window IDs in the expected final columns and solid color populations within 2% of the original; closing one moving client removes it and leaves the survivor intact. The harness requires acknowledgements less than 600 ms apart and rejects IPC stalls of 150 ms or more. These checks do not assert seamless retargeting or measure GPU frame time. |
 
 The shell workflow found a standalone preflight bug with an existing inline
 `animations` block. Validation now uses a separate generated include, matching

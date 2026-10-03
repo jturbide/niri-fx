@@ -10,4 +10,5 @@ captures and identify stock Niri, Studio concept, or patched-compositor output.
 - [ ] Ran lint/format and the relevant unit, integration, browser or native checks.
 - [ ] Added an Unreleased changelog entry when user-visible behavior/docs changed.
 - [ ] Preserved resize opt-in, unrelated settings and custom preset choices.
-- [ ] Included no private configs, credentials, session URLs or personal captures.
+- [ ] Reviewed new files and media for private data, local paths and session URLs.
+- [ ] Wrote user-facing docs for newcomers and kept local notes/drafts out of the change.

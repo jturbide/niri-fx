@@ -51,7 +51,7 @@ be combined with effect overrides. `--config`, `--registry`, `--inir-root` and
 
 Use one owner for animation settings. A standalone include takes precedence over
 earlier shell settings, so it can override a shell's preset picker. Setup refuses
-a known existing manual Fragments include or an unowned destination file rather
+a known existing manual NiriFX include or an unowned destination file rather
 than stacking another override. Remove or migrate a manual installation first;
 see [the manual guide](getting-started.md#standalone-niri). Config managers outside
 the root config may need their own include ordering adjustments.
@@ -71,7 +71,7 @@ python3 -m niri_fx restore --apply       # Restore it
 python3 -m niri_fx restore --transaction SNAPSHOT # Preview a specific snapshot
 ```
 
-For iNiR, select your previous non-Fragments style **before restoring**. Registry
+For iNiR, select your previous non-NiriFX style **before restoring**. Registry
 restoration does not remove a shader already embedded in the active config.
 Standalone restoration removes the managed include and restores the original
 root config. Files created by setup are removed only if they still match the

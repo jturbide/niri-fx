@@ -124,10 +124,14 @@ class NestedSession:
                 return next((w for w in windows if w["pid"] == self.compositor.pid), None)
 
             outer = wait_for(outer_window, "owned outer window")
+            self.outer_id = outer["id"]
             for action in (
                 ("move-window-to-floating",),
                 ("set-window-width", str(self.width)),
                 ("set-window-height", str(self.height)),
+                # An occluded winit window can wait for host frame callbacks,
+                # stalling both rendering and IPC. Raise only our owned window.
+                ("focus-window",),
             ):
                 subprocess.run(
                     ["niri", "msg", "action", action[0], "--id", str(outer["id"]), *action[1:]],
@@ -185,6 +189,16 @@ class NestedSession:
         subprocess.run(["grim", "-o", "winit", str(dest)], env=self.env, check=True, timeout=10)
         return dest
 
+    def focus(self):
+        """Raise only this session's outer window before a timed recording."""
+        subprocess.run(
+            ["niri", "msg", "action", "focus-window", "--id", str(self.outer_id)],
+            env=self.host,
+            check=True,
+            capture_output=True,
+            timeout=10,
+        )
+
     def keys(self, *args):
         subprocess.run(["wtype", *args], env=self.env, check=True, timeout=15)
 
@@ -228,7 +242,7 @@ def source_hashes(*paths):
     return {path: hashlib.sha256((ROOT / path).read_bytes()).hexdigest() for path in paths}
 
 
-def encode_gif(source, dest, width=800, crop=None):
+def encode_gif(source, dest, width=800, crop=None, fps=20, colors=96):
     """Encode only an owned video; scaling/palette reduction is presentation, not evidence."""
     subprocess.run(
         [
@@ -240,8 +254,8 @@ def encode_gif(source, dest, width=800, crop=None):
             str(source),
             "-filter_complex",
             (f"crop={crop}," if crop else "")
-            + f"fps=20,scale={width}:-1:flags=lanczos,split[a][b];"
-            "[a]palettegen=max_colors=96:stats_mode=full[p];[b][p]paletteuse=dither=none",
+            + f"fps={fps},scale={width}:-1:flags=lanczos,split[a][b];"
+            f"[a]palettegen=max_colors={colors}:stats_mode=full[p];[b][p]paletteuse=dither=none",
             "-loop",
             "0",
             str(dest),
@@ -261,7 +275,8 @@ def save_clips(clips):
     )
 
 
-def record(session, name):
+def record(session, name, fps=20):
+    session.focus()
     video = session.root / f"{name}.mkv"
     process = session.launch(
         [
@@ -269,7 +284,7 @@ def record(session, name):
             "-o",
             "winit",
             "-r",
-            "20",
+            str(fps),
             "--no-damage",
             "-c",
             "libx264",

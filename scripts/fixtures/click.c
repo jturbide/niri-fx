@@ -5,10 +5,24 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 #include <wayland-client.h>
 #include "virtual-pointer.h"
 
 static struct zwlr_virtual_pointer_manager_v1 *manager;
+
+static uint32_t timestamp(void) {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return (uint32_t)((uint64_t)now.tv_sec * 1000 + now.tv_nsec / 1000000);
+}
+
+static void settle(void) {
+    // A server roundtrip does not mean the client has processed pointer enter
+    // or press yet. Give its event loop time before the next input transition.
+    const struct timespec delay = { .tv_nsec = 30000000 };
+    nanosleep(&delay, NULL);
+}
 
 static void global(void *data, struct wl_registry *registry, uint32_t name,
                    const char *interface, uint32_t version) {
@@ -44,13 +58,15 @@ int main(int argc, char **argv) {
     }
     struct zwlr_virtual_pointer_v1 *pointer =
         zwlr_virtual_pointer_manager_v1_create_virtual_pointer(manager, NULL);
-    zwlr_virtual_pointer_v1_motion_absolute(pointer, 0, values[0], values[1], values[2], values[3]);
+    zwlr_virtual_pointer_v1_motion_absolute(pointer, timestamp(), values[0], values[1], values[2], values[3]);
     zwlr_virtual_pointer_v1_frame(pointer);
     wl_display_roundtrip(display);
-    zwlr_virtual_pointer_v1_button(pointer, 1, 272, WL_POINTER_BUTTON_STATE_PRESSED);
+    settle();
+    zwlr_virtual_pointer_v1_button(pointer, timestamp(), 272, WL_POINTER_BUTTON_STATE_PRESSED);
     zwlr_virtual_pointer_v1_frame(pointer);
     wl_display_roundtrip(display);
-    zwlr_virtual_pointer_v1_button(pointer, 2, 272, WL_POINTER_BUTTON_STATE_RELEASED);
+    settle();
+    zwlr_virtual_pointer_v1_button(pointer, timestamp(), 272, WL_POINTER_BUTTON_STATE_RELEASED);
     zwlr_virtual_pointer_v1_frame(pointer);
     wl_display_roundtrip(display);
     zwlr_virtual_pointer_v1_destroy(pointer);

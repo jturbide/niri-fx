@@ -1,47 +1,45 @@
-# NiriFX identity
+# Name, description and brand assets
 
-**Name:** NiriFX. **Tagline:** Window effects for niri.
-**Short description:** Configurable fragment, slice and elastic window animations
-for niri, with a visual Studio, CLI and optional shell integrations.
+**Name:** NiriFX
 
-Use `niri-fx` for the repository, executable and application ID, and `niri_fx` for
-the Python package. Fragments, Slices and Elastic are effect families. Use the
-upstream spellings **niri**, **iNiR**, **iRiS**, **DankMaterialShell (DMS)**,
+**Tagline:** Window effects for niri.
+
+Use this short description in listings, articles or videos:
+
+> Customizable window animations for niri, with a visual editor, CLI and optional
+> shell integrations. Explore fragments, slices, wobble, pixels, wisps and more.
+
+The repository and command are `niri-fx`; the Python package is `niri_fx`.
+Use the upstream spellings **niri**, **iNiR**, **iRiS**, **DankMaterialShell (DMS)**,
 **Noctalia** and **Quickshell**.
 
 ## Assets
 
-- [Application mark](../niri_fx/assets/niri-fx.svg): original mint pixel N with
-  violet fragments; suitable for the Studio launcher and small icons.
-- [README banner](assets/nirifx-banner.svg): wordmark and the three effect families.
+- [Application icon](../niri_fx/assets/niri-fx.svg): mint and violet pixel artwork.
+- [README banner](assets/nirifx-banner.svg): NiriFX wordmark and effect artwork.
 
-The assets are SVG, use no external fonts or resources, and are covered by this
-project's MIT license. Keep the artwork legible against dark backgrounds and
-provide an accessible text label when it carries meaning. The glyph depicts
-fragments; it is not an upstream project's logo.
+Both are SVGs with no external fonts or resources and are covered by the
+project's [MIT license](../LICENSE). Keep the artwork legible and provide an
+accessible text label when it carries meaning.
 
-## Credits and support claims
+## Describing features and integrations
 
-| Wording | Appropriate use |
+NiriFX is built with **Python, GLSL and WebGL** for **niri**. Opening and closing
+work on stock Niri. Fragment resize is opt-in, and native movement/swaps require
+the separate experimental compositor patch.
+
+| Integration | What it provides |
 | --- | --- |
-| Built with Python, GLSL and WebGL | Actual implementation: generator/server, compositor shaders and browser preview. |
-| Built for niri | The compositor target; stock open/close, optional fragment resize. |
-| Integrates with iNiR/iRiS | External preset registration and Studio save. |
-| Exports presets for Noctalia | Its existing Niri Animations picker consumes the KDL folder. File contract and Noctalia 5.2.1 picker selection/return to base checked in isolation. |
-| Works at the niri config layer with DMS | Standalone KDL include. No DMS-native settings plugin or runtime acceptance claim. |
-| Quickshell ecosystem | iNiR and DMS use Quickshell. NiriFX itself is Python/WebGL, not a QML shell or Quickshell plugin. |
-| Compiz-inspired elastic motion | Timed spring-like warping. Pointer-driven spring physics is not implemented. |
+| iNiR/iRiS | Preset registration and saving from Studio to the shell's style picker |
+| DankMaterialShell | An optional launcher adapter for preset search, Studio and Undo |
+| Noctalia | KDL preset files for its existing Niri Animations picker |
+| Other bars or shells on Niri | Standalone setup and optional CLI launchers |
 
-Use plain credit links, not upstream logos or “official partner” badges. Native
-move/swap shaders require the separate patched compositor. The project has no
-Hyprland, KWin or GNOME backend. See [related projects](related-projects.md) and
-[third-party notices](../THIRD_PARTY.md).
+Studio is a web editor that can open in a dedicated app-style window. Quickshell
+is optional; installing a shell does not add support for another compositor.
+See [compatibility](compatibility.md) for tested versions and limitations.
 
-## Discovery vocabulary
-
-Package metadata and desktop search include animation, window effects, shaders,
-GLSL, WebGL, fragments, pixels, particles, slices, wobble, niri, Wayland, iNiR,
-iRiS, Quickshell, DankMaterialShell/DMS and Noctalia. GitHub topics use lowercase,
-searchable names. Shell keywords describe integration targets, not dependencies
-or endorsements. Keep descriptions readable; do not repeat keyword lists in
-unrelated prose or use misspellings as project names.
+NiriFX is independent of these projects. Link to upstream projects when giving
+credit; do not present their names or logos as endorsements. See
+[related projects](related-projects.md) and [third-party notices](../THIRD_PARTY.md)
+for references and attribution.

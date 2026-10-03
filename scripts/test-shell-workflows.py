@@ -152,7 +152,8 @@ def dms(session, args):
 def noctalia(session, args):
     if not args.binary or not args.assets or not args.plugin:
         raise ValueError("Noctalia needs --binary, --assets and --plugin")
-    presets = session.root / "presets"
+    # The picker displays this path. Keep personal checkout paths out of demos.
+    presets = Path(session.runtime.name) / "presets"
     run(
         session,
         sys.executable,
@@ -326,6 +327,7 @@ def iris(session, args):
     if args.record:
         recorder, video = record(session, "workflow-iris")
     for preset in [*profiles, {"id": "snappy"}]:
+        session.focus()
         point = json.loads(ipc("locate", preset["id"]))
         assert point and 0 <= point["x"] < 1060 and 0 <= point["y"] < 740, point
         time.sleep(0.6)
