@@ -113,5 +113,6 @@ try{
  console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports and exact imported values`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
 }finally{
  ws?.close();if(browser.exitCode===null){const exited=new Promise(resolve=>browser.once('exit',resolve));browser.kill('SIGTERM');await exited;}
- rmSync(profile,{recursive:true,force:true});
+ // Chrome helpers may flush their profile briefly after the browser exits.
+ rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:100});
 }

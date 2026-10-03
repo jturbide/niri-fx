@@ -115,5 +115,6 @@ try{
  console.log('Frame sources: '+scratch);
 }finally{
  ws?.close();if(browser.exitCode===null){const exited=new Promise(resolve=>browser.once('exit',resolve));browser.kill('SIGTERM');await exited;}
- rmSync(profile,{recursive:true,force:true});
+ // Chrome helpers may flush their profile briefly after the browser exits.
+ rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:100});
 }

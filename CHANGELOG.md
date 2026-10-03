@@ -46,6 +46,11 @@ First public prerelease. Earlier versions were private development milestones.
 - Added package project links and made the source archive include its demo assets,
   experimental patch and corresponding license notices.
 
+### Fixed
+
+- Retry temporary Chromium profile removal while helper processes finish writing,
+  preventing successful browser checks from failing during cleanup.
+
 Migration: re-register the built-in pack and reselect a style in iRiS, or
 regenerate your standalone include. Existing JSON remains compatible; absent
 new fields use centered origins, simultaneous release and Full Breakup. Resize
