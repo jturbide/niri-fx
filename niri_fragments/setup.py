@@ -14,7 +14,7 @@ import sys
 import tempfile
 import uuid
 
-from .effects import render_kdl
+from .effects import effect_document, render_kdl
 from .integration import make_presets, make_custom_preset, merge_registry, read_shell_presets
 
 BEGIN = "// BEGIN niri-fragments managed include"
@@ -103,8 +103,8 @@ def launcher_change():
     root = str(Path(__file__).resolve().parents[1])
     if any(c in root + sys.executable for c in "\n\r"):
         raise ValueError("Launcher paths cannot contain newlines")
-    content = ("[Desktop Entry]\nType=Application\nName=Niri Fragments Studio\n"
-               "Comment=Customize window fragment animations\n"
+    content = ("[Desktop Entry]\nType=Application\nName=NiriFX Studio\n"
+               "Comment=Customize Niri window animations\n"
                f"Exec={quote(sys.executable)} -m niri_fragments studio\n"
                f"Path={root.replace(chr(92), chr(92) * 2)}\n"
                "Icon=preferences-desktop-effects\nTerminal=false\nCategories=Settings;DesktopSettings;\n"
@@ -125,8 +125,7 @@ def plan_setup(args, effect, custom=None):
         if custom:
             generated = [make_custom_preset(shell, custom, args.base)]
         elif args.name:
-            from dataclasses import asdict
-            generated = [make_custom_preset(shell, {"schema": 1, "name": args.name, "effect": asdict(effect)}, args.base)]
+            generated = [make_custom_preset(shell, effect_document(args.name, effect), args.base)]
         else:
             generated = make_presets(shell, args.base)
         registry = Path(args.registry).expanduser().resolve()
@@ -305,4 +304,4 @@ def doctor(args):
     return {"checks": checks, "healthy": all(c["ok"] is not False for c in checks),
             "resize": "Opt-in; all built-in presets default off.",
             "movement": "Requires the separate experimental compositor; setup never installs it.",
-            "next": "Run niri-fragments setup to review a plan, then repeat with --apply."}
+            "next": "Run niri-fx setup to review a plan, then repeat with --apply."}

@@ -10,7 +10,7 @@ import sys
 import tempfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from niri_fragments.effects import PRESETS, RESIZE_MODES, render_kdl, shader, resize_shader, movement_shader
+from niri_fragments.effects import FAMILIES, PRESETS, RESIZE_MODES, render_kdl, shader, resize_shader, movement_shader
 
 HEADER = """#version 100
 precision highp float;
@@ -42,16 +42,21 @@ def main():
         root = Path(directory)
         for name, effect in PRESETS.items():
             if validator:
-                sources = [("open_color", shader(effect, True)), ("close_color", shader(effect, False)),
-                           ("move_color", movement_shader(effect))]
-                sources.extend(("resize_color", resize_shader(replace(effect, resize_mode=mode))) for mode in RESIZE_MODES)
+                sources = [("open_color", shader(effect, True)), ("close_color", shader(effect, False))]
+                if FAMILIES[effect.family]["movement"]:
+                    sources.append(("move_color", movement_shader(effect)))
+                if FAMILIES[effect.family]["resize"]:
+                    sources.extend(("resize_color", resize_shader(replace(effect, resize_mode=mode))) for mode in RESIZE_MODES)
                 for index, (entry, source) in enumerate(sources):
                     frag = root / f"{name}-{entry}-{index}.frag"
                     frag.write_text(HEADER + source + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n")
                     subprocess.run([validator, "-S", "frag", str(frag)], check=True)
             if niri:
                 config = root / f"{name}.kdl"
-                for variant in [effect] + [replace(effect, resize=True, resize_mode=mode) for mode in RESIZE_MODES]:
+                variants = [effect]
+                if FAMILIES[effect.family]["resize"]:
+                    variants.extend(replace(effect, resize=True, resize_mode=mode) for mode in RESIZE_MODES)
+                for variant in variants:
                     config.write_text(render_kdl(variant))
                     subprocess.run([niri, "validate", "-c", str(config)], check=True, capture_output=True)
             print(f"OK {name}")

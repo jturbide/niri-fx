@@ -17,8 +17,8 @@ target = data / ("applications/niri-fragments-movement-demo.desktop" if args.mov
                  else "applications/niri-fragments-studio.desktop")
 python = sys.executable.replace("\\", "\\\\").replace('"', '\\"').replace("`", "\\`").replace("$", "\\$")
 working_directory = str(root).replace("\\", "\\\\").replace("\n", "\\n")
-name = "Niri Fragments Movement Demo" if args.movement_demo else "Niri Fragments Studio"
-comment = "Try experimental particle swaps in a separate Niri window" if args.movement_demo else "Customize window gravity, particles, and rotation"
+name = "NiriFX Movement Demo" if args.movement_demo else "NiriFX Studio"
+comment = "Try experimental particle swaps in a separate Niri window" if args.movement_demo else "Customize fragment and slice window animations"
 command = 'scripts/nested-demo.py' if args.movement_demo else '-m niri_fragments studio'
 content = f"""[Desktop Entry]
 Type=Application

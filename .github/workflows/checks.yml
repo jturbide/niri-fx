@@ -38,6 +38,10 @@ jobs:
           cd /tmp
           /tmp/niri-fragments-package/bin/niri-fragments render --preset balanced > fragments.kdl
           /tmp/niri-fragments-package/bin/niri-fragments preview --output fragments.html
+          /tmp/niri-fragments-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
+          /tmp/niri-fragments-package/bin/niri-fragments render --preset diagonal-shear > slices-legacy.kdl
+          cmp slices.kdl slices-legacy.kdl
+          /tmp/niri-fragments-package/bin/python -m niri_fx --version
 
   browser:
     runs-on: ubuntu-24.04

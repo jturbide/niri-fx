@@ -2,10 +2,10 @@
 <html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Niri Fragments Studio</title>
+<title>NiriFX Studio</title>
 <style>
 :root{color-scheme:dark;font:15px system-ui,sans-serif;background:#10151e;color:#e8ecf4}
-body{max-width:1300px;margin:22px auto;padding:0 24px}header{display:flex;justify-content:space-between;align-items:center}.badge{font-size:11px;letter-spacing:1.5px;color:#93d9ce;background:#1b3739;padding:7px 10px;border-radius:20px}.tabs{display:flex;gap:8px;margin:0 0 12px}.tabs button[aria-pressed=true]{background:#305c61;border-color:#8ed8d0}.tabs small{color:inherit;opacity:.65}aside{max-height:calc(100vh - 130px);overflow:auto}#concept-note{padding:12px 14px;background:#302d40;border-radius:8px;color:#d7c8f0;font-size:13px}canvas[hidden],p[hidden]{display:none}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #8ed8d0;outline-offset:3px}h1{font-size:28px;font-weight:600;letter-spacing:-.6px;margin:0 0 6px}
+body{max-width:1300px;margin:22px auto;padding:0 24px}header{display:flex;justify-content:space-between;align-items:center}.badge{font-size:11px;letter-spacing:1.5px;color:#93d9ce;background:#1b3739;padding:7px 10px;border-radius:20px}.tabs{display:flex;gap:8px;margin:0 0 12px}.tabs button[aria-pressed=true]{background:#305c61;border-color:#8ed8d0}.tabs small{color:inherit;opacity:.65}aside{max-height:calc(100vh - 130px);overflow:auto}#concept-note{padding:12px 14px;background:#302d40;border-radius:8px;color:#d7c8f0;font-size:13px}[hidden]{display:none!important}button:focus-visible,select:focus-visible,input:focus-visible{outline:2px solid #8ed8d0;outline-offset:3px}h1{font-size:28px;font-weight:600;letter-spacing:-.6px;margin:0 0 6px}
 p{color:#afbdd0;line-height:1.5;margin:8px 0 18px}.layout{display:grid;grid-template-columns:minmax(0,1fr) 310px;gap:24px;align-items:start}
 canvas{width:100%;height:auto;max-height:calc(100vh - 400px);min-height:240px;object-fit:contain;display:block;background:radial-gradient(ellipse at center,#263646,#151d29);border-radius:14px;border:1px solid #334155}
 .controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:16px 0}button,select,input[type=text]{font:inherit;padding:9px 12px;background:#233647;color:#e0edf5;border:1px solid #3c5368;border-radius:7px}
@@ -14,13 +14,13 @@ input[type=range]{min-width:0;width:100%;accent-color:#8ed8d0}aside{background:#
 .divider{border-top:1px solid #334155;margin:18px 0}#error{color:#ffb4ab;white-space:pre-wrap}#status{color:#a3e4c5;min-height:24px}small{color:#98a6bb}#caption{font-size:14px}
 @media(max-width:900px){.layout{grid-template-columns:1fr}aside{display:grid;grid-template-columns:1fr 1fr;gap:0 20px}aside .wide{grid-column:1/-1}}
 </style>
-<header><h1>Niri Fragments Studio</h1><span class="badge">LOCAL STUDIO</span></header>
-<p>Shape how windows fall apart and come together. Save your own style to iRiS.</p>
+<header><h1>NiriFX Studio</h1><span class="badge">LOCAL STUDIO</span></header>
+<p>Shape how windows open and close. Explore fragments and slices, then save your own style.</p>
 <div class="layout"><main>
 <nav class="tabs" aria-label="Preview mode"><button data-mode="effect" aria-pressed="true">Open &amp; close</button><button data-mode="resize" aria-pressed="false">Resize</button><button data-mode="move" aria-pressed="false">Move <small>concept</small></button><button data-mode="swap" aria-pressed="false">Swap <small>concept</small></button></nav>
 <p id="concept-note" hidden>Design preview only. Niri needs a compositor extension for these movements. Saving and exporting affect open/close and enabled resize animations. The experimental native movement demo runs separately.</p>
 <canvas id="motion-stage" width="1000" height="760" aria-label="Window move and swap concept" hidden></canvas>
-<canvas id="stage" width="1000" height="760" aria-label="Interactive preview of window gravity and rotating fragments"></canvas>
+<canvas id="stage" width="1000" height="760" aria-label="Interactive preview of NiriFX window effects"></canvas>
 <div class="controls"><button id="open">Reconstruct</button><button id="close">Deconstruct</button><button id="seed">New variation</button>
 <label><span id="timeline-label">Breakup</span> <input id="progress" type="range" min="0" max="1000" value="450"><output id="amount">45%</output></label></div>
 <p id="caption"></p>
@@ -29,8 +29,10 @@ input[type=range]{min-width:0;width:100%;accent-color:#8ed8d0}aside{background:#
 <small>Saving adds a style to Settings → Windows → Movement → Style. Your current animation stays active until you select another style there.</small>
 <pre id="error" role="alert"></pre>
 </main><aside>
+<div class="wide"><label for="family">Effect family</label><select id="family"><option value="fragments">Fragments</option><option value="slices">Slices</option></select><small id="family-note"></small></div>
 <div class="wide"><label for="preset">Starting style</label><select id="preset"></select></div>
 <div class="wide"><label for="name">Your preset name</label><input id="name" type="text" maxlength="48" value="My Fragments" autocomplete="off"></div>
+<div id="fragment-controls" class="wide">
 <div><label for="gravity">Gravity direction</label><select id="gravity"><option value="none">None</option><option value="down">Down / Earth</option><option value="up">Up</option><option value="left">Left</option><option value="right">Right</option><option value="center">Center / Black Hole</option><option value="space">Outward / Space</option></select></div>
 <div><label for="gravity_strength">Gravity strength <output id="gravity_strength-value"></output></label><input id="gravity_strength" type="range" min="0" max="3" step="0.05"></div>
 <div><label for="density">Particle sizing</label><select id="density"><option value="count">Target particle count</option><option value="tile">Fixed square size</option></select></div>
@@ -46,21 +48,32 @@ input[type=range]{min-width:0;width:100%;accent-color:#8ed8d0}aside{background:#
 <div><label for="origin_x">Burst center · horizontal <output id="origin_x-value"></output></label><input id="origin_x" type="range" min="0" max="1" step="0.01"></div>
 <div><label for="origin_y">Burst center · vertical <output id="origin_y-value"></output></label><input id="origin_y" type="range" min="0" max="1" step="0.01"></div>
 <div><label for="swirl">Orbit around center <output id="swirl-value"></output></label><input id="swirl" type="range" min="-360" max="360" step="5"></div>
+</div>
+<div id="slice-controls" class="wide" hidden>
+<div><label for="slice_count">Slice count <output id="slice_count-value"></output></label><input id="slice_count" type="range" min="2" max="48" step="1"></div>
+<div><label for="slice_angle">Slice angle <output id="slice_angle-value"></output></label><input id="slice_angle" type="range" min="-90" max="90" step="1"><small>0° is horizontal; ±90° is vertical.</small></div>
+<div><label for="slice_direction">Travel direction</label><select id="slice_direction"><option value="outward">Split outward</option><option value="alternate">Alternate strips</option><option value="positive">Along the angle</option><option value="negative">Against the angle</option></select></div>
+<div><label for="slice_distance">Travel distance <output id="slice_distance-value"></output></label><input id="slice_distance" type="range" min="0" max="600" step="1"></div>
+<div><label for="slice_stagger">Release stagger <output id="slice_stagger-value"></output></label><input id="slice_stagger" type="range" min="0" max="0.75" step="0.01"></div>
+<div><label for="slice_rotation">Strip rotation <output id="slice_rotation-value"></output></label><input id="slice_rotation" type="range" min="-60" max="60" step="1"></div>
+</div>
 <div><label for="open_ms">Opening time <output id="open_ms-value"></output></label><input id="open_ms" type="range" min="100" max="1500" step="10"></div>
 <div><label for="close_ms">Closing time <output id="close_ms-value"></output></label><input id="close_ms" type="range" min="100" max="1500" step="10"></div>
+<div id="resize-controls" class="wide">
 <div class="wide divider"></div>
 <div class="wide"><label><input id="resize" type="checkbox"> Fragment windows when resizing</label><small>Supported animated resizes, such as changing column width. Compact fragments stay within the changing window.</small></div>
 <div><label for="resize_mode">Resize style</label><select id="resize_mode"><option value="full">Full breakup</option><option value="edge">Edge rebuild</option><option value="soft">Soft reflow</option></select><small>Choosing a style does not enable resize.</small></div>
 <div><label for="resize_ms">Resize time <output id="resize_ms-value"></output></label><input id="resize_ms" type="range" min="100" max="1500" step="10"></div>
 <div><label for="resize_strength">Resize breakup <output id="resize_strength-value"></output></label><input id="resize_strength" type="range" min="0" max="1" step="0.05"></div>
-<div class="wide"><small>Count is approximate so the pieces stay square. Gravity is an artistic motion control, not a physical simulation. This preview uses the real effect shader; monitor clipping and desktop performance can differ.</small></div>
+</div>
+<div id="fragment-note" class="wide"><small>Count is approximate so the pieces stay square. Gravity is an artistic motion control, not a physical simulation. This preview uses the real effect shader; monitor clipping and desktop performance can differ.</small></div>
 </aside></div>
 <script>
 @MOTION_JS@
 const catalog = @EFFECT_JSON@;
 const byId=id=>document.getElementById(id);
-const numeric=['tile_size','scatter','gravity_strength','particles','spin','swirl','open_ms','close_ms','dispersion','stagger','resize_ms','resize_strength','origin_x','origin_y','wave_span'];
-const units={tile_size:' px',scatter:' px',gravity_strength:'×',particles:'',spin:'°',swirl:'°',open_ms:' ms',close_ms:' ms',dispersion:'',stagger:'',resize_ms:' ms',resize_strength:'',origin_x:'',origin_y:'',wave_span:''};
+const numeric=['tile_size','scatter','gravity_strength','particles','spin','swirl','open_ms','close_ms','dispersion','stagger','resize_ms','resize_strength','origin_x','origin_y','wave_span','slice_count','slice_angle','slice_distance','slice_stagger','slice_rotation'];
+const units={tile_size:' px',scatter:' px',gravity_strength:'×',particles:'',spin:'°',swirl:'°',open_ms:' ms',close_ms:' ms',dispersion:'',stagger:'',resize_ms:' ms',resize_strength:'',origin_x:'',origin_y:'',wave_span:'',slice_count:'',slice_angle:'°',slice_distance:' px',slice_stagger:'',slice_rotation:'°'};
 let parameters={...catalog.parameters}, frame=0, seed=0.37, program=null, lastSource='', mode='effect';
 const query=new URLSearchParams(location.search);
 if(catalog.presets[query.get('preset')]) parameters={...catalog.presets[query.get('preset')]};
@@ -72,12 +85,18 @@ for(const name of Object.keys(catalog.presets)){const option=document.createElem
 byId('preset').value=query.get('preset')||(catalog.presets[catalog.name]?catalog.name:'');
 byId('name').value=catalog.presets[catalog.name]?'My '+title(byId('preset').value):catalog.name;
 function populate(){
- for(const key of numeric){byId(key).step=(key.endsWith('_ms')||key==='particles')?'1':'any';byId(key).value=key==='particles'?(parameters.particles||240):parameters[key];}
- for(const key of ['gravity','rotation','release','resize_mode']) byId(key).value=parameters[key];
+ for(const key of numeric){byId(key).step=(key.endsWith('_ms')||['particles','slice_count'].includes(key))?'1':'any';byId(key).value=key==='particles'?(parameters.particles||240):parameters[key];}
+ for(const key of ['gravity','rotation','release','resize_mode','slice_direction']) byId(key).value=parameters[key];
  byId('resize').checked=parameters.resize;
- byId('density').value=parameters.particles?'count':'tile'; labels();
+ byId('density').value=parameters.particles?'count':'tile';byId('family').value=parameters.family; labels();
+ if((mode==='resize'&&!catalog.families[parameters.family].resize)||(['move','swap'].includes(mode)&&!catalog.families[parameters.family].movement))document.querySelector('[data-mode=effect]').click();
 }
 function labels(){
+ const fragment=parameters.family==='fragments',capabilities=catalog.families[parameters.family];
+ byId('fragment-controls').hidden=!fragment;byId('fragment-note').hidden=!fragment;byId('slice-controls').hidden=fragment;byId('resize-controls').hidden=!capabilities.resize;
+ byId('family-note').textContent=fragment?'Open, close and optional resize. Move/swap previews are experimental concepts.':'Open and close. Slice resize and movement are not supported in this release.';
+ for(const option of byId('preset').options)option.hidden=!!option.value&&catalog.presets[option.value].family!==parameters.family;
+ for(const tab of document.querySelectorAll('[data-mode]'))tab.disabled=tab.dataset.mode==='resize'?!capabilities.resize:['move','swap'].includes(tab.dataset.mode)?!capabilities.movement:false;
  byId('count-control').hidden=byId('density').value!=='count';byId('tile-control').hidden=byId('density').value!=='tile';
  for(const key of numeric) byId(key+'-value').textContent=Number(Number(byId(key).value).toFixed(3))+units[key];
  for(const key of ['scatter','dispersion','stagger','swirl','open_ms','close_ms','origin_x','origin_y','release','wave_span'])byId(key).disabled=mode==='resize';
@@ -85,32 +104,35 @@ function labels(){
  byId('gravity_strength').disabled=mode==='resize'||byId('gravity').value==='none';byId('spin').disabled=byId('rotation').value==='none';
 }
 function shaderFor(p,opening,resizing=false){
+ if(resizing&&!catalog.families[p.family].resize)throw new Error('This effect family does not support resize.');
  const classic=p.gravity==='none'&&!p.particles&&p.rotation==='none'&&p.swirl===0&&p.dispersion===0&&p.stagger===0&&p.release==='together'&&p.origin_x===0.5&&p.origin_y===0.5;
- const tokens={RELEASE:String(catalog.releases.indexOf(p.release)),WAVE_SPAN:p.wave_span.toFixed(6),ORIGIN_X:p.origin_x.toFixed(6),ORIGIN_Y:p.origin_y.toFixed(6),RESIZE_MODE:String(catalog.resize_modes.indexOf(p.resize_mode)),RESIZE:p.resize_strength.toFixed(6),TILE:p.tile_size.toFixed(6),SCATTER:p.scatter.toFixed(6),PARTICLES:p.particles.toFixed(6),GRAVITY:String(catalog.gravities.indexOf(p.gravity)),STRENGTH:p.gravity_strength.toFixed(6),ROTATION:String(catalog.rotations.indexOf(p.rotation)),SPIN:p.spin.toFixed(6),SWIRL:p.swirl.toFixed(6),DISPERSION:p.dispersion.toFixed(6),STAGGER:p.stagger.toFixed(6),ENTRY:opening?'open_color':'close_color',PROGRESS:opening?'1.0 - niri_clamped_progress':'niri_clamped_progress'};
- return (resizing?catalog.templates.resize:classic?catalog.templates.classic:catalog.templates.gravity).replace(/@([A-Z_]+)@/g,(_,key)=>tokens[key]);
+ const tokens={SLICE_COUNT:String(p.slice_count),SLICE_ANGLE:p.slice_angle.toFixed(6),SLICE_DISTANCE:p.slice_distance.toFixed(6),SLICE_STAGGER:p.slice_stagger.toFixed(6),SLICE_ROTATION:p.slice_rotation.toFixed(6),SLICE_DIRECTION:String(catalog.slice_directions.indexOf(p.slice_direction)),RELEASE:String(catalog.releases.indexOf(p.release)),WAVE_SPAN:p.wave_span.toFixed(6),ORIGIN_X:p.origin_x.toFixed(6),ORIGIN_Y:p.origin_y.toFixed(6),RESIZE_MODE:String(catalog.resize_modes.indexOf(p.resize_mode)),RESIZE:p.resize_strength.toFixed(6),TILE:p.tile_size.toFixed(6),SCATTER:p.scatter.toFixed(6),PARTICLES:p.particles.toFixed(6),GRAVITY:String(catalog.gravities.indexOf(p.gravity)),STRENGTH:p.gravity_strength.toFixed(6),ROTATION:String(catalog.rotations.indexOf(p.rotation)),SPIN:p.spin.toFixed(6),SWIRL:p.swirl.toFixed(6),DISPERSION:p.dispersion.toFixed(6),STAGGER:p.stagger.toFixed(6),ENTRY:opening?'open_color':'close_color',PROGRESS:opening?'1.0 - niri_clamped_progress':'niri_clamped_progress'};
+ return (resizing?catalog.templates.resize:p.family==='slices'?catalog.templates.slices:classic?catalog.templates.classic:catalog.templates.gravity).replace(/@([A-Z_]+)@/g,(_,key)=>tokens[key]);
 }
 function normalizePreset(doc){
- if(!doc||Array.isArray(doc)||doc.schema!==1||!doc.effect||typeof doc.effect!=='object'||Array.isArray(doc.effect))throw new Error('Expected schema: 1, name and an effect object.');
+ if(!doc||Array.isArray(doc)||![1,2].includes(doc.schema)||!doc.effect||typeof doc.effect!=='object'||Array.isArray(doc.effect))throw new Error('Expected schema: 1 or 2, name and an effect object.');
+ if(doc.schema===1&&(doc.effect.family??'fragments')!=='fragments')throw new Error('Non-fragment families require preset schema: 2.');
  if(typeof doc.name!=='string'||!/^[A-Za-z0-9][A-Za-z0-9 _-]{0,47}$/.test(doc.name))throw new Error('Name must be 1–48 letters, numbers, spaces, hyphens or underscores.');
  for(const key of Object.keys(doc.effect))if(!Object.hasOwn(catalog.defaults,key))throw new Error('Unsupported effect parameter: '+key);
  const effect={...catalog.defaults,...doc.effect};
  for(const [key,[low,high]] of Object.entries(catalog.limits)){
   const value=effect[key];if(typeof value!=='number'||!Number.isFinite(value)||value<low||value>high)throw new Error(key+' must be a finite number from '+low+' to '+high+'.');
-  if((key.endsWith('_ms')||key==='particles')&&!Number.isInteger(value))throw new Error(key+' must be a whole number.');
+  if((key.endsWith('_ms')||['particles','slice_count'].includes(key))&&!Number.isInteger(value))throw new Error(key+' must be a whole number.');
  }
  if(effect.particles!==0&&effect.particles<16)throw new Error('Particle count must be zero or at least 16.');
  if(typeof effect.resize!=='boolean')throw new Error('Resize must be true or false.');
- for(const [key,choices] of Object.entries({gravity:catalog.gravities,rotation:catalog.rotations,release:catalog.releases,resize_mode:catalog.resize_modes}))if(!choices.includes(effect[key]))throw new Error('Unknown '+key+'.');
- return {schema:1,name:doc.name,effect};
+ for(const [key,choices] of Object.entries({family:Object.keys(catalog.families),slice_direction:catalog.slice_directions,gravity:catalog.gravities,rotation:catalog.rotations,release:catalog.releases,resize_mode:catalog.resize_modes}))if(!choices.includes(effect[key]))throw new Error('Unknown '+key+'.');
+ if(effect.resize&&!catalog.families[effect.family].resize)throw new Error('This effect family does not support resize.');
+ return {schema:doc.schema,name:doc.name,effect};
 }
 byId('import').onclick=()=>byId('import-file').click();
-function effectDocument(){return {schema:1,name:byId('name').value.trim(),effect:{...parameters}};}
+function effectDocument(){const effect={...parameters};if(effect.family==='fragments')for(const key of catalog.family_fields)delete effect[key];return {schema:parameters.family==='fragments'?1:2,name:byId('name').value.trim(),effect};}
 function download(name,text,type){const url=URL.createObjectURL(new Blob([text],{type}));const link=document.createElement('a');link.href=url;link.download=name;link.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-byId('export').onclick=()=>download('niri-fragments-preset.json',JSON.stringify(effectDocument(),null,2)+'\n','application/json');
-byId('kdl').onclick=()=>{let result='// Generated by Niri Fragments Studio\nanimations {\n';for(const opening of [true,false]) result+=`    window-${opening?'open':'close'} {\n        duration-ms ${opening?parameters.open_ms:parameters.close_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,opening)}\n        "\n    }\n`;if(parameters.resize)result+=`    window-resize {\n        duration-ms ${parameters.resize_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,false,true)}\n        "\n    }\n`;download('fragments.kdl',result+'}\n','text/plain');};
+byId('export').onclick=()=>download('nirifx-preset.json',JSON.stringify(effectDocument(),null,2)+'\n','application/json');
+byId('kdl').onclick=()=>{let result='// Generated by NiriFX Studio\nanimations {\n';for(const opening of [true,false]) result+=`    window-${opening?'open':'close'} {\n        duration-ms ${opening?parameters.open_ms:parameters.close_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,opening)}\n        "\n    }\n`;if(parameters.resize)result+=`    window-resize {\n        duration-ms ${parameters.resize_ms}\n        curve "linear"\n        custom-shader r"\n${shaderFor(parameters,false,true)}\n        "\n    }\n`;download('nirifx.kdl',result+'}\n','text/plain');};
 byId('save').disabled=!catalog.connection;
 if(catalog.connection)setInterval(()=>fetch('/ping?token='+encodeURIComponent(catalog.connection.token)).catch(()=>{}),45000);
-if(!catalog.connection) byId('status').textContent='Offline preview: export a preset, or run “python3 -m niri_fragments studio” to save directly to iRiS.';
+if(!catalog.connection) byId('status').textContent='Offline preview: export a preset, or run “python3 -m niri_fx studio” to save directly to iRiS.';
 byId('save').onclick=async()=>{
  byId('save').disabled=true;byId('error').textContent='';
  try{const response=await fetch('/save',{method:'POST',headers:{'Content-Type':'application/json','X-Fragments-Token':catalog.connection.token},body:JSON.stringify(effectDocument())});const data=await response.json();if(!response.ok)throw new Error(data.error);byId('status').textContent=`Saved ${data.name}. Select it in iRiS Settings → Windows → Movement → Style.`;}
@@ -149,15 +171,16 @@ try{
   for(const name of ['niri_geo_to_tex','niri_geo_to_tex_prev','niri_geo_to_tex_next'])gl.uniformMatrix3fv(gl.getUniformLocation(program,name),false,new Float32Array([1,0,0,0,1,0,0,0,1]));
  }
  function draw(value){progress=value;if(['move','swap'].includes(mode))motionPreview.draw(value,mode,parameters,seed);else{gl.uniformMatrix3fv(gl.getUniformLocation(program,'niri_curr_geo_to_next_geo'),false,new Float32Array([(600+200*value)/800,0,0,0,(380+60*value)/440,0,0,0,1]));gl.uniform1f(gl.getUniformLocation(program,'niri_clamped_progress'),value);gl.uniform1f(gl.getUniformLocation(program,'niri_random_seed'),seed);gl.drawArrays(gl.TRIANGLES,0,6);}byId('progress').value=Math.round(value*1000);byId('amount').textContent=Math.round(value*100)+'%';}
- function refresh(){try{rebuild();draw(progress);byId('error').textContent='';const tile=parameters.particles?Math.max(4,Math.sqrt(600*380/parameters.particles)):parameters.tile_size;const count=Math.ceil(600/tile)*Math.ceil(380/tile);byId('caption').textContent=mode==='resize'?`Resize · ${parameters.resize_ms} ms · ${parameters.resize?'Included when you save':'Preview only — resize is disabled for this style'}`:`${count} pieces in this window · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;document.documentElement.dataset.shaderStatus='ready';}catch(error){byId('error').textContent=error.message;document.documentElement.dataset.shaderStatus='error';}}
- function update(){cancelAnimationFrame(frame);parameters.resize=byId('resize').checked;for(const key of numeric)parameters[key]=Number(byId(key).value);for(const key of ['gravity','rotation','release','resize_mode'])parameters[key]=byId(key).value;if(byId('density').value==='tile')parameters.particles=0;labels();refresh();}
- for(const id of [...numeric,'gravity','rotation','release','resize_mode','density','resize'])byId(id).addEventListener('input',update);
+ function refresh(){try{rebuild();draw(progress);byId('error').textContent='';const tile=parameters.particles?Math.max(4,Math.sqrt(600*380/parameters.particles)):parameters.tile_size;const count=Math.ceil(600/tile)*Math.ceil(380/tile);byId('caption').textContent=mode==='resize'?`Resize · ${parameters.resize_ms} ms · ${parameters.resize?'Included when you save':'Preview only — resize is disabled for this style'}`:`${parameters.family==='slices'?parameters.slice_count+' slices':count+' pieces in this window'} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;document.documentElement.dataset.shaderStatus='ready';}catch(error){byId('error').textContent=error.message;document.documentElement.dataset.shaderStatus='error';}}
+ function update(){cancelAnimationFrame(frame);parameters.resize=byId('resize').checked;for(const key of numeric)parameters[key]=Number(byId(key).value);for(const key of ['gravity','rotation','release','resize_mode','slice_direction'])parameters[key]=byId(key).value;if(byId('density').value==='tile')parameters.particles=0;labels();refresh();}
+ for(const id of [...numeric,'gravity','rotation','release','resize_mode','slice_direction','density','resize'])byId(id).addEventListener('input',update);
+ byId('family').onchange=()=>{byId('preset').value=Object.keys(catalog.presets).find(name=>catalog.presets[name].family===byId('family').value);byId('preset').dispatchEvent(new Event('change'));};
  byId('preset').onchange=()=>{if(!byId('preset').value)return;cancelAnimationFrame(frame);parameters={...catalog.presets[byId('preset').value]};byId('name').value='My '+title(byId('preset').value);populate();refresh();};
  function animate(opening){cancelAnimationFrame(frame);const start=performance.now(),duration=mode==='effect'?(opening?parameters.open_ms:parameters.close_ms):mode==='resize'?parameters.resize_ms:Math.max(900,parameters.open_ms+parameters.close_ms);function tick(now){const p=Math.min(1,(now-start)/duration);draw(opening?1-p:p);if(p<1)frame=requestAnimationFrame(tick);}frame=requestAnimationFrame(tick);}
  byId('open').onclick=()=>animate(true);byId('close').onclick=()=>animate(false);byId('seed').onclick=()=>{seed=Math.random();draw(progress);};
  byId('progress').oninput=()=>{cancelAnimationFrame(frame);draw(Number(byId('progress').value)/1000);};
  for(const button of document.querySelectorAll('[data-mode]'))button.onclick=()=>{
-  cancelAnimationFrame(frame);mode=button.dataset.mode;
+  if(button.disabled)return;cancelAnimationFrame(frame);mode=button.dataset.mode;
   for(const tab of document.querySelectorAll('[data-mode]'))tab.setAttribute('aria-pressed',String(tab===button));
   const concept=['move','swap'].includes(mode);byId('stage').hidden=concept;byId('motion-stage').hidden=!concept;byId('concept-note').hidden=!concept;
   byId('open').textContent=mode==='effect'?'Reconstruct':'Reverse';byId('close').textContent=mode==='effect'?'Deconstruct':'Play';byId('timeline-label').textContent=mode==='effect'?'Breakup':'Journey';

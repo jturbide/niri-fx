@@ -67,7 +67,7 @@ Use synthetic content for captures and remove private data from logs/configs.
 
 ## Reporting a problem
 
-Use the repository's bug template with `python3 -m niri_fragments --version`,
+Use the repository's bug template with `python3 -m niri_fx --version`,
 `niri --version`, your shell version/commit and the relevant effect parameters.
 Do not attach your whole desktop configuration or a Studio URL containing its
 session token. For security issues, follow [SECURITY.md](../SECURITY.md).

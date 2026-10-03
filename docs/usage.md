@@ -1,16 +1,47 @@
 # Studio and controls
 
-![Gravity and rotation controls in Niri Fragments Studio](studio.png)
+![Slice controls in NiriFX Studio](studio-slices.png)
 
 ```sh
-python3 -m niri_fragments studio
+python3 -m niri_fx studio
 ```
 
 This opens a dedicated Chromium app window, with no tabs or address bar and a
 separate profile. The optional application launcher opens the same window.
 The renderer is still web technology, not a native QML page. If Chromium is
 unavailable, it falls back to your browser; `studio --browser` explicitly opens
-a browser tab. Live controls include:
+a browser tab. Choose **Fragments** or **Slices** first. The starting styles and
+controls follow the selected family. Switching families starts with that family's
+first preset; export a custom style before switching if you want to keep it.
+
+## Slices
+
+Slices preserve broad strips of the actual window texture. They support opening
+and closing on stock Niri; resize and movement controls are unavailable for this
+family in 0.6. Opening reverses the closing path with its own duration.
+
+| Control | Range / meaning |
+| --- | --- |
+| Slice count | 2–48 strips; more strips also increase shader work |
+| Slice angle | −90° to 90°; 0° horizontal, ±90° vertical |
+| Travel direction | Split outward, alternating strips, along the angle, against the angle |
+| Travel distance | 0–600 logical pixels |
+| Release stagger | 0–0.75; delay between first and last strip |
+| Strip rotation | −60° to 60° during travel |
+| Opening / closing time | Independent 100–1500 ms durations |
+
+```sh
+python3 -m niri_fx preview --preset diagonal-shear --output /tmp/slices.html
+python3 -m niri_fx render --family slices --slice-count 20 --slice-angle 30 \
+  --slice-direction alternate --slice-rotation 8 > /tmp/slices.kdl
+```
+
+Every preset leaves resize off. Slice JSON uses schema 2 and requires NiriFX 0.6+.
+Fragment exports retain schema 1 and remain readable by the old 0.5 editor.
+
+## Fragments
+
+Live fragment controls include:
 
 - **Gravity direction:** none, down, up, left, right, center, or outward.
 - **Gravity strength:** 0–3×. Downward gravity accelerates; outward space motion
@@ -48,7 +79,7 @@ movement effects. Saving/exporting changes open/close and enabled resize behavio
 Run `python3 scripts/nested-demo.py` after building the isolated experiment
 to try actual native movement. See [the compositor work](movement.md).
 
-The controls live in Fragments Studio. iRiS's native page lists the resulting
+The controls live in NiriFX Studio. iRiS's native page lists the resulting
 presets; its stock thumbnail still shows generic timing rather than this shader.
 
 The editor binds only to loopback and uses a per-session save token and origin
@@ -62,14 +93,14 @@ For an app-launcher entry tied to this checkout:
 python3 scripts/install-desktop.py
 ```
 
-Search for **Niri Fragments Studio** in your application launcher. This is
+Search for **NiriFX Studio** in your application launcher. This is
 on-demand; nothing is added to session startup. Keep the checkout at its current
 path, or recreate the launcher after moving it.
 
 An offline editor is also available:
 
 ```sh
-python3 -m niri_fragments preview --preset earth --output /tmp/fragments.html
+python3 -m niri_fx preview --preset earth --output /tmp/fragments.html
 xdg-open /tmp/fragments.html
 ```
 
@@ -82,25 +113,25 @@ legacy files without `resize` keep it off. An explicit `resize: true` is retaine
 Open the same file directly from the CLI:
 
 ```sh
-python3 -m niri_fragments studio --custom examples/corner-burst.json
-python3 -m niri_fragments render --custom examples/corner-burst.json > /tmp/corner-burst.kdl
+python3 -m niri_fx studio --custom examples/corner-burst.json
+python3 -m niri_fx render --custom examples/corner-burst.json > /tmp/corner-burst.kdl
 ```
 
 Use `--custom` without effect overrides. To save an imported file to iNiR:
 
 ```sh
-python3 -m niri_fragments register --custom ~/Downloads/niri-fragments-preset.json
+python3 -m niri_fx register --custom ~/Downloads/nirifx-preset.json
 ```
 
 ## Command-line options
 
 ```sh
 # Save a custom option alongside the built-in pack.
-python3 -m niri_fragments register --name "Heavy Meteor" --preset earth \
+python3 -m niri_fx register --name "Heavy Meteor" --preset earth \
   --gravity-strength 1.8 --particles 400 --rotation random --spin 360
 
 # Render a standalone override; includes no shell integration or activation.
-python3 -m niri_fragments render --preset black-hole --gravity-strength 0.8 \
+python3 -m niri_fx render --preset black-hole --gravity-strength 0.8 \
   --swirl 120 --rotation gravity --particles 300 > fragments.kdl
 niri validate -c fragments.kdl
 ```
@@ -125,6 +156,9 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 | Directional Wave | Three stages release from left to right, with upward drift |
 | Corner Burst | 1,200 pieces scatter from a lower-left origin |
 | Orbital Collapse | 1,400 pieces spiral inward with 300° orbit |
+| Slide Apart (Slices) | 12 horizontal strips split outward |
+| Alternating Blinds (Slices) | 16 vertical strips travel alternately and rotate |
+| Diagonal Shear (Slices) | 10 diagonal strips travel alternately |
 
 Particle targets are approximate and depend on window geometry. Opening reverses
 the closing trajectory with its own duration; the effect is artistic rather than
@@ -132,12 +166,14 @@ a physical simulation. There are no particle collisions.
 
 ## Resize is opt-in
 
+Resize effects are available for **Fragments only** in this release.
+
 All built-in presets and fresh Studio sessions start with fragment resize
 disabled. Imported custom presets retain their explicit choice. Enable **Fragment windows when resizing**, or pass `--resize`:
 
 ```sh
-python3 -m niri_fragments register --name "Resize experiment" --preset balanced --resize
-python3 -m niri_fragments render --preset balanced --resize --resize-mode edge > /tmp/fragments-resize.kdl
+python3 -m niri_fx register --name "Resize experiment" --preset balanced --resize
+python3 -m niri_fx render --preset balanced --resize --resize-mode edge > /tmp/fragments-resize.kdl
 ```
 
 `--no-resize` suppresses the override. With the iNiR adapter, the base preset's

@@ -60,9 +60,9 @@ def resolve_base(shell_registry, base_id="auto"):
 def make_preset(identifier, label, effect, chosen, base_types):
     types = deepcopy(base_types)
     types.update(animation_types(effect))
-    return {"id": identifier, "name": f"Fragments · {label}",
+    return {"id": identifier, "name": f"NiriFX · {label}",
             "description": preset_description(effect),
-            "keywords": ["fragments", "pixels", "gravity", "particles", "rotation", "reconstruct"],
+            "keywords": ["nirifx", effect.family, "animation", "reconstruct", "slices" if effect.family == "slices" else "particles"],
             "generator": OWNER, "schema-version": 2, "base-preset": chosen,
             "effect": asdict(effect), "types": types}
 
@@ -76,8 +76,10 @@ def make_presets(shell_registry, base_id="auto"):
 
 
 def custom_document(data):
-    if not isinstance(data, dict) or type(data.get("schema")) is not int or data["schema"] != 1 or not isinstance(data.get("effect"), dict):
-        raise ValueError("Custom preset must contain schema: 1, name, and an effect object")
+    if not isinstance(data, dict) or type(data.get("schema")) is not int or data["schema"] not in (1, 2) or not isinstance(data.get("effect"), dict):
+        raise ValueError("Custom preset must contain schema: 1 or 2, name, and an effect object")
+    if data["schema"] == 1 and data["effect"].get("family", "fragments") != "fragments":
+        raise ValueError("Non-fragment families require preset schema: 2")
     name = data.get("name")
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,47}", name):
         raise ValueError("Preset name must be 1–48 letters, numbers, spaces, hyphens or underscores")

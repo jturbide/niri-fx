@@ -1,24 +1,31 @@
 """Dependency-free command line interface."""
 
 import argparse
-from dataclasses import asdict, replace
+from dataclasses import replace
 import json
 from pathlib import Path
 import subprocess
 import sys
 
 from . import __version__
-from .effects import GRAVITIES, ROTATIONS, RELEASES, RESIZE_MODES, PRESETS, describe_presets, render_kdl
+from .effects import FAMILIES, FAMILY_FIELDS, SLICE_DIRECTIONS, GRAVITIES, ROTATIONS, RELEASES, RESIZE_MODES, PRESETS, describe_presets, effect_document, render_kdl
 from .integration import custom_document, default_inir_root, default_registry, make_presets, make_custom_preset, read_shell_presets, update_registry
 
 
-EFFECT_FIELDS = ("tile_size", "scatter", "open_ms", "close_ms", "gravity",
+EFFECT_FIELDS = FAMILY_FIELDS + ("tile_size", "scatter", "open_ms", "close_ms", "gravity",
                  "gravity_strength", "particles", "rotation", "spin", "swirl", "dispersion", "stagger", "resize", "resize_ms", "resize_strength",
                  "release", "wave_span", "origin_x", "origin_y", "resize_mode")
 
 
 def effect_options(command):
     command.add_argument("--preset", choices=PRESETS, default="balanced")
+    command.add_argument("--family", choices=FAMILIES, help="Effect family; old presets default to fragments")
+    command.add_argument("--slice-count", type=int, help="Number of strips (2–48)")
+    command.add_argument("--slice-angle", type=float, help="Strip angle: 0 horizontal, ±90 vertical")
+    command.add_argument("--slice-distance", type=float, help="Strip travel in logical pixels (0–600)")
+    command.add_argument("--slice-stagger", type=float, help="First-to-last release delay (0–0.75)")
+    command.add_argument("--slice-rotation", type=float, help="Strip rotation during travel (-60–60 degrees)")
+    command.add_argument("--slice-direction", choices=SLICE_DIRECTIONS)
     density = command.add_mutually_exclusive_group()
     density.add_argument("--tile-size", type=float, help="Square size in logical pixels (8–128); disables target count")
     density.add_argument("--particles", type=int, help="Approximate particle count (16–4096), or 0 for tile-size mode")
@@ -50,7 +57,12 @@ def selected_effect(arguments):
     overrides = {k: getattr(arguments, k) for k in EFFECT_FIELDS if getattr(arguments, k, None) is not None}
     if overrides.get("tile_size") is not None:
         overrides["particles"] = 0
-    return replace(PRESETS[arguments.preset], **overrides)
+    effect = replace(PRESETS[arguments.preset], **overrides)
+    inactive = (set(FAMILY_FIELDS) - {"family"} if effect.family == "fragments" else
+                set(EFFECT_FIELDS) - set(FAMILY_FIELDS) - {"open_ms", "close_ms", "resize"})
+    if inactive.intersection(overrides):
+        raise ValueError(f"Options do not apply to the {effect.family} family: " + ", ".join(sorted(inactive.intersection(overrides))))
+    return effect
 
 
 def read_custom(path):
@@ -64,10 +76,11 @@ def read_custom(path):
 
 
 def parser():
-    root = argparse.ArgumentParser(description="Window fragment animations and native iNiR/iRiS presets.")
+    root = argparse.ArgumentParser(description="NiriFX window effects and native iNiR/iRiS presets.")
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="Print built-in effect parameters as JSON")
+    commands.add_parser("families", help="Print supported effect families and capabilities as JSON")
     for name, help_text in (("render", "Print a standalone Niri KDL animation override"),
                             ("preview", "Write a self-contained interactive editor; no desktop changes")):
         command = commands.add_parser(name, help=help_text)
@@ -118,7 +131,9 @@ def parser():
 def main(argv=None):
     arguments = parser().parse_args(argv)
     try:
-        if arguments.command == "list":
+        if arguments.command == "families":
+            print(json.dumps(FAMILIES, indent=2))
+        elif arguments.command == "list":
             print(json.dumps(describe_presets(), indent=2))
         elif arguments.command == "doctor":
             from .setup import doctor
@@ -161,7 +176,7 @@ def main(argv=None):
                     document = read_custom(arguments.custom)
                     generated = [make_custom_preset(registry, document, arguments.base)]
                 elif arguments.name:
-                    document = {"schema": 1, "name": arguments.name, "effect": asdict(selected_effect(arguments))}
+                    document = effect_document(arguments.name, selected_effect(arguments))
                     generated = [make_custom_preset(registry, document, arguments.base)]
                 else:
                     if arguments.preset != "balanced" or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS):

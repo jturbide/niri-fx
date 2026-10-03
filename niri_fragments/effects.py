@@ -1,4 +1,4 @@
-"""Generate the same fragment effect for standalone Niri and shell presets."""
+"""Validated effect families shared by Studio, Niri exports and shell adapters."""
 
 from dataclasses import asdict, dataclass
 from importlib.resources import files
@@ -8,15 +8,30 @@ GRAVITIES = ("none", "down", "up", "left", "right", "center", "space")
 ROTATIONS = ("none", "random", "gravity")
 RELEASES = ("together", "left", "right", "up", "down")
 RESIZE_MODES = ("full", "edge", "soft")
+SLICE_DIRECTIONS = ("outward", "alternate", "positive", "negative")
+FAMILIES = {
+    "fragments": {"label": "Fragments", "open_close": True, "resize": True, "movement": True},
+    "slices": {"label": "Slices", "open_close": True, "resize": False, "movement": False},
+}
+FAMILY_FIELDS = ("family", "slice_count", "slice_angle", "slice_distance", "slice_stagger", "slice_rotation", "slice_direction")
 LIMITS = {"tile_size": (8, 128), "scatter": (0, 240), "open_ms": (100, 1500),
           "close_ms": (100, 1500), "gravity_strength": (0, 3), "particles": (0, 4096),
           "spin": (0, 720), "swirl": (-360, 360), "dispersion": (0, 1), "stagger": (0, 0.4),
           "resize_ms": (100, 1500), "resize_strength": (0, 1), "origin_x": (0, 1),
-          "origin_y": (0, 1), "wave_span": (0, 0.7)}
+          "origin_y": (0, 1), "wave_span": (0, 0.7), "slice_count": (2, 48),
+          "slice_angle": (-90, 90), "slice_distance": (0, 600), "slice_stagger": (0, 0.75),
+          "slice_rotation": (-60, 60)}
 
 
 @dataclass(frozen=True)
 class Effect:
+    family: str = "fragments"
+    slice_count: int = 12
+    slice_angle: float = 0
+    slice_distance: float = 220
+    slice_stagger: float = 0.25
+    slice_rotation: float = 0
+    slice_direction: str = "outward"
     tile_size: float = 28
     scatter: float = 125
     open_ms: int = 520
@@ -43,10 +58,16 @@ class Effect:
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"{name} must be a finite number between {low} and {high}")
-            if (name.endswith("_ms") or name == "particles") and int(value) != value:
+            if (name.endswith("_ms") or name in ("particles", "slice_count")) and int(value) != value:
                 raise ValueError(f"{name} must be a whole number")
         if not isinstance(self.resize, bool):
             raise ValueError("resize must be a boolean")
+        if not isinstance(self.family, str) or self.family not in FAMILIES:
+            raise ValueError(f"family must be one of {', '.join(FAMILIES)}")
+        if self.slice_direction not in SLICE_DIRECTIONS:
+            raise ValueError(f"slice_direction must be one of {', '.join(SLICE_DIRECTIONS)}")
+        if self.resize and not FAMILIES[self.family]["resize"]:
+            raise ValueError(f"The {self.family} family does not support resize; use --no-resize")
         if self.particles and self.particles < 16:
             raise ValueError("particles must be 0 (tile size mode) or between 16 and 4096")
         if self.gravity not in GRAVITIES:
@@ -80,26 +101,34 @@ PRESETS = {
     "directional-wave": Effect(scatter=90, open_ms=1000, close_ms=1000, gravity="up", gravity_strength=0.6, particles=900, spin=180, release="left", wave_span=0.6),
     "corner-burst": Effect(scatter=180, open_ms=780, close_ms=740, gravity="space", gravity_strength=1.1, particles=1200, spin=300, origin_x=0.15, origin_y=0.8, dispersion=0.8),
     "orbital-collapse": Effect(scatter=15, open_ms=1000, close_ms=1000, gravity="center", gravity_strength=1.5, particles=1400, rotation="gravity", spin=320, swirl=300, dispersion=0.8, stagger=0.25),
+    "slide-apart": Effect(family="slices", slice_count=12, slice_distance=240, slice_stagger=0.22, open_ms=680, close_ms=640),
+    "alternating-blinds": Effect(family="slices", slice_count=16, slice_angle=90, slice_direction="alternate", slice_rotation=16, slice_distance=180, slice_stagger=0.35, open_ms=820, close_ms=760),
+    "diagonal-shear": Effect(family="slices", slice_count=10, slice_angle=-35, slice_direction="alternate", slice_rotation=5, slice_distance=280, slice_stagger=0.3, open_ms=760, close_ms=720),
 }
 
 def shader_templates():
     root = files("niri_fragments").joinpath("shaders")
     return {"classic": root.joinpath("fragments.glsl").read_text(),
             "gravity": root.joinpath("gravity.glsl").read_text(),
-            "resize": root.joinpath("resize.glsl").read_text()}
+            "resize": root.joinpath("resize.glsl").read_text(),
+            "slices": root.joinpath("slices.glsl").read_text()}
 
 
 def shader(effect, opening):
-    template = shader_templates()["classic" if effect.classic else "gravity"]
+    template = shader_templates()["slices" if effect.family == "slices" else "classic" if effect.classic else "gravity"]
     return _expand(template, effect, opening)
 
 
 def resize_shader(effect):
+    if not FAMILIES[effect.family]["resize"]:
+        raise ValueError(f"The {effect.family} family does not support resize")
     return _expand(shader_templates()["resize"], effect, False)
 
 
 def movement_shader(effect):
     """Experimental API: emit only for the pinned patched compositor."""
+    if not FAMILIES[effect.family]["movement"]:
+        raise ValueError(f"The {effect.family} family does not support experimental movement")
     source = shader(effect, False)
     source = source[:source.rfind("vec4 close_color")]
     return source + """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
@@ -113,6 +142,12 @@ def movement_shader(effect):
 
 def _expand(template, effect, opening):
     return (template.replace("@TILE@", f"{effect.tile_size:.6f}")
+            .replace("@SLICE_COUNT@", str(int(effect.slice_count)))
+            .replace("@SLICE_ANGLE@", f"{effect.slice_angle:.6f}")
+            .replace("@SLICE_DISTANCE@", f"{effect.slice_distance:.6f}")
+            .replace("@SLICE_STAGGER@", f"{effect.slice_stagger:.6f}")
+            .replace("@SLICE_ROTATION@", f"{effect.slice_rotation:.6f}")
+            .replace("@SLICE_DIRECTION@", str(SLICE_DIRECTIONS.index(effect.slice_direction)))
             .replace("@SCATTER@", f"{effect.scatter:.6f}")
             .replace("@PARTICLES@", f"{effect.particles:.6f}")
             .replace("@GRAVITY@", str(GRAVITIES.index(effect.gravity)))
@@ -146,7 +181,7 @@ def animation_types(effect):
 
 
 def render_kdl(effect):
-    parts = ["// Generated by niri-fragments. Include after your base animation settings.", "animations {"]
+    parts = ["// Generated by NiriFX. Include after your base animation settings.", "animations {"]
     for name, spec in animation_types(effect).items():
         parts.extend([f"    {name} {{", f"        duration-ms {int(spec['duration-ms'])}",
                       '        curve "linear"', '        custom-shader r"',
@@ -155,6 +190,8 @@ def render_kdl(effect):
 
 
 def preset_description(effect):
+    if effect.family == "slices":
+        return f"{int(effect.slice_count)} slices at {effect.slice_angle:g}°, {effect.slice_direction}; {effect.open_ms}/{effect.close_ms}ms open/close."
     density = f"~{effect.particles} pieces" if effect.particles else f"{effect.tile_size:g}px pieces"
     motion = f"{effect.gravity} {effect.gravity_strength:g}×, {effect.rotation} spin" if not effect.classic else f"{effect.scatter:g}px scatter"
     return f"{density}, {motion}; {effect.open_ms}/{effect.close_ms}ms open/close." + (f" Resize {effect.resize_ms}ms." if effect.resize else "")
@@ -162,3 +199,12 @@ def preset_description(effect):
 
 def describe_presets():
     return {name: asdict(effect) for name, effect in PRESETS.items()}
+
+
+def effect_document(name, effect):
+    """Keep fragment exports readable by 0.5; new families use schema 2."""
+    parameters = asdict(effect)
+    if effect.family == "fragments":
+        for key in FAMILY_FIELDS:
+            parameters.pop(key)
+    return {"schema": 1 if effect.family == "fragments" else 2, "name": name, "effect": parameters}

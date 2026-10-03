@@ -1,18 +1,19 @@
 # Validation and known limits
 
-Evidence recorded on **2026-10-02**, for 0.5.0. This is a prototype validation record, not a GPU performance certification.
+Evidence recorded on **2026-10-02**, for 0.6.0. This is a prototype validation record, not a GPU performance certification.
 For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 
 ## Stock effects and editor
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 36 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
-| GLSL ES 1.00 compilation | All 84 shaders compiled: 14 presets × open/close/movement + three resize modes |
-| Stock Niri config parsing | All 14 default and 42 explicitly enabled resize exports validated with Niri 26.04 (`8ed0da4`) |
-| iNiR adapter | 14 presets registered/restored with the installed helper in a temporary registry; prior 11-preset apply/recognition checks retained |
+| Python regression suite | 45 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| GLSL ES 1.00 compilation | All 90 shaders compiled: 84 fragment variants and six slice open/close shaders |
+| Stock Niri config parsing | All 17 default and 42 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
+| iNiR adapter | All 17 presets plus a named slice preset registered, applied, validated and recognized by the installed helper in temporary config; exact registry restoration passed |
 | Setup / restore | Real standalone setup, repeat apply and exact restoration passed with Niri, relative includes and a Unicode config path; conflict, failure and symlink cases covered in tests |
 | JSON import | Valid/legacy documents, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
+| Rebrand / migration | Legacy module/CLI aliases, schema 1 import/export, stable registry IDs and every 0.5 fragment shader fingerprint checked |
 | Resize defaults | All built-ins and new editor sessions opt out; explicit custom choices preserved |
 | Browser shader endpoints | Intact initial texture, fragmented midpoint and transparent final frame for open/close |
 | Resize preview | All three modes have intact endpoints and correct texture replacement; Edge Rebuild retains the center and Soft Reflow reduces breakup |
@@ -21,10 +22,16 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 | Concept move / swap | Synthetic windows arrived intact in their correct columns; these are not compositor movement checks |
 | Packaging | Wheel/source builds and installed CLI resource checks; see the public preparation record for archive scope |
 
-The 0.5.0 browser checks exercised all 14 presets, exact endpoints, extreme
-parameters and three resize styles. The real installed desktop has been used
-for earlier open/close effects; the new variants have compilation/browser
-validation but not broad hardware acceptance.
+The 0.6 browser checks exercised all 17 presets, exact endpoints, extreme
+parameters, slice family controls/capability limits, schema 1/2 imports and three
+fragment resize styles. The 14 existing fragment presets retain exactly the 0.5
+open/close/resize/movement shader source, verified against historical hashes.
+
+All three slice effects also opened and closed a synthetic Alacritty client in
+an isolated **stock Niri 26.04** session. Intermediate captures differed from the
+intact window, the opening completed intact, and closing left no window-colored
+pixels. No shader/render/config errors appeared. These are functional checks,
+not performance certification across hardware.
 
 ## Native movement experiment
 
@@ -46,8 +53,8 @@ not replaced. See [the experiment scope](../experimental/README.md).
 
 ## Documentation recordings
 
-The gallery contains 31 GIFs: real Studio shader recordings for opening, closing,
-optional resize and all 14 presets; five synchronized control comparisons; three
+The gallery contains 35 GIFs: real Studio shader recordings for opening, closing,
+optional resize and all 17 presets; six synchronized control comparisons; three
 custom recipes and three opt-in resize styles; two labelled Canvas movement concepts; and one actual nested
 Niri swap recording. The custom examples ship with their recorded JSON settings.
 The clips use synthetic content. Frame
@@ -68,6 +75,8 @@ appearance on every desktop. The experimental default build is unoptimized.
   shader evaluates up to 27 candidate cells per pixel for simultaneous release,
   or 81 for three directional waves, independent of particle count. Expanded
   draw area adds cost; lower particle count alone does not guarantee faster rendering.
+  Slices evaluates at most its configured 2–48 strips per pixel; strip count,
+  window size and expanded draw bounds affect work.
 - Fractional scaling, mixed monitors, transparency, decorations, fullscreen,
   output-edge clipping and different applications. Client-side shadows outside
   window geometry are omitted during breakup.

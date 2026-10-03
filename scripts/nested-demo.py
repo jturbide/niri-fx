@@ -15,7 +15,7 @@ import time
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from niri_fragments.effects import PRESETS, movement_shader, render_kdl
+from niri_fragments.effects import FAMILIES, PRESETS, movement_shader, render_kdl
 
 BASE = '''layout {
     gaps 24
@@ -48,7 +48,7 @@ def config(effect, duration, source):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--preset", choices=PRESETS, default="explosion")
+    parser.add_argument("--preset", choices=[name for name, effect in PRESETS.items() if FAMILIES[effect.family]["movement"]], default="explosion")
     parser.add_argument("--duration-ms", type=int, default=1100)
     parser.add_argument("--resize", action="store_true", help="Opt into fragment resize effects in the demo")
     parser.add_argument("--smoke", action="store_true", help="Capture movement, resize and fallback, then exit; needs grim and Pillow")

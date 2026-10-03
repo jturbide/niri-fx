@@ -12,11 +12,19 @@ if(!url)throw new Error('Usage: node scripts/browser-smoke.mjs PREVIEW_URL [--sa
 const executable=process.env.CHROME_BIN || ['chromium','chromium-browser','google-chrome','google-chrome-stable'].find(name=>spawnSync(name,['--version'],{stdio:'ignore'}).status===0);
 if(!executable)throw new Error('Install Chromium/Chrome or set CHROME_BIN');
 const profile=mkdtempSync(join(tmpdir(),'niri-fragments-browser-'));
-const browser=spawn(executable,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+const browser=spawn(executable,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
+let diagnostics='',launchError,closed=false;
+browser.stderr.on('data',chunk=>{diagnostics=(diagnostics+chunk.toString()).slice(-8192);});
+browser.on('error',error=>{launchError=error;});
+const browserClosed=new Promise(resolve=>browser.once('close',()=>{closed=true;resolve();}));
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let ws;
 try{
- for(let i=0;i<100&&!existsSync(join(profile,'DevToolsActivePort'));i++)await sleep(100);
+ const deadline=Date.now()+30000;
+ while(!existsSync(join(profile,'DevToolsActivePort'))){
+  if(launchError||closed||Date.now()>=deadline)throw new Error(`Chrome did not start (${launchError?.message??(closed?'exit '+browser.exitCode:'30s timeout')}).\n${diagnostics}`);
+  await sleep(100);
+ }
  const port=readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0];
  const tabs=await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
  ws=new WebSocket(tabs.find(tab=>tab.type==='page').webSocketDebuggerUrl);
@@ -38,8 +46,8 @@ try{
   assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready',name);
   assert.equal(createHash('sha256').update(await evaluate('shaderFor(parameters,false)')).digest('hex'),expected[name],name+' export matches Python');
   await setProgress(0);const start=await sample();assert.equal(start.occupied,600*380,name+' reconstructs all pixels');
-  await setProgress(.45);const middle=await sample();assert(middle.occupied>0&&middle.occupied<start.occupied,name+' intermediate fragments');assert.equal(middle.error,0);
-  if(['balanced','explosion','implosion','earth','black-hole','vortex','space'].includes(name)){
+  await setProgress(.45);const middle=await sample();assert(middle.alpha>0&&middle.alpha<start.alpha,name+' visible partial transition');assert.equal(middle.error,0);
+  if(['balanced','explosion','implosion','earth','black-hole','vortex','space','slide-apart','alternating-blinds','diagonal-shear'].includes(name)){
    const capture=await rpc('Page.captureScreenshot',{format:'png'});writeFileSync(resolve('artifacts',name+'.png'),Buffer.from(capture.data,'base64'));
   }
   await setProgress(1);const end=await sample();assert.equal(end.occupied,0,name+' disappears completely');
@@ -54,7 +62,7 @@ try{
   await evaluate(`byId(${JSON.stringify(id)}).value=${JSON.stringify(value)};byId(${JSON.stringify(id)}).dispatchEvent(new Event('input'))`);
  await setProgress(.5);assert.equal((await sample()).error,0);assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
  // Exercise the real resize shader, two texture inputs and stable endpoints.
- const resizeExpected=JSON.parse(execFileSync('python3',['-c','import hashlib,json;from niri_fragments.effects import PRESETS,resize_shader;print(json.dumps({k:hashlib.sha256(resize_shader(v).encode()).hexdigest() for k,v in PRESETS.items()}))'],{encoding:'utf8'}));
+ const resizeExpected=JSON.parse(execFileSync('python3',['-c','import hashlib,json;from niri_fragments.effects import PRESETS,resize_shader;print(json.dumps({k:hashlib.sha256(resize_shader(v).encode()).hexdigest() for k,v in PRESETS.items() if v.family=="fragments"}))'],{encoding:'utf8'}));
  await evaluate("document.querySelector('[data-mode=resize]').click()");
  for(const name of Object.keys(resizeExpected)){
   await evaluate(`byId('preset').value=${JSON.stringify(name)};byId('preset').dispatchEvent(new Event('change'))`);
@@ -104,15 +112,33 @@ try{
  }
  imported=await importFile(JSON.stringify({schema:1,name:'Resize import',effect:{resize:true,resize_mode:'soft'}}));assert.equal(imported.error,'');assert.equal(imported.effect.effect.resize,true);
  await importFile(JSON.stringify({schema:1,name:'Legacy import',effect:{}}));assert.equal(await evaluate('parameters.resize'),false);
+ // Family-specific UI, versioned slice imports and bounded extreme controls.
+ assert.equal(await evaluate('parameters.family'),'fragments','legacy imports select fragments');
+ assert.equal(await evaluate('effectDocument().schema'),1,'fragment exports remain readable by 0.5');
+ await evaluate("document.querySelector('[data-mode=resize]').click()");
+ imported=await importFile(JSON.stringify({schema:2,name:'Sliced Test',effect:{family:'slices',slice_count:13,slice_angle:-33.25,slice_rotation:12.5}}));
+ assert.equal(imported.error,'');assert.equal(imported.effect.schema,2);assert.equal(imported.effect.effect.family,'slices');assert.equal(await evaluate('mode'),'effect','import exits an unsupported resize preview');
+ assert.equal(await evaluate("byId('fragment-controls').hidden"),true);assert.equal(await evaluate("byId('slice-controls').hidden"),false);
+ assert(await evaluate("[...document.querySelectorAll('[data-mode]')].filter(b=>b.dataset.mode!=='effect').every(b=>b.disabled)"),'unsupported modes disabled');
+ const sliceSaved=await evaluate('effectDocument()');
+ for(const effect of [{family:'slices',resize:true},{family:'slices',slice_count:1},{family:'unknown'},{family:'slices',slice_direction:'typo'}]){
+  const rejected=await importFile(JSON.stringify({schema:2,name:'Invalid Slice',effect}));assert.match(rejected.error,/Import failed/);assert.deepEqual(rejected.effect,sliceSaved);
+ }
+ const oldSchema=await importFile(JSON.stringify({schema:1,name:'Wrong version',effect:{family:'slices'}}));assert.match(oldSchema.error,/schema: 2/);
+ for(const [id,value] of Object.entries({slice_count:48,slice_angle:-90,slice_distance:600,slice_stagger:.75,slice_rotation:60,slice_direction:'negative'}))await evaluate(`byId(${JSON.stringify(id)}).value=${JSON.stringify(value)};byId(${JSON.stringify(id)}).dispatchEvent(new Event('input'))`);
+ assert.equal(await evaluate('parameters.slice_direction'),'negative','slice direction responds immediately');
+ await setProgress(0);assert.equal((await sample()).occupied,600*380);await setProgress(.5);assert.equal((await sample()).error,0);await setProgress(1);assert.equal((await sample()).occupied,0);
+ const exportedSlice=await evaluate('effectDocument()');const normalizedSlice=JSON.parse(execFileSync('python3',['-c','import json,sys;from niri_fragments.integration import custom_document;from niri_fragments.effects import effect_document;doc=json.load(sys.stdin);name,_,effect=custom_document(doc);print(json.dumps(effect_document(name,effect)))'],{input:JSON.stringify(exportedSlice),encoding:'utf8'}));assert.deepEqual(exportedSlice,normalizedSlice);
+ await evaluate("byId('family').value='fragments';byId('family').dispatchEvent(new Event('change'))");assert.equal(await evaluate('parameters.resize'),false);assert.equal(await evaluate("byId('slice-controls').hidden"),true);
  if(process.argv.includes('--save-test')){
   await evaluate("byId('name').value='Browser Smoke Test';byId('save').click()");
   for(let i=0;i<100;i++){if(await evaluate("!byId('save').disabled"))break;await sleep(100);}
-  assert.equal(await evaluate("byId('error').textContent"),'');assert.match(await evaluate("byId('status').textContent"),/^Saved Fragments/);
+  assert.equal(await evaluate("byId('error').textContent"),'');assert.match(await evaluate("byId('status').textContent"),/^Saved NiriFX/);
  }
  writeFileSync('artifacts/browser-checks.json',JSON.stringify(results,null,2)+'\n');
- console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports and exact imported values`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
+ console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, slice controls, capabilities and schema compatibility`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
 }finally{
- ws?.close();if(browser.exitCode===null){const exited=new Promise(resolve=>browser.once('exit',resolve));browser.kill('SIGTERM');await exited;}
+ ws?.close();if(!closed){browser.kill('SIGTERM');await browserClosed;}
  // Chrome helpers may flush their profile briefly after the browser exits.
  rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:100});
 }

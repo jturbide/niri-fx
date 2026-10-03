@@ -6,6 +6,9 @@ content is captured.
 - `opening.gif`, `closing.gif`, `resize.gif`: Studio's actual GLSL shader renderer.
   Resize is shown as an opt-in feature; recording it does not change a preset.
 - `preset-*.gif`: each built-in style closes and opens at its configured timing.
+  Slide Apart, Alternating Blinds and Diagonal Shear use the Slices shader.
+- `compare-slice-count.gif`: four, twelve and thirty-two strips, with the same
+  seed, texture and other settings.
 - `compare-*.gif`: synchronized three-panel comparisons of density, gravity
   direction, gravity strength, rotation and burst origin. Within each clip only the named
   control changes; texture, seed, other parameters and timing match.
@@ -37,7 +40,7 @@ frames with FFmpeg. Sources remain under ignored `artifacts/`; the browser
 profile is removed. `manifest.json` records the Studio clips' frame counts,
 modes and file sizes.
 
-To render just the five comparisons, three custom recipes and three resize styles:
+To render just the six comparisons, three custom recipes and three resize styles:
 
 ```sh
 node scripts/render-readme-gifs.mjs --showcase-only
@@ -49,6 +52,16 @@ their saved durations. The renderer verifies Python/browser shader parity and
 records resolved parameters in `manifest.json`. This allows the documentation
 check to catch a changed recipe whose recording has not been regenerated.
 The partial render preserves manifest entries for the other existing clips.
+
+To regenerate only the three slice presets and their count comparison:
+
+```sh
+node scripts/render-readme-gifs.mjs --slices-only
+```
+
+The 0.5 fragment recordings remain valid: their shader hashes are checked against
+the signed 0.5 release. Legacy recording metadata is normalized with defaults
+before comparison; introducing unused slice fields does not require new footage.
 
 To record the native experiment, also prepare the patched compositor, Alacritty
 and `wf-recorder`, then run inside the existing Niri desktop:
