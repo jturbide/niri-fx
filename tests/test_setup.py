@@ -109,6 +109,47 @@ class SetupTests(unittest.TestCase):
             setup.apply_plan(plan, self.state)
         self.assertFalse((self.config.parent / "nirifx").exists())
 
+    def test_review_hash_accepts_only_the_reviewed_plan(self):
+        reviewed = setup.summarize(self.plan())["plan_sha256"]
+        self.assertEqual(reviewed, setup.summarize(self.plan())["plan_sha256"])
+        self.config.chmod(0o640)
+        with self.assertRaisesRegex(ValueError, "plan changed"):
+            setup.apply_plan(self.plan(), self.state, expected=reviewed)
+        self.assertFalse(self.state.exists())
+        self.assertEqual(self.config.read_bytes(), self.original)
+        reviewed = setup.summarize(self.plan())["plan_sha256"]
+        self.assertTrue(setup.apply_plan(self.plan(), self.state, expected=reviewed)["changed"])
+
+    def test_review_includes_config_even_when_only_shader_changes(self):
+        setup.apply_plan(self.plan(), self.state)
+        effect = PRESETS["explosion"]
+        plan = setup.plan_setup(self.args, effect)
+        self.assertEqual(len(plan["changes"]), 1)
+        reviewed = setup.summarize(plan)["plan_sha256"]
+        include = self.config.parent / "nirifx/animations.kdl"
+        before = include.read_bytes()
+        self.config.write_bytes(self.config.read_bytes() + b"// independent edit\n")
+        with self.assertRaisesRegex(ValueError, "plan changed"):
+            setup.apply_plan(setup.plan_setup(self.args, effect), self.state, expected=reviewed)
+        # Changes between planning and writing are also refused, including the
+        # root config when it would not itself have been rewritten.
+        with self.assertRaisesRegex(ValueError, "File changed"):
+            setup.apply_plan(plan, self.state, expected=reviewed)
+        self.assertEqual(include.read_bytes(), before)
+
+    def test_review_hash_binds_selection_and_resolved_path(self):
+        reviewed = setup.summarize(self.plan())["plan_sha256"]
+        different = setup.plan_setup(self.args, PRESETS["explosion"])
+        with self.assertRaisesRegex(ValueError, "plan changed"):
+            setup.apply_plan(different, self.state, expected=reviewed)
+        target = self.root / "moved.kdl"
+        self.config.rename(target)
+        self.config.symlink_to(target)
+        with self.assertRaisesRegex(ValueError, "plan changed"):
+            setup.apply_plan(self.plan(), self.state, expected=reviewed)
+        self.assertFalse(self.state.exists())
+        self.assertEqual(target.read_bytes(), self.original)
+
     def test_config_edit_during_validation_blocks_the_plan(self):
         self.validator.side_effect = lambda _: self.config.write_text("// Concurrent edit\n")
         with self.assertRaisesRegex(ValueError, "changed while preparing"):

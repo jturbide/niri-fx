@@ -84,8 +84,8 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**135 GIFs**, including all **64 presets**, resize profiles and comparisons, custom
-recipes, labelled Canvas concepts, ten native swaps and thirteen workflow/compositor
+**136 GIFs**, including all **64 presets**, resize profiles and comparisons, custom
+recipes, labelled Canvas concepts, ten native swaps and fourteen workflow/compositor
 scenarios. Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
 
@@ -147,9 +147,8 @@ The Python/browser validators share 24 accepted/rejected document fixtures; the
 standalone JavaScript core has no DOM or network dependency. Full Studio E2E remains
 a separate check of rendering, UI state and actual temporary-registry saving.
 
-The installed desktop config and preset registry are outside the hygiene change.
-No active effects, resize choices, shell integrations or compositor binaries are
-changed by this maintenance work. See [architecture](architecture.md) and the
+Tests use temporary configuration and registry files. Running these checks does
+not activate effects or replace the installed compositor. See [architecture](architecture.md) and the
 [next-phase gates](next-phases.md).
 
 ## Workflow and compositor scenarios
@@ -168,6 +167,7 @@ and uses a generic temporary preset path.
 | Studio | Actual profile import, independent closing-wind edit, pinned A/B, Undo/Redo, JSON/KDL download equality, stock Niri validation and absent resize. Chromium software WebGL; 10 fps UI recording. |
 | iNiR/iRiS c08bb92 / Quickshell 0.3.1 | Unmodified `IrisNiriMotionGallery` and `NiriAnimationPresets` in a small host. Real virtual-pointer selection of Burst and Drift, Frost and Fragments, then Snappy; helper reports each active profile, resulting configs validate, base resize is preserved and prior animation file is restored exactly. The card previews are iRiS timing illustrations. |
 | DMS 1.6.2 / Quickshell 0.3.1 | Unmodified `DankLauncherV2Modal` and `PluginService` in a small host load the NiriFX adapter. Real keyboard search/selection applies Balanced, Undo restores exact config bytes, Studio opens as an app window. A separate check proves Undo refuses an externally edited config. This is launcher-component acceptance, not a full DMS daemon/session test. |
+| NiriFX picker / Quickshell 0.3.1 | Packaged controller/view in an isolated host. Real keyboard search, Review, Apply and exact Undo; base resize stays intact. Offscreen checks also cover profiles, explicit resize consent, repeated Undo, stale files, external-edit refusal and missing commands. Studio dispatch arguments are verified; this harness does not launch Studio or test every embedding shell. |
 | Noctalia 5.2.1 / Niri Animations 0.2.0 | Full isolated shell, 55 exported styles plus Burst and Drift. Real keyboard dropdown selection applies the independent profile, returns to base and validates both configs; fragment resize remains absent. |
 | Pinned native movement patch | Explosion at 1200 ms, release build, 50 fps recording: left/right/left interruption leaves both window IDs in the expected final columns and solid color populations within 2% of the original; closing one moving client removes it and leaves the survivor intact. The harness requires acknowledgements less than 600 ms apart and rejects IPC stalls of 150 ms or more. These checks do not assert seamless retargeting or measure GPU frame time. |
 

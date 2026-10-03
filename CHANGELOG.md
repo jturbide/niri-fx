@@ -10,6 +10,17 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- Optional Quickshell picker with style/family search, JSON profile loading,
+  Studio launch, reviewed Apply and dedicated Undo history. Reusable controller
+  and view components ship in the Python package; `niri-fx picker` opens them.
+- Read-only `inspect --custom` for normalized style/profile JSON and
+  `setup --expect-plan` to bind Apply to a previously reviewed plan. The picker
+  rejects stale selections and requires explicit consent for custom resize effects.
+- Quickshell integration guide and keyboard workflow showcase, with isolated
+  controller/view tests for exact restore, changed files and process failures.
+
 ## 0.8.0 — 2026-10-03
 
 ### Maintenance

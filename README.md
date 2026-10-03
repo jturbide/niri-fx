@@ -150,6 +150,18 @@ Import one of the [JSON examples](examples/README.md), edit it and export a pres
 or Niri config. [Studio guide](docs/usage.md) · [Profiles](docs/profiles.md) ·
 [Control reference](docs/effect-controls.md).
 
+## A desktop picker for Quickshell
+
+Run `python3 -m niri_fx picker` from the checkout to browse styles and load JSON
+profiles. Review the affected files before Apply; Undo restores the previous
+settings. Resize requires explicit consent. The controller and view can also
+be embedded in a custom Quickshell settings page.
+
+![Quickshell picker search, reviewed Apply and Undo](docs/gifs/workflow-quickshell-picker.gif)
+
+[Picker guide and embedding example](docs/quickshell.md). Requires Quickshell;
+Studio and standalone setup remain independent of it. Available on `main` after v0.8.0.
+
 ## Performance and compatibility
 
 Effect cost depends on the renderer, window size and settings. The

@@ -72,6 +72,10 @@ export parity; it is not a compositor GPU benchmark. See
 - Python targets 3.10+, uses four spaces and Ruff lint/format (100 columns).
   Run `.venv/bin/ruff check --fix .` and `.venv/bin/ruff format .` before review.
 - JavaScript, CSS, HTML and workflow YAML use Prettier; JavaScript also uses ESLint.
+- QML components use Qt's `qmlformat` and `qmllint`. With Quickshell and Niri
+  installed, run `python3 scripts/test-quickshell-picker.py` for real controller/view
+  acceptance against temporary files. CI checks the portable backend and packaged
+  QML resources; the Quickshell runtime test is a local gate for picker changes.
   Run `npm run format`. The lockfile pins development tools; npm is not a runtime
   dependency. Studio sources are readable files assembled into one offline HTML page.
 - Comments should explain units, bounds, ordering, ownership and design choices.

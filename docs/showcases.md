@@ -1,10 +1,13 @@
 # Choose an effect by scenario
 
-The gallery has **134 GIFs**, including all **64 built-in presets**. Use this
+The gallery has **136 GIFs**, including all **64 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
 [Search and play one example at a time](https://jturbide.github.io/niri-fx/gallery/) or browse the [full catalog](catalog.md).
+
+[Quickshell picker: search, review, apply and restore](gifs/workflow-quickshell-picker.gif)
+shows the optional desktop UI. [Setup and embedding](quickshell.md).
 
 ## Opening and closing
 

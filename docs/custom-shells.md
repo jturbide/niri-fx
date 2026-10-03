@@ -13,7 +13,15 @@ NiriFX use. An optional bar button can open Studio, just like an application lau
 The same distinction applies to other bars and widgets: their own layer-shell
 surfaces are not the application open/close animations targeted by this pack.
 
-## Custom Quickshell and AGS/Astal
+## Custom Quickshell
+
+Use `niri-fx picker` for a standalone desktop window, or embed the packaged QML
+controller and view into your settings page. The [Quickshell guide](quickshell.md)
+includes an example and documents reviewed Apply, JSON profiles, resize consent
+and dedicated Undo history. Existing iRiS, DMS and Noctalia users can keep their
+own pickers; choose one owner for Niri's animation configuration.
+
+## AGS/Astal and other custom UIs
 
 [Quickshell](https://quickshell.org/), [AGS](https://aylur.github.io/ags/) and
 [Astal](https://aylur.github.io/astal/) provide tools for building desktop UIs.
@@ -44,8 +52,8 @@ binds {
 ```
 
 Merge the binding into your existing `binds` block and choose an unused shortcut.
-It only opens Studio. Custom Quickshell and AGS/Astal picker UIs are future work;
-the generic CLI/config path does not imply those UIs have been tested.
+It only opens Studio. An AGS/Astal picker example remains future work;
+the generic CLI/config path does not imply that UI has been tested.
 
 ## Caelestia and ML4W
 

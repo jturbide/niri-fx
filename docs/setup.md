@@ -20,6 +20,16 @@ note. `--dry-run` is an explicit alias for this preview. It may create and remov
 a temporary sibling config to validate relative includes; it does not install
 files or create a restore snapshot until `--apply`.
 
+For a UI or script that separates review from activation, retain the JSON
+`plan_sha256` and pass it back as `--expect-plan HASH` with `--apply`, keeping
+the other setup arguments identical. NiriFX rebuilds the plan and rejects changed
+selections or observed file state before writing. The [Quickshell picker](quickshell.md)
+uses this contract. It supplements validation and per-write conflict checks;
+it does not lock your files while you review them.
+
+`python3 -m niri_fx inspect --custom /path/to/style.json` validates and prints
+normalized style/profile JSON without requiring Niri or modifying a config.
+
 ## Apply
 
 ```sh

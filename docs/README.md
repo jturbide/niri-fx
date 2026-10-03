@@ -12,6 +12,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Use plain Niri or Waybar | [Standalone setup](standalone.md) |
 | Use iNiR or iRiS | [iNiR/iRiS setup](getting-started.md#inir-and-iris) |
 | Use DankMaterialShell | [DMS launcher adapter](dms.md) |
+| Use or embed the Quickshell picker | [Quickshell picker](quickshell.md) |
 | Use Noctalia's animation picker | [Noctalia preset pack](noctalia.md) |
 | Use another shell or a generated config | [Choose your setup](scenarios.md), [custom shells](custom-shells.md) |
 | Check requirements and supported features | [Compatibility](compatibility.md) |
