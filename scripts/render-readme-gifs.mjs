@@ -10,7 +10,7 @@ import assert from 'node:assert/strict';
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)));
 process.chdir(root);
 const args=process.argv.slice(2);
-assert(args.every(arg=>arg==='--showcase-only'),'Supported option: --showcase-only');
+assert(args.every(arg=>['--showcase-only','--slices-only'].includes(arg)),'Supported options: --showcase-only or --slices-only');
 mkdirSync(join(root,'artifacts'),{recursive:true});
 const scratch=mkdtempSync(join(root,'artifacts/readme-gifs-'));
 const preview=join(scratch,'preview.html');
@@ -54,7 +54,7 @@ try{
   ...Object.keys(presets).map(preset=>({name:'preset-'+preset,preset,mode:'effect',title:preset.replaceAll('-',' ').toUpperCase(),direction:'round',small:true}))
  ];
  const showcases=JSON.parse(readFileSync(join(out,'showcases.json'),'utf8')).clips;
- const specs=args.includes('--showcase-only')?showcases:[...originalSpecs,...showcases];
+ const specs=args.includes('--slices-only')?[...originalSpecs.filter(spec=>presets[spec.preset].family==='slices'),...showcases.filter(spec=>spec.name.startsWith('compare-slice'))]:args.includes('--showcase-only')?showcases:[...originalSpecs,...showcases];
  const previous=existsSync(join(out,'manifest.json'))?JSON.parse(readFileSync(join(out,'manifest.json'),'utf8')).clips:[];
  const replaced=new Set(specs.map(spec=>'docs/gifs/'+spec.name+'.gif'));
  const manifest=previous.filter(clip=>!replaced.has(clip.file));
@@ -75,13 +75,12 @@ try{
    const pause=450,fps=20;
    const duration=spec.direction==='round'?pause*3+forward+backward:pause*2+(spec.direction==='open'?backward:forward);
    const note=concept?'Synthetic windows · design preview, not installed movement':spec.mode==='resize'?'Real resize shader · disabled by default':comparison?'Real shader · same timing, texture and seed':panel.source?'Custom settings · real shader · resize off':'Real open/close shader · '+panel.preset+' preset · synthetic window';
-   await evaluate(`byId('preset').value=${JSON.stringify(panel.preset||'balanced')};byId('preset').dispatchEvent(new Event('change'));document.querySelector('[data-mode=${spec.mode}]').click();
-    for(const [key,value] of Object.entries(${JSON.stringify(effect)})){if(key==='resize')byId(key).checked=value;else byId(key).value=value;}
-    byId('density').value=${JSON.stringify(effect.particles?'count':'tile')};byId('density').dispatchEvent(new Event('input'));
+   await evaluate(`byId('preset').value=${JSON.stringify(panel.preset||'balanced')};byId('preset').dispatchEvent(new Event('change'));
+    parameters=normalizePreset({schema:2,name:'Recording',effect:${JSON.stringify(effect)}}).effect;populate();document.querySelector('[data-mode=${spec.mode}]').click();refresh();
     byId('gif-heading').textContent=${JSON.stringify(panel.label)};byId('gif-note').textContent=${JSON.stringify(note)};
     byId('gif-heading').style.fontSize=${JSON.stringify(comparison?'28px':spec.panels?'24px':'18px')};byId('gif-note').style.fontSize=${JSON.stringify(spec.panels?'18px':'12px')};`);
    assert.equal(await evaluate('document.documentElement.dataset.shaderStatus'),'ready');
-   assert.deepEqual(await evaluate('effectDocument().effect'),effect);
+   assert.deepEqual(await evaluate('parameters'),effect);
    assert.deepEqual(await evaluate('[shaderFor(parameters,true),shaderFor(parameters,false)]'),sources);
    const panelFrames=Math.ceil(duration*fps/1000);
    if(index)assert.equal(panelFrames,count,'Comparison panels must have matching timing');
@@ -107,7 +106,7 @@ try{
    '-filter_complex',`${scale};${stack}split[a][b];[a]palettegen=max_colors=192:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle`,
    '-loop','0',target]);
   assert(statSync(target).size>1000);
-  manifest.push({file:'docs/gifs/'+spec.name+'.gif',...(spec.preset?{preset:spec.preset}:{}),mode:spec.mode,frames:count,fps,bytes:statSync(target).size,
+  manifest.push({file:'docs/gifs/'+spec.name+'.gif',...(spec.preset?{preset:spec.preset,effect:recorded[0].effect}:{}),mode:spec.mode,frames:count,fps,bytes:statSync(target).size,
    ...(spec.panels?{panels:recorded.map(({directory,...panel})=>panel)}:{})});
   console.log(`Rendered ${spec.name}: ${count} frames, ${Math.round(statSync(target).size/1024)} KiB`);
  }

@@ -3,7 +3,7 @@
 ## Reporting
 
 Please report vulnerabilities through
-[GitHub private vulnerability reporting](https://github.com/jturbide/niri-fragments/security/advisories/new)
+[GitHub private vulnerability reporting](https://github.com/jturbide/niri-fx/security/advisories/new)
 when it is available for this repository. If that page is unavailable, open an
 issue containing **only a request for a private reporting channel**, with no
 vulnerability details, credentials or sensitive logs. Do not disclose an exploit

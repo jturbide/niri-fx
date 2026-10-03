@@ -35,7 +35,7 @@ Niri window with two colored synthetic clients. Click inside it, then use:
 - **Alt+Q:** close the demo.
 
 For an optional app-launcher entry, run `python3 scripts/install-desktop.py --movement-demo`,
-then open **Niri Fragments Movement Demo**. Remove
+then open **NiriFX Movement Demo**. Remove
 `~/.local/share/applications/niri-fragments-movement-demo.desktop` to remove it.
 
 The parent desktop may reserve some keys. The demo runs without `--session`,

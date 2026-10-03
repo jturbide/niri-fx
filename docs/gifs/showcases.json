@@ -336,6 +336,40 @@
           "source": "examples/resize-soft.json"
         }
       ]
+    },
+    {
+      "name": "compare-slice-count",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "4 slices",
+          "preset": "slide-apart",
+          "overrides": {
+            "slice_count": 4,
+            "open_ms": 750,
+            "close_ms": 750
+          }
+        },
+        {
+          "label": "12 slices",
+          "preset": "slide-apart",
+          "overrides": {
+            "slice_count": 12,
+            "open_ms": 750,
+            "close_ms": 750
+          }
+        },
+        {
+          "label": "32 slices",
+          "preset": "slide-apart",
+          "overrides": {
+            "slice_count": 32,
+            "open_ms": 750,
+            "close_ms": 750
+          }
+        }
+      ]
     }
   ]
 }

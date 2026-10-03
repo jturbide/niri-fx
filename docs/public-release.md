@@ -2,8 +2,8 @@
 
 Reviewed on **2026-10-02** for the first public **0.5.0 prerelease**, with explicit
 capability and validation limits. This page records the audit scope; see the
-[repository](https://github.com/jturbide/niri-fragments) and
-[release page](https://github.com/jturbide/niri-fragments/releases/tag/v0.5.0)
+[repository](https://github.com/jturbide/niri-fx) and
+[release page](https://github.com/jturbide/niri-fx/releases/tag/v0.5.0)
 for current publication status. No PyPI or AUR publication is configured.
 
 ## Prepared content
@@ -70,6 +70,25 @@ public artifact is a **prerelease**: stock open/close and optional resize,
 app-style Studio, iNiR registration and standalone setup. Native movement is an
 isolated experiment; DMS-native settings, seamless swap retargeting and broad GPU
 performance acceptance remain future work.
+
+## 0.6.0 rebrand and Slices review
+
+The NiriFX update adds an original MIT slice shader and four synthetic GIFs,
+bringing the gallery to 35. The new clips and Studio screenshots were inspected.
+All 14 legacy fragment presets retain their exact generated 0.5 shader source;
+56 historical hashes cover open, close, resize and experimental movement.
+
+The proposed source tree passed Gitleaks 8.30.1 with no findings. Both command
+names and Python entry points are packaged, and the migration guide describes
+the distribution rename, schema compatibility and preserved state paths.
+The new slice effects passed Chromium checks and open/close checks in an
+isolated stock Niri session. iNiR checks used temporary configuration files and
+restored the original registry exactly. See [current validation](validation.md).
+
+The public launch's main-branch protections, required Checks jobs, signed-commit
+requirement, private vulnerability reporting, secret scanning and push protection
+are enabled. The rename retains the old GitHub URL as a redirect; do not reuse
+the old repository name. Package-registry publication remains out of scope.
 
 ## Visibility and launch settings
 

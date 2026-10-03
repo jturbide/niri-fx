@@ -52,7 +52,7 @@ class ServerTests(unittest.TestCase):
     def test_session_page_and_actual_named_preset_save(self):
         with urlopen(self.server.session_url, timeout=5) as response:
             html = response.read().decode()
-            self.assertIn("Niri Fragments Studio", html)
+            self.assertIn("NiriFX Studio", html)
             self.assertNotIn("@EFFECT_JSON@", html)
         with patch("niri_fragments.studio.read_shell_presets", return_value=shell_registry()):
             document = {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 500, "rotation": "random"}}
@@ -78,6 +78,16 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, 400)
         caught.exception.close()
         self.assertFalse(self.registry.exists())
+
+    def test_slice_schema_two_is_saved_without_replacing_base_resize(self):
+        document = {"schema": 2, "name": "Sliced", "effect": {"family": "slices", "slice_count": 9}}
+        with patch("niri_fragments.studio.read_shell_presets", return_value=shell_registry()):
+            with urlopen(self.request(document), timeout=5) as response:
+                saved = json.load(response)
+        self.assertEqual(saved["id"], "niri-fragments-custom-sliced")
+        registered = json.loads(self.registry.read_text())["presets"][0]
+        self.assertIn("slices_color", registered["types"]["window-close"]["custom-shader"])
+        self.assertEqual(registered["types"]["window-resize"], shell_registry()["presets"][0]["types"]["window-resize"])
 
 
 if __name__ == "__main__":

@@ -37,7 +37,7 @@ Commands after the version commit is ready (replace `X.Y.Z`):
 
 ```sh
 git verify-commit HEAD
-git tag -s vX.Y.Z -m "Niri Fragments X.Y.Z"
+git tag -s vX.Y.Z -m "NiriFX X.Y.Z"
 git verify-tag vX.Y.Z
 git push origin main
 git push origin vX.Y.Z

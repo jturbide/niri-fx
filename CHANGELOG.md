@@ -10,6 +10,37 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.6.0 — 2026-10-02
+
+Niri Fragments becomes **NiriFX**, a window effects studio with multiple families.
+
+### Added
+
+- Slices family with Slide Apart, Alternating Blinds and Diagonal Shear presets.
+  Configure strip count, angle, distance, direction, stagger and rotation.
+- Family-specific Studio controls and a `families` capability command. Unsupported
+  slice resize/movement requests fail explicitly; Studio disables those previews.
+- Schema 2 slice documents, three importable examples, three preset GIFs and a
+  synchronized 4/12/32-slice comparison. The README gallery now has 35 GIFs.
+- Historical shader fingerprint tests, slice validation/round trips, family UI
+  checks and new/legacy command compatibility coverage.
+- Migration guidance for the repository/package rename and preserved user state.
+
+### Changed
+
+- Repository/distribution/primary CLI become `niri-fx`; app name is NiriFX Studio.
+  `niri-fragments`, `python3 -m niri_fragments` and existing Python imports remain
+  supported, alongside `python3 -m niri_fx`.
+- iNiR display labels use NiriFX while IDs/ownership remain `niri-fragments`.
+  Existing presets, snapshots, managed includes and launcher identities are retained.
+- Studio filters controls/presets by family. Irrelevant CLI overrides are rejected.
+
+Compatibility: all 14 existing fragment shaders remain byte-for-byte identical
+in generated source to 0.5. Fragment exports retain schema 1, and legacy JSON
+still imports. New slice JSON needs 0.6+. Resize stays off by default; Slices
+supports opening/closing only. See [migration](docs/migration-0.6.md) before
+replacing an installed Python distribution. DMS integration remains future work.
+
 ## 0.5.0 — 2026-10-02
 
 First public prerelease. Earlier versions were private development milestones.

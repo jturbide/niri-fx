@@ -89,7 +89,7 @@ class PresetTests(unittest.TestCase):
         invalid = [[], {"schema": 1, "name": "Bad", "effect": {"shader": "arbitrary"}},
                    {"schema": 1, "name": "../outside", "effect": {}},
                    {"schema": 1, "name": "Bad", "effect": {"gravity": "typo"}},
-                   {"schema": 2, "name": "Future", "effect": {}},
+                   {"schema": 3, "name": "Future", "effect": {}},
                    {"schema": True, "name": "Boolean schema", "effect": {}}]
         for data in invalid:
             with self.subTest(data=data), self.assertRaises(ValueError):
@@ -165,6 +165,10 @@ class EffectTests(unittest.TestCase):
     def test_movement_is_separate_from_stock_config(self):
         for effect in PRESETS.values():
             self.assertNotIn("window-movement", render_kdl(effect))
+            if effect.family == "slices":
+                with self.assertRaisesRegex(ValueError, "does not support"):
+                    movement_shader(effect)
+                continue
             self.assertIn("move_color", movement_shader(effect))
             self.assertNotIn("@", movement_shader(effect))
 

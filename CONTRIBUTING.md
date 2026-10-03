@@ -27,7 +27,7 @@ so local socket access must be available. Do not point tests at your real regist
 For editor/rendering changes, use Node 22+ and Chromium/Chrome (or `CHROME_BIN`):
 
 ```sh
-python3 -m niri_fragments preview --output /tmp/fragments-review.html
+python3 -m niri_fx preview --output /tmp/fragments-review.html
 node scripts/browser-smoke.mjs file:///tmp/fragments-review.html
 ```
 
@@ -40,6 +40,7 @@ export parity; it is not a compositor GPU benchmark. See
 
 | Location | Responsibility |
 | --- | --- |
+| `niri_fx/` | New module entry point; the legacy module and CLI remain supported |
 | `niri_fragments/effects.py`, `shaders/` | Validated parameters, presets and shader generation |
 | `niri_fragments/setup.py` | Setup plans, snapshots, conflict-aware restore and diagnostics |
 | `niri_fragments/integration.py` | iNiR helper contract and safe registry updates |
@@ -65,7 +66,7 @@ Changes to the Niri patch need the pinned build/tests and a nested-session check
 Do not replace a contributor's login compositor to run tests. Explain any new
 capture, damage, rendering or interruption behavior and its validation limits.
 
-Original Fragments contributions use [MIT](LICENSE). Changes derived from Niri
+Original NiriFX contributions use [MIT](LICENSE). Changes derived from Niri
 in the movement patch use [GPL-3.0-or-later](experimental/COPYING-NIRI).
 Preserve attribution for any imported code; see [third-party notices](THIRD_PARTY.md).
 There is no CLA. Follow the [release guide](docs/releasing.md) for maintainer tasks.

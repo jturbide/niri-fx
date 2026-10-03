@@ -1,0 +1,33 @@
+{
+  "schema": 2,
+  "name": "Diagonal Shear",
+  "effect": {
+    "family": "slices",
+    "slice_count": 10,
+    "slice_angle": -35,
+    "slice_distance": 280,
+    "slice_stagger": 0.3,
+    "slice_rotation": 5,
+    "slice_direction": "alternate",
+    "tile_size": 28,
+    "scatter": 125,
+    "open_ms": 760,
+    "close_ms": 720,
+    "gravity": "space",
+    "gravity_strength": 0.7,
+    "particles": 720,
+    "rotation": "random",
+    "spin": 180,
+    "swirl": 0,
+    "dispersion": 0.7,
+    "stagger": 0.18,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65,
+    "release": "together",
+    "wave_span": 0.55,
+    "origin_x": 0.5,
+    "origin_y": 0.5,
+    "resize_mode": "full"
+  }
+}

@@ -9,3 +9,4 @@ include experimental/COPYING-NIRI
 recursive-include scripts *.py
 recursive-include scripts *.mjs
 recursive-include tests *.py
+recursive-include tests *.json

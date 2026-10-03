@@ -1,13 +1,13 @@
 # Setup, diagnostics and restore
 
-Run from the checkout, or replace `python3 -m niri_fragments` with the installed
-`niri-fragments` command. Python 3.10+ and a working Niri configuration are required.
+Run from the checkout, or replace `python3 -m niri_fx` with the installed
+`niri-fx` command. Python 3.10+ and a working Niri configuration are required.
 
 ## Inspect first
 
 ```sh
-python3 -m niri_fragments doctor
-python3 -m niri_fragments setup
+python3 -m niri_fx doctor
+python3 -m niri_fx setup
 ```
 
 `doctor` reports the Niri version, config validation, iNiR helper, browser and
@@ -23,7 +23,7 @@ files or create a restore snapshot until `--apply`.
 ## Apply
 
 ```sh
-python3 -m niri_fragments setup --apply
+python3 -m niri_fx setup --apply
 ```
 
 Automatic targeting uses iNiR when its external-preset helper is installed;
@@ -33,16 +33,16 @@ Existing launchers are preserved. Nothing starts at login.
 
 | Target | Changes | Activation |
 | --- | --- | --- |
-| iNiR | Merge the 14 built-ins into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
+| iNiR | Merge the 17 built-ins into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
 | Standalone | Generate `fragments/niri-fragments.kdl` beside the root config; append one marked include | Niri hot reloads the validated include |
 
 All built-ins leave resize fragments off. To save an iNiR custom style, use
 `--name`; custom options cannot silently modify the whole built-in pack.
 
 ```sh
-python3 -m niri_fragments setup --target inir --base bouncy --no-launcher
-python3 -m niri_fragments setup --target standalone --preset directional-wave --no-launcher
-python3 -m niri_fragments setup --custom examples/corner-burst.json
+python3 -m niri_fx setup --target inir --base bouncy --no-launcher
+python3 -m niri_fx setup --target standalone --preset directional-wave --no-launcher
+python3 -m niri_fx setup --custom examples/corner-burst.json
 ```
 
 These are previews; repeat the chosen command with `--apply`. `--custom` cannot
@@ -66,9 +66,9 @@ and does not require a separately installed `niri-fragments` executable.
 Reapplying identical settings is a no-op and creates no new snapshot.
 
 ```sh
-python3 -m niri_fragments restore               # Preview the latest applied setup
-python3 -m niri_fragments restore --apply       # Restore it
-python3 -m niri_fragments restore --transaction SNAPSHOT # Preview a specific snapshot
+python3 -m niri_fx restore               # Preview the latest applied setup
+python3 -m niri_fx restore --apply       # Restore it
+python3 -m niri_fx restore --transaction SNAPSHOT # Preview a specific snapshot
 ```
 
 For iNiR, select your previous non-Fragments style **before restoring**. Registry

@@ -17,10 +17,10 @@ need iNiR, a Rust toolchain or the experimental compositor.
 ## Get the source and preview
 
 ```sh
-git clone https://github.com/jturbide/niri-fragments.git
-cd niri-fragments
-python3 -m niri_fragments --version
-python3 -m niri_fragments preview --output /tmp/fragments-preview.html
+git clone https://github.com/jturbide/niri-fx.git
+cd niri-fx
+python3 -m niri_fx --version
+python3 -m niri_fx preview --output /tmp/fragments-preview.html
 xdg-open /tmp/fragments-preview.html
 ```
 
@@ -31,10 +31,10 @@ environment instead:
 ```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install .
-.venv/bin/niri-fragments --help
+.venv/bin/niri-fx --help
 ```
 
-Use `.venv/bin/niri-fragments` in place of `python3 -m niri_fragments` when running
+Use `.venv/bin/niri-fx` in place of `python3 -m niri_fx` when running
 the installed package. Source installation is the documented distribution path;
 there is no official PyPI, AUR or Flatpak release yet.
 
@@ -45,8 +45,8 @@ restore snapshots, use [the setup workflow](setup.md). `setup` previews changes;
 `setup --apply` performs them. The manual registration workflow remains available:
 
 ```sh
-python3 -m niri_fragments register --dry-run
-python3 -m niri_fragments register
+python3 -m niri_fx register --dry-run
+python3 -m niri_fx register
 ```
 
 Registration backs up and updates the user preset registry atomically. It adds
@@ -59,8 +59,8 @@ Open and close are replaced; ordinary resize is preserved unless you explicitly
 opt into fragments. If the current preset is unrecognized, select a known base:
 
 ```sh
-python3 -m niri_fragments register --base bouncy --dry-run
-python3 -m niri_fragments register --base bouncy
+python3 -m niri_fx register --base bouncy --dry-run
+python3 -m niri_fx register --base bouncy
 ```
 
 An explicit base chooses those timings for the saved entries. It does not capture
@@ -69,7 +69,7 @@ unrecognized custom timings. Later base changes are not inherited automatically.
 For visual editing and saving:
 
 ```sh
-python3 -m niri_fragments studio
+python3 -m niri_fx studio
 # Optional launcher, tied to this checkout's current path:
 python3 scripts/install-desktop.py
 ```
@@ -94,7 +94,7 @@ This path also applies to Niri with DankMaterialShell or another shell. Keep the
 generated file outside shell-managed directories. First generate and validate:
 
 ```sh
-python3 -m niri_fragments render --preset explosion > /tmp/fragments.kdl
+python3 -m niri_fx render --preset explosion > /tmp/fragments.kdl
 niri validate -c /tmp/fragments.kdl
 ```
 
@@ -128,6 +128,10 @@ override settings selected through a shell preset manager. See the
 
 ## Update
 
+For a 0.5 installation, follow the [0.6 migration guide](migration-0.6.md) first;
+the Python distribution name changed and the old package must be removed before
+installing the new one in the same virtual environment.
+
 Review the [changelog](../CHANGELOG.md), then update a clean checkout:
 
 ```sh
@@ -147,19 +151,19 @@ moves. Existing custom resize choices survive updates; new presets stay opted ou
 
 ## Roll back or remove
 
-For iNiR, **first select your previous non-Fragments style in Settings**, then:
+For iNiR, **first select your previous non-NiriFX style in Settings**, then:
 
 ```sh
-python3 -m niri_fragments unregister --dry-run
-python3 -m niri_fragments unregister
+python3 -m niri_fx unregister --dry-run
+python3 -m niri_fx unregister
 ```
 
-This removes all Fragments registry entries, including named custom styles; export
+This removes all NiriFX registry entries, including named custom styles; export
 any you want to keep first. Unregister does not rewrite the shader currently in
 Niri's config and retains registry backups. Restore a printed backup path if you
 need the previous registry; reselect a style afterward.
 
-For standalone Niri, remove the Fragments include and run `niri validate`. Your
+For standalone Niri, remove the NiriFX include and run `niri validate`. Your
 underlying animation settings take over. Keep or remove the generated file and
 its backups as needed.
 

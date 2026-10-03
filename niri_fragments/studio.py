@@ -13,7 +13,7 @@ import time
 from urllib.parse import parse_qs, urlsplit
 import webbrowser
 
-from .effects import Effect, GRAVITIES, ROTATIONS, RELEASES, RESIZE_MODES, LIMITS, describe_presets, shader_templates
+from .effects import Effect, FAMILIES, FAMILY_FIELDS, SLICE_DIRECTIONS, GRAVITIES, ROTATIONS, RELEASES, RESIZE_MODES, LIMITS, describe_presets, shader_templates
 from .integration import make_custom_preset, read_shell_presets, update_registry
 
 
@@ -21,6 +21,7 @@ def preview_document(effect, name="balanced", connection=None):
     payload = {"parameters": asdict(effect), "name": name, "presets": describe_presets(),
                "templates": shader_templates(), "gravities": GRAVITIES, "rotations": ROTATIONS,
                "releases": RELEASES, "resize_modes": RESIZE_MODES, "limits": LIMITS, "defaults": asdict(Effect()),
+               "families": FAMILIES, "family_fields": FAMILY_FIELDS, "slice_directions": SLICE_DIRECTIONS,
                "connection": connection}
     data = json.dumps(payload).replace("</", "<\\/")
     root = files("niri_fragments")
@@ -125,7 +126,7 @@ def serve(arguments, effect):
     if not 0 <= arguments.port <= 65535:
         raise ValueError("port must be between 0 and 65535")
     with make_server(arguments, effect) as server:
-        print(f"Niri Fragments Studio: {server.session_url}", flush=True)
+        print(f"NiriFX Studio: {server.session_url}", flush=True)
         print("Save adds a preset to iRiS; select it there to activate. Ctrl+C stops the editor.", flush=True)
         if not arguments.no_browser:
             mode = open_studio(server.session_url, browser=arguments.browser)

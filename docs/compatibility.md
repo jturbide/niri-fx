@@ -1,6 +1,6 @@
 # Compatibility and next integrations
 
-Checked on 2026-10-02. The shader engine targets **Niri**. A desktop shell
+Checked on 2026-10-02. NiriFX (formerly Niri Fragments) targets **Niri**. A desktop shell
 provides settings and launchers; it does not render these application windows.
 The iNiR/iRiS preset adapter is optional: `render` and the offline Studio preview
 do not need iNiR installed.
@@ -29,7 +29,7 @@ not a claim that a DMS plugin has been shipped or tested.
 From this checkout:
 
 ```sh
-python3 -m niri_fragments render --preset explosion \
+python3 -m niri_fx render --preset explosion \
   > /tmp/fragments.kdl
 niri validate -c /tmp/fragments.kdl
 ```
@@ -59,7 +59,7 @@ same open/close settings.
 For visual tuning without the iNiR save adapter:
 
 ```sh
-python3 -m niri_fragments preview --output /tmp/fragments-preview.html
+python3 -m niri_fx preview --output /tmp/fragments-preview.html
 xdg-open /tmp/fragments-preview.html
 ```
 
@@ -83,5 +83,5 @@ This adapter is a recommendation, not an implemented feature in this release.
 Keep one Niri renderer and add shell adapters around it. A Hyprland, KWin or
 GNOME version would be a separate compositor backend with its own lifecycle,
 texture, damage and input contracts. Defer those ports until the current Niri
-effects and experimental movement behavior are settled. Keep the project name
-**niri-fragments** while that remains its actual supported renderer.
+effects and experimental movement behavior are settled. The **NiriFX** name reflects multiple effect families while retaining Niri as
+the supported renderer. Shell support does not imply support for another compositor.

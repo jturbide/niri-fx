@@ -1,24 +1,24 @@
-# Niri Fragments
+# NiriFX
 
-**Explode windows into pixels. Pull them back together.**
+**Slice windows apart. Explode them into pixels. Bring them back together.**
 
-Niri Fragments gives application windows textured particle animations: outward
-bursts, inward collapses, gravity, orbit and rotation. Choose from 14 presets or
-build your own in Fragments Studio. Niri renders the effects; the optional
-iNiR/iRiS adapter adds them to your existing settings picker.
+NiriFX is a configurable window effects studio for Niri, formerly **Niri
+Fragments**. Choose from **17 presets across Fragments and Slices**, preview the
+actual shaders, and tune the controls for each family. The optional iNiR/iRiS
+adapter adds your styles to its settings picker.
 
 [Get started](docs/getting-started.md) · [Studio & controls](docs/usage.md) ·
 [Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md)
 
-**Public prerelease · 0.5.0.** Opening and closing work on stock Niri 26.04.
+**Public prerelease · 0.6.0.** Opening and closing work on stock Niri 26.04.
 Resize fragments are **off by default and strictly opt-in**. Native move/swap
 fragmentation requires the separate experimental Niri patch. Performance and
 appearance still need testing across GPUs, applications and display scales.
 
 ## See it in motion
 
-[Presets](#fourteen-starting-styles) · [Compare the controls](#one-control-at-a-time) ·
+[Slices](#three-slice-styles) · [Fragments](#fourteen-fragment-styles) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
@@ -30,7 +30,31 @@ These clips use Studio's real shader renderer with synthetic content at 20 fps.
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](docs/gifs/opening.gif) | ![Closing explodes a window into fragments](docs/gifs/closing.gif) |
 
-### Fourteen starting styles
+### Three slice styles
+
+**New in 0.6.** Whole strips of the window slide, rotate and reassemble. Slice
+count, angle, travel distance, direction, stagger and rotation are adjustable.
+These effects use stock Niri opening/closing shaders; slice resize and movement
+are not supported in this release.
+
+| Slide Apart | Alternating Blinds | Diagonal Shear |
+| --- | --- | --- |
+| ![Horizontal strips slide apart and return](docs/gifs/preset-slide-apart.gif) | ![Vertical strips travel in alternating directions and rotate](docs/gifs/preset-alternating-blinds.gif) | ![Diagonal strips shear away and reconstruct](docs/gifs/preset-diagonal-shear.gif) |
+| 12 horizontal slices | 16 vertical strips · 16° rotation | 10 diagonal strips · alternating travel |
+| [Settings JSON](examples/slide-apart.json) | [Settings JSON](examples/alternating-blinds.json) | [Settings JSON](examples/diagonal-shear.json) |
+
+**Slice count — 4 / 12 / 32.** Same timing, texture and motion, with different strip widths.
+
+![Synchronized comparison of four, twelve and thirty-two slices](docs/gifs/compare-slice-count.gif)
+
+Choose **Slices** in Studio, or try it offline:
+
+```sh
+python3 -m niri_fx preview --preset diagonal-shear --output /tmp/nirifx-slices.html
+xdg-open /tmp/nirifx-slices.html
+```
+
+### Fourteen fragment styles
 
 Every loop closes and opens at that preset's configured timing. Start with
 **Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
@@ -94,7 +118,7 @@ pieces scatter and around which they orbit; everything else is held constant.
 ### Three custom examples
 
 Combine the controls to create your own style. These downloadable examples use
-existing capabilities; they are separate from the 14 built-ins. **Resize is off
+the Fragments family; they are separate from the built-in presets. **Resize is off
 in all three.** The JSON files contain the exact parameters used for the GIFs.
 
 | Meteor Shower | Orbit Burst | Reverse Gravity |
@@ -106,7 +130,7 @@ in all three.** The JSON files contain the exact parameters used for the GIFs.
 From the checkout, add an example to iRiS and then select it in Settings:
 
 ```sh
-python3 -m niri_fragments register --custom examples/meteor-shower.json
+python3 -m niri_fx register --custom examples/meteor-shower.json
 ```
 
 Use the other JSON filenames to add those styles too. Registration does not
@@ -164,9 +188,9 @@ runtime dependencies. Chromium provides the app-style editor; other WebGL-capabl
 browsers can open the offline preview.
 
 ```sh
-git clone https://github.com/jturbide/niri-fragments.git
-cd niri-fragments
-python3 -m niri_fragments preview --output /tmp/fragments-preview.html
+git clone https://github.com/jturbide/niri-fx.git
+cd niri-fx
+python3 -m niri_fx preview --output /tmp/fragments-preview.html
 xdg-open /tmp/fragments-preview.html
 ```
 
@@ -176,9 +200,9 @@ you already have that file; existing previews are never overwritten.
 For installation with diagnostics and a restore snapshot:
 
 ```sh
-python3 -m niri_fragments doctor
-python3 -m niri_fragments setup            # Review the detected target and file changes
-python3 -m niri_fragments setup --apply    # Apply that setup
+python3 -m niri_fx doctor
+python3 -m niri_fx setup            # Review the detected target and file changes
+python3 -m niri_fx setup --apply    # Apply that setup
 ```
 
 Setup detects iNiR or standalone Niri and adds an application launcher if absent.
@@ -189,18 +213,18 @@ for custom paths, updates and recovery.
 ### Niri + iNiR/iRiS
 
 ```sh
-python3 -m niri_fragments register --dry-run
-python3 -m niri_fragments register
+python3 -m niri_fx register --dry-run
+python3 -m niri_fx register
 ```
 
-Choose a Fragments style in **iRiS Settings → Windows → Movement → Style**.
+Choose a NiriFX style in **iRiS Settings → Windows → Movement → Style**.
 Registration adds presets without activating them. Your other presets and named
 custom styles are preserved. Requires iNiR's external animation preset support.
 
 ### Standalone Niri, DankMaterialShell, or another Niri shell
 
 ```sh
-python3 -m niri_fragments render --preset explosion > /tmp/fragments.kdl
+python3 -m niri_fx render --preset explosion > /tmp/fragments.kdl
 niri validate -c /tmp/fragments.kdl
 ```
 
@@ -212,13 +236,14 @@ runtime-tested. See [DMS setup and the roadmap](docs/compatibility.md).
 ## Make it yours
 
 ```sh
-python3 -m niri_fragments studio
+python3 -m niri_fx studio
 ```
 
-![Particle controls in Fragments Studio](docs/studio.png)
+![Family-specific slice controls in NiriFX Studio](docs/studio-slices.png)
 
-Tune particle count, gravity direction and strength, spin, orbit, scatter,
-release stagger and timing. Studio opens as a dedicated Chromium app window,
+Select an effect family to see its controls. Tune slices by count, angle and
+travel, or fragments by particles, gravity, spin and orbit. Opening and closing
+have separate timings. Studio opens as a dedicated Chromium app window,
 with a browser fallback. **Import preset** opens any showcase JSON in the editor.
 Tune release direction, burst origin and resize style, then export JSON/KDL or
 **Save to iRiS** and
@@ -228,12 +253,20 @@ The default Balanced preset targets 720 pieces; Explosion uses 1,200 and
 Implosion uses 1,000. Resize stays off until you enable it. The controls and
 CLI examples are in the [usage guide](docs/usage.md).
 
+## Upgrading from Niri Fragments
+
+The `niri-fragments` executable and `python3 -m niri_fragments` still work. Existing
+JSON, iNiR preset IDs, setup snapshots, launchers and configuration paths are
+preserved. Fragment exports remain schema 1; slices use schema 2 and require
+NiriFX 0.6+. See [the migration guide](docs/migration-0.6.md) before replacing an
+installed package or updating your presets.
+
 ## What works where?
 
 | Feature | Stock Niri | Extra requirement |
 | --- | --- | --- |
-| Open / close fragments, 14 presets | Yes; validated on 26.04 | Enable Niri animations |
-| Optional resize fragments | Yes; disabled by default | Studio checkbox or `--resize` |
+| Open / close effects, 17 presets in two families | Yes; validated on 26.04 | Enable Niri animations |
+| Optional resize (Fragments family only) | Yes; disabled by default | Studio checkbox or `--resize` |
 | Studio preview and KDL / JSON export | Yes | WebGL browser |
 | Preset registration and Studio save | Yes | iNiR external preset support |
 | Native movement / column swaps | No | [Pinned experimental Niri build](experimental/README.md) |
@@ -255,7 +288,7 @@ python3 scripts/check-docs.py
 ```
 
 See [Contributing](CONTRIBUTING.md) for dependencies and the full development
-workflow. Report reproducible bugs in [Issues](https://github.com/jturbide/niri-fragments/issues);
+workflow. Report reproducible bugs in [Issues](https://github.com/jturbide/niri-fx/issues);
 use the [security policy](SECURITY.md) for vulnerabilities.
 
 ## License
