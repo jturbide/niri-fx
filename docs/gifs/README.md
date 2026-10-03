@@ -51,8 +51,8 @@ node scripts/render-readme-gifs.mjs --showcase-only
 ```
 
 [showcases.json](showcases.json) defines those clips. Comparison panels use
-750 ms closing/opening durations and the same seed; the custom examples use
-their saved durations. The renderer verifies Python/browser shader parity and
+matched closing/opening durations (750 or 1100 ms) and the same seed; custom
+examples and profiles use their saved action durations. The renderer verifies Python/browser shader parity and
 records resolved parameters in `manifest.json`. This allows the documentation
 check to catch a changed recipe whose recording has not been regenerated.
 The partial render preserves manifest entries for the other existing clips.
@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The current gallery has **95 GIFs**, including all **55 presets**. Eight new
+The current gallery has **106 GIFs**, including all **55 presets**. Eight new
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -136,3 +136,28 @@ node scripts/render-readme-gifs.mjs --only=compare-ember-palette,compare-pixel-m
 
 These are original implementations inspired by broad visual ideas, not captures
 or ports of Burn My Windows. Upstream reference media is not bundled.
+
+## Tuning scenarios and mixed profiles
+
+Eight additional comparisons cover pixel release direction, dust size and wind,
+wisp curl and palettes, ripple displacement, shockwave origin and erosion flow.
+Three additional profiles show Explosion/Dust Drift, Frost Vanish/Pixel Dust and
+Ghost Wisps/Shockwave. The [visual scenario index](../showcases.md) maps the full
+gallery to practical choices, with recordings and importable profile JSON.
+
+```sh
+node scripts/render-readme-gifs.mjs --only=compare-pixel-directions,compare-dust-size,compare-dust-wind
+node scripts/render-readme-gifs.mjs --only=compare-wisp-curl,compare-wisp-palette
+node scripts/render-readme-gifs.mjs --only=compare-distortion-strength,compare-shockwave-origin,compare-dissolve-flow
+node scripts/render-readme-gifs.mjs --only=profile-burst-and-drift,profile-frost-and-fragments,profile-ghost-and-shockwave
+```
+
+All new comparisons use 1100 ms for each action. They change the labelled control
+or palette while keeping other settings fixed. Dust travel stays in cell units;
+increasing cell size also increases pixel travel. Profile loops close, then open,
+with separate shader parameters recorded for both actions. Resize remains off.
+The documentation check enforces a recording for each preset and profile example,
+and a documentation link for each GIF, as well as parameter and file-size agreement.
+Fourteen early preset loops were also refreshed to complete parameter metadata
+for all 55 built-ins. The introductory clips and original movement concepts retain
+their older, smaller metadata records; the original native swap is documented separately.

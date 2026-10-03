@@ -21,6 +21,7 @@ from .model import (
 )
 from .parameters import glsl_number, shader_tokens
 from .presets import PRESETS
+from .profiles import Profile
 
 __all__ = [
     "ELASTIC_ANCHORS",
@@ -45,54 +46,57 @@ __all__ = [
     "render_kdl",
     "preset_description",
     "describe_presets",
-    "effect_document",
 ]
 
 
+# Family names map directly to files. Fragments has three implementations with
+# different bounded lookup costs; resize has its own two-texture interface.
+TEMPLATE_FILES = {
+    "classic": "fragments",
+    "gravity": "gravity",
+    "varied": "varied",
+    "resize": "resize",
+    **{name: name for name in FAMILIES if name != "fragments"},
+}
+
+
 def shader_templates():
+    """Assemble readable GLSL parts, leaving only parameter/action tokens.
+
+    Shared helpers and action entry points expand first. Python and the browser
+    then substitute the same catalog constants into these exact template strings.
+    Read fresh resources so a source-checkout Studio can pick up shader edits.
+    """
     root = files("niri_fx").joinpath("shaders")
-    noise = root.joinpath("noise.glsl").read_text().rstrip()
-    edge_color = root.joinpath("edge-color.glsl").read_text().rstrip()
-    templates = {
-        "dissolve": root.joinpath("dissolve.glsl").read_text(),
-        "iris": root.joinpath("iris.glsl").read_text(),
-        "pixels": root.joinpath("pixels.glsl").read_text(),
-        "wisps": root.joinpath("wisps.glsl").read_text(),
-        "distortion": root.joinpath("distortion.glsl").read_text(),
-        "classic": root.joinpath("fragments.glsl")
-        .read_text()
-        .replace("@ACTION_ENTRY@", root.joinpath("fragments-entry.glsl").read_text().rstrip()),
-        "gravity": root.joinpath("gravity.glsl")
-        .read_text()
-        .replace("@ACTION_ENTRY@", root.joinpath("gravity-entry.glsl").read_text().rstrip()),
-        "resize": root.joinpath("resize.glsl").read_text(),
-        "slices": root.joinpath("slices.glsl")
-        .read_text()
-        .replace("@ACTION_ENTRY@", root.joinpath("slices-entry.glsl").read_text().rstrip()),
-        "elastic": root.joinpath("elastic.glsl")
-        .read_text()
-        .replace("@ACTION_ENTRY@", root.joinpath("elastic-entry.glsl").read_text().rstrip()),
-        "varied": root.joinpath("varied.glsl")
-        .read_text()
-        .replace("@ACTION_ENTRY@", root.joinpath("varied-entry.glsl").read_text().rstrip()),
+    snippets = {
+        "NOISE": root.joinpath("noise.glsl").read_text().rstrip(),
+        "EDGE_COLOR": root.joinpath("edge-color.glsl").read_text().rstrip(),
     }
-    return {
-        name: source.replace("@NOISE@", noise).replace("@EDGE_COLOR@", edge_color)
-        for name, source in templates.items()
-    }
+    result = {}
+    for name, filename in TEMPLATE_FILES.items():
+        source = root.joinpath(f"{filename}.glsl").read_text()
+        if "@ACTION_ENTRY@" in source:
+            source = source.replace(
+                "@ACTION_ENTRY@", root.joinpath(f"{filename}-entry.glsl").read_text().rstrip()
+            )
+        for token, snippet in snippets.items():
+            source = source.replace(f"@{token}@", snippet)
+        result[name] = source
+    return result
+
+
+def renderer_name(effect):
+    """Select a renderer without changing an effect's saved parameters."""
+    if effect.family != "fragments":
+        return effect.family
+    if effect.varied:
+        return "varied"
+    return "classic" if effect.classic else "gravity"
 
 
 def shader(effect, opening):
-    template = shader_templates()[
-        effect.family
-        if effect.family != "fragments"
-        else "varied"
-        if effect.varied
-        else "classic"
-        if effect.classic
-        else "gravity"
-    ]
-    return _expand(template, effect, opening)
+    """Opening reverses the same breakup path; independent profiles choose separately."""
+    return _expand(shader_templates()[renderer_name(effect)], effect, opening)
 
 
 def resize_shader(effect):
@@ -105,15 +109,7 @@ def movement_shader(effect):
     """Experimental API: emit only for the pinned patched compositor."""
     if not FAMILIES[effect.family]["movement"]:
         raise ValueError(f"The {effect.family} family does not support experimental movement")
-    renderer = (
-        "elastic"
-        if effect.family == "elastic"
-        else "varied"
-        if effect.varied
-        else "fragments"
-        if effect.classic
-        else "gravity"
-    )
+    renderer = TEMPLATE_FILES[renderer_name(effect)]
     source = _expand(
         files("niri_fx")
         .joinpath(f"shaders/{renderer}.glsl")
@@ -154,29 +150,38 @@ def _expand(template, effect, opening):
             "PROGRESS": "1.0 - niri_clamped_progress" if opening else "niri_clamped_progress",
         }
     )
-    return re.sub(r"@([A-Z_]+)@", lambda match: tokens[match[1]], template)
+
+    def substitute(match):
+        try:
+            return tokens[match[1]]
+        except KeyError as error:
+            raise ValueError(f"Unknown shader token: {match[1]}") from error
+
+    return re.sub(r"@([A-Z_]+)@", substitute, template)
 
 
 def animation_types(effect):
-    from .profiles import Profile
+    """Emit only stock actions; preserving a movement slot never activates it.
 
-    if isinstance(effect, Profile):
-        return effect.animation_types()
-    types = {
-        name: {"duration-ms": duration, "curve": "linear", "custom-shader": shader(effect, opening)}
-        for name, duration, opening in (
-            ("window-open", effect.open_ms, True),
-            ("window-close", effect.close_ms, False),
-        )
-    }
-
-    if effect.resize:
-        types["window-resize"] = {
-            "duration-ms": effect.resize_ms,
+    Profiles opt into resize with a separate slot. Single styles use their
+    explicit resize flag. Omitting the key lets the base Niri config keep control.
+    """
+    selected = (
+        {action: getattr(effect, action) for action in ("open", "close", "resize")}
+        if isinstance(effect, Profile)
+        else {"open": effect, "close": effect, "resize": effect if effect.resize else None}
+    )
+    return {
+        f"window-{action}": {
+            "duration-ms": getattr(style, f"{action}_ms"),
             "curve": "linear",
-            "custom-shader": resize_shader(effect),
+            "custom-shader": resize_shader(style)
+            if action == "resize"
+            else shader(style, action == "open"),
         }
-    return types
+        for action, style in selected.items()
+        if style is not None
+    }
 
 
 def render_kdl(effect):
@@ -197,8 +202,6 @@ def render_kdl(effect):
 
 
 def preset_description(effect):
-    from .profiles import Profile
-
     if isinstance(effect, Profile):
         return f"Open: {effect.open.family}; close: {effect.close.family}; resize: {effect.resize.family if effect.resize else 'unchanged'}."
     if effect.family not in ("fragments", "slices", "elastic"):
@@ -222,12 +225,3 @@ def preset_description(effect):
 
 def describe_presets():
     return {name: asdict(effect) for name, effect in PRESETS.items()}
-
-
-def effect_document(name, effect):
-    """Serialize the current preset format; older formats are not supported."""
-    from .profiles import Profile
-
-    if isinstance(effect, Profile):
-        return effect.document(name)
-    return {"schema": PRESET_SCHEMA, "name": name, "effect": asdict(effect)}

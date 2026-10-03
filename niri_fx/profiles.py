@@ -2,13 +2,20 @@
 
 from dataclasses import asdict, dataclass
 
-from .effects import FAMILIES, Effect, resize_shader, shader
+from .model import FAMILIES, Effect
 
 PROFILE_SCHEMA = 1
 
 
 @dataclass(frozen=True)
 class Profile:
+    """Action choices, independent of shader generation or shell persistence.
+
+    None means inherit the compositor's existing behavior. Nested resize flags
+    stay false because the resize slot is the only opt-in for a profile.
+    Movement data can round-trip here without appearing in stock Niri exports.
+    """
+
     open: Effect
     close: Effect
     resize: Effect | None = None
@@ -27,21 +34,6 @@ class Profile:
                 )
             if action in ("resize", "movement") and not FAMILIES[effect.family][action]:
                 raise ValueError(f"The {effect.family} family does not support {action}")
-
-    def animation_types(self):
-        result = {}
-        for action in ("open", "close", "resize"):
-            effect = getattr(self, action)
-            if effect is None:
-                continue
-            result[f"window-{action}"] = {
-                "duration-ms": getattr(effect, f"{action}_ms"),
-                "curve": "linear",
-                "custom-shader": resize_shader(effect)
-                if action == "resize"
-                else shader(effect, action == "open"),
-            }
-        return result
 
     def document(self, name):
         return {"kind": "profile", "schema": PROFILE_SCHEMA, "name": name, "actions": asdict(self)}

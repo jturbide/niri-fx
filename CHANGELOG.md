@@ -10,6 +10,29 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Maintenance
+
+- Separate portable document validation, action profiles, offline preview assembly,
+  HTTP transport and shared file staging into focused modules. Remove circular
+  profile/rendering imports and adapter dependencies from the domain layer.
+- Extract Studio's document/shader/KDL operations into a DOM-free core. Share
+  acceptance fixtures with Python and compare all 55 presets' supported stock
+  action shaders directly in Node, in addition to real browser E2E.
+- Unify Chromium startup, readiness, request deadlines, disconnect handling and
+  cleanup across browser tests, GIF recording and GPU benchmarks. All tools now
+  honor `CHROME_BIN`; use URL-safe source paths and isolated browser profiles.
+- Reject unknown single-style document fields consistently with profile documents;
+  reject trailing-newline names in the browser as Python already does. Fail on
+  unknown shader tokens and derive GLSL numeric syntax from parameter metadata.
+- Add storage rollback/cleanup and browser lifecycle regression checks, extend CI
+  and source packaging to include them, and separate shared test fixtures from
+  individual test modules.
+- Document architecture, shader invariants, ownership/restore behavior, effect
+  contribution steps and concrete next-phase acceptance gates. Add focused source
+  comments without changing preset values or shader math. Existing GIFs remain valid.
+- Refresh fourteen early preset loops to record their exact parameters. Every
+  built-in preset now has metadata checked against its current values in CI.
+
 ### Added
 
 - Eight presets across three new stock open/close families: Pixels (Pixel Wipe,
@@ -18,9 +41,11 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   eight families, with resize still opt-in and no new movement hooks.
 - Thirty-two controls for layered erosion, edge palettes, pixel release/drift,
   curling wisps and wave distortion, shared by CLI, Studio and JSON presets.
-- Eleven new showcase GIFs: eight preset loops and comparisons of Ember palettes,
-  pixel modes and distortion patterns. Five existing clips were regenerated for
-  the revised Dissolve effects; the gallery now has 95 GIFs.
+- Twenty-two new showcase GIFs: eight preset loops, eleven tuning comparisons
+  and three mixed-action profiles. Five existing clips were regenerated for
+  the revised Dissolve effects; the gallery now has 106 GIFs. A visual scenario
+  index links practical choices, exact settings and importable profiles; docs CI
+  requires a recording for every preset/profile example and links for all GIFs.
 - README TL;DR before the gallery, a scenario selector, a complete standalone
   guide and custom-shell/bar guidance. Prioritized integration roadmap for
   custom Quickshell, AGS/Astal, Caelestia and ML4W; Waybar needs no shader adapter.

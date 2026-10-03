@@ -10,6 +10,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     vec2 origin = vec2(@IRIS_X@, @IRIS_Y@);
     vec2 size = max(size_geo.xy, vec2(1.0));
     vec2 delta = (uv - origin) * size;
+    // Rotate only the distance field. Texture UVs stay fixed, so the contents
+    // are revealed rather than rotated with the mask.
     float angle = radians(@IRIS_TWIST@) * p;
     delta = mat2(cos(angle), -sin(angle), sin(angle), cos(angle)) * delta;
     // A circumscribing radius keeps all corner/origin combinations intact at p=0.

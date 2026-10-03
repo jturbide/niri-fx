@@ -1,5 +1,8 @@
 # Custom showcase examples
 
+For independent opening/closing combinations, see the [four action profiles](profiles/README.md).
+For a visual starting point, use the [scenario index](../docs/showcases.md).
+
 The checked-in JSON supplies the exact settings used in the README recordings.
 Use **Import preset** in Studio to inspect any file without applying it. The
 three recipes and three new built-in examples leave resize off; the three

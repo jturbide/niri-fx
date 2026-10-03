@@ -72,6 +72,13 @@ FAMILIES.update(
 
 @dataclass(frozen=True)
 class Effect:
+    """Immutable, validated parameter data for every renderer.
+
+    The flat schema keeps round trips stable when Studio switches families;
+    irrelevant fields remain stored but never select unsupported capabilities.
+    Add controls through parameter metadata, not parallel CLI/UI field lists.
+    """
+
     family: str = parameter(
         "fragments", label="Effect family", families=(), group="general", choices=tuple(FAMILIES)
     )
@@ -82,6 +89,7 @@ class Effect:
         group="slices",
         limits=(2, 48),
         token="SLICE_COUNT",
+        glsl_type="int",
         integer=True,
     )
     slice_angle: float = parameter(
@@ -828,10 +836,12 @@ class Effect:
 
     @property
     def varied(self):
+        """Variation requires the wider inverse-search renderer."""
         return bool(self.size_variation or self.direction_variation or self.wave_strength)
 
     @property
     def classic(self):
+        """Only this restricted field can use the smallest analytic lookup."""
         return (
             self.gravity == "none"
             and not self.particles

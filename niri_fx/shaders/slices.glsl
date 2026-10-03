@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: MIT
 // NiriFX slices: inverse-map each rigid strip into its original window texture.
 // Original shader, MIT licensed. Bounded by the validated 2–48 slice count.
 const int SL_COUNT = @SLICE_COUNT@;

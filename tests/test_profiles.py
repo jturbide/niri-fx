@@ -1,18 +1,18 @@
 import unittest
 from dataclasses import replace
 
-from test_fragments import shell_registry
+from helpers import shell_registry
 
+from niri_fx.documents import effect_document, parse_document
 from niri_fx.effects import (
     PARAMETERS,
     PRESETS,
     Effect,
     animation_types,
-    effect_document,
     render_kdl,
     shader,
 )
-from niri_fx.integration import custom_document, make_custom_preset
+from niri_fx.integration import make_custom_preset
 from niri_fx.parameters import glsl_number
 from niri_fx.profiles import Profile
 
@@ -29,7 +29,7 @@ class ProfileTests(unittest.TestCase):
                 types[f"window-{action}"]["duration-ms"], getattr(effect, action + "_ms")
             )
         self.assertNotIn("window-resize", render_kdl(profile))
-        self.assertEqual(custom_document(effect_document("My Profile", profile))[2], profile)
+        self.assertEqual(parse_document(effect_document("My Profile", profile))[2], profile)
 
     def test_registration_preserves_base_resize_and_unrelated_actions(self):
         profile = Profile(
@@ -58,7 +58,7 @@ class ProfileTests(unittest.TestCase):
             document = profile.document("Valid")
             document["actions"][action] = {"injected": 1}
             with self.assertRaises(ValueError):
-                custom_document(document)
+                parse_document(document)
 
     def test_catalog_defines_validation_and_rounding_boundaries(self):
         for name, spec in PARAMETERS.items():

@@ -2,6 +2,7 @@
 
 | I want to… | Read |
 | --- | --- |
+| Choose a look and compare its controls | [Visual scenario index](showcases.md) |
 | Pick the right setup for my desktop | [Scenario guide](scenarios.md) |
 | Use NiriFX without a desktop shell | [Standalone guide](standalone.md) |
 | Add a launcher in a custom shell or bar | [Custom shells](custom-shells.md) |
@@ -32,3 +33,9 @@
 Open/close and explicitly enabled resize use stock Niri shaders. Native movement
 is a separate experiment. The Studio Move/Swap previews are concepts, and saving
 them does not install movement effects.
+
+## Development
+
+- [Architecture and maintenance contracts](architecture.md)
+- [Adding or changing an effect](adding-effects.md)
+- [Next development phases and acceptance gates](next-phases.md)

@@ -37,6 +37,7 @@ def main():
         | set((ROOT / ".github").rglob("*.md"))
     )
     links = 0
+    referenced_gifs = set()
     for doc in docs:
         text = without_fences(doc.read_text())
         targets = re.findall(r"!?\[[^\]]*\]\(([^\s)]+)(?:\s+\"[^\"]*\")?\)", text)
@@ -47,6 +48,8 @@ def main():
                 continue
             links += 1
             dest = (doc.parent / unquote(url.path)).resolve() if url.path else doc
+            if dest.suffix == ".gif" and dest.is_relative_to(ROOT):
+                referenced_gifs.add(str(dest.relative_to(ROOT)))
             if not dest.is_relative_to(ROOT) or not dest.exists():
                 errors.append(f"{doc.relative_to(ROOT)}: missing/outside local target {target}")
             elif (
@@ -71,17 +74,27 @@ def main():
 
     manifest = json.loads((ROOT / "docs/gifs/manifest.json").read_text())
     from niri_fx.cli import parser, selected_effect
+    from niri_fx.documents import load_document, parse_document
     from niri_fx.effects import PRESETS, Effect
+    from niri_fx.profiles import Profile
 
     examples = {}
-    for source in sorted((ROOT / "examples").glob("*.json")):
-        document = json.loads(source.read_text())
-        if document.get("schema") != 3 or not document.get("name"):
-            errors.append(f"Invalid example document: {source.relative_to(ROOT)}")
-        examples[source.stem] = asdict(Effect(**document["effect"]))
+    profile_sources = set()
+    for source in sorted((ROOT / "examples").rglob("*.json")):
+        try:
+            document = parse_document(load_document(source))[2]
+        except ValueError as error:
+            errors.append(f"Invalid example {source.relative_to(ROOT)}: {error}")
+            continue
+        if source.stem in examples:
+            errors.append(f"Example names must be unique: {source.stem}")
+        examples[source.stem] = asdict(document)
+        if isinstance(document, Profile):
+            profile_sources.add(str(source.relative_to(ROOT)))
         if source.stem in PRESETS and examples[source.stem] != asdict(PRESETS[source.stem]):
             errors.append(f"Built-in example differs from its preset: {source.stem}")
-    commands = (ROOT / "examples/README.md").read_text().replace("\\\n", "")
+    commands = "\n".join(doc.read_text() for doc in (ROOT / "examples").rglob("*.md"))
+    commands = commands.replace("\\\n", "")
     checked_examples = set()
     for command in re.findall(r"^python3 -m niri_fx preview .+$", commands, re.M):
         args = parser().parse_args(shlex.split(command)[3:])
@@ -94,15 +107,25 @@ def main():
     if checked_examples != set(examples):
         errors.append("Every example needs a matching documented preview command")
     recorded = {clip["file"]: clip for clip in manifest["clips"]}
+    if len(recorded) != len(manifest["clips"]):
+        errors.append("GIF manifest has duplicate file entries")
+    # Coverage is an obligation of adding a preset, not just a check that the
+    # remaining old recordings still match. Profiles also need an importable demo.
+    for preset in PRESETS:
+        path = f"docs/gifs/preset-{preset}.gif"
+        clip = recorded.get(path, {})
+        if clip.get("preset") != preset:
+            errors.append(f"Preset needs a dedicated recording: {preset}")
+        elif "effect" not in clip:
+            errors.append(f"Preset recording needs exact parameter metadata: {preset}")
     showcases = json.loads((ROOT / "docs/gifs/showcases.json").read_text())["clips"]
+    showcased_sources = set()
     for spec in showcases:
         expected = []
         for panel in spec["panels"]:
             if "source" in panel:
-                from niri_fx.integration import custom_document
-                from niri_fx.profiles import Profile
-
-                document = custom_document(json.loads((ROOT / panel["source"]).read_text()))[2]
+                showcased_sources.add(panel["source"])
+                document = parse_document(load_document(ROOT / panel["source"]))[2]
                 effect = document.close if isinstance(document, Profile) else document
                 origin = {"source": panel["source"]}
                 if isinstance(document, Profile):
@@ -116,6 +139,8 @@ def main():
             actual = [{**panel, "effect": asdict(Effect(**panel["effect"]))} for panel in actual]
         if actual != expected:
             errors.append(f"Showcase settings changed; regenerate {spec['name']}.gif")
+    for source in sorted(profile_sources - showcased_sources):
+        errors.append(f"Profile example needs a showcase: {source}")
     for clip in manifest["clips"]:
         if (
             "preset" in clip
@@ -138,6 +163,8 @@ def main():
     listed |= {clip["file"] for clip in native}
     if {str(gif.relative_to(ROOT)) for gif in gifs} != listed:
         errors.append("GIF files and manifest differ (native swap is recorded separately)")
+    for path in sorted(listed - referenced_gifs):
+        errors.append(f"GIF needs a documentation link: {path}")
     for gif in gifs:
         with gif.open("rb") as stream:
             if stream.read(6) not in (b"GIF87a", b"GIF89a"):

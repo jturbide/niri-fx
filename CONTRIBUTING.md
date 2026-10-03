@@ -3,7 +3,9 @@
 Small, focused contributions are welcome. For a larger feature or compositor
 backend, open an issue describing the intended behavior before implementing it.
 Check the [compatibility roadmap](docs/compatibility.md) and
-[movement limits](experimental/README.md) first.
+[movement limits](experimental/README.md) first. Read the [architecture](docs/architecture.md),
+[effect contribution guide](docs/adding-effects.md) and [next phases](docs/next-phases.md)
+for implementation boundaries and acceptance criteria.
 
 ## Development setup
 
@@ -18,6 +20,7 @@ npm ci --ignore-scripts
 .venv/bin/ruff format --check .
 npm run lint
 npm run format:check
+npm test
 python3 -m unittest discover -s tests -v
 python3 scripts/check-docs.py
 python3 scripts/validate.py --require-glsl --require-niri
@@ -35,6 +38,7 @@ For editor/rendering changes, use Node 22+ and Chromium/Chrome (or `CHROME_BIN`)
 python3 -m niri_fx preview --output /tmp/fragments-review.html
 node scripts/browser-smoke.mjs file:///tmp/fragments-review.html
 # Full CLI/browser/save flow, using temporary config only:
+npm run test:browser
 python3 scripts/studio-e2e.py
 ```
 
@@ -49,11 +53,14 @@ export parity; it is not a compositor GPU benchmark. See
 | --- | --- |
 | `niri_fx/` | Canonical implementation, module entry point and packaged assets |
 | `niri_fx/model.py`, `parameters.py`, `presets.py` | Shared parameter catalog, validation and built-in styles |
-| `niri_fx/effects.py`, `profiles.py`, `shaders/` | Action profiles and shader generation |
-| `niri_fx/setup.py` | Setup plans, snapshots, conflict-aware restore and diagnostics |
+| `niri_fx/documents.py`, `profiles.py` | Shell-independent document validation, serialization and action choices |
+| `niri_fx/effects.py`, `shaders/` | Shader assembly and stock/experimental export boundaries |
+| `niri_fx/setup.py`, `pack.py`, `storage.py` | Setup plans, preset folders, shared atomic writes, snapshots and conflict-aware restore |
 | `niri_fx/integration.py` | iNiR helper contract and safe registry updates |
-| `niri_fx/studio.py`, `preview.html`, `studio.js`, `studio.css`, `motion-preview.js` | Local editor, actual shader previews and labelled movement concepts |
-| `tests/`, `scripts/validate.py`, `scripts/browser-smoke.mjs` | Behavioral, compilation and browser checks |
+| `niri_fx/preview.py`, `effect-core.js` | Offline assembly and DOM-free browser validation/shader generation |
+| `niri_fx/studio.py`, `preview.html`, `studio.js`, `studio.css`, `motion-preview.js` | HTTP/app lifetime, editor state, actual shader previews and labelled movement concepts |
+| `tests/`, `tests/fixtures/`, `scripts/validate.py`, `scripts/browser-smoke.mjs` | Shared document cases, domain/storage tests, shader parity and real browser checks |
+| `scripts/lib/browser.mjs` | Chromium startup, bounded protocol calls, readiness and cleanup shared by all browser tools |
 | `experimental/`, `scripts/build-niri-movement.py`, `scripts/nested-demo.py` | Pinned compositor patch and isolated native experiment |
 | `docs/`, `CHANGELOG.md` | User guidance, evidence and release history |
 
@@ -67,12 +74,18 @@ export parity; it is not a compositor GPU benchmark. See
 - JavaScript, CSS, HTML and workflow YAML use Prettier; JavaScript also uses ESLint.
   Run `npm run format`. The lockfile pins development tools; npm is not a runtime
   dependency. Studio sources are readable files assembled into one offline HTML page.
+- Comments should explain units, bounds, ordering, ownership and design choices.
+  Avoid line-by-line narration, commented-out experiments and undocumented magic
+  numbers. Keep mathematical rationale beside the GLSL and architecture in its guide.
 - Put behavior in small shared functions; keep family-specific rendering in GLSL
   templates and capabilities in the family catalog. Check rendered behavior when
   changing shaders. The compact and varied renderers have different costs.
 - Add focused unit tests for validation/math/contracts and temporary-file integration
   tests for ownership, restore and migrations. Browser E2E checks render actual
   pixels, compare Python exports and save all families through the real Studio CLI.
+  `npm test` also runs the DOM-free browser core with the same document cases as
+  Python and compares all supported stock action shaders. `npm run test:browser`
+  tests real Chromium launch/error/timeout/cleanup before the full editor E2E.
   Avoid duplicating these with a separate framework just to increase test counts.
 - GitHub Actions runs lint, Python 3.10/3.14 tests, GLSL compilation, docs/media
   checks, wheel installation and browser E2E. The optional DMS adapter test requires Quickshell; the [GPU harness](docs/performance.md) requires hardware timer queries. Stock Niri parsing and patched native

@@ -9,7 +9,7 @@ from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
-from test_fragments import shell_registry
+from helpers import shell_registry
 
 from niri_fx.effects import PRESETS
 from niri_fx.studio import make_server, valid_save_request

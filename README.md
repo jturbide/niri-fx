@@ -52,6 +52,10 @@ second manager: [iNiR / iRiS](docs/getting-started.md#inir-and-iris) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
+All **55 presets** have a recording. The [visual scenario index](docs/showcases.md)
+also helps you compare controls and choose a combination for everyday use,
+strong explosions, drifting dust, subtle distortion or different open/close actions.
+
 Opening and closing use the **Explosion** preset. Fragments keep pieces of the
 window's actual texture, then reconstruct those pieces in their original places.
 These clips use Studio's real shader renderer with synthetic content at 20 fps.
@@ -300,6 +304,16 @@ Frost keeps its cool, fine-grained look.
 
 ![White, black and warm Ember edge palettes](docs/gifs/compare-ember-palette.gif)
 
+<details>
+<summary>Compare erosion flow: still field, gentle flow and stronger flow</summary>
+
+Only flow changes: **0 / 0.7 / 1.4**, with the same monochrome edge and timing.
+Zero stops the noise field's travel; the window still erodes and reconstructs.
+
+![Ember noise field with zero, medium and strong flow](docs/gifs/compare-dissolve-flow.gif)
+
+</details>
+
 ### Pixel wipes and dust
 
 A radial grid wipe, progressive pixelation, or fine grains drifting on the wind.
@@ -313,6 +327,25 @@ The origin is a configured point in the window, not the live mouse pointer.
 
 ![Pixel wipe, pixelation and drifting dust at the same grain size and timing](docs/gifs/compare-pixel-modes.gif)
 
+<details>
+<summary>Compare wipe direction, dust size and wind</summary>
+
+**Wipe direction — center out / edges in / left to right.** This controls the
+release front, independently of dust travel.
+
+![Pixel wipe release fronts from the center, edges and left](docs/gifs/compare-pixel-directions.gif)
+
+**Dust size — 4 / 8 / 16 logical pixels.** Travel stays at eight cells, so larger
+grains also travel farther in pixels. Timing and wind stay fixed.
+
+![Fine, medium and coarse window-textured dust](docs/gifs/compare-dust-size.gif)
+
+**Wind — up / right / down.** All three keep the same left-to-right release front.
+
+![Dust travels upward, rightward or downward from the same release front](docs/gifs/compare-dust-wind.gif)
+
+</details>
+
 ### Wisps and currents
 
 Threaded erosion and flowing texture distortion produce wisps. Adjust curl,
@@ -323,6 +356,20 @@ is preserved. These are shader flows, not a fluid simulation.
 | --- | --- |
 | ![Pale curling threads carry the window away](docs/gifs/preset-ghost-wisps.gif) | ![Dark diagonal currents dissolve and rebuild the window](docs/gifs/preset-ink-current.gif) |
 | [Settings](examples/ghost-wisps.json) | [Settings](examples/ink-current.json) |
+
+<details>
+<summary>Compare wisp curl and white, ink or teal threads</summary>
+
+**Curl — 0 / 0.8 / 1.6.** Direction, thread density and color stay fixed.
+
+![Wisp flow with zero, medium and strong curl](docs/gifs/compare-wisp-curl.gif)
+
+**Palette — white / ink / teal.** Hue, saturation and brightness define the
+highlight palette; the source window texture is the same in every panel.
+
+![The same wisps with white, dark and teal highlights](docs/gifs/compare-wisp-palette.gif)
+
+</details>
 
 ### Shockwaves and distortions
 
@@ -337,6 +384,21 @@ These use stock Niri open/close shaders; resize and native movement stay unsuppo
 
 ![Shock front, radial ripples and planar waves with matched settings](docs/gifs/compare-distortion-patterns.gif)
 
+<details>
+<summary>Compare distortion strength and shockwave origins</summary>
+
+**Ripple displacement — 0 / 28 / 56 logical pixels.** At zero, the fade remains
+without texture warping. Wavelength, falloff and timing stay fixed.
+
+![Ripple Collapse with no warp, medium warp and strong warp](docs/gifs/compare-distortion-strength.gif)
+
+**Shockwave origin — center / near the left edge / lower corner.** The origin is
+a configured window-relative point; it does not follow the pointer.
+
+![Shockwaves originating at the center, left and lower corner](docs/gifs/compare-shockwave-origin.gif)
+
+</details>
+
 [Burn My Windows](https://github.com/Schneegans/Burn-My-Windows) supplied the visual
 references for pixel wipes, disintegration and wisps. These NiriFX shaders are
 original implementations; no upstream shaders or preview assets are bundled.
@@ -349,6 +411,17 @@ Studio now includes independent action editing, undo/redo, parameter reset,
 search, favorites and a pinned A/B comparison. [Profile guide](docs/profiles.md).
 
 ![One profile opens with spring motion and closes with ember erosion](docs/gifs/profile-spring-and-ember.gif)
+
+Three more combinations are ready to import into Studio. These loops close,
+then open, using each action's own timing. **Resize remains off in all four profiles.**
+
+| Burst and Drift | Frost and Fragments | Ghost and Shockwave |
+| --- | --- | --- |
+| ![Dust Drift closes the window and Explosion reconstructs it](docs/gifs/profile-burst-and-drift.gif) | ![Pixel Dust closes the window and Frost Vanish reconstructs it](docs/gifs/profile-frost-and-fragments.gif) | ![Shockwave closes the window and Ghost Wisps reconstructs it](docs/gifs/profile-ghost-and-shockwave.gif) |
+| Open: Explosion · Close: Dust Drift | Open: Frost Vanish · Close: Pixel Dust | Open: Ghost Wisps · Close: Shockwave |
+| [Import JSON](examples/profiles/burst-and-drift.json) | [Import JSON](examples/profiles/frost-and-fragments.json) | [Import JSON](examples/profiles/ghost-and-shockwave.json) |
+
+[Preview or export these profiles](examples/profiles/README.md).
 
 ### Resize — opt-in
 

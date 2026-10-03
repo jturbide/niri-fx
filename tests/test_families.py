@@ -1,18 +1,18 @@
 import unittest
 from dataclasses import replace
 
-from test_fragments import shell_registry
+from helpers import shell_registry
 
 from niri_fx.cli import parser, selected_effect
+from niri_fx.documents import effect_document, parse_document
 from niri_fx.effects import (
     FAMILIES,
     PRESETS,
     Effect,
-    effect_document,
     movement_shader,
     resize_shader,
 )
-from niri_fx.integration import custom_document, make_custom_preset, make_presets, merge_registry
+from niri_fx.integration import make_custom_preset, make_presets, merge_registry
 
 
 class FamilyTests(unittest.TestCase):
@@ -21,11 +21,11 @@ class FamilyTests(unittest.TestCase):
             with self.subTest(preset=name):
                 document = effect_document(name, effect)
                 self.assertEqual(document["schema"], 3)
-                self.assertEqual(custom_document(document)[2], effect)
+                self.assertEqual(parse_document(document)[2], effect)
                 self.assertEqual(document["effect"]["family"], effect.family)
         for version in (1, 2, 4, True, 3.0):
             with self.subTest(schema=version), self.assertRaisesRegex(ValueError, "schema: 3"):
-                custom_document({"schema": version, "name": "Unsupported", "effect": {}})
+                parse_document({"schema": version, "name": "Unsupported", "effect": {}})
 
     def test_unsupported_resize_and_movement_fail_explicitly(self):
         effect = PRESETS["slide-apart"]

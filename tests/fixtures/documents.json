@@ -1,0 +1,274 @@
+[
+  {
+    "name": "minimal style",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {}
+    },
+    "valid": true
+  },
+  {
+    "name": "explicit resize",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {
+        "resize": true
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "independent actions",
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Valid profile",
+      "actions": {
+        "open": {},
+        "close": {
+          "family": "wisps"
+        },
+        "resize": null,
+        "movement": null
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "empty object",
+    "document": {},
+    "valid": false
+  },
+  {
+    "name": "array document",
+    "document": [],
+    "valid": false
+  },
+  {
+    "name": "boolean schema",
+    "document": {
+      "schema": true,
+      "name": "Valid style",
+      "effect": {}
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional schema",
+    "document": {
+      "schema": 3.5,
+      "name": "Valid style",
+      "effect": {}
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown top-level key",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {},
+      "unexpected": true
+    },
+    "valid": false
+  },
+  {
+    "name": "wrong document kind",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {},
+      "kind": "style"
+    },
+    "valid": false
+  },
+  {
+    "name": "newline in name",
+    "document": {
+      "schema": 3,
+      "name": "Valid\n",
+      "effect": {}
+    },
+    "valid": false
+  },
+  {
+    "name": "nonstring name",
+    "document": {
+      "schema": 3,
+      "name": 12,
+      "effect": {}
+    },
+    "valid": false
+  },
+  {
+    "name": "too long name",
+    "document": {
+      "schema": 3,
+      "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "effect": {}
+    },
+    "valid": false
+  },
+  {
+    "name": "longest name",
+    "document": {
+      "schema": 3,
+      "name": "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+      "effect": {}
+    },
+    "valid": true
+  },
+  {
+    "name": "array effect",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": []
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown parameter",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {
+        "injected-shader": "ignored?"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fractional count",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {
+        "particles": 16.5
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "boolean number",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {
+        "particles": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "unsupported resize",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {
+        "family": "pixels",
+        "resize": true
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "unknown family",
+    "document": {
+      "schema": 3,
+      "name": "Valid style",
+      "effect": {
+        "family": "unknown"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "missing profile action",
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Valid profile",
+      "actions": {
+        "open": {},
+        "close": {}
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "profile with null opening",
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Valid profile",
+      "actions": {
+        "open": null,
+        "close": {
+          "family": "wisps"
+        },
+        "resize": null,
+        "movement": null
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "nested resize flag",
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Valid profile",
+      "actions": {
+        "open": {
+          "resize": true
+        },
+        "close": {
+          "family": "wisps"
+        },
+        "resize": null,
+        "movement": null
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "unsupported movement",
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Valid profile",
+      "actions": {
+        "open": {},
+        "close": {
+          "family": "wisps"
+        },
+        "resize": null,
+        "movement": {
+          "family": "wisps"
+        }
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "profile extra key",
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Valid profile",
+      "actions": {
+        "open": {},
+        "close": {
+          "family": "wisps"
+        },
+        "resize": null,
+        "movement": null
+      },
+      "unexpected": 1
+    },
+    "valid": false
+  }
+]

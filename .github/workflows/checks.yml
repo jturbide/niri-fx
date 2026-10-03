@@ -30,6 +30,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: ruff check . && ruff format --check .
       - run: npm run lint && npm run format:check
+      - run: npm test
 
   validate:
     runs-on: ubuntu-latest
@@ -91,4 +92,6 @@ jobs:
       - name: Test Studio rendering, import and real save flow
         env:
           CHROME_BIN: google-chrome
-        run: python scripts/studio-e2e.py
+        run: |
+          npm run test:browser
+          python scripts/studio-e2e.py

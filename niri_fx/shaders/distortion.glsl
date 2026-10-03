@@ -5,6 +5,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     if (p >= 1.0) return vec4(0.0);
     vec2 uv = coords_geo.xy, size = max(size_geo.xy, vec2(1.0));
     vec2 origin = vec2(@DISTORTION_X@, @DISTORTION_Y@);
+    // Radial distances use logical pixels, keeping circular fronts circular
+    // on wide windows. The farthest corner bounds the complete sweep.
     vec2 delta = (uv - origin) * size;
     float radius = max(length(max(origin, 1.0 - origin) * size), 1.0);
     float distance = length(delta), phase = p * @DISTORTION_CYCLES@ * 6.2831853;
@@ -13,6 +15,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     float wave = sin(distance / @DISTORTION_WAVELENGTH@ * 6.2831853 - phase);
     float envelope = sin(p * 3.14159265);
     float mask = 1.0 - smoothstep(@DISTORTION_FADE@, 1.0, p);
+    // Shockwave concentrates displacement around a travelling front; the
+    // other modes distort the whole texture and use the independent fade.
     if (@DISTORTION_MODE@ == 0) {
         float front = mix(-@DISTORTION_WIDTH@, radius + @DISTORTION_WIDTH@, p);
         float offset = distance - front;
@@ -26,6 +30,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
         direction = vec2(-axis.y, axis.x);
         wave = sin(dot(delta, axis) / @DISTORTION_WAVELENGTH@ * 6.2831853 - phase);
     }
+    // Pull from source coordinates rather than pushing pixels forward. Samples
+    // outside geometry return transparent instead of stretching edge texels.
     vec2 source = uv - direction * wave * @DISTORTION_STRENGTH@ * envelope * attenuation / size;
     if (p <= 0.0) { source = uv; mask = 1.0; }
     if (any(lessThan(source, vec2(0.0))) || any(greaterThanEqual(source, vec2(1.0)))) return vec4(0.0);

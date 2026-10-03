@@ -5,7 +5,8 @@ import re
 from pathlib import Path
 
 from .effects import PRESETS, render_kdl
-from .setup import change, digest, read_bytes
+from .setup import change
+from .storage import digest, read_bytes
 
 
 def plan_pack(output):

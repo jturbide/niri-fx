@@ -1,7 +1,6 @@
 """Inspectable setup plans and conflict-aware restoration of project-owned changes."""
 
 import fcntl
-import hashlib
 import json
 import os
 import re
@@ -15,8 +14,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .branding import APP_ID, desktop_entry
-from .effects import effect_document, render_kdl
+from .documents import effect_document
+from .effects import render_kdl
 from .integration import make_custom_preset, make_presets, merge_registry, read_shell_presets
+from .storage import atomic_write, digest, read_bytes
 
 BEGIN = "// BEGIN niri-fx managed include"
 END = "// END niri-fx managed include"
@@ -29,37 +30,6 @@ def default_config():
 
 def default_state():
     return Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / APP_ID / "setup"
-
-
-def read_bytes(path):
-    return path.read_bytes() if path.exists() else None
-
-
-def digest(data):
-    return hashlib.sha256(data).hexdigest() if data is not None else None
-
-
-def atomic_write(path, data, mode=0o600):
-    """The caller resolves symlinks and checks the expected previous contents."""
-    if data is None:
-        path.unlink(missing_ok=True)
-        return
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temporary = None
-    try:
-        with tempfile.NamedTemporaryFile(
-            dir=path.parent, prefix=".nirifx-", delete=False
-        ) as output:
-            temporary = Path(output.name)
-            os.fchmod(output.fileno(), mode)
-            output.write(data)
-            output.flush()
-            os.fsync(output.fileno())
-        os.replace(temporary, path)
-        temporary = None
-    finally:
-        if temporary is not None:
-            temporary.unlink(missing_ok=True)
 
 
 def validate_config(path):
@@ -87,6 +57,11 @@ def without_managed_block(text):
 
 
 def change(path, data, expected_before=...):
+    """Capture bytes plus logical/resolved paths for later conflict detection.
+
+    Dotfile symlinks stay intact: apply writes the captured target, and refuses
+    if a later symlink retarget or file edit invalidates this plan.
+    """
     logical = Path(path).expanduser().absolute()
     target = logical.resolve()
     if logical.is_symlink() and not target.exists():
@@ -233,6 +208,12 @@ def check_unchanged(item, expected):
 
 
 def apply_plan(plan, state):
+    """Snapshot, compare, write and validate; roll back only bytes still owned.
+
+    The lock coordinates NiriFX writers sharing this state directory. Editors
+    and other tools do not honor it, so every write also checks current bytes.
+    Multi-file writes are sequential, not crash-atomic; snapshots aid recovery.
+    """
     if not plan["changes"]:
         return {**summarize(plan), "changed": False, "transaction": None}
     state = Path(state).expanduser().resolve()
@@ -305,6 +286,11 @@ def apply_plan(plan, state):
 
 
 def restore(state, identifier=None, apply=False):
+    """Undo a selected/latest applied snapshot after verifying hashes and paths.
+
+    Later user edits are conflicts, never an invitation to force an old backup
+    over current data. Reverse write order unwinds dependent includes safely.
+    """
     state = Path(state).expanduser().resolve()
     if not state.is_dir():
         raise ValueError(

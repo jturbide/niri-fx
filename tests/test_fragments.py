@@ -4,36 +4,17 @@ import unittest
 from copy import deepcopy
 from pathlib import Path
 
+from helpers import shell_registry
+
 from niri_fx.cli import parser, selected_effect
+from niri_fx.documents import parse_document
 from niri_fx.effects import FAMILIES, PRESETS, Effect, movement_shader, render_kdl
 from niri_fx.integration import (
-    custom_document,
     make_custom_preset,
     make_presets,
     merge_registry,
     update_registry,
 )
-
-
-def shell_registry():
-    return {
-        "active": "example",
-        "presets": [
-            {
-                "id": "example",
-                "types": {
-                    "workspace-switch": {"spring": [0.9, 700, 0.0001]},
-                    "window-resize": {
-                        "duration-ms": 210,
-                        "curve": "ease-out-cubic",
-                        "custom-shader": "existing resize shader",
-                    },
-                    "window-open": {"duration-ms": 170, "curve": "ease-out-expo"},
-                    "window-close": {"duration-ms": 130, "curve": "ease-out-quad"},
-                },
-            }
-        ],
-    }
 
 
 class PresetTests(unittest.TestCase):
@@ -134,7 +115,7 @@ class PresetTests(unittest.TestCase):
         ]
         for data in invalid:
             with self.subTest(data=data), self.assertRaises(ValueError):
-                custom_document(data)
+                parse_document(data)
 
 
 class FileTests(unittest.TestCase):

@@ -5,7 +5,8 @@ from pathlib import Path
 
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import PRESETS, movement_shader, resize_shader
-from niri_fx.studio import make_server, preview_document
+from niri_fx.preview import preview_document
+from niri_fx.studio import make_server
 
 
 class RevealTests(unittest.TestCase):
