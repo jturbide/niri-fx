@@ -16,7 +16,7 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   HTTP transport and shared file staging into focused modules. Remove circular
   profile/rendering imports and adapter dependencies from the domain layer.
 - Extract Studio's document/shader/KDL operations into a DOM-free core. Share
-  acceptance fixtures with Python and compare all 55 presets' supported stock
+  acceptance fixtures with Python and compare all 64 presets' supported stock
   action shaders directly in Node, in addition to real browser E2E.
 - Unify Chromium startup, readiness, request deadlines, disconnect handling and
   cleanup across browser tests, GIF recording and GPU benchmarks. All tools now
@@ -29,23 +29,40 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   individual test modules.
 - Document architecture, shader invariants, ownership/restore behavior, effect
   contribution steps and concrete next-phase acceptance gates. Add focused source
-  comments without changing preset values or shader math. Existing GIFs remain valid.
+  comments without changing preset values or shader math. Shader-preserving refactors retain existing recording metadata.
 - Refresh fourteen early preset loops to record their exact parameters. Every
   built-in preset now has metadata checked against its current values in CI.
 
 ### Added
 
+- Nine presets: Hexagon Burst, Hive Collapse, Signal Glitch, Chromatic Glitch,
+  Ink Spread, Ink Bloom, Slice Exchange, Pixel Transfer and Soft Phase. The
+  catalog now contains 64 styles across nine families.
+- Explicit Elastic Stretch, Accordion and Ripple resize profiles, with adjustable
+  strength and family controls. Every built-in still leaves resize disabled.
+- Native slice, pixel and distortion movement in the optional compositor patch,
+  plus movement intensity. Interrupted swaps retain deformation and seed;
+  direction changes blend instead of snapping. Closing during an opening or move
+  continues that effect while fading, taking precedence over the normal close
+  style. This preserves visual state, not physical velocity across every retarget.
+- Searchable click-to-play gallery on GitHub Pages with 134 recordings, lightweight
+  posters, family/scenario/renderer filters and single-animation playback.
+  New clips cover all added presets, three resize profiles, a resize comparison,
+  three native swap styles and closing during opening.
+- Basic/Advanced Studio controls, Pause and a reduced-motion preview preference
+  that follows the system setting. Preview preferences do not change exported effects.
+- Fragment reference-image comparison and native capture-delivery diagnostics;
+  expanded browser, stock compositor, interruption and gallery checks.
 - Root roadmap with current work, planned improvements and contribution paths;
   detailed integration and engineering plans link back to it.
 - Eleven workflow/scenario GIFs: Studio editing/export, iRiS/DMS/Noctalia pickers,
   transparent stock-Niri clients, tall/wide windows, fractional scale and two
-  interrupted native movement cases. The gallery now contains 117 GIFs.
+  interrupted native movement cases. The workflow recordings complement the effect catalog.
 - Reproducible nested-session acceptance tools with private settings, owned
   process cleanup, synthetic content, versioned evidence and checked GIF metadata.
 - Eight presets across three new stock open/close families: Pixels (Pixel Wipe,
   Pixelate, Dust Drift), Wisps (Ghost Wisps, Ink Current), and Distortion
-  (Shockwave, Ripple Collapse, Wave Fold). The catalog now has 55 styles in
-  eight families, with resize still opt-in and no new movement hooks.
+  (Shockwave, Ripple Collapse, Wave Fold). All are usable for opening and closing on stock Niri.
 - Thirty-two controls for layered erosion, edge palettes, pixel release/drift,
   curling wisps and wave distortion, shared by CLI, Studio and JSON presets.
 - Twenty-two new showcase GIFs: eight preset loops, eleven tuning comparisons
@@ -61,6 +78,16 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Changed
 
+- Tighten the bounded lookup for varied fragments without waves from 7×7 to 5×5.
+  All 231 reference frame pairs matched exactly; measured Core Detonation and
+  Mosaic Burst shader time fell roughly 45–47% on the documented GPU sample.
+- Refresh all ten native swap recordings and three interruption scenarios with
+  mint/violet synthetic cards, 50 fps capture and the release-built experiment.
+- Curate the README with Fragments first and move the full catalog to its own
+  page. Rewrite roadmap priorities and document resize, continuity and measured
+  performance limits for public use.
+- Skip expensive CI steps for known documentation/media-only changes while
+  retaining required check names, lint/docs validation and conservative fallback.
 - Rewrite the README, roadmap and setup guides around user workflows and supported
   features. Add release/download guidance, refresh issue forms and correct stale
   DMS/Noctalia descriptions. Remove historical launch notes and unsubmitted

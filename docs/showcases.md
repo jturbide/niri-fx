@@ -1,13 +1,15 @@
 # Choose an effect by scenario
 
-The gallery has **117 GIFs**, including all **55 built-in presets**. Use this
+The gallery has **134 GIFs**, including all **64 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
+
+[Search and play one example at a time](https://jturbide.github.io/niri-fx/gallery/) or browse the [full catalog](catalog.md).
 
 ## Opening and closing
 
 These use stock Niri shaders. The recordings use synthetic window textures in
-Studio's real WebGL renderer. Fragments come first in the [main gallery](../README.md#see-it-in-motion).
+Studio's real WebGL renderer. Fragments come first in the [main gallery](catalog.md#see-it-in-motion).
 
 | I want… | Start with | Compare or customize |
 | --- | --- | --- |
@@ -31,7 +33,7 @@ for every panel's exact settings. Preset loops retain their own default timing.
 
 ## Different effects for each action
 
-All four [importable profiles](../examples/profiles/README.md) leave resize off.
+The four open/close [importable profiles](../examples/profiles/README.md) leave resize off.
 Opening and closing are independent; these are not application-specific rules.
 
 | Profile | Opens with | Closes with | Recording |
@@ -56,8 +58,7 @@ Undo/Redo and pinned A/B comparisons.
 | Move/swap design exploration | [Move concept](gifs/move-concept.gif), [Swap concept](gifs/swap-concept.gif), [Three swap concepts](gifs/compare-swap-styles.gif) | Labelled Canvas simulations in Studio; these are not compositor recordings |
 
 See [resize controls](usage.md), [movement limits](movement.md) and the
-[nested compositor experiment](../experimental/README.md). Pixels, Wisps,
-Dissolve, Iris and Distortion families currently support opening/closing only.
+[nested compositor experiment](../experimental/README.md). Wisps, Dissolve, Iris and Hexagons currently support opening/closing only. Pixels also supports experimental movement; Slices and Distortion now support movement and resize.
 
 ## Workflows and real compositor scenarios
 
@@ -89,3 +90,18 @@ and overlapping resize/close animations need broader testing. See
 [roadmap](../ROADMAP.md) for planned improvements.
 
 GIFs demonstrate appearance. For shader timing data, see [GPU measurements](performance.md).
+
+## New styles and resize profiles
+
+| Scenario | Examples |
+| --- | --- |
+| Hexagonal tiles | [Hexagon Burst](gifs/preset-hexagon-burst.gif), [Hive Collapse](gifs/preset-hive-collapse.gif) |
+| Spreading ink | [Ink Spread](gifs/preset-ink-spread.gif), [Ink Bloom](gifs/preset-ink-bloom.gif) |
+| Signal distortion | [Signal Glitch](gifs/preset-signal-glitch.gif), [Chromatic Glitch](gifs/preset-chromatic-glitch.gif) |
+| Movement styles used for open/close | [Slice Exchange](gifs/preset-slice-exchange.gif), [Pixel Transfer](gifs/preset-pixel-transfer.gif), [Soft Phase](gifs/preset-soft-phase.gif) |
+| Optional continuous resize | [Elastic](gifs/elastic-resize.gif), [Accordion](gifs/accordion-resize.gif), [Ripple](gifs/ripple-resize.gif), [Compare](gifs/compare-resize-families.gif) |
+| Experimental native swaps | [Slice Exchange](gifs/native-swap-slice-exchange.gif), [Pixel Transfer](gifs/native-swap-pixel-transfer.gif), [Soft Phase](gifs/native-swap-soft-phase.gif) |
+| Close before opening completes | [Continued opening trajectory](gifs/native-close-during-open.gif) · requires the experimental compositor |
+
+All new styles have [JSON examples](../examples/README.md). The three resize
+profiles explicitly enable resize; the built-in presets do not.

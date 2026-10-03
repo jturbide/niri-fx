@@ -10,7 +10,7 @@ do not need iNiR installed.
 | Niri + iNiR/iRiS | Native preset registration and Studio save | iNiR/iRiS c08bb92 gallery selection, apply and restore tested with Quickshell 0.3.1. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
 | Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher selection, apply and undo tested in a component host. |
-| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 55 files validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
+| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 64 files validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
 | Niri + Waybar, custom Quickshell or AGS/Astal | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering; custom picker UI not tested. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |

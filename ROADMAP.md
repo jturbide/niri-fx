@@ -1,78 +1,61 @@
 # NiriFX roadmap
 
-NiriFX's next priority is making its effects feel good in everyday use across
-more applications and display setups. Performance improvements and reusable
-shell integrations follow. Priorities may change with feedback; no release dates
-are set for the work below.
+NiriFX aims to make window effects expressive, easy to tune and comfortable for
+everyday use. This roadmap describes work being considered next. Priorities can
+change with feedback; items here do not imply a release date.
 
-For features you can use today, see the [README](README.md) and
-[compatibility guide](docs/compatibility.md). The [changelog](CHANGELOG.md) records
-completed changes; `main` can include features newer than the latest release.
+See the [README](README.md) for available features, the [changelog](CHANGELOG.md)
+for completed work and [compatibility](docs/compatibility.md) for supported setups.
+`main` may contain features newer than the latest release.
 
-## Everyday use — in progress
+## Next: confidence across more desktops
 
-Make effects behave consistently when windows open, close, change size or are
-interrupted, and make choosing and restoring a style straightforward.
+- **More hardware results.** Compare large windows and simultaneous animations on
+  integrated GPUs and several refresh rates. Publish repeatable measurements with
+  their hardware and renderer details.
+- **Mixed-monitor behavior.** Test fractional scaling, output changes, decorations,
+  fullscreen transitions and effects near screen edges.
+- **More interruption coverage.** Exercise rapid open/close sequences and overlapping
+  resize, movement and close actions with real applications.
+- **Clearer performance choices.** Explore quality options where measurements show
+  a useful tradeoff, while retaining recognizable textures and smooth endpoints.
 
-- [x] A recorded example for every built-in preset and importable profile.
-- [x] Walkthroughs for Studio editing/export and iRiS, DMS and Noctalia selection.
-- [x] Tests with transparent, tall and wide windows, plus a single output at 1.5× scale.
-- [ ] Broader testing with application decorations, fullscreen windows and effects
-  near output edges.
-- [ ] Mixed-scale monitors and windows moving between outputs.
-- [ ] More coverage of interrupted opening/closing and overlapping resize/close effects.
+The [performance guide](docs/performance.md) and [validation record](docs/validation.md)
+show what has already been measured and what remains untested.
 
-The [gallery](docs/showcases.md) shows current behavior. [Testing and known limits](docs/validation.md)
-identify the applications, versions and display setups checked so far.
+## Next: reusable shell pickers
 
-## Performance and visual quality — planned
+Standalone NiriFX already works with any bar or shell running on Niri. These
+integrations would add convenient browsing and settings interfaces:
 
-Help users choose effects that suit their hardware without losing the look they want.
+1. **Custom Quickshell:** a reusable picker with search, profiles and Undo.
+2. **AGS/Astal:** an equivalent example for GTK-based shells.
+3. **Caelestia:** assess a maintained Niri setup and a suitable extension point.
+4. **ML4W:** document a separate Niri session, then assess an appropriate settings adapter.
 
-- Measure responsiveness with large windows, concurrent animations and different
-  refresh rates on integrated and discrete GPUs.
-- Improve expensive shader paths, transparency and clipping using those results.
-- Explore quality options with documented performance and appearance tradeoffs.
-- Add styles and variants with distinct visual behavior, alongside improvements
-  to the existing collection.
+The existing iNiR/iRiS, DMS and Noctalia paths remain the supported integrations.
+Waybar uses [standalone setup](docs/standalone.md) and needs no separate effects
+backend. See the [integration design notes](docs/roadmap.md).
 
-The [GPU measurements](docs/performance.md) provide initial shader timings.
-Measurements of complete compositor behavior are the next step.
+## Exploring: interactive movement
 
-## More shell integrations — planned
+The optional compositor patch demonstrates native swaps, retargeting and continued
+animation during close interruptions. It remains an experiment with a pinned Niri
+revision, separate from the standard installation.
 
-Standalone NiriFX already works with any bar or shell on Niri. These projects
-would add convenient ways to browse and apply effects:
+Further research includes velocity continuity during rapid direction changes,
+pointer-driven deformation, more efficient damage bounds and ordering particles
+from different windows in one scene. A shared particle scene would need more
+compositor work than the current independent window shaders.
 
-1. **Custom Quickshell picker:** a reusable example with search, custom profiles
-   and Undo.
-2. **AGS/Astal example:** the same workflow in a GTK-based shell.
-3. **Caelestia:** assess a Niri-compatible setup and suitable integration point.
-4. **ML4W:** document use in a separate Niri session, then assess a settings integration.
+See the [movement guide](docs/movement.md) and [nested demo](experimental/README.md).
+New styles are welcome when they add a distinct look, with examples and measured
+costs rather than a growing list of nearly identical presets.
 
-Caelestia and ML4W adapters are exploratory. Waybar works through the
-[standalone setup](docs/standalone.md); it needs no separate effects backend.
-See [integration plans](docs/roadmap.md) for details.
+## Contribute a result or an idea
 
-## Movement and swaps — experimental
-
-An optional Niri patch already demonstrates native fragment and elastic column
-swaps. Further work aims to make movement feel continuous during interaction:
-
-- Smoother redirection when another move starts before the previous one finishes.
-- Pointer-driven deformation while dragging a window.
-- Better handling of overlapping movement, resize and close actions.
-- Exploration of particle ordering between swapping windows.
-
-These are research goals, not features of the standard installation. The
-[experimental build](experimental/README.md) runs in a separate nested session;
-Studio's Move/Swap tabs remain concept previews. Fragment resize stays opt-in.
-
-## Help shape the roadmap
-
-[Open an issue](https://github.com/jturbide/niri-fx/issues) with the behavior you
-want, your setup and a reproducible example where possible. Reports from different
-GPUs and monitor arrangements are especially useful. See [Contributing](CONTRIBUTING.md)
-for implementation guidance and the [engineering plan](docs/next-phases.md) for
-detailed test requirements. Releases follow the [release process](docs/releasing.md)
-after their changes are tested and documented.
+[Open an issue](https://github.com/jturbide/niri-fx/issues) with your setup, the
+behavior you want and a reproducible example. Reports from different GPUs and
+monitor arrangements are especially useful. [Contributing](CONTRIBUTING.md) covers
+development checks; the [design notes](docs/next-phases.md) explain the technical
+questions behind this roadmap.

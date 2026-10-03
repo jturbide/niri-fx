@@ -136,7 +136,7 @@ export async function launchBrowser({
     return result.result.value;
   }
 
-  async function navigate(url, { width, height, timeout = 30000 } = {}) {
+  async function navigate(url, { width, height, timeout = 30000, readySelector = null } = {}) {
     if (width && height)
       await rpc("Emulation.setDeviceMetricsOverride", {
         width,
@@ -151,7 +151,7 @@ export async function launchBrowser({
       let state;
       try {
         state = await evaluate(
-          `({url:location.href,status:document.documentElement?.dataset.shaderStatus,error:document.getElementById('error')?.textContent})`,
+          `({url:location.href,status:${readySelector ? `(document.querySelector(${JSON.stringify(readySelector)}) ? "ready" : "loading")` : "document.documentElement?.dataset.shaderStatus"},error:document.getElementById('error')?.textContent})`,
         );
       } catch (error) {
         // Navigation can replace the execution context between two CDP requests.

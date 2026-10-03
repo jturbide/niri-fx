@@ -1235,6 +1235,78 @@
           "source": "examples/profiles/ghost-and-shockwave.json"
         }
       ]
+    },
+    {
+      "name": "elastic-resize",
+      "title": "Elastic Resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Elastic Resize \u00b7 opt-in",
+          "source": "examples/profiles/elastic-resize.json"
+        }
+      ]
+    },
+    {
+      "name": "accordion-resize",
+      "title": "Accordion Resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Accordion Resize \u00b7 opt-in",
+          "source": "examples/profiles/accordion-resize.json"
+        }
+      ]
+    },
+    {
+      "name": "ripple-resize",
+      "title": "Ripple Resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Ripple Resize \u00b7 opt-in",
+          "source": "examples/profiles/ripple-resize.json"
+        }
+      ]
+    },
+    {
+      "name": "compare-resize-families",
+      "title": "Resize styles",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Elastic stretch",
+          "preset": "spring-wobble",
+          "overrides": {
+            "resize_ms": 950,
+            "resize_strength": 0.85,
+            "elastic_frequency": 1.5
+          }
+        },
+        {
+          "label": "Accordion folds",
+          "preset": "slice-exchange",
+          "overrides": {
+            "resize_ms": 950,
+            "resize_strength": 1,
+            "slice_count": 12,
+            "slice_angle": 0
+          }
+        },
+        {
+          "label": "Radial ripples",
+          "preset": "ripple-collapse",
+          "overrides": {
+            "resize_ms": 950,
+            "resize_strength": 0.8,
+            "distortion_strength": 36
+          }
+        }
+      ]
     }
   ]
 }

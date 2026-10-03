@@ -50,9 +50,8 @@ also cost work. For compact fragments, set size variation, direction variation
 and wave strength to zero. Together release reduces the search further. Reduce
 slice count for less strip work. See [validation limits](validation.md).
 
-The next performance acceptance step is a release-built nested compositor with
-presentation timing, mixed output scales and interrupted animations. The existing
-debug movement build and GIF recordings cannot establish those results.
+Physical presentation timing and mixed-output measurements remain open. A release-built
+nested capture diagnostic is included below; its delivery intervals are not scanout timing.
 
 ## New reveal and distortion sample
 
@@ -76,3 +75,58 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-new-styles.json \
 
 Dust's bounded 33-cell search costs more than the other new effects in this run.
 The figures do not predict performance on integrated GPUs or under compositor load.
+
+
+## Bounded fragment lookup comparison
+
+Measured on 2026-10-03 with the same RTX 4070 Ti / Chromium ANGLE/OpenGL setup,
+120 samples per case and identical parameters/seed/draw dimensions. The previous
+shader searches 7×7 cells per band; the revised shader uses 5×5 when waves are
+zero and retains 7×7 for waved fields. Geometry bounds are documented beside the
+loop. All 231 reference frame pairs matched byte-for-byte in software WebGL.
+
+| Preset | Output | Before p95 (ms) | After p95 (ms) |
+| --- | --- | ---: | ---: |
+| balanced | 1920×1080 | 0.246 | 0.242 |
+| balanced | 3840×2160 | 0.802 | 0.796 |
+| core-detonation | 1920×1080 | 4.532 | 2.374 |
+| core-detonation | 3840×2160 | 14.989 | 7.959 |
+| mosaic-burst | 1920×1080 | 1.642 | 0.909 |
+| mosaic-burst | 3840×2160 | 5.298 | 2.940 |
+| orbital-ribbons | 1920×1080 | 1.157 | 1.147 |
+| orbital-ribbons | 3840×2160 | 4.372 | 4.318 |
+
+[Raw samples, exact parameters and renderer metadata](benchmarks/fragment-lookup.json)
+are available for both runs.
+
+Core Detonation and Mosaic Burst improved roughly 45–47% in this sample. Balanced
+uses the compact renderer, and Orbital Ribbons uses waves; their small differences
+are within ordinary run variation. These are single-run shader measurements,
+not a guarantee of equivalent compositor frame-rate gains.
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-lookup.json \
+  --presets=balanced,core-detonation,mosaic-burst,orbital-ribbons \
+  --sizes=1920x1080,3840x2160 --samples=120
+# A checkout of the previous implementation is needed for rendered parity:
+node scripts/compare-fragment-renderers.mjs /path/to/reference-checkout
+```
+
+## Native capture-delivery diagnostic
+
+```sh
+python3 scripts/build-niri-movement.py --release --test
+python3 scripts/measure-native-movement.py --output /tmp/nirifx-capture.json
+```
+
+This opens an isolated 1280×800 nested compositor and records six alternating
+1200 ms swaps. Fixed-rate encoder resampling is disabled; the report retains
+raw captured timestamps and IPC acknowledgement times. The current local sample
+reported capture-interval p95 values of 4 ms for Balanced and 10 ms for Core
+Detonation, with IPC acknowledgements below 13 ms at p95.
+
+These unexpectedly short intervals illustrate the measurement boundary: the
+nested backend can deliver captures faster than its advertised 60 Hz output.
+Host compositor, screencopy and encoder scheduling all contribute. Do not convert
+these numbers into physical FPS, input latency or dropped-frame estimates.
+Presentation feedback on a real output is still needed for those claims.

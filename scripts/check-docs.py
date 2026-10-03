@@ -5,6 +5,7 @@ import hashlib
 import json
 import re
 import shlex
+import subprocess
 import sys
 from dataclasses import asdict, replace
 from pathlib import Path
@@ -26,6 +27,21 @@ def anchors(text):
         seen[slug] = count + 1
         result.add(f"{slug}-{count}" if count else slug)
     return result
+
+
+def recording_sources(clip, errors):
+    """Invalidate native clips when their fixture or compositor changes."""
+    name = clip["file"]
+    for source, digest in clip.get("sources", {}).items():
+        path = ROOT / source
+        if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
+            errors.append(f"Recording source changed; regenerate {name}: {source}")
+    if "patch_sha256" in clip:
+        digest = hashlib.sha256(
+            (ROOT / "experimental/niri-movement.patch").read_bytes()
+        ).hexdigest()
+        if digest != clip["patch_sha256"]:
+            errors.append(f"Native patch changed; regenerate {name}")
 
 
 def main():
@@ -127,9 +143,13 @@ def main():
             if "source" in panel:
                 showcased_sources.add(panel["source"])
                 document = parse_document(load_document(ROOT / panel["source"]))[2]
-                effect = document.close if isinstance(document, Profile) else document
+                effect = (
+                    (document.resize if spec["mode"] == "resize" else document.close)
+                    if isinstance(document, Profile)
+                    else document
+                )
                 origin = {"source": panel["source"]}
-                if isinstance(document, Profile):
+                if isinstance(document, Profile) and spec["mode"] != "resize":
                     origin["opening_effect"] = asdict(document.open)
             else:
                 effect = replace(PRESETS[panel["preset"]], **panel["overrides"])
@@ -137,7 +157,18 @@ def main():
             expected.append({"effect": asdict(effect), **origin, "label": panel["label"]})
         actual = recorded.get(f"docs/gifs/{spec['name']}.gif", {}).get("panels")
         if actual is not None:
-            actual = [{**panel, "effect": asdict(Effect(**panel["effect"]))} for panel in actual]
+            actual = [
+                {
+                    **panel,
+                    "effect": asdict(Effect(**panel["effect"])),
+                    **(
+                        {"opening_effect": asdict(Effect(**panel["opening_effect"]))}
+                        if "opening_effect" in panel
+                        else {}
+                    ),
+                }
+                for panel in actual
+            ]
         if actual != expected:
             errors.append(f"Showcase settings changed; regenerate {spec['name']}.gif")
     for source in sorted(profile_sources - showcased_sources):
@@ -159,6 +190,7 @@ def main():
             errors.append(f"Native GIF manifest size differs: {clip['file']}")
         if asdict(Effect(**clip["effect"])) != asdict(PRESETS[clip["preset"]]):
             errors.append(f"Native preset settings changed: {clip['preset']}")
+        recording_sources(clip, errors)
     scenarios = json.loads((ROOT / "docs/gifs/scenario-manifest.json").read_text())["clips"]
     if len({clip["name"] for clip in scenarios}) != len(scenarios):
         errors.append("Scenario manifest has duplicate names")
@@ -174,16 +206,7 @@ def main():
             expected = replace(PRESETS[clip["preset"]], **clip.get("overrides", {}))
             if asdict(Effect(**clip["effect"])) != asdict(expected):
                 errors.append(f"Scenario settings changed; regenerate {clip['name']}.gif")
-        for source, digest in clip.get("sources", {}).items():
-            path = ROOT / source
-            if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
-                errors.append(f"Scenario source changed; regenerate {clip['name']}.gif: {source}")
-        if "patch_sha256" in clip:
-            digest = hashlib.sha256(
-                (ROOT / "experimental/niri-movement.patch").read_bytes()
-            ).hexdigest()
-            if digest != clip["patch_sha256"]:
-                errors.append(f"Native patch changed; regenerate {clip['name']}.gif")
+        recording_sources(clip, errors)
     gifs = list((ROOT / "docs/gifs").glob("*.gif"))
     listed = {clip["file"] for clip in manifest["clips"]} | {"docs/gifs/native-swap.gif"}
     listed |= {clip["file"] for clip in native}
@@ -196,6 +219,13 @@ def main():
         with gif.open("rb") as stream:
             if stream.read(6) not in (b"GIF87a", b"GIF89a"):
                 errors.append(f"Invalid GIF header: {gif.relative_to(ROOT)}")
+    gallery = subprocess.run(
+        [sys.executable, str(ROOT / "scripts/build-gallery.py"), "--check"],
+        capture_output=True,
+        text=True,
+    )
+    if gallery.returncode:
+        errors.append("Gallery is stale or invalid: " + gallery.stderr.strip())
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
