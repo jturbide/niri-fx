@@ -21,7 +21,7 @@ need iNiR, a Rust toolchain or the experimental compositor.
 ## Pick a look first
 
 Try [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter)
-or [seven open/close pairings](https://jturbide.github.io/niri-fx/gallery/?collection=profiles)
+or [finished open/close pairings](https://jturbide.github.io/niri-fx/gallery/?collection=profiles)
 in your browser. All previews start paused. Choose the same name locally after
 installation; customizing settings is optional. Start with **Balanced** for
 textured fragments, **Spring Wobble** for a playful bend, or **Pixel Wipe** for a

@@ -10,7 +10,7 @@ from dataclasses import asdict
 from html import escape
 from importlib.resources import files
 
-from .catalog import PROFILE_RECIPES, PROFILES, documents
+from .catalog import PROFILE_RECIPES, PROFILES, collection_documents, documents
 from .documents import MAX_DOCUMENT_BYTES
 from .effects import (
     ELASTIC_ANCHORS,
@@ -99,6 +99,7 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "name": name,
         "presets": describe_presets(),
         "profiles": documents(PROFILES),
+        "collections": collection_documents(),
         "profile_descriptions": {name: recipe[2] for name, recipe in PROFILE_RECIPES.items()},
         "templates": shader_templates(),
         "resize_templates": RESIZE_TEMPLATES,

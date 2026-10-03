@@ -7,15 +7,74 @@ from pathlib import Path
 
 from helpers import shell_registry
 
-from niri_fx.catalog import PROFILES, RECOMMENDED, STYLES, documents
+from niri_fx.catalog import (
+    COLLECTIONS,
+    PROFILES,
+    RECOMMENDED,
+    STYLES,
+    collection_documents,
+    documents,
+    families,
+)
 from niri_fx.cli import main, parser, selected_effect
 from niri_fx.documents import parse_document
 from niri_fx.effects import PRESETS, animation_types, render_kdl
 from niri_fx.integration import make_builtin_profile, make_presets
+from niri_fx.profiles import Profile
 from niri_fx.terminal import catalog
 
 
 class CuratedProfileTests(unittest.TestCase):
+    def test_collection_metadata_is_valid_and_does_not_modify_documents(self):
+        before = documents()
+        for name, collection in COLLECTIONS.items():
+            with self.subTest(name=name):
+                self.assertTrue(collection["label"] and collection["description"])
+                members = collection["styles"]
+                self.assertTrue(members)
+                self.assertEqual(len(members), len(set(members)))
+                self.assertFalse(set(members) - set(STYLES))
+                self.assertEqual(set(catalog(collection=name)), set(members))
+        self.assertTrue(
+            all(any(name in c["styles"] for c in COLLECTIONS.values()) for name in PROFILES)
+        )
+        metadata = collection_documents()
+        metadata["shapes"]["styles"].clear()
+        self.assertTrue(collection_documents()["shapes"]["styles"])
+        self.assertEqual(before, documents())
+
+    def test_collection_cli_preserves_profile_actions_and_intersects_filters(self):
+        with redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(main(["list", "--collections"]), 0)
+        self.assertEqual(json.loads(output.getvalue()), collection_documents())
+        with redirect_stdout(io.StringIO()) as output:
+            self.assertEqual(main(["list", "--collection", "shapes"]), 0)
+        exported = json.loads(output.getvalue())
+        self.assertEqual(parse_document(exported["geometric-flow"])[2], PROFILES["geometric-flow"])
+        self.assertEqual(catalog(collection="shapes", profiles=True), ["geometric-flow"])
+        self.assertEqual(
+            catalog("hexagon burst", collection="shapes", family="hexagons"), ["hexagon-burst"]
+        )
+        with redirect_stderr(io.StringIO()) as error:
+            self.assertEqual(main(["list", "--collections", "--family", "pixels"]), 2)
+        self.assertIn("cannot be combined", error.getvalue())
+
+    def test_family_metadata_includes_resize_and_movement_actions(self):
+        profile = Profile(
+            PRESETS["balanced"],
+            PRESETS["dust-drift"],
+            resize=PRESETS["spring-wobble"],
+            movement=PRESETS["shockwave"],
+        )
+        self.assertEqual(families(profile), ("fragments", "pixels", "elastic", "distortion"))
+        self.assertEqual(families(PROFILES["ribbon-current"]), ("slices",))
+
+    def test_inir_search_keywords_cover_pairings_and_collections(self):
+        registry = {p["id"]: p for p in make_presets(shell_registry())}
+        keywords = registry["niri-fx-burst-and-drift"]["keywords"]
+        self.assertTrue({"fragments", "pixels", "bursts"}.issubset(keywords))
+        self.assertIn("shapes", registry["niri-fx-geometric-flow"]["keywords"])
+
     def test_portable_catalog_keeps_both_actions_and_no_resize(self):
         exported = documents()
         self.assertFalse(set(PROFILES) & set(PRESETS))

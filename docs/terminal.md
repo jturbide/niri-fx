@@ -20,8 +20,8 @@ Use `niri-fx setup --interactive` for an explicit interactive invocation.
 
 On standalone Niri, the guide starts with the same nine recommended presets as
 the [gallery](https://jturbide.github.io/niri-fx/gallery/?collection=starter). Enter a
-number or preset name, use `profiles` for seven open/close pairings, `all` for all
-73 single styles and seven profiles, or search with `/slices`,
+number or preset name, use `profiles` for finished open/close pairings, `all` for all
+single styles and profiles, or search with `/slices`,
 `/wobble` or `/pixel`. An empty selection chooses Balanced. `q` leaves the guide.
 
 For an everyday starting point, try Balanced. Spring Wobble, Pixel Wipe and
@@ -73,10 +73,16 @@ the ordinary JSON setup/restore commands.
 ```sh
 niri-fx list --text --recommended
 niri-fx list --profiles --text
+niri-fx list --collections --text
+niri-fx list --collection shapes --text
 niri-fx list --text --family slices
 niri-fx list --text --search pixel
 niri-fx doctor --text
 ```
+
+Type **groups** in the guide, then **@shapes**, **@ribbons** or another collection ID.
+Filtering only changes the choices shown. Pick a name or number to review a setup.
+See [all collections](collections.md).
 
 Plain `list` and `doctor` retain JSON output for integrations. Filters also work
 with JSON. The diagnostic report checks Niri/config health and optional picker

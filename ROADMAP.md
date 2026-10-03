@@ -16,6 +16,7 @@ order expresses priority, not a release date. See [available features](README.md
 - [x] Eight fragment shapes, four shape presets and their showcases in 0.12.0.
 - [x] Experimental tile/column movement, swaps and velocity-preserving retargets.
 - [x] Searchable gallery, Studio, terminal workflow and reversible setup snapshots.
+- [x] Curated collections shared across browsing interfaces and ten finished pairings.
 
 ## Epic 1: general window movement
 

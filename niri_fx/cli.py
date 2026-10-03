@@ -8,7 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from . import __version__
-from .catalog import PROFILES, STYLES, documents, title
+from .catalog import COLLECTIONS, PROFILES, STYLES, collection_documents, documents, title
 from .documents import effect_document, load_document, parse_document
 from .effects import (
     FAMILIES,
@@ -114,6 +114,11 @@ def parser():
     listing.add_argument("--recommended", action="store_true", help="Show the starter selection")
     listing.add_argument("--family", choices=FAMILIES)
     listing.add_argument("--search", default="", help="Filter preset names and families")
+    collections = listing.add_mutually_exclusive_group()
+    collections.add_argument("--collections", action="store_true", help="List curated collections")
+    collections.add_argument(
+        "--collection", choices=COLLECTIONS, help="Browse a collection of styles and pairings"
+    )
     commands.add_parser("families", help="Print supported effect families and capabilities as JSON")
     inspect = commands.add_parser(
         "inspect", help="Validate and print normalized style/profile JSON"
@@ -256,7 +261,22 @@ def main(argv=None):
         if arguments.command == "families":
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "list":
-            from .terminal import catalog, print_catalog
+            from .terminal import catalog, print_catalog, print_collections
+
+            if arguments.collections:
+                if (
+                    arguments.profiles
+                    or arguments.documents
+                    or arguments.recommended
+                    or arguments.family
+                    or arguments.search
+                ):
+                    raise ValueError("--collections cannot be combined with style filters")
+                if arguments.text:
+                    print_collections()
+                else:
+                    print(json.dumps(collection_documents(), indent=2))
+                return 0
 
             keys = catalog(
                 arguments.search,
@@ -264,13 +284,14 @@ def main(argv=None):
                 arguments.recommended,
                 profiles=arguments.profiles,
                 all_styles=arguments.documents,
+                collection=arguments.collection,
             )
             if arguments.text:
                 print_catalog(keys)
             else:
                 presets = (
                     documents(PROFILES if arguments.profiles else STYLES)
-                    if arguments.profiles or arguments.documents
+                    if arguments.profiles or arguments.documents or arguments.collection
                     else describe_presets()
                 )
                 print(json.dumps({key: presets[key] for key in keys}, indent=2))

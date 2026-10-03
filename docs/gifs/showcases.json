@@ -1750,6 +1750,39 @@
           "source": "examples/profiles/fragment-wake-motion.json"
         }
       ]
+    },
+    {
+      "name": "profile-geometric-flow",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "GEOMETRIC FLOW",
+          "source": "examples/profiles/geometric-flow.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-ribbon-current",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "RIBBON CURRENT",
+          "source": "examples/profiles/ribbon-current.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-soft-landing",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "SOFT LANDING",
+          "source": "examples/profiles/soft-landing.json"
+        }
+      ]
     }
   ]
 }

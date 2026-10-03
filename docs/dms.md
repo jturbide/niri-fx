@@ -28,7 +28,7 @@ animation manager: an active standalone override takes precedence over iRiS or
 Noctalia's earlier animation includes. Remove the override through Undo/restore
 before switching to another picker. Disabling the plugin alone does not undo a
 Niri configuration change. Studio's standalone save target downloads a file;
-the DMS launcher lists the built-in styles and seven curated profiles. Saved custom
+the DMS launcher lists the built-in styles and curated profiles. Saved custom
 JSON profiles can be opened in Studio or the reusable desktop pickers.
 
 ## Tested versions

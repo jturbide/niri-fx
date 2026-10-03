@@ -12,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from niri_fx.catalog import PROFILES, RECOMMENDED
+from niri_fx.catalog import COLLECTIONS, PROFILES, RECOMMENDED, collection_names
 from niri_fx.documents import MAX_DOCUMENT_BYTES, effect_document, load_document, parse_document
 from niri_fx.effects import FAMILIES, PRESETS, Effect
 from niri_fx.profiles import Profile
@@ -124,6 +124,9 @@ def entries():
                     "settings": settings(clip, stem),
                     "starter": starter,
                     "pairing": pairing,
+                    "groups": collection_names(
+                        stem.removeprefix("preset-").removeprefix("profile-")
+                    ),
                 }
             )
     # Fragments first, then other effect families; workflows stay discoverable.
@@ -143,6 +146,10 @@ def entries():
 
 
 def document(clips):
+    collection_options = "".join(
+        f'<option value="{key}">{html.escape(value["label"])}</option>'
+        for key, value in COLLECTIONS.items()
+    )
     options = "".join(
         f'<option value="{name}">{spec["label"]}</option>' for name, spec in FAMILIES.items()
     )
@@ -175,7 +182,8 @@ def document(clips):
         recommendation = (
             f'<p class="starter-note">{html.escape(clip["starter"])}</p>' if clip["starter"] else ""
         )
-        cards.append(f'''<article data-collection="{collections}" data-families="{families}" data-kind="{clip["kind"]}" data-action="{clip["action"]}" data-search="{title.lower()} {families}">
+        groups = " ".join(clip["groups"])
+        cards.append(f'''<article data-collection="{collections}" data-groups="{groups}" data-families="{families}" data-kind="{clip["kind"]}" data-action="{clip["action"]}" data-search="{title.lower()} {families} {groups}">
 <img id="{name}" src="{poster_url}" data-poster="{poster_url}" data-animation="{animation_url}" alt="{title}" loading="lazy" width="400" height="280">
 <div class="card-body"><h2>{title}</h2>{recommendation}<p>{html.escape(labels)} · {clip["kind"]}</p>
 <button type="button" data-play="{name}" aria-controls="{name}" aria-pressed="false">Play</button> <a href="{animation_url}">Open GIF</a> <a href="#{name}" aria-label="Link to {title}">Link</a>{"".join(controls)}</div></article>''')
@@ -188,7 +196,7 @@ def document(clips):
 <p class="legend">Stock Niri open/close. Resize is opt-in; movement needs the experimental build.</p>
 <div class="collections" role="group" aria-label="Browse collections"><button type="button" data-collection="starter">Start here ({len(RECOMMENDED)})</button><button type="button" data-collection="profiles">Open/close pairings ({len(PROFILES)})</button><button type="button" data-collection="all">All {len(clips)} examples</button></div>
 <form role="search" onsubmit="return false"><label>Search<input type="search" id="search" placeholder="Try explosion, resize, ink…"></label>
-<input type="hidden" id="collection" value="starter">
+<label>Collection<select id="collection"><option value="starter">Start here</option><option value="profiles">Open/close pairings</option><option value="all">All examples</option>{collection_options}</select></label>
 <details class="filters"><summary>Filter by family, scenario or renderer</summary><div class="filter-options"><label>Family<select id="family"><option value="">All families</option>{options}</select></label>
 <label>Scenario<select id="action"><option value="">All scenarios</option><option value="effect">Open / close</option><option value="resize">Resize</option><option value="swap">Swap</option><option value="movement">Native movement</option><option value="interruption">Interruption</option><option value="workflow">Workflow</option><option value="move">Move concept</option></select></label>
 <label>Renderer<select id="kind"><option value="">All renderers</option><option value="shader">Studio shader</option><option value="stock">Stock Niri</option><option value="experimental">Experimental Niri</option><option value="workflow">Workflow</option><option value="concept">Concept</option></select></label></div></details></form>

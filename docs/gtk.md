@@ -32,7 +32,7 @@ The default `niri-fx picker` continues to open the [Quickshell UI](quickshell.md
 5. **Undo last change** restores the previous file bytes. Repeat to undo earlier
    changes from this picker's history.
 
-Search `profile` for the seven curated pairings, alongside the 64 single styles.
+Search `profile` for curated pairings alongside the single styles.
 Browsing, importing and reviewing are read-only. All built-ins use your base
 Niri resize settings. A custom selection with resize effects requires the visible
 consent checkbox before Apply. Replacing a previously applied NiriFX resize
