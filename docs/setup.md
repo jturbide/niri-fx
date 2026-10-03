@@ -61,6 +61,8 @@ the root config may need their own include ordering adjustments.
 Each changed file gets its original bytes, permissions and hashes recorded under
 `$XDG_STATE_HOME/niri-fragments/setup` (normally `~/.local/state/...`). Setup prints
 the snapshot ID and an exact restore command, including a custom state path.
+Run it from the same checkout/environment; it uses your current Python interpreter
+and does not require a separately installed `niri-fragments` executable.
 Reapplying identical settings is a no-op and creates no new snapshot.
 
 ```sh

@@ -50,6 +50,8 @@ First public prerelease. Earlier versions were private development milestones.
 
 - Retry temporary Chromium profile removal while helper processes finish writing,
   preventing successful browser checks from failing during cleanup.
+- Printed restore commands use the running Python interpreter, including when
+  running directly from a checkout without an installed CLI executable.
 
 Migration: re-register the built-in pack and reselect a style in iRiS, or
 regenerate your standalone include. Existing JSON remains compatible; absent

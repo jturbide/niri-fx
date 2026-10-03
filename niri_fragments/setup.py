@@ -230,7 +230,7 @@ def apply_plan(plan, state):
             save()
             raise
         return {**summarize(plan), "changed": True, "transaction": identifier,
-                "restore": shlex.join(["niri-fragments", "restore", "--state", str(state), "--transaction", identifier, "--apply"])}
+                "restore": shlex.join([sys.executable, "-m", "niri_fragments", "restore", "--state", str(state), "--transaction", identifier, "--apply"])}
 
 
 def restore(state, identifier=None, apply=False):
