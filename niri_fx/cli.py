@@ -31,7 +31,10 @@ EFFECT_FIELDS = tuple(PARAMETERS)
 
 def effect_options(command):
     selection = command.add_mutually_exclusive_group()
-    selection.add_argument("--preset", choices=PRESETS, default="balanced")
+    # In older argparse versions a value identical to an action's default does
+    # not count toward mutual exclusion. Supply the fallback on the root parser
+    # so explicitly choosing Balanced still conflicts with --profile.
+    selection.add_argument("--preset", choices=PRESETS, default=argparse.SUPPRESS)
     selection.add_argument(
         "--profile", choices=PROFILES, help="Use a ready-made open/close pairing"
     )
@@ -100,6 +103,7 @@ def parser():
         description="NiriFX window effects and native iNiR/iRiS presets."
     )
     root.add_argument("--version", action="version", version=__version__)
+    root.set_defaults(preset="balanced")
     commands = root.add_subparsers(dest="command", required=True)
     listing = commands.add_parser("list", help="List ready-made presets (JSON by default)")
     listing.add_argument("--profiles", action="store_true", help="List curated open/close pairings")

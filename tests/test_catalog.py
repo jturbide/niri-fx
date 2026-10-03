@@ -67,8 +67,16 @@ class CuratedProfileTests(unittest.TestCase):
                 self.assertEqual(
                     main(["render", "--profile", "fragment-flow", "--custom", str(path)]), 2
                 )
-        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
-            parser().parse_args(["render", "--preset", "balanced", "--profile", "fragment-flow"])
+        for name in ("balanced", "explosion"):
+            for flags in (
+                ["--preset", name, "--profile", "fragment-flow"],
+                ["--profile", "fragment-flow", "--preset", name],
+            ):
+                with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
+                    parser().parse_args(["render", *flags])
+        defaults = parser().parse_args(["render"])
+        self.assertEqual(defaults.preset, "balanced")
+        self.assertEqual(selected_effect(defaults), PRESETS["balanced"])
 
     def test_one_profile_and_full_inir_pack_share_identity_and_base(self):
         shell = shell_registry()
