@@ -183,6 +183,4 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
     return result;
 }
 
-vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
-    return fragments_color(coords_geo, size_geo, @PROGRESS@);
-}
+@ACTION_ENTRY@

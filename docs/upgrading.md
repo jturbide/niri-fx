@@ -1,11 +1,12 @@
 # Updating the development checkout
 
 NiriFX is an early project with one current API. Development changes may remove
-old interfaces; compatibility shims are not maintained. Read [Unreleased](../CHANGELOG.md)
+old interfaces; compatibility shims are not maintained. Read the [changelog](../CHANGELOG.md)
 before updating. Tagged releases retain their own documentation.
 
 The current interface is `niri-fx` or `python3 -m niri_fx`. Preset JSON uses
-**schema 3** for every family. Namespaced state lives under
+**schema 3** for every family. [Independent action profiles](profiles.md) use a
+separate document type, kind `profile`, schema 1. Namespaced state lives under
 `$XDG_STATE_HOME/niri-fx`; desktop launchers are `niri-fx-studio.desktop` and
 `niri-fx-movement-demo.desktop`. The iNiR registry uses the `niri-fx` generator
 and ID prefix. Standalone setup owns `nirifx/animations.kdl`.

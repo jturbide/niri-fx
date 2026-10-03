@@ -99,8 +99,14 @@ def main():
         expected = []
         for panel in spec["panels"]:
             if "source" in panel:
-                effect = Effect(**json.loads((ROOT / panel["source"]).read_text())["effect"])
+                from niri_fx.integration import custom_document
+                from niri_fx.profiles import Profile
+
+                document = custom_document(json.loads((ROOT / panel["source"]).read_text()))[2]
+                effect = document.close if isinstance(document, Profile) else document
                 origin = {"source": panel["source"]}
+                if isinstance(document, Profile):
+                    origin["opening_effect"] = asdict(document.open)
             else:
                 effect = replace(PRESETS[panel["preset"]], **panel["overrides"])
                 origin = {"preset": panel["preset"]}

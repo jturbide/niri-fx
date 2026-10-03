@@ -4,25 +4,25 @@
 
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
-NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **41 presets across Fragments, Slices and Elastic**, preview the
+NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **47 presets across Fragments, Slices, Elastic, Dissolve and Iris**, preview the
 actual shaders, and tune the controls for each family. The optional iNiR/iRiS
 adapter adds your styles to its settings picker. A preset-folder export also
-feeds Noctalia’s existing animation picker.
+feeds Noctalia’s existing animation picker. Independent action profiles combine different
+opening and closing styles; the optional DMS launcher adapter offers preset selection and undo.
 
 [Get started](docs/getting-started.md) · [Studio & controls](docs/usage.md) ·
 [Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
-[Contributing](CONTRIBUTING.md)
+[Contributing](CONTRIBUTING.md) · [GPU measurements](docs/performance.md)
 
-**Development checkout after 0.6.0.** The new shapes, hinges, waves, wobble and Noctalia
-pack below are not in the published 0.6.0 prerelease. Opening and closing work on
-stock Niri 26.04.
+**0.7.0 prerelease.** Includes independent profiles, five effect families, shell
+adapters and GPU measurements. Opening and closing work on stock Niri 26.04.
 Resize fragments are **off by default and strictly opt-in**. Native move/swap
 fragmentation requires the separate experimental Niri patch. Performance and
 appearance still need testing across GPUs, applications and display scales.
 
 ## See it in motion
 
-[Fragments](#twenty-three-fragment-styles) · [Slices](#eleven-slice-styles) · [Wobble](#seven-elastic-styles) · [Compare the controls](#one-control-at-a-time) ·
+[Fragments](#twenty-three-fragment-styles) · [Slices](#eleven-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
@@ -246,6 +246,35 @@ added control in each comparison panel.
 [Controls, CLI examples and costs](docs/effect-controls.md) explain the new
 parameters. Resize remains off in all built-ins.
 
+### Dissolve and iris reveals
+
+Erode the window through seeded noise, or reveal it with an aspect-correct mask.
+These are stock Niri open/close shaders. Resize stays off.
+
+| Noise Dissolve | Ember Erosion | Frost Vanish |
+| --- | --- | --- |
+| ![Noise erodes and rebuilds the window](docs/gifs/preset-noise-dissolve.gif) | ![A warm edge follows directional erosion](docs/gifs/preset-ember-erosion.gif) | ![A cool edge sweeps through fine noise](docs/gifs/preset-frost-vanish.gif) |
+| [Settings](examples/noise-dissolve.json) | [Settings](examples/ember-erosion.json) | [Settings](examples/frost-vanish.json) |
+| **Iris Bloom** | **Diamond Turn** | **Portal Out** |
+| ![Circular reveal closes inward and reconstructs](docs/gifs/preset-iris-bloom.gif) | ![A rotating diamond mask reveals the window](docs/gifs/preset-diamond-turn.gif) | ![An off-center hole expands and closes](docs/gifs/preset-portal-out.gif) |
+| [Settings](examples/iris-bloom.json) | [Settings](examples/diamond-turn.json) | [Settings](examples/portal-out.json) |
+
+**Noise size — 12 / 32 / 90 logical pixels.** Direction, color and timing stay fixed.
+
+![Fine, medium and broad dissolution patterns](docs/gifs/compare-dissolve-scale.gif)
+
+**Reveal shape — circle / diamond / square.** Same origin, softness and timing.
+
+![Three iris mask shapes compared](docs/gifs/compare-iris-shapes.gif)
+
+### Combine different actions
+
+Open with Spring Wobble and close with Ember Erosion in the same profile.
+Studio now includes independent action editing, undo/redo, parameter reset,
+search, favorites and a pinned A/B comparison. [Profile guide](docs/profiles.md).
+
+![One profile opens with spring motion and closes with ember erosion](docs/gifs/profile-spring-and-ember.gif)
+
 ### Resize — opt-in
 
 **Disabled by default.** When explicitly enabled, the actual resize shader breaks
@@ -386,18 +415,20 @@ CLI examples are in the [usage guide](docs/usage.md).
 ## Development status
 
 NiriFX is moving quickly and maintains one current API: `niri-fx`, the `niri_fx`
-Python package and preset schema 3. Obsolete command aliases and formats are
+Python package, effect schema 3 and independent profile schema 1. Obsolete command aliases and formats are
 removed. Read [the update policy](docs/upgrading.md) when upgrading a checkout.
 
 ## What works where?
 
 | Feature | Stock Niri | Extra requirement |
 | --- | --- | --- |
-| Open / close effects, 41 presets in three families | Yes; validated on 26.04 | Enable Niri animations |
+| Open / close effects, 47 presets in five families | Yes; validated on 26.04 | Enable Niri animations |
 | Optional resize (Fragments family only) | Yes; disabled by default | Studio checkbox or `--resize` |
 | Studio preview and KDL / JSON export | Yes | WebGL browser |
+| Independent open/close profiles | Yes | [Studio or CLI](docs/profiles.md) |
+| DMS launcher adapter | Reversible KDL setup | [Plugin setup and validation scope](docs/dms.md) |
 | Preset registration and Studio save | Yes | iNiR external preset support |
-| Noctalia preset picker | KDL file integration | [Export pack and setup](docs/noctalia.md); UI acceptance pending |
+| Noctalia preset picker | KDL file integration | [Export pack and setup](docs/noctalia.md); tested in Noctalia 5.2.1 |
 | Native movement / column swaps | No | [Pinned experimental Niri build](experimental/README.md) |
 | Studio Move / Swap tabs | Visual concepts | Do not activate desktop movement |
 | Hyprland, KWin, GNOME | No current backend | Separate compositor work |
@@ -410,7 +441,7 @@ Built for [niri](https://github.com/niri-wm/niri), using **Python**, **GLSL** an
 - **iNiR / iRiS:** [external presets and Studio save](docs/integration.md).
 - **Noctalia:** [KDL preset export](docs/noctalia.md) for its existing animation picker.
 - **DankMaterialShell / DMS:** [standalone niri configuration](docs/compatibility.md),
-  with native settings integration still to be developed.
+  with an optional [launcher adapter](docs/dms.md) for presets, Studio and undo.
 - **Quickshell:** the toolkit behind iNiR and DMS; NiriFX itself uses a web editor.
 
 Explore [related shader projects](docs/related-projects.md), [brand assets](docs/branding.md)

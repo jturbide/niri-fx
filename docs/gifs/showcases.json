@@ -739,6 +739,85 @@
           }
         }
       ]
+    },
+    {
+      "name": "compare-dissolve-scale",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "NOISE SIZE \u00b7 12 px",
+          "preset": "ember-erosion",
+          "overrides": {
+            "dissolve_scale": 12,
+            "open_ms": 1000,
+            "close_ms": 1000
+          }
+        },
+        {
+          "label": "NOISE SIZE \u00b7 32 px",
+          "preset": "ember-erosion",
+          "overrides": {
+            "dissolve_scale": 32,
+            "open_ms": 1000,
+            "close_ms": 1000
+          }
+        },
+        {
+          "label": "NOISE SIZE \u00b7 90 px",
+          "preset": "ember-erosion",
+          "overrides": {
+            "dissolve_scale": 90,
+            "open_ms": 1000,
+            "close_ms": 1000
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-iris-shapes",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "IRIS \u00b7 CIRCLE",
+          "preset": "iris-bloom",
+          "overrides": {
+            "iris_shape": "circle",
+            "open_ms": 1000,
+            "close_ms": 1000
+          }
+        },
+        {
+          "label": "IRIS \u00b7 DIAMOND",
+          "preset": "iris-bloom",
+          "overrides": {
+            "iris_shape": "diamond",
+            "open_ms": 1000,
+            "close_ms": 1000
+          }
+        },
+        {
+          "label": "IRIS \u00b7 SQUARE",
+          "preset": "iris-bloom",
+          "overrides": {
+            "iris_shape": "square",
+            "open_ms": 1000,
+            "close_ms": 1000
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile-spring-and-ember",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "OPEN \u00b7 SPRING / CLOSE \u00b7 EMBER",
+          "source": "examples/profiles/spring-and-ember.json"
+        }
+      ]
     }
   ]
 }

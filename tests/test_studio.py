@@ -103,6 +103,26 @@ class ServerTests(unittest.TestCase):
         caught.exception.close()
         self.assertFalse(self.registry.exists())
 
+    def test_favorites_are_persisted_and_reject_unknown_values(self):
+        request = self.request({"favorites": ["iris-bloom", "balanced"]})
+        request.full_url = self.server.origin + "/preferences"
+        with urlopen(request, timeout=5) as response:
+            self.assertTrue(json.load(response)["ok"])
+        preferences = self.registry.parent / "studio-preferences.json"
+        self.assertEqual(
+            json.loads(preferences.read_text())["favorites"], ["balanced", "iris-bloom"]
+        )
+        with urlopen(self.server.session_url, timeout=5) as response:
+            self.assertIn('"favorites": ["balanced", "iris-bloom"]', response.read().decode())
+        original = preferences.read_bytes()
+        request = self.request({"favorites": ["../../unowned"]})
+        request.full_url = self.server.origin + "/preferences"
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(request, timeout=5)
+        self.assertEqual(caught.exception.code, 400)
+        caught.exception.close()
+        self.assertEqual(preferences.read_bytes(), original)
+
     def test_slice_schema_three_is_saved_without_replacing_base_resize(self):
         document = {"schema": 3, "name": "Sliced", "effect": {"family": "slices", "slice_count": 9}}
         with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):

@@ -1,0 +1,13 @@
+{
+  "id": "niriFX",
+  "name": "NiriFX",
+  "description": "Choose Niri window effects, undo the last change, or open NiriFX Studio.",
+  "version": "0.7.0",
+  "author": "Julien Turbide",
+  "icon": "animation",
+  "type": "launcher",
+  "capabilities": ["command-execution"],
+  "component": "./NiriFX.qml",
+  "trigger": "fx",
+  "permissions": []
+}

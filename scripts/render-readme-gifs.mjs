@@ -212,8 +212,12 @@ try {
     for (const [index, panel] of panels.entries()) {
       const directory = join(scratch, spec.name + "-" + index);
       mkdirSync(directory);
-      let effect = panel.source
-        ? JSON.parse(readFileSync(join(root, panel.source), "utf8")).effect
+      const sourceDoc = panel.source
+        ? JSON.parse(readFileSync(join(root, panel.source), "utf8"))
+        : null;
+      const openingEffect = sourceDoc?.kind === "profile" ? sourceDoc.actions.open : null;
+      let effect = sourceDoc
+        ? sourceDoc.effect || sourceDoc.actions.close
         : { ...presets[panel.preset], ...panel.overrides };
       // Python validation and shader parity keep the examples faithful to CLI exports.
       const generated = JSON.parse(
@@ -228,10 +232,29 @@ try {
       );
       effect = generated.effect;
       const sources = generated.sources;
+      if (openingEffect) {
+        const openingShader = execFileSync(
+          "python3",
+          [
+            "-c",
+            "import json,sys;from niri_fx.effects import Effect,shader;print(shader(Effect(**json.load(sys.stdin)),True),end='')",
+          ],
+          { input: JSON.stringify(openingEffect), encoding: "utf8" },
+        );
+        assert.equal(
+          await evaluate(`shaderFor(${JSON.stringify(openingEffect)}, true)`),
+          openingShader,
+        );
+      }
       const concept = ["move", "swap"].includes(spec.mode);
       // Show actual preset durations, sampled at 20 fps; a hold separates endpoints.
       const forward = spec.mode === "resize" ? effect.resize_ms : concept ? 1100 : effect.close_ms;
-      const backward = spec.mode === "resize" ? effect.resize_ms : concept ? 1100 : effect.open_ms;
+      const backward =
+        spec.mode === "resize"
+          ? effect.resize_ms
+          : concept
+            ? 1100
+            : (openingEffect || effect).open_ms;
       const pause = 450,
         fps = 20;
       const duration =
@@ -260,8 +283,13 @@ try {
       const panelFrames = Math.ceil((duration * fps) / 1000);
       if (index) assert.equal(panelFrames, count, "Comparison panels must have matching timing");
       count = panelFrames;
+      let showingOpening = false;
       for (let frame = 0; frame < count; frame++) {
         const t = (frame * 1000) / fps;
+        if (openingEffect && !showingOpening && t >= 2 * pause + forward) {
+          showingOpening = true;
+          await evaluate(`parameters=${JSON.stringify(openingEffect)};populate();refresh();`);
+        }
         let p;
         if (spec.direction === "open") p = 1 - Math.max(0, Math.min(1, (t - pause) / backward));
         else if (spec.direction === "close") p = Math.max(0, Math.min(1, (t - pause) / forward));
@@ -282,6 +310,7 @@ try {
       recorded.push({
         directory,
         effect,
+        ...(openingEffect ? { opening_effect: openingEffect } : {}),
         ...(panel.source ? { source: panel.source } : { preset: panel.preset }),
         label: panel.label,
       });

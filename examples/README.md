@@ -161,3 +161,44 @@ python3 -m niri_fx preview --preset flag-wave --output /tmp/flag-wave.html
 python3 -m niri_fx preview --preset corner-spring --output /tmp/corner-spring.html
 python3 -m niri_fx preview --preset accordion --output /tmp/accordion.html
 ```
+
+## Dissolve and iris
+
+[Noise Dissolve](noise-dissolve.json)
+
+```sh
+python3 -m niri_fx preview --preset noise-dissolve --output /tmp/noise-dissolve.html
+```
+
+[Ember Erosion](ember-erosion.json)
+
+```sh
+python3 -m niri_fx preview --preset ember-erosion --output /tmp/ember-erosion.html
+```
+
+[Frost Vanish](frost-vanish.json)
+
+```sh
+python3 -m niri_fx preview --preset frost-vanish --output /tmp/frost-vanish.html
+```
+
+[Iris Bloom](iris-bloom.json)
+
+```sh
+python3 -m niri_fx preview --preset iris-bloom --output /tmp/iris-bloom.html
+```
+
+[Diamond Turn](diamond-turn.json)
+
+```sh
+python3 -m niri_fx preview --preset diamond-turn --output /tmp/diamond-turn.html
+```
+
+[Portal Out](portal-out.json)
+
+```sh
+python3 -m niri_fx preview --preset portal-out --output /tmp/portal-out.html
+```
+
+An [independent Spring and Ember profile](profiles/spring-and-ember.json) opens with
+Spring Wobble and closes with Ember Erosion. See the [profile guide](../docs/profiles.md).

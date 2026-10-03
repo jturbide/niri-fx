@@ -14,3 +14,4 @@ include requirements-dev.txt package.json package-lock.json eslint.config.mjs .p
 recursive-include .github *.md *.yml
 recursive-include docs *.svg
 recursive-include docs *.patch
+recursive-include integrations *.qml *.json *.md

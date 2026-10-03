@@ -115,3 +115,7 @@ python3 scripts/record-native-gif.py --preset twist-snap --name native-swap-twis
 Unknown/empty names fail before any frames are recorded. Use one selection option
 at a time. Recordings use exact current parameters with resize off except the
 explicit resize examples.
+
+The current gallery has 84 GIFs. New reveals include six preset loops, two controlled
+comparisons and `profile-spring-and-ember.gif`: its source profile records separate
+opening and closing effects. Metadata includes both parameter sets.

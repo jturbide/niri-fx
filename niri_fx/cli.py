@@ -9,19 +9,9 @@ from pathlib import Path
 
 from . import __version__
 from .effects import (
-    ELASTIC_ANCHORS,
-    ELASTIC_AXES,
-    ELASTIC_FIELDS,
     FAMILIES,
-    FAMILY_FIELDS,
-    GRAVITIES,
-    MOTION_FIELDS,
+    PARAMETERS,
     PRESETS,
-    RELEASES,
-    RESIZE_MODES,
-    ROTATIONS,
-    SLICE_DIRECTIONS,
-    SLICE_ORDERS,
     describe_presets,
     effect_document,
     render_kdl,
@@ -36,152 +26,29 @@ from .integration import (
     update_registry,
 )
 
-EFFECT_FIELDS = (
-    FAMILY_FIELDS
-    + MOTION_FIELDS
-    + ELASTIC_FIELDS
-    + (
-        "tile_size",
-        "scatter",
-        "open_ms",
-        "close_ms",
-        "gravity",
-        "gravity_strength",
-        "particles",
-        "rotation",
-        "spin",
-        "swirl",
-        "dispersion",
-        "stagger",
-        "resize",
-        "resize_ms",
-        "resize_strength",
-        "release",
-        "wave_span",
-        "origin_x",
-        "origin_y",
-        "resize_mode",
-        "fragment_shrink",
-        "fragment_roundness",
-    )
-)
+EFFECT_FIELDS = tuple(PARAMETERS)
 
 
 def effect_options(command):
     command.add_argument("--preset", choices=PRESETS, default="balanced")
-    command.add_argument("--family", choices=FAMILIES, help="Effect family")
-    command.add_argument("--slice-count", type=int, help="Number of strips (2–48)")
-    command.add_argument(
-        "--slice-angle", type=float, help="Strip angle: 0 horizontal, ±90 vertical"
-    )
-    command.add_argument(
-        "--slice-distance", type=float, help="Strip travel in logical pixels (0–600)"
-    )
-    command.add_argument("--slice-stagger", type=float, help="First-to-last release delay (0–0.75)")
-    command.add_argument(
-        "--slice-rotation", type=float, help="Strip rotation during travel (-60–60 degrees)"
-    )
-    command.add_argument("--slice-direction", choices=SLICE_DIRECTIONS)
-    command.add_argument(
-        "--slice-order", choices=SLICE_ORDERS, help="Release sequence across the strips"
-    )
-    command.add_argument(
-        "--slice-travel-variation", type=float, help="Random strip travel distance (0–1)"
-    )
-    command.add_argument("--slice-rotation-variation", type=float, help="Random strip spin (0–1)")
-    command.add_argument("--slice-pivot", type=float, help="Strip hinge along its length (-1–1)")
-    command.add_argument(
-        "--slice-collapse", type=float, help="Strip width collapse during flight (0–1)"
-    )
-    command.add_argument(
-        "--fragment-shrink", type=float, help="Extra fragment shrink during flight (0–1)"
-    )
-    command.add_argument(
-        "--fragment-roundness", type=float, help="Square-to-rounded fragment corners (0–1)"
-    )
-    command.add_argument(
-        "--size-variation", type=float, help="Unequal strip widths or fragment grid cells (0–1)"
-    )
-    command.add_argument("--direction-variation", type=float, help="Random heading spread (0–1)")
-    command.add_argument(
-        "--wave-strength", type=float, help="Rigid-piece wave amplitude (0–1); zero disables waves"
-    )
-    command.add_argument(
-        "--wave-frequency", type=float, help="Wave cycles across the window (0.25–4)"
-    )
-    command.add_argument("--wave-speed", type=float, help="Wave cycles during the animation (0–4)")
-    command.add_argument(
-        "--elastic-strength", type=float, help="Whole-window wobble strength (0–1)"
-    )
-    command.add_argument("--elastic-frequency", type=float, help="Spring oscillations (1–5)")
-    command.add_argument("--elastic-damping", type=float, help="Spring settling rate (0–8)")
-    command.add_argument("--elastic-axis", choices=ELASTIC_AXES)
-    command.add_argument("--elastic-twist", type=float, help="Spring rotation (-90–90 degrees)")
-    command.add_argument("--elastic-stretch", type=float, help="Additional spring stretching (0–1)")
-    command.add_argument(
-        "--elastic-ripple", type=float, help="Spatial bend frequency multiplier (0.5–4)"
-    )
-    command.add_argument(
-        "--elastic-anchor",
-        choices=ELASTIC_ANCHORS,
-        help="Rotation/stretch/collapse origin; not a pinned edge",
-    )
     density = command.add_mutually_exclusive_group()
-    density.add_argument(
-        "--tile-size",
-        type=float,
-        help="Square size in logical pixels (8–128); disables target count",
-    )
-    density.add_argument(
-        "--particles",
-        type=int,
-        help="Approximate particle count (16–4096), or 0 for tile-size mode",
-    )
-    command.add_argument("--scatter", type=float, help="Radial scatter in logical pixels (0–240)")
-    command.add_argument("--gravity", choices=GRAVITIES)
-    command.add_argument("--gravity-strength", type=float, help="Gravity multiplier (0–3)")
-    command.add_argument(
-        "--rotation",
-        choices=ROTATIONS,
-        help="No spin, random spin, or face the direction of travel",
-    )
-    command.add_argument(
-        "--spin", type=float, help="Random spin range or alignment limit in degrees (0–720)"
-    )
-    command.add_argument(
-        "--swirl", type=float, help="Orbit around the window center in degrees (-360–360)"
-    )
-    command.add_argument(
-        "--dispersion", type=float, help="Independent fragment path variation (0–1)"
-    )
-    command.add_argument("--stagger", type=float, help="Variation in fragment release time (0–0.4)")
-    command.add_argument("--open-ms", type=int)
-    command.add_argument("--close-ms", type=int)
-    command.add_argument(
-        "--resize",
-        action=argparse.BooleanOptionalAction,
-        default=None,
-        help="Include the stock Niri resize effect",
-    )
-    command.add_argument("--resize-ms", type=int)
-    command.add_argument("--resize-strength", type=float, help="Bounded resize fragmentation (0–1)")
-    command.add_argument(
-        "--release", choices=RELEASES, help="Spatial release sequence across the window"
-    )
-    command.add_argument(
-        "--wave-span", type=float, help="Fraction of time separating first/last wave (0–0.7)"
-    )
-    command.add_argument(
-        "--origin-x", type=float, help="Burst/orbit center from left (0) to right (1)"
-    )
-    command.add_argument(
-        "--origin-y", type=float, help="Burst/orbit center from top (0) to bottom (1)"
-    )
-    command.add_argument(
-        "--resize-mode",
-        choices=RESIZE_MODES,
-        help="Full breakup, edge rebuild or soft reflow; does not enable resize",
-    )
+    for name, spec in PARAMETERS.items():
+        options = {
+            "help": spec["label"]
+            + (
+                f" ({spec['limits'][0]}–{spec['limits'][1]}{spec['unit']})"
+                if spec["limits"]
+                else ""
+            )
+        }
+        if spec["type"] == "boolean":
+            options.update(action=argparse.BooleanOptionalAction, default=None)
+        elif spec["choices"]:
+            options["choices"] = spec["choices"]
+        else:
+            options["type"] = int if spec["integer"] else float
+        target = density if name in ("tile_size", "particles") else command
+        target.add_argument("--" + name.replace("_", "-"), **options)
 
 
 def selected_effect(arguments):
@@ -199,13 +66,11 @@ def selected_effect(arguments):
     if overrides.get("tile_size") is not None:
         overrides["particles"] = 0
     effect = replace(PRESETS[arguments.preset], **overrides)
-    common = {"family", "open_ms", "close_ms", "resize"}
-    allowed = {
-        "fragments": set(EFFECT_FIELDS) - set(FAMILY_FIELDS) - set(ELASTIC_FIELDS),
-        "slices": set(FAMILY_FIELDS) | set(MOTION_FIELDS),
-        "elastic": set(ELASTIC_FIELDS),
+    inactive = {
+        name
+        for name, spec in PARAMETERS.items()
+        if spec["families"] and effect.family not in spec["families"]
     }
-    inactive = set(EFFECT_FIELDS) - allowed[effect.family] - common
     if inactive.intersection(overrides):
         raise ValueError(
             f"Options do not apply to the {effect.family} family: "
@@ -232,6 +97,13 @@ def parser():
     commands = root.add_subparsers(dest="command", required=True)
     commands.add_parser("list", help="Print built-in effect parameters as JSON")
     commands.add_parser("families", help="Print supported effect families and capabilities as JSON")
+    profile = commands.add_parser("profile", help="Create an independent action profile as JSON")
+    profile.add_argument("--name", default="My Profile")
+    profile.add_argument("--open-preset", choices=PRESETS, default="spring-wobble")
+    profile.add_argument("--close-preset", choices=PRESETS, default="core-detonation")
+    profile.add_argument(
+        "--resize-preset", choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["resize"]]
+    )
     for name, help_text in (
         ("render", "Print a standalone Niri KDL animation override"),
         ("preview", "Write a self-contained interactive editor; no desktop changes"),
@@ -264,6 +136,10 @@ def parser():
         "--port", type=int, default=0, help="Loopback port; default chooses an available port"
     )
     from .setup import default_config, default_state
+
+    studio.add_argument(
+        "--state", type=Path, default=default_state().parent, help="Studio preferences directory"
+    )
 
     pack = commands.add_parser(
         "export-pack", help="Preview/export a KDL preset folder for Noctalia or other Niri pickers"
@@ -319,6 +195,16 @@ def main(argv=None):
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "list":
             print(json.dumps(describe_presets(), indent=2))
+        elif arguments.command == "profile":
+            from .profiles import Profile
+
+            document = Profile(
+                open=PRESETS[arguments.open_preset],
+                close=PRESETS[arguments.close_preset],
+                resize=PRESETS[arguments.resize_preset] if arguments.resize_preset else None,
+            ).document(arguments.name)
+            custom_document(document)
+            print(json.dumps(document, indent=2))
         elif arguments.command == "doctor":
             from .setup import doctor
 
