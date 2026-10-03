@@ -3,14 +3,14 @@
 This directory contains a patch for Niri **8ed0da44d974c32c6877d2f4630c314da0717ecb**
 (26.04). It is an isolated prototype, not an upstream Niri API or an installed
 compositor replacement. The patch is **GPL-3.0-or-later**, matching Niri;
-see [COPYING-NIRI](COPYING-NIRI). Fragments' original Python/GLSL code remains MIT.
+see [COPYING-NIRI](COPYING-NIRI). NiriFX's original Python/GLSL code remains MIT.
 Niri's original source and copyright notices remain in the patched checkout.
 
 From the repository root, with Niri's native build dependencies and a working
 Rust toolchain installed:
 
 ```sh
-python3 scripts/build-niri-movement.py --test
+python3 scripts/build-niri-movement.py --release --test
 python3 scripts/nested-demo.py
 ```
 
@@ -36,7 +36,7 @@ Niri window with two colored synthetic clients. Click inside it, then use:
 
 For an optional app-launcher entry, run `python3 scripts/install-desktop.py --movement-demo`,
 then open **NiriFX Movement Demo**. Remove
-`~/.local/share/applications/niri-fragments-movement-demo.desktop` to remove it.
+`~/.local/share/applications/niri-fx-movement-demo.desktop` to remove it.
 
 The parent desktop may reserve some keys. The demo runs without `--session`,
 uses a generated config with no startup shell/bar, and directs its clients to
@@ -59,6 +59,8 @@ It calls `vec4 move_color(vec3 coords_geo, vec3 size_geo)` with the same single
 texture and geometry matrices as the opening shader, plus `niri_move_delta`
 (total displacement in logical pixels). `niri_clamped_progress` runs 0 to 1;
 `niri_random_seed` is stable while that tile's movement effect is active.
+`niri_move_impulse` blends direction changes without snapping the shader's orientation.
+Retargeting preserves the current shader phase and continues toward reconstruction.
 Output colors use premultiplied alpha. The geometry follows Niri's animated
 position; shaders should deform around it rather than translate by the full
 movement again. Fragments uses a symmetric breakup/reassembly pulse.
@@ -71,10 +73,32 @@ into the movement texture. Removing the shader restores ordinary movement.
 Compilation errors keep the last working shader, following Niri's existing
 custom-shader behavior; without a previous shader, ordinary rendering remains.
 
+## Interruption behavior
+
+Closing while a window is opening carries its original opening shader, seed and
+clock into a fading continuation. Particles keep approaching their destinations;
+they do not reverse into a fresh explosion. Closing during movement similarly
+retains its phase, impulse, seed and remaining displacement while fading.
+This interruption path takes precedence over the usual closing style, including
+when a profile has different opening and closing families.
+
+The path retains separate normal/blocked-out snapshots for Niri capture rules.
+It does not make a cross-window particle simulation or guarantee velocity
+continuity for every layout event. See the [recordings](../docs/showcases.md).
+
+```sh
+python3 scripts/record-native-gif.py --all
+python3 scripts/record-movement-scenarios.py
+```
+
+Recorders require Quickshell, Pillow, grim, wf-recorder and FFmpeg. They capture
+only their own nested compositor with synthetic mint/violet app cards.
+
 ## Scope and remaining work
 
 Verified locally: column swaps with both textured windows fragmented, intact
 arrival, animated resize, shader removal on hot reload, legacy config parsing,
+repeated retargets, close-during-open and close-during-move,
 and existing resize/cancellation layout regression tests.
 
 This is not the complete transaction/particle engine described in
@@ -82,8 +106,8 @@ This is not the complete transaction/particle engine described in
 
 - It follows existing tile/column animation clocks. Direct pointer dragging and
   workspace/camera panning do not get a new particle timeline.
-- Repeated actions can restart the breakup phase. Seamless velocity-preserving
-  retargeting and one shared swap transaction remain future work.
+- Repeated actions preserve shader phase, seed and direction continuity. Fully
+  matching velocity/acceleration and one shared swap transaction remain future work.
 - Two streams overlap, but each window is still a separate render element.
   Particle-level interleaving/collisions and shared physics are not implemented.
 - Large excursions can clip at output/workspace boundaries. The expanded draw

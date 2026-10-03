@@ -148,6 +148,204 @@ index a9bcc5155145b622c0494c2c6274e2f93b2983dc..74e5212c321035d161942a270165e418
          drop(config);
  
          niri.update_shaders();
+diff --git a/src/layout/closing_window.rs b/src/layout/closing_window.rs
+index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b63ffd22d 100644
+--- a/src/layout/closing_window.rs
++++ b/src/layout/closing_window.rs
+@@ -24,6 +24,23 @@ use crate::render_helpers::texture::{TextureBuffer, TextureRenderElement};
+ use crate::render_helpers::{render_to_encompassing_texture, RenderCtx, RenderTarget};
+ use crate::utils::transaction::TransactionBlocker;
+ 
++/// Interrupted effects continue their existing path while opacity falls. In
++/// particular an opening implosion must not suddenly become a new explosion.
++#[derive(Debug)]
++pub enum AnimationContinuation {
++    Opening {
++        animation: Animation,
++        random_seed: f32,
++    },
++    Movement {
++        phase: f64,
++        random_seed: f32,
++        impulse: [f32; 2],
++        delta: Point<f64, Logical>,
++        remaining: Point<f64, Logical>,
++    },
++}
++
+ #[derive(Debug)]
+ pub struct ClosingWindow {
+     /// Contents of the window.
+@@ -61,6 +78,7 @@ pub struct ClosingWindow {
+ 
+     /// Random seed for the shader.
+     random_seed: f32,
++    continuation: Option<AnimationContinuation>,
+ }
+ 
+ niri_render_elements! {
+@@ -94,6 +112,7 @@ impl AnimationState {
+ }
+ 
+ impl ClosingWindow {
++    #[allow(clippy::too_many_arguments)]
+     pub fn new<E: RenderElement<GlesRenderer>>(
+         renderer: &mut GlesRenderer,
+         snapshot: RenderSnapshot<E, E>,
+@@ -102,6 +121,7 @@ impl ClosingWindow {
+         pos: Point<f64, Logical>,
+         blocker: TransactionBlocker,
+         anim: Animation,
++        continuation: Option<AnimationContinuation>,
+     ) -> anyhow::Result<Self> {
+         let _span = tracy_client::span!("ClosingWindow::new");
+ 
+@@ -154,6 +174,7 @@ impl ClosingWindow {
+             blocked_out_buffer_offset,
+             anim_state: AnimationState::new(blocker, anim),
+             random_seed: fastrand::f32(),
++            continuation,
+         })
+     }
+ 
+@@ -194,6 +215,7 @@ impl ClosingWindow {
+         };
+ 
+         let anim = match &self.anim_state {
++            AnimationState::Waiting { anim, .. } if self.continuation.is_some() => anim,
+             AnimationState::Waiting { .. } => {
+                 let elem = TextureRenderElement::from_texture_buffer(
+                     buffer.clone(),
+@@ -220,19 +242,56 @@ impl ClosingWindow {
+             AnimationState::Animating(anim) => anim,
+         };
+ 
+-        let progress = anim.value();
+-        let clamped_progress = anim.clamped_value().clamp(0., 1.);
++        let closing = if matches!(self.anim_state, AnimationState::Waiting { .. }) {
++            0.
++        } else {
++            anim.clamped_value().clamp(0., 1.)
++        };
++        let fade = closing * closing * (3. - 2. * closing);
++        let mut program = ProgramType::Close;
++        let mut progress = anim.value();
++        let mut random_seed = self.random_seed;
++        let mut alpha = 1.;
++        let mut position = self.pos;
++        let mut impulse = [1., 1.];
++        let mut delta = Point::from((0., 0.));
++        if let Some(continuation) = &self.continuation {
++            match continuation {
++                AnimationContinuation::Opening {
++                    animation,
++                    random_seed: seed,
++                } => {
++                    program = ProgramType::Open;
++                    // Clone retains the original clock/start time and velocity.
++                    progress = animation.clamped_value().clamp(0., 1.);
++                    random_seed = *seed;
++                }
++                AnimationContinuation::Movement {
++                    phase,
++                    random_seed: seed,
++                    impulse: direction,
++                    delta: travel,
++                    remaining,
++                } => {
++                    program = ProgramType::Move;
++                    progress = phase + (1. - phase) * closing;
++                    random_seed = *seed;
++                    impulse = *direction;
++                    delta = *travel;
++                    position += remaining.upscale(closing);
++                }
++            }
++            alpha = (1. - fade) as f32;
++        }
++        let clamped_progress = progress.clamp(0., 1.);
+ 
+-        if Shaders::get(ctx.renderer)
+-            .program(ProgramType::Close)
+-            .is_some()
+-        {
++        if Shaders::get(ctx.renderer).program(program).is_some() {
+             let area_loc = Vec2::new(view_rect.loc.x as f32, view_rect.loc.y as f32);
+             let area_size = Vec2::new(view_rect.size.w as f32, view_rect.size.h as f32);
+ 
+             // Round to physical pixels relative to the view position. This is similar to what
+             // happens when rendering normal windows.
+-            let relative = self.pos - view_rect.loc;
++            let relative = position - view_rect.loc;
+             let pos = view_rect.loc + relative.to_physical_precise_round(scale).to_logical(scale);
+ 
+             let geo_loc = Vec2::new(pos.x as f32, pos.y as f32);
+@@ -250,20 +309,29 @@ impl ClosingWindow {
+             let geo_to_tex =
+                 Mat3::from_translation(-tex_loc / tex_size) * Mat3::from_scale(geo_size / tex_size);
+ 
++            let mut uniforms = vec![
++                mat3_uniform("niri_input_to_geo", input_to_geo),
++                Uniform::new("niri_geo_size", geo_size.to_array()),
++                mat3_uniform("niri_geo_to_tex", geo_to_tex),
++                Uniform::new("niri_progress", progress as f32),
++                Uniform::new("niri_clamped_progress", clamped_progress as f32),
++                Uniform::new("niri_random_seed", random_seed),
++            ];
++
++            if matches!(program, ProgramType::Move) {
++                uniforms.push(Uniform::new("niri_move_impulse", impulse));
++                uniforms.push(Uniform::new(
++                    "niri_move_delta",
++                    [delta.x as f32, delta.y as f32],
++                ));
++            }
+             return ShaderRenderElement::new(
+-                ProgramType::Close,
++                program,
+                 view_rect.size,
+                 None,
+                 scale.x as f32,
+-                1.,
+-                Rc::new([
+-                    mat3_uniform("niri_input_to_geo", input_to_geo),
+-                    Uniform::new("niri_geo_size", geo_size.to_array()),
+-                    mat3_uniform("niri_geo_to_tex", geo_to_tex),
+-                    Uniform::new("niri_progress", progress as f32),
+-                    Uniform::new("niri_clamped_progress", clamped_progress as f32),
+-                    Uniform::new("niri_random_seed", self.random_seed),
+-                ]),
++                alpha,
++                Rc::from(uniforms),
+                 HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
+                 Kind::Unspecified,
+             )
+@@ -274,7 +342,11 @@ impl ClosingWindow {
+         let elem = TextureRenderElement::from_texture_buffer(
+             buffer.clone(),
+             Point::from((0., 0.)),
+-            1. - clamped_progress as f32,
++            if self.continuation.is_some() {
++                1. - fade as f32
++            } else {
++                1. - clamped_progress as f32
++            },
+             None,
+             None,
+             Kind::Unspecified,
+diff --git a/src/layout/floating.rs b/src/layout/floating.rs
+index d102f40d2a98c26f406548e57ba310ff01b0cc6f..ec8f54767109e941e738be1ed17c311c0b1b7cc0 100644
+--- a/src/layout/floating.rs
++++ b/src/layout/floating.rs
+@@ -615,7 +615,7 @@ impl<W: LayoutElement> FloatingSpace<W> {
+ 
+         let scale = Scale::from(self.scale);
+         let res = ClosingWindow::new(
+-            renderer, snapshot, scale, tile_size, tile_pos, blocker, anim,
++            renderer, snapshot.render, scale, tile_size, tile_pos, blocker, anim, snapshot.continuation,
+         );
+         match res {
+             Ok(closing) => {
 diff --git a/src/layout/mod.rs b/src/layout/mod.rs
 index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a181212880420f79f510 100644
 --- a/src/layout/mod.rs
@@ -188,8 +386,26 @@ index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a18121288042
              );
          }
  
+diff --git a/src/layout/opening_window.rs b/src/layout/opening_window.rs
+index 5ba97a3598ec7dcb7e5797d5e764298be28ec4d7..6877db315a48a588eb3b14f1d3c1f9d22b3f3f78 100644
+--- a/src/layout/opening_window.rs
++++ b/src/layout/opening_window.rs
+@@ -40,6 +40,13 @@ impl OpenAnimation {
+         }
+     }
+ 
++    pub fn continuation(&self) -> super::closing_window::AnimationContinuation {
++        super::closing_window::AnimationContinuation::Opening {
++            animation: self.anim.clone(),
++            random_seed: self.random_seed,
++        }
++    }
++
+     pub fn is_done(&self) -> bool {
+         self.anim.is_done()
+     }
 diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
-index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..230f0d5f8d28a7c2cd6ce16c70038fdd24980391 100644
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40b34462ba 100644
 --- a/src/layout/scrolling.rs
 +++ b/src/layout/scrolling.rs
 @@ -920,11 +920,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
@@ -233,6 +449,15 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..230f0d5f8d28a7c2cd6ce16c70038fdd
          let offset = self.column_x(column_idx + 1) - self.column_x(column_idx);
          if self.active_column_idx <= column_idx {
              for col in &mut self.columns[column_idx + 1..] {
+@@ -1530,7 +1530,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+ 
+         let scale = Scale::from(self.scale);
+         let res = ClosingWindow::new(
+-            renderer, snapshot, scale, tile_size, tile_pos, blocker, anim,
++            renderer, snapshot.render, scale, tile_size, tile_pos, blocker, anim, snapshot.continuation,
+         );
+         match res {
+             Ok(closing) => {
 @@ -1711,7 +1711,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              }
          }
@@ -372,7 +597,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..b12d5d9a6d3cdd57c4b3b18fa5b9df29
  
      // The resize is in progress.
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae8517eb9b63 100644
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fbb68879d6 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,4 +1,5 @@
@@ -412,7 +637,21 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
          Border = BorderRenderElement,
          Shadow = ShadowRenderElement,
          ClippedSurface = ClippedSurfaceRenderElement<R>,
-@@ -204,6 +212,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -136,8 +144,11 @@ niri_render_elements! {
+     }
+ }
+ 
+-pub type TileRenderSnapshot =
+-    RenderSnapshot<TileRenderElement<GlesRenderer>, TileRenderElement<GlesRenderer>>;
++#[derive(Debug)]
++pub struct TileRenderSnapshot {
++    pub render: RenderSnapshot<TileRenderElement<GlesRenderer>, TileRenderElement<GlesRenderer>>,
++    pub continuation: Option<super::closing_window::AnimationContinuation>,
++}
+ 
+ #[derive(Debug)]
+ struct ResizeAnimation {
+@@ -204,6 +215,7 @@ impl<W: LayoutElement> Tile<W> {
              resize_animation: None,
              move_x_animation: None,
              move_y_animation: None,
@@ -420,7 +659,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -578,7 +587,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -578,7 +590,7 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn animate_move_x_from(&mut self, from: f64) {
@@ -429,7 +668,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
      }
  
      pub fn animate_move_x_from_with_config(&mut self, from: f64, config: niri_config::Animation) {
-@@ -597,7 +606,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -597,7 +609,7 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn animate_move_y_from(&mut self, from: f64) {
@@ -438,7 +677,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
      }
  
      pub fn animate_move_y_from_with_config(&mut self, from: f64, config: niri_config::Animation) {
-@@ -1315,11 +1324,25 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1315,11 +1327,25 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn render<R: NiriRenderer>(
@@ -464,7 +703,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render");
-@@ -1334,6 +1357,40 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1334,6 +1360,40 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -490,7 +729,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
 +            }
 +        }
 +        let motion = motion.filter(|m| {
-+            m.progress > 0.
++            m.progress >= 0.
 +                && m.progress < 1.
 +                && (m.delta.x.abs() + m.delta.y.abs()) > 0.01
 +                && Shaders::get(ctx.renderer)
@@ -505,7 +744,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
          if let Some(open) = &self.open_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1361,6 +1418,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1361,6 +1421,34 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }
@@ -540,6 +779,84 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..7766057c2238738a03f6c9633072ae85
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
+@@ -1415,8 +1503,28 @@ impl<W: LayoutElement> Tile<W> {
+     ) -> TileRenderSnapshot {
+         let _span = tracy_client::span!("Tile::render_snapshot");
+ 
++        // Capture raw content when we can carry the current shader forward.
++        // Baking it and starting a second shader would re-fragment already
++        // rotated pieces and lose their original seed, orientation and path.
++        let continuation = self
++            .open_animation
++            .as_ref()
++            .filter(|_| Shaders::get(renderer).program(ProgramType::Open).is_some())
++            .map(|open| open.continuation())
++            .or_else(|| {
++                self.movement_effect
++                    .borrow()
++                    .as_ref()
++                    .and_then(|effect| effect.continuation())
++            });
++        let render = if continuation.is_some() {
++            Self::render_inner
++        } else {
++            Self::render
++        };
+         let mut contents = Vec::new();
+-        self.render(
++        render(
++            self,
+             RenderCtx {
+                 target: RenderTarget::Output,
+                 renderer,
+@@ -1467,7 +1575,8 @@ impl<W: LayoutElement> Tile<W> {
+                 xray.backdrop[output_idx] = screencast_backdrop.clone().unwrap();
+ 
+                 let mut contents = Vec::new();
+-                self.render(
++                render(
++                    self,
+                     RenderCtx {
+                         target: RenderTarget::Output,
+                         renderer,
+@@ -1487,7 +1596,8 @@ impl<W: LayoutElement> Tile<W> {
+ 
+         // A bit of a hack to render blocked out as for screencast, but I think it's fine here.
+         let mut blocked_out_contents = Vec::new();
+-        self.render(
++        render(
++            self,
+             RenderCtx {
+                 target: RenderTarget::Screencast,
+                 renderer,
+@@ -1510,15 +1620,18 @@ impl<W: LayoutElement> Tile<W> {
+             }
+         }
+ 
+-        RenderSnapshot {
+-            contents,
+-            contents_with_blocked_out_bg,
+-            blocked_out_contents,
+-            block_out_from: self.window.rules().block_out_from,
+-            size: self.animated_tile_size(),
+-            texture: Default::default(),
+-            texture_with_blocked_out_bg: Default::default(),
+-            blocked_out_texture: Default::default(),
++        TileRenderSnapshot {
++            continuation,
++            render: RenderSnapshot {
++                contents,
++                contents_with_blocked_out_bg,
++                blocked_out_contents,
++                block_out_from: self.window.rules().block_out_from,
++                size: self.animated_tile_size(),
++                texture: Default::default(),
++                texture_with_blocked_out_bg: Default::default(),
++                blocked_out_texture: Default::default(),
++            },
+         }
+     }
+ 
 diff --git a/src/niri.rs b/src/niri.rs
 index ec40e01c140b02847fb3337df29d98b7dcc68014..604a4b9b04fcdbfb516f2c4170b3a95331f97fd0 100644
 --- a/src/niri.rs
@@ -574,10 +891,10 @@ index 474437af4511b5d34de9aec66c2a0451949ef8b7..fe6157cd893d9d8e9414b8c3a08134fc
  pub mod render_elements;
 diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1cb7d93c6
+index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d930462c0994b3
 --- /dev/null
 +++ b/src/render_helpers/movement.rs
-@@ -0,0 +1,112 @@
+@@ -0,0 +1,211 @@
 +//! Experimental movement shader path. The regular renderer is the fallback.
 +use super::offscreen::{OffscreenBuffer, OffscreenData};
 +use super::shader_element::ShaderRenderElement;
@@ -588,6 +905,7 @@ index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1
 +use smithay::backend::renderer::gles::{GlesRenderer, Uniform};
 +use smithay::backend::renderer::Texture;
 +use smithay::utils::{Logical, Point, Rectangle, Scale, Size};
++use std::cell::RefCell;
 +use std::collections::HashMap;
 +use std::rc::Rc;
 +
@@ -597,10 +915,50 @@ index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1
 +    pub delta: Point<f64, Logical>,
 +}
 +
++/// Carries deformation through a layout retarget. Position continuity belongs
++/// to Niri's layout animation; this state keeps the shader phase and impulse
++/// from snapping back to an intact window when that animation starts again.
++#[derive(Debug, Default)]
++struct MotionContinuity {
++    previous: Option<MovementState>,
++    phase: f64,
++    phase_from: f64,
++    raw_from: f64,
++    impulse: [f64; 2],
++    impulse_from: [f64; 2],
++}
++
++impl MotionContinuity {
++    fn sample(&mut self, motion: MovementState) -> (f64, [f32; 2]) {
++        let target = [
++            if motion.delta.x < 0. { -1. } else { 1. },
++            if motion.delta.y < 0. { -1. } else { 1. },
++        ];
++        if let Some(previous) = self.previous {
++            if motion.progress < previous.progress || motion.delta != previous.delta {
++                self.phase_from = self.phase;
++                self.raw_from = motion.progress;
++                self.impulse_from = self.impulse;
++            }
++        } else {
++            self.impulse_from = target;
++        }
++        let t = ((motion.progress - self.raw_from) / (1. - self.raw_from).max(1e-9)).clamp(0., 1.);
++        self.phase = self.phase_from + (1. - self.phase_from) * t;
++        let blend = t * t * (3. - 2. * t);
++        for (i, value) in target.into_iter().enumerate() {
++            self.impulse[i] = self.impulse_from[i] + (value - self.impulse_from[i]) * blend;
++        }
++        self.previous = Some(motion);
++        (self.phase, self.impulse.map(|value| value as f32))
++    }
++}
++
 +#[derive(Debug)]
 +pub struct MovementEffect {
 +    random_seed: f32,
 +    buffer: OffscreenBuffer,
++    continuity: RefCell<MotionContinuity>,
 +}
 +
 +impl MovementEffect {
@@ -608,7 +966,22 @@ index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1
 +        Self {
 +            random_seed: fastrand::f32(),
 +            buffer: OffscreenBuffer::default(),
++            continuity: RefCell::new(MotionContinuity::default()),
 +        }
++    }
++
++    pub fn continuation(&self) -> Option<crate::layout::closing_window::AnimationContinuation> {
++        let state = self.continuity.borrow();
++        let motion = state.previous?;
++        Some(
++            crate::layout::closing_window::AnimationContinuation::Movement {
++                phase: state.phase,
++                random_seed: self.random_seed,
++                impulse: state.impulse.map(|value| value as f32),
++                delta: motion.delta,
++                remaining: motion.delta.upscale(1. - motion.progress),
++            },
++        )
 +    }
 +
 +    #[allow(clippy::too_many_arguments)]
@@ -622,7 +995,7 @@ index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1
 +        alpha: f32,
 +        motion: MovementState,
 +    ) -> anyhow::Result<(ShaderRenderElement, OffscreenData)> {
-+        let progress = motion.progress;
++        let (progress, impulse) = self.continuity.borrow_mut().sample(motion);
 +        let clamped_progress = progress.clamp(0., 1.);
 +        let (elem, _sync_point, mut data) = self
 +            .buffer
@@ -674,6 +1047,7 @@ index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1
 +                Uniform::new("niri_progress", progress as f32),
 +                Uniform::new("niri_clamped_progress", clamped_progress as f32),
 +                Uniform::new("niri_random_seed", self.random_seed),
++                Uniform::new("niri_move_impulse", impulse),
 +                Uniform::new(
 +                    "niri_move_delta",
 +                    [motion.delta.x as f32, motion.delta.y as f32],
@@ -690,8 +1064,50 @@ index 0000000000000000000000000000000000000000..7f3c89f817713c6206e79873efd17ba1
 +        Ok((elem, data))
 +    }
 +}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn state(progress: f64, x: f64) -> MovementState {
++        MovementState {
++            progress,
++            delta: Point::from((x, 0.)),
++        }
++    }
++
++    #[test]
++    fn uninterrupted_phase_matches_layout() {
++        let mut motion = MotionContinuity::default();
++        for p in [0., 0.2, 0.5, 0.8, 1.] {
++            assert_eq!(motion.sample(state(p, 500.)), (p, [1., 1.]));
++        }
++    }
++
++    #[test]
++    fn reversal_preserves_phase_and_impulse_then_settles() {
++        let mut motion = MotionContinuity::default();
++        let before = motion.sample(state(0.4, 500.));
++        assert_eq!(motion.sample(state(0., -500.)), before);
++        let (phase, impulse) = motion.sample(state(0.5, -500.));
++        assert!((phase - 0.7).abs() < 1e-9);
++        assert_eq!(impulse, [0., 1.]);
++        assert_eq!(motion.sample(state(1., -500.)), (1., [-1., 1.]));
++    }
++
++    #[test]
++    fn repeated_retargets_and_render_passes_preserve_state() {
++        let mut motion = MotionContinuity::default();
++        motion.sample(state(0.3, 500.));
++        let retained = motion.sample(state(0.02, -300.));
++        assert_eq!(retained.0, 0.3);
++        assert_eq!(motion.sample(state(0.02, -300.)), retained);
++        assert_eq!(motion.sample(state(0.01, 200.)), retained);
++        assert_eq!(motion.sample(state(1., 200.)).0, 1.);
++    }
++}
 diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
-index 7be9b159fde97328eb11d5872ba254a36c119055..56632b90b9928b7a582d473683cfcd3e5762aeea 100644
+index 7be9b159fde97328eb11d5872ba254a36c119055..e606d0d934df5e775e9e306261c20285de6e1a7f 100644
 --- a/src/render_helpers/shaders/mod.rs
 +++ b/src/render_helpers/shaders/mod.rs
 @@ -20,6 +20,7 @@ pub struct Shaders {
@@ -740,7 +1156,7 @@ index 7be9b159fde97328eb11d5872ba254a36c119055..56632b90b9928b7a582d473683cfcd3e
          }
      }
  }
-@@ -353,6 +364,50 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
+@@ -353,6 +364,51 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
      }
  }
  
@@ -763,6 +1179,7 @@ index 7be9b159fde97328eb11d5872ba254a36c119055..56632b90b9928b7a582d473683cfcd3e
 +            UniformName::new("niri_clamped_progress", UniformType::_1f),
 +            UniformName::new("niri_random_seed", UniformType::_1f),
 +            UniformName::new("niri_move_delta", UniformType::_2f),
++            UniformName::new("niri_move_impulse", UniformType::_2f),
 +        ],
 +        &["niri_tex"],
 +    )
@@ -815,10 +1232,10 @@ index 0000000000000000000000000000000000000000..20332ac65098cdc4202d56efa4c68005
 +}
 diff --git a/src/render_helpers/shaders/move_prelude.frag b/src/render_helpers/shaders/move_prelude.frag
 new file mode 100644
-index 0000000000000000000000000000000000000000..f62f96c65879b16c8843ce89411a9ead1ba7060a
+index 0000000000000000000000000000000000000000..49bbdbab3c2ce2869c7f5aa41609034cd1023e2d
 --- /dev/null
 +++ b/src/render_helpers/shaders/move_prelude.frag
-@@ -0,0 +1,25 @@
+@@ -0,0 +1,28 @@
 +precision highp float;
 +
 +#if defined(DEBUG_FLAGS)
@@ -844,6 +1261,9 @@ index 0000000000000000000000000000000000000000..f62f96c65879b16c8843ce89411a9ead
 +
 +// Total movement from start to destination, in logical pixels.
 +uniform vec2 niri_move_delta;
++
++// Direction impulse blended continuously when a movement is retargeted.
++uniform vec2 niri_move_impulse;
 diff --git a/src/tests/animations.rs b/src/tests/animations.rs
 index 51c57f7380c47a5e51cfac0a92ff0d76c324ef62..c2cd6f5cfe51d14e6a5bba2da818e1d644b0b34a 100644
 --- a/src/tests/animations.rs

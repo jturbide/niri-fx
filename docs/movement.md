@@ -1,4 +1,4 @@
-# Fragment movement and swaps
+# Native movement and interruption behavior
 
 ## What works today
 
@@ -15,10 +15,28 @@ Studio's Move and Swap tabs are a Canvas design prototype. Each fragment keeps
 its own source image coordinates. The two color streams overlap in the middle,
 then reconstruct their original contents in opposite columns. No window contents
 are captured: both images are synthetic. Saving a style exports supported open/close and enabled resize shaders.
-The v0.4 [isolated native prototype](../experimental/README.md) now demonstrates
-real column swaps with textured fragments, outside the installed compositor.
+The [isolated native prototype](../experimental/README.md) demonstrates
+fragment, elastic, slice, pixel and distortion column swaps in a separate compositor.
 
 ![Two synthetic windows sharing a particle stream](swap.png)
+
+## Continuous interruptions
+
+The experimental build preserves the current deformation and seed when another
+move retargets the same window. Direction impulses blend from their current value
+instead of immediately flipping particle orientation. The remaining animation
+continues toward reconstruction.
+
+Closing during opening continues the original opening shader and clock while
+fading out. Closing during movement retains its current phase, seed, orientation
+and remaining displacement while fading. This avoids re-fragmenting a snapshot
+with a newly seeded close effect. It intentionally takes precedence over the
+usual close style during those interruptions.
+
+These changes provide visual-state continuity. They do not preserve physical
+velocity/acceleration across every layout change, and the windows still render
+as separate elements. The pinned patch is required; a stock Niri install or a
+shell event listener cannot provide the same state handoff.
 
 ## Prototype and longer-term compositor design
 

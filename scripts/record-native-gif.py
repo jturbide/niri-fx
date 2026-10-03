@@ -1,21 +1,101 @@
 #!/usr/bin/env python3
-"""Record only the isolated, synthetic two-window Niri demo as a looping GIF."""
+"""Record actual swaps with synthetic app cards in the isolated pinned compositor."""
 
 import argparse
 import json
-import os
 import re
 import signal
-import subprocess
 import sys
-import tempfile
 import time
 from dataclasses import asdict
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
-from niri_fx.effects import FAMILIES, PRESETS
+from lib.movement import PALETTE, color_counts, experiment, launch_cards
+from lib.nested import NestedSession, encode_gif, record, source_hashes, stop
+
+from niri_fx.effects import FAMILIES, PRESETS, movement_shader
+
+SHOWCASE_PRESETS = (
+    "explosion",
+    "crosswind",
+    "orbital-ribbons",
+    "spring-wobble",
+    "bubble-burst",
+    "core-detonation",
+    "twist-snap",
+    "slice-exchange",
+    "pixel-transfer",
+    "soft-phase",
+)
+
+
+def record_swap(preset, name):
+    binary, build, config = experiment()
+    effect = PRESETS[preset]
+    with NestedSession(
+        config(effect, 1200, movement_shader(effect)), binary=binary, width=1280, height=800
+    ) as session:
+        windows = launch_cards(session)
+        time.sleep(1.5)
+        right = max(windows, key=lambda w: w["layout"]["pos_in_scrolling_layout"][0])
+        session.msg("action", "focus-window", "--id", str(right["id"]))
+        before = color_counts(session.capture("before"))
+        recorder, video = record(session, name, fps=50)
+        time.sleep(0.35)
+        latencies = []
+        for action in ("move-column-left", "move-column-right"):
+            requested = time.monotonic()
+            session.msg("action", action)
+            latencies.append((time.monotonic() - requested) * 1000)
+            assert latencies[-1] < 150, "Movement IPC stalled during capture"
+            time.sleep(1.45)
+        stop(recorder, signal.SIGINT)
+        after = color_counts(session.capture("after"))
+        settled = session.windows()
+        assert {w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in settled} == {
+            w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in windows
+        }
+        for label, count in before.items():
+            assert count > 1000 and abs(after[label] - count) < count * 0.02
+        session.check_render_log()
+        dest = ROOT / "docs/gifs" / f"{name}.gif"
+        encode_gif(video, dest, width=640, fps=50, colors=32)
+        clip = {
+            "file": str(dest.relative_to(ROOT)),
+            "preset": preset,
+            "effect": asdict(effect),
+            "duration_ms": 1200,
+            "bytes": dest.stat().st_size,
+            "fps": 50,
+            "width": 640,
+            "colors": 32,
+            "palette": PALETTE,
+            "build_profile": binary.parent.name,
+            "sources": source_hashes("scripts/fixtures/movement.qml"),
+            "revision": build["revision"],
+            "patch_sha256": build["patch_sha256"],
+            "backend": "pinned patched Niri nested winit; synthetic clients",
+            "checks": [
+                "bounded IPC latency",
+                "round-trip window positions",
+                "settled color populations",
+                "shader render log",
+            ],
+        }
+        path = ROOT / "docs/gifs/native-manifest.json"
+        clips = json.loads(path.read_text())["clips"]
+        path.write_text(
+            json.dumps(
+                {"clips": [c for c in clips if c["file"] != clip["file"]] + [clip]}, indent=2
+            )
+            + "\n"
+        )
+        (session.root / "checks.json").write_text(
+            json.dumps({"before": before, "after": after, "ipc_ms": latencies}, indent=2) + "\n"
+        )
+        print(f"PASS {name}; evidence: {session.root}", flush=True)
 
 
 def main():
@@ -26,164 +106,17 @@ def main():
         default="explosion",
     )
     parser.add_argument("--name", default="native-swap")
+    parser.add_argument(
+        "--all", action="store_true", help="Refresh the complete curated native swap gallery"
+    )
     args = parser.parse_args()
     if not re.fullmatch(r"native-swap(?:-[a-z0-9-]+)?", args.name):
         parser.error("name must be native-swap or native-swap-NAME")
-    if not os.environ.get("NIRI_SOCKET") or not os.environ.get("WAYLAND_DISPLAY"):
-        raise SystemExit("Run from a Niri desktop with the experimental build already prepared")
-    (ROOT / "artifacts").mkdir(exist_ok=True)
-    scratch = Path(tempfile.mkdtemp(prefix="native-gif-", dir=ROOT / "artifacts"))
-    recorder = None
-    with (scratch / "launcher.log").open("w") as log:
-        demo = subprocess.Popen(
-            [
-                sys.executable,
-                str(ROOT / "scripts/nested-demo.py"),
-                "--duration-ms",
-                "1200",
-                "--preset",
-                args.preset,
-            ],
-            cwd=ROOT,
-            stdout=log,
-            stderr=log,
-            start_new_session=True,
-        )
-        nested_pid = None
-        try:
-            deadline = time.monotonic() + 20
-            while time.monotonic() < deadline:
-                text = (scratch / "launcher.log").read_text()
-                match = re.search(r"Logs: (.+)", text)
-                if match:
-                    session = json.loads((Path(match[1]) / "session.json").read_text())
-                    nested_pid = session["pid"]
-                    break
-                if demo.poll() is not None:
-                    raise RuntimeError(text)
-                time.sleep(0.1)
-            else:
-                raise RuntimeError("Nested demo startup timed out")
-            host = os.environ.copy()
-            nested = host | {
-                "NIRI_SOCKET": session["socket"],
-                "WAYLAND_DISPLAY": session["display"],
-            }
-            if (
-                nested["NIRI_SOCKET"] == host["NIRI_SOCKET"]
-                or nested["WAYLAND_DISPLAY"] == host["WAYLAND_DISPLAY"]
-            ):
-                raise RuntimeError("Refusing to record the parent desktop")
-
-            def msg(env, *args):
-                return subprocess.check_output(["niri", "msg", *args], env=env, text=True)
-
-            # Change only the newly created nested window, never a user's app.
-            for _ in range(100):
-                windows = json.loads(msg(host, "-j", "windows"))
-                outer = next((w for w in windows if w["pid"] == nested_pid), None)
-                if outer:
-                    break
-                time.sleep(0.1)
-            if not outer:
-                raise RuntimeError("Nested compositor window is missing")
-            identifier = str(outer["id"])
-            msg(host, "action", "move-window-to-floating", "--id", identifier)
-            msg(host, "action", "set-window-width", "--id", identifier, "1280")
-            msg(host, "action", "set-window-height", "--id", identifier, "800")
-            time.sleep(2)
-            windows = json.loads(msg(nested, "-j", "windows"))
-            if len(windows) != 2 or not all(
-                w["title"].startswith("NiriFX demo /") for w in windows
-            ):
-                raise RuntimeError("Refusing to record unexpected nested clients")
-            right = max(windows, key=lambda w: w["layout"]["pos_in_scrolling_layout"][0])
-            msg(nested, "action", "focus-window", "--id", str(right["id"]))
-            video = scratch / "swap.mkv"
-            with (scratch / "recorder.log").open("w") as record_log:
-                recorder = subprocess.Popen(
-                    [
-                        "wf-recorder",
-                        "-o",
-                        "winit",
-                        "-r",
-                        "20",
-                        "--no-damage",
-                        "-c",
-                        "libx264",
-                        "-p",
-                        "crf=16",
-                        "-f",
-                        str(video),
-                    ],
-                    env=nested,
-                    stdout=record_log,
-                    stderr=record_log,
-                )
-                time.sleep(0.8)
-                if recorder.poll() is not None:
-                    raise RuntimeError((scratch / "recorder.log").read_text())
-                msg(nested, "action", "move-column-left")
-                time.sleep(2)
-                msg(nested, "action", "move-column-right")
-                time.sleep(2)
-                recorder.send_signal(signal.SIGINT)
-                recorder.wait(timeout=10)
-                recorder = None
-            dest = ROOT / "docs/gifs" / (args.name + ".gif")
-            dest.parent.mkdir(parents=True, exist_ok=True)
-            subprocess.run(
-                [
-                    "ffmpeg",
-                    "-v",
-                    "error",
-                    "-y",
-                    "-i",
-                    str(video),
-                    "-filter_complex",
-                    "fps=20,scale=560:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=64:stats_mode=full[p];[b][p]paletteuse=dither=none:diff_mode=rectangle",
-                    "-loop",
-                    "0",
-                    str(dest),
-                ],
-                check=True,
-            )
-            metadata = ROOT / "docs/gifs/native-manifest.json"
-            clips = json.loads(metadata.read_text())["clips"] if metadata.exists() else []
-            filename = str(dest.relative_to(ROOT))
-            clips = [clip for clip in clips if clip["file"] != filename]
-            clips.append(
-                {
-                    "file": filename,
-                    "preset": args.preset,
-                    "effect": asdict(PRESETS[args.preset]),
-                    "duration_ms": 1200,
-                    "bytes": dest.stat().st_size,
-                    "backend": "isolated patched Niri; synthetic clients",
-                }
-            )
-            metadata.write_text(json.dumps({"clips": clips}, indent=2) + "\n")
-            print(f"Recorded {dest} ({dest.stat().st_size // 1024} KiB)\nSource video: {video}")
-        finally:
-            if recorder and recorder.poll() is None:
-                recorder.send_signal(signal.SIGINT)
-                try:
-                    recorder.wait(timeout=10)
-                except subprocess.TimeoutExpired:
-                    recorder.kill()
-                    recorder.wait(timeout=5)
-            # This isolated process group contains only our demo and clients,
-            # including when startup fails before session.json can be read.
-            if demo.poll() is None:
-                try:
-                    os.killpg(demo.pid, signal.SIGINT)
-                except ProcessLookupError:
-                    pass
-            try:
-                demo.wait(timeout=10)
-            except subprocess.TimeoutExpired:
-                os.killpg(demo.pid, signal.SIGKILL)
-                demo.wait(timeout=5)
+    if args.all:
+        for preset in SHOWCASE_PRESETS:
+            record_swap(preset, "native-swap" + ("" if preset == "explosion" else "-" + preset))
+    else:
+        record_swap(args.preset, args.name)
 
 
 if __name__ == "__main__":

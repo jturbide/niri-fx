@@ -68,6 +68,9 @@ def main():
     if args.test:
         run("cargo", "test", "--locked", "-p", "niri-config", cwd=SOURCE, env=env)
         run("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=SOURCE, env=env)
+        run(
+            "cargo", "test", *flags, "--lib", "render_helpers::movement::tests", cwd=SOURCE, env=env
+        )
     run("cargo", "build", *flags, *(["--release"] if args.release else []), cwd=SOURCE, env=env)
     profile = "release" if args.release else "debug"
     binary = SOURCE / "target" / profile / "niri"
