@@ -4,18 +4,29 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
-## Current development version (after 0.9)
+## From 0.9 to 0.10
 
 The seven [curated pairings](profiles.md#choose-a-finished-pairing) and `--profile`
-selection require a checkout of current `main`; they are not in the 0.9.0 release
-assets. Update the CLI and your copied DMS adapter together. The packaged desktop
-pickers update with the Python package. Re-register the iNiR pack or re-export the
-Noctalia folder to make the pairings available in those pickers.
+selection are included in 0.10. Update the CLI and your copied DMS adapter together.
+The packaged desktop pickers update with the Python package. Re-register the iNiR
+pack or re-export the Noctalia folder to make the pairings available in those pickers.
 
 Integrations can use `list --documents` for complete style/profile documents or
 `list --profiles` for pairings only. The existing `list` JSON format remains the
 single-effect parameter map. Schema versions and individual effect defaults are
 unchanged; every built-in pairing leaves resize and movement untouched.
+
+Re-render or re-register saved effects to pick up the varied-fragment shader
+optimization. It preserves the particles and motion; updating the application
+alone does not rewrite active shaders. See [updating your effects](#update-your-effects)
+for each setup and [performance results](performance.md#varied-fragment-flight-bounds).
+
+For the experimental compositor, 0.10 adds layout-velocity continuity during
+interrupted swaps. Build from a fresh 0.10 source directory with
+`python3 scripts/build-niri-movement.py --release --test`, keeping the older
+patched checkout for rollback. The helper refuses to overwrite an earlier patch
+and never replaces the login compositor. Stock open/close effects do not need
+this build. See [experimental movement](../experimental/README.md).
 
 ## From 0.8 to 0.9
 

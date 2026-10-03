@@ -22,7 +22,8 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. See [choosing a version](docs/releases.md).
+release. [Download v0.10.0](https://github.com/jturbide/niri-fx/releases/tag/v0.10.0)
+for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
 
@@ -198,7 +199,7 @@ Both provide reusable components for custom settings pages.
 
 Only the chosen UI's toolkit is needed; the GTK picker also works without AGS.
 Studio and standalone setup remain independent of both toolkits.
-Available in [v0.9.0](https://github.com/jturbide/niri-fx/releases/tag/v0.9.0).
+Available since v0.9.0; built-in open/close pairings require v0.10.0.
 
 ## Performance and compatibility
 

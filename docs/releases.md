@@ -16,18 +16,32 @@ Read the notes for the version you install.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
-## 0.9.0 prerelease
+## 0.10.0 prerelease
 
-[Download v0.9.0](https://github.com/jturbide/niri-fx/releases/tag/v0.9.0) for 64
-presets, nine effect families, a guided terminal workflow and optional Quickshell
-and GTK desktop pickers. All interfaces share reviewed setup and restore;
-the underlying shader defaults are unchanged from 0.8. Read
-[upgrading from 0.8](upgrading.md#from-08-to-09) before updating.
+[Download v0.10.0](https://github.com/jturbide/niri-fx/releases/tag/v0.10.0) for 64
+presets across nine effect families and seven ready-made opening/closing pairs.
+Choose a pairing in the terminal guide, Studio or a desktop picker. This release
+also reduces varied-fragment shader cost without changing their appearance and
+improves interrupted swaps in the optional compositor experiment. Read
+[upgrading from 0.9](upgrading.md#from-09-to-010) before updating.
 
 Download the wheel, source archive and `SHA256SUMS` from the same release. In their
 download folder, verify both packages with `sha256sum -c SHA256SUMS`. The Git tag
 is signed; checksums detect corrupted or mismatched assets and are not a substitute
 for checking a trusted signing key.
+
+Install the verified wheel into a dedicated environment, then browse the pairings:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install ./niri_fx-0.10.0-py3-none-any.whl
+.venv/bin/niri-fx list --profiles --text
+.venv/bin/niri-fx
+```
+
+The terminal guide reviews changes before Apply. Installing the wheel alone does
+not activate effects. For iNiR/iRiS, DMS and Noctalia, follow the
+[setup-specific guides](getting-started.md).
 
 ## Package contents
 
