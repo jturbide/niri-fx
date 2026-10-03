@@ -73,7 +73,13 @@ class SetupTests(unittest.TestCase):
     @unittest.skipUnless(shutil.which("niri"), "requires the real Niri config parser")
     def test_inline_base_animations_plan_apply_and_restore_with_real_niri(self):
         self.validator.side_effect = REAL_VALIDATE_CONFIG
-        original = b"animations { window-resize { duration-ms 170; }; }\n"
+        # JSON's ASCII Unicode escapes are not valid KDL escapes; sibling
+        # includes must also work when the user's config directory is non-ASCII.
+        directory = self.root / "niri é"
+        self.config.parent.rename(directory)
+        self.config = directory / "config.kdl"
+        self.args.config = self.config
+        original = b'include "base.kdl"\nanimations { window-resize { duration-ms 170; }; }\n'
         self.config.write_bytes(original)
         plan = self.plan()
         self.assertEqual(self.config.read_bytes(), original)

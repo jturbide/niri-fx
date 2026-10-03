@@ -154,7 +154,9 @@ def plan_setup(args, effect, custom=None):
         ):
             effect_probe.write(generated)
             effect_probe.flush()
-            probe.write(base.rstrip() + "\ninclude " + json.dumps(effect_probe.name) + "\n")
+            probe.write(
+                base.rstrip() + "\ninclude " + json.dumps(Path(effect_probe.name).name) + "\n"
+            )
             probe.flush()
             validate_config(probe.name)
         include = config.parent / "nirifx/animations.kdl"
