@@ -36,10 +36,9 @@ python3 -m niri_fx render --family slices --slice-count 20 --slice-angle 30 \
   --slice-direction alternate --slice-rotation 8 > /tmp/slices.kdl
 ```
 
-Every preset leaves resize off. Legacy slice JSON uses schema 2; legacy Fragments
-uses schema 1. New controls and Elastic use schema 3 and need the development
-checkout after 0.6. See [waves, variation and wobble](effect-controls.md) for all
-new controls, presets, examples and rendering costs.
+Every preset leaves resize off. All families use preset schema 3; earlier formats
+are unsupported. See [waves, variation and wobble](effect-controls.md) for new
+controls, examples and rendering costs.
 
 ## Fragments
 
@@ -110,7 +109,7 @@ Both offline and app-style Studio support **Import preset**, JSON export and
 standalone KDL export. Import validates the entire file before replacing editor
 settings; it does not save or activate anything. Files are limited to 16 KiB and
 contain named parameters, never arbitrary shaders. Missing fields use defaults;
-legacy files without `resize` keep it off. An explicit `resize: true` is retained.
+documents without `resize` keep it off. An explicit `resize: true` is retained.
 
 Open the same file directly from the CLI:
 
@@ -186,7 +185,7 @@ python3 -m niri_fx render --preset balanced --resize --resize-mode edge > /tmp/f
 `--no-resize` suppresses the override. With the iNiR adapter, the base preset's
 resize behavior is preserved when fragments are disabled. Standalone exports
 omit `window-resize`, leaving your existing Niri settings in charge. Saved custom
-presets keep their explicit choices; legacy JSON without `resize` opts out.
+presets keep their explicit choices; JSON without `resize` opts out.
 
 See [installation, updating and rollback](getting-started.md) before applying
 exports. The CLI's `--help` and subcommand `--help` list every available option.

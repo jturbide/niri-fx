@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="128" height="128" viewBox="0 0 128 128" role="img" aria-labelledby="title">
+  <title id="title">NiriFX pixel N mark</title>
+  <rect width="128" height="128" rx="28" fill="#101722"/>
+  <g fill="#7ee4d5">
+    <rect x="23" y="30" width="17" height="17" rx="3"/><rect x="23" y="51" width="17" height="17" rx="3"/>
+    <rect x="23" y="72" width="17" height="17" rx="3"/><rect x="23" y="93" width="17" height="12" rx="3"/>
+    <rect x="44" y="44" width="17" height="17" rx="3"/><rect x="65" y="65" width="17" height="17" rx="3"/>
+    <rect x="86" y="51" width="17" height="17" rx="3"/><rect x="86" y="72" width="17" height="17" rx="3"/>
+    <rect x="86" y="93" width="17" height="12" rx="3"/>
+  </g>
+  <rect x="89" y="27" width="15" height="15" rx="3" transform="rotate(12 96 34)" fill="#ac9aff"/>
+  <rect x="69" y="13" width="11" height="11" rx="2" transform="rotate(-12 74 18)" fill="#ac9aff"/>
+  <rect x="106" y="11" width="7" height="7" rx="1.5" transform="rotate(20 109 14)" fill="#e7ddff"/>
+</svg>

@@ -23,8 +23,8 @@ cannot reproduce the fragment shader. Detailed controls remain in Studio.
 
 ## Registry ownership and activation
 
-Built-in IDs use `niri-fragments-`; named custom IDs use
-`niri-fragments-custom-`. Pack updates replace only incoming owned IDs and preserve
+Built-in IDs use `niri-fx-`; named custom IDs use
+`niri-fx-custom-`. Pack updates replace only incoming owned IDs and preserve
 named custom styles and other providers. Malformed JSON, duplicate IDs and foreign
 ownership collisions are rejected. Writes are atomic, back up the resolved target,
 and preserve symlinks. Unregister removes all Fragments entries, including customs.
@@ -49,8 +49,8 @@ Requests require a per-session token and matching Origin/Host; request bodies ar
 limited to 16 KiB. See [security boundaries](../SECURITY.md).
 
 Chromium app mode uses a dedicated profile under
-`$XDG_STATE_HOME/niri-fragments/studio-profile`, defaulting to
-`~/.local/state/niri-fragments/studio-profile`. Use `--browser` for a tab or
+`$XDG_STATE_HOME/niri-fx/studio-profile`, defaulting to
+`~/.local/state/niri-fx/studio-profile`. Use `--browser` for a tab or
 `--no-browser` to launch nothing. The server exits after 15 minutes without a
 browser heartbeat, or immediately with Ctrl+C from its terminal.
 
@@ -66,12 +66,9 @@ against upstream source and reviewed separately from installed shell files.
 See [compatibility](compatibility.md) for the proposed DMS adapter and compositor
 boundaries; none of these future integrations are implied by current registration.
 
-## NiriFX compatibility
+## NiriFX identity
 
-The public brand/CLI is NiriFX as of 0.6. Registry `generator` ownership and ID
-prefixes remain `niri-fragments` so updates and removal recognize existing entries.
-Display labels use NiriFX. `effect.family` selects the shader; missing family in
-legacy JSON defaults to `fragments`. Legacy fragment exports remain schema 1; legacy slices use schema 2.
-New wave/variation controls and Elastic use schema 3. Never infer capabilities from the selected shell: Slices currently
-supports only open/close, while Fragment and Elastic movement still requires patched Niri.
-See [migration](migration-0.6.md).
+The CLI, registry generator and ID prefix are `niri-fx`; the Python package is
+`niri_fx`. All preset documents use schema 3. Slices supports open/close only;
+Fragments and Elastic movement requires patched niri. Registry paths remain
+those defined by iNiR's external-preset API, including its config-root selection.

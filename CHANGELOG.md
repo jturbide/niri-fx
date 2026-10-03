@@ -30,22 +30,30 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 - Ruff lint/format, ESLint, Prettier, editor conventions and pinned development
   dependencies. Actions now includes lint and a real CLI/browser/HTTP/helper/save
   E2E flow for all families, alongside unit/integration/GLSL/docs/package checks.
-- Compatibility alias tests, schema/pack ownership tests, visible and deterministic
+- Current-schema and pack ownership tests, visible and deterministic
   browser variation checks, and native wobble/interrupted-swap checks.
 
 ### Changed
 
 - Slide Apart alternates adjacent horizontal strips instead of splitting halves.
-  Split Curtain retains the old look; saved legacy JSON keeps its saved direction.
-- Canonical implementation/resources move to `niri_fx`; `niri_fragments` modules
-  alias the same objects. Existing commands, IDs, state paths, snapshots and
-  launcher identities remain supported. Fresh launcher commands use `niri_fx`.
+  Split Curtain supplies the former split direction.
+- One current NiriFX identity: `niri_fx` package, `niri-fx` CLI/registry IDs/state
+  and launcher names. Remove the legacy package, executable and schema 1/2 preset
+  support. All examples and exports use schema 3. Historical snapshots remain
+  recovery records; the application does not migrate old formats.
 - Studio JavaScript and CSS become readable, separately linted source files,
   assembled into the same self-contained offline HTML export.
-- All 14 original Fragment presets retain their exact shader sources. New varied
-  Fragments use a separate, more expensive bounded renderer. Resize stays opt-in
+- Compact and varied Fragments use separate bounded renderers with different
+  costs. Historical shader hashes no longer constrain development. Resize stays opt-in
   and uses its existing renderer without the new wave/variation controls.
 
+### Branding and discoverability
+
+- Original pixel-N application icon, README banner, searchable desktop metadata,
+  expanded package/GitHub keywords and accurate Built with / Integrations credits.
+- Updated related-project research and a community contribution plan, including
+  a focused awesome-niri listing proposal and Noctalia documentation suggestion.
+- Fix issue-template links that still pointed at the old repository name.
 
 ## 0.6.0 — 2026-10-02
 
@@ -80,7 +88,7 @@ Niri Fragments becomes **NiriFX**, a window effects studio with multiple familie
 Compatibility: all 14 existing fragment shaders remain byte-for-byte identical
 in generated source to 0.5. Fragment exports retain schema 1, and legacy JSON
 still imports. New slice JSON needs 0.6+. Resize stays off by default; Slices
-supports opening/closing only. See [migration](docs/migration-0.6.md) before
+supports opening/closing only. See [migration](https://github.com/jturbide/niri-fx/blob/v0.6.0/docs/migration-0.6.md) before
 replacing an installed Python distribution. DMS integration remains future work.
 
 ## 0.5.0 — 2026-10-02

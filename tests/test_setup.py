@@ -48,8 +48,8 @@ class SetupTests(unittest.TestCase):
         self.assertEqual(len(plan["changes"]), 2)
         self.assertEqual(self.config.read_bytes(), self.original)
         self.assertFalse(self.state.exists())
-        self.assertFalse((self.config.parent / "fragments").exists())
-        self.assertFalse(list(self.config.parent.glob(".fragments-check-*")))
+        self.assertFalse((self.config.parent / "nirifx").exists())
+        self.assertFalse(list(self.config.parent.glob(".nirifx-check-*")))
 
     def test_standalone_apply_idempotence_and_exact_restore(self):
         self.config.chmod(0o640)
@@ -63,13 +63,13 @@ class SetupTests(unittest.TestCase):
         self.assertIn(setup.BEGIN, self.config.read_text())
         setup.restore(self.state, result["transaction"], True)
         self.assertEqual(self.config.read_bytes(), self.original)
-        self.assertFalse((self.config.parent / "fragments/niri-fragments.kdl").exists())
+        self.assertFalse((self.config.parent / "nirifx/animations.kdl").exists())
         with self.assertRaisesRegex(ValueError, "No applied"):
             setup.restore(self.state)
 
     def test_post_install_edits_block_all_restore_writes(self):
         setup.apply_plan(self.plan(), self.state)
-        include = self.config.parent / "fragments/niri-fragments.kdl"
+        include = self.config.parent / "nirifx/animations.kdl"
         installed = include.read_bytes()
         self.config.write_text(self.config.read_text() + "// Later user edit\n")
         with self.assertRaisesRegex(ValueError, "changed"):
@@ -82,7 +82,7 @@ class SetupTests(unittest.TestCase):
         self.config.write_text("// Concurrent edit\n")
         with self.assertRaisesRegex(ValueError, "changed"):
             setup.apply_plan(plan, self.state)
-        self.assertFalse((self.config.parent / "fragments").exists())
+        self.assertFalse((self.config.parent / "nirifx").exists())
 
     def test_config_edit_during_validation_blocks_the_plan(self):
         self.validator.side_effect = lambda _: self.config.write_text("// Concurrent edit\n")
@@ -97,7 +97,7 @@ class SetupTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "failed validation"):
             setup.apply_plan(plan, self.state)
         self.assertEqual(self.config.read_bytes(), self.original)
-        self.assertFalse((self.config.parent / "fragments/niri-fragments.kdl").exists())
+        self.assertFalse((self.config.parent / "nirifx/animations.kdl").exists())
         manifest = json.loads(next(self.state.glob("*/manifest.json")).read_text())
         self.assertEqual(manifest["status"], "failed")
 
@@ -114,10 +114,10 @@ class SetupTests(unittest.TestCase):
             with self.assertRaisesRegex(OSError, "disk write failed"):
                 setup.apply_plan(plan, self.state)
         self.assertEqual(self.config.read_bytes(), self.original)
-        self.assertFalse((self.config.parent / "fragments/niri-fragments.kdl").exists())
+        self.assertFalse((self.config.parent / "nirifx/animations.kdl").exists())
 
     def test_unowned_include_and_damaged_markers_are_rejected(self):
-        include = self.config.parent / "fragments/niri-fragments.kdl"
+        include = self.config.parent / "nirifx/animations.kdl"
         include.parent.mkdir()
         include.write_text("// Somebody else's file\n")
         with self.assertRaisesRegex(ValueError, "unowned"):
@@ -186,7 +186,7 @@ class SetupTests(unittest.TestCase):
         with patch.dict(os.environ, {"XDG_DATA_HOME": str(self.root / "data with spaces")}):
             plan = self.plan()
             setup.apply_plan(plan, self.state)
-            launcher = self.root / "data with spaces/applications/niri-fragments-studio.desktop"
+            launcher = self.root / "data with spaces/applications/niri-fx-studio.desktop"
             self.assertTrue(launcher.exists())
             self.assertFalse(self.plan()["changes"])
             setup.restore(self.state, apply=True)
@@ -199,7 +199,7 @@ class SetupTests(unittest.TestCase):
         document.write_text(
             json.dumps(
                 {
-                    "schema": 1,
+                    "schema": 3,
                     "name": "Portable",
                     "effect": {"gravity": "up", "resize_mode": "edge"},
                 }

@@ -1,0 +1,6 @@
+--- a/README.md
++++ b/README.md
+@@ -106,2 +106,3 @@
+ ## Custom Shaders
++- [NiriFX](https://github.com/jturbide/niri-fx) - Configurable fragment, slice and elastic window shaders for niri, with a visual editor.
+ - [Nirimation](https://github.com/XansiVA/nirimation) - A host for custom shaders to be used as animations.

@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300" role="img" aria-labelledby="title desc">
+  <title id="title">NiriFX — window effects for niri</title>
+  <desc id="desc">Mint fragments, violet slices and an elastic window surround the NiriFX wordmark.</desc>
+  <defs><radialGradient id="glow"><stop stop-color="#253649"/><stop offset="1" stop-color="#101722"/></radialGradient></defs>
+  <rect width="1200" height="300" rx="24" fill="url(#glow)"/>
+  <g font-family="DejaVu Sans, sans-serif">
+    <text x="60" y="135" font-size="82" font-weight="700" fill="#f1f5fb">Niri<tspan fill="#7ee4d5">FX</tspan></text>
+    <text x="64" y="184" font-size="25" fill="#bfd0e2">Window effects for niri</text>
+    <text x="64" y="240" font-size="16" letter-spacing="2" fill="#95adbf">FRAGMENTS · SLICES · ELASTIC</text>
+  </g>
+  <g fill="#7ee4d5">
+    <rect x="648" y="87" width="27" height="27" rx="4"/><rect x="681" y="87" width="27" height="27" rx="4"/>
+    <rect x="648" y="120" width="27" height="27" rx="4"/><rect x="681" y="120" width="27" height="27" rx="4"/>
+    <rect x="648" y="153" width="27" height="27" rx="4"/><rect x="681" y="153" width="27" height="27" rx="4"/>
+    <rect x="721" y="108" width="25" height="25" rx="4" transform="rotate(17 733 120)"/>
+    <rect x="729" y="155" width="22" height="22" rx="3" transform="rotate(-18 740 166)"/>
+    <rect x="697" y="52" width="15" height="15" rx="3" transform="rotate(26 704 60)"/>
+    <rect x="755" y="78" width="11" height="11" rx="2" transform="rotate(-15 760 83)"/>
+  </g>
+  <g fill="#ac9aff"><rect x="801" y="83" width="97" height="15" rx="4"/><rect x="782" y="106" width="97" height="15" rx="4"/><rect x="808" y="129" width="97" height="15" rx="4"/><rect x="788" y="152" width="97" height="15" rx="4"/><rect x="806" y="175" width="97" height="15" rx="4"/></g>
+  <path d="M957 87 Q1003 66 1056 88 Q1040 137 1069 182 Q1014 198 965 177 Q983 130 957 87Z" fill="#7ee4d5" fill-opacity=".12" stroke="#a9d9ee" stroke-width="4"/>
+  <path d="M965 104 Q1004 87 1051 103" fill="none" stroke="#a9d9ee" stroke-width="3"/>
+</svg>

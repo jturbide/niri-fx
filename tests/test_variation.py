@@ -5,28 +5,13 @@ from dataclasses import replace
 from pathlib import Path
 
 from niri_fx.cli import parser, selected_effect
-from niri_fx.effects import PRESETS, Effect, effect_document, movement_shader, shader
-from niri_fx.integration import custom_document
+from niri_fx.effects import PRESETS, Effect, movement_shader, shader
 from niri_fx.pack import plan_pack
 from niri_fx.setup import apply_plan, restore
 
 
 class VariationTests(unittest.TestCase):
-    def test_new_parameters_round_trip_without_changing_legacy_exports(self):
-        for name in ("shuffled-slats", "tidal-fragments", "spring-wobble"):
-            effect = PRESETS[name]
-            document = effect_document(name, effect)
-            self.assertEqual(document["schema"], 3)
-            self.assertEqual(custom_document(document)[2], effect)
-            for schema in (1, 2):
-                with self.assertRaises(ValueError):
-                    custom_document(dict(document, schema=schema))
-        self.assertEqual(effect_document("Balanced", Effect())["schema"], 1)
-        self.assertEqual(effect_document("Legacy slices", PRESETS["split-curtain"])["schema"], 2)
-
-    def test_old_slice_json_preserves_split_and_default_now_alternates(self):
-        old = custom_document({"schema": 2, "name": "Old", "effect": {"family": "slices"}})[2]
-        self.assertEqual(old.slice_direction, "outward")
+    def test_alternating_slices_and_outward_curtain_are_distinct(self):
         self.assertEqual(PRESETS["slide-apart"].slice_direction, "alternate")
         self.assertEqual(PRESETS["split-curtain"].slice_direction, "outward")
 

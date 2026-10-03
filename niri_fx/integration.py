@@ -12,14 +12,15 @@ from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
-from .effects import PRESETS, VARIATION_FIELDS, Effect, animation_types, preset_description
+from .branding import APP_ID
+from .effects import PRESET_SCHEMA, PRESETS, Effect, animation_types, preset_description
 
-OWNER = "niri-fragments"
+OWNER = APP_ID
 
 
 def default_registry():
     config = Path(os.environ.get("XDG_CONFIG_HOME", Path.home() / ".config"))
-    # Match iNiR's own legacy-directory selection, including its common symlink.
+    # Follow iNiR's config-root selection, including its common symlink.
     legacy = config / "illogical-impulse"
     return (legacy if legacy.exists() else config / "inir") / "niri-animation-presets.json"
 
@@ -56,7 +57,7 @@ def resolve_base(shell_registry, base_id="auto"):
     seen = set()
     while chosen in presets and presets[chosen].get("generator") == OWNER:
         if chosen in seen:
-            raise ValueError("Fragment preset base reference contains a cycle")
+            raise ValueError("NiriFX preset base reference contains a cycle")
         seen.add(chosen)
         chosen = presets[chosen].get("base-preset", "")
     if (
@@ -106,18 +107,12 @@ def custom_document(data):
     if (
         not isinstance(data, dict)
         or type(data.get("schema")) is not int
-        or data["schema"] not in (1, 2, 3)
+        or data["schema"] != PRESET_SCHEMA
         or not isinstance(data.get("effect"), dict)
     ):
-        raise ValueError("Custom preset must contain schema: 1, 2 or 3, name, and an effect object")
-    if data["schema"] == 1 and data["effect"].get("family", "fragments") != "fragments":
-        raise ValueError("Non-fragment families require preset schema: 2")
-    if data["schema"] < 3 and (
-        data["effect"].get("family") == "elastic"
-        or set(VARIATION_FIELDS).intersection(data["effect"])
-        or data["effect"].get("slice_direction") == "random"
-    ):
-        raise ValueError("Wave and variation parameters require preset schema: 3")
+        raise ValueError(
+            f"Custom preset must contain schema: {PRESET_SCHEMA}, name, and an effect object"
+        )
     name = data.get("name")
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,47}", name):
         raise ValueError(
@@ -191,7 +186,7 @@ def update_registry(registry_path, generated=(), *, remove=False, dry_run=False)
         temporary = None
         try:
             with tempfile.NamedTemporaryFile(
-                dir=target.parent, prefix=".niri-fragments-", delete=False
+                dir=target.parent, prefix=".niri-fx-", delete=False
             ) as output:
                 temporary = Path(output.name)
                 os.fchmod(output.fileno(), mode)

@@ -63,9 +63,9 @@ To regenerate the slice presets and their count comparison:
 node scripts/render-readme-gifs.mjs --slices-only
 ```
 
-The 0.5 fragment recordings remain valid: their shader hashes are checked against
-the signed 0.5 release. Legacy recording metadata is normalized with defaults
-before comparison; introducing unused slice fields does not require new footage.
+The recordings remain valid when only serialization, packaging or application
+branding changes. The docs check compares recorded effect values with current
+presets and examples; regenerate clips when those values or rendered behavior change.
 
 To record the native experiment, also prepare the patched compositor, Alacritty
 and `wf-recorder`, then run inside the existing Niri desktop:

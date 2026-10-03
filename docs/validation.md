@@ -7,27 +7,29 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 54 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| Python regression suite | 48 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
 | GLSL ES 1.00 compilation | All 137 shaders compiled: 114 fragment variants, 14 slice and nine elastic variants |
 | Stock Niri config parsing | All 29 default and 57 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
 | iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves schema 3 Fragments, Slices and Elastic through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
 | Noctalia file contract | All 29 exported files validated through picker-style relative includes with stock Niri; Noctalia UI not run. |
 | Code conventions | Ruff, ESLint and Prettier pass; Actions runs them with pinned development dependencies. |
 | Setup / restore | Real standalone setup, repeat apply and exact restoration passed with Niri, relative includes and a Unicode config path; conflict, failure and symlink cases covered in tests |
-| JSON import | Valid/legacy documents, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
-| Rebrand / migration | Legacy module/CLI aliases, schema 1 import/export, stable registry IDs and every 0.5 fragment shader fingerprint checked |
+| JSON import | Current documents and rejected obsolete schemas, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
+| Current API | One module/CLI and schema 3 for all families; obsolete schemas rejected; current registry ownership and resize preservation tested |
 | Resize defaults | All built-ins and new editor sessions opt out; explicit custom choices preserved |
 | Browser shader endpoints | Intact initial texture, fragmented midpoint and transparent final frame for open/close |
 | Resize preview | All three modes have intact endpoints and correct texture replacement; Edge Rebuild retains the center and Soft Reflow reduces breakup |
 | Browser / Python parity | Generated shader exports matched across built-ins; extreme controls rendered without WebGL errors |
 | Gravity checks | Earth moved downward, Updraft upward and Black Hole contracted |
 | Concept move / swap | Synthetic windows arrived intact in their correct columns; these are not compositor movement checks |
-| Packaging | Wheel/source builds and installed CLI resource checks; see the public preparation record for archive scope |
+| Packaging | Clean wheel/source builds; installed current CLI, icon and offline Studio checked outside the checkout; obsolete namespace/entry point absent; all 29 exported presets restored exactly |
+| Branding and local registration | Canonical Studio/demo launchers installed; iNiR recognizes renamed preset ownership/IDs while the selected shader and resize settings remain unchanged |
 
 Current browser checks exercised all 29 presets, exact endpoints, extreme
-parameters, all family controls/capability limits, schema 1/2/3 imports and three
-fragment resize styles. The 14 existing fragment presets retain exactly the 0.5
-open/close/resize/movement shader source, verified against historical hashes.
+parameters, all family controls/capability limits, schema 3 round trips and rejected schema 1/2 imports and three
+fragment resize styles. Application identity and serialization changes do not
+alter the GLSL renderer. Historical release hashes are no longer compatibility
+requirements; browser parity and behavioral checks validate current effects.
 
 The three original 0.6 slice effects also opened and closed a synthetic Alacritty client in
 an isolated **stock Niri 26.04** session. Intermediate captures differed from the

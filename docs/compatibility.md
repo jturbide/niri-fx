@@ -38,8 +38,8 @@ niri validate -c /tmp/fragments.kdl
 After validation succeeds, copy it with a backup:
 
 ```sh
-mkdir -p ~/.config/niri/fragments
-cp --backup=numbered /tmp/fragments.kdl ~/.config/niri/fragments/animations.kdl
+mkdir -p ~/.config/niri/nirifx
+cp --backup=numbered /tmp/fragments.kdl ~/.config/niri/nirifx/animations.kdl
 ```
 
 Back up your main config before editing it.
@@ -47,7 +47,7 @@ Add this **once**, after the existing animation settings and DMS includes in
 `~/.config/niri/config.kdl`:
 
 ```kdl
-include "fragments/animations.kdl"
+include "nirifx/animations.kdl"
 ```
 
 Then run `niri validate`. To switch styles, generate, validate and copy again with

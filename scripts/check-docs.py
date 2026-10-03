@@ -76,16 +76,14 @@ def main():
     examples = {}
     for source in sorted((ROOT / "examples").glob("*.json")):
         document = json.loads(source.read_text())
-        if document.get("schema") not in (1, 2, 3) or not document.get("name"):
+        if document.get("schema") != 3 or not document.get("name"):
             errors.append(f"Invalid example document: {source.relative_to(ROOT)}")
         examples[source.stem] = asdict(Effect(**document["effect"]))
         if source.stem in PRESETS and examples[source.stem] != asdict(PRESETS[source.stem]):
             errors.append(f"Built-in example differs from its preset: {source.stem}")
     commands = (ROOT / "examples/README.md").read_text().replace("\\\n", "")
     checked_examples = set()
-    for command in re.findall(
-        r"^python3 -m (?:niri_fragments|niri_fx) preview .+$", commands, re.M
-    ):
+    for command in re.findall(r"^python3 -m niri_fx preview .+$", commands, re.M):
         args = parser().parse_args(shlex.split(command)[3:])
         if args.custom:
             args.custom = ROOT / args.custom

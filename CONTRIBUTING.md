@@ -58,16 +58,17 @@ export parity; it is not a compositor GPU benchmark. See
 
 ## Code conventions and checks
 
-- Use `niri_fx` for new code; `niri_fragments` modules are identity-preserving
-  compatibility aliases. Keep persistent legacy IDs/paths and the old CLI working.
+- Use `niri_fx` and `niri-fx` exclusively. The project is in active development;
+  obsolete APIs and formats are removed instead of maintained as compatibility
+  layers. Document breaking changes under Unreleased. Preset documents use schema 3.
 - Python targets 3.10+, uses four spaces and Ruff lint/format (100 columns).
   Run `.venv/bin/ruff check --fix .` and `.venv/bin/ruff format .` before review.
 - JavaScript, CSS, HTML and workflow YAML use Prettier; JavaScript also uses ESLint.
   Run `npm run format`. The lockfile pins development tools; npm is not a runtime
   dependency. Studio sources are readable files assembled into one offline HTML page.
 - Put behavior in small shared functions; keep family-specific rendering in GLSL
-  templates and capabilities in the family catalog. Do not format historical GLSL
-  mechanically: exact shader fingerprints protect existing appearances.
+  templates and capabilities in the family catalog. Check rendered behavior when
+  changing shaders. The compact and varied renderers have different costs.
 - Add focused unit tests for validation/math/contracts and temporary-file integration
   tests for ownership, restore and migrations. Browser E2E checks render actual
   pixels, compare Python exports and save all families through the real Studio CLI.

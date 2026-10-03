@@ -1,10 +1,5 @@
-import hashlib
-import json
-import subprocess
-import sys
 import unittest
 from dataclasses import replace
-from pathlib import Path
 
 from test_fragments import shell_registry
 
@@ -16,45 +11,21 @@ from niri_fx.effects import (
     effect_document,
     movement_shader,
     resize_shader,
-    shader,
 )
 from niri_fx.integration import custom_document, make_custom_preset, make_presets, merge_registry
 
 
 class FamilyTests(unittest.TestCase):
-    def test_rebrand_preserves_every_v05_fragment_shader(self):
-        # Captured from the signed v0.5.0 tag, independent of the current generator.
-        expected = json.loads(Path(__file__).with_name("legacy-v0.5-shaders.json").read_text())
-        for name, signatures in expected.items():
-            effect = PRESETS[name]
-            sources = {
-                "open": shader(effect, True),
-                "close": shader(effect, False),
-                "resize": resize_shader(effect),
-                "movement": movement_shader(effect),
-            }
-            for kind, source in sources.items():
-                self.assertEqual(
-                    hashlib.sha256(source.encode()).hexdigest(), signatures[kind], f"{name}/{kind}"
-                )
-
-    def test_legacy_import_and_fragment_export_remain_schema_one(self):
-        document = {"schema": 1, "name": "Old custom", "effect": {"gravity": "up", "resize": True}}
-        name, _, effect = custom_document(document)
-        self.assertEqual(effect.family, "fragments")
-        exported = effect_document(name, effect)
-        self.assertEqual(exported["schema"], 1)
-        self.assertNotIn("family", exported["effect"])
-        self.assertFalse(any(key.startswith("slice_") for key in exported["effect"]))
-        self.assertEqual(custom_document(exported)[2], effect)
-
-    def test_slice_document_round_trip_and_schema_gate(self):
-        effect = replace(PRESETS["diagonal-shear"], slice_angle=-33.25, open_ms=721)
-        document = effect_document("My slices", effect)
-        self.assertEqual(document["schema"], 2)
-        self.assertEqual(custom_document(document)[2], effect)
-        with self.assertRaisesRegex(ValueError, "schema: 2"):
-            custom_document(dict(document, schema=1))
+    def test_every_family_uses_the_current_preset_document(self):
+        for name, effect in PRESETS.items():
+            with self.subTest(preset=name):
+                document = effect_document(name, effect)
+                self.assertEqual(document["schema"], 3)
+                self.assertEqual(custom_document(document)[2], effect)
+                self.assertEqual(document["effect"]["family"], effect.family)
+        for version in (1, 2, 4, True, 3.0):
+            with self.subTest(schema=version), self.assertRaisesRegex(ValueError, "schema: 3"):
+                custom_document({"schema": version, "name": "Unsupported", "effect": {}})
 
     def test_unsupported_resize_and_movement_fail_explicitly(self):
         effect = PRESETS["slide-apart"]
@@ -97,32 +68,24 @@ class FamilyTests(unittest.TestCase):
         )
         self.assertEqual(effect.slice_count, 20)
 
-    def test_preset_identity_and_base_resize_survive_rebrand(self):
+    def test_pack_refresh_preserves_customs_and_base_resize(self):
         registry = shell_registry()
         old = {
-            "id": "niri-fragments-custom-keep",
-            "generator": "niri-fragments",
+            "id": "niri-fx-custom-keep",
+            "generator": "niri-fx",
             "name": "Keep",
             "effect": {"resize": True},
         }
         merged = merge_registry({"presets": [old]}, make_presets(registry))
         self.assertIn(old, merged["presets"])
-        self.assertEqual(sum(p["id"] == "niri-fragments-balanced" for p in merged["presets"]), 1)
+        self.assertEqual(sum(p["id"] == "niri-fx-balanced" for p in merged["presets"]), 1)
         custom = make_custom_preset(
             registry, effect_document("Slice custom", PRESETS["slide-apart"])
         )
-        self.assertEqual(custom["id"], "niri-fragments-custom-slice-custom")
+        self.assertEqual(custom["id"], "niri-fx-custom-slice-custom")
         self.assertEqual(
             custom["types"]["window-resize"], registry["presets"][0]["types"]["window-resize"]
         )
-
-    def test_new_and_legacy_module_commands_are_identical(self):
-        arguments = ["render", "--preset", "diagonal-shear"]
-        outputs = [
-            subprocess.check_output([sys.executable, "-m", module, *arguments])
-            for module in ("niri_fx", "niri_fragments")
-        ]
-        self.assertEqual(*outputs)
 
 
 if __name__ == "__main__":

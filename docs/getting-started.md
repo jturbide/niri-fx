@@ -102,15 +102,15 @@ After validation succeeds, copy it into its own include. GNU `cp` keeps a number
 backup if the target already exists:
 
 ```sh
-mkdir -p ~/.config/niri/fragments
-cp --backup=numbered /tmp/fragments.kdl ~/.config/niri/fragments/animations.kdl
+mkdir -p ~/.config/niri/nirifx
+cp --backup=numbered /tmp/fragments.kdl ~/.config/niri/nirifx/animations.kdl
 ```
 
 Back up your main Niri config before editing it. Add the following **once**, after
 existing animation settings and shell-generated includes:
 
 ```kdl
-include "fragments/animations.kdl"
+include "nirifx/animations.kdl"
 ```
 
 Run `niri validate` to check the full configuration. Use `-c` for a nonstandard
@@ -128,9 +128,9 @@ override settings selected through a shell preset manager. See the
 
 ## Update
 
-For a 0.5 installation, follow the [0.6 migration guide](migration-0.6.md) first;
-the Python distribution name changed and the old package must be removed before
-installing the new one in the same virtual environment.
+Read the [development update policy](upgrading.md) before updating an older
+checkout. NiriFX uses one current API and preset format; obsolete interfaces
+are removed during development.
 
 Review the [changelog](../CHANGELOG.md), then update a clean checkout:
 
@@ -167,8 +167,8 @@ For standalone Niri, remove the NiriFX include and run `niri validate`. Your
 underlying animation settings take over. Keep or remove the generated file and
 its backups as needed.
 
-Remove the optional `niri-fragments-studio.desktop` entry from
+Remove the optional `niri-fx-studio.desktop` entry from
 `~/.local/share/applications` (or your XDG data directory) to remove the launcher.
 The checkout, virtual environment and Studio profile can then be removed when
 no longer needed. The profile is under
-`~/.local/state/niri-fragments/studio-profile` by default.
+`~/.local/state/niri-fx/studio-profile` by default.

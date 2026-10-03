@@ -49,15 +49,15 @@ class PresetTests(unittest.TestCase):
             self.assertIn("close_color", preset["types"]["window-close"]["custom-shader"])
         self.assertEqual(registry, original)
 
-    def test_legacy_custom_document_keeps_base_resize(self):
+    def test_custom_document_without_resize_keeps_base_resize(self):
         registry = shell_registry()
-        preset = make_custom_preset(registry, {"schema": 1, "name": "Old style", "effect": {}})
+        preset = make_custom_preset(registry, {"schema": 3, "name": "Old style", "effect": {}})
         self.assertEqual(
             preset["types"]["window-resize"], registry["presets"][0]["types"]["window-resize"]
         )
         enabled = make_custom_preset(
             registry,
-            {"schema": 1, "name": "New style", "effect": {"resize": True, "resize_ms": 600}},
+            {"schema": 3, "name": "New style", "effect": {"resize": True, "resize_ms": 600}},
         )
         self.assertEqual(enabled["types"]["window-resize"]["duration-ms"], 600)
         self.assertIn("resize_color", enabled["types"]["window-resize"]["custom-shader"])
@@ -72,13 +72,13 @@ class PresetTests(unittest.TestCase):
     def test_reregistration_resolves_original_base(self):
         registry = shell_registry()
         registry["presets"].extend(make_presets(registry))
-        registry["active"] = "niri-fragments-balanced"
+        registry["active"] = "niri-fx-balanced"
         self.assertTrue(all(p["base-preset"] == "example" for p in make_presets(registry)))
 
     def test_cycle_rejected(self):
         registry = {
             "active": "a",
-            "presets": [{"id": "a", "generator": "niri-fragments", "base-preset": "a"}],
+            "presets": [{"id": "a", "generator": "niri-fx", "base-preset": "a"}],
         }
         with self.assertRaisesRegex(ValueError, "cycle"):
             make_presets(registry)
@@ -86,7 +86,7 @@ class PresetTests(unittest.TestCase):
     def test_foreign_id_collision_rejected(self):
         with self.assertRaisesRegex(ValueError, "another provider"):
             merge_registry(
-                {"presets": [{"id": "niri-fragments-balanced"}]}, make_presets(shell_registry())
+                {"presets": [{"id": "niri-fx-balanced"}]}, make_presets(shell_registry())
             )
 
     def test_unrelated_entries_metadata_and_defaults_preserved(self):
@@ -109,10 +109,10 @@ class PresetTests(unittest.TestCase):
         builtins = make_presets(registry)
         first = make_custom_preset(
             registry,
-            {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 300}},
+            {"schema": 3, "name": "My Meteor", "effect": {"gravity": "down", "particles": 300}},
         )
         second = make_custom_preset(
-            registry, {"schema": 1, "name": "My Orbit", "effect": {"swirl": 180, "resize": True}}
+            registry, {"schema": 3, "name": "My Orbit", "effect": {"swirl": 180, "resize": True}}
         )
         data = merge_registry({}, builtins)
         data = merge_registry(data, [first])
@@ -126,9 +126,9 @@ class PresetTests(unittest.TestCase):
     def test_custom_input_is_parameters_not_arbitrary_shader_code(self):
         invalid = [
             [],
-            {"schema": 1, "name": "Bad", "effect": {"shader": "arbitrary"}},
-            {"schema": 1, "name": "../outside", "effect": {}},
-            {"schema": 1, "name": "Bad", "effect": {"gravity": "typo"}},
+            {"schema": 3, "name": "Bad", "effect": {"shader": "arbitrary"}},
+            {"schema": 3, "name": "../outside", "effect": {}},
+            {"schema": 3, "name": "Bad", "effect": {"gravity": "typo"}},
             {"schema": 4, "name": "Future", "effect": {}},
             {"schema": True, "name": "Boolean schema", "effect": {}},
         ]

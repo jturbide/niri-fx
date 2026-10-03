@@ -1,26 +1,43 @@
-# Related projects
+# Related projects and foundations
 
-Research checked on 2026-10-02. This is a comparison of the inspected source,
-not a claim that no equivalent effect exists anywhere.
+Research refreshed on **2026-10-02**. These projects provide useful alternatives,
+interfaces or inspiration. Inclusion is a reference, not an endorsement or a
+claim that NiriFX originated every visual idea.
 
-| Project | Existing capability | Relationship to this project |
-| --- | --- | --- |
-| [liixini/shaders](https://github.com/liixini/shaders) | `randomsquares`, `pixelfade-wave`, `voronoi-shatter`, and many other transitions | The inspected square/shard shaders reveal or fade cells; they do not translate textured square fragments. |
-| [Xansidev/nirimation](https://github.com/Xansidev/nirimation) | Pixelation, an `explode` shader, and other effects | The inspected explosion is fire/smoke/debris with a simple opening fade, rather than reversible textured block assembly. |
-| [jgarza9788/niri-animation-collection](https://github.com/jgarza9788/niri-animation-collection) | A larger collection including pixelation and pixel sorting | Useful examples and alternatives. |
-| [pnbarbeito/niri-animation-rotate](https://github.com/pnbarbeito/niri-animation-rotate) | Rotates community effects on compositor events | An existing manager; a rotation daemon is unnecessary for a fixed external iNiR preset pack. |
-| [snowarch/iNiR](https://github.com/snowarch/iNiR) | External user animation presets and shared settings services | Existing integration point, including iRiS's window movement gallery. |
+## Foundation and shell ecosystem
 
-The GLSL and adapter in this repository are original. No shader collection is
-vendored. If an existing effect is imported later, retain its specific license
-and attribution and document any changes.
+| Project | Relationship |
+| --- | --- |
+| [niri](https://github.com/niri-wm/niri) | The Wayland compositor whose animation shader interfaces render NiriFX effects. |
+| [iNiR / iRiS](https://github.com/snowarch/iNiR) | Desktop shell and settings interface; NiriFX uses its external animation-preset registry. |
+| [Quickshell](https://quickshell.org/) | QtQuick toolkit used by shells including iNiR and DMS. NiriFX's own Studio uses WebGL. |
+| [DankMaterialShell](https://github.com/AvengeMedia/DankMaterialShell) | Quickshell/Go shell. NiriFX exports can be included in niri config; a native DMS adapter has not been implemented. |
+| [Noctalia](https://noctalia.dev/) and [Niri Animations](https://github.com/noctalia-dev/community-plugins/tree/main/niri-animations) | The existing picker reads KDL preset folders. NiriFX exports one; current Noctalia uses a Luau plugin API. |
+| [awesome-niri](https://github.com/niri-wm/awesome-niri) | Curated ecosystem directory with a Custom Shaders category; a suitable discovery venue. |
 
-The separate Niri-derived movement patch is GPL-3.0-or-later; see
-[third-party notices](../THIRD_PARTY.md) for its source and license scope.
+## Similar effects and tools
 
-Official references:
+| Project | What to explore |
+| --- | --- |
+| [liixini/shaders](https://github.com/liixini/shaders) | Experimental GLSL transitions for niri. |
+| [Nirimation](https://github.com/XansiVA/nirimation) | Shareable niri animation configurations and shader showcases. |
+| [niri-animation-collection](https://github.com/jgarza9788/niri-animation-collection) | Animation presets, a showcase and a documented template/GIF contribution workflow. |
+| [niri-animation-rotate](https://github.com/pnbarbeito/niri-animation-rotate) | Rotates KDL animations through compositor events or manual actions. A complementary manager, not a NiriFX dependency. |
+| [Burn-My-Windows](https://github.com/Schneegans/Burn-My-Windows) | Configurable effects for GNOME Shell and KWin, including pixel and disintegration styles. A related implementation for other desktops. |
+| [Compiz plugins](https://github.com/compiz-reloaded/compiz-plugins-main) | The classic desktop-effects tradition behind the request for springy windows. NiriFX Elastic is a timed shader warp, not the original interactive physics. |
 
-- [Niri animations](https://niri-wm.github.io/niri/Configuration:-Animations.html)
-- [Opening shader interface](https://niri-wm.github.io/niri/examples/open_custom_shader.frag)
-- [Closing shader interface](https://niri-wm.github.io/niri/examples/close_custom_shader.frag)
-- [Niri includes and merging](https://niri-wm.github.io/niri/Configuration:-Include.html)
+NiriFX combines parameterized GLSL with an offline visual editor, CLI, explicit
+family capabilities and optional shell adapters. That is its current scope;
+these references are not an exhaustive feature comparison or a uniqueness claim.
+
+The shader collection is original and does not vendor those collections. Imported
+code would require license/attribution review. The separate Niri-derived movement
+patch is GPL-3.0-or-later; see [third-party notices](../THIRD_PARTY.md).
+
+Official interfaces: [niri animations](https://niri-wm.github.io/niri/Configuration:-Animations.html),
+[opening shader](https://niri-wm.github.io/niri/examples/open_custom_shader.frag),
+[closing shader](https://niri-wm.github.io/niri/examples/close_custom_shader.frag),
+[include semantics](https://niri-wm.github.io/niri/Configuration:-Include.html).
+
+See [the community contribution plan](community/README.md) for suitable listing
+and showcase proposals, and [branding](branding.md) for accurate credit wording.

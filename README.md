@@ -1,9 +1,10 @@
 # NiriFX
 
+![NiriFX — window effects for niri](docs/assets/nirifx-banner.svg)
+
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
-NiriFX is a configurable window effects studio for Niri, formerly **Niri
-Fragments**. Choose from **29 presets across Fragments, Slices and Elastic**, preview the
+NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **29 presets across Fragments, Slices and Elastic**, preview the
 actual shaders, and tune the controls for each family. The optional iNiR/iRiS
 adapter adds your styles to its settings picker. A preset-folder export also
 feeds Noctalia’s existing animation picker.
@@ -314,13 +315,11 @@ The default Balanced preset targets 720 pieces; Explosion uses 1,200 and
 Implosion uses 1,000. Resize stays off until you enable it. The controls and
 CLI examples are in the [usage guide](docs/usage.md).
 
-## Upgrading from Niri Fragments
+## Development status
 
-The `niri-fragments` executable and `python3 -m niri_fragments` still work. Existing
-JSON, iNiR preset IDs, setup snapshots, launchers and configuration paths are
-preserved. Legacy fragment exports remain schema 1; legacy slices use schema 2.
-New variation/wave controls and Elastic use schema 3 and require this checkout. See [the migration guide](docs/migration-0.6.md) before replacing an
-installed package or updating your presets.
+NiriFX is moving quickly and maintains one current API: `niri-fx`, the `niri_fx`
+Python package and preset schema 3. Obsolete command aliases and formats are
+removed. Read [the update policy](docs/upgrading.md) when upgrading a checkout.
 
 ## What works where?
 
@@ -334,6 +333,21 @@ installed package or updating your presets.
 | Native movement / column swaps | No | [Pinned experimental Niri build](experimental/README.md) |
 | Studio Move / Swap tabs | Visual concepts | Do not activate desktop movement |
 | Hyprland, KWin, GNOME | No current backend | Separate compositor work |
+
+## Built with and connected to
+
+Built for [niri](https://github.com/niri-wm/niri), using **Python**, **GLSL** and
+**WebGL**. Studio runs locally and exports self-contained previews.
+
+- **iNiR / iRiS:** [external presets and Studio save](docs/integration.md).
+- **Noctalia:** [KDL preset export](docs/noctalia.md) for its existing animation picker.
+- **DankMaterialShell / DMS:** [standalone niri configuration](docs/compatibility.md),
+  with native settings integration still to be developed.
+- **Quickshell:** the toolkit behind iNiR and DMS; NiriFX itself uses a web editor.
+
+Explore [related shader projects](docs/related-projects.md), [brand assets](docs/branding.md)
+and [community contribution opportunities](docs/community/README.md). NiriFX is
+independent of these upstream projects.
 
 ## Documentation and development
 

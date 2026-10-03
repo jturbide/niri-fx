@@ -4,7 +4,7 @@
 | --- | --- |
 | Preview, install, update or remove NiriFX | [Getting started](getting-started.md) |
 | Diagnose, plan an installation or restore setup | [Setup and restore](setup.md) |
-| Upgrade from Niri Fragments 0.5 | [Migration to NiriFX](migration-0.6.md) |
+| Update the development checkout | [Current API and update policy](upgrading.md) |
 | Tune fragments, slices, wobble or optional resize | [Studio and controls](usage.md) |
 | Try the custom styles shown in the README | [Showcase examples](../examples/README.md) |
 | Tune waves, randomness and elastic motion | [New effect controls](effect-controls.md) |
@@ -16,6 +16,8 @@
 | Understand movement limitations and future hooks | [Movement design](movement.md) |
 | See what has actually been tested | [Validation](validation.md) |
 | Reproduce the GIF gallery | [Recording guide](gifs/README.md) |
+| Reuse the name, icon or credit wording | [Branding](branding.md) |
+| Find appropriate community listing channels | [Community references](community/README.md) |
 | Compare other projects | [Related projects](related-projects.md) |
 | Contribute or maintain a release | [Contributing](../CONTRIBUTING.md), [release guide](releasing.md) |
 | See changes or license boundaries | [Changelog](../CHANGELOG.md), [third-party notices](../THIRD_PARTY.md) |

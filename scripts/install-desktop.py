@@ -18,33 +18,14 @@ if args.movement_demo and not (root / "artifacts/niri-movement-build.json").exis
     parser.error("Build the experiment first: python3 scripts/build-niri-movement.py")
 data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
 target = data / (
-    "applications/niri-fragments-movement-demo.desktop"
+    "applications/niri-fx-movement-demo.desktop"
     if args.movement_demo
-    else "applications/niri-fragments-studio.desktop"
+    else "applications/niri-fx-studio.desktop"
 )
-python = (
-    sys.executable.replace("\\", "\\\\").replace('"', '\\"').replace("`", "\\`").replace("$", "\\$")
-)
-working_directory = str(root).replace("\\", "\\\\").replace("\n", "\\n")
-name = "NiriFX Movement Demo" if args.movement_demo else "NiriFX Studio"
-comment = (
-    "Try experimental particle swaps in a separate Niri window"
-    if args.movement_demo
-    else "Customize fragment, slice and elastic window animations"
-)
-command = "scripts/nested-demo.py" if args.movement_demo else "-m niri_fx studio"
-content = f"""[Desktop Entry]
-Type=Application
-Name={name}
-Comment={comment}
-Exec="{python}" {command}
-Path={working_directory}
-Icon=preferences-desktop-effects
-Terminal=false
-Categories=Settings;DesktopSettings;
-Keywords=Niri;iNiR;iRiS;animation;gravity;particles;
-StartupNotify=false
-"""
+sys.path.insert(0, str(root))
+from niri_fx.branding import desktop_entry
+
+content = desktop_entry(args.movement_demo).decode()
 target.parent.mkdir(parents=True, exist_ok=True)
 if target.exists():
     if target.read_text() != content:
