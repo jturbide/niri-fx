@@ -10,6 +10,20 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.13.1 — 2026-10-03
+
+### Added
+
+- Movement diagnostics distinguish configuration support in a chosen Niri binary
+  from the compositor currently running. `doctor --movement-binary PATH` checks
+  a trusted experimental build without installing it. JSON and readable reports
+  describe parser support separately from rendering and activation.
+
+### Fixed
+
+- Studio's shape hint now includes opt-in resize. Setup and native demo guides
+  reflect the current preset registry and Quickshell fixtures.
+
 ## 0.13.0 — 2026-10-03
 
 ### Added

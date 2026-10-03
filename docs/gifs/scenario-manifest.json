@@ -1319,24 +1319,6 @@
       "bytes": 429593
     },
     {
-      "name": "workflow-terminal",
-      "backend": "real CLI terminal workflow in stock nested Niri",
-      "version": "niri 26.04 (8ed0da4)",
-      "checks": [
-        "preset selection",
-        "read-only review",
-        "confirmed apply",
-        "exact Undo",
-        "resize preserved"
-      ],
-      "sources": {
-        "niri_fx/terminal.py": "15a4c866437b8f6c5ba6ffcfd0af71e8047d4853e54dc7ad91583b5597ebfece",
-        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
-      },
-      "file": "docs/gifs/workflow-terminal.gif",
-      "bytes": 2179240
-    },
-    {
       "name": "native-rearrangement",
       "file": "docs/gifs/native-rearrangement.gif",
       "title": "Consume, vertical reorder and expel",
@@ -1478,6 +1460,24 @@
         "settled colors",
         "render log"
       ]
+    },
+    {
+      "name": "workflow-terminal",
+      "backend": "real CLI terminal workflow in stock nested Niri",
+      "version": "niri 26.04 (8ed0da4)",
+      "checks": [
+        "preset selection",
+        "read-only review",
+        "confirmed apply",
+        "exact Undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/terminal.py": "f96cd67c3adc60d54377d9c0b7170aff9f75da77c147f7a90bb440bef5920b5c",
+        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
+      },
+      "file": "docs/gifs/workflow-terminal.gif",
+      "bytes": 2249283
     }
   ]
 }

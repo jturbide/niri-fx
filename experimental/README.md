@@ -27,8 +27,8 @@ sufficient. For an isolated toolchain, the build script also detects rustup unde
 `artifacts/toolchain/{cargo,rustup}`. Toolchain installation is separate from the
 build helper; it does not change system packages or shell startup files.
 
-The demo requires an existing Wayland desktop and Alacritty. It opens a separate
-Niri window with two colored synthetic clients. Click inside it, then use:
+The demo requires an existing Niri desktop and Quickshell. It opens a separate
+Niri window with two synthetic app cards. Click inside it, then use:
 
 - **Alt+Left / Alt+Right:** exchange adjacent columns.
 - **Alt+R:** change column width (fragment resize requires `--resize`).
@@ -131,9 +131,12 @@ This is not the complete transaction/particle engine described in
   interrupted resize/close and graphics-reset behavior need broader validation
   before replacing a login compositor. The TTY path compiles but was not activated.
 
-Stock Studio saves only supported open, close and optional resize settings.
-Movement settings should be exposed in iRiS only after capability detection and
-the compositor contract are settled.
+Stock configuration exports contain only supported open, close and optional
+resize settings. Studio can store experimental movement separately in portable
+JSON. `doctor --movement-binary PATH` checks a trusted binary's config parser and
+whether the running IPC session uses that executable; see
+[movement diagnostics](../docs/setup.md#movement-support). This does not verify
+the renderer or shader contract. Live movement controls in iRiS remain planned.
 
 Portable profiles with an explicit movement slot are accepted by
 `python3 scripts/nested-demo.py --custom PATH.json`. The demo uses owned synthetic

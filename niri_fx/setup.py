@@ -397,6 +397,8 @@ def restore(state, identifier=None, apply=False):
 
 
 def doctor(args):
+    from .capabilities import movement_capability
+
     checks = []
     niri = shutil.which("niri")
     try:
@@ -454,14 +456,18 @@ def doctor(args):
             else "Studio will use the default browser; WebGL is required.",
         }
     )
-    checks.append(
-        {
-            "check": "session",
-            "ok": None,
-            "detail": "Niri socket advertised"
-            if os.environ.get("NIRI_SOCKET")
-            else "No Niri socket advertised; this may be an offline/SSH session.",
-        }
+    movement = movement_capability(
+        getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
+    )
+    checks.extend(
+        [
+            {
+                "check": "movement-binary",
+                "ok": None,
+                "detail": f"{movement['binary'] or 'Unavailable'}: {movement['detail']}",
+            },
+            {"check": "session", "ok": None, "detail": movement["session"]["detail"]},
+        ]
     )
     from .picker import picker_checks
 
@@ -470,6 +476,7 @@ def doctor(args):
         "checks": checks,
         "healthy": all(c["ok"] is not False for c in checks),
         "resize": "Opt-in; all built-in presets default off.",
-        "movement": "Requires the separate experimental compositor; setup never installs it.",
+        "movement": "Movement is experimental. Parser support does not verify rendering or activate an effect.",
+        "movement_capability": movement,
         "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
     }

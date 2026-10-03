@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for 0.13.0. These checks
+Evidence updated on **2026-10-03** for 0.13.1. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -8,7 +8,7 @@ See the [changelog](../CHANGELOG.md) for user-visible changes.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 115 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows and conservative CI scope selection |
+| Python | 127 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
 | Portable JavaScript | 67 Node checks; all 73 presets' supported stock shaders match Python, with picker transaction and profile checks |
 | Real Chromium | 73 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
@@ -33,6 +33,19 @@ The earlier transparency, window-shape and fractional-scale cases below remain
 useful regression evidence. Adapter UI recordings describe the versions and
 catalog size actually exercised; new family support is checked through the current
 file contract and Studio save flow, not assumed from those older recordings.
+
+## Movement diagnostics
+
+The parser probe was checked against stock Niri 26.04 and the pinned experimental
+build, which report the same upstream version. IPC executable identification
+correctly distinguished the running stock session from that separate binary,
+then identified the matching binary in an owned nested experimental session.
+These checks made no changes to desktop settings.
+
+Regression coverage includes missing and replaced binaries, parser errors,
+timeouts, malformed/oversized IPC replies, another user's socket and unavailable
+process identity. These results certify configuration parsing and identity only;
+they do not certify the movement shader contract or rendering.
 
 ## Native movement and continuity
 

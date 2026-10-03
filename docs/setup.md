@@ -15,11 +15,47 @@ python3 -m niri_fx setup
 ```
 
 `doctor` reports the Niri version, config validation, iNiR helper, browser,
-optional Quickshell/GJS/GTK interfaces and advertised session socket as JSON.
+optional Quickshell/GJS/GTK interfaces and movement capability as JSON.
 Use `--text` for a readable report. Missing optional interfaces do not fail core
-health. It does not change settings. A socket being
-present does not prove a live compositor connection. Exit status is 0 when Niri
+health. It does not change settings. Exit status is 0 when Niri
 and its config are healthy, 1 for missing prerequisites, or 2 for a command error.
+
+### Movement support
+
+`doctor` validates two temporary configurations: ordinary movement timing, then
+the same configuration with a movement shader. This distinguishes stock Niri from
+a patched binary even when both have the same version number.
+
+```sh
+python3 -m niri_fx doctor --text
+# Inspect a trusted experimental build without installing or starting it:
+python3 -m niri_fx doctor --text --movement-binary artifacts/niri-src/target/release/niri
+```
+
+`--movement-binary` selects only the movement probe. The normal Niri version and
+your existing configuration are still checked with Niri on `PATH`.
+
+When `NIRI_SOCKET` is available, the diagnostic makes a read-only version request
+and compares the IPC peer's executable with the probed binary using Linux peer
+credentials and `/proc`. It never executes a binary discovered through IPC.
+A matching version string or socket filename alone is not evidence of support.
+
+JSON integrations can read `movement_capability.status` and
+`movement_capability.session.status` separately:
+
+| Status | Meaning |
+| --- | --- |
+| `supported` | The tested executable accepts the movement shader configuration |
+| `unsupported` | Ordinary movement configuration passes, but `custom-shader` is rejected |
+| `unknown` | The probe could not establish support, or the running executable differs or cannot be identified |
+
+The scope is **configuration parsing**. It does not verify GPU compilation, the
+experimental shader contract or an active effect. Missing sockets, timeouts and
+unsupported experimental movement remain informational; stock effects still work.
+Use the [isolated native demo](../experimental/README.md) for rendering checks.
+Setup does not install a compositor or enable movement shaders.
+
+## Review a setup
 
 `setup` prints a plan by default. Check its target, affected paths and activation
 note. `--dry-run` is an explicit alias for this preview. It may create and remove
@@ -49,7 +85,7 @@ Existing launchers are preserved. Nothing starts at login.
 
 | Target | Changes | Activation |
 | --- | --- | --- |
-| iNiR | Merge the 64 built-ins into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
+| iNiR | Merge built-in styles and profiles into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
 | Standalone | Generate `nirifx/animations.kdl` beside the root config; append one marked include | Niri hot reloads the validated include |
 
 All built-ins leave resize fragments off. To save an iNiR custom style, use

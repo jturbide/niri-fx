@@ -211,6 +211,11 @@ def parser():
         "doctor", help="Check Niri, configuration and optional interfaces"
     )
     diagnose.add_argument("--text", action="store_true", help="Print a readable diagnostic report")
+    diagnose.add_argument(
+        "--movement-binary",
+        type=Path,
+        help="Probe movement config support in this trusted Niri binary (default: Niri on PATH)",
+    )
     restore = commands.add_parser("restore", help="Review or restore the latest setup snapshot")
     restore.add_argument("--transaction", help="Restore a specific setup transaction")
     for command in (setup, restore):

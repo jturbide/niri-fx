@@ -29,7 +29,10 @@ Goal: make movement a distinct, well-tested action with useful finished looks.
       insertion/removal and simultaneous resize/movement.
 - [x] Record native movement and swap examples, including reversals.
 - [x] Publish measured costs and explicit compositor/renderer requirements.
-- [ ] Detect installed movement capability before offering live activation.
+- [x] Detect movement configuration support and distinguish the tested executable
+      from the running compositor in `doctor`.
+- [ ] Verify the running movement shader contract before offering live activation;
+      parser acceptance alone is insufficient.
 
 ## Epic 2: shaped and expressive resize
 
