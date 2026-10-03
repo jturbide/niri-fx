@@ -22,6 +22,9 @@ const float FX_FREQUENCY = @WAVE_FREQUENCY@;
 const float FX_SPEED = @WAVE_SPEED@;
 const float FX_SHRINK = @FRAGMENT_SHRINK@;
 const float FX_ROUNDNESS = @FRAGMENT_ROUNDNESS@;
+// The exporter selects ±2 for unwaved fields (reach < 3 nominal cells),
+// retaining the reference ±3 neighborhood for waved fields. Literal bounds
+// avoid driver-specific loop-unrolling differences in sine-based seeded hashes.
 const float FRAGMENTS_PI = 3.14159265359;
 
 vec2 fragments_hash(vec2 cell) {
@@ -113,9 +116,11 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
         float field_shrink = min(1.0, scale);
         // Inverse lookup: variable centers <= .2 tiles, half-diagonal <= .99,
         // wander <= .72, wave inverse error <= .45 * (.99 + .72).
-        // Including the cell-center offset gives < 3.2, covered by offsets ±3.
-        for (int y = -3; y <= 3; y++) {
-          for (int x = -3; x <= 3; x++) {
+        // Including the .5 cell-center offset gives < 3.2 with waves (±3).
+        // Without waves the sum is .5 + .2 + .99 + .72 = 2.41 < 3,
+        // so every integer offset lies in -2..2. Keep hash evaluation unchanged.
+        for (int y = -@VARIED_RADIUS@; y <= @VARIED_RADIUS@; y++) {
+          for (int x = -@VARIED_RADIUS@; x <= @VARIED_RADIUS@; x++) {
             vec2 cell = candidate + vec2(float(x), float(y));
             if (any(lessThan(cell, vec2(0.0))) || any(greaterThanEqual(cell, count))) continue;
             vec2 low = fragments_boundary(cell), high = fragments_boundary(cell + 1.0);
@@ -189,7 +194,7 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
     if (FRAGMENTS_RELEASE == 0) return fragments_phase(coords_geo, size_geo, breakup, 0);
     vec4 result = vec4(0.0);
     // Three staggered source groups retain invertible fields and bounded lookup.
-    // Together uses 147 candidates; three release phases use up to 441.
+    // Together uses 75–147 candidates; three release phases use up to 441.
     for (int phase = 0; phase < 3; phase++) {
         float delay = float(phase) * 0.5 * FRAGMENTS_WAVE_SPAN;
         float p = clamp((breakup - delay) / (1.0 - FRAGMENTS_WAVE_SPAN), 0.0, 1.0);

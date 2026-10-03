@@ -19,8 +19,7 @@ vec4 pixel_texture(vec2 uv) {
     if (any(lessThan(uv, vec2(0.0))) || any(greaterThanEqual(uv, vec2(1.0)))) return vec4(0.0);
     return texture2D(niri_tex, (niri_geo_to_tex * vec3(uv, 1.0)).xy);
 }
-vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
-    float p = @PROGRESS@;
+vec4 pixels_color(vec3 coords_geo, vec3 size_geo, float p) {
     if (p <= 0.0) return pixel_texture(coords_geo.xy);
     if (p >= 1.0) return vec4(0.0);
     vec2 size = max(size_geo.xy, vec2(1.0)), px = coords_geo.xy * size;
@@ -76,3 +75,5 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     }
     return result;
 }
+
+@ACTION_ENTRY@

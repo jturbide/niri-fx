@@ -233,3 +233,12 @@ button[aria-pressed="true"] {
     border-color: #8ed8d0;
     background: #305c61;
 }
+
+/* Visibility is presentation only: switching views never resets parameters. */
+aside[data-view="basic"] .advanced {
+    display: none;
+}
+.motion-preference {
+    display: block;
+    margin-top: 0.75rem;
+}

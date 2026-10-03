@@ -16,6 +16,7 @@ def parameter(
     token=None,
     glsl_type="float",
     integer=False,
+    basic=False,
 ):
     """Describe one field once for validation, CLI, Studio and GLSL generation.
 
@@ -33,6 +34,7 @@ def parameter(
         "token": token,
         "glsl_type": glsl_type,
         "integer": integer,
+        "basic": basic,
     }
     return field(default=default, metadata=spec)
 

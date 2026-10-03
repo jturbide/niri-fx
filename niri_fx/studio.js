@@ -162,13 +162,11 @@ function labels() {
       wrapper.hidden = families.length > 0 && !families.includes(parameters.family);
   }
   byId("resize-controls").hidden = !capabilities.resize;
-  byId("family-note").textContent = fragment
-    ? "Open, close and optional resize. Move/swap previews are experimental concepts."
-    : !["slices", "elastic"].includes(parameters.family)
-      ? "Stock Niri open/close effects. Resize and native movement are unavailable."
-      : parameters.family === "elastic"
-        ? "Whole-window wobble. Open/close on stock Niri; native movement requires the patched compositor."
-        : "Open and close. Slice resize and movement are not supported in this release.";
+  byId("family-note").textContent =
+    "Stock Niri open/close" +
+    (capabilities.resize ? " and opt-in resize." : ".") +
+    (capabilities.movement ? " Native movement requires the experimental patched compositor." : "");
+  byId("movement-controls").hidden = !capabilities.movement;
   filterPresets();
   byId("action-controls").hidden = !actions;
   byId("action-enable-label").hidden = editingAction !== "resize";
@@ -213,11 +211,17 @@ function labels() {
   ])
     byId(key).disabled = mode === "resize";
   byId("seed").disabled =
-    mode === "resize" || ["elastic", "iris", "distortion"].includes(parameters.family);
+    mode === "resize" ||
+    ["elastic", "iris"].includes(parameters.family) ||
+    (parameters.family === "distortion" && parameters.distortion_mode !== "glitch");
   byId("edge_hue").disabled = parameters.edge_saturation === 0;
   for (const id of ["pixel_travel", "pixel_wind"])
     byId(id).disabled = parameters.pixel_mode !== "dust";
   byId("pixel_direction").disabled = parameters.pixel_mode === "pixelate";
+  for (const id of ["glitch_bands", "glitch_chroma"])
+    byId(id).disabled = parameters.distortion_mode !== "glitch";
+  for (const id of ["dissolve_x", "dissolve_y", "dissolve_turbulence"])
+    byId(id).disabled = parameters.dissolve_mode !== "ink";
   byId("distortion_width").disabled = parameters.distortion_mode !== "shockwave";
   byId("distortion_fade").disabled = parameters.distortion_mode === "shockwave";
   byId("distortion_angle").disabled = parameters.distortion_mode !== "wave";
@@ -613,7 +617,8 @@ try {
     parameters = { ...catalog.presets[byId("preset").value] };
     if (actions && editingAction === "resize" && !catalog.families[parameters.family].resize) {
       parameters = { ...catalog.presets.balanced };
-      byId("status").textContent = "Resize currently supports Fragments only.";
+      byId("status").textContent =
+        "This family has no resize renderer; select Fragments, Slices, Elastic or Distortion.";
     }
     byId("name").value = "My " + title(byId("preset").value);
     populate();
@@ -626,6 +631,10 @@ try {
       chooseAction(opening ? "open" : "close");
       populate();
       refresh();
+    }
+    if (byId("reduced-motion").checked) {
+      draw(opening ? 0 : 1);
+      return;
     }
     const start = performance.now(),
       duration =
@@ -643,6 +652,17 @@ try {
     }
     frame = requestAnimationFrame(tick);
   }
+  byId("advanced").onchange = () => {
+    document.querySelector("aside").dataset.view = byId("advanced").checked ? "advanced" : "basic";
+  };
+  const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
+  byId("reduced-motion").checked = motionPreference.matches;
+  motionPreference.addEventListener("change", (event) => {
+    byId("reduced-motion").checked = event.matches;
+    cancelAnimationFrame(frame);
+  });
+  byId("reduced-motion").onchange = () => cancelAnimationFrame(frame);
+  byId("pause").onclick = () => cancelAnimationFrame(frame);
   byId("open").onclick = () => animate(true);
   byId("close").onclick = () => animate(false);
   byId("seed").onclick = () => {

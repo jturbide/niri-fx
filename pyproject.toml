@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "niri-fx"
 version = "0.7.0"
-description = "Configurable Niri window effects: fragments, slices, wobble, dissolves, pixels, wisps and distortion, with profiles and a visual Studio."
+description = "Configurable Niri window effects: fragments, slices, wobble, dissolves, pixels, hexagons and distortion, with profiles and a visual Studio."
 requires-python = ">=3.10"
 license = "MIT AND GPL-3.0-or-later"
 license-files = ["LICENSE", "THIRD_PARTY.md", "experimental/COPYING-NIRI"]
@@ -15,7 +15,7 @@ dependencies = []
 keywords = [
     "niri", "wayland", "linux", "shaders", "glsl", "webgl", "animations",
     "window-effects", "fragments", "pixels", "particles", "slices", "wobble",
-    "elastic", "dissolve", "iris-reveal", "wisps", "distortion", "shockwave", "animation-profiles",
+    "elastic", "hexagons", "glitch", "ink", "dissolve", "iris-reveal", "wisps", "distortion", "shockwave", "animation-profiles",
     "inir", "iris", "quickshell", "dank", "dankmaterialshell", "dms", "noctalia",
 ]
 classifiers = [

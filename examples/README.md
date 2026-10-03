@@ -257,3 +257,29 @@ python3 -m niri_fx preview --custom examples/ripple-collapse.json --output /tmp/
 ```sh
 python3 -m niri_fx preview --custom examples/wave-fold.json --output /tmp/wave-fold.html
 ```
+
+## Hexagons, ink, glitch and movement styles
+
+These examples keep resize disabled. Movement styles also work for open/close; native swaps require the [experimental build](../experimental/README.md).
+
+```sh
+python3 -m niri_fx preview --custom examples/hexagon-burst.json --output /tmp/hexagon-burst.html
+python3 -m niri_fx preview --custom examples/hive-collapse.json --output /tmp/hive-collapse.html
+python3 -m niri_fx preview --custom examples/signal-glitch.json --output /tmp/signal-glitch.html
+python3 -m niri_fx preview --custom examples/chromatic-glitch.json --output /tmp/chromatic-glitch.html
+python3 -m niri_fx preview --custom examples/ink-spread.json --output /tmp/ink-spread.html
+python3 -m niri_fx preview --custom examples/ink-bloom.json --output /tmp/ink-bloom.html
+python3 -m niri_fx preview --custom examples/slice-exchange.json --output /tmp/slice-exchange.html
+python3 -m niri_fx preview --custom examples/pixel-transfer.json --output /tmp/pixel-transfer.html
+python3 -m niri_fx preview --custom examples/soft-phase.json --output /tmp/soft-phase.html
+```
+
+## Resize profiles (explicit opt-in)
+
+These profiles use Balanced for open/close and a separate resize effect. Importing previews them; applying their generated config enables resize.
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/elastic-resize.json --output /tmp/elastic-resize.html
+python3 -m niri_fx preview --custom examples/profiles/accordion-resize.json --output /tmp/accordion-resize.html
+python3 -m niri_fx preview --custom examples/profiles/ripple-resize.json --output /tmp/ripple-resize.html
+```

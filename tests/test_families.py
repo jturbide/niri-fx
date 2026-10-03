@@ -28,7 +28,7 @@ class FamilyTests(unittest.TestCase):
                 parse_document({"schema": version, "name": "Unsupported", "effect": {}})
 
     def test_unsupported_resize_and_movement_fail_explicitly(self):
-        effect = PRESETS["slide-apart"]
+        effect = PRESETS["iris-bloom"]
         self.assertFalse(FAMILIES[effect.family]["resize"])
         for operation in (
             lambda: replace(effect, resize=True),

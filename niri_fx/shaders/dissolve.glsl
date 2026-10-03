@@ -21,6 +21,15 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     if (@DISSOLVE_DIRECTION@ == 4) order = 1.0 - uv.y;
     if (@DISSOLVE_DIRECTION@ == 5) order = length((uv - 0.5) * 1.41421356237);
     if (@DISSOLVE_DIRECTION@ != 0) field = mix(field, order, @DISSOLVE_BIAS@);
+    if (@DISSOLVE_MODE@ == 1) {
+        // A spreading wet edge with layered turbulence. A fixed origin and
+        // deterministic field make reconstruction a reverse ink reveal.
+        vec2 origin = vec2(@DISSOLVE_X@, @DISSOLVE_Y@);
+        vec2 size = max(size_geo.xy, vec2(1.0));
+        float radius = max(length(max(origin, 1.0 - origin) * size), 1.0);
+        float radial = length((uv - origin) * size) / radius;
+        field = clamp(radial + (field - 0.5) * 0.5 * @DISSOLVE_TURBULENCE@, 0.0, 1.0);
+    }
     // Sweep beyond both ends of the noise range so the soft band fully enters
     // and exits. Explicit endpoint branches above preserve the exact source.
     float threshold = mix(-@DISSOLVE_SOFTNESS@, 1.0 + @DISSOLVE_SOFTNESS@, p);

@@ -20,6 +20,8 @@ vec4 elastic_sample(vec2 geo) {
 vec4 elastic_color(vec3 coords_geo, vec3 size_geo, float p, float collapse, vec2 impulse) {
     if (p <= 0.0) return elastic_sample(coords_geo.xy);
     if (p >= 1.0) return collapse > 0.0 ? vec4(0.0) : elastic_sample(coords_geo.xy);
+    float intensity = collapse > 0.0 ? 1.0 : length(impulse) / 1.41421356237;
+    float strength = EL_STRENGTH * intensity;
     float envelope = sin(EL_PI * p) * exp(-EL_DAMPING * p);
     float spring = sin(2.0 * EL_PI * EL_FREQUENCY * p);
     vec2 bend = impulse * EL_STRENGTH * envelope * vec2(0.22 * spring, 0.15 * cos(2.0 * EL_PI * EL_FREQUENCY * p));
@@ -27,8 +29,8 @@ vec4 elastic_color(vec3 coords_geo, vec3 size_geo, float p, float collapse, vec2
     if (EL_AXIS == 2) bend.x = 0.0;
     float scale = 1.0 - collapse * 0.28 * smoothstep(0.0, 1.0, p);
     // Mild breathing adds spring tension without folding the texture.
-    vec2 stretch = vec2(1.0 + (0.08 + 0.3 * EL_STRETCH) * spring * envelope * EL_STRENGTH,
-                        1.0 - (0.06 + 0.3 * EL_STRETCH) * spring * envelope * EL_STRENGTH);
+    vec2 stretch = vec2(1.0 + (0.08 + 0.3 * EL_STRETCH) * spring * envelope * strength,
+                        1.0 - (0.06 + 0.3 * EL_STRETCH) * spring * envelope * strength);
     // Rotate in logical pixels so a wide window rotates without aspect distortion.
     vec2 unturned = coords_geo.xy - EL_ORIGIN;
     if (EL_TWIST != 0.0) {
