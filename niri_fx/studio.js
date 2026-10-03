@@ -157,9 +157,16 @@ function populate() {
   labels();
   if (
     (mode === "resize" && !catalog.families[parameters.family].resize) ||
-    (["move", "swap"].includes(mode) && !catalog.families[parameters.family].concept)
+    (["move", "swap"].includes(mode) && !supportsConcept())
   )
     document.querySelector("[data-mode=effect]").click();
+}
+function supportsConcept() {
+  return (
+    catalog.families[parameters.family].concept &&
+    parameters.fragment_shape === "square" &&
+    parameters.fragment_orientation === 0
+  );
 }
 function labels() {
   const fragment = parameters.family === "fragments",
@@ -195,16 +202,13 @@ function labels() {
       tab.dataset.mode === "resize"
         ? !capabilities.resize
         : ["move", "swap"].includes(tab.dataset.mode)
-          ? !capabilities.concept
+          ? !supportsConcept()
           : false;
   byId("variation-controls").hidden =
     mode === "resize" || !["fragments", "slices"].includes(parameters.family);
   byId("slice-variation").hidden = fragment;
   byId("wave_frequency").disabled = byId("wave_speed").disabled = !parameters.wave_strength;
   byId("slice_stagger").disabled = parameters.slice_order === "together";
-  byId("variation-note").textContent = fragment
-    ? "Uneven cells and waves cost more to render. These controls affect open/close and the separate movement experiment, not resize."
-    : "Size variation keeps adjacent strip boundaries joined. Frequency controls the wavelength; lower frequencies make wider waves.";
   byId("count-control").hidden = byId("density").value !== "count";
   byId("tile-control").hidden = byId("density").value !== "tile";
   for (const key of numeric)
@@ -213,6 +217,10 @@ function labels() {
     "scatter",
     "fragment_shrink",
     "fragment_roundness",
+    "fragment_shape",
+    "fragment_aspect",
+    "fragment_orientation",
+    "fragment_transition",
     "dispersion",
     "stagger",
     "swirl",
@@ -224,6 +232,19 @@ function labels() {
     "wave_span",
   ])
     byId(key).disabled = mode === "resize";
+  byId("fragment_aspect").disabled =
+    mode === "resize" || ["square", "circle"].includes(parameters.fragment_shape);
+  byId("fragment_roundness").disabled =
+    mode === "resize" || ["circle", "ellipse", "star"].includes(parameters.fragment_shape);
+  byId("fragment_transition").disabled =
+    mode === "resize" ||
+    (!["circle", "ellipse", "diamond", "star"].includes(parameters.fragment_shape) &&
+      !parameters.fragment_roundness);
+  byId("variation-note").textContent = fragment
+    ? parameters.fragment_shape !== "square" || parameters.fragment_orientation !== 0
+      ? "Size variation changes piece sizes during flight so the starting layout stays joined. Shapes, elongated pieces and waves can cost more to render."
+      : "Uneven cells and waves cost more to render. These controls affect open/close and the separate movement experiment, not resize."
+    : "Size variation keeps adjacent strip boundaries joined. Frequency controls the wavelength; lower frequencies make wider waves.";
   byId("seed").disabled =
     mode === "resize" ||
     ["elastic", "iris"].includes(parameters.family) ||
@@ -573,7 +594,7 @@ try {
       const caption =
         mode === "resize"
           ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
-          : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
+          : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
       byId("caption").textContent = (comparing ? "Pinned A · " : pinned ? "B · " : "") + caption;
       document.documentElement.dataset.shaderStatus = "ready";
     } catch (error) {
@@ -693,6 +714,8 @@ try {
     for (const key of choices) parameters[key] = byId(key).value;
     if (byId("density").value === "tile") parameters.particles = 0;
     if (actions) parameters.resize = false;
+    if (["move", "swap"].includes(mode) && !supportsConcept())
+      document.querySelector("[data-mode=effect]").click();
     labels();
     refresh();
     recordHistory();

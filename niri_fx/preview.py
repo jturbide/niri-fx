@@ -61,7 +61,7 @@ def parameter_controls():
         if group == "fragments":
             controls.insert(
                 0,
-                '<div><label for="density">Particle sizing</label><select id="density"><option value="count">Target particle count</option><option value="tile">Fixed square size</option></select></div>',
+                '<div><label for="density">Particle sizing</label><select id="density"><option value="count">Target particle count</option><option value="tile">Fixed piece size</option></select></div>',
             )
         identifier = {"fragments": "fragment", "slices": "slice"}.get(group, group)
         # Basic family settings stay visible; detailed variation is collapsible.

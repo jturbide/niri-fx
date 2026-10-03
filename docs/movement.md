@@ -91,3 +91,17 @@ shader compilation/hot reload, expanded offscreen drawing, and a nested demo.
 The full transaction and particle renderer above remains future work.
 A screenshot overlay or keybinding wrapper cannot faithfully replace layout rendering: it misses other
 movement triggers and leaves input, z-order and cancellation out of sync.
+
+## Shaped fragments
+
+Triangle Shatter, Circle Burst, Rectangle Confetti and Hex Swarm use the shared
+fragment movement hook since 0.12.0. The same geometry and seeded identity
+are used for opening, closing and native movement; no new compositor patch is
+required. See the [shape guide and native recordings](fragment-shapes.md).
+
+```sh
+python3 scripts/nested-demo.py --preset triangle-shatter
+python3 scripts/nested-demo.py --preset hex-swarm
+```
+
+These commands open isolated demos. They do not replace the login compositor.

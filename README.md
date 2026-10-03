@@ -5,7 +5,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **66 presets across nine effect families and seven ready-made open/close pairings**. For further
+Pick a finished style from **70 presets across nine effect families and seven ready-made open/close pairings**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -22,7 +22,7 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.11.0](https://github.com/jturbide/niri-fx/releases/tag/v0.11.0)
+release. [Download v0.12.0](https://github.com/jturbide/niri-fx/releases/tag/v0.12.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
@@ -32,7 +32,7 @@ or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-f
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0110-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0120-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
@@ -84,6 +84,29 @@ or **Implosion** for an inward collapse.
 Tune particle density, gravity, spin, release order, waves, size variation and
 burst origin. [Compare those controls](docs/catalog.md#one-control-at-a-time).
 These clips use Studio's real shaders with synthetic window content.
+
+### More fragment shapes
+
+**Triangle Shatter**, **Circle Burst**, **Rectangle Confetti** and **Hex Swarm**
+combine new geometry with the existing gravity and spin controls. Studio also
+supports ellipses, diamonds and stars, with adjustable proportions, orientation
+and silhouette timing. Available since v0.12.0; resize stays off.
+
+| Triangle Shatter | Circle Burst |
+| --- | --- |
+| ![Triangular fragments scatter and reassemble](docs/gifs/preset-triangle-shatter.gif) | ![Circular fragments burst outward and reconstruct](docs/gifs/preset-circle-burst.gif) |
+| **Rectangle Confetti** | **Hex Swarm** |
+| ![Rectangular fragments tumble with downward gravity](docs/gifs/preset-rectangle-confetti.gif) | ![Hexagonal pieces spread and return](docs/gifs/preset-hex-swarm.gif) |
+
+[Shape controls and comparisons](docs/fragment-shapes.md) ·
+[Try Triangle Shatter](https://jturbide.github.io/niri-fx/gallery/#preset-triangle-shatter)
+
+The [experimental compositor](experimental/README.md) also uses these shapes for
+native movement and swaps:
+
+| Triangle swap | Hexagon swap |
+| --- | --- |
+| ![Two windows exchange positions with triangular pieces](docs/gifs/native-swap-triangle-shatter.gif) | ![Two windows exchange positions with hexagonal pieces](docs/gifs/native-swap-hex-swarm.gif) |
 
 ### Slices, springs and hexagons
 

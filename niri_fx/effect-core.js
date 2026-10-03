@@ -41,6 +41,8 @@ function createEffectCore(catalog) {
     );
     Object.assign(tokens, {
       VARIED_RADIUS: p.wave_strength === 0 ? "2" : "3",
+      SHAPED_RADIUS: String(shapeSearchRadius(p)),
+      SHAPED_PARTS: p.fragment_shape === "triangle" ? "2" : "1",
       ELASTIC_ORIGIN_X: glslNumber(catalog.elastic_anchors[p.elastic_anchor][0]),
       ELASTIC_ORIGIN_Y: glslNumber(catalog.elastic_anchors[p.elastic_anchor][1]),
       ENTRY: opening ? "open_color" : "close_color",
@@ -51,15 +53,40 @@ function createEffectCore(catalog) {
         ? catalog.templates[catalog.resize_templates[p.family]]
         : p.family !== "fragments"
           ? catalog.templates[p.family]
-          : p.size_variation || p.direction_variation || p.wave_strength
-            ? catalog.templates.varied
-            : classic
-              ? catalog.templates.classic
-              : catalog.templates.gravity
+          : p.fragment_shape !== "square" ||
+              p.fragment_orientation !== 0 ||
+              (p.fragment_roundness > 0 && p.fragment_transition !== 0.28)
+            ? catalog.templates.shaped
+            : p.size_variation || p.direction_variation || p.wave_strength
+              ? catalog.templates.varied
+              : classic
+                ? catalog.templates.classic
+                : catalog.templates.gravity
     ).replace(/@([A-Z_]+)@/g, (_, key) => {
       if (!Object.hasOwn(tokens, key)) throw new Error("Unknown shader token: " + key);
       return tokens[key];
     });
+  }
+  function shapeSearchRadius(p) {
+    const aspect = ["square", "circle"].includes(p.fragment_shape) ? 1 : p.fragment_aspect;
+    const stretch = Math.sqrt(Math.max(aspect, 1 / aspect));
+    let radius = 0.5 * Math.sqrt(aspect + 1 / aspect);
+    let low = 0.5,
+      high = 0.5;
+    if (p.fragment_shape === "triangle") {
+      radius = Math.sqrt(Math.max(4 * aspect + 1 / aspect, aspect + 4 / aspect)) / 3;
+      low = 1 / 3;
+      high = 2 / 3;
+    }
+    let axial = 1;
+    if (p.fragment_shape === "hexagon") {
+      radius = stretch;
+      axial = 2 / 3;
+      low = high = 0;
+    }
+    const reach =
+      (radius + 0.72 * p.dispersion) * (p.wave_strength ? 1.45 : 1) * stretch * axial + 0.00001;
+    return Math.max(Math.floor(reach + high), Math.ceil(reach - low));
   }
   function normalizePreset(doc) {
     if (doc?.kind === "profile") {

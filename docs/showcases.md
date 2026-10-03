@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **151 GIFs**, including all **66 built-in presets**. Use this
+The gallery has **161 GIFs**, including all **70 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -24,6 +24,7 @@ Studio's real WebGL renderer. Fragments come first in the [main gallery](catalog
 | --- | --- | --- |
 | A compact everyday breakup | [Subtle](gifs/preset-subtle.gif) or [Balanced](gifs/preset-balanced.gif) | [Particle density](gifs/compare-density.gif) |
 | A strong explosion or inward collapse | [Explosion](gifs/preset-explosion.gif), [Implosion](gifs/preset-implosion.gif), [Core Detonation](gifs/preset-core-detonation.gif) | [Burst origin](gifs/compare-origin.gif), [release order](gifs/compare-fragment-release.gif) |
+| Triangles, circles, confetti or a honeycomb | [Triangle Shatter](gifs/preset-triangle-shatter.gif), [Circle Burst](gifs/preset-circle-burst.gif), [Rectangle Confetti](gifs/preset-rectangle-confetti.gif), [Hex Swarm](gifs/preset-hex-swarm.gif) | [Shapes, proportions and emergence](fragment-shapes.md) |
 | Falling pieces or a black-hole pull | [Earth](gifs/preset-earth.gif), [Black Hole](gifs/preset-black-hole.gif), [Orbital Collapse](gifs/preset-orbital-collapse.gif) | [Gravity direction](gifs/compare-gravity.gif), [strength](gifs/compare-strength.gif), [rotation](gifs/compare-rotation.gif) |
 | Ribbons, blinds or folding strips | [Alternating Blinds](gifs/preset-alternating-blinds.gif), [Ribbon Wave](gifs/preset-ribbon-wave.gif), [Hinged Fan](gifs/preset-hinged-fan.gif) | [Directions](gifs/compare-slice-directions.gif), [count](gifs/compare-slice-count.gif), [hinges](gifs/compare-slice-hinges.gif) |
 | Springy motion without breakup | [Spring Wobble](gifs/preset-spring-wobble.gif), [Jelly](gifs/preset-jelly.gif), [Flag Wave](gifs/preset-flag-wave.gif) | [Elastic styles](gifs/compare-elastic.gif), [twist and ripples](gifs/compare-elastic-transforms.gif) |

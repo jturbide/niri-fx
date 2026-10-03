@@ -4,6 +4,15 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.11 to 0.12
+
+Fragment shapes and their four new presets require 0.12 or newer. Update the CLI
+before importing those documents. Schema 3 is unchanged; missing shape settings
+use square, aspect 1, orientation 0 and emergence 0.28. Existing built-in shaders
+are unchanged. Re-register or re-export to expose the new presets in shell pickers.
+Installing or updating alone does not change active effects. Resize stays off.
+The experimental compositor patch is unchanged from 0.11.
+
 ## From 0.10 to 0.11
 
 Vortex Fold, Soft Swirl, Edge Ripple and Torsion Resize require 0.11 or newer.

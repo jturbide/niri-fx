@@ -5,11 +5,11 @@ This reference keeps every preset and control comparison together.
 
 ## See it in motion
 
-[Fragments](#twenty-three-fragment-styles) · [Slices](#twelve-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
+[Fragments](#twenty-seven-fragment-styles) · [Slices](#twelve-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
-All **66 presets** have a recording. The [visual scenario index](showcases.md)
+All **70 presets** have a recording. The [visual scenario index](showcases.md)
 also helps you compare controls and choose a combination for everyday use,
 strong explosions, drifting dust, subtle distortion or different open/close actions.
 
@@ -21,7 +21,7 @@ These clips use Studio's real shader renderer with synthetic content at 20 fps.
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](gifs/opening.gif) | ![Closing explodes a window into fragments](gifs/closing.gif) |
 
-### Twenty-three fragment styles
+### Twenty-seven fragment styles
 
 Every loop closes and opens at that preset's configured timing. Start with
 **Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
@@ -92,6 +92,25 @@ only the named shape control changes.
 The Checker Scatter preset above releases alternating groups of pieces.
 
 ![Center-out, inward and diagonal release comparison](gifs/compare-fragment-release.gif)
+
+### Fragment shapes
+
+Choose a joined triangular or hexagonal layout, rectangular confetti, or a
+silhouette that emerges as pieces separate. All four new presets leave resize off.
+The [shape guide](fragment-shapes.md) covers every choice, CLI flag and comparison.
+
+| Triangle Shatter | Circle Burst | Rectangle Confetti | Hex Swarm |
+| --- | --- | --- | --- |
+| ![Triangle Shatter](gifs/preset-triangle-shatter.gif) | ![Circle Burst](gifs/preset-circle-burst.gif) | ![Rectangle Confetti](gifs/preset-rectangle-confetti.gif) | ![Hex Swarm](gifs/preset-hex-swarm.gif) |
+| [Settings](../examples/triangle-shatter.json) | [Settings](../examples/circle-burst.json) | [Settings](../examples/rectangle-confetti.json) | [Settings](../examples/hex-swarm.json) |
+
+![Compare joined square, triangle and hexagon layouts](gifs/compare-fragment-polygons.gif)
+
+![Compare circle, diamond and star silhouettes](gifs/compare-fragment-silhouettes.gif)
+
+![Compare piece proportions](gifs/compare-fragment-aspect.gif)
+
+![Compare silhouette emergence timing](gifs/compare-fragment-emergence.gif)
 
 ### One control at a time
 

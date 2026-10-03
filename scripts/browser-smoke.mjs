@@ -7,6 +7,7 @@ import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
 import { setTimeout as sleep } from "node:timers/promises";
 import { checkResize } from "./lib/resize-checks.mjs";
+import { checkShapes } from "./lib/shape-checks.mjs";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 
 process.chdir(projectRoot);
@@ -18,6 +19,7 @@ try {
   const { rpc, evaluate } = browser;
   await browser.navigate(url, { width: 1380, height: 1120 });
   const initialDocument = await evaluate("effectDocument()");
+  await checkShapes(evaluate);
   assert.equal(
     await evaluate("getComputedStyle(byId('spin').closest('.parameter')).display"),
     "none",
