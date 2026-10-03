@@ -35,6 +35,11 @@ Niri Fragments becomes **NiriFX**, a window effects studio with multiple familie
   Existing presets, snapshots, managed includes and launcher identities are retained.
 - Studio filters controls/presets by family. Irrelevant CLI overrides are rejected.
 
+### Fixed
+
+- Browser checks wait for Chrome startup and report launch errors/diagnostics
+  instead of an unhelpful missing debug-port file error on slower CI runners.
+
 Compatibility: all 14 existing fragment shaders remain byte-for-byte identical
 in generated source to 0.5. Fragment exports retain schema 1, and legacy JSON
 still imports. New slice JSON needs 0.6+. Resize stays off by default; Slices

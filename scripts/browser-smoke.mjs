@@ -12,11 +12,19 @@ if(!url)throw new Error('Usage: node scripts/browser-smoke.mjs PREVIEW_URL [--sa
 const executable=process.env.CHROME_BIN || ['chromium','chromium-browser','google-chrome','google-chrome-stable'].find(name=>spawnSync(name,['--version'],{stdio:'ignore'}).status===0);
 if(!executable)throw new Error('Install Chromium/Chrome or set CHROME_BIN');
 const profile=mkdtempSync(join(tmpdir(),'niri-fragments-browser-'));
-const browser=spawn(executable,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:'ignore'});
+const browser=spawn(executable,['--headless=new','--no-sandbox','--disable-dev-shm-usage','--use-angle=swiftshader','--enable-unsafe-swiftshader','--remote-debugging-port=0','--user-data-dir='+profile,'about:blank'],{stdio:['ignore','ignore','pipe']});
+let diagnostics='',launchError,closed=false;
+browser.stderr.on('data',chunk=>{diagnostics=(diagnostics+chunk.toString()).slice(-8192);});
+browser.on('error',error=>{launchError=error;});
+const browserClosed=new Promise(resolve=>browser.once('close',()=>{closed=true;resolve();}));
 const sleep=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 let ws;
 try{
- for(let i=0;i<100&&!existsSync(join(profile,'DevToolsActivePort'));i++)await sleep(100);
+ const deadline=Date.now()+30000;
+ while(!existsSync(join(profile,'DevToolsActivePort'))){
+  if(launchError||closed||Date.now()>=deadline)throw new Error(`Chrome did not start (${launchError?.message??(closed?'exit '+browser.exitCode:'30s timeout')}).\n${diagnostics}`);
+  await sleep(100);
+ }
  const port=readFileSync(join(profile,'DevToolsActivePort'),'utf8').split('\n')[0];
  const tabs=await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
  ws=new WebSocket(tabs.find(tab=>tab.type==='page').webSocketDebuggerUrl);
@@ -130,7 +138,7 @@ try{
  writeFileSync('artifacts/browser-checks.json',JSON.stringify(results,null,2)+'\n');
  console.log(`PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, slice controls, capabilities and schema compatibility`+(process.argv.includes('--save-test')?', and save to isolated registry.':'.'));
 }finally{
- ws?.close();if(browser.exitCode===null){const exited=new Promise(resolve=>browser.once('exit',resolve));browser.kill('SIGTERM');await exited;}
+ ws?.close();if(!closed){browser.kill('SIGTERM');await browserClosed;}
  // Chrome helpers may flush their profile briefly after the browser exits.
  rmSync(profile,{recursive:true,force:true,maxRetries:10,retryDelay:100});
 }
