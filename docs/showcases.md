@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **161 GIFs**, including all **70 built-in presets**. Use this
+The gallery has **172 GIFs**, including all **73 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -121,3 +121,22 @@ GIFs demonstrate appearance. For shader timing data, see [GPU measurements](perf
 
 All new styles have [JSON examples](../examples/README.md). The seven resize
 profiles explicitly enable resize; the built-in presets do not.
+
+## General movement and shaped resize
+
+The native clips use the pinned experimental compositor and synthetic clients.
+The resize clips render stock Niri-compatible shaders. Resize remains opt-in.
+
+| Fragment Wake | Ribbon Transfer | Momentum Glide |
+| --- | --- | --- |
+| ![Fragment Wake](gifs/preset-fragment-wake.gif) | ![Ribbon Transfer](gifs/preset-ribbon-transfer.gif) | ![Momentum Glide](gifs/preset-momentum-glide.gif) |
+| ![Native triangle wake swap](gifs/native-swap-fragment-wake.gif) | ![Native ribbon swap](gifs/native-swap-ribbon-transfer.gif) | ![Native elastic glide](gifs/native-swap-momentum-glide.gif) |
+
+![Consume, vertical reorder and expel](gifs/native-rearrangement.gif)
+
+| Triangle Edge Rebuild | Hexagon Edge Rebuild | Circle Soft Reflow |
+| --- | --- | --- |
+| ![Triangle resize](gifs/triangle-edge-rebuild.gif) | ![Hexagon resize](gifs/hexagon-edge-rebuild.gif) | ![Circle resize](gifs/circle-soft-reflow.gif) |
+
+[Movement controls and requirements](movement.md#movement-presets-and-general-rearrangement) ·
+[Resize profiles](resize.md#shaped-resize) · [Profile JSON](../examples/profiles/README.md)

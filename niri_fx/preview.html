@@ -20,6 +20,8 @@
       <nav class="tabs" aria-label="Preview mode">
         <button data-mode="effect" aria-pressed="true">Open &amp; close</button
         ><button data-mode="resize" aria-pressed="false">Resize</button
+        ><button data-mode="movement" aria-pressed="false">
+          Movement <small>experimental shader</small></button
         ><button data-mode="move" aria-pressed="false">Move <small>concept</small></button
         ><button data-mode="swap" aria-pressed="false">Swap <small>concept</small></button>
       </nav>
@@ -109,6 +111,19 @@
           @FAMILY_OPTIONS@</select
         ><small id="family-note"></small>
       </div>
+      <div id="movement-preview-controls" class="wide" hidden>
+        <label for="movement-direction">Preview direction</label>
+        <select id="movement-direction">
+          <option value="right">Right</option>
+          <option value="left">Left</option>
+          <option value="down">Down</option>
+          <option value="up">Up</option>
+        </select>
+        <small
+          >Actual experimental shader on synthetic content. The desktop controls position and
+          interruptions; this preview uses a simple path. Stock Niri exports omit movement.</small
+        >
+      </div>
       <div class="wide profile-controls">
         <label for="profile">Ready-made open / close pairing</label>
         <select id="profile">
@@ -124,13 +139,16 @@
             <option value="open">Open</option>
             <option value="close">Close</option>
             <option value="resize">Resize (opt-in)</option>
+            <option value="movement">Movement (experimental)</option>
           </select>
           <label id="action-enable-label" hidden
-            ><input id="action-enabled" type="checkbox" /> Enable resize effect</label
+            ><input id="action-enabled" type="checkbox" />
+            <span id="action-enable-text">Enable resize effect</span></label
           >
           <small
             >Each action keeps its own settings. Disabled resize leaves your existing Niri resize
-            behavior unchanged.</small
+            behavior unchanged. Movement is saved in JSON only and needs the experimental
+            compositor.</small
           >
         </div>
       </div>

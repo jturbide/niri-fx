@@ -150,12 +150,16 @@ def main():
                 showcased_sources.add(panel["source"])
                 document = parse_document(load_document(ROOT / panel["source"]))[2]
                 effect = (
-                    (document.resize if spec["mode"] == "resize" else document.close)
+                    (
+                        getattr(document, spec["mode"])
+                        if spec["mode"] in {"resize", "movement"}
+                        else document.close
+                    )
                     if isinstance(document, Profile)
                     else document
                 )
                 origin = {"source": panel["source"]}
-                if isinstance(document, Profile) and spec["mode"] != "resize":
+                if isinstance(document, Profile) and spec["mode"] == "effect":
                     origin["opening_effect"] = asdict(document.open)
             else:
                 effect = replace(PRESETS[panel["preset"]], **panel["overrides"])

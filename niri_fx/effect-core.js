@@ -12,9 +12,11 @@ function createEffectCore(catalog) {
       String(scaled % 1000000).padStart(6, "0")
     );
   }
-  function shaderFor(p, opening, resizing = false) {
+  function shaderFor(p, opening, resizing = false, moving = false) {
     if (resizing && !catalog.families[p.family].resize)
       throw new Error("This effect family does not support resize.");
+    if (moving && !catalog.families[p.family].movement)
+      throw new Error("This effect family does not support movement.");
     const classic =
       p.gravity === "none" &&
       !p.particles &&
@@ -42,32 +44,42 @@ function createEffectCore(catalog) {
     Object.assign(tokens, {
       VARIED_RADIUS: p.wave_strength === 0 ? "2" : "3",
       SHAPED_RADIUS: String(shapeSearchRadius(p)),
+      SHAPED_RESIZE_RADIUS: String(shapeSearchRadius(p, true)),
       SHAPED_PARTS: p.fragment_shape === "triangle" ? "2" : "1",
       ELASTIC_ORIGIN_X: glslNumber(catalog.elastic_anchors[p.elastic_anchor][0]),
       ELASTIC_ORIGIN_Y: glslNumber(catalog.elastic_anchors[p.elastic_anchor][1]),
       ENTRY: opening ? "open_color" : "close_color",
       PROGRESS: opening ? "1.0 - niri_clamped_progress" : "niri_clamped_progress",
     });
-    return (
+    const shaped =
+      p.fragment_shape !== "square" ||
+      p.fragment_orientation !== 0 ||
+      (p.fragment_roundness > 0 && p.fragment_transition !== 0.28);
+    const renderer =
+      p.family !== "fragments"
+        ? p.family
+        : shaped
+          ? "shaped"
+          : p.size_variation || p.direction_variation || p.wave_strength
+            ? "varied"
+            : classic
+              ? "classic"
+              : "gravity";
+    return catalog.templates[
       resizing
-        ? catalog.templates[catalog.resize_templates[p.family]]
-        : p.family !== "fragments"
-          ? catalog.templates[p.family]
-          : p.fragment_shape !== "square" ||
-              p.fragment_orientation !== 0 ||
-              (p.fragment_roundness > 0 && p.fragment_transition !== 0.28)
-            ? catalog.templates.shaped
-            : p.size_variation || p.direction_variation || p.wave_strength
-              ? catalog.templates.varied
-              : classic
-                ? catalog.templates.classic
-                : catalog.templates.gravity
-    ).replace(/@([A-Z_]+)@/g, (_, key) => {
+        ? p.family === "fragments" &&
+          (shaped || p.fragment_shrink || p.fragment_roundness || p.size_variation)
+          ? "resize-shaped"
+          : catalog.resize_templates[p.family]
+        : moving
+          ? "move-" + renderer
+          : renderer
+    ].replace(/@([A-Z_]+)@/g, (_, key) => {
       if (!Object.hasOwn(tokens, key)) throw new Error("Unknown shader token: " + key);
       return tokens[key];
     });
   }
-  function shapeSearchRadius(p) {
+  function shapeSearchRadius(p, resizing = false) {
     const aspect = ["square", "circle"].includes(p.fragment_shape) ? 1 : p.fragment_aspect;
     const stretch = Math.sqrt(Math.max(aspect, 1 / aspect));
     let radius = 0.5 * Math.sqrt(aspect + 1 / aspect);
@@ -85,7 +97,11 @@ function createEffectCore(catalog) {
       low = high = 0;
     }
     const reach =
-      (radius + 0.72 * p.dispersion) * (p.wave_strength ? 1.45 : 1) * stretch * axial + 0.00001;
+      (radius + (resizing ? 0.4 : 0.72 * p.dispersion)) *
+        (!resizing && p.wave_strength ? 1.45 : 1) *
+        stretch *
+        axial +
+      0.00001;
     return Math.max(Math.floor(reach + high), Math.ceil(reach - low));
   }
   function normalizePreset(doc) {

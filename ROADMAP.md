@@ -1,99 +1,146 @@
 # NiriFX roadmap
 
-NiriFX aims to make window effects expressive, easy to tune and comfortable for
-everyday use. This roadmap describes work being considered next. Priorities can
-change with feedback; items here do not imply a release date.
+NiriFX focuses on finished effects and coherent motion for Niri. Choose a preset,
+apply it, and customize when useful. Niri remains the primary compositor; other
+backends are research candidates, not current compatibility claims.
 
-See the [README](README.md) for available features, the [changelog](CHANGELOG.md)
-for completed work and [compatibility](docs/compatibility.md) for supported setups.
-`main` may contain features newer than the latest release.
+Checklists describe concrete deliverables. Checked items have shipped or have
+recorded validation; unchecked items are still planned or in development. Epic
+order expresses priority, not a release date. See [available features](README.md),
+[release history](CHANGELOG.md) and [validation limits](docs/validation.md).
 
-## Next: confidence across more desktops
+## Released foundation
 
-Finished presets and smooth effects are the main product. The terminal guide,
-graphical pickers and Studio serve that workflow: choose a look, apply it, and
-customize when useful. New interface work should address a demonstrated need.
+- [x] Stock Niri opening and closing effects, standalone setup and shell adapters.
+- [x] Independent open/close pairings and explicitly enabled resize profiles.
+- [x] Eight fragment shapes, four shape presets and their showcases in 0.12.0.
+- [x] Experimental tile/column movement, swaps and velocity-preserving retargets.
+- [x] Searchable gallery, Studio, terminal workflow and reversible setup snapshots.
 
-The [gallery](https://jturbide.github.io/niri-fx/gallery/) starts with the same nine
-recommended looks as the terminal guide. Shareable collection views, setup links
-and community forms support trying effects and reporting results.
+## Epic 1: general window movement
 
-Seven [ready-made action profiles](docs/profiles.md) now pair opening and closing
-styles across the existing CLI, Studio and pickers. Further curation should focus
-on distinct looks and useful timing, with resize kept explicitly opt-in.
+Goal: make movement a distinct, well-tested action with useful finished looks.
 
-[Vortex Fold and Soft Swirl](docs/catalog.md#vortex-and-swirl) extend the texture
-warps with a pronounced spiral and a gentler everyday variation. Their showcases
-include stock-style previews and a native swap, with [measured shader costs](docs/performance.md#vortex-distortion).
+- [x] Add Fragment Wake, Ribbon Transfer and Momentum Glide presets.
+- [x] Preview the actual movement shader in Studio with directional controls.
+- [x] Edit an independent movement action and preserve it in portable profiles.
+- [x] Keep movement out of stock exports; support profiles in the isolated demo.
+- [x] Exercise horizontal and vertical rearrangement, consuming/expelling windows,
+      insertion/removal and simultaneous resize/movement.
+- [x] Record native movement and swap examples, including reversals.
+- [x] Publish measured costs and explicit compositor/renderer requirements.
+- [ ] Detect installed movement capability before offering live activation.
 
-[Edge Ripple and Torsion Resize](docs/resize.md) add Subtle and Expressive options
-for animated size changes. These separate profiles explicitly opt into resize.
+## Epic 2: shaped and expressive resize
 
-- **More hardware results.** Compare large windows and simultaneous animations on
-  integrated GPUs and several refresh rates. Publish repeatable measurements with
-  their hardware and renderer details.
-- **Mixed-monitor behavior.** Test fractional scaling, output changes, decorations,
-  fullscreen transitions and effects near screen edges.
-- **More interruption coverage.** Exercise rapid open/close sequences and overlapping
-  resize, movement and close actions with real applications.
-- **Clearer performance choices.** Explore quality options where measurements show
-  a useful tradeoff, while retaining recognizable textures and smooth endpoints.
+Goal: extend the shape vocabulary to size changes while keeping borders and
+endpoints reliable. Every built-in style keeps resize off unless a separate
+resize profile is explicitly applied.
 
-Varied fragments now skip empty flight regions and reject cells assigned to other
-velocity groups before calculating their shapes. This reduces shader work without
-changing preset settings. Further optimization should include reproducible cost
-measurements and rendered-reference checks, as described in the [performance guide](docs/performance.md).
+- [x] Reuse triangle, hexagon and silhouette geometry in the resize renderer.
+- [x] Add finished Edge Rebuild and Soft Reflow profiles with shapes.
+- [x] Expose only resize-relevant controls in Studio.
+- [x] Verify growth/shrink, transparent source ownership, extreme proportions,
+      stable identities and zero-strength behavior.
+- [x] Check repeated resize, close-during-resize and fullscreen interruptions.
+- [x] Publish comparisons, native recordings and GPU measurements.
+- [ ] Investigate a physical resize-edge anchor where the compositor exposes it.
 
-The [performance guide](docs/performance.md) and [validation record](docs/validation.md)
-show what has already been measured and what remains untested.
+## Epic 3: continuous transitions
 
-## Exploring: custom fragment silhouettes
+Goal: retain visual direction and state when actions overlap.
 
-[Fragment shapes](docs/fragment-shapes.md) provide built-in geometry and four
-finished presets since 0.12.0. Next candidates are deterministic mixtures
-of selected shapes and a constrained SVG silhouette importer. An initial importer
-would accept one closed outline, simplify it at import time and bound its shader
-complexity. Full SVG artwork, filters, strokes and compound paths need separate
-design and performance work. These features are not implemented yet.
+- [x] Preserve movement phase, seed, direction and sampled position velocity in
+      the pinned experimental build.
+- [x] Continue an interrupted opening or movement while fading a closing window.
+- [x] Expand coverage to move/resize/close combinations and vertical layout changes.
+- [ ] Fix discontinuities demonstrated by those scenarios and add regressions.
+- [ ] Investigate velocity continuity across interrupted resize transitions.
+- [ ] Test floating/tiled changes, physical mixed outputs and output removal.
+- [ ] Investigate acceleration continuity and shared swap transactions.
+- [ ] Evaluate particle-level ordering across windows and conservative damage bounds.
 
-## Next: reusable shell pickers
+Current guarantees and their limits are in [native movement](docs/movement.md).
+A clean endpoint test is not evidence of uninterrupted velocity.
 
-Standalone NiriFX already works with any bar or shell running on Niri. These
-integrations would add convenient browsing and settings interfaces:
+## Epic 4: pointer-driven wobble
 
-The [Quickshell picker](docs/quickshell.md) and [GTK picker with an AGS 3 example](docs/gtk.md)
-provide search, profile loading, reviewed activation and Undo, with reusable
-components. Further work includes:
+Goal: responsive, Compiz-inspired deformation tied to actual dragging.
 
-1. **Full shell embedding:** validate the reusable components in maintained
-   Quickshell and GTK 4/Astal settings pages, beyond isolated component hosts.
-2. **Caelestia:** assess a maintained Niri setup and a suitable extension point.
-3. **ML4W:** document a separate Niri session, then assess an appropriate settings adapter.
+- [ ] Design a grab-point anchor and a pointer-driven deformation state.
+- [ ] Keep visual deformation separate from input hit testing and layout ownership.
+- [ ] Preserve state through drag cancellation, release and tiling transitions.
+- [ ] Add gentle wobble, rubber-sheet and release-settle presets.
+- [ ] Measure input latency and frame times in a nested compositor.
+- [ ] Add reduced-motion behavior and ordinary-renderer fallback.
 
-The iNiR/iRiS, DMS and Noctalia paths remain available alongside the reusable picker.
-Waybar uses [standalone setup](docs/standalone.md) and needs no separate effects
-backend. See the [integration design notes](docs/roadmap.md).
+This requires further compositor work. Existing timed Elastic effects do not
+simulate dragging.
 
-## Exploring: interactive movement
+## Epic 5: workspace, camera and overview motion
 
-The optional compositor patch demonstrates native swaps, retargeting and continued
-animation during close interruptions. It remains an experiment with a pinned Niri
-revision, separate from the standard installation.
+Goal: a coherent sense of motion across the desktop.
 
-Deformation and interrupted tile/column positions now carry their sampled speed
-through direction changes. Further research includes acceleration continuity,
-pointer-driven deformation, more efficient damage bounds and ordering particles
-from different windows in one scene. A shared particle scene would need more
-compositor work than the current independent window shaders.
+- [ ] Curate opt-in stock timing/spring profiles for workspace switching,
+      horizontal camera scrolling and overview zoom.
+- [ ] Keep camera motion separate from individual window movement effects.
+- [ ] Design an experimental workspace rendering hook with gesture reversal.
+- [ ] Prototype a restrained depth slide, wave sweep and slice transition.
+- [ ] Preserve clipping, capture restrictions, multiple outputs and input behavior.
+- [ ] Evaluate fullscreen and overview entry/exit as separate transition paths.
+- [ ] Record native demonstrations and establish compositor frame-time budgets.
 
-See the [movement guide](docs/movement.md) and [nested demo](experimental/README.md).
-New styles are welcome when they add a distinct look, with examples and measured
-costs rather than a growing list of nearly identical presets.
+Stock Niri exposes timing for these actions, not the same custom shader interface
+as opening, closing and resizing. See [Niri's animation documentation](https://niri-wm.github.io/niri/Configuration:-Animations.html).
+
+## Epic 6: performance and broader desktop validation
+
+- [ ] Collect integrated-GPU results and several output sizes/refresh rates.
+- [ ] Measure compositor presentation separately from WebGL shader cost.
+- [ ] Test simultaneous effects, fractional scaling and physical mixed monitors.
+- [ ] Add quality choices only where measurements demonstrate a useful tradeoff.
+- [ ] Expand capture, popup, decoration and graphics-reset acceptance.
+
+Published results and reproducible commands remain in the
+[performance guide](docs/performance.md) and [validation record](docs/validation.md).
+
+## Epic 7: custom silhouettes and curated profiles
+
+- [ ] Add deterministic mixtures of selected built-in shapes.
+- [ ] Prototype one closed SVG outline, simplified at import time with bounded
+      shader complexity. Filters, strokes and compound artwork remain out of scope.
+- [ ] Curate coordinated Fragments, Ribbons and Elastic motion profiles as actions
+      become supported; preserve explicit resize and movement choices.
+- [ ] Give each new visual behavior an importable example and faithful showcase.
+
+See [fragment shapes](docs/fragment-shapes.md) and [action profiles](docs/profiles.md).
+
+## Epic 8: shell integration and future compositor ports
+
+Shells and compositors are different integration targets. iNiR/iRiS, DMS,
+Noctalia, Quickshell and GTK pickers use NiriFX's Niri backend today. Waybar needs
+only the standalone path.
+
+- [ ] Validate full shell embedding of reusable Quickshell and GTK/Astal components.
+- [ ] Assess Caelestia on a maintained Niri setup, then an ML4W Niri-session adapter.
+- [x] Document the reusable effect/preset model and compositor-specific rendering
+      inputs without introducing an unused generic backend framework.
+- [ ] After the Niri motion milestones, assess one Hyprland effect as a small port
+      experiment: textures, coordinates, progress, transparency and damage first.
+- [ ] Evaluate plugin/version maintenance and capture/input behavior before any
+      broader Hyprland support commitment.
+- [ ] Add another backend only when a working prototype justifies its abstractions.
+
+Shader math and preset descriptions can be reused. Window textures, animation
+lifecycle, interruption state, damage and configuration belong to each compositor;
+Wayland is not a portable window-effects plugin API. Hyprland's
+[C++ plugin interface](https://wiki.hypr.land/Plugins/Development/Getting-Started/)
+is a possible research path, not a drop-in Niri shader loader. No Hyprland backend
+is being implemented in the current release. See [portability boundaries](docs/architecture.md#compositor-portability).
 
 ## Contribute a result or an idea
 
-[Open an issue](https://github.com/jturbide/niri-fx/issues) with your setup, the
-behavior you want and a reproducible example. Reports from different GPUs and
-monitor arrangements are especially useful. [Contributing](CONTRIBUTING.md) covers
-development checks; the [design notes](docs/next-phases.md) explain the technical
-questions behind this roadmap.
+[Open an issue](https://github.com/jturbide/niri-fx/issues) with the setup, desired
+behavior and a reproducible example. Reports from different GPUs and monitor
+arrangements are useful. [Contributing](CONTRIBUTING.md) covers checks; the
+[design notes](docs/next-phases.md) explain the engineering questions.

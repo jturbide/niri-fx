@@ -324,3 +324,39 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-shapes.json \
   --presets=triangle-shatter,circle-burst,rectangle-confetti,hex-swarm \
   --sizes=1920x1080,3840x2160 --samples=60 --draws=1,2
 ```
+
+## General movement and shaped resize
+
+Measured on 2026-10-03 with an NVIDIA RTX 4070 Ti through Chromium ANGLE/OpenGL.
+Each value is p95 GPU time over 60 samples after 12 warmup draws. These are single
+synthetic-window shader passes, including a framebuffer clear. They exclude
+compositor layout, texture capture, simultaneous windows, scanout and input latency.
+Movement uses the actual experimental shader with a synthetic directional path;
+resize grows between distinct old/new textures.
+
+| Action and preset/profile | 1920×1080 | 2560×1440 |
+| --- | ---: | ---: |
+| Movement: Fragment Wake | 0.423 ms | 0.706 ms |
+| Movement: Ribbon Transfer | 0.177 ms | 0.309 ms |
+| Movement: Momentum Glide | 0.095 ms | 0.165 ms |
+| Resize: Triangle Edge Rebuild | 0.201 ms | 0.348 ms |
+| Resize: Hexagon Edge Rebuild | 0.146 ms | 0.247 ms |
+| Resize: Circle Soft Reflow | 0.150 ms | 0.255 ms |
+
+[Movement samples and settings](benchmarks/general-movement.json) ·
+[Resize samples and settings](benchmarks/shaped-resize.json)
+
+These results do not establish integrated-GPU performance or compositor frame
+budgets. Wider aspect ratios, different output sizes and stronger custom effects
+can increase cost. Movement timing changes playback duration, not work per draw.
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/movement-gpu.json --presets=fragment-wake,ribbon-transfer,momentum-glide --action=movement --sizes=1920x1080,2560x1440 --samples=60
+node scripts/benchmark-gpu.mjs --output=/tmp/resize-gpu.json --resize-profiles=triangle-edge-rebuild,hexagon-edge-rebuild,circle-soft-reflow --sizes=1920x1080,2560x1440 --samples=60
+```
+
+Shaped resize uses a bounded search derived from piece extent and maximum local
+drift. A wider reference search covers 72 shape/aspect/mode combinations per
+renderer. Software output matches exactly; hardware differences stay within one
+8-bit channel step with identical occupancy and overlap counts. Joined translucent
+layouts and exact endpoints are checked independently.

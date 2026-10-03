@@ -75,7 +75,9 @@ Single-style documents continue to use effect schema 3; these are different
 document types, not compatibility aliases. [Complete example](../examples/profiles/spring-and-ember.json).
 
 The experimental `movement` slot is validated and preserved on import/export.
-Studio does not edit or activate it yet. Stock KDL and iRiS exports omit it;
+Studio can edit it and preview the actual shader in **Movement (experimental shader)**.
+Tick **Include experimental movement in JSON** to store the choice; viewing it
+alone leaves the slot unset. Stock KDL and iRiS exports omit it;
 movement requires the separate [compositor experiment](../experimental/README.md).
 Profiles do not add application-specific rules or interactive dragging hooks.
 
@@ -101,3 +103,13 @@ Launch with `python3 -m niri_fx studio --target standalone` to start with file
 downloads, or choose `--target inir` / `--target noctalia`. The default `auto`
 selects iNiR when its helper is installed, otherwise standalone. Offline previews
 also default to standalone. The target changes the save UI, not your active effect.
+
+Test an exported movement profile without replacing the login compositor:
+
+```sh
+python3 scripts/nested-demo.py --custom examples/profiles/fragment-wake-motion.json
+```
+
+The demo uses the movement action's duration and strength. `--duration-ms` and
+`--movement-strength` are explicit demo overrides. An unset movement slot is
+rejected rather than silently replaced. See [native movement](movement.md).

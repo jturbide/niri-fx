@@ -307,3 +307,18 @@ python3 -m niri_fx preview --custom examples/circle-burst.json --output /tmp/cir
 python3 -m niri_fx preview --custom examples/rectangle-confetti.json --output /tmp/rectangle-confetti.html
 python3 -m niri_fx preview --custom examples/hex-swarm.json --output /tmp/hex-swarm.html
 ```
+
+## Movement-oriented styles
+
+These are stock open/close styles with tuned experimental movement settings.
+Native movement needs the [pinned compositor](../experimental/README.md).
+
+- [Fragment Wake](fragment-wake.json): [GIF](../docs/gifs/preset-fragment-wake.gif).
+- [Ribbon Transfer](ribbon-transfer.json): [GIF](../docs/gifs/preset-ribbon-transfer.gif).
+- [Momentum Glide](momentum-glide.json): [GIF](../docs/gifs/preset-momentum-glide.gif).
+
+```sh
+python3 -m niri_fx preview --preset fragment-wake --output /tmp/fragment-wake.html
+python3 -m niri_fx preview --preset ribbon-transfer --output /tmp/ribbon-transfer.html
+python3 -m niri_fx preview --preset momentum-glide --output /tmp/momentum-glide.html
+```

@@ -4,7 +4,18 @@ import assert from "node:assert/strict";
 
 export function renderShape(
   source,
-  { entry = "close_color", progress = 0, seed = 0.37, width = 144, height = 96 } = {},
+  {
+    entry = "close_color",
+    progress = 0,
+    seed = 0.37,
+    width = 144,
+    height = 96,
+    from = [144, 96],
+    to = [192, 144],
+    alphaValue = 128,
+    includePixels = false,
+    impulse = [1, 0],
+  } = {},
 ) {
   // Reuse one owned context; repeatedly losing contexts can race GPU cleanup.
   if (!renderShape.context) {
@@ -44,6 +55,10 @@ export function renderShape(
         `precision highp float;
       uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;
       uniform float niri_random_seed;uniform float niri_clamped_progress;
+      uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;
+      uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;
+      uniform mat3 niri_curr_geo_to_prev_geo;uniform mat3 niri_curr_geo_to_next_geo;
+      uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;
       ${source}
       void main(){vec2 size=vec2(${width}.0,${height}.0);vec2 coords=(gl_FragCoord.xy-(vec2(240.,192.)-size)*.5)/size;
         gl_FragColor=${entry}(vec3(coords,1.),vec3(size,1.)${entry === "fragments_phase" ? ",0.0,0" : ""});}`,
@@ -68,7 +83,7 @@ export function renderShape(
       pixels[i] = 20 + ((i / 4) % 80);
       pixels[i + 1] = 45;
       pixels[i + 2] = 70;
-      pixels[i + 3] = 128;
+      pixels[i + 3] = alphaValue;
     }
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
     for (const name of [gl.TEXTURE_MIN_FILTER, gl.TEXTURE_MAG_FILTER])
@@ -80,6 +95,23 @@ export function renderShape(
       false,
       new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
     );
+    for (const name of ["niri_geo_to_tex_prev", "niri_geo_to_tex_next"])
+      gl.uniformMatrix3fv(
+        gl.getUniformLocation(program, name),
+        false,
+        new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]),
+      );
+    for (const [name, size] of [
+      ["prev", from],
+      ["next", to],
+    ])
+      gl.uniformMatrix3fv(
+        gl.getUniformLocation(program, "niri_curr_geo_to_" + name + "_geo"),
+        false,
+        new Float32Array([width / size[0], 0, 0, 0, height / size[1], 0, 0, 0, 1]),
+      );
+    gl.uniform2f(gl.getUniformLocation(program, "niri_move_impulse"), ...impulse);
+    gl.uniform2f(gl.getUniformLocation(program, "niri_move_delta"), ...impulse.map((v) => v * 160));
     gl.uniform1f(gl.getUniformLocation(program, "niri_random_seed"), seed);
     gl.uniform1f(gl.getUniformLocation(program, "niri_clamped_progress"), progress);
     gl.viewport(0, 0, canvas.width, canvas.height);
@@ -105,7 +137,14 @@ export function renderShape(
         alpha += output[i];
       }
     }
-    return { occupied, overlap, alpha, hash, error: gl.getError() };
+    return {
+      occupied,
+      overlap,
+      alpha,
+      hash,
+      error: gl.getError(),
+      ...(includePixels ? { pixels: Array.from(output) } : {}),
+    };
   } finally {
     gl.deleteProgram(program);
     gl.deleteBuffer(buffer);
@@ -191,8 +230,8 @@ export async function checkShapes(evaluate) {
   ])
     assert.equal(
       await evaluate(`byId('${field}').disabled`),
-      true,
-      field + " does not affect resize",
+      field === "fragment_transition",
+      field + " matches shaped resize capability",
     );
   await evaluate("document.querySelector('[data-mode=effect]').click()");
   assert.equal(await evaluate("parameters.fragment_shape"), "triangle");

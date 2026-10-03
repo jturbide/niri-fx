@@ -3,6 +3,7 @@
 import math
 import re
 from dataclasses import asdict
+from functools import lru_cache
 from importlib.resources import files
 
 from .model import (
@@ -62,6 +63,7 @@ TEMPLATE_FILES = {
     "gravity": "gravity",
     "varied": "varied",
     "shaped": "shaped",
+    "resize-shaped": "resize-shaped",
     **{name: name for name in RESIZE_TEMPLATES.values()},
     **{name: name for name in FAMILIES if name != "fragments"},
 }
@@ -91,9 +93,31 @@ def _template(filename, entry=None):
     return source
 
 
+@lru_cache(maxsize=1)
 def shader_templates():
     """Python and offline Studio expand the same assembled template strings."""
-    return {name: _template(filename) for name, filename in TEMPLATE_FILES.items()}
+    templates = {name: _template(filename) for name, filename in TEMPLATE_FILES.items()}
+    root = files("niri_fx").joinpath("shaders")
+    for renderer in (
+        "classic",
+        "gravity",
+        "varied",
+        "shaped",
+        "slices",
+        "elastic",
+        "pixels",
+        "distortion",
+    ):
+        family = "fragments" if renderer in {"classic", "gravity", "varied", "shaped"} else renderer
+        entry = (
+            root.joinpath(
+                "movement-elastic-entry.glsl" if family == "elastic" else "movement-entry.glsl"
+            )
+            .read_text()
+            .replace("@FUNCTION@", family)
+        )
+        templates[f"move-{renderer}"] = _template(TEMPLATE_FILES[renderer], entry)
+    return templates
 
 
 def renderer_name(effect):
@@ -115,39 +139,26 @@ def shader(effect, opening):
 def resize_shader(effect):
     if not FAMILIES[effect.family]["resize"]:
         raise ValueError(f"The {effect.family} family does not support resize")
-    return _expand(shader_templates()[RESIZE_TEMPLATES[effect.family]], effect, False)
+    renderer = (
+        "resize-shaped"
+        if effect.family == "fragments" and effect.shaped_resize
+        else RESIZE_TEMPLATES[effect.family]
+    )
+    return _expand(shader_templates()[renderer], effect, False)
 
 
 def movement_shader(effect):
     """Experimental API: emit only for the pinned patched compositor."""
     if not FAMILIES[effect.family]["movement"]:
         raise ValueError(f"The {effect.family} family does not support experimental movement")
-    renderer = TEMPLATE_FILES[renderer_name(effect)]
-    if effect.family == "elastic":
-        entry = """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
-    vec2 impulse = niri_move_impulse * (@MOVEMENT_STRENGTH@ / 0.64);
-    return elastic_color(coords_geo, size_geo, niri_clamped_progress, 0.0, impulse);
-}
-"""
-    else:
-        function = {
-            "fragments": "fragments",
-            "slices": "slices",
-            "pixels": "pixels",
-            "distortion": "distortion",
-        }[effect.family]
-        entry = """vec4 move_color(vec3 coords_geo, vec3 size_geo) {
-    float p = niri_clamped_progress;
-    float breakup = @MOVEMENT_STRENGTH@ * pow(sin(3.14159265359 * p), 2.0);
-    if (p <= 0.0 || p >= 1.0) breakup = 0.0;
-    return FUNCTION_color(coords_geo, size_geo, breakup);
-}
-""".replace("FUNCTION", function)
-    return _expand(_template(renderer, entry), effect, False)
+    return _expand(shader_templates()[f"move-{renderer_name(effect)}"], effect, False)
 
 
-def shape_search_radius(effect):
+def shape_search_radius(effect, *, resizing=False):
     """Bound inverse cell lookup despite spin, aspect, wandering and waves.
+
+    Resize allows .4 tiles of local drift and no waves. Open/close and movement
+    use the flight bound below; both branches search in their source lattice.
 
     A source piece fits inside `radius * tile`. Inverse flight adds at most .72
     tiles of wander; undoing the wave expands distances by at most 1.45. Rotating
@@ -167,7 +178,9 @@ def shape_search_radius(effect):
     if effect.fragment_shape == "hexagon":
         radius, axial = stretch, 2 / 3
         low = high = 0
-    reach = (radius + 0.72 * effect.dispersion) * (1.45 if effect.wave_strength else 1)
+    reach = radius + (0.4 if resizing else 0.72 * effect.dispersion)
+    if not resizing and effect.wave_strength:
+        reach *= 1.45
     reach = reach * stretch * axial + 0.00001
     return max(math.floor(reach + high), math.ceil(reach - low))
 
@@ -178,6 +191,7 @@ def _expand(template, effect, opening):
         {
             "VARIED_RADIUS": "2" if effect.wave_strength == 0 else "3",
             "SHAPED_RADIUS": str(shape_search_radius(effect)),
+            "SHAPED_RESIZE_RADIUS": str(shape_search_radius(effect, resizing=True)),
             "SHAPED_PARTS": "2" if effect.fragment_shape == "triangle" else "1",
             "ELASTIC_ORIGIN_X": glsl_number(ELASTIC_ANCHORS[effect.elastic_anchor][0]),
             "ELASTIC_ORIGIN_Y": glsl_number(ELASTIC_ANCHORS[effect.elastic_anchor][1]),

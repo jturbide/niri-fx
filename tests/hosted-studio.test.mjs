@@ -102,6 +102,17 @@ test("hosted gallery settings load, edit, share and download without local endpo
     assert.equal(await browser.evaluate("editingAction"), "resize");
     assert.equal(await browser.evaluate("mode"), "resize");
     assert.equal(await browser.evaluate('byId("resize-direction").value'), "shrink");
+    await browser.evaluate(
+      'byId("action").value="movement";byId("action").dispatchEvent(new Event("change"));byId("preset").value="fragment-wake";byId("preset").dispatchEvent(new Event("change"));byId("action-enabled").click();byId("movement-direction").value="up";byId("share").click()',
+    );
+    const moving = await browser.evaluate("effectDocument()"),
+      movingLink = await browser.evaluate('byId("share-url").value');
+    await browser.navigate(base + "/studio/" + new URL(movingLink).hash);
+    assert.deepEqual(await browser.evaluate("effectDocument()"), moving);
+    assert.equal(await browser.evaluate("editingAction"), "movement");
+    assert.equal(await browser.evaluate("mode"), "movement");
+    assert.equal(await browser.evaluate('byId("movement-direction").value'), "up");
+    assert(!(await browser.evaluate("kdlDocument().includes('window-movement')")));
     for (const fragment of [
       "#style=!bad",
       "#style=" +

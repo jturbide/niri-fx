@@ -72,7 +72,7 @@ class FragmentShapeTests(unittest.TestCase):
 
         for shape in FRAGMENT_SHAPES:
             for aspect in (0.25, 1, 4):
-                for wave in (0, 1):
+                for wave, resizing in ((0, False), (1, False), (0, True)):
                     effect = replace(
                         Effect(),
                         fragment_shape=shape,
@@ -80,7 +80,7 @@ class FragmentShapeTests(unittest.TestCase):
                         wave_strength=wave,
                         dispersion=1,
                     )
-                    bound = shape_search_radius(effect)
+                    bound = shape_search_radius(effect, resizing=resizing)
                     used_aspect = 1 if shape in {"square", "circle"} else aspect
                     stretch = (math.sqrt(used_aspect), 1 / math.sqrt(used_aspect))
                     for _ in range(160):
@@ -106,9 +106,10 @@ class FragmentShapeTests(unittest.TestCase):
                         edge = turn(
                             (vertex[0] * stretch[0], vertex[1] * stretch[1]), orientation + spin
                         )
+                        reach = 0.4 if resizing else 0.72
                         delta = (
-                            edge[0] + 0.72 * math.cos(wander),
-                            edge[1] + 0.72 * math.sin(wander),
+                            edge[0] + reach * math.cos(wander),
+                            edge[1] + reach * math.sin(wander),
                         )
                         # Undo the maximum horizontal wave slope at the displaced Y.
                         delta = (delta[0] + rng.choice((-0.45, 0.45)) * wave * delta[1], delta[1])
@@ -121,5 +122,5 @@ class FragmentShapeTests(unittest.TestCase):
                             point = (point[0] / math.sqrt(3) - point[1] / 3, point[1] * 2 / 3)
                         offsets = (cell[0] - math.floor(point[0]), cell[1] - math.floor(point[1]))
                         self.assertLessEqual(
-                            max(map(abs, offsets)), bound, (shape, aspect, wave, offsets)
+                            max(map(abs, offsets)), bound, (shape, aspect, wave, resizing, offsets)
                         )

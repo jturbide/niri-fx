@@ -29,7 +29,14 @@ class ExpandedMotionTests(unittest.TestCase):
         self.assertTrue(all(not effect.resize for effect in PRESETS.values()))
 
     def test_new_movement_styles_are_never_emitted_by_stock_export(self):
-        for name in ("slice-exchange", "pixel-transfer", "soft-phase"):
+        for name in (
+            "slice-exchange",
+            "pixel-transfer",
+            "soft-phase",
+            "fragment-wake",
+            "ribbon-transfer",
+            "momentum-glide",
+        ):
             effect = PRESETS[name]
             self.assertIn("vec4 move_color", movement_shader(effect))
             self.assertNotIn("vec4 open_color", movement_shader(effect))
@@ -52,6 +59,8 @@ class ExpandedMotionTests(unittest.TestCase):
             ("ink-spread", "--dissolve-turbulence", "0.8", "dissolve_turbulence"),
             ("signal-glitch", "--glitch-chroma", "0.5", "glitch_chroma"),
             ("pixel-transfer", "--movement-strength", "0.4", "movement_strength"),
+            ("fragment-wake", "--movement-focus", "0.5", "movement_focus"),
+            ("fragment-wake", "--movement-ms", "750", "movement_ms"),
             ("ripple-collapse", "--resize-twist", "-45", "resize_twist"),
             ("vortex-fold", "--distortion-twist", "-720", "distortion_twist"),
             ("soft-swirl", "--distortion-contract", "0.95", "distortion_contract"),

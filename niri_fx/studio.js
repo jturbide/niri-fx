@@ -63,7 +63,7 @@ if (catalog.preferences) favorites = catalog.preferences.favorites;
 function commitAction() {
   if (actions)
     actions[editingAction] =
-      editingAction === "resize" && !byId("action-enabled").checked
+      ["resize", "movement"].includes(editingAction) && !byId("action-enabled").checked
         ? null
         : { ...parameters, resize: false };
 }
@@ -81,7 +81,7 @@ function loadDocument(doc, action = "open") {
   parameters = { ...(actions ? actions[editingAction] || catalog.presets.balanced : doc.effect) };
   byId("independent").checked = !!actions;
   byId("action").value = editingAction;
-  byId("action-enabled").checked = !!actions?.resize;
+  byId("action-enabled").checked = !!actions?.[editingAction];
   byId("name").value = doc.name;
 }
 function recordHistory() {
@@ -156,7 +156,7 @@ function populate() {
   byId("independent").checked = !!actions;
   labels();
   if (
-    (mode === "resize" && !catalog.families[parameters.family].resize) ||
+    (["resize", "movement"].includes(mode) && !catalog.families[parameters.family][mode]) ||
     (["move", "swap"].includes(mode) && !supportsConcept())
   )
     document.querySelector("[data-mode=effect]").click();
@@ -187,10 +187,13 @@ function labels() {
     "Stock Niri open/close" +
     (capabilities.resize ? " and opt-in resize." : ".") +
     (capabilities.movement ? " Native movement requires the experimental patched compositor." : "");
-  byId("movement-controls").hidden = !capabilities.movement;
+  byId("movement-controls").hidden = mode !== "movement" || !capabilities.movement;
+  byId("movement-preview-controls").hidden = mode !== "movement";
   filterPresets();
   byId("action-controls").hidden = !actions;
-  byId("action-enable-label").hidden = editingAction !== "resize";
+  byId("action-enable-label").hidden = !["resize", "movement"].includes(editingAction);
+  byId("action-enable-text").textContent =
+    editingAction === "movement" ? "Include experimental movement in JSON" : "Enable resize effect";
   if (actions) {
     byId("resize").closest(".parameter").hidden = true;
     byId("open_ms").closest(".parameter").hidden = editingAction !== "open";
@@ -198,16 +201,17 @@ function labels() {
     byId("resize-controls").hidden = editingAction !== "resize";
   }
   for (const tab of document.querySelectorAll("[data-mode]"))
-    tab.disabled =
-      tab.dataset.mode === "resize"
-        ? !capabilities.resize
-        : ["move", "swap"].includes(tab.dataset.mode)
-          ? !supportsConcept()
-          : false;
+    tab.disabled = ["resize", "movement"].includes(tab.dataset.mode)
+      ? !capabilities[tab.dataset.mode]
+      : ["move", "swap"].includes(tab.dataset.mode)
+        ? !supportsConcept()
+        : false;
   byId("variation-controls").hidden =
-    mode === "resize" || !["fragments", "slices"].includes(parameters.family);
+    (mode === "resize" && !fragment) || !["fragments", "slices"].includes(parameters.family);
   byId("slice-variation").hidden = fragment;
-  byId("wave_frequency").disabled = byId("wave_speed").disabled = !parameters.wave_strength;
+  byId("wave_frequency").disabled = byId("wave_speed").disabled =
+    mode === "resize" || !parameters.wave_strength;
+  byId("direction_variation").disabled = mode === "resize";
   byId("slice_stagger").disabled = parameters.slice_order === "together";
   byId("count-control").hidden = byId("density").value !== "count";
   byId("tile-control").hidden = byId("density").value !== "tile";
@@ -215,12 +219,6 @@ function labels() {
     byId(key + "-value").textContent = Number(Number(byId(key).value).toFixed(3)) + units[key];
   for (const key of [
     "scatter",
-    "fragment_shrink",
-    "fragment_roundness",
-    "fragment_shape",
-    "fragment_aspect",
-    "fragment_orientation",
-    "fragment_transition",
     "dispersion",
     "stagger",
     "swirl",
@@ -232,19 +230,26 @@ function labels() {
     "wave_span",
   ])
     byId(key).disabled = mode === "resize";
-  byId("fragment_aspect").disabled =
-    mode === "resize" || ["square", "circle"].includes(parameters.fragment_shape);
-  byId("fragment_roundness").disabled =
-    mode === "resize" || ["circle", "ellipse", "star"].includes(parameters.fragment_shape);
+  byId("fragment_aspect").disabled = ["square", "circle"].includes(parameters.fragment_shape);
+  byId("fragment_roundness").disabled = ["circle", "ellipse", "star"].includes(
+    parameters.fragment_shape,
+  );
   byId("fragment_transition").disabled =
-    mode === "resize" ||
-    (!["circle", "ellipse", "diamond", "star"].includes(parameters.fragment_shape) &&
-      !parameters.fragment_roundness);
-  byId("variation-note").textContent = fragment
-    ? parameters.fragment_shape !== "square" || parameters.fragment_orientation !== 0
-      ? "Size variation changes piece sizes during flight so the starting layout stays joined. Shapes, elongated pieces and waves can cost more to render."
-      : "Uneven cells and waves cost more to render. These controls affect open/close and the separate movement experiment, not resize."
-    : "Size variation keeps adjacent strip boundaries joined. Frequency controls the wavelength; lower frequencies make wider waves.";
+    !["circle", "ellipse", "diamond", "star"].includes(parameters.fragment_shape) &&
+    !parameters.fragment_roundness;
+  byId("size_variation").disabled = false;
+  byId("wave_strength").disabled = mode === "resize";
+  byId("fragment_shrink").disabled = false;
+  byId("fragment_shape").disabled = false;
+  byId("fragment_orientation").disabled = false;
+  byId("variation-note").textContent =
+    mode === "resize"
+      ? "Size variation changes piece sizes during flight. Resize keeps a joined source partition; waves and direction variation do not apply."
+      : fragment
+        ? parameters.fragment_shape !== "square" || parameters.fragment_orientation !== 0
+          ? "Size variation changes piece sizes during flight so the starting layout stays joined. Shapes, elongated pieces and waves can cost more to render."
+          : "Uneven cells and waves cost more to render. Resize uses size variation during flight; waves and direction variation affect open/close and experimental movement."
+        : "Size variation keeps adjacent strip boundaries joined. Frequency controls the wavelength; lower frequencies make wider waves.";
   byId("seed").disabled =
     mode === "resize" ||
     ["elastic", "iris"].includes(parameters.family) ||
@@ -323,7 +328,11 @@ byId("share").onclick = async () => {
       progress: String(progress),
       action: editingAction,
       mode,
-      ...(mode === "resize" ? { direction: byId("resize-direction").value } : {}),
+      ...(mode === "resize"
+        ? { direction: byId("resize-direction").value }
+        : mode === "movement"
+          ? { direction: byId("movement-direction").value }
+          : {}),
     });
     byId("share-url").value = url.href;
     byId("share-result").hidden = false;
@@ -493,15 +502,16 @@ try {
   uploadTexture(nextSample, 1);
   function rebuild() {
     const resizing = mode === "resize",
-      source = shaderFor(comparing ? pinned.parameters : parameters, false, resizing);
+      moving = mode === "movement",
+      source = shaderFor(comparing ? pinned.parameters : parameters, false, resizing, moving);
     if (source === lastSource) return;
     const uniforms = resizing
       ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;uniform mat3 niri_curr_geo_to_prev_geo;uniform vec2 fx_resize_from;uniform vec2 fx_resize_to;"
-      : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;";
+      : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;uniform vec2 fx_move_origin;";
     const geometry = resizing
       ? "mix(fx_resize_from,fx_resize_to,niri_clamped_progress)"
       : "fx_window";
-    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
+    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : moving ? "fx_move_origin" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : moving ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
     const vs = compile(gl.VERTEX_SHADER, vertex),
       fs = compile(gl.FRAGMENT_SHADER, fragment),
       next = gl.createProgram();
@@ -540,6 +550,22 @@ try {
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_surface"), canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_window"), ...(benchmarkWindow || [600, 380]));
+      const direction = { right: [1, 0], left: [-1, 0], down: [0, 1], up: [0, -1] }[
+        byId("movement-direction").value
+      ];
+      const windowSize = benchmarkWindow || [600, 380];
+      const travel = 160 * (value * value * (3 - 2 * value) - 0.5);
+      gl.uniform2f(
+        gl.getUniformLocation(program, "fx_move_origin"),
+        (canvas.width - windowSize[0]) * 0.5 + direction[0] * travel,
+        (canvas.height - windowSize[1]) * 0.5 + direction[1] * travel,
+      );
+      gl.uniform2f(gl.getUniformLocation(program, "niri_move_impulse"), ...direction);
+      gl.uniform2f(
+        gl.getUniformLocation(program, "niri_move_delta"),
+        direction[0] * 160,
+        direction[1] * 160,
+      );
       // A shrink is a new forward transition, with both geometry and textures
       // exchanged. Reversing growth frames gives the wrong direction to shaders.
       const shrinking = mode === "resize" && byId("resize-direction").value === "shrink";
@@ -592,9 +618,11 @@ try {
         : parameters.tile_size;
       const count = Math.ceil(600 / tile) * Math.ceil(380 / tile);
       const caption =
-        mode === "resize"
-          ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
-          : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
+        mode === "movement"
+          ? `Experimental movement · ${parameters.movement_ms} ms · JSON preserves the effect; stock exports omit it`
+          : mode === "resize"
+            ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
+            : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
       byId("caption").textContent = (comparing ? "Pinned A · " : pinned ? "B · " : "") + caption;
       document.documentElement.dataset.shaderStatus = "ready";
     } catch (error) {
@@ -627,7 +655,7 @@ try {
     const timer = gl.getExtension("EXT_disjoint_timer_query");
     const report = {
       kind: "webgl-shader-gpu",
-      action: mode === "resize" ? "resize" : "close",
+      action: mode === "effect" ? "close" : mode,
       ...(mode === "resize" ? { direction: byId("resize-direction").value } : {}),
       renderer,
       vendor,
@@ -646,8 +674,8 @@ try {
         status: "unsupported",
         reason: !timer ? "GPU timer queries unavailable" : "Hardware renderer not verified",
       };
-    if (!["effect", "resize"].includes(mode) || comparing)
-      throw new Error("Use open/close or resize preview, with A/B comparison off");
+    if (!["effect", "resize", "movement"].includes(mode) || comparing)
+      throw new Error("Use open/close, resize or movement preview, with A/B comparison off");
     cancelAnimationFrame(frame);
     const original = { width: canvas.width, height: canvas.height, progress };
     const measurements = [];
@@ -732,10 +760,14 @@ try {
     if (!byId("preset").value) return;
     cancelAnimationFrame(frame);
     parameters = { ...catalog.presets[byId("preset").value] };
-    if (actions && editingAction === "resize" && !catalog.families[parameters.family].resize) {
+    if (
+      actions &&
+      ["resize", "movement"].includes(editingAction) &&
+      !catalog.families[parameters.family][editingAction]
+    ) {
       parameters = { ...catalog.presets.balanced };
       byId("status").textContent =
-        "This family has no resize renderer; select Fragments, Slices, Elastic or Distortion.";
+        "This family does not support " + editingAction + ". Select a supported family.";
     }
     byId("name").value = "My " + title(byId("preset").value);
     populate();
@@ -750,8 +782,12 @@ try {
       refresh();
     }
     if (mode === "resize") byId("resize-direction").value = opening ? "shrink" : "grow";
+    if (mode === "movement" && opening)
+      byId("movement-direction").value = { right: "left", left: "right", up: "down", down: "up" }[
+        byId("movement-direction").value
+      ];
     if (byId("reduced-motion").checked) {
-      draw(mode === "resize" ? 1 : opening ? 0 : 1);
+      draw(["resize", "movement"].includes(mode) ? 1 : opening ? 0 : 1);
       return;
     }
     const start = performance.now(),
@@ -762,10 +798,12 @@ try {
             : parameters.close_ms
           : mode === "resize"
             ? parameters.resize_ms
-            : Math.max(900, parameters.open_ms + parameters.close_ms);
+            : mode === "movement"
+              ? parameters.movement_ms
+              : Math.max(900, parameters.open_ms + parameters.close_ms);
     function tick(now) {
       const p = Math.min(1, (now - start) / duration);
-      draw(mode === "resize" ? p : opening ? 1 - p : p);
+      draw(["resize", "movement"].includes(mode) ? p : opening ? 1 - p : p);
       if (p < 1) frame = requestAnimationFrame(tick);
     }
     frame = requestAnimationFrame(tick);
@@ -787,6 +825,10 @@ try {
   byId("pause").onclick = () => cancelAnimationFrame(frame);
   byId("open").onclick = () => animate(true);
   byId("close").onclick = () => animate(false);
+  byId("movement-direction").onchange = () => {
+    cancelAnimationFrame(frame);
+    refresh();
+  };
   byId("seed").onclick = () => {
     seed = Math.random();
     draw(progress);
@@ -899,7 +941,11 @@ try {
     byId("preset").value = "";
     populate();
     document
-      .querySelector(editingAction === "resize" ? "[data-mode=resize]" : "[data-mode=effect]")
+      .querySelector(
+        ["resize", "movement"].includes(editingAction)
+          ? `[data-mode=${editingAction}]`
+          : "[data-mode=effect]",
+      )
       .click();
     refresh();
   };
@@ -952,7 +998,7 @@ try {
     if (!shared.has("style")) return;
     try {
       const doc = decodeShareDocument(shared.get("style"));
-      const action = ["open", "close", "resize"].includes(shared.get("action"))
+      const action = ["open", "close", "resize", "movement"].includes(shared.get("action"))
         ? shared.get("action")
         : "open";
       cancelAnimationFrame(frame);
@@ -967,6 +1013,8 @@ try {
       }
       populate();
       byId("resize-direction").value = shared.get("direction") === "shrink" ? "shrink" : "grow";
+      if (["left", "right", "up", "down"].includes(shared.get("direction")))
+        byId("movement-direction").value = shared.get("direction");
       const requested = shared.get("mode"),
         button = [...document.querySelectorAll("[data-mode]")].find(
           (item) => item.dataset.mode === requested,

@@ -5,7 +5,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **70 presets across nine effect families and seven ready-made open/close pairings**. For further
+Pick a finished style from **73 presets across nine effect families and seven ready-made open/close pairings**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -22,7 +22,7 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.12.0](https://github.com/jturbide/niri-fx/releases/tag/v0.12.0)
+release. [Download v0.13.0](https://github.com/jturbide/niri-fx/releases/tag/v0.13.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
@@ -32,7 +32,7 @@ or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-f
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0120-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0130-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
@@ -210,7 +210,33 @@ Eight quick direction changes, carrying the wobble through each retarget:
 [All native swaps and interruption recordings](docs/showcases.md#resize-movement-and-swaps)
 
 The windows still render independently; particles do not share collision physics
-or one combined depth order. Studio's Move/Swap tabs are labelled concept previews.
+or one combined depth order. Studio now previews the actual movement shader on a
+synthetic directional path; its older Move/Swap sketches remain labelled concepts.
+
+### Movement beyond horizontal swaps
+
+Fragment Wake, Ribbon Transfer and Momentum Glide provide three movement looks.
+The patched compositor also handles vertical reorder and consume/expel animation
+paths. Pointer dragging and workspace effects remain on the [roadmap](ROADMAP.md).
+
+| Fragment Wake | Ribbon Transfer | Momentum Glide |
+| --- | --- | --- |
+| ![Triangle wake](docs/gifs/native-swap-fragment-wake.gif) | ![Alternating ribbons](docs/gifs/native-swap-ribbon-transfer.gif) | ![Gentle elastic movement](docs/gifs/native-swap-momentum-glide.gif) |
+
+![Consume, vertical reorder and expel](docs/gifs/native-rearrangement.gif)
+
+[Controls, profile export and isolated demos](docs/movement.md#movement-presets-and-general-rearrangement)
+
+### Shaped resize, explicitly enabled
+
+Triangles, hexagons and other fragment shapes now work during resize. These
+separate profiles enable it deliberately; every built-in style still leaves it off.
+
+| Triangle Edge Rebuild | Hexagon Edge Rebuild | Circle Soft Reflow |
+| --- | --- | --- |
+| ![Triangle resize](docs/gifs/triangle-edge-rebuild.gif) | ![Hexagon resize](docs/gifs/hexagon-edge-rebuild.gif) | ![Circle resize](docs/gifs/circle-soft-reflow.gif) |
+
+[Importable profiles and resize controls](docs/resize.md#shaped-resize)
 
 ## Make it yours
 

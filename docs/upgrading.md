@@ -133,3 +133,20 @@ installed in the same virtual environment, remove it before installing NiriFX.
 
 For custom file locations, see [setup options](setup.md) and the
 [iNiR integration reference](integration.md).
+
+## From 0.12 to 0.13
+
+Update the CLI or checkout before importing the new movement parameters. The
+preset collection now has 73 styles. Re-register iNiR/iRiS or re-export your
+Noctalia pack to add Fragment Wake, Ribbon Transfer and Momentum Glide. Existing
+selection and restore snapshots remain under your control.
+
+Studio's **Movement (experimental shader)** preview uses the same GLSL as the
+pinned compositor. **Include experimental movement in JSON** stores a separate
+action; stock exports omit it. Use `scripts/nested-demo.py --custom PATH.json`
+to try an exported movement profile in isolation. The pinned patch is unchanged.
+
+Resize remains off in every built-in style. Explicit fragment resize effects now
+honor shapes, orientation, rounding, shrink and size variation. The new shaped
+profiles enable resize deliberately; previewing one does not activate it. Export
+your current custom profile before editing if you want to preserve its settings.

@@ -66,3 +66,35 @@ style still needs `--resize`; a profile needs an explicit resize slot. These mod
 do not add pointer physics or carry shader velocity across interrupted resizes.
 Niri owns interruption handling; the tests check settling and cleanup rather than
 claiming uninterrupted velocity.
+
+## Shaped resize
+
+NiriFX 0.13 adds the eight fragment shapes to resize. The layout stays fixed in the
+new window's logical geometry while the current rectangle stretches. Triangles
+and hexagons form joined partitions; circles and other silhouettes emerge only
+during deformation. Border pieces stay intact, and both endpoint textures are
+restored exactly. Resizing still needs explicit activation.
+
+| Triangle Edge Rebuild | Hexagon Edge Rebuild | Circle Soft Reflow |
+| --- | --- | --- |
+| ![Triangle resize](gifs/triangle-edge-rebuild.gif) | ![Hexagonal resize](gifs/hexagon-edge-rebuild.gif) | ![Soft circular resize](gifs/circle-soft-reflow.gif) |
+| [JSON](../examples/profiles/triangle-edge-rebuild.json) | [JSON](../examples/profiles/hexagon-edge-rebuild.json) | [JSON](../examples/profiles/circle-soft-reflow.json) |
+
+These profiles use Balanced opening and closing. Edge Rebuild concentrates motion
+in the outer bands of changing dimensions; it does not identify the dragged edge.
+Soft Reflow blends a gentle deformation with intact content. All three use 750 ms.
+
+Applicable controls are shape, aspect, orientation, emergence, rounding, shrink,
+size variation, gravity direction, rotation, spin, density, resize strength and
+time. Gravity strength, open/close scatter, release timing and waves are disabled
+in the resize preview. Small windows and elongated pieces can leave little
+interior room for deformation because the border must remain sealed.
+
+```sh
+python3 -m niri_fx studio --custom examples/profiles/triangle-edge-rebuild.json
+python3 scripts/test-interruptions.py --resize-profile examples/profiles/triangle-edge-rebuild.json
+```
+
+The shader keeps deterministic piece identities within one resize, but has no
+persistent particle state across successive resizes. See the
+[roadmap](../ROADMAP.md#epic-3-continuous-transitions) for interruption work.

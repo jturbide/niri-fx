@@ -11,7 +11,10 @@ This agrees with the [official animation documentation](https://niri-wm.github.i
 and the installed revision's [animation configuration](https://github.com/niri-wm/niri/blob/8ed0da4/niri-config/src/lib.rs).
 Changing iRiS settings alone cannot add a compositor rendering hook.
 
-Studio's Move and Swap tabs are a Canvas design prototype. Each fragment keeps
+Studio's **Movement (experimental shader)** tab renders the same GLSL used by the
+pinned compositor, with a synthetic texture and a simple directional path. Niri
+owns actual window positions, timing handoffs and interruptions. The older
+**Move concept** and **Swap concept** tabs remain Canvas design prototypes. Each fragment keeps
 its own source image coordinates. The two color streams overlap in the middle,
 then reconstruct their original contents in opposite columns. No window contents
 are captured: both images are synthetic. Saving a style exports supported open/close and enabled resize shaders.
@@ -105,3 +108,37 @@ python3 scripts/nested-demo.py --preset hex-swarm
 ```
 
 These commands open isolated demos. They do not replace the login compositor.
+
+## Movement presets and general rearrangement
+
+NiriFX 0.13 adds three movement-oriented choices. They also work as stock opening
+and closing styles; native movement still requires the pinned compositor.
+
+| Fragment Wake | Ribbon Transfer | Momentum Glide |
+| --- | --- | --- |
+| ![Triangle wake swap](gifs/native-swap-fragment-wake.gif) | ![Ribbon transfer swap](gifs/native-swap-ribbon-transfer.gif) | ![Elastic glide swap](gifs/native-swap-momentum-glide.gif) |
+| 850 ms, trailing triangle breakup | 900 ms, alternating ribbons | 750 ms, gentle elastic deformation |
+
+`movement_strength` controls deformation, `movement_ms` sets the demo/preview
+clock, and `movement_focus` emphasizes the trailing edge for Fragments, Slices,
+Pixels and Distortion. Trailing emphasis blends intact content with the effect
+according to the compositor's direction impulse. It is a screen-space mask,
+not a particle emitter or cross-window simulation. Elastic uses its impulse
+and spring controls instead.
+
+```sh
+python3 scripts/nested-demo.py --preset fragment-wake
+python3 scripts/nested-demo.py --preset ribbon-transfer
+python3 scripts/nested-demo.py --preset momentum-glide
+python3 scripts/nested-demo.py --custom examples/profiles/fragment-wake-motion.json
+python3 scripts/test-movement.py --preset fragment-wake
+```
+
+![Consume, vertical reorder and expel in the nested compositor](gifs/native-rearrangement.gif)
+
+The movement hook covers tile and column animation paths, including vertical
+reordering and consuming/expelling windows. The harness checks final layout,
+client identity, resize during movement, insertion/removal, repeated reversals
+and complete close cleanup. These checks establish coverage and endpoints; they
+do not prove continuous velocity for every overlap. Pointer dragging, workspace
+transitions and camera scrolling remain separate roadmap epics.

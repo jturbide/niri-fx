@@ -180,3 +180,21 @@ Explain invariants, units, ordering, ownership, bounds and tradeoffs. Do not nar
 assignments or add commented-out experiments. Put user instructions in scenario
 guides, mathematical rationale next to the shader, and upcoming work in the
 [phase plan](next-phases.md). Keep pure domain modules free of adapter shortcuts.
+
+## Compositor portability
+
+Niri is the supported compositor. Keep the effect model, preset descriptions,
+geometry/math and Studio independent of shell-specific persistence. The current
+GLSL entry points, texture uniforms, matrices and KDL export are a Niri rendering
+contract, not a Wayland-wide shader interface.
+
+A future backend would adapt textures, coordinate spaces, progress, stable seeds,
+premultiplied alpha, output scale and clipping. It would also own animation
+retargeting, damage/occlusion, capture restrictions and configuration. Reusing a
+shader's math does not supply those lifecycle guarantees.
+
+Hyprland's [plugin interface](https://wiki.hypr.land/Plugins/Development/Getting-Started/)
+could host an experiment, but it introduces C++ integration and compositor-version
+maintenance. Start with one opening/closing effect if that work is prioritized.
+Keep Niri implementation direct until a second working backend demonstrates which
+abstractions are useful. The [roadmap](../ROADMAP.md) tracks this deferred research.

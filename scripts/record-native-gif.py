@@ -32,14 +32,15 @@ SHOWCASE_PRESETS = (
 )
 
 
-def record_swap(preset, name):
+def record_swap(preset, name, duration=1200):
     binary, build, config = experiment()
     effect = PRESETS[preset]
     with NestedSession(
-        config(effect, 1200, movement_shader(effect)), binary=binary, width=1280, height=800
+        config(effect, duration, movement_shader(effect)), binary=binary, width=1280, height=800
     ) as session:
         windows = launch_cards(session)
         time.sleep(1.5)
+        windows = session.windows()
         right = max(windows, key=lambda w: w["layout"]["pos_in_scrolling_layout"][0])
         session.msg("action", "focus-window", "--id", str(right["id"]))
         before = color_counts(session.capture("before"))
@@ -47,17 +48,19 @@ def record_swap(preset, name):
         time.sleep(0.35)
         latencies = []
         for action in ("move-column-left", "move-column-right"):
+            session.focus()
+            session.msg("action", "focus-window", "--id", str(right["id"]))
             requested = time.monotonic()
             session.msg("action", action)
             latencies.append((time.monotonic() - requested) * 1000)
             assert latencies[-1] < 150, "Movement IPC stalled during capture"
-            time.sleep(1.45)
+            time.sleep(duration / 1000 + 0.25)
         stop(recorder, signal.SIGINT)
         after = color_counts(session.capture("after"))
         settled = session.windows()
         assert {w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in settled} == {
             w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in windows
-        }
+        }, {"initial": windows, "settled": settled}
         for label, count in before.items():
             assert count > 1000 and abs(after[label] - count) < count * 0.02
         session.check_render_log()
@@ -67,7 +70,7 @@ def record_swap(preset, name):
             "file": str(dest.relative_to(ROOT)),
             "preset": preset,
             "effect": asdict(effect),
-            "duration_ms": 1200,
+            "duration_ms": duration,
             "bytes": dest.stat().st_size,
             "fps": 50,
             "width": 640,
@@ -110,14 +113,19 @@ def main():
     parser.add_argument(
         "--all", action="store_true", help="Refresh the complete curated native swap gallery"
     )
+    parser.add_argument(
+        "--duration-ms", type=int, default=1200, help="Movement time for this recording"
+    )
     args = parser.parse_args()
+    if not 100 <= args.duration_ms <= 3000:
+        parser.error("duration must be 100 to 3000 ms")
     if not re.fullmatch(r"native-swap(?:-[a-z0-9-]+)?", args.name):
         parser.error("name must be native-swap or native-swap-NAME")
     if args.all:
         for preset in SHOWCASE_PRESETS:
             record_swap(preset, "native-swap" + ("" if preset == "explosion" else "-" + preset))
     else:
-        record_swap(args.preset, args.name)
+        record_swap(args.preset, args.name, args.duration_ms)
 
 
 if __name__ == "__main__":

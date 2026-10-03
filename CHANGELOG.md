@@ -10,6 +10,38 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.13.0 — 2026-10-03
+
+### Added
+
+- Fragment Wake, Ribbon Transfer and Momentum Glide: three movement-oriented
+  presets with duration, intensity and directional trailing emphasis controls.
+- Actual movement shader preview in Studio, four preview directions, and an
+  independent movement action preserved in portable JSON profiles.
+- Eight fragment shapes during explicit resize, with Triangle Edge Rebuild,
+  Hexagon Edge Rebuild and Circle Soft Reflow profiles.
+- Native consume/expel, vertical reorder, move/resize and insertion/removal checks;
+  new swap, rearrangement, resize and shader showcases.
+- Public roadmap epics with acceptance checklists and Niri-first portability notes.
+
+### Changed
+
+- The isolated demo accepts portable movement profiles and uses the chosen
+  movement time. Synthetic Quickshell cards replace terminal clients, with private
+  configuration, state and D-Bus directories.
+- Resize exposes applicable shape controls and keeps a stable border. Square
+  styles with rounding, shrink or size variation use the shaped resize renderer.
+- Python and Studio share assembled movement shader templates. Stock exports
+  continue to omit experimental movement; all built-in styles leave resize off.
+
+### Upgrade
+
+Update NiriFX before importing documents containing the new movement controls.
+Re-register or re-export the collection to add the three styles to shell pickers.
+Updating does not select an effect or enable resize. Existing explicit fragment
+resize configurations with shape, rounding, shrink or size variation now honor
+those controls. The experimental compositor patch remains unchanged.
+
 ## 0.12.0 — 2026-10-03
 
 ### Added

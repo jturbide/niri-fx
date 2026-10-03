@@ -57,7 +57,12 @@ def settings(clip, stem):
         raw = json.dumps(payload, separators=(",", ":")).encode()
         assert len(raw) <= MAX_DOCUMENT_BYTES
         encoded = base64.urlsafe_b64encode(raw).decode().rstrip("=")
-        preview = "&mode=resize&action=resize" if clip.get("mode") == "resize" else ""
+        preview_mode = "movement" if stem.startswith("native-swap") else clip.get("mode")
+        preview = (
+            f"&mode={preview_mode}&action={preview_mode}"
+            if preview_mode in {"resize", "movement"}
+            else ""
+        )
         filename = f"nirifx-{identifier}.json"
         builtin = next((name for name, value in PROFILES.items() if value == effect), None)
         selection = f"--profile {builtin}" if builtin else f"--custom ./{filename}"
@@ -92,7 +97,10 @@ def entries():
             kind = "shader"
             action = clip.get("mode", "workflow")
             if stem.startswith("native-"):
-                kind, action = "experimental", "swap" if "swap" in stem else "interruption"
+                kind, action = (
+                    "experimental",
+                    "swap" if "swap" in stem else clip.get("mode", "interruption"),
+                )
             elif stem.startswith("stock-"):
                 kind, action = "stock", "effect"
             elif action in {"move", "swap"}:
@@ -182,7 +190,7 @@ def document(clips):
 <form role="search" onsubmit="return false"><label>Search<input type="search" id="search" placeholder="Try explosion, resize, ink…"></label>
 <input type="hidden" id="collection" value="starter">
 <details class="filters"><summary>Filter by family, scenario or renderer</summary><div class="filter-options"><label>Family<select id="family"><option value="">All families</option>{options}</select></label>
-<label>Scenario<select id="action"><option value="">All scenarios</option><option value="effect">Open / close</option><option value="resize">Resize</option><option value="swap">Swap</option><option value="interruption">Interruption</option><option value="workflow">Workflow</option><option value="move">Move concept</option></select></label>
+<label>Scenario<select id="action"><option value="">All scenarios</option><option value="effect">Open / close</option><option value="resize">Resize</option><option value="swap">Swap</option><option value="movement">Native movement</option><option value="interruption">Interruption</option><option value="workflow">Workflow</option><option value="move">Move concept</option></select></label>
 <label>Renderer<select id="kind"><option value="">All renderers</option><option value="shader">Studio shader</option><option value="stock">Stock Niri</option><option value="experimental">Experimental Niri</option><option value="workflow">Workflow</option><option value="concept">Concept</option></select></label></div></details></form>
 <p id="count" role="status" aria-live="polite">{len(clips)} examples</p><button id="pause-all" type="button" hidden>Pause playback</button> <button id="share-view" type="button">Share this view</button>
 <div id="copy-result" hidden><label id="copy-label" for="copy-text">Copy</label><input id="copy-text" readonly><p id="copy-note" role="status"></p></div>

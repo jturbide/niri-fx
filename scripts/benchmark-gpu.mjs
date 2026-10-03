@@ -10,8 +10,8 @@ import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 const options = Object.fromEntries(
   process.argv.slice(2).map((arg) => {
     assert(
-      /^--(output|presets|resize-profiles|sizes|samples|draws|software)=.+$/.test(arg),
-      "Use --output=report.json --presets=balanced,iris-bloom --sizes=1920x1080,2560x1440 --samples=60 --draws=1,2,4 [--resize-profiles=PROFILE instead of --presets] [--software=true for rejection testing]",
+      /^--(output|presets|resize-profiles|action|sizes|samples|draws|software)=.+$/.test(arg),
+      "Use --output=report.json --presets=balanced,iris-bloom --sizes=1920x1080,2560x1440 --samples=60 --draws=1,2,4 [--resize-profiles=PROFILE instead of --presets] [--action=movement for experimental movement presets] [--software=true for rejection testing]",
     );
     const split = arg.indexOf("=");
     return [arg.slice(2, split), arg.slice(split + 1)];
@@ -19,6 +19,8 @@ const options = Object.fromEntries(
 );
 assert(!(options.presets && options["resize-profiles"]), "Choose presets or resize profiles");
 assert(options.output, "--output is required");
+assert(!options.action || options.action === "movement", "Only --action=movement is supported");
+assert(!(options.action && options["resize-profiles"]), "Movement cannot use resize profiles");
 const output = resolve(options.output);
 assert(!existsSync(output), "Use a fresh report filename");
 const root = projectRoot;
@@ -63,6 +65,13 @@ try {
       await evaluate(
         `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
       );
+    }
+    if (options.action) {
+      assert(
+        await evaluate("catalog.families[parameters.family].movement"),
+        "Unsupported movement family",
+      );
+      await evaluate("document.querySelector('[data-mode=movement]').click()");
     }
     for (const [width, height] of sizes) {
       for (const draws of batches) {

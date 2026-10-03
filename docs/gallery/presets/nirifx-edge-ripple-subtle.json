@@ -114,7 +114,9 @@
       "dissolve_y": 0.5,
       "glitch_bands": 24,
       "glitch_chroma": 0,
-      "movement_strength": 0.64
+      "movement_strength": 0.64,
+      "movement_focus": 0,
+      "movement_ms": 900
     },
     "close": {
       "family": "fragments",
@@ -227,7 +229,9 @@
       "dissolve_y": 0.5,
       "glitch_bands": 24,
       "glitch_chroma": 0,
-      "movement_strength": 0.64
+      "movement_strength": 0.64,
+      "movement_focus": 0,
+      "movement_ms": 900
     },
     "resize": {
       "family": "distortion",
@@ -340,7 +344,9 @@
       "dissolve_y": 0.5,
       "glitch_bands": 24,
       "glitch_chroma": 0,
-      "movement_strength": 0.64
+      "movement_strength": 0.64,
+      "movement_focus": 0,
+      "movement_ms": 900
     },
     "movement": null
   }
