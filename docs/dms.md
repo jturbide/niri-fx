@@ -41,5 +41,10 @@ also passed discovery and launcher instantiation through the actual **DMS 1.6.2
 PluginService**, followed by search, apply and exact restore. Reproduce that check
 with `python3 scripts/test-dms-service.py --source /path/to/dms-qml`. It uses a
 private D-Bus session and temporary XDG directories; no running shell is replaced.
-This covers the real plugin service contract. Visual acceptance of the full DMS
-launcher remains separate; the isolated service test does not render that modal.
+The newer [visual workflow](gifs/workflow-dms.gif) also renders the unmodified
+DMS 1.6.2 launcher modal and PluginService in a small isolated host. It passes
+keyboard search/selection, apply, exact Undo, Studio app launch and a separate
+external-edit refusal check. Reproduce with
+`python3 scripts/test-shell-workflows.py dms --source /path/to/dms-qml --version 'DMS 1.6.2 / Quickshell 0.3.1'`;
+add `--record` to regenerate the GIF. This exercises the actual launcher, not the
+complete DMS daemon/desktop session. See the [recording guide](gifs/README.md#workflow-and-compositor-recordings).

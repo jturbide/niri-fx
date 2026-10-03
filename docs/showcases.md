@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **106 GIFs**, including all **55 built-in presets**. Use this
+The gallery has **117 GIFs**, including all **55 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -59,18 +59,36 @@ See [resize controls](usage.md), [movement limits](movement.md) and the
 [nested compositor experiment](../experimental/README.md). New Pixels, Wisps,
 Dissolve, Iris and Distortion families currently support opening/closing only.
 
+## Workflows and real compositor scenarios
+
+The gallery now contains **117 GIFs**. The following recordings use real UI or
+compositor actions, with synthetic content and temporary settings. They complement
+Studio shader comparisons rather than replacing them.
+
+| Scenario | Recording | Acceptance scope |
+| --- | --- | --- |
+| Import, edit one action, A/B, Undo/Redo, export | [Studio workflow](gifs/workflow-studio-profile.gif) | Actual controls and JSON/KDL downloads; resize absent |
+| Select mixed profiles and restore Snappy | [iRiS gallery](gifs/workflow-iris.gif) | iNiR/iRiS c08bb92 gallery and service in an isolated host; two profiles, exact prior style |
+| Search, select, Undo, launch Studio | [DMS launcher](gifs/workflow-dms.gif) | DMS 1.6.2 launcher modal and PluginService in an isolated host; separate external-edit refusal check |
+| Select a profile and return to base | [Noctalia picker](gifs/workflow-noctalia.gif) | Noctalia 5.2.1 / Niri Animations 0.2.0; 55 presets plus a custom profile |
+| Transparent margins and separated tile | [Fragments](gifs/stock-transparent-fragments.gif), [Wisps](gifs/stock-transparent-wisps.gif) | Stock Niri 26.04 with a real transparent Quickshell client |
+| Wide and tall geometry | [Wide Shockwave](gifs/stock-wide-shockwave.gif), [Tall Pixel Wipe](gifs/stock-tall-pixels.gif) | 900×280 and 300×660 logical client sizes |
+| Fractional scale | [Frost at 1.5×](gifs/stock-fractional-frost.gif) | One nested output; not a mixed-monitor test |
+| Repeated movement interruption | [Reverse direction](gifs/native-interrupted.gif) | Pinned experimental Niri; both clients finish reconstructed |
+| Close while moving | [Close during movement](gifs/native-close-during-move.gif) | Pinned experimental Niri; closed client disappears and survivor reconstructs |
+
+The iRiS gallery cards use the shell's timing preview, not NiriFX's shader renderer.
+DMS/iRiS component-host acceptance does not imply their complete desktop sessions
+were exercised. [Validation details](validation.md#workflow-and-compositor-scenarios)
+and [reproduction commands](gifs/README.md#workflow-and-compositor-recordings) record
+the exact boundaries.
+
 ## What still needs recording
 
-More presets already have coverage; the next useful recordings should demonstrate
-behavior in context:
+- Real mixed-scale monitors and output transitions.
+- Decorations, fullscreen, output-edge clipping and a wider range of applications.
+- Interrupted stock open/close and overlapping resize/close cases.
+- Broader full-shell and hardware acceptance across versions and GPUs.
 
-- Studio workflow: import a profile, tune one action, compare A/B and export it.
-- Existing shell pickers: iRiS selection, DMS launcher selection/undo and Noctalia
-  selection/return to base, with the tested shell versions stated.
-- Stock Niri with synthetic transparent clients, tall/wide windows and mixed
-  output scales, to expose clipping and scaling differences.
-- Native move interruption and cancellation, clearly identified as experimental.
-
-These are planned scenarios, not claimed captures. See the [next phases](next-phases.md)
-and [validation record](validation.md). GIFs demonstrate appearance; they do not
-measure GPU cost or input latency. [Reproduce the existing gallery](gifs/README.md).
+Track priorities and completion gates in [ROADMAP.md](../ROADMAP.md). GIFs
+show appearance; they do not measure GPU cost, seamless retargeting or input latency.

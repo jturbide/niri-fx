@@ -1,5 +1,8 @@
 # Next development phases
 
+Use [ROADMAP.md](../ROADMAP.md) for current milestone status. This document
+provides the detailed engineering scope and exit criteria.
+
 This plan follows the maintenance refactor after 0.7.0. It prepares concrete work;
 it does not announce implemented integrations, release dates or a new release.
 The product scope remains standalone Niri and the existing iNiR/iRiS, DMS and
@@ -10,16 +13,13 @@ Noctalia paths. Keep the [integration priority order](roadmap.md).
 Deliver a repeatable acceptance run for the current 55 styles and existing setup
 paths before expanding the catalog again.
 
-- Complete full DMS launcher visual acceptance, including search, selecting a
-  style, launching Studio, and Undo after an external config edit.
-- Exercise independent profiles through the existing Noctalia picker and iRiS,
-  including disabled resize and return to a prior style. Record versions and
-  temporary config ownership, rather than implying every shell revision passed.
-- Turn the stock Niri open/close smoke into a maintained script with synthetic
-  clients, bounded waits, child cleanup and readable evidence. Keep it separate
-  from the patched movement harness.
-- Add a small transparent-window fixture and mixed/fractional-scale cases to
-  compositor acceptance. Test interrupted open/close and output-edge clipping.
+- Maintain the new DMS launcher component, iRiS gallery and full Noctalia picker
+  checks for search/selection, profiles, restore, resize preservation and visible
+  failures. Broaden DMS/iRiS coverage to full shell sessions as appropriate.
+- Maintain the stock Niri transparent-client smoke script and separate patched
+  movement interruption recorder, with bounded waits and owned-process cleanup.
+- Extend the single-output fractional-scale fixture to real mixed monitors.
+  Test interrupted open/close, decorations, fullscreen and output-edge clipping.
 - Build a candidate from a clean source archive, verify installed resources and
   restore behavior, update validation evidence, then follow the release guide.
 

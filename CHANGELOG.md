@@ -35,6 +35,13 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
+- Root roadmap with milestone status, priorities, completion gates and a separate
+  release checklist; detailed integration and engineering plans link back to it.
+- Eleven workflow/scenario GIFs: Studio editing/export, iRiS/DMS/Noctalia pickers,
+  transparent stock-Niri clients, tall/wide windows, fractional scale and two
+  interrupted native movement cases. The gallery now contains 117 GIFs.
+- Reproducible nested-session acceptance tools with private settings, owned
+  process cleanup, synthetic content, versioned evidence and checked GIF metadata.
 - Eight presets across three new stock open/close families: Pixels (Pixel Wipe,
   Pixelate, Dust Drift), Wisps (Ghost Wisps, Ink Current), and Distortion
   (Shockwave, Ripple Collapse, Wave Fold). The catalog now has 55 styles in
@@ -43,7 +50,7 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   curling wisps and wave distortion, shared by CLI, Studio and JSON presets.
 - Twenty-two new showcase GIFs: eight preset loops, eleven tuning comparisons
   and three mixed-action profiles. Five existing clips were regenerated for
-  the revised Dissolve effects; the gallery now has 106 GIFs. A visual scenario
+  the revised Dissolve effects. A visual scenario
   index links practical choices, exact settings and importable profiles; docs CI
   requires a recording for every preset/profile example and links for all GIFs.
 - README TL;DR before the gallery, a scenario selector, a complete standalone
@@ -65,6 +72,10 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Fixed
 
+- Standalone setup preflight now validates generated animations through the same
+  include boundary used by installation. Configs with an existing inline
+  `animations` block no longer fail with a duplicate-node error. A real Niri
+  regression test covers planning, apply, preservation of resize and exact restore.
 - Browser automation tolerates the brief absence of a document during navigation
   instead of failing before Studio is ready.
 

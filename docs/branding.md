@@ -27,7 +27,7 @@ fragments; it is not an upstream project's logo.
 | Built with Python, GLSL and WebGL | Actual implementation: generator/server, compositor shaders and browser preview. |
 | Built for niri | The compositor target; stock open/close, optional fragment resize. |
 | Integrates with iNiR/iRiS | External preset registration and Studio save. |
-| Exports presets for Noctalia | Its existing Niri Animations picker consumes the KDL folder. File contract checked; picker UI acceptance pending. |
+| Exports presets for Noctalia | Its existing Niri Animations picker consumes the KDL folder. File contract and Noctalia 5.2.1 picker selection/return to base checked in isolation. |
 | Works at the niri config layer with DMS | Standalone KDL include. No DMS-native settings plugin or runtime acceptance claim. |
 | Quickshell ecosystem | iNiR and DMS use Quickshell. NiriFX itself is Python/WebGL, not a QML shell or Quickshell plugin. |
 | Compiz-inspired elastic motion | Timed spring-like warping. Pointer-driven spring physics is not implemented. |

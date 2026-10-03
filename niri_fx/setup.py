@@ -140,11 +140,23 @@ def plan_setup(args, effect, custom=None):
                 "An unmanaged NiriFX include already exists; remove/review it before setup."
             )
         generated = render_kdl(effect)
-        # Sibling validation keeps relative includes valid without activating a file.
-        with tempfile.NamedTemporaryFile(
-            mode="w", suffix=".kdl", prefix=".nirifx-check-", dir=config.parent
-        ) as probe:
-            probe.write(base.rstrip() + "\n" + generated)
+        # Preserve the actual include boundary: Niri permits animation overrides
+        # across files but rejects duplicate animations nodes in a single file.
+        # Sibling probes also keep the user's relative includes valid. Neither
+        # probe is referenced by the active config, and both disappear on failure.
+        with (
+            tempfile.NamedTemporaryFile(
+                mode="w", suffix=".kdl", prefix=".nirifx-effect-", dir=config.parent
+            ) as effect_probe,
+            tempfile.NamedTemporaryFile(
+                mode="w", suffix=".kdl", prefix=".nirifx-check-", dir=config.parent
+            ) as probe,
+        ):
+            effect_probe.write(generated)
+            effect_probe.flush()
+            probe.write(
+                base.rstrip() + "\ninclude " + json.dumps(Path(effect_probe.name).name) + "\n"
+            )
             probe.flush()
             validate_config(probe.name)
         include = config.parent / "nirifx/animations.kdl"

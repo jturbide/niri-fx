@@ -6,7 +6,8 @@
 | Pick the right setup for my desktop | [Scenario guide](scenarios.md) |
 | Use NiriFX without a desktop shell | [Standalone guide](standalone.md) |
 | Add a launcher in a custom shell or bar | [Custom shells](custom-shells.md) |
-| See which integration comes next | [Prioritized roadmap](roadmap.md) |
+| See priorities, progress and completion gates | [Project roadmap](../ROADMAP.md) |
+| See which integration comes next | [Integration priorities](roadmap.md) |
 | Preview, install, update or remove NiriFX | [Getting started](getting-started.md) |
 | Diagnose, plan an installation or restore setup | [Setup and restore](setup.md) |
 | Update the development checkout | [Current API and update policy](upgrading.md) |

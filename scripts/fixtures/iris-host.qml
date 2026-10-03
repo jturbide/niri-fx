@@ -1,0 +1,51 @@
+// Real iRiS style gallery and service in an isolated test window.
+import QtQuick
+import QtQuick.Controls
+import Quickshell
+import Quickshell.Io
+import qs.services
+import qs.modules.common
+import qs.modules.iris.style
+import qs.modules.iris.settings
+
+ShellRoot {
+    FloatingWindow {
+        id: window
+        title: "NiriFX / iRiS gallery acceptance"
+        implicitWidth: 1060
+        implicitHeight: 740
+        color: IrisStyle.surface
+        Text {
+            x: 28; y: 20
+            text: "iRiS animation styles / isolated integration test"
+            color: IrisStyle.text
+            font.pixelSize: 24
+        }
+        ScrollView {
+            id: scroll
+            anchors.fill: parent
+            anchors.margins: 28
+            anchors.topMargin: 70
+            IrisNiriMotionGallery { id: gallery; width: scroll.availableWidth }
+        }
+        IpcHandler {
+            target: "record"
+            function info(): string {
+                return JSON.stringify({ready: NiriAnimationPresets.loaded,
+                    active: NiriAnimationPresets.activeId, error: NiriAnimationPresets.error});
+            }
+            function locate(identifier: string): string {
+                function find(item) {
+                    if (item.modelData?.id === identifier) return item;
+                    for (const child of item.children || []) { const found = find(child); if (found) return found; }
+                    return null;
+                }
+                const tile = find(gallery);
+                if (!tile) return "null";
+                scroll.contentItem.contentY = Math.max(0, tile.y - 40);
+                const point = tile.mapToItem(window.contentItem, tile.width / 2, 35);
+                return JSON.stringify({x: point.x, y: point.y});
+            }
+        }
+    }
+}
