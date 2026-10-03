@@ -10,6 +10,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.10.0 — 2026-10-03
+
 ### Added
 
 - Seven selectable open/close profiles: Fragment Flow, Burst and Drift, Frost and
