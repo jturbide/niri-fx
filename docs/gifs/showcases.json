@@ -1448,6 +1448,260 @@
           "source": "examples/profiles/torsion-expressive.json"
         }
       ]
+    },
+    {
+      "name": "compare-fragment-polygons",
+      "title": "Joined fragment layouts",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Square",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "square"
+          }
+        },
+        {
+          "label": "Triangle",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "triangle"
+          }
+        },
+        {
+          "label": "Hexagon",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "hexagon"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-fragment-silhouettes",
+      "title": "Emerging silhouettes",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Circle",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "circle"
+          }
+        },
+        {
+          "label": "Diamond",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "diamond"
+          }
+        },
+        {
+          "label": "Star",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "star"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-fragment-aspect",
+      "title": "Fragment proportions",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Tall rectangles",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "rectangle",
+            "fragment_aspect": 0.4
+          }
+        },
+        {
+          "label": "Wide rectangles",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "rectangle",
+            "fragment_aspect": 2.5
+          }
+        },
+        {
+          "label": "Ellipses",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "ellipse",
+            "fragment_aspect": 2.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-fragment-emergence",
+      "title": "Shape emergence",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Early",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "star",
+            "fragment_transition": 0.12
+          }
+        },
+        {
+          "label": "Balanced",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "star",
+            "fragment_transition": 0.28
+          }
+        },
+        {
+          "label": "Late",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "particles": 180,
+            "gravity": "space",
+            "gravity_strength": 0.65,
+            "scatter": 120,
+            "dispersion": 0.55,
+            "stagger": 0,
+            "spin": 100,
+            "swirl": 0,
+            "fragment_roundness": 0,
+            "fragment_shape": "star",
+            "fragment_transition": 0.55
+          }
+        }
+      ]
     }
   ]
 }

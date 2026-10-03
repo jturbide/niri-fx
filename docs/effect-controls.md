@@ -5,8 +5,14 @@ version and consult the [changelog](../CHANGELOG.md). All built-ins leave resize
 
 ## Fragments
 
-Ordinary fragments use a compact renderer. Effects use a separate renderer when size variation, direction variation or a travelling wave
-is nonzero. Set all three to zero to return to the compact renderer.
+The **Piece shape** selector offers square, rectangle, triangle, circle, ellipse,
+hexagon, diamond and star. The [shape guide](fragment-shapes.md) explains proportions,
+orientation, emergence timing and how pieces reconstruct without gaps.
+
+Existing square styles use a compact renderer, or a wider lookup when size
+variation, direction variation or a travelling wave is nonzero. Other shapes and
+rotated layouts use a bounded geometry renderer; larger aspect ratios and waves
+can increase its cost.
 
 | Control / CLI flag | Meaning |
 | --- | --- |
@@ -34,8 +40,7 @@ python3 -m niri_fx render --preset balanced --size-variation 0.8 \
   --wave-strength 0.7 --wave-frequency 0.5 --wave-speed 1.5 > /tmp/waves.kdl
 ```
 
-Shape and shrink work in both fragment renderers without increasing their
-candidate search radius. Try **Pixel Dust**, **Bubble Burst**, **Core Detonation**
+Rounding and shrink stay inside each piece's source region. Their controls do not increase the candidate search radius. Try **Pixel Dust**, **Bubble Burst**, **Core Detonation**
 and **Checker Scatter**. The Canvas move/swap concepts approximate these controls;
 only the native experiment uses the actual movement shader.
 

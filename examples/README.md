@@ -294,3 +294,16 @@ Both leave resize off.
 python3 -m niri_fx preview --custom examples/vortex-fold.json --output /tmp/vortex-fold.html
 python3 -m niri_fx preview --custom examples/soft-swirl.json --output /tmp/soft-swirl.html
 ```
+
+## Fragment shapes (NiriFX 0.12+)
+
+Four finished looks use shared shape, gravity and spin controls. See the
+[shape guide](../docs/fragment-shapes.md) for additional silhouettes and comparisons.
+All four leave resize off.
+
+```sh
+python3 -m niri_fx preview --custom examples/triangle-shatter.json --output /tmp/triangle-shatter.html
+python3 -m niri_fx preview --custom examples/circle-burst.json --output /tmp/circle-burst.html
+python3 -m niri_fx preview --custom examples/rectangle-confetti.json --output /tmp/rectangle-confetti.html
+python3 -m niri_fx preview --custom examples/hex-swarm.json --output /tmp/hex-swarm.html
+```

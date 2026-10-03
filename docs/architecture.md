@@ -124,6 +124,26 @@ The renderer-specific comments explain the applicable coordinate frames, search
 bounds and scale floors. The shader bodies are deliberately kept readable as
 GLSL files rather than generated strings of math inside Python or JavaScript.
 
+### Shaped fragment geometry
+
+`shaped.glsl` is the bounded layout renderer for explicit shapes and rotated
+partitions. `fragment-shapes.glsl` owns geometry: rectangular cells, two triangular
+pieces per cell, and a hexagonal axial lattice with deterministic edge ownership.
+Window pixels stay attached to their source piece. Circle, ellipse, diamond and
+star masks emerge inside the source region; exact endpoints restore the texture.
+
+The source partition is oriented independently of flight spin. Size variation
+shrinks pieces during flight, preserving the initial joined layout. The inverse
+search accounts for the largest stretched, rotated piece, wandering, wave slope
+and each lattice's centroid offset. `shape_search_radius` documents the bound;
+Python and JavaScript exports must agree. Forward-transformed vertex tests and
+translucent WebGL coverage checks exercise the geometry independently.
+
+The seeded hash uses integer-valued highp arithmetic below 2^24 and power-of-two
+reduction to keep particle identities stable across loop specialization. Shader
+code remains stateless between frames. Existing square styles keep their three
+original optimized paths; resize continues to use its separate renderer.
+
 ## File ownership and recovery
 
 A setup plan captures logical paths, resolved targets and before/after bytes.

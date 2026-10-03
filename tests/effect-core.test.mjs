@@ -37,6 +37,34 @@ const core = create(catalog);
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const cases = JSON.parse(readFileSync(new URL("fixtures/documents.json", import.meta.url)));
 
+test("shaped lookup bounds and shaders match Python at extreme controls", () => {
+  const shapes = catalog.specifications.fragment_shape.choices;
+  const effects = shapes.flatMap((shape) =>
+    [0.25, 4].map((aspect) => ({
+      ...catalog.defaults,
+      fragment_shape: shape,
+      fragment_aspect: aspect,
+      fragment_orientation: 37,
+      fragment_roundness: 1,
+      fragment_transition: 0.6,
+      wave_strength: 1,
+      dispersion: 1,
+    })),
+  );
+  const expected = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        "import json,sys;from niri_fx.effects import Effect,shader;print(json.dumps([shader(Effect(**p),False) for p in json.load(sys.stdin)]))",
+      ],
+      { input: JSON.stringify(effects), encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+    ),
+  );
+  for (const [index, effect] of effects.entries())
+    assert.equal(core.shaderFor(effect, false), expected[index]);
+});
+
 test("shared settings round-trip every preset and independent action without mutating inputs", () => {
   const profile = {
     kind: "profile",

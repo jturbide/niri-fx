@@ -47,6 +47,15 @@ measurements and rendered-reference checks, as described in the [performance gui
 The [performance guide](docs/performance.md) and [validation record](docs/validation.md)
 show what has already been measured and what remains untested.
 
+## Exploring: custom fragment silhouettes
+
+[Fragment shapes](docs/fragment-shapes.md) provide built-in geometry and four
+finished presets since 0.12.0. Next candidates are deterministic mixtures
+of selected shapes and a constrained SVG silhouette importer. An initial importer
+would accept one closed outline, simplify it at import time and bound its shader
+complexity. Full SVG artwork, filters, strokes and compound paths need separate
+design and performance work. These features are not implemented yet.
+
 ## Next: reusable shell pickers
 
 Standalone NiriFX already works with any bar or shell running on Niri. These

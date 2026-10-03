@@ -50,3 +50,5 @@ show concepts and do not install movement effects.
 - [Testing details](validation.md) and [recording the gallery](gifs/README.md)
 - [Release process](releasing.md), [changelog](../CHANGELOG.md) and [security policy](../SECURITY.md)
 - [Brand assets](branding.md), [related projects](related-projects.md) and [license notices](../THIRD_PARTY.md)
+
+[Fragment shapes](fragment-shapes.md) covers joined layouts, emerging silhouettes and ready-made looks.

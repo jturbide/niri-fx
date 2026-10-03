@@ -14,7 +14,7 @@ from lib.movement import experiment, launch_cards
 from lib.nested import NestedSession, stop, wait_for
 
 from niri_fx.documents import load_document, parse_document
-from niri_fx.effects import PRESETS, movement_shader, render_kdl
+from niri_fx.effects import FAMILIES, PRESETS, movement_shader, render_kdl
 from niri_fx.profiles import Profile
 
 BASE = """hotkey-overlay { skip-at-startup; }
@@ -35,13 +35,26 @@ def changed_pixels(path, baseline):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--experimental", action="store_true", help="Use the pinned native build")
-    parser.add_argument("--resize-profile", type=Path, help="Exercise an explicit resize profile")
+    selection = parser.add_mutually_exclusive_group()
+    selection.add_argument(
+        "--resize-profile", type=Path, help="Exercise an explicit resize profile"
+    )
+    selection.add_argument(
+        "--preset",
+        default="spring-wobble",
+        choices=[
+            name
+            for name, effect in PRESETS.items()
+            if FAMILIES[effect.family]["resize"] and FAMILIES[effect.family]["movement"]
+        ],
+        help="Exercise this preset; resize is enabled only in the temporary fixture",
+    )
     args = parser.parse_args()
     binary, build = "niri", None
     if args.experimental:
         binary, build, _ = experiment()
     # Resize is explicit in this test fixture; catalog defaults stay disabled.
-    effect = replace(PRESETS["spring-wobble"], open_ms=1000, close_ms=1000, resize=True)
+    effect = replace(PRESETS[args.preset], open_ms=1000, close_ms=1000, resize=True)
     if args.resize_profile:
         profile = parse_document(load_document(args.resize_profile))[2]
         if not isinstance(profile, Profile) or profile.resize is None:
@@ -112,7 +125,7 @@ def main():
             print(f"PASS transparent interruption cases at {scale}x", flush=True)
         if args.experimental:
             _, _, native_config = experiment()
-            native_effect = PRESETS["spring-wobble"]
+            native_effect = PRESETS[args.preset]
             session.reload(native_config(native_effect, 1200, movement_shader(native_effect)))
             windows = launch_cards(session)
             time.sleep(1.5)
@@ -140,6 +153,7 @@ def main():
                     "backend": session.version,
                     "build": build,
                     "resize_profile": str(args.resize_profile) if args.resize_profile else None,
+                    "preset": None if args.resize_profile else args.preset,
                     "results": results,
                     "scope": "single nested output; sequential scales, not mixed physical outputs",
                 },

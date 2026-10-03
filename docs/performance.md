@@ -288,3 +288,39 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-resize-gpu.json \
 `--resize-profiles` accepts enabled resize profile names from `examples/profiles`
 and cannot be combined with `--presets`. Resize reports identify the action,
 preview direction and both window sizes. Hardware timers are still required.
+
+## Fragment shapes
+
+The four shaped presets were measured on 2026-10-03 with ANGLE/OpenGL on an
+NVIDIA GeForce RTX 4070 Ti. Each cell below is p95 GPU time from 60 samples of the
+stated draw count, including a framebuffer clear per draw. The output size is the
+canvas size; the window occupies 60% of its width and 50% of its height.
+
+| Preset | 1920×1080 output | 3840×2160 output | Two draws at 3840×2160 |
+| --- | --- | --- | --- |
+| Triangle Shatter | 0.631 ms | 1.891 ms | 3.387 ms |
+| Circle Burst | 0.311 ms | 1.006 ms | 1.667 ms |
+| Rectangle Confetti | 0.436 ms | 1.431 ms | 2.536 ms |
+| Hex Swarm | 0.279 ms | 0.946 ms | 1.547 ms |
+
+[Raw samples and exact settings](benchmarks/fragment-shapes.json). These are
+shader costs on one discrete GPU, not compositor frame times or a guarantee for
+integrated GPUs. Two draws are independent passes; they do not measure two
+interacting windows in Niri.
+
+The shaped renderer computes its candidate neighborhood from the actual piece
+radius, aspect ratio, wandering and inverse-wave bound. It rejects unreachable
+cells before calculating motion. A deterministic seed function uses integer-valued
+float arithmetic without trigonometric hashing. Software and hardware reference
+comparisons cover extreme proportions, waves, gravity and animation progress.
+The existing square presets keep their original shader paths unchanged.
+
+Triangles have two pieces per cell. Larger aspect ratios, waves and staged
+release can increase lookup work; reducing count alone does not guarantee lower
+cost. Start with a finished preset and compare your chosen settings on your GPU.
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-shapes.json \
+  --presets=triangle-shatter,circle-burst,rectangle-confetti,hex-swarm \
+  --sizes=1920x1080,3840x2160 --samples=60 --draws=1,2
+```

@@ -21,7 +21,7 @@ Use `niri-fx setup --interactive` for an explicit interactive invocation.
 On standalone Niri, the guide starts with the same nine recommended presets as
 the [gallery](https://jturbide.github.io/niri-fx/gallery/?collection=starter). Enter a
 number or preset name, use `profiles` for seven open/close pairings, `all` for all
-66 single styles and seven profiles, or search with `/slices`,
+70 single styles and seven profiles, or search with `/slices`,
 `/wobble` or `/pixel`. An empty selection chooses Balanced. `q` leaves the guide.
 
 For an everyday starting point, try Balanced. Spring Wobble, Pixel Wipe and

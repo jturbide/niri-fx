@@ -18,6 +18,16 @@ RELEASES = (
     "checkerboard",
 )
 RESIZE_MODES = ("full", "edge", "soft")
+FRAGMENT_SHAPES = (
+    "square",
+    "rectangle",
+    "triangle",
+    "circle",
+    "ellipse",
+    "hexagon",
+    "diamond",
+    "star",
+)
 SLICE_DIRECTIONS = ("outward", "alternate", "positive", "negative", "random")
 SLICE_ORDERS = ("forward", "reverse", "center", "edges", "random", "together")
 ELASTIC_AXES = ("both", "horizontal", "vertical")
@@ -165,6 +175,40 @@ class Effect:
         group="slices",
         limits=(0, 1),
         token="SLICE_COLLAPSE",
+    )
+    fragment_shape: str = parameter(
+        "square",
+        label="Piece shape",
+        families=("fragments",),
+        group="fragments",
+        choices=FRAGMENT_SHAPES,
+        token="FRAGMENT_SHAPE",
+        basic=True,
+    )
+    fragment_aspect: float = parameter(
+        1,
+        label="Shape width / height",
+        families=("fragments",),
+        group="fragments",
+        limits=(0.25, 4),
+        token="FRAGMENT_ASPECT",
+    )
+    fragment_orientation: float = parameter(
+        0,
+        label="Shape orientation",
+        families=("fragments",),
+        group="fragments",
+        limits=(-180, 180),
+        unit="°",
+        token="FRAGMENT_ORIENTATION",
+    )
+    fragment_transition: float = parameter(
+        0.28,
+        label="Shape emergence",
+        families=("fragments",),
+        group="fragments",
+        limits=(0.05, 0.6),
+        token="FRAGMENT_TRANSITION",
     )
     fragment_shrink: float = parameter(
         0,
@@ -991,6 +1035,15 @@ class Effect:
             raise ValueError(f"The {self.family} family does not support resize; use --no-resize")
         if self.particles and self.particles < 16:
             raise ValueError("particles must be 0 (tile size mode) or between 16 and 4096")
+
+    @property
+    def shaped(self):
+        """Keep existing square effects on their smaller, unchanged lookup paths."""
+        return (
+            self.fragment_shape != "square"
+            or self.fragment_orientation != 0
+            or (self.fragment_roundness > 0 and self.fragment_transition != 0.28)
+        )
 
     @property
     def varied(self):

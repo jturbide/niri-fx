@@ -1,5 +1,6 @@
 """Public effect catalog and action-specific shader generation."""
 
+import math
 import re
 from dataclasses import asdict
 from importlib.resources import files
@@ -49,7 +50,7 @@ __all__ = [
 ]
 
 
-# Family names map directly to files. Fragments has three implementations with
+# Family names map directly to files. Fragments has four implementations with
 # different bounded lookup costs; resize has its own two-texture interface.
 RESIZE_TEMPLATES = {
     "fragments": "resize",
@@ -60,6 +61,7 @@ TEMPLATE_FILES = {
     "classic": "fragments",
     "gravity": "gravity",
     "varied": "varied",
+    "shaped": "shaped",
     **{name: name for name in RESIZE_TEMPLATES.values()},
     **{name: name for name in FAMILIES if name != "fragments"},
 }
@@ -80,6 +82,7 @@ def _template(filename, entry=None):
         "NOISE": "noise",
         "EDGE_COLOR": "edge-color",
         "RESIZE_COMMON": "resize-common",
+        "FRAGMENT_SHAPES": "fragment-shapes",
     }.items():
         if f"@{token}@" in source:
             source = source.replace(
@@ -97,6 +100,8 @@ def renderer_name(effect):
     """Select a renderer without changing an effect's saved parameters."""
     if effect.family != "fragments":
         return effect.family
+    if effect.shaped:
+        return "shaped"
     if effect.varied:
         return "varied"
     return "classic" if effect.classic else "gravity"
@@ -141,11 +146,39 @@ def movement_shader(effect):
     return _expand(_template(renderer, entry), effect, False)
 
 
+def shape_search_radius(effect):
+    """Bound inverse cell lookup despite spin, aspect, wandering and waves.
+
+    A source piece fits inside `radius * tile`. Inverse flight adds at most .72
+    tiles of wander; undoing the wave expands distances by at most 1.45. Rotating
+    the lattice preserves lengths and undoing its aspect adds `stretch`. Hex
+    axial coordinate rows have norm 2/3. Floor the extreme possible coordinates
+    relative to each cell's centroid. Match this bound in effect-core.js;
+    shader parity tests enforce it.
+    """
+    aspect = 1 if effect.fragment_shape in {"square", "circle"} else effect.fragment_aspect
+    stretch = math.sqrt(max(aspect, 1 / aspect))
+    radius = 0.5 * math.sqrt(aspect + 1 / aspect)
+    low = high = 0.5
+    if effect.fragment_shape == "triangle":
+        radius = math.sqrt(max(4 * aspect + 1 / aspect, aspect + 4 / aspect)) / 3
+        low, high = 1 / 3, 2 / 3
+    axial = 1
+    if effect.fragment_shape == "hexagon":
+        radius, axial = stretch, 2 / 3
+        low = high = 0
+    reach = (radius + 0.72 * effect.dispersion) * (1.45 if effect.wave_strength else 1)
+    reach = reach * stretch * axial + 0.00001
+    return max(math.floor(reach + high), math.ceil(reach - low))
+
+
 def _expand(template, effect, opening):
     tokens = shader_tokens(effect, PARAMETERS)
     tokens.update(
         {
             "VARIED_RADIUS": "2" if effect.wave_strength == 0 else "3",
+            "SHAPED_RADIUS": str(shape_search_radius(effect)),
+            "SHAPED_PARTS": "2" if effect.fragment_shape == "triangle" else "1",
             "ELASTIC_ORIGIN_X": glsl_number(ELASTIC_ANCHORS[effect.elastic_anchor][0]),
             "ELASTIC_ORIGIN_Y": glsl_number(ELASTIC_ANCHORS[effect.elastic_anchor][1]),
             "ENTRY": "open_color" if opening else "close_color",

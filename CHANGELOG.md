@@ -10,6 +10,34 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.12.0 — 2026-10-03
+
+### Added
+
+- Eight fragment shapes with shared gravity, spin, wave and release controls:
+  square, rectangle, triangle, circle, ellipse, hexagon, diamond and star.
+- Shape proportions, starting orientation and silhouette emergence timing in
+  Studio and the CLI. Triangles move independently; hexagons form a joined lattice.
+- Triangle Shatter, Circle Burst, Rectangle Confetti and Hex Swarm presets,
+  importable examples, control comparisons and native swap showcases.
+- Transparent layout, extreme aspect, reconstruction and lookup-bound checks.
+
+### Changed
+
+- Skip unreachable shaped cells before motion calculations. Existing square
+  presets retain their original shaders and appearance. All built-ins keep resize off.
+- Shaped layouts vary piece sizes during flight to preserve a joined initial
+  partition. Shape controls do not affect the separate resize renderer.
+- Studio keeps the older Canvas movement sketches limited to unrotated square
+  fragments. Native shaped movement remains available through the experimental build.
+
+### Upgrade
+
+Update the CLI before importing shape settings. Existing documents receive square
+defaults, and existing built-in shaders are unchanged. Re-register or re-export
+to expose the new presets in shell pickers. Updating alone does not rewrite active
+effects. The experimental compositor patch is unchanged from 0.11.0.
+
 ## 0.11.0 — 2026-10-03
 
 ### Added

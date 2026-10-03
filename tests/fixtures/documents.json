@@ -380,5 +380,172 @@
       }
     },
     "valid": false
+  },
+  {
+    "name": "fragment shape square",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "square",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape rectangle",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "rectangle",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape triangle",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "triangle",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape circle",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "circle",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape ellipse",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "ellipse",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape hexagon",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "hexagon",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape diamond",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "diamond",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "fragment shape star",
+    "valid": true,
+    "document": {
+      "schema": 3,
+      "name": "Shape",
+      "effect": {
+        "fragment_shape": "star",
+        "fragment_aspect": 4,
+        "fragment_orientation": -180,
+        "fragment_transition": 0.05
+      }
+    }
+  },
+  {
+    "name": "invalid fragment_shape svg",
+    "valid": false,
+    "document": {
+      "schema": 3,
+      "name": "Invalid shape",
+      "effect": {
+        "fragment_shape": "svg"
+      }
+    }
+  },
+  {
+    "name": "invalid fragment_aspect 0",
+    "valid": false,
+    "document": {
+      "schema": 3,
+      "name": "Invalid shape",
+      "effect": {
+        "fragment_aspect": 0
+      }
+    }
+  },
+  {
+    "name": "invalid fragment_aspect True",
+    "valid": false,
+    "document": {
+      "schema": 3,
+      "name": "Invalid shape",
+      "effect": {
+        "fragment_aspect": true
+      }
+    }
+  },
+  {
+    "name": "invalid fragment_orientation 181",
+    "valid": false,
+    "document": {
+      "schema": 3,
+      "name": "Invalid shape",
+      "effect": {
+        "fragment_orientation": 181
+      }
+    }
+  },
+  {
+    "name": "invalid fragment_transition 0",
+    "valid": false,
+    "document": {
+      "schema": 3,
+      "name": "Invalid shape",
+      "effect": {
+        "fragment_transition": 0
+      }
+    }
   }
 ]
