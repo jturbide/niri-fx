@@ -264,6 +264,9 @@ within an animation. The Distortion resize renderer always uses smooth ripples.
 ## Native movement and resize
 
 `--movement-strength` (0–1) controls the experimental movement deformation.
+Pass it to `scripts/nested-demo.py` to try an override in the isolated compositor.
+Studio also stores this value in exported JSON; its Canvas concept does not
+preview this native control.
 The standard export never emits a movement hook. Slice Exchange, Pixel Transfer
 and Soft Phase supply three new starting points for the patched compositor.
 

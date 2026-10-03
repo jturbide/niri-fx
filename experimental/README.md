@@ -46,6 +46,8 @@ Logs and captures stay in a new `artifacts/nested-demo-*` directory each run.
 
 ```sh
 python3 scripts/nested-demo.py --preset vortex --duration-ms 1200
+# Reduce native deformation without changing the preset:
+python3 scripts/nested-demo.py --preset slice-exchange --movement-strength 0.35
 # Opt into resize fragments as well:
 python3 scripts/nested-demo.py --resize
 # Optional automated native rendering check (also requires grim and Pillow):
