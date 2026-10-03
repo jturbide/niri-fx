@@ -1,6 +1,7 @@
 # Choose your setup
 
-**NiriFX works standalone. Quickshell is optional.** Niri renders the window
+**NiriFX works standalone. Quickshell is optional.** Start with the
+[terminal preset guide](terminal.md) for a single-command workflow. Niri renders the window
 effects; a shell or bar only supplies buttons, launchers and settings. Studio
 also previews synthetic windows without a running Niri session.
 

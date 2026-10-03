@@ -20,6 +20,11 @@ need iNiR, a Rust toolchain or the experimental compositor.
 
 ## Get the source and preview
 
+For preset selection without a graphical toolkit, run `python3 -m niri_fx` from
+the checkout, or `niri-fx` after installation. The [terminal guide](terminal.md)
+provides search, file review, Apply and Undo. Customize only when you want to;
+the finished presets use the same effects as Studio and the shell pickers.
+
 ```sh
 git clone https://github.com/jturbide/niri-fx.git
 cd niri-fx

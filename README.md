@@ -5,8 +5,8 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Choose from **64 presets across nine effect families**, then tune them in the
-Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
+Pick a finished style from **64 presets across nine effect families**. For further
+customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
 Works **standalone** or with **iNiR/iRiS, DankMaterialShell and Noctalia**.
@@ -31,16 +31,20 @@ or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-f
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-Linux, Python 3.10+ and a WebGL browser are enough to try Studio:
+On Niri with Python 3.10+, start the guided preset workflow:
 
 ```sh
 git clone https://github.com/jturbide/niri-fx.git
 cd niri-fx
-python3 -m niri_fx studio --target standalone
+python3 -m niri_fx
 ```
 
-Previewing changes no active animations. To install Balanced on plain Niri,
-review the plan, then apply it:
+Choose a preset, review its files and type `apply`. Run it again and choose `undo`
+to restore the previous settings. With iNiR, it registers the collection for your
+existing iRiS picker. No extra UI toolkit is required. [Terminal guide](docs/terminal.md).
+
+For a visual editor, run `python3 -m niri_fx studio --target standalone`.
+Previewing changes no active animations. For scriptable setup on plain Niri:
 
 ```sh
 python3 -m niri_fx setup --target standalone --preset balanced
@@ -151,6 +155,11 @@ or Niri config. [Studio guide](docs/usage.md) · [Profiles](docs/profiles.md) ·
 [Control reference](docs/effect-controls.md).
 
 ## Desktop pickers
+
+Prefer your terminal? `niri-fx` provides preset search, reviewed Apply and Undo
+without a graphical toolkit. [Guided workflow](docs/terminal.md):
+
+![Terminal preset selection, reviewed Apply and Undo](docs/gifs/workflow-terminal.gif)
 
 Run `python3 -m niri_fx picker` from the checkout to browse styles and load JSON
 profiles. Review the affected files before Apply; Undo restores the previous

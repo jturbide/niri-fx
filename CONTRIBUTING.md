@@ -58,6 +58,7 @@ export parity; it is not a compositor GPU benchmark. See
 | `niri_fx/setup.py`, `pack.py`, `storage.py` | Setup plans, preset folders, shared atomic writes, snapshots and conflict-aware restore |
 | `niri_fx/integration.py` | iNiR helper contract and safe registry updates |
 | `niri_fx/picker.py`, `qml/`, `gtk/`, `integrations/ags/` | Optional desktop pickers, reusable views/controllers and AGS example; writes stay in the CLI |
+| `niri_fx/terminal.py` | Recommended preset presentation and a line-oriented guide using the shared setup/restore backend |
 | `niri_fx/preview.py`, `effect-core.js` | Offline assembly and DOM-free browser validation/shader generation |
 | `niri_fx/studio.py`, `preview.html`, `studio.js`, `studio.css`, `motion-preview.js` | HTTP/app lifetime, editor state, actual shader previews and labelled movement concepts |
 | `tests/`, `tests/fixtures/`, `scripts/validate.py`, `scripts/browser-smoke.mjs` | Shared document cases, domain/storage tests, shader parity and real browser checks |
@@ -85,6 +86,9 @@ export parity; it is not a compositor GPU benchmark. See
   Run `npm run format`. The lockfile pins development tools; npm is not a runtime
   dependency. Studio sources are readable files assembled into one offline HTML page.
 - Comments should explain units, bounds, ordering, ownership and design choices.
+  For terminal workflow changes, run `python3 scripts/test-terminal.py` with Niri
+  and util-linux `script` installed; `--record` uses an isolated Alacritty/Niri
+  output for the showcase. Core tests also cover cancellation and stale reviews.
   Avoid line-by-line narration, commented-out experiments and undocumented magic
   numbers. Keep mathematical rationale beside the GLSL and architecture in its guide.
 - Put behavior in small shared functions; keep family-specific rendering in GLSL

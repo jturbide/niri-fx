@@ -12,6 +12,14 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
+- Guided preset selection through `niri-fx` in a terminal or `setup --interactive`:
+  nine recommended starting points, the full searchable catalog, concrete file
+  review, guarded Apply and exact Undo. iNiR users register the collection for
+  their existing picker; standalone users apply a chosen preset. No extra UI
+  toolkit or default launcher is added by the guide.
+- Readable `list --text` with recommendation/family/search filters, and
+  `doctor --text` with optional Quickshell/GJS/GTK dependency checks. Existing
+  JSON output remains available; missing optional interfaces do not fail core health.
 - Optional GTK 4/GJS picker (`niri-fx picker --toolkit gtk`) with reusable widgets
   and an AGS 3 example. Includes search, JSON profiles, Studio dispatch, reviewed
   Apply, explicit resize consent and separate Undo history; closing the window

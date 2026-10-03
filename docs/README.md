@@ -13,6 +13,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Use iNiR or iRiS | [iNiR/iRiS setup](getting-started.md#inir-and-iris) |
 | Use DankMaterialShell | [DMS launcher adapter](dms.md) |
 | Use or embed the Quickshell picker | [Quickshell picker](quickshell.md) |
+| Pick presets from one terminal command | [Terminal guide](terminal.md) |
 | Use a GTK picker or embed it in AGS 3 | [GTK and AGS guide](gtk.md) |
 | Use Noctalia's animation picker | [Noctalia preset pack](noctalia.md) |
 | Use another shell or a generated config | [Choose your setup](scenarios.md), [custom shells](custom-shells.md) |

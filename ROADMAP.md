@@ -10,6 +10,13 @@ for completed work and [compatibility](docs/compatibility.md) for supported setu
 
 ## Next: confidence across more desktops
 
+Finished presets and smooth effects are the main product. The terminal guide,
+graphical pickers and Studio serve that workflow: choose a look, apply it, and
+customize when useful. New interface work should address a demonstrated need.
+
+- **Curated action profiles.** Make useful open/close pairings easier to discover,
+  with clear descriptions and faithful examples. Keep resize explicitly opt-in.
+
 - **More hardware results.** Compare large windows and simultaneous animations on
   integrated GPUs and several refresh rates. Publish repeatable measurements with
   their hardware and renderer details.
