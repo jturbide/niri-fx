@@ -61,6 +61,12 @@ both validators and those cases together.
 
 ## Desktop picker state and lifetime
 
+The line-oriented [terminal guide](../niri_fx/terminal.py) calls the same setup
+and restore functions directly. It fixes the backend before review, rebuilds
+the plan before confirmed Apply and pins the reviewed transaction for Undo.
+Recommended choices reference the existing preset registry; they introduce no
+new parameter defaults. The CLI preserves JSON output for integrations.
+
 The QML picker and GTK/GJS picker consume the CLI's catalog and normalized documents.
 GTK separates a toolkit-independent controller, Gio subprocess transport and ordinary
 widgets. Controller tests run under Node; local runtime tests exercise the same

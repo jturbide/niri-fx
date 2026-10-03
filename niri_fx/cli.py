@@ -84,7 +84,11 @@ def parser():
     )
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
-    commands.add_parser("list", help="Print built-in effect parameters as JSON")
+    listing = commands.add_parser("list", help="List ready-made presets (JSON by default)")
+    listing.add_argument("--text", action="store_true", help="Readable preset names and timings")
+    listing.add_argument("--recommended", action="store_true", help="Show the starter selection")
+    listing.add_argument("--family", choices=FAMILIES)
+    listing.add_argument("--search", default="", help="Filter preset names and families")
     commands.add_parser("families", help="Print supported effect families and capabilities as JSON")
     inspect = commands.add_parser(
         "inspect", help="Validate and print normalized style/profile JSON"
@@ -169,11 +173,17 @@ def parser():
     setup.add_argument("--target", choices=("auto", "inir", "standalone"), default="auto")
     setup.add_argument("--custom", type=Path)
     setup.add_argument("--name", help="Name customized settings for iNiR")
-    setup.add_argument("--launcher", action=argparse.BooleanOptionalAction, default=True)
+    setup.add_argument("--launcher", action=argparse.BooleanOptionalAction, default=None)
+    setup.add_argument(
+        "--interactive",
+        action="store_true",
+        help="Guided preset selection, review and Undo in a terminal",
+    )
     setup.add_argument("--expect-plan", help="Apply only if the reviewed plan_sha256 still matches")
     diagnose = commands.add_parser(
-        "doctor", help="Check Niri, configuration and Studio prerequisites"
+        "doctor", help="Check Niri, configuration and optional interfaces"
     )
+    diagnose.add_argument("--text", action="store_true", help="Print a readable diagnostic report")
     restore = commands.add_parser("restore", help="Review or restore the latest setup snapshot")
     restore.add_argument("--transaction", help="Restore a specific setup transaction")
     for command in (setup, restore):
@@ -203,12 +213,25 @@ def parser():
 
 
 def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if not argv:
+        if not (sys.stdin.isatty() and sys.stdout.isatty()):
+            parser().print_help()
+            return 0
+        argv = ["setup", "--interactive"]
     arguments = parser().parse_args(argv)
     try:
         if arguments.command == "families":
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "list":
-            print(json.dumps(describe_presets(), indent=2))
+            from .terminal import catalog, print_catalog
+
+            keys = catalog(arguments.search, arguments.family, arguments.recommended)
+            if arguments.text:
+                print_catalog(keys)
+            else:
+                presets = describe_presets()
+                print(json.dumps({key: presets[key] for key in keys}, indent=2))
         elif arguments.command == "inspect":
             name, _, effect = parse_document(load_document(arguments.custom))
             print(json.dumps(effect_document(name, effect), indent=2))
@@ -235,7 +258,12 @@ def main(argv=None):
             from .setup import doctor
 
             report = doctor(arguments)
-            print(json.dumps(report, indent=2, ensure_ascii=False))
+            if arguments.text:
+                from .terminal import print_diagnostics
+
+                print_diagnostics(report)
+            else:
+                print(json.dumps(report, indent=2, ensure_ascii=False))
             return 0 if report["healthy"] else 1
         elif arguments.command == "export-pack":
             from .pack import plan_pack
@@ -259,6 +287,29 @@ def main(argv=None):
         elif arguments.command == "setup":
             from .setup import apply_plan, plan_setup, summarize
 
+            if arguments.launcher is None:
+                arguments.launcher = not arguments.interactive
+            if arguments.interactive:
+                from .terminal import guide
+
+                if not (sys.stdin.isatty() and sys.stdout.isatty()):
+                    raise ValueError(
+                        "Interactive setup needs a terminal. Use setup to review JSON, then --apply."
+                    )
+                if (
+                    arguments.custom
+                    or arguments.name
+                    or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS)
+                ):
+                    raise ValueError(
+                        "The guide selects built-in presets. Use Studio or setup without --interactive for custom settings."
+                    )
+                if arguments.apply or arguments.dry_run or arguments.expect_plan:
+                    raise ValueError(
+                        "The guide reviews and confirms each change; omit --apply, --dry-run and --expect-plan."
+                    )
+                guide(arguments)
+                return 0
             if arguments.custom and arguments.name:
                 raise ValueError("--custom already supplies a name; omit --name")
             if arguments.expect_plan and not arguments.apply:
@@ -333,6 +384,9 @@ def main(argv=None):
             )
             print(json.dumps(result, indent=2, ensure_ascii=False))
         return 0
+    except (EOFError, KeyboardInterrupt):
+        print("\nCancelled. Completed changes remain available through restore.", file=sys.stderr)
+        return 130
     except (OSError, ValueError, subprocess.SubprocessError) as error:
         print(f"niri-fx: {error}", file=sys.stderr)
         return 2

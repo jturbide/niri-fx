@@ -364,6 +364,7 @@ def restore(state, identifier=None, apply=False):
             work.append((item, before, after))
         result = {
             "transaction": data["id"],
+            "target": data["target"],
             "dry_run": not apply,
             "paths": [item["logical"] for item, _, _ in work],
             "note": "For iNiR, select your previous non-NiriFX style first; restoring the registry does not rewrite the active shader.",
@@ -388,15 +389,17 @@ def restore(state, identifier=None, apply=False):
 def doctor(args):
     checks = []
     niri = shutil.which("niri")
-    checks.append(
-        {
-            "check": "niri",
-            "ok": bool(niri),
-            "detail": subprocess.check_output([niri, "--version"], text=True, timeout=10).strip()
+    try:
+        version = (
+            subprocess.check_output(
+                [niri, "--version"], text=True, stderr=subprocess.PIPE, timeout=10
+            ).strip()
             if niri
-            else "Not installed; offline preview is available.",
-        }
-    )
+            else "Not installed; offline preview is available."
+        )
+        checks.append({"check": "niri", "ok": bool(niri), "detail": version})
+    except (OSError, subprocess.SubprocessError) as error:
+        checks.append({"check": "niri", "ok": False, "detail": f"Could not query Niri: {error}"})
     config = Path(args.config).expanduser()
     try:
         validate_config(config)
@@ -450,10 +453,13 @@ def doctor(args):
             else "No Niri socket advertised; this may be an offline/SSH session.",
         }
     )
+    from .picker import picker_checks
+
+    checks.extend(picker_checks())
     return {
         "checks": checks,
         "healthy": all(c["ok"] is not False for c in checks),
         "resize": "Opt-in; all built-in presets default off.",
         "movement": "Requires the separate experimental compositor; setup never installs it.",
-        "next": "Run niri-fx setup to review a plan, then repeat with --apply.",
+        "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
     }

@@ -98,6 +98,7 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx preview --output fragments.html
           /tmp/niri-fx-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
           /tmp/niri-fx-package/bin/python -m niri_fx --version
+          /tmp/niri-fx-package/bin/niri-fx list --text --recommended
           /tmp/niri-fx-package/bin/niri-fx picker --qml-dir
           /tmp/niri-fx-package/bin/niri-fx picker --gtk-dir
           /tmp/niri-fx-package/bin/python -c "from niri_fx.picker import qml_directory; assert all((qml_directory() / name).is_file() for name in ('shell.qml', 'NiriFXController.qml', 'NiriFXPicker.qml'))"

@@ -1317,6 +1317,24 @@
       },
       "file": "docs/gifs/workflow-gtk-picker.gif",
       "bytes": 554818
+    },
+    {
+      "name": "workflow-terminal",
+      "backend": "real CLI terminal workflow in stock nested Niri",
+      "version": "niri 26.04 (8ed0da4)",
+      "checks": [
+        "preset selection",
+        "read-only review",
+        "confirmed apply",
+        "exact Undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/terminal.py": "6953d0a00e5daa71d1528224972d0fa37d0ee41444a73c6ab77a3f815773e4e7",
+        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
+      },
+      "file": "docs/gifs/workflow-terminal.gif",
+      "bytes": 2184482
     }
   ]
 }

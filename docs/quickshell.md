@@ -9,7 +9,7 @@ custom Quickshell settings page. Effects still run in Niri; Quickshell supplies 
 ## Open the picker
 
 Requires Niri, Python 3.10+ and Quickshell (`qs`); tested with Niri 26.04 and
-Quickshell 0.3.1. This feature is currently on `main`, after v0.8.0.
+Quickshell 0.3.1. Available since v0.9.0.
 From a [source checkout](getting-started.md):
 
 ```sh

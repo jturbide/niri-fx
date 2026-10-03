@@ -546,5 +546,9 @@
   "workflow-studio-profile": {
     "source": "bac6476117fa4e3636c85a6759a11502970c25988056e2a8d5a0983d243800ce",
     "poster": "9a5e8c1ef9838e2d5773198bb3bab60cb7b3a797c97f0dc3893a45e09732da1d"
+  },
+  "workflow-terminal": {
+    "source": "7ac4871be9a6a1d3f7e7b1582f57b4b9cc51f0d9751cec30979b47a31072f9b7",
+    "poster": "eb0a8deb9c4d311152b186f037e19110cba171c8858efd47f6dc542a1d991b2d"
   }
 }

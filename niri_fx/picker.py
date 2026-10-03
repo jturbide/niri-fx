@@ -16,6 +16,54 @@ def gtk_directory():
     return Path(__file__).with_name("gtk")
 
 
+def picker_checks():
+    """Probe optional interfaces without opening windows or changing settings.
+
+    An absent desktop toolkit is information, not an unhealthy core install:
+    the terminal workflow and shader generator only require Python and Niri.
+    """
+    checks = []
+    for name, binary, flags, missing in (
+        (
+            "quickshell-picker",
+            "qs",
+            ["--version"],
+            "Install Quickshell only to use the optional QML picker.",
+        ),
+        (
+            "gtk-picker",
+            "gjs",
+            [
+                "-c",
+                "imports.gi.versions.Gtk='4.0'; const Gtk=imports.gi.Gtk; print([Gtk.get_major_version(),Gtk.get_minor_version(),Gtk.get_micro_version()].join('.'));",
+            ],
+            "Install GJS and GTK 4.10+ with introspection data only to use the optional GTK picker.",
+        ),
+    ):
+        available, detail = False, missing
+        executable = shutil.which(binary)
+        if executable:
+            try:
+                result = subprocess.run(
+                    [executable, *flags], text=True, capture_output=True, timeout=5
+                )
+                if result.returncode:
+                    detail = f"{binary} could not load this interface. {missing}"
+                elif binary == "gjs":
+                    version = tuple(int(part) for part in result.stdout.strip().split("."))
+                    available = len(version) == 3 and version >= (4, 10, 0)
+                    detail = f"GTK {result.stdout.strip()}; " + (
+                        "niri-fx picker --toolkit gtk" if available else "GTK 4.10+ is required."
+                    )
+                else:
+                    available = True
+                    detail = f"{(result.stdout or result.stderr).strip()}; niri-fx picker"
+            except (OSError, ValueError, subprocess.SubprocessError):
+                detail = f"Could not query {binary}. {missing}"
+        checks.append({"check": name, "ok": None, "available": available, "detail": detail})
+    return checks
+
+
 def launch_picker(arguments):
     from .setup import default_state
 

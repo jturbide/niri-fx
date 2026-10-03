@@ -1,5 +1,9 @@
 # Setup, diagnostics and restore
 
+For a guided preset workflow, run `niri-fx` in a terminal or
+`python3 -m niri_fx` from the checkout. [Choose, review, apply and undo](terminal.md)
+without installing another interface. The commands below remain available for scripts.
+
 Run from the checkout, or replace `python3 -m niri_fx` with the installed
 `niri-fx` command. Python 3.10+ and a working Niri configuration are required.
 
@@ -10,8 +14,10 @@ python3 -m niri_fx doctor
 python3 -m niri_fx setup
 ```
 
-`doctor` reports the Niri version, config validation, iNiR helper, browser and
-advertised session socket as JSON. It does not change settings. A socket being
+`doctor` reports the Niri version, config validation, iNiR helper, browser,
+optional Quickshell/GJS/GTK interfaces and advertised session socket as JSON.
+Use `--text` for a readable report. Missing optional interfaces do not fail core
+health. It does not change settings. A socket being
 present does not prove a live compositor connection. Exit status is 0 when Niri
 and its config are healthy, 1 for missing prerequisites, or 2 for a command error.
 

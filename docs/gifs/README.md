@@ -195,6 +195,17 @@ compositor error logs. One scaled output does not test mixed monitors.
 
 The reusable NiriFX picker ships with the project:
 
+The terminal guide can be checked in a real PTY or recorded in Alacritty on an
+owned nested Niri output. All configs and histories are temporary:
+
+```sh
+python3 scripts/test-terminal.py
+python3 scripts/test-terminal.py --record
+```
+
+The recording additionally requires Alacritty, wtype, wf-recorder and ffmpeg.
+The guide itself has no terminal-emulator dependency.
+
 ```sh
 python3 scripts/test-quickshell-picker.py
 python3 scripts/test-quickshell-picker.py --record
