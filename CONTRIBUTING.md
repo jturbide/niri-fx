@@ -140,3 +140,13 @@ Original NiriFX contributions use [MIT](LICENSE). Changes derived from Niri
 in the movement patch use [GPL-3.0-or-later](experimental/COPYING-NIRI).
 Preserve attribution for any imported code; see [third-party notices](THIRD_PARTY.md).
 There is no CLA. Follow the [release guide](docs/releasing.md) for maintainer tasks.
+
+For hosted Studio, `python3 scripts/build-site.py --output /tmp/nirifx-site` stages
+both pages and their downloadable settings in a fresh directory. The browser suite
+covers gallery-to-Studio links, edited share round trips, profile actions, malformed
+input and exclusion of local session tokens.
+
+For overlapping compositor actions, run `python3 scripts/test-interruptions.py`
+and, after building the pinned experiment, add `--experimental`. These tests use
+owned nested sessions with transparent fixtures. Sequential output scales are not
+a substitute for physical mixed-monitor acceptance.

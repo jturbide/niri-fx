@@ -43,7 +43,8 @@ The optional compositor patch demonstrates native swaps, retargeting and continu
 animation during close interruptions. It remains an experiment with a pinned Niri
 revision, separate from the standard installation.
 
-Further research includes velocity continuity during rapid direction changes,
+Deformation now carries its sampled speed through direction changes. Further
+research includes layout-position velocity and acceleration continuity,
 pointer-driven deformation, more efficient damage bounds and ordering particles
 from different windows in one scene. A shared particle scene would need more
 compositor work than the current independent window shaders.

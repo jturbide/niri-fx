@@ -109,7 +109,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 11241894,
+      "bytes": 11261118,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -122,7 +122,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -240,7 +240,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 9545190,
+      "bytes": 9624327,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -253,7 +253,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -371,7 +371,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 6990380,
+      "bytes": 6882205,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -384,7 +384,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -502,7 +502,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 2716587,
+      "bytes": 2833394,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -515,7 +515,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -633,7 +633,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 6801504,
+      "bytes": 6859717,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -646,7 +646,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -764,7 +764,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 6170284,
+      "bytes": 6266673,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -777,7 +777,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -895,7 +895,7 @@
         "movement_strength": 0.64
       },
       "duration_ms": 1200,
-      "bytes": 3532149,
+      "bytes": 3469544,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -908,7 +908,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1026,7 +1026,7 @@
         "movement_strength": 0.48
       },
       "duration_ms": 1200,
-      "bytes": 4018863,
+      "bytes": 4121129,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1039,7 +1039,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1157,7 +1157,7 @@
         "movement_strength": 0.55
       },
       "duration_ms": 1200,
-      "bytes": 3985157,
+      "bytes": 3979389,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1170,7 +1170,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1288,7 +1288,7 @@
         "movement_strength": 0.55
       },
       "duration_ms": 1200,
-      "bytes": 2968515,
+      "bytes": 2745872,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1301,7 +1301,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "364dd4229825cd9239c89cd7e6749529ddb301c2f17e68240a2501afc507cd05",
+      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",

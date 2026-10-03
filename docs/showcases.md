@@ -75,6 +75,7 @@ recordings use sample content in Studio, shell interfaces and Niri.
 | Wide and tall geometry | [Wide Shockwave](gifs/stock-wide-shockwave.gif), [Tall Pixel Wipe](gifs/stock-tall-pixels.gif) | 900×280 and 300×660 logical client sizes |
 | Fractional scale | [Frost at 1.5×](gifs/stock-fractional-frost.gif) | One nested output; not a mixed-monitor test |
 | Repeated movement interruption | [Reverse direction](gifs/native-interrupted.gif) | Pinned experimental Niri; both clients finish reconstructed |
+| Rapid wobble reversals | [Eight direction changes](gifs/native-rapid-reversals.gif) | Pinned experimental Niri; both clients return to their initial columns |
 | Close while moving | [Close during movement](gifs/native-close-during-move.gif) | Pinned experimental Niri; closed client disappears and survivor reconstructs |
 
 The iRiS cards show the shell's timing preview. The iRiS and DMS clips use real

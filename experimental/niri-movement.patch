@@ -149,10 +149,10 @@ index a9bcc5155145b622c0494c2c6274e2f93b2983dc..74e5212c321035d161942a270165e418
  
          niri.update_shaders();
 diff --git a/src/layout/closing_window.rs b/src/layout/closing_window.rs
-index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b63ffd22d 100644
+index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742004027e7 100644
 --- a/src/layout/closing_window.rs
 +++ b/src/layout/closing_window.rs
-@@ -24,6 +24,23 @@ use crate::render_helpers::texture::{TextureBuffer, TextureRenderElement};
+@@ -24,6 +24,21 @@ use crate::render_helpers::texture::{TextureBuffer, TextureRenderElement};
  use crate::render_helpers::{render_to_encompassing_texture, RenderCtx, RenderTarget};
  use crate::utils::transaction::TransactionBlocker;
  
@@ -165,18 +165,16 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
 +        random_seed: f32,
 +    },
 +    Movement {
-+        phase: f64,
++        path: crate::render_helpers::movement::MovementContinuation,
 +        random_seed: f32,
-+        impulse: [f32; 2],
 +        delta: Point<f64, Logical>,
-+        remaining: Point<f64, Logical>,
 +    },
 +}
 +
  #[derive(Debug)]
  pub struct ClosingWindow {
      /// Contents of the window.
-@@ -61,6 +78,7 @@ pub struct ClosingWindow {
+@@ -61,6 +76,7 @@ pub struct ClosingWindow {
  
      /// Random seed for the shader.
      random_seed: f32,
@@ -184,7 +182,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
  }
  
  niri_render_elements! {
-@@ -94,6 +112,7 @@ impl AnimationState {
+@@ -94,6 +110,7 @@ impl AnimationState {
  }
  
  impl ClosingWindow {
@@ -192,7 +190,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
      pub fn new<E: RenderElement<GlesRenderer>>(
          renderer: &mut GlesRenderer,
          snapshot: RenderSnapshot<E, E>,
-@@ -102,6 +121,7 @@ impl ClosingWindow {
+@@ -102,6 +119,7 @@ impl ClosingWindow {
          pos: Point<f64, Logical>,
          blocker: TransactionBlocker,
          anim: Animation,
@@ -200,7 +198,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
      ) -> anyhow::Result<Self> {
          let _span = tracy_client::span!("ClosingWindow::new");
  
-@@ -154,6 +174,7 @@ impl ClosingWindow {
+@@ -154,6 +172,7 @@ impl ClosingWindow {
              blocked_out_buffer_offset,
              anim_state: AnimationState::new(blocker, anim),
              random_seed: fastrand::f32(),
@@ -208,7 +206,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
          })
      }
  
-@@ -194,6 +215,7 @@ impl ClosingWindow {
+@@ -194,6 +213,7 @@ impl ClosingWindow {
          };
  
          let anim = match &self.anim_state {
@@ -216,7 +214,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
              AnimationState::Waiting { .. } => {
                  let elem = TextureRenderElement::from_texture_buffer(
                      buffer.clone(),
-@@ -220,19 +242,56 @@ impl ClosingWindow {
+@@ -220,19 +240,55 @@ impl ClosingWindow {
              AnimationState::Animating(anim) => anim,
          };
  
@@ -247,18 +245,17 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
 +                    random_seed = *seed;
 +                }
 +                AnimationContinuation::Movement {
-+                    phase,
++                    path,
 +                    random_seed: seed,
-+                    impulse: direction,
 +                    delta: travel,
-+                    remaining,
 +                } => {
 +                    program = ProgramType::Move;
-+                    progress = phase + (1. - phase) * closing;
++                    let (phase, direction, displacement) = path.sample();
++                    progress = phase;
 +                    random_seed = *seed;
-+                    impulse = *direction;
++                    impulse = direction;
 +                    delta = *travel;
-+                    position += remaining.upscale(closing);
++                    position += displacement;
 +                }
 +            }
 +            alpha = (1. - fade) as f32;
@@ -280,7 +277,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
              let pos = view_rect.loc + relative.to_physical_precise_round(scale).to_logical(scale);
  
              let geo_loc = Vec2::new(pos.x as f32, pos.y as f32);
-@@ -250,20 +309,29 @@ impl ClosingWindow {
+@@ -250,20 +306,29 @@ impl ClosingWindow {
              let geo_to_tex =
                  Mat3::from_translation(-tex_loc / tex_size) * Mat3::from_scale(geo_size / tex_size);
  
@@ -320,7 +317,7 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..19adb066eeae836ac9a824a508e8267b
                  HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
                  Kind::Unspecified,
              )
-@@ -274,7 +342,11 @@ impl ClosingWindow {
+@@ -274,7 +339,11 @@ impl ClosingWindow {
          let elem = TextureRenderElement::from_texture_buffer(
              buffer.clone(),
              Point::from((0., 0.)),
@@ -405,7 +402,7 @@ index 5ba97a3598ec7dcb7e5797d5e764298be28ec4d7..6877db315a48a588eb3b14f1d3c1f9d2
          self.anim.is_done()
      }
 diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
-index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40b34462ba 100644
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f4be80c93 100644
 --- a/src/layout/scrolling.rs
 +++ b/src/layout/scrolling.rs
 @@ -920,11 +920,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
@@ -449,16 +446,23 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
          let offset = self.column_x(column_idx + 1) - self.column_x(column_idx);
          if self.active_column_idx <= column_idx {
              for col in &mut self.columns[column_idx + 1..] {
-@@ -1530,7 +1530,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1530,7 +1530,14 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          let scale = Scale::from(self.scale);
          let res = ClosingWindow::new(
 -            renderer, snapshot, scale, tile_size, tile_pos, blocker, anim,
-+            renderer, snapshot.render, scale, tile_size, tile_pos, blocker, anim, snapshot.continuation,
++            renderer,
++            snapshot.render,
++            scale,
++            tile_size,
++            tile_pos,
++            blocker,
++            anim,
++            snapshot.continuation,
          );
          match res {
              Ok(closing) => {
-@@ -1711,7 +1711,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1711,7 +1718,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              }
          }
  
@@ -470,7 +474,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
      }
  
      pub fn move_left(&mut self) -> bool {
-@@ -1825,7 +1828,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1825,7 +1835,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -479,7 +483,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1851,7 +1854,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1851,7 +1861,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -488,7 +492,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
              );
  
              if source_tile_was_active {
-@@ -1921,7 +1924,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1921,7 +1931,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -497,7 +501,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1945,7 +1948,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1945,7 +1955,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -506,7 +510,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
              );
  
              offset.x += if self.active_column_idx <= target_column_idx {
-@@ -2019,7 +2022,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2019,7 +2029,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              false,
              removed.width,
              removed.is_full_width,
@@ -515,7 +519,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
          );
  
          offset.x += cur_x - self.column_x(target_col_idx);
-@@ -2957,9 +2960,19 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2957,9 +2967,20 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  }
  
                  let xray_pos = xray_pos.offset(tile_pos);
@@ -528,17 +532,18 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
 +                    xray_pos,
 +                    focus_ring,
 +                    col.move_animation.as_ref().map(|m| {
-+                        crate::render_helpers::movement::MovementState {
-+                            progress: 1. - m.anim.clamped_value().clamp(0., 1.),
-+                            delta: Point::from((-m.from, 0.)),
-+                        }
++                        crate::render_helpers::movement::MovementState::from_animation(
++                            &m.anim,
++                            Point::from((-m.from, 0.)),
++                            self.clock.now(),
++                        )
 +                    }),
 +                    &mut |elem| push(elem.into()),
 +                );
              }
          }
      }
-@@ -3997,7 +4010,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -3997,7 +4018,7 @@ impl<W: LayoutElement> Column<W> {
              // Usually new columns are created together with window movement actions. For new
              // windows, we handle that in start_open_animation().
              rv.tab_indicator
@@ -547,7 +552,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
          }
  
          rv
-@@ -4166,7 +4179,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4166,7 +4187,7 @@ impl<W: LayoutElement> Column<W> {
      pub fn animate_move_from(&mut self, from_x_offset: f64) {
          self.animate_move_from_with_config(
              from_x_offset,
@@ -556,7 +561,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
          );
      }
  
-@@ -5149,7 +5162,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5149,7 +5170,7 @@ impl<W: LayoutElement> Column<W> {
                  } else {
                      (0., 1.)
                  };
@@ -565,7 +570,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..e4241935e3fab4b58e607f6d12b87c40
              }
          }
  
-@@ -5157,7 +5170,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5157,7 +5178,7 @@ impl<W: LayoutElement> Column<W> {
          if display == ColumnDisplay::Tabbed {
              self.tab_indicator.start_open_animation(
                  self.clock.clone(),
@@ -597,7 +602,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..b12d5d9a6d3cdd57c4b3b18fa5b9df29
  
      // The resize is in progress.
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fbb68879d6 100644
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a171cb1cb 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,4 +1,5 @@
@@ -703,7 +708,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render");
-@@ -1334,6 +1360,40 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1334,6 +1360,34 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -713,19 +718,13 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
 +            (&self.move_y_animation, false),
 +        ] {
 +            if let Some(movement) = movement {
-+                let progress = 1. - movement.anim.clamped_value().clamp(0., 1.);
 +                let delta = if horizontal {
 +                    Point::from((-movement.from, 0.))
 +                } else {
 +                    Point::from((0., -movement.from))
 +                };
-+                motion = Some(match motion {
-+                    Some(state) => MovementState {
-+                        progress: state.progress.min(progress),
-+                        delta: state.delta + delta,
-+                    },
-+                    None => MovementState { progress, delta },
-+                });
++                let own = MovementState::from_animation(&movement.anim, delta, self.clock.now());
++                motion = Some(motion.map_or(own, |state| state.combined(own)));
 +            }
 +        }
 +        let motion = motion.filter(|m| {
@@ -744,7 +743,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
          if let Some(open) = &self.open_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1361,6 +1421,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1361,6 +1415,34 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }
@@ -759,7 +758,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
 +                &mut |elem| elements.push(elem),
 +            );
 +            let mut effect = self.movement_effect.borrow_mut();
-+            let effect = effect.get_or_insert_with(MovementEffect::new);
++            let effect = effect.get_or_insert_with(|| MovementEffect::new(self.clock.clone()));
 +            match effect.render(
 +                ctx.renderer,
 +                &elements,
@@ -779,7 +778,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1415,8 +1503,28 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1415,8 +1497,28 @@ impl<W: LayoutElement> Tile<W> {
      ) -> TileRenderSnapshot {
          let _span = tracy_client::span!("Tile::render_snapshot");
  
@@ -809,7 +808,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
              RenderCtx {
                  target: RenderTarget::Output,
                  renderer,
-@@ -1467,7 +1575,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1467,7 +1569,8 @@ impl<W: LayoutElement> Tile<W> {
                  xray.backdrop[output_idx] = screencast_backdrop.clone().unwrap();
  
                  let mut contents = Vec::new();
@@ -819,7 +818,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
                      RenderCtx {
                          target: RenderTarget::Output,
                          renderer,
-@@ -1487,7 +1596,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1487,7 +1590,8 @@ impl<W: LayoutElement> Tile<W> {
  
          // A bit of a hack to render blocked out as for screencast, but I think it's fine here.
          let mut blocked_out_contents = Vec::new();
@@ -829,7 +828,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..13b41f1728258a10468e1c6a6a3d19fb
              RenderCtx {
                  target: RenderTarget::Screencast,
                  renderer,
-@@ -1510,15 +1620,18 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1510,15 +1614,18 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
@@ -891,10 +890,10 @@ index 474437af4511b5d34de9aec66c2a0451949ef8b7..fe6157cd893d9d8e9414b8c3a08134fc
  pub mod render_elements;
 diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d930462c0994b3
+index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f6807b165
 --- /dev/null
 +++ b/src/render_helpers/movement.rs
-@@ -0,0 +1,211 @@
+@@ -0,0 +1,459 @@
 +//! Experimental movement shader path. The regular renderer is the fallback.
 +use super::offscreen::{OffscreenBuffer, OffscreenData};
 +use super::shader_element::ShaderRenderElement;
@@ -908,27 +907,152 @@ index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d93046
 +use std::cell::RefCell;
 +use std::collections::HashMap;
 +use std::rc::Rc;
++use std::time::Duration;
 +
++use crate::animation::{Animation, Clock};
++
++/// Layout samples use the compositor clock, so slow-motion and repeated render
++/// passes cannot change the effect's trajectory. Velocity is in logical units/s.
 +#[derive(Debug, Clone, Copy)]
 +pub struct MovementState {
 +    pub progress: f64,
 +    pub delta: Point<f64, Logical>,
++    at: Duration,
++    end: Duration,
++    velocity: f64,
++    travel_velocity: Point<f64, Logical>,
 +}
 +
-+/// Carries deformation through a layout retarget. Position continuity belongs
-+/// to Niri's layout animation; this state keeps the shader phase and impulse
-+/// from snapping back to an intact window when that animation starts again.
++impl MovementState {
++    pub fn from_animation(animation: &Animation, delta: Point<f64, Logical>, at: Duration) -> Self {
++        let progress = 1. - animation.clamped_value().clamp(0., 1.);
++        // Sampling the existing curve avoids duplicating Niri's easing and
++        // spring equations. Clamp both samples just like the rendered phase.
++        let step = Duration::from_micros(100);
++        let before = at.saturating_sub(step).max(animation.start_time());
++        let after = (at + step).min(animation.end_time());
++        let velocity = if after > before && progress < 1. {
++            (animation.value_at(before).clamp(0., 1.) - animation.value_at(after).clamp(0., 1.))
++                / (after - before).as_secs_f64()
++        } else {
++            0.
++        };
++        Self {
++            progress,
++            delta,
++            at,
++            end: animation.end_time(),
++            velocity,
++            travel_velocity: delta.upscale(velocity),
++        }
++    }
++
++    pub fn combined(self, other: Self) -> Self {
++        let driver = if self.progress <= other.progress {
++            self
++        } else {
++            other
++        };
++        Self {
++            delta: self.delta + other.delta,
++            travel_velocity: self.travel_velocity + other.travel_velocity,
++            end: self.end.max(other.end),
++            ..driver
++        }
++    }
++}
++
++#[derive(Debug, Clone, Copy, Default)]
++struct Sample {
++    value: f64,
++    velocity: f64,
++}
++
++/// A cubic finishes with zero speed and retains its incoming derivative. Phase
++/// curves shorten their duration when needed to stay monotone in [0, 1]. The
++/// signed impulse may briefly overshoot: clamping it would introduce a kink.
++#[derive(Debug, Clone, Copy)]
++struct Curve {
++    from: Sample,
++    target: f64,
++    start: Duration,
++    seconds: f64,
++}
++
++impl Curve {
++    fn new(from: Sample, target: f64, start: Duration, end: Duration) -> Self {
++        Self {
++            from,
++            target,
++            start,
++            seconds: end.saturating_sub(start).as_secs_f64(),
++        }
++    }
++
++    fn phase(from: Sample, start: Duration, end: Duration) -> Self {
++        let mut curve = Self::new(from, 1., start, end);
++        if from.velocity > 0. {
++            curve.seconds = curve
++                .seconds
++                .min(3. * (1. - from.value).max(0.) / from.velocity);
++        }
++        curve
++    }
++
++    fn sample(self, at: Duration) -> Sample {
++        let elapsed = at.saturating_sub(self.start).as_secs_f64();
++        if self.seconds <= 1e-9 || elapsed >= self.seconds {
++            return Sample {
++                value: self.target,
++                velocity: 0.,
++            };
++        }
++        let t = elapsed / self.seconds;
++        let t2 = t * t;
++        let t3 = t2 * t;
++        let slope = self.from.velocity * self.seconds;
++        Sample {
++            value: self.from.value * (2. * t3 - 3. * t2 + 1.)
++                + slope * (t3 - 2. * t2 + t)
++                + self.target * (-2. * t3 + 3. * t2),
++            velocity: (self.from.value * (6. * t2 - 6. * t)
++                + slope * (3. * t2 - 4. * t + 1.)
++                + self.target * (-6. * t2 + 6. * t))
++                / self.seconds,
++        }
++    }
++}
++
++/// Only shader deformation is retargeted here; Niri still owns layout position,
++/// hit testing and focus. Retargets carry both phase and direction derivatives.
 +#[derive(Debug, Default)]
 +struct MotionContinuity {
 +    previous: Option<MovementState>,
-+    phase: f64,
-+    phase_from: f64,
-+    raw_from: f64,
-+    impulse: [f64; 2],
-+    impulse_from: [f64; 2],
++    phase: Sample,
++    impulse: [Sample; 2],
++    curves: Option<(Curve, [Curve; 2])>,
 +}
 +
 +impl MotionContinuity {
++    fn values_at(&self, at: Duration) -> (Sample, [Sample; 2]) {
++        if let Some((phase, impulse)) = self.curves {
++            return (phase.sample(at), impulse.map(|curve| curve.sample(at)));
++        }
++        // Between layout samples, predict only the unsampled fraction of a
++        // frame. Render passes at the same clock value are exactly idempotent.
++        let elapsed = self
++            .previous
++            .map_or(0., |old| at.saturating_sub(old.at).as_secs_f64());
++        let value = (self.phase.value + self.phase.velocity * elapsed).clamp(0., 1.);
++        (
++            Sample {
++                value,
++                velocity: if value >= 1. { 0. } else { self.phase.velocity },
++            },
++            self.impulse,
++        )
++    }
++
 +    fn sample(&mut self, motion: MovementState) -> (f64, [f32; 2]) {
 +        let target = [
 +            if motion.delta.x < 0. { -1. } else { 1. },
@@ -936,35 +1060,75 @@ index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d93046
 +        ];
 +        if let Some(previous) = self.previous {
 +            if motion.progress < previous.progress || motion.delta != previous.delta {
-+                self.phase_from = self.phase;
-+                self.raw_from = motion.progress;
-+                self.impulse_from = self.impulse;
++                let (phase, impulse) = self.values_at(motion.at);
++                self.curves = Some((
++                    Curve::phase(phase, motion.at, motion.end),
++                    std::array::from_fn(|i| {
++                        Curve::new(impulse[i], target[i], motion.at, motion.end)
++                    }),
++                ));
 +            }
 +        } else {
-+            self.impulse_from = target;
++            self.impulse = target.map(|value| Sample {
++                value,
++                velocity: 0.,
++            });
 +        }
-+        let t = ((motion.progress - self.raw_from) / (1. - self.raw_from).max(1e-9)).clamp(0., 1.);
-+        self.phase = self.phase_from + (1. - self.phase_from) * t;
-+        let blend = t * t * (3. - 2. * t);
-+        for (i, value) in target.into_iter().enumerate() {
-+            self.impulse[i] = self.impulse_from[i] + (value - self.impulse_from[i]) * blend;
++        if let Some((phase, impulse)) = self.curves {
++            self.phase = phase.sample(motion.at);
++            self.impulse = impulse.map(|curve| curve.sample(motion.at));
++        } else {
++            self.phase = Sample {
++                value: motion.progress,
++                velocity: motion.velocity.max(0.),
++            };
 +        }
 +        self.previous = Some(motion);
-+        (self.phase, self.impulse.map(|value| value as f32))
++        (
++            self.phase.value,
++            self.impulse.map(|value| value.value as f32),
++        )
++    }
++}
++
++/// Closing keeps the same phase/direction clocks. Its translation starts with
++/// the sampled layout velocity and eases to the remaining destination while
++/// ClosingWindow independently fades opacity on the configured close clock.
++#[derive(Debug)]
++pub struct MovementContinuation {
++    clock: Clock,
++    phase: Curve,
++    impulse: [Curve; 2],
++    travel: [Curve; 2],
++}
++
++impl MovementContinuation {
++    pub fn sample(&self) -> (f64, [f32; 2], Point<f64, Logical>) {
++        let at = self.clock.now();
++        (
++            self.phase.sample(at).value,
++            self.impulse.map(|curve| curve.sample(at).value as f32),
++            Point::from((
++                self.travel[0].sample(at).value,
++                self.travel[1].sample(at).value,
++            )),
++        )
 +    }
 +}
 +
 +#[derive(Debug)]
 +pub struct MovementEffect {
 +    random_seed: f32,
++    clock: Clock,
 +    buffer: OffscreenBuffer,
 +    continuity: RefCell<MotionContinuity>,
 +}
 +
 +impl MovementEffect {
-+    pub fn new() -> Self {
++    pub fn new(clock: Clock) -> Self {
 +        Self {
 +            random_seed: fastrand::f32(),
++            clock,
 +            buffer: OffscreenBuffer::default(),
 +            continuity: RefCell::new(MotionContinuity::default()),
 +        }
@@ -973,13 +1137,40 @@ index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d93046
 +    pub fn continuation(&self) -> Option<crate::layout::closing_window::AnimationContinuation> {
 +        let state = self.continuity.borrow();
 +        let motion = state.previous?;
++        let at = self.clock.now();
++        let (phase, impulse) = state.values_at(at);
++        let remaining = motion.delta.upscale(1. - motion.progress);
++        let (phase, impulse) = state.curves.unwrap_or_else(|| {
++            (
++                Curve::phase(phase, at, motion.end),
++                impulse.map(|sample| Curve::new(sample, sample.value, at, motion.end)),
++            )
++        });
++        let travel = [
++            (remaining.x, motion.travel_velocity.x),
++            (remaining.y, motion.travel_velocity.y),
++        ]
++        .map(|(target, velocity)| {
++            Curve::new(
++                Sample {
++                    value: 0.,
++                    velocity,
++                },
++                target,
++                at,
++                motion.end,
++            )
++        });
 +        Some(
 +            crate::layout::closing_window::AnimationContinuation::Movement {
-+                phase: state.phase,
++                path: MovementContinuation {
++                    clock: self.clock.clone(),
++                    phase,
++                    impulse,
++                    travel,
++                },
 +                random_seed: self.random_seed,
-+                impulse: state.impulse.map(|value| value as f32),
 +                delta: motion.delta,
-+                remaining: motion.delta.upscale(1. - motion.progress),
 +            },
 +        )
 +    }
@@ -1069,10 +1260,14 @@ index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d93046
 +mod tests {
 +    use super::*;
 +
-+    fn state(progress: f64, x: f64) -> MovementState {
++    fn state(progress: f64, x: f64, seconds: f64, end: f64) -> MovementState {
 +        MovementState {
 +            progress,
 +            delta: Point::from((x, 0.)),
++            at: Duration::from_secs_f64(seconds),
++            end: Duration::from_secs_f64(end),
++            velocity: 1.,
++            travel_velocity: Point::from((x, 0.)),
 +        }
 +    }
 +
@@ -1080,30 +1275,82 @@ index 0000000000000000000000000000000000000000..e59dba79dfadf032d6314bf190d93046
 +    fn uninterrupted_phase_matches_layout() {
 +        let mut motion = MotionContinuity::default();
 +        for p in [0., 0.2, 0.5, 0.8, 1.] {
-+            assert_eq!(motion.sample(state(p, 500.)), (p, [1., 1.]));
++            assert_eq!(motion.sample(state(p, 500., p, 1.)), (p, [1., 1.]));
 +        }
 +    }
 +
 +    #[test]
-+    fn reversal_preserves_phase_and_impulse_then_settles() {
++    fn reversal_keeps_value_and_velocity_then_settles() {
 +        let mut motion = MotionContinuity::default();
-+        let before = motion.sample(state(0.4, 500.));
-+        assert_eq!(motion.sample(state(0., -500.)), before);
-+        let (phase, impulse) = motion.sample(state(0.5, -500.));
-+        assert!((phase - 0.7).abs() < 1e-9);
-+        assert_eq!(impulse, [0., 1.]);
-+        assert_eq!(motion.sample(state(1., -500.)), (1., [-1., 1.]));
++        let before = motion.sample(state(0.4, 500., 0.4, 1.));
++        assert_eq!(motion.sample(state(0., -500., 0.4, 1.4)), before);
++        assert!((motion.phase.velocity - 1.).abs() < 1e-9);
++        motion.sample(state(0.2, -500., 0.6, 1.4));
++        let phase = motion.phase;
++        let impulse = motion.impulse;
++        let before = motion.sample(state(0., 500., 0.6, 1.6));
++        assert!((motion.phase.value - phase.value).abs() < 1e-9);
++        assert!((motion.phase.velocity - phase.velocity).abs() < 1e-9);
++        assert!((motion.impulse[0].velocity - impulse[0].velocity).abs() < 1e-9);
++        assert_eq!(motion.sample(state(0., 500., 0.6, 1.6)), before);
++        assert_eq!(motion.sample(state(1., 500., 1.6, 1.6)), (1., [1., 1.]));
 +    }
 +
 +    #[test]
-+    fn repeated_retargets_and_render_passes_preserve_state() {
-+        let mut motion = MotionContinuity::default();
-+        motion.sample(state(0.3, 500.));
-+        let retained = motion.sample(state(0.02, -300.));
-+        assert_eq!(retained.0, 0.3);
-+        assert_eq!(motion.sample(state(0.02, -300.)), retained);
-+        assert_eq!(motion.sample(state(0.01, 200.)), retained);
-+        assert_eq!(motion.sample(state(1., 200.)).0, 1.);
++    fn phase_stays_monotone_even_with_fast_late_handoffs() {
++        for value in [0., 0.4, 0.99, 1.] {
++            for velocity in [0., 0.1, 1., 10., 100.] {
++                let curve = Curve::phase(
++                    Sample { value, velocity },
++                    Duration::ZERO,
++                    Duration::from_secs(1),
++                );
++                let mut previous = value;
++                for frame in 0..=1000 {
++                    let sample = curve.sample(Duration::from_millis(frame));
++                    assert!(sample.value >= previous - 1e-12 && sample.value <= 1. + 1e-12);
++                    assert!(sample.velocity >= -1e-9);
++                    previous = sample.value;
++                }
++            }
++        }
++    }
++
++    #[test]
++    fn finite_difference_confirms_incoming_derivative_and_zero_endpoint() {
++        let from = Sample {
++            value: 0.35,
++            velocity: 0.8,
++        };
++        let curve = Curve::phase(from, Duration::ZERO, Duration::from_secs(1));
++        let h = Duration::from_micros(1);
++        assert!(
++            ((curve.sample(h).value - from.value) / h.as_secs_f64() - from.velocity).abs() < 1e-5
++        );
++        let end = curve.sample(Duration::from_secs(1));
++        assert_eq!((end.value, end.velocity), (1., 0.));
++        let instant = Curve::phase(from, Duration::ZERO, Duration::ZERO).sample(Duration::ZERO);
++        assert_eq!((instant.value, instant.velocity), (1., 0.));
++    }
++
++    #[test]
++    fn close_path_keeps_clock_phase_impulse_and_translation_speed() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let effect = MovementEffect::new(clock.clone());
++        effect
++            .continuity
++            .borrow_mut()
++            .sample(state(0.4, 500., 0., 1.));
++        let crate::layout::closing_window::AnimationContinuation::Movement { path, .. } =
++            effect.continuation().unwrap()
++        else {
++            panic!("movement path");
++        };
++        assert_eq!(path.sample(), (0.4, [1., 1.], Point::from((0., 0.))));
++        clock.set_unadjusted(Duration::from_micros(1));
++        let (phase, _, travel) = path.sample();
++        assert!(((phase - 0.4) / 1e-6 - 1.).abs() < 1e-4);
++        assert!((travel.x / 1e-6 - 500.).abs() < 0.01);
 +    }
 +}
 diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs

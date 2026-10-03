@@ -23,9 +23,11 @@ fragment, elastic, slice, pixel and distortion column swaps in a separate compos
 ## Continuous interruptions
 
 The experimental build preserves the current deformation and seed when another
-move retargets the same window. Direction impulses blend from their current value
-instead of immediately flipping particle orientation. The remaining animation
-continues toward reconstruction.
+move retargets the same window. Deformation phase and direction impulses retain
+their sampled speed through cubic transitions, instead of restarting their easing
+curve. A repeated reversal carries the direction's current speed as well as its value.
+Late phase handoffs shorten their remaining duration when necessary to avoid
+overshooting or reversing reconstruction.
 
 Closing during opening continues the original opening shader and clock while
 fading out. Closing during movement retains its current phase, seed, orientation
@@ -33,9 +35,10 @@ and remaining displacement while fading. This avoids re-fragmenting a snapshot
 with a newly seeded close effect. It intentionally takes precedence over the
 usual close style during those interruptions.
 
-These changes provide visual-state continuity. They do not preserve physical
-velocity/acceleration across every layout change, and the windows still render
-as separate elements. The pinned patch is required; a stock Niri install or a
+The shader phase and impulse transitions match their incoming first derivative;
+close movement also starts with the sampled translation speed. This does not
+change Niri's layout easing during a swap, preserve acceleration, or create
+shared particle physics. The windows still render as separate elements. The pinned patch is required; a stock Niri install or a
 shell event listener cannot provide the same state handoff.
 
 ## Prototype and longer-term compositor design

@@ -129,6 +129,40 @@ h2 {
     margin-left: 10px;
     font-size: 14px;
 }
+.style-links {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    border-top: 1px solid #2d3b44;
+    padding-top: 14px;
+    margin-top: 14px;
+}
+.style-links a {
+    margin: 0;
+}
+.style-links strong {
+    width: 100%;
+    font-size: 13px;
+}
+.style-links button {
+    font-size: 13px;
+    padding: 7px 9px;
+}
+#copy-result {
+    padding: 16px;
+    border: 1px solid #40515a;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+#copy-text {
+    width: 100%;
+    margin-top: 8px;
+}
+#copy-note {
+    font-size: 14px;
+    color: #a2b3bb;
+}
 footer {
     margin-top: 35px;
     color: #a2b3bb;

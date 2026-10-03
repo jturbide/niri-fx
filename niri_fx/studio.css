@@ -242,3 +242,19 @@ aside[data-view="basic"] .advanced {
     display: block;
     margin-top: 0.75rem;
 }
+
+#share-result {
+    display: grid;
+    gap: 8px;
+    margin-top: 16px;
+}
+#share-result[hidden] {
+    display: none;
+}
+#share-url {
+    width: 100%;
+    box-sizing: border-box;
+}
+#hosted-note a {
+    color: inherit;
+}

@@ -16,6 +16,18 @@ Read the notes for the version you install.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
+## 0.8.0 prerelease
+
+[Download v0.8.0](https://github.com/jturbide/niri-fx/releases/tag/v0.8.0) for 64
+presets, nine effect families, hosted Studio sharing, opt-in resize profiles and
+updated experimental interruption handling. Read [upgrading from 0.7](upgrading.md#from-07-to-08)
+before updating custom presets or the optional compositor build.
+
+Download the wheel, source archive and `SHA256SUMS` from the same release. In their
+download folder, verify both packages with `sha256sum -c SHA256SUMS`. The Git tag
+is signed; checksums detect corrupted or mismatched assets and are not a substitute
+for checking a trusted signing key.
+
 ## Package contents
 
 | Format | Contents |

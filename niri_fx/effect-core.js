@@ -150,5 +150,53 @@ function createEffectCore(catalog) {
     }
     return result + "}\n";
   }
-  return { glslNumber, shaderFor, normalizePreset, renderKdl };
+  // Share links contain validated parameter data only. Omit unchanged defaults
+  // to keep links readable by browsers; decoding uses the regular import rules.
+  function encodeShareDocument(document) {
+    const doc = normalizePreset(document);
+    const compact = (effect) =>
+      effect === null
+        ? null
+        : Object.fromEntries(
+            Object.entries(effect).filter(([key, value]) => value !== catalog.defaults[key]),
+          );
+    const data = doc.actions
+      ? {
+          ...doc,
+          actions: Object.fromEntries(
+            Object.entries(doc.actions).map(([key, value]) => [key, compact(value)]),
+          ),
+        }
+      : { ...doc, effect: compact(doc.effect) };
+    const bytes = new TextEncoder().encode(JSON.stringify(data));
+    if (bytes.length > catalog.max_document_bytes)
+      throw new Error("Shared preset must be at most 16 KiB.");
+    return btoa(String.fromCharCode(...bytes))
+      .replaceAll("+", "-")
+      .replaceAll("/", "_")
+      .replace(/=+$/, "");
+  }
+  function decodeShareDocument(encoded) {
+    if (
+      !encoded ||
+      encoded.length > Math.ceil((catalog.max_document_bytes * 4) / 3) ||
+      !/^[A-Za-z0-9_-]+$/.test(encoded)
+    )
+      throw new Error("Invalid or oversized shared preset.");
+    const bytes = Uint8Array.from(
+      atob(encoded.replaceAll("-", "+").replaceAll("_", "/")),
+      (character) => character.charCodeAt(0),
+    );
+    if (bytes.length > catalog.max_document_bytes)
+      throw new Error("Shared preset must be at most 16 KiB.");
+    return normalizePreset(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
+  }
+  return {
+    glslNumber,
+    shaderFor,
+    normalizePreset,
+    renderKdl,
+    encodeShareDocument,
+    decodeShareDocument,
+  };
 }

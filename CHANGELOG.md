@@ -10,6 +10,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.8.0 — 2026-10-03
+
 ### Maintenance
 
 - Separate portable document validation, action profiles, offline preview assembly,
@@ -35,6 +37,17 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
+- Hosted Web Studio on GitHub Pages. Gallery styles open their recorded settings,
+  offer JSON downloads and local commands, and support shareable filter links.
+  Studio shares validated documents, action selection, seed and preview position
+  without forwarding local save tokens. Hosted Studio never activates effects.
+- Native deformation retargets carry sampled phase and direction speed through
+  cubic transitions. Closing a moving window retains those clocks and begins
+  translation with its sampled velocity. Layout easing remains owned by Niri.
+- Rapid-reversal wobble showcase, refreshed native recordings and stock/patched
+  stress checks for transparent clients, rapid open/close, resize interruptions,
+  fullscreen and sequential 1×/1.5×/2× output scales.
+
 - Nine presets: Hexagon Burst, Hive Collapse, Signal Glitch, Chromatic Glitch,
   Ink Spread, Ink Bloom, Slice Exchange, Pixel Transfer and Soft Phase. The
   catalog now contains 64 styles across nine families.
@@ -44,8 +57,9 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   plus movement intensity. Interrupted swaps retain deformation and seed;
   direction changes blend instead of snapping. Closing during an opening or move
   continues that effect while fading, taking precedence over the normal close
-  style. This preserves visual state, not physical velocity across every retarget.
-- Searchable click-to-play gallery on GitHub Pages with 134 recordings, lightweight
+  style. Shader deformation carries sampled velocity; this does not change every
+  layout trajectory or create shared particle physics.
+- Searchable click-to-play gallery on GitHub Pages with 135 recordings, lightweight
   posters, family/scenario/renderer filters and single-animation playback.
   New clips cover all added presets, three resize profiles, a resize comparison,
   three native swap styles and closing during opening.
@@ -81,7 +95,7 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 - Tighten the bounded lookup for varied fragments without waves from 7×7 to 5×5.
   All 231 reference frame pairs matched exactly; measured Core Detonation and
   Mosaic Burst shader time fell roughly 45–47% on the documented GPU sample.
-- Refresh all ten native swap recordings and three interruption scenarios with
+- Refresh all ten native swap recordings and four interruption scenarios with
   mint/violet synthetic cards, 50 fps capture and the release-built experiment.
 - Curate the README with Fragments first and move the full catalog to its own
   page. Rewrite roadmap priorities and document resize, continuity and measured
