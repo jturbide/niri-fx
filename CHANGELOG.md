@@ -10,37 +10,45 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
-- The gallery starts with the same nine recommended looks as the terminal guide,
-  with separate views for open/close pairings and the full collection. Search and
-  existing filtered links still reach every example; collection links are shareable.
-- Setup links beside the gallery explain how to use a chosen style on plain Niri,
-  iNiR/iRiS, DMS or Noctalia. Community forms collect shared styles and compatibility
-  reports without automatic telemetry.
-
-- Edge Ripple and Torsion Resize modes, each with separate Subtle and Expressive
-  opt-in profiles, dedicated recordings and side-by-side comparisons. All built-in
-  styles and open/close pairings still leave resize disabled.
-- Studio Grow/Shrink previews now exchange geometry and textures and run time
-  forward in both directions. All resize showcase clips use this corrected flow.
-- Signed resize twist and independent resize-pattern controls, plus browser checks
-  for growth, shrinkage, endpoints, extreme aspect ratios and zero strength.
-- Resize profile coverage in the nested compositor interruption harness.
+## 0.11.0 — 2026-10-03
 
 ### Added
 
-- Vortex distortion with signed twist, contraction, falloff and origin controls.
-  Vortex Fold makes a pronounced spiral collapse; Soft Swirl is a shorter, gentler
-  counterclockwise warp. Both support stock open/close and experimental movement.
-  Resize remains opt-in and uses a separate renderer.
-- Preset loops, a twist-direction comparison and a native vortex swap showcase,
-  with importable settings and measured shader costs.
+- Vortex Fold and Soft Swirl, with signed twist, contraction, falloff and origin
+  controls. Both support stock Niri opening/closing and experimental movement.
+- Edge Ripple and Torsion Resize, each with separate Subtle and Expressive profiles.
+  All built-in styles and open/close pairings still leave resize disabled.
+- Dedicated recordings, comparisons, importable settings and hardware shader
+  measurements for the new effects. The gallery contains 151 showcases.
+- Gallery collections for nine starter looks, seven open/close pairings and all
+  examples, with shareable links and setup instructions for each supported shell.
+- Community forms for sharing styles and reporting compatibility across GPUs,
+  displays and shells. No automatic telemetry or report upload is added.
 
 ### Changed
 
-- Standardize GitHub release titles as `NiriFX X.Y.Z`; feature summaries belong
-  in the release notes.
-- Disable irrelevant distortion controls in Studio's resize preview. Switching
-  views preserves values and never enables resize.
+- Share the starter selection between the gallery and terminal guide, keeping
+  Fragments first. Shorter mobile pages and expandable filters put previews closer
+  to the top. Search from Start here explores the complete collection.
+- Studio disables controls that do not affect the selected action, preserving
+  their values. Torsion has its own signed resize twist control.
+- Standardize GitHub release titles as `NiriFX X.Y.Z`.
+
+### Fixed
+
+- Preview shrinking as a new forward-time transition, exchanging old/new textures
+  and geometry. Share links preserve resize direction; all resize showcase clips
+  use the corrected flow.
+- Preserve access to filtered gallery views and direct example links outside the
+  starter collection. Update the terminal guide's preset count and walkthrough.
+
+### Upgrade
+
+Update the CLI before importing Vortex, Edge Ripple or Torsion documents. Older
+settings receive defaults for the new controls; existing built-in effect values
+and resize choices are preserved. Updating the package does not rewrite active
+shaders. Re-register or re-export to expose new styles in shell pickers. The
+experimental compositor patch is unchanged from 0.10.0.
 
 ## 0.10.0 — 2026-10-03
 

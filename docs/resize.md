@@ -37,7 +37,7 @@ Open/close-only controls such as ink color or glitch bands do not affect resize.
 
 ## Edge Ripple and Torsion Resize
 
-These modes require current `main` after 0.10.0. Start with **Subtle** for everyday
+These modes require NiriFX 0.11 or newer. Start with **Subtle** for everyday
 use or **Expressive** for a stronger deformation. All four profiles keep Balanced
 opening and closing, and explicitly assign a resize effect at 650 ms. Import the
 JSON in Studio, select the Resize action, and use **Grow** or **Shrink** to preview.

@@ -1,7 +1,7 @@
 # Effect controls
 
-This guide follows **main**, including the additions after the latest release listed in
-[Unreleased](../CHANGELOG.md#unreleased). All built-ins leave resize disabled.
+This guide follows **main**. For a tagged release, use the guide shipped with that
+version and consult the [changelog](../CHANGELOG.md). All built-ins leave resize disabled.
 
 ## Fragments
 
@@ -239,7 +239,7 @@ the window image; they do not move the actual window or affect neighboring apps.
 a shorter, gentler counterclockwise turn. Zero twist leaves contraction and fade;
 zero contraction leaves rotation and fade. Falloff zero rotates the window rigidly,
 while higher values curl the center more than the outer texture. Wave displacement,
-wavelength and cycles do not affect vortex. These additions require `main` after 0.10.0.
+wavelength and cycles do not affect vortex. These additions require NiriFX 0.11 or newer.
 
 ```sh
 python3 -m niri_fx studio --preset vortex-fold

@@ -4,19 +4,21 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
-## Current development version (after 0.10)
+## From 0.10 to 0.11
 
-Vortex Fold, Soft Swirl and the vortex twist/contraction controls require current
-`main`. They are not in the 0.10.0 release assets. The existing schema remains 3;
-older files receive defaults for the new, vortex-only controls. Update the CLI
-before importing a vortex document. Existing preset values and appearance are
-unchanged. Re-register or re-export a shell pack to add the new styles.
+Vortex Fold, Soft Swirl, Edge Ripple and Torsion Resize require 0.11 or newer.
+Update the CLI before importing their documents. The existing preset schema
+remains 3; older files receive defaults for the added controls. Existing built-in
+values and appearance are unchanged. Re-register or re-export a shell pack to
+expose the new styles. Installing the package alone does not update active shaders.
 
-The experimental compositor patch is unchanged from 0.10. Regenerate its movement
-shader to try Vortex Fold. Resize remains off in all built-ins. Its default distortion mode remains Ripple.
-Edge Ripple, Torsion Resize and their four opt-in profiles also require current
-`main`. Update the CLI before importing them. Missing `distortion_resize_mode`
-and `resize_twist` fields receive defaults; existing resize choices are preserved.
+Resize stays off in all built-ins. Distortion still defaults to Ripple Resize;
+Edge Ripple and Torsion are separate choices with explicit opt-in profiles. A
+missing `distortion_resize_mode` or `resize_twist` uses its default.
+
+The gallery now starts with nine recommended looks. Search, All examples and
+existing filtered links still reach every style. The experimental compositor patch
+is unchanged from 0.10; regenerate its movement shader to try Vortex Fold.
 
 ## From 0.9 to 0.10
 
