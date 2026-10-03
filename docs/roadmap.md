@@ -2,6 +2,8 @@
 
 Reviewed on **2026-10-03**. The current scope is standalone Niri plus iNiR/iRiS,
 DMS and Noctalia. This is a priority order, not a release-date promise.
+The [development phases](next-phases.md) turn these priorities into scoped deliverables
+and acceptance gates; [architecture](architecture.md) defines the implementation boundaries.
 
 | Priority | Work | Why / acceptance gate |
 | --- | --- | --- |

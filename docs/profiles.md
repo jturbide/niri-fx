@@ -6,6 +6,13 @@ with Ember Erosion, and leave your existing resize behavior unchanged.
 
 ![Spring opening and ember closing in one profile](gifs/profile-spring-and-ember.gif)
 
+Other ready-to-import combinations are **Burst and Drift** (Explosion opening,
+Dust Drift closing), **Frost and Fragments** (Frost Vanish opening, Pixel Dust
+closing), and **Ghost and Shockwave** (Ghost Wisps opening, Shockwave closing).
+See [all four JSON files and preview commands](../examples/profiles/README.md)
+or [their gallery loops](../README.md#combine-different-actions). Resize stays
+off in every example.
+
 In Studio, enable **Independent action effects**, choose **Editing action**, and
 pick/tune its style. Reconstruct previews the opening action; Deconstruct previews
 the closing action. Viewing Resize never enables it: tick **Enable resize effect**

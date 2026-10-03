@@ -1,21 +1,13 @@
 // Deterministic recordings of Studio's real shaders and its labelled concepts.
 // Node 22+, Chromium and FFmpeg. No desktop capture or live preset changes.
-import { spawn, execFileSync } from "node:child_process";
-import {
-  mkdtempSync,
-  readFileSync,
-  existsSync,
-  mkdirSync,
-  writeFileSync,
-  rmSync,
-  statSync,
-} from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
-import { pathToFileURL, fileURLToPath } from "node:url";
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, readFileSync, existsSync, mkdirSync, writeFileSync, statSync } from "node:fs";
+import { join } from "node:path";
+import { pathToFileURL } from "node:url";
 import assert from "node:assert/strict";
+import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 
-const root = resolve(fileURLToPath(new URL("..", import.meta.url)));
+const root = projectRoot;
 process.chdir(root);
 const args = process.argv.slice(2);
 assert(
@@ -31,72 +23,10 @@ mkdirSync(join(root, "artifacts"), { recursive: true });
 const scratch = mkdtempSync(join(root, "artifacts/readme-gifs-"));
 const preview = join(scratch, "preview.html");
 execFileSync("python3", ["-m", "niri_fx", "preview", "--output", preview]);
-const profile = mkdtempSync(join(tmpdir(), "fragments-gifs-"));
-const browser = spawn(
-  "chromium",
-  [
-    "--headless=new",
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--use-angle=swiftshader",
-    "--enable-unsafe-swiftshader",
-    "--remote-debugging-port=0",
-    "--user-data-dir=" + profile,
-    "about:blank",
-  ],
-  { stdio: "ignore" },
-);
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-let ws;
+const browser = await launchBrowser();
 try {
-  for (let i = 0; i < 100 && !existsSync(join(profile, "DevToolsActivePort")); i++)
-    await sleep(100);
-  const port = readFileSync(join(profile, "DevToolsActivePort"), "utf8").split("\n")[0];
-  const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-  ws = new WebSocket(tabs.find((tab) => tab.type === "page").webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => {
-    ws.onopen = resolve;
-    ws.onerror = reject;
-  });
-  let sequence = 0;
-  const pending = new Map();
-  ws.onmessage = (event) => {
-    const message = JSON.parse(event.data),
-      p = pending.get(message.id);
-    if (p) {
-      pending.delete(message.id);
-      message.error
-        ? p.reject(new Error(JSON.stringify(message.error)))
-        : p.resolve(message.result);
-    }
-  };
-  const rpc = (method, params = {}) =>
-    new Promise((resolve, reject) => {
-      const id = ++sequence;
-      pending.set(id, { resolve, reject });
-      ws.send(JSON.stringify({ id, method, params }));
-    });
-  const evaluate = async (expression) => {
-    const r = await rpc("Runtime.evaluate", {
-      expression,
-      returnByValue: true,
-      awaitPromise: true,
-    });
-    if (r.exceptionDetails) throw new Error(JSON.stringify(r.exceptionDetails));
-    return r.result.value;
-  };
-  await rpc("Emulation.setDeviceMetricsOverride", {
-    width: 720,
-    height: 616,
-    deviceScaleFactor: 1,
-    mobile: false,
-  });
-  await rpc("Page.navigate", { url: pathToFileURL(preview).href });
-  for (let i = 0; i < 100; i++) {
-    if (await evaluate("document.documentElement?.dataset.shaderStatus")) break;
-    await sleep(100);
-  }
-  assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
+  const { rpc, evaluate } = browser;
+  await browser.navigate(pathToFileURL(preview).href, { width: 720, height: 616 });
   // Capture-only layout: keep the actual canvas and synthetic window textures.
   await evaluate(`(()=>{
   const style=document.createElement('style');style.textContent=
@@ -376,12 +306,5 @@ try {
   }
   console.log("Frame sources: " + scratch);
 } finally {
-  ws?.close();
-  if (browser.exitCode === null) {
-    const exited = new Promise((resolve) => browser.once("exit", resolve));
-    browser.kill("SIGTERM");
-    await exited;
-  }
-  // Chrome helpers may flush their profile briefly after the browser exits.
-  rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  await browser.close();
 }

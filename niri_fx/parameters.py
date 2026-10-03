@@ -14,9 +14,15 @@ def parameter(
     limits=None,
     choices=None,
     token=None,
+    glsl_type="float",
     integer=False,
-    advanced=False,
 ):
+    """Describe one field once for validation, CLI, Studio and GLSL generation.
+
+    `integer` constrains user values; `glsl_type` controls emitted syntax. They
+    differ: particle counts are whole numbers but multiply GLSL float vectors.
+    Empty families means shared controls; group only describes editor layout.
+    """
     spec = {
         "label": label,
         "families": families,
@@ -25,8 +31,8 @@ def parameter(
         "limits": limits,
         "choices": choices,
         "token": token,
+        "glsl_type": glsl_type,
         "integer": integer,
-        "advanced": advanced,
     }
     return field(default=default, metadata=spec)
 
@@ -43,6 +49,7 @@ def specifications(cls):
 
 
 def validate_parameters(effect, specs):
+    """Reject non-finite values and bool-as-int before they reach generated GLSL."""
     for name, spec in specs.items():
         value = getattr(effect, name)
         if spec["type"] == "boolean":
@@ -81,7 +88,7 @@ def shader_tokens(effect, specs):
             str(list(spec["choices"]).index(value))
             if spec["type"] == "choice"
             else str(int(value))
-            if name == "slice_count"
+            if spec["glsl_type"] == "int"
             else glsl_number(value)
         )
     return tokens

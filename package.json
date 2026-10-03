@@ -2,9 +2,11 @@
   "name": "nirifx-development",
   "private": true,
   "scripts": {
-    "lint": "eslint niri_fx/*.js scripts/*.mjs",
-    "format:check": "prettier --check niri_fx/*.js niri_fx/*.css niri_fx/preview.html scripts/*.mjs eslint.config.mjs package.json .github/workflows/*.yml",
-    "format": "prettier --write niri_fx/*.js niri_fx/*.css niri_fx/preview.html scripts/*.mjs eslint.config.mjs package.json .github/workflows/*.yml"
+    "lint": "eslint \"niri_fx/*.js\" \"scripts/**/*.mjs\" \"tests/*.mjs\"",
+    "format:check": "prettier --check \"niri_fx/*.{js,css}\" niri_fx/preview.html \"scripts/**/*.mjs\" \"tests/*.mjs\" eslint.config.mjs package.json .github/workflows/*.yml",
+    "format": "prettier --write \"niri_fx/*.{js,css}\" niri_fx/preview.html \"scripts/**/*.mjs\" \"tests/*.mjs\" eslint.config.mjs package.json .github/workflows/*.yml",
+    "test": "node --test tests/effect-core.test.mjs",
+    "test:browser": "node --test tests/browser-session.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

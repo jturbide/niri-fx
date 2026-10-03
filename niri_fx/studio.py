@@ -1,6 +1,5 @@
 """Local effect editor. Only validated named presets can be saved to iNiR."""
 
-import base64
 import json
 import os
 import secrets
@@ -8,148 +7,16 @@ import shutil
 import subprocess
 import time
 import webbrowser
-from dataclasses import asdict
-from html import escape
 from http.server import BaseHTTPRequestHandler, HTTPServer
-from importlib.resources import files
 from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from .branding import APP_ID
-from .effects import (
-    ELASTIC_ANCHORS,
-    ELASTIC_AXES,
-    FAMILIES,
-    GRAVITIES,
-    LIMITS,
-    PARAMETERS,
-    PRESET_SCHEMA,
-    PRESETS,
-    RELEASES,
-    RESIZE_MODES,
-    ROTATIONS,
-    SLICE_DIRECTIONS,
-    SLICE_ORDERS,
-    Effect,
-    describe_presets,
-    shader_templates,
-)
+from .documents import MAX_DOCUMENT_BYTES
 from .integration import make_custom_preset, read_shell_presets, update_registry
-
-
-def parameter_controls():
-    groups = {}
-    for key, spec in PARAMETERS.items():
-        if key == "family":
-            continue
-        attrs = f'id="{key}"'
-        if spec["type"] == "number":
-            low, high = spec["limits"]
-            control = f'<input {attrs} type="range" min="{16 if key == "particles" else low}" max="{high}" step="{1 if spec["integer"] else "any"}" />'
-            output = f' <output id="{key}-value"></output>'
-        elif spec["type"] == "boolean":
-            control, output = f'<input {attrs} type="checkbox" />', ""
-        else:
-            options = "".join(
-                f'<option value="{escape(value)}">{escape(value.replace("-", " ").title())}</option>'
-                for value in spec["choices"]
-            )
-            control, output = f"<select {attrs}>{options}</select>", ""
-        wrapper = (
-            ' id="count-control"'
-            if key == "particles"
-            else ' id="tile-control"'
-            if key == "tile_size"
-            else ""
-        )
-        groups.setdefault(spec["group"], []).append(
-            f'<div{wrapper} class="parameter" data-parameter="{key}"><label for="{key}">{escape(spec["label"])}{output}</label>{control}<button type="button" class="reset-parameter" data-reset="{key}" aria-label="Reset {escape(spec["label"])}">Reset</button></div>'
-        )
-    result = []
-    for group, controls in groups.items():
-        if group == "general":
-            group = "resize"  # resize boolean uses the same opt-in group
-        if group == "fragments":
-            controls.insert(
-                0,
-                '<div><label for="density">Particle sizing</label><select id="density"><option value="count">Target particle count</option><option value="tile">Fixed square size</option></select></div>',
-            )
-        identifier = {"fragments": "fragment", "slices": "slice"}.get(group, group)
-        # Basic family settings stay visible; detailed variation is collapsible.
-        if group == "variation":
-            result.append(
-                '<details id="variation-controls" class="wide"><summary>Advanced waves and variation</summary>'
-                + "".join(controls)
-                + '<small id="variation-note"></small><span id="slice-variation"></span></details>'
-            )
-        else:
-            result.append(
-                f'<div id="{identifier}-controls" class="wide parameter-group">'
-                + "".join(controls)
-                + "</div>"
-            )
-    return "".join(result)
-
-
-def preview_document(effect, name="balanced", connection=None, preferences=None):
-    from .profiles import Profile
-
-    profile = effect.document(name) if isinstance(effect, Profile) else None
-    if profile:
-        effect = effect.open
-
-    payload = {
-        "schema": PRESET_SCHEMA,
-        "profile": profile,
-        "preferences": preferences,
-        "specifications": PARAMETERS,
-        "parameters": asdict(effect),
-        "name": name,
-        "presets": describe_presets(),
-        "templates": shader_templates(),
-        "gravities": GRAVITIES,
-        "rotations": ROTATIONS,
-        "releases": RELEASES,
-        "resize_modes": RESIZE_MODES,
-        "limits": LIMITS,
-        "defaults": asdict(Effect()),
-        "families": FAMILIES,
-        "slice_directions": SLICE_DIRECTIONS,
-        "slice_orders": SLICE_ORDERS,
-        "elastic_axes": ELASTIC_AXES,
-        "elastic_anchors": ELASTIC_ANCHORS,
-        "connection": connection,
-        "save_target": connection.get("target", "inir") if connection else "standalone",
-    }
-    data = json.dumps(payload).replace("</", "<\\/")
-    root = files("niri_fx")
-    return (
-        root.joinpath("preview.html")
-        .read_text()
-        .replace("@EFFECT_JSON@", data)
-        .replace("@PARAMETER_CONTROLS@", parameter_controls())
-        .replace(
-            "@FAMILY_OPTIONS@",
-            "".join(
-                f'<option value="{name}">{spec["label"]}</option>'
-                for name, spec in FAMILIES.items()
-            ),
-        )
-        .replace(
-            "@APP_ICON@",
-            base64.b64encode(root.joinpath("assets/niri-fx.svg").read_bytes()).decode(),
-        )
-        .replace(
-            "<!--@MOTION_JS@-->",
-            "<script>" + root.joinpath("motion-preview.js").read_text() + "</script>",
-        )
-        .replace(
-            "<!--@STUDIO_CSS@-->", "<style>" + root.joinpath("studio.css").read_text() + "</style>"
-        )
-        .replace(
-            "<!--@STUDIO_JS@-->", "<script>" + root.joinpath("studio.js").read_text() + "</script>"
-        )
-    )
+from .presets import PRESETS
+from .preview import preview_document
+from .storage import atomic_write
 
 
 def open_studio(url, browser=False):
@@ -185,6 +52,11 @@ def open_studio(url, browser=False):
 
 
 def valid_save_request(headers, origin, token):
+    """Require the same loopback authority, browser origin and session capability.
+
+    Loopback binding alone is insufficient: an unrelated website can send local
+    requests. Host/Origin checks and the token keep writes tied to this editor.
+    """
     return (
         headers.get("Host") == urlsplit(origin).netloc
         and headers.get("Origin") == origin
@@ -194,6 +66,12 @@ def valid_save_request(headers, origin, token):
 
 
 def make_server(arguments, effect):
+    """Create an on-demand editor server; the caller controls its lifetime.
+
+    GET serves self-contained previews. POST accepts bounded parameter documents
+    or favorites, never paths, commands or raw shader source supplied by clients.
+    The save target only selects UI behavior; iNiR registration remains explicit.
+    """
     token = secrets.token_urlsafe(32)
     target = getattr(arguments, "target", "auto")
     if target == "auto":
@@ -268,12 +146,12 @@ def make_server(arguments, effect):
             try:
                 self.server.last_seen = time.monotonic()
                 length = int(self.headers.get("Content-Length", "0"))
-                if not 0 < length <= 16384:
-                    raise ValueError("Preset request must be between 1 and 16384 bytes")
+                if not 0 < length <= MAX_DOCUMENT_BYTES:
+                    raise ValueError(
+                        f"Preset request must be between 1 and {MAX_DOCUMENT_BYTES} bytes"
+                    )
                 data = json.loads(self.rfile.read(length))
                 if self.path == "/preferences":
-                    from .setup import atomic_write
-
                     if (
                         not isinstance(data, dict)
                         or set(data) != {"favorites"}

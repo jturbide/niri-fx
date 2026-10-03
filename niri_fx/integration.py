@@ -3,18 +3,18 @@
 import fcntl
 import json
 import os
-import re
 import subprocess
 import sys
-import tempfile
 from copy import deepcopy
 from dataclasses import asdict
 from datetime import datetime, timezone
 from pathlib import Path
 
 from .branding import APP_ID
-from .effects import PRESET_SCHEMA, PRESETS, Effect, animation_types, preset_description
-from .profiles import Profile, parse_profile
+from .documents import parse_document
+from .effects import PRESETS, animation_types, preset_description
+from .profiles import Profile
+from .storage import staged_write
 
 OWNER = APP_ID
 
@@ -49,6 +49,7 @@ def read_shell_presets(inir_root):
 
 
 def resolve_base(shell_registry, base_id="auto"):
+    """Follow NiriFX ancestry to real shell timings, rejecting cycles/custom state."""
     presets = {p["id"]: p for p in shell_registry["presets"] if isinstance(p, dict) and "id" in p}
     chosen = shell_registry.get("active", "") if base_id == "auto" else base_id
     if not chosen:
@@ -71,6 +72,7 @@ def resolve_base(shell_registry, base_id="auto"):
 
 
 def make_preset(identifier, label, effect, chosen, base_types):
+    """Overlay only requested actions onto a copy of the user's base settings."""
     family = "profile" if isinstance(effect, Profile) else effect.family
     types = deepcopy(base_types)
     types.update(animation_types(effect))
@@ -109,32 +111,8 @@ def make_presets(shell_registry, base_id="auto"):
     return generated
 
 
-def custom_document(data):
-    profile = isinstance(data, dict) and data.get("kind") == "profile"
-    if not profile and (
-        not isinstance(data, dict)
-        or type(data.get("schema")) is not int
-        or data["schema"] != PRESET_SCHEMA
-        or not isinstance(data.get("effect"), dict)
-    ):
-        raise ValueError(
-            f"Custom preset must contain schema: {PRESET_SCHEMA}, name, and an effect object"
-        )
-    name = data.get("name")
-    if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,47}", name):
-        raise ValueError(
-            "Preset name must be 1–48 letters, numbers, spaces, hyphens or underscores"
-        )
-    slug = re.sub(r"[ _-]+", "-", name.lower()).rstrip("-")
-    try:
-        effect = parse_profile(data) if profile else Effect(**data["effect"])
-    except TypeError as error:
-        raise ValueError(f"Unsupported effect parameters: {error}") from error
-    return name, slug, effect
-
-
 def make_custom_preset(shell_registry, data, base_id="auto"):
-    name, slug, effect = custom_document(data)
+    name, slug, effect = parse_document(data)
     chosen, base_types = resolve_base(shell_registry, base_id)
     return make_preset(f"{OWNER}-custom-{slug}", name, effect, chosen, base_types)
 
@@ -170,6 +148,12 @@ def merge_registry(data, generated, remove=False):
 
 
 def update_registry(registry_path, generated=(), *, remove=False, dry_run=False):
+    """Register without activation; preserve unrelated providers and recovery bytes.
+
+    Lock cooperating writers, stage and fsync the replacement, compare against
+    the read snapshot, then back up before rename. A failure before rename leaves
+    the original registry intact. This does not edit the active Niri shader.
+    """
     target = Path(registry_path).expanduser().resolve()
     if dry_run:
         data = json.loads(target.read_text()) if target.exists() else {}
@@ -190,16 +174,8 @@ def update_registry(registry_path, generated=(), *, remove=False, dry_run=False)
             return {"path": str(target), "changed": False, "backup": None}
         mode = (target.stat().st_mode & 0o777) if original is not None else 0o600
         backup = None
-        temporary = None
-        try:
-            with tempfile.NamedTemporaryFile(
-                dir=target.parent, prefix=".niri-fx-", delete=False
-            ) as output:
-                temporary = Path(output.name)
-                os.fchmod(output.fileno(), mode)
-                output.write((json.dumps(updated, indent=2, ensure_ascii=False) + "\n").encode())
-                output.flush()
-                os.fsync(output.fileno())
+        content = (json.dumps(updated, indent=2, ensure_ascii=False) + "\n").encode()
+        with staged_write(target, content, mode) as temporary:
             current = target.read_bytes() if target.exists() else None
             if current != original:
                 raise ValueError(
@@ -214,10 +190,6 @@ def update_registry(registry_path, generated=(), *, remove=False, dry_run=False)
                     saved.flush()
                     os.fsync(saved.fileno())
             os.replace(temporary, target)
-            temporary = None
-        finally:
-            if temporary is not None:
-                temporary.unlink(missing_ok=True)
         return {
             "path": str(target),
             "changed": True,

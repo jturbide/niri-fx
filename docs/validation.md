@@ -7,7 +7,9 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 57 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| Python regression suite | 63 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| Portable JavaScript core | 28 Node checks, including shared valid/invalid documents and all 55 presets’ supported stock shaders matched against Python |
+| Browser tool lifecycle | Two real Chromium checks cover failed launch, request timeout, page error, in-flight disconnect and profile cleanup |
 | GLSL ES 1.00 compilation | All 209 shaders compiled: 138 fragment variants, 22 slice, 21 elastic and 28 reveal variants |
 | Stock Niri config parsing | All 55 default and 69 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
 | iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves all eight families and independent profiles through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
@@ -80,19 +82,23 @@ use the same separately built compositor; the compositor patch is unchanged.
 
 ## Documentation recordings
 
-The gallery contains 95 GIFs: all 55 presets, open/close and opt-in resize,
+The gallery contains 106 GIFs: all 55 presets, open/close and opt-in resize,
 control/style comparisons, custom recipes, labelled Canvas movement concepts,
-and seven actual nested Niri swaps. The latest addition is eight preset loops and
-three comparisons for Pixels, Wisps, Distortion and Ember palettes, plus five
-regenerated clips for revised Dissolve behavior. Earlier additions
+and seven actual nested Niri swaps. The latest additions cover eight new preset
+loops, eleven comparisons for Pixels, Wisps, Distortion and Ember controls, and
+three mixed-action profiles, plus five regenerated clips for revised Dissolve
+behavior. Earlier additions
 cover piece shapes, spatial release, slice hinges/collapse and elastic transforms.
-All current clips include exact
-parameter metadata, apart from the separately documented original native swap.
+All dedicated preset loops, comparisons, recipes, profiles and newer native swaps
+include exact parameter metadata. Fourteen early preset loops were refreshed to
+complete that coverage. The introductory open/close/resize clips, two original
+Canvas concepts and original native swap retain their historical recording metadata.
 Synthetic content only; see [reproduction details](gifs/README.md).
 
 The comparison/custom recorder checks browser/Python shader parity for every
 panel. The docs check verifies that preview commands, importable JSON, comparison
-definitions and recorded parameter metadata still agree.
+definitions and recorded parameter metadata still agree. It also requires a
+dedicated recording for each preset and profile example, and links for all GIFs.
 
 GIFs use 20 fps, scaled output and palette reduction. Browser checks use Chromium
 software WebGL. Neither measures compositor GPU frame time or guarantees exact
@@ -150,3 +156,17 @@ D-Bus session. The unmodified Niri Animations 0.2.0 picker displayed all 47 styl
 Virtual keyboard dropdown selection applied Iris Bloom then Ember Erosion, and
 selecting the base pack removed the include. Stock Niri validated the resulting
 configs; the isolated shell and compositor were stopped after the test.
+
+## Maintenance refactor
+
+The refactor preserved all 163 default action shaders across 55 presets after
+stripping comments and whitespace (opening, closing, supported resize and movement).
+New comments explain coordinate spaces, alpha handling and bounded inverse searches.
+The Python/browser validators share 24 accepted/rejected document fixtures; the
+standalone JavaScript core has no DOM or network dependency. Full Studio E2E remains
+a separate check of rendering, UI state and actual temporary-registry saving.
+
+The installed desktop config and preset registry are outside the hygiene change.
+No active effects, resize choices, shell integrations or compositor binaries are
+changed by this maintenance work. See [architecture](architecture.md) and the
+[next-phase gates](next-phases.md).

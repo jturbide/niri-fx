@@ -6,7 +6,7 @@ from argparse import Namespace
 from pathlib import Path
 from unittest.mock import patch
 
-from test_fragments import shell_registry
+from helpers import shell_registry
 
 from niri_fx import setup
 from niri_fx.cli import parser, selected_effect

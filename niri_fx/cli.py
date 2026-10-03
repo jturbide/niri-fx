@@ -8,16 +8,15 @@ from dataclasses import replace
 from pathlib import Path
 
 from . import __version__
+from .documents import effect_document, load_document, parse_document
 from .effects import (
     FAMILIES,
     PARAMETERS,
     PRESETS,
     describe_presets,
-    effect_document,
     render_kdl,
 )
 from .integration import (
-    custom_document,
     default_inir_root,
     default_registry,
     make_custom_preset,
@@ -59,7 +58,7 @@ def selected_effect(arguments):
             raise ValueError(
                 "--custom uses the file's parameters; do not combine it with effect overrides"
             )
-        return custom_document(read_custom(arguments.custom))[2]
+        return parse_document(load_document(arguments.custom))[2]
     overrides = {
         k: getattr(arguments, k) for k in EFFECT_FIELDS if getattr(arguments, k, None) is not None
     }
@@ -77,16 +76,6 @@ def selected_effect(arguments):
             + ", ".join(sorted(inactive.intersection(overrides)))
         )
     return effect
-
-
-def read_custom(path):
-    with Path(path).open("rb") as stream:
-        raw = stream.read(16385)
-    if len(raw) > 16384:
-        raise ValueError("Custom preset must be at most 16 KiB")
-    data = json.loads(raw)
-    custom_document(data)
-    return data
 
 
 def parser():
@@ -211,7 +200,7 @@ def main(argv=None):
                 close=PRESETS[arguments.close_preset],
                 resize=PRESETS[arguments.resize_preset] if arguments.resize_preset else None,
             ).document(arguments.name)
-            custom_document(document)
+            parse_document(document)
             print(json.dumps(document, indent=2))
         elif arguments.command == "doctor":
             from .setup import doctor
@@ -246,7 +235,7 @@ def main(argv=None):
             plan = plan_setup(
                 arguments,
                 selected_effect(arguments),
-                read_custom(arguments.custom) if arguments.custom else None,
+                load_document(arguments.custom) if arguments.custom else None,
             )
             if (
                 plan["target"] == "inir"
@@ -267,11 +256,11 @@ def main(argv=None):
             print(json.dumps(result, indent=2, ensure_ascii=False))
         elif arguments.command in ("render", "preview", "studio"):
             effect = selected_effect(arguments)
-            name = read_custom(arguments.custom)["name"] if arguments.custom else arguments.preset
+            name = load_document(arguments.custom)["name"] if arguments.custom else arguments.preset
             if arguments.command == "render":
                 print(render_kdl(effect), end="")
             elif arguments.command == "preview":
-                from .studio import preview_document
+                from .preview import preview_document
 
                 with arguments.output.open("x") as output:
                     output.write(preview_document(effect, name))
@@ -292,7 +281,7 @@ def main(argv=None):
                         raise ValueError(
                             "--custom uses the file's parameters; do not combine it with effect overrides"
                         )
-                    document = read_custom(arguments.custom)
+                    document = load_document(arguments.custom)
                     generated = [make_custom_preset(registry, document, arguments.base)]
                 elif arguments.name:
                     document = effect_document(arguments.name, selected_effect(arguments))

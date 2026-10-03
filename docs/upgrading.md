@@ -25,3 +25,9 @@ formats or delete them during an update.
 
 Resize is opt-in. Registration does not activate effects. Read [setup and restore](setup.md)
 and [iNiR integration](integration.md) for current paths and ownership boundaries.
+
+Single-style JSON now requires exactly `schema`, `name` and `effect`, matching the
+strict outer-field validation already used for profiles. Remove unrelated metadata
+from preset files. Unknown effect parameters and malformed names remain errors.
+The maintenance refactor changes internal Python module locations; the `niri-fx`
+CLI, document schemas and existing presets remain the supported user interfaces.

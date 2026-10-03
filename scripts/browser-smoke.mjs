@@ -1,111 +1,21 @@
 // Run against an offline preview or an isolated studio --registry test path.
 // Requires Node 22+ and Chromium. Saves review images in the ignored artifacts/.
-import { spawn, execFileSync, spawnSync } from "node:child_process";
-import { mkdtempSync, readFileSync, existsSync, mkdirSync, writeFileSync, rmSync } from "node:fs";
-import { tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { execFileSync } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
+import { setTimeout as sleep } from "node:timers/promises";
+import { launchBrowser, projectRoot } from "./lib/browser.mjs";
+
+process.chdir(projectRoot);
 
 const url = process.argv[2];
 if (!url) throw new Error("Usage: node scripts/browser-smoke.mjs PREVIEW_URL [--save-test]");
-const executable =
-  process.env.CHROME_BIN ||
-  ["chromium", "chromium-browser", "google-chrome", "google-chrome-stable"].find(
-    (name) => spawnSync(name, ["--version"], { stdio: "ignore" }).status === 0,
-  );
-if (!executable) throw new Error("Install Chromium/Chrome or set CHROME_BIN");
-const profile = mkdtempSync(join(tmpdir(), "niri-fx-browser-"));
-const browser = spawn(
-  executable,
-  [
-    "--headless=new",
-    "--no-sandbox",
-    "--disable-dev-shm-usage",
-    "--use-angle=swiftshader",
-    "--enable-unsafe-swiftshader",
-    "--remote-debugging-port=0",
-    "--user-data-dir=" + profile,
-    "about:blank",
-  ],
-  { stdio: ["ignore", "ignore", "pipe"] },
-);
-let diagnostics = "",
-  launchError,
-  closed = false;
-browser.stderr.on("data", (chunk) => {
-  diagnostics = (diagnostics + chunk.toString()).slice(-8192);
-});
-browser.on("error", (error) => {
-  launchError = error;
-});
-const browserClosed = new Promise((resolve) =>
-  browser.once("close", () => {
-    closed = true;
-    resolve();
-  }),
-);
-const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-let ws;
+const browser = await launchBrowser();
 try {
-  const deadline = Date.now() + 30000;
-  while (!existsSync(join(profile, "DevToolsActivePort"))) {
-    if (launchError || closed || Date.now() >= deadline)
-      throw new Error(
-        `Chrome did not start (${launchError?.message ?? (closed ? "exit " + browser.exitCode : "30s timeout")}).\n${diagnostics}`,
-      );
-    await sleep(100);
-  }
-  const port = readFileSync(join(profile, "DevToolsActivePort"), "utf8").split("\n")[0];
-  const tabs = await (await fetch(`http://127.0.0.1:${port}/json/list`)).json();
-  ws = new WebSocket(tabs.find((tab) => tab.type === "page").webSocketDebuggerUrl);
-  await new Promise((resolve, reject) => {
-    ws.onopen = resolve;
-    ws.onerror = reject;
-  });
-  let sequence = 0;
-  const pending = new Map();
-  ws.onmessage = (event) => {
-    const message = JSON.parse(event.data);
-    const p = pending.get(message.id);
-    if (p) {
-      pending.delete(message.id);
-      message.error
-        ? p.reject(new Error(JSON.stringify(message.error)))
-        : p.resolve(message.result);
-    }
-  };
-  const rpc = (method, params = {}) =>
-    new Promise((resolve, reject) => {
-      const id = ++sequence;
-      pending.set(id, { resolve, reject });
-      ws.send(JSON.stringify({ id, method, params }));
-    });
-  const evaluate = async (expression) => {
-    const r = await rpc("Runtime.evaluate", {
-      expression,
-      returnByValue: true,
-      awaitPromise: true,
-    });
-    if (r.exceptionDetails) throw new Error(JSON.stringify(r.exceptionDetails));
-    return r.result.value;
-  };
-  await rpc("Emulation.setDeviceMetricsOverride", {
-    width: 1380,
-    height: 1120,
-    deviceScaleFactor: 1,
-    mobile: false,
-  });
-  await rpc("Page.navigate", { url });
-  for (let i = 0; i < 100; i++) {
-    if (await evaluate("document.documentElement?.dataset.shaderStatus")) break;
-    await sleep(100);
-  }
-  assert.equal(
-    await evaluate("document.documentElement?.dataset.shaderStatus"),
-    "ready",
-    await evaluate("byId('error').textContent"),
-  );
+  const { rpc, evaluate } = browser;
+  await browser.navigate(url, { width: 1380, height: 1120 });
   const expected = JSON.parse(
     execFileSync(
       "python3",
@@ -449,7 +359,7 @@ try {
       "python3",
       [
         "-c",
-        "import json,sys;from niri_fx.integration import custom_document;from niri_fx.effects import effect_document;doc=json.load(sys.stdin);name,_,effect=custom_document(doc);print(json.dumps(effect_document(name,effect)))",
+        "import json,sys;from niri_fx.documents import parse_document,effect_document;doc=json.load(sys.stdin);name,_,effect=parse_document(doc);print(json.dumps(effect_document(name,effect)))",
       ],
       { input: JSON.stringify(exportedSlice), encoding: "utf8" },
     ),
@@ -630,7 +540,7 @@ try {
       "python3",
       [
         "-c",
-        "import json,sys;from niri_fx.integration import custom_document;from niri_fx.effects import animation_types;print(json.dumps(animation_types(custom_document(json.load(sys.stdin))[2])))",
+        "import json,sys;from niri_fx.documents import parse_document;from niri_fx.effects import animation_types;print(json.dumps(animation_types(parse_document(json.load(sys.stdin))[2])))",
       ],
       { input: JSON.stringify(profileDocument), encoding: "utf8" },
     ),
@@ -801,7 +711,7 @@ try {
     "python3",
     [
       "-c",
-      "import sys,json;from niri_fx.integration import custom_document;from niri_fx.effects import shader;print(shader(custom_document(json.load(sys.stdin))[2],False),end='')",
+      "import sys,json;from niri_fx.documents import parse_document;from niri_fx.effects import shader;print(shader(parse_document(json.load(sys.stdin))[2],False),end='')",
     ],
     { input: JSON.stringify(roundingDoc), encoding: "utf8" },
   );
@@ -867,11 +777,5 @@ try {
       (process.argv.includes("--save-test") ? ", and save to isolated registry." : "."),
   );
 } finally {
-  ws?.close();
-  if (!closed) {
-    browser.kill("SIGTERM");
-    await browserClosed;
-  }
-  // Chrome helpers may flush their profile briefly after the browser exits.
-  rmSync(profile, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 });
+  await browser.close();
 }

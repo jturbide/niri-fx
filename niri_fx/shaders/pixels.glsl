@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 // Original NiriFX grid wipe, progressive pixelation and bounded drifting dust.
 @NOISE@
+// Cell order is seeded once per animation. Opening retraces the same field
+// backwards; no particles or random values are advanced frame by frame.
 float pixel_order(vec2 cell, vec2 uv, vec2 size) {
     vec2 origin = vec2(@PIXEL_X@, @PIXEL_Y@);
     float radius = max(length(max(origin, 1.0 - origin) * size), 1.0);
@@ -25,6 +27,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     float tile = @PIXEL_SIZE@;
     if (@PIXEL_MODE@ != 2) {
         if (any(lessThan(coords_geo.xy, vec2(0.0))) || any(greaterThanEqual(coords_geo.xy, vec2(1.0)))) return vec4(0.0);
+        // Keep the release grid fixed while sample blocks grow. Otherwise a
+        // changing cell identity would cause pieces to flicker between orders.
         vec2 cell = floor(px / tile), center = clamp((cell + 0.5) * tile, vec2(0.5), size - 0.5);
         float order = pixel_order(cell, center / size, size);
         float local = clamp((p - 0.65 * order) / 0.35, 0.0, 1.0);
@@ -39,6 +43,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
     if (@PIXEL_WIND@ == 1) wind = vec2(-1.0, 0.0);
     if (@PIXEL_WIND@ == 2) wind = vec2(0.0, -1.0);
     if (@PIXEL_WIND@ == 3) wind = vec2(0.0, 1.0);
+    // Work in a cardinal wind basis. All four directions then share one bounded
+    // inverse lookup; travel is measured in cells rather than screen pixels.
     vec2 side = vec2(-wind.y, wind.x);
     vec2 dest = vec2(dot(px, wind), dot(px, side)), near_cell = floor(dest / tile);
     vec4 result = vec4(0.0);
@@ -51,6 +57,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
             vec2 source_center = wind * center.x + side * center.y;
             float order = pixel_order(cell, clamp(source_center / size, 0.0, 1.0), size);
             float local = clamp((p - 0.65 * order) / 0.35, 0.0, 1.0);
+            // A positive scale floor keeps the inverse transform finite. Each
+            // candidate is clipped in source space before texture sampling.
             float shrink = 1.0 - 0.92 * local;
             vec2 drift = tile * vec2(@PIXEL_TRAVEL@ * local * local,
                 sin(fx_hash(cell + 4.7) * 6.2831853 + local * 4.0) * local * 0.75);
@@ -61,6 +69,8 @@ vec4 @ENTRY@(vec3 coords_geo, vec3 size_geo) {
             vec2 sampled = mix(source_px, clamp(source_center, vec2(0.5), size - 0.5), smoothstep(0.0, 0.18, local));
             vec4 color = pixel_texture(sampled / size);
             color *= 1.0 - smoothstep(0.5 - @PIXEL_SOFTNESS@, 1.0, local);
+            // Premultiplied source-over composes overlapping grains. This is a
+            // deterministic per-window order, not cross-window particle depth.
             result = color + result * (1.0 - color.a);
         }
     }

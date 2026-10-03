@@ -923,6 +923,318 @@
           }
         }
       ]
+    },
+    {
+      "name": "compare-pixel-directions",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "CENTER OUT",
+          "preset": "pixel-wipe",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_direction": "center"
+          }
+        },
+        {
+          "label": "EDGES IN",
+          "preset": "pixel-wipe",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_direction": "edges"
+          }
+        },
+        {
+          "label": "LEFT TO RIGHT",
+          "preset": "pixel-wipe",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_direction": "left"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-dust-size",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "FINE \u00b7 4 PX",
+          "preset": "dust-drift",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_size": 4
+          }
+        },
+        {
+          "label": "MEDIUM \u00b7 8 PX",
+          "preset": "dust-drift",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_size": 8
+          }
+        },
+        {
+          "label": "COARSE \u00b7 16 PX",
+          "preset": "dust-drift",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_size": 16
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-dust-wind",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "UPDRAFT",
+          "preset": "dust-drift",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_wind": "up"
+          }
+        },
+        {
+          "label": "RIGHTWARD",
+          "preset": "dust-drift",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_wind": "right"
+          }
+        },
+        {
+          "label": "FALLING",
+          "preset": "dust-drift",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "pixel_wind": "down"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-wisp-curl",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "STRAIGHT \u00b7 0",
+          "preset": "ghost-wisps",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "wisp_curl": 0
+          }
+        },
+        {
+          "label": "CURL \u00b7 0.8",
+          "preset": "ghost-wisps",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "wisp_curl": 0.8
+          }
+        },
+        {
+          "label": "CURL \u00b7 1.6",
+          "preset": "ghost-wisps",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "wisp_curl": 1.6
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-wisp-palette",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "WHITE THREADS",
+          "preset": "ghost-wisps",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "edge_saturation": 0,
+            "edge_brightness": 1
+          }
+        },
+        {
+          "label": "INK THREADS",
+          "preset": "ghost-wisps",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "edge_saturation": 0,
+            "edge_brightness": 0.08
+          }
+        },
+        {
+          "label": "TEAL THREADS",
+          "preset": "ghost-wisps",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "edge_hue": 185,
+            "edge_saturation": 0.9,
+            "edge_brightness": 1
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-distortion-strength",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "NO WARP \u00b7 0 PX",
+          "preset": "ripple-collapse",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_strength": 0
+          }
+        },
+        {
+          "label": "WARP \u00b7 28 PX",
+          "preset": "ripple-collapse",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_strength": 28
+          }
+        },
+        {
+          "label": "WARP \u00b7 56 PX",
+          "preset": "ripple-collapse",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_strength": 56
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-shockwave-origin",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "CENTER",
+          "preset": "shockwave",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_x": 0.5,
+            "distortion_y": 0.5
+          }
+        },
+        {
+          "label": "LEFT EDGE",
+          "preset": "shockwave",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_x": 0.1,
+            "distortion_y": 0.5
+          }
+        },
+        {
+          "label": "LOWER CORNER",
+          "preset": "shockwave",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "distortion_x": 0.15,
+            "distortion_y": 0.85
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-dissolve-flow",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "STILL FIELD \u00b7 0",
+          "preset": "ember-erosion",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "dissolve_flow": 0
+          }
+        },
+        {
+          "label": "FLOW \u00b7 0.7",
+          "preset": "ember-erosion",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "dissolve_flow": 0.7
+          }
+        },
+        {
+          "label": "FLOW \u00b7 1.4",
+          "preset": "ember-erosion",
+          "overrides": {
+            "open_ms": 1100,
+            "close_ms": 1100,
+            "dissolve_flow": 1.4
+          }
+        }
+      ]
+    },
+    {
+      "name": "profile-burst-and-drift",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "BURST AND DRIFT",
+          "source": "examples/profiles/burst-and-drift.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-frost-and-fragments",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "FROST AND FRAGMENTS",
+          "source": "examples/profiles/frost-and-fragments.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-ghost-and-shockwave",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "GHOST AND SHOCKWAVE",
+          "source": "examples/profiles/ghost-and-shockwave.json"
+        }
+      ]
     }
   ]
 }

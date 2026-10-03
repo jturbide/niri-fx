@@ -1,20 +1,14 @@
+// UI state and event wiring. Portable document validation and shader expansion
+// live in effect-core.js; this file alone coordinates history and active actions.
 const catalog = JSON.parse(document.getElementById("effect-catalog").textContent);
 const byId = (id) => document.getElementById(id);
 const specs = catalog.specifications;
+const { shaderFor, normalizePreset, renderKdl } = createEffectCore(catalog);
 const numeric = Object.keys(specs).filter((key) => specs[key].type === "number");
 const choices = Object.keys(specs).filter(
   (key) => specs[key].type === "choice" && key !== "family",
 );
 const units = Object.fromEntries(Object.entries(specs).map(([key, spec]) => [key, spec.unit]));
-function glslNumber(value) {
-  const scaled = Math.floor(Math.abs(value) * 1000000 + 0.5);
-  return (
-    (value < 0 && scaled ? "-" : "") +
-    Math.floor(scaled / 1000000) +
-    "." +
-    String(scaled % 1000000).padStart(6, "0")
-  );
-}
 let parameters = { ...catalog.parameters },
   frame = 0,
   seed = 0.37,
@@ -231,118 +225,13 @@ function labels() {
   byId("gravity_strength").disabled = mode === "resize" || byId("gravity").value === "none";
   byId("spin").disabled = byId("rotation").value === "none";
 }
-function shaderFor(p, opening, resizing = false) {
-  if (resizing && !catalog.families[p.family].resize)
-    throw new Error("This effect family does not support resize.");
-  const classic =
-    p.gravity === "none" &&
-    !p.particles &&
-    p.rotation === "none" &&
-    p.swirl === 0 &&
-    p.dispersion === 0 &&
-    p.stagger === 0 &&
-    p.release === "together" &&
-    p.origin_x === 0.5 &&
-    p.origin_y === 0.5 &&
-    !p.fragment_shrink &&
-    !p.fragment_roundness;
-  const tokens = Object.fromEntries(
-    Object.entries(specs)
-      .filter(([, spec]) => spec.token)
-      .map(([key, spec]) => [
-        spec.token,
-        spec.type === "choice"
-          ? String(spec.choices.indexOf(p[key]))
-          : key === "slice_count"
-            ? String(p[key])
-            : glslNumber(p[key]),
-      ]),
-  );
-  Object.assign(tokens, {
-    ELASTIC_ORIGIN_X: glslNumber(catalog.elastic_anchors[p.elastic_anchor][0]),
-    ELASTIC_ORIGIN_Y: glslNumber(catalog.elastic_anchors[p.elastic_anchor][1]),
-    ENTRY: opening ? "open_color" : "close_color",
-    PROGRESS: opening ? "1.0 - niri_clamped_progress" : "niri_clamped_progress",
-  });
-  return (
-    resizing
-      ? catalog.templates.resize
-      : p.family !== "fragments"
-        ? catalog.templates[p.family]
-        : p.size_variation || p.direction_variation || p.wave_strength
-          ? catalog.templates.varied
-          : classic
-            ? catalog.templates.classic
-            : catalog.templates.gravity
-  ).replace(/@([A-Z_]+)@/g, (_, key) => tokens[key]);
-}
-function normalizePreset(doc) {
-  if (doc?.kind === "profile") {
-    if (
-      doc.schema !== 1 ||
-      Object.keys(doc).sort().join() !== "actions,kind,name,schema" ||
-      !doc.actions ||
-      Object.keys(doc.actions).sort().join() !== "close,movement,open,resize"
-    )
-      throw new Error("Expected profile schema 1 with open, close, resize and movement actions.");
-    const normalized = {};
-    for (const action of ["open", "close", "resize", "movement"]) {
-      const value = doc.actions[action];
-      if (value === null && ["resize", "movement"].includes(action)) {
-        normalized[action] = null;
-        continue;
-      }
-      const effect = normalizePreset({
-        schema: catalog.schema,
-        name: doc.name,
-        effect: value,
-      }).effect;
-      if (effect.resize) throw new Error("Profile actions use a separate resize slot.");
-      if (["resize", "movement"].includes(action) && !catalog.families[effect.family][action])
-        throw new Error("This family does not support " + action);
-      normalized[action] = effect;
-    }
-    return { kind: "profile", schema: 1, name: doc.name, actions: normalized };
-  }
-  if (
-    !doc ||
-    Array.isArray(doc) ||
-    doc.schema !== catalog.schema ||
-    !doc.effect ||
-    typeof doc.effect !== "object" ||
-    Array.isArray(doc.effect)
-  )
-    throw new Error(`Expected schema: ${catalog.schema}, name and an effect object.`);
-  if (typeof doc.name !== "string" || !/^[A-Za-z0-9][A-Za-z0-9 _-]{0,47}$/.test(doc.name))
-    throw new Error("Name must be 1–48 letters, numbers, spaces, hyphens or underscores.");
-  for (const key of Object.keys(doc.effect))
-    if (!Object.hasOwn(catalog.defaults, key))
-      throw new Error("Unsupported effect parameter: " + key);
-  const effect = { ...catalog.defaults, ...doc.effect };
-  for (const [key, [low, high]] of Object.entries(catalog.limits)) {
-    const value = effect[key];
-    if (typeof value !== "number" || !Number.isFinite(value) || value < low || value > high)
-      throw new Error(key + " must be a finite number from " + low + " to " + high + ".");
-    if (specs[key].integer && !Number.isInteger(value))
-      throw new Error(key + " must be a whole number.");
-  }
-  if (effect.particles !== 0 && effect.particles < 16)
-    throw new Error("Particle count must be zero or at least 16.");
-  if (typeof effect.resize !== "boolean") throw new Error("Resize must be true or false.");
-  for (const [key, spec] of Object.entries(specs))
-    if (spec.choices && !spec.choices.includes(effect[key]))
-      throw new Error("Unknown " + key + ".");
-  if (effect.resize && !catalog.families[effect.family].resize)
-    throw new Error("This effect family does not support resize.");
-  return { schema: doc.schema, name: doc.name, effect };
-}
 byId("import").onclick = () => byId("import-file").click();
 function effectDocument() {
   if (actions) {
     commitAction();
     return {
       kind: "profile",
-      schema: 1,
+      schema: catalog.profile_schema,
       name: byId("name").value.trim(),
       actions: structuredClone(actions),
     };
@@ -364,19 +253,7 @@ byId("export").onclick = () =>
     "application/json",
   );
 function kdlDocument() {
-  commitAction();
-  let result = "// Generated by NiriFX Studio\nanimations {\n";
-  const selected = actions || {
-    open: parameters,
-    close: parameters,
-    resize: parameters.resize ? parameters : null,
-  };
-  for (const action of ["open", "close", "resize"]) {
-    const effect = selected[action];
-    if (!effect) continue;
-    result += `    window-${action} {\n        duration-ms ${effect[action + "_ms"]}\n        curve "linear"\n        custom-shader r"\n${shaderFor(effect, action === "open", action === "resize")}\n        "\n    }\n`;
-  }
-  return result + "}\n";
+  return renderKdl(effectDocument());
 }
 byId("kdl").onclick = () => download("nirifx.kdl", kdlDocument(), "text/plain");
 function saveTarget() {
@@ -804,7 +681,7 @@ try {
       file = byId("import-file").files[0];
     if (!file) return;
     try {
-      if (file.size > 16384) throw new Error("Preset must be at most 16 KiB.");
+      if (file.size > catalog.max_document_bytes) throw new Error("Preset must be at most 16 KiB.");
       const imported = normalizePreset(JSON.parse(await file.text()));
       if (epoch !== importEpoch) return;
       const previous = {
