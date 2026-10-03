@@ -1,6 +1,6 @@
 # Importable action profiles
 
-Each profile assigns independent opening and closing effects. All seven built-in pairings leave
+Each profile assigns independent opening and closing effects. All built-in pairings leave
 resize and experimental movement unset, preserving the user's existing behavior.
 Choose one by name with `--profile`, import its JSON in Studio, or preview it using the commands below. Previewing
 and exporting do not activate animations.
@@ -14,6 +14,9 @@ and exporting do not activate animations.
 | [Ghost and Shockwave](ghost-and-shockwave.json) | Ghost Wisps | Shockwave | [GIF](../../docs/gifs/profile-ghost-and-shockwave.gif) |
 | [Pixel Shuffle](pixel-shuffle.json) | Pixel Wipe | Pixelate | [GIF](../../docs/gifs/profile-pixel-shuffle.gif) |
 | [Ribbon Exit](ribbon-exit.json) | Alternating Blinds | Ribbon Fold | [GIF](../../docs/gifs/profile-ribbon-exit.gif) |
+| [Geometric Flow](geometric-flow.json) | Triangle Shatter | Hex Swarm | [Loop](../../docs/gifs/profile-geometric-flow.gif) |
+| [Ribbon Current](ribbon-current.json) | Ribbon Wave | Ribbon Transfer | [Loop](../../docs/gifs/profile-ribbon-current.gif) |
+| [Soft Landing](soft-landing.json) | Momentum Glide | Frost Vanish | [Loop](../../docs/gifs/profile-soft-landing.gif) |
 
 Run from the checkout:
 

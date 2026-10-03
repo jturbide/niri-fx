@@ -172,7 +172,7 @@ python3 -m niri_fx list --profiles --text
 python3 -m niri_fx studio --profile fragment-flow
 ```
 
-[All seven pairings, commands and downloads](docs/profiles.md) ·
+[All ten pairings, commands and downloads](docs/profiles.md) ·
 [Ghost and Shockwave](docs/gifs/profile-ghost-and-shockwave.gif)
 
 ## Resize (opt-in)

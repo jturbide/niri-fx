@@ -30,7 +30,7 @@ continue to work without Quickshell.
 5. **Undo last change** restores the previous file bytes. Repeat to step back
    through changes made with this picker's state directory.
 
-The catalog includes 64 single styles and seven ready-made open/close profiles.
+The catalog includes single styles and ready-made open/close profiles.
 Search `profile` to show the pairings. Resize stays unchanged for all built-ins. A custom style/profile that specifies
 resize requires the visible **Allow this selection to change resize effects**
 checkbox before Apply. Experimental movement data can be loaded and sent to

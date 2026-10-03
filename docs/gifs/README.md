@@ -120,9 +120,19 @@ The 0.7.0 reveals added six preset loops, two controlled comparisons and
 `profile-spring-and-ember.gif`: its source profile records separate opening and
 closing effects. Metadata includes both parameter sets.
 
+## Curated collections and pairings
+
+[Collections](../collections.md) group looks without adding renderer families.
+Geometric Flow, Ribbon Current and Soft Landing each have a resolved profile JSON
+and a real shader loop. Regenerate just these clips with:
+
+```sh
+node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon-current,profile-soft-landing
+```
+
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **172 GIFs**, including all **73 presets**. The earlier eight
+The gallery contains **175 GIFs**, including all **73 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -321,7 +331,7 @@ mixed-monitor behavior.
 
 Edge Ripple and Torsion Resize each have `subtle` and `expressive` profile clips,
 plus `compare-edge-ripple-resize.gif` and `compare-torsion-resize.gif`. See the
-[resize guide](../resize.md). The gallery contains 172 clips.
+[resize guide](../resize.md). The gallery contains 175 clips.
 
 ```sh
 node scripts/render-readme-gifs.mjs --only=edge-ripple-subtle,edge-ripple-expressive,torsion-subtle,torsion-expressive,compare-edge-ripple-resize,compare-torsion-resize

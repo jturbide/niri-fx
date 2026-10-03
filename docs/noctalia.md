@@ -1,6 +1,6 @@
 # Noctalia and preset folders
 
-NiriFX can export a reversible folder of 64 presets and 7 curated open/close pairings for the
+NiriFX can export a reversible folder of built-in presets and curated open/close pairings for the
 existing Noctalia **Niri Animations** picker. Export the pack, connect the picker
 and select a style. No additional daemon is required.
 
