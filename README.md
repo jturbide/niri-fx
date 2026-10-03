@@ -5,7 +5,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **73 presets across nine effect families and ten ready-made open/close pairings**. For further
+Pick a finished style from **73 presets**, **9 effect families** and **10 ready-made open/close pairings**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -14,7 +14,8 @@ Quickshell is optional. Studio opens as an app-style window or a browser tab.
 
 [Interactive gallery](https://jturbide.github.io/niri-fx/gallery/) ·
 [Web Studio](https://jturbide.github.io/niri-fx/studio/) ·
-[All presets & comparisons](docs/catalog.md) · [Documentation](docs/README.md) ·
+[All presets & comparisons](docs/catalog.md) · [Preset reference](docs/presets.md) ·
+[Documentation](docs/README.md) ·
 [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
 Opening, closing and optional resize work on **stock Niri**, tested with 26.04.

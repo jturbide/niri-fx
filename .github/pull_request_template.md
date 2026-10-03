@@ -12,3 +12,4 @@ captures and identify stock Niri, Studio concept, or patched-compositor output.
 - [ ] Preserved resize opt-in, unrelated settings and custom preset choices.
 - [ ] Reviewed new files and media for private data, local paths and session URLs.
 - [ ] Wrote user-facing docs for newcomers and kept local notes/drafts out of the change.
+- [ ] Kept the preset reference, visual catalog, settings downloads and showcases complete.

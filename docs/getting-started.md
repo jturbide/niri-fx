@@ -72,7 +72,7 @@ Enable animations if the picker is hidden.
 
 Each NiriFX style keeps the other animation settings from your current recognized
 shell preset. Only opening and closing change; resize changes only when you
-explicitly enable fragment resize. If your current settings are custom, choose
+explicitly enable a resize effect. If your current settings are custom, choose
 a built-in shell preset as the base:
 
 ```sh

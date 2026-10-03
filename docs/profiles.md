@@ -8,7 +8,7 @@ with Ember Erosion, and leave your existing resize behavior unchanged.
 
 ## Choose a finished pairing
 
-The built-in collection contains ten profiles. Select **profiles** in the
+Choose a built-in pairing. Select **profiles** in the
 terminal guide, use **Ready-made open / close pairing** in Studio, or search a name
 in the Quickshell, GTK, DMS or iRiS picker. No JSON file is needed. Existing iNiR
 registrations and Noctalia preset packs need a reviewed update to add the new names.
@@ -30,7 +30,8 @@ registrations and Noctalia preset packs need a reviewed update to add the new na
 | --- | --- | --- |
 | ![Triangles assemble and hexagons drift away](gifs/profile-geometric-flow.gif) | ![Waving ribbons arrive and alternating strips leave](gifs/profile-ribbon-current.gif) | ![A gentle elastic arrival and a frosted exit](gifs/profile-soft-landing.gif) |
 
-Browse by look in the [preset collections](collections.md). These pairings reuse existing preset settings. All leave resize and experimental
+Browse by look in the [preset collections](collections.md). These pairings reuse
+existing preset settings. All leave resize and experimental
 movement unset. Their shader cost is the cost of the chosen action; profiles do
 not add a second rendering pass. See [performance measurements](performance.md).
 

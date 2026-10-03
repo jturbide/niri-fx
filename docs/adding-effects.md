@@ -61,13 +61,17 @@ Create a preset loop and, when useful, a comparison that isolates one control:
 
 ```sh
 node scripts/render-readme-gifs.mjs --only=preset-NAME
+python3 scripts/build-gallery.py
 python3 scripts/check-docs.py
 ```
 
 `NAME` is the new catalog ID. The recorder also accepts comparison names from
 [showcases.json](gifs/showcases.json). Generated metadata must match the current
-parameters. Use synthetic content only. A code move or comment change that leaves
-rendering unchanged does not require replacing all existing GIFs.
+parameters. The gallery builder also updates the [preset reference](presets.md)
+from the canonical catalog; its check mode rejects missing, duplicate or mismatched
+recordings and stale settings tables. Use synthetic content only. A code move or
+comment change that leaves rendering unchanged does not require replacing all
+existing GIFs.
 
 ## Finish the change
 

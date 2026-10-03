@@ -93,8 +93,23 @@ def main():
     from niri_fx.catalog import PROFILES
     from niri_fx.cli import parser, selected_effect
     from niri_fx.documents import load_document, parse_document
-    from niri_fx.effects import PRESETS, Effect
+    from niri_fx.effects import FAMILIES, PRESETS, Effect
     from niri_fx.profiles import Profile
+
+    readme = (ROOT / "README.md").read_text()
+    for summary in (
+        f"**{len(PRESETS)} presets**",
+        f"**{len(FAMILIES)} effect families**",
+        f"**{len(PROFILES)} ready-made open/close pairings**",
+    ):
+        if summary not in readme:
+            errors.append(f"README catalog summary is stale; expected {summary}")
+
+    visual_catalog = without_fences((ROOT / "docs/catalog.md").read_text())
+    for prefix, styles in (("preset", PRESETS), ("profile", PROFILES)):
+        for name in styles:
+            if f"](gifs/{prefix}-{name}.gif)" not in visual_catalog:
+                errors.append(f"Visual catalog needs its preview: {prefix}-{name}")
 
     examples = {}
     profile_sources = set()
