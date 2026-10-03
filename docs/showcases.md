@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **141 GIFs**, including all **64 built-in presets**. Use this
+The gallery has **145 GIFs**, including all **66 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -32,6 +32,7 @@ Studio's real WebGL renderer. Fragments come first in the [main gallery](catalog
 | Frost or monochrome erosion | [Frost Vanish](gifs/preset-frost-vanish.gif), [Ember Erosion](gifs/preset-ember-erosion.gif) | [Noise size](gifs/compare-dissolve-scale.gif), [palette](gifs/compare-ember-palette.gif), [flow](gifs/compare-dissolve-flow.gif) |
 | A geometric reveal | [Iris Bloom](gifs/preset-iris-bloom.gif), [Diamond Turn](gifs/preset-diamond-turn.gif), [Portal Out](gifs/preset-portal-out.gif) | [Circle/diamond/square masks](gifs/compare-iris-shapes.gif) |
 | A shockwave or texture ripple | [Shockwave](gifs/preset-shockwave.gif), [Ripple Collapse](gifs/preset-ripple-collapse.gif), [Wave Fold](gifs/preset-wave-fold.gif) | [Patterns](gifs/compare-distortion-patterns.gif), [displacement strength](gifs/compare-distortion-strength.gif), [origin](gifs/compare-shockwave-origin.gif) |
+| A spiral collapse or subtle swirl | [Vortex Fold](gifs/preset-vortex-fold.gif), [Soft Swirl](gifs/preset-soft-swirl.gif) | [Twist directions](gifs/compare-vortex-twist.gif), [native swap](gifs/native-swap-vortex-fold.gif) |
 
 Comparisons keep the same texture and seed, with matched timing. A direction or
 strength comparison changes only that control. Palette panels intentionally

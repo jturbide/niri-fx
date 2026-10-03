@@ -52,6 +52,8 @@ class ExpandedMotionTests(unittest.TestCase):
             ("ink-spread", "--dissolve-turbulence", "0.8", "dissolve_turbulence"),
             ("signal-glitch", "--glitch-chroma", "0.5", "glitch_chroma"),
             ("pixel-transfer", "--movement-strength", "0.4", "movement_strength"),
+            ("vortex-fold", "--distortion-twist", "-720", "distortion_twist"),
+            ("soft-swirl", "--distortion-contract", "0.95", "distortion_contract"),
         ):
             with self.subTest(preset=preset):
                 effect = selected_effect(

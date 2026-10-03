@@ -9,7 +9,7 @@ This reference keeps every preset and control comparison together.
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
-All **64 presets** have a recording. The [visual scenario index](showcases.md)
+All **66 presets** have a recording. The [visual scenario index](showcases.md)
 also helps you compare controls and choose a combination for everyday use,
 strong explosions, drifting dust, subtle distortion or different open/close actions.
 
@@ -337,6 +337,28 @@ highlight palette; the source window texture is the same in every panel.
 
 </details>
 
+### Vortex and swirl
+
+Vortex Fold contracts and twists the whole texture into a spiral. Soft Swirl
+uses less contraction, a gentler opposite turn and shorter timing. Both use stock
+open/close shaders; opening unwinds the same path.
+
+| Vortex Fold | Soft Swirl |
+| --- | --- |
+| ![A strong spiral collapse and reconstruction](gifs/preset-vortex-fold.gif) | ![A gentle counterclockwise swirl](gifs/preset-soft-swirl.gif) |
+| [Settings](../examples/vortex-fold.json) | [Settings](../examples/soft-swirl.json) |
+
+The comparison changes only twist: negative, zero, positive. Contraction,
+timing and falloff stay fixed. At zero twist the window simply shrinks and fades.
+
+![Counterclockwise, contraction only and clockwise compared](gifs/compare-vortex-twist.gif)
+
+The same shader can deform a native swap in the optional experimental compositor:
+
+![Two windows curl and reconstruct while exchanging columns](gifs/native-swap-vortex-fold.gif)
+
+[Control reference](effect-controls.md#distortion) · [Movement requirements](movement.md)
+
 ### Shockwaves and distortions
 
 Bend the actual window texture with an expanding shock front, concentric ripples
@@ -498,7 +520,7 @@ separate work; see [movement behavior](movement.md).
 | --- | --- |
 | ![Two fragmenting windows reverse direction and finish reconstructed](gifs/native-interrupted.gif) | ![One moving window closes while its neighbor finishes reconstructing](gifs/native-close-during-move.gif) |
 
-The [scenario index](showcases.md) maps the **134-GIF gallery** to practical
+The [scenario index](showcases.md) maps the gallery to practical
 choices. See the [roadmap](../ROADMAP.md) for planned improvements.
 
 ## New ways to resize and swap

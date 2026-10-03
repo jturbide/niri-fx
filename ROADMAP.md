@@ -18,6 +18,10 @@ Seven [ready-made action profiles](docs/profiles.md) now pair opening and closin
 styles across the existing CLI, Studio and pickers. Further curation should focus
 on distinct looks and useful timing, with resize kept explicitly opt-in.
 
+[Vortex Fold and Soft Swirl](docs/catalog.md#vortex-and-swirl) extend the texture
+warps with a pronounced spiral and a gentler everyday variation. Their showcases
+include stock-style previews and a native swap, with [measured shader costs](docs/performance.md#vortex-distortion).
+
 - **More hardware results.** Compare large windows and simultaneous animations on
   integrated GPUs and several refresh rates. Publish repeatable measurements with
   their hardware and renderer details.

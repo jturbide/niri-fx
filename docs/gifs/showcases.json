@@ -1340,6 +1340,34 @@
           "source": "examples/profiles/ribbon-exit.json"
         }
       ]
+    },
+    {
+      "name": "compare-vortex-twist",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "COUNTERCLOCKWISE",
+          "preset": "vortex-fold",
+          "overrides": {
+            "distortion_twist": -270
+          }
+        },
+        {
+          "label": "CONTRACT ONLY",
+          "preset": "vortex-fold",
+          "overrides": {
+            "distortion_twist": 0
+          }
+        },
+        {
+          "label": "CLOCKWISE",
+          "preset": "vortex-fold",
+          "overrides": {
+            "distortion_twist": 270
+          }
+        }
+      ]
     }
   ]
 }

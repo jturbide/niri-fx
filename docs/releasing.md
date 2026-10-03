@@ -51,6 +51,9 @@ entry as the GitHub release notes and label prototype releases as prereleases.
 Create a draft first, review asset contents, then publish. Package registry
 publication is a separate decision; no automatic PyPI upload is configured.
 
+Use `NiriFX X.Y.Z` for the GitHub release title. Put feature summaries in the
+release notes, keeping titles consistent across versions.
+
 ## Repository maintenance
 
 Keep the public [release and download guide](releases.md), versioned documentation

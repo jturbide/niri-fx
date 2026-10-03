@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for **0.10.0**. These checks
+Evidence updated on **2026-10-03** for current `main` (after 0.10.0). These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -9,13 +9,14 @@ See the [changelog](../CHANGELOG.md) for user-visible changes.
 | Check | Observed result |
 | --- | --- |
 | Python | 106 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows and conservative CI scope selection |
-| Portable JavaScript | 43 Node checks; all 64 presets' supported stock shaders match Python, with picker transaction and profile checks |
-| Real Chromium | 64 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
+| Portable JavaScript | 43 Node checks; all 66 presets' supported stock shaders match Python, with picker transaction and profile checks |
+| Real Chromium | 66 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
 | Browser lifecycle and gallery | Four tests cover failed startup, bounded requests, disconnect/cleanup, gallery filtering, reduced-motion startup, single-GIF playback and hosted Studio share/download flows |
-| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 64 default exports, supported resize exports and 71 style/profile picker includes parse in stock Niri 26.04 |
+| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 66 default exports, supported resize exports and 73 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Fragment optimization | 1,050 reference-frame pairs across software WebGL and hardware ANGLE match byte-for-byte, including extreme settings and transparent input. Core Detonation, Mosaic Burst and Orbital Ribbons pass stock open/close checks; Core Detonation also passes native swaps, interruptions and fallback. See [measurements and reproduction](performance.md#varied-fragment-flight-bounds). |
+| Vortex distortion | Existing distortion presets match 126 reference-frame pairs against 0.10.0 byte-for-byte. Signed twist, contraction, origin, extreme geometry and transparent source pass browser checks. Both presets pass stock open/close and cleanup. Vortex Fold passes native swaps, six interrupted swaps, close during movement, resize and fallback. |
 | Resize profiles | Elastic, Accordion and Ripple grow and shrink a synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
 | Resize defaults | Every built-in leaves resize off; viewing controls never enables it; explicit profile slots and custom choices round-trip |
 | Packaging | Wheel and source distribution build; installed CLI, shader resources, icon, offline Studio and profile exports work outside the checkout |
@@ -88,8 +89,8 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**141 GIFs**, including all **64 presets**, resize profiles and comparisons, custom
-recipes, labelled Canvas concepts, ten native swaps and fourteen workflow/compositor
+**145 GIFs**, including all **66 presets**, resize profiles and comparisons, custom
+recipes, labelled Canvas concepts, eleven native swaps and fourteen workflow/compositor
 scenarios. Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
 

@@ -687,6 +687,13 @@ try {
       distortion_y: 0.1,
     },
     "wave-fold": { distortion_angle: -45, distortion_fade: 0.8 },
+    "vortex-fold": {
+      distortion_twist: -270,
+      distortion_contract: 0,
+      distortion_falloff: 0,
+      distortion_x: 0.15,
+      distortion_y: 0.85,
+    },
     "hexagon-burst": {
       hex_size: 42,
       hex_spread: 0.2,
@@ -765,6 +772,52 @@ try {
   assert.equal(await evaluate("shaderFor(parameters,false)"), rounded);
   const unsupported = await evaluate("window.niriFxBenchmark({samples:10})");
   assert.equal(unsupported.status, "unsupported", "software WebGL must not claim GPU performance");
+  // Vortex controls are inactive for waves and the independent ripple resize.
+  // Changing views preserves them and never opts into resize.
+  await evaluate(
+    "byId('preset').value='vortex-fold';byId('preset').dispatchEvent(new Event('change'))",
+  );
+  const vortexDocument = await evaluate("effectDocument()");
+  assert.equal(await evaluate("byId('distortion_twist').disabled"), false);
+  assert.equal(await evaluate("byId('distortion_strength').disabled"), true);
+  await evaluate("document.querySelector('[data-mode=resize]').click()");
+  assert.equal(await evaluate("byId('distortion_twist').disabled"), true);
+  assert.equal(await evaluate("byId('distortion_strength').disabled"), false);
+  assert.deepEqual(await evaluate("effectDocument()"), vortexDocument);
+  await evaluate("document.querySelector('[data-mode=effect]').click()");
+  // Exercise signed twists, the smallest legal scale, corner origins and
+  // non-square geometry through the real shader, including exact endpoints.
+  for (const [twist, contraction, origin, geometry] of [
+    [-720, 0.95, 0, [900, 280]],
+    [720, 0.95, 1, [280, 660]],
+    [0, 0, 0.5, [600, 380]],
+    [720, 0.95, 0.5, [5, 3]],
+  ]) {
+    await importFile(
+      JSON.stringify({
+        schema: 3,
+        name: "Vortex extrema",
+        effect: {
+          family: "distortion",
+          distortion_mode: "vortex",
+          distortion_twist: twist,
+          distortion_contract: contraction,
+          distortion_x: origin,
+          distortion_y: origin,
+        },
+      }),
+    );
+    for (const position of [0, 0.001, 0.5, 0.999, 1]) {
+      await setProgress(position);
+      await evaluate(`(() => { const gl=byId('stage').getContext('webgl');
+        gl.uniform2f(gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'fx_window'),${geometry.join(",")});
+        gl.drawArrays(gl.TRIANGLES,0,6);gl.finish(); })()`);
+      const pixels = await sample();
+      assert.equal(pixels.error, 0, "vortex extreme renders without GL errors");
+      if (position === 0) assert(pixels.occupied > 0, "vortex starts intact");
+      if (position === 1) assert.equal(pixels.occupied, 0, "vortex ends transparent");
+    }
+  }
   // Generated edge highlights must never make a fully transparent source opaque.
   await evaluate(`(()=>{
     const context=byId('stage').getContext('webgl');context.activeTexture(context.TEXTURE0);
@@ -785,6 +838,8 @@ try {
     "shockwave",
     "ripple-collapse",
     "wave-fold",
+    "vortex-fold",
+    "soft-swirl",
     "hexagon-burst",
     "hive-collapse",
     "signal-glitch",

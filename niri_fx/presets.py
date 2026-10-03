@@ -575,6 +575,26 @@ PRESETS.update(
             open_ms=1150,
             close_ms=1100,
         ),
+        "vortex-fold": Effect(
+            family="distortion",
+            distortion_mode="vortex",
+            distortion_falloff=2.4,
+            distortion_fade=0.65,
+            movement_strength=0.42,
+            open_ms=1000,
+            close_ms=900,
+        ),
+        "soft-swirl": Effect(
+            family="distortion",
+            distortion_mode="vortex",
+            distortion_twist=-95,
+            distortion_contract=0.25,
+            distortion_falloff=1.6,
+            distortion_fade=0.3,
+            movement_strength=0.3,
+            open_ms=650,
+            close_ms=600,
+        ),
     }
 )
 

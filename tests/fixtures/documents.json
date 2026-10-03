@@ -270,5 +270,59 @@
       "unexpected": 1
     },
     "valid": false
+  },
+  {
+    "name": "vortex extrema",
+    "document": {
+      "schema": 3,
+      "name": "Vortex validation",
+      "effect": {
+        "family": "distortion",
+        "distortion_mode": "vortex",
+        "distortion_twist": -720,
+        "distortion_contract": 0.95
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "vortex zero contraction",
+    "document": {
+      "schema": 3,
+      "name": "Vortex validation",
+      "effect": {
+        "family": "distortion",
+        "distortion_mode": "vortex",
+        "distortion_twist": 720,
+        "distortion_contract": 0
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "singular vortex",
+    "document": {
+      "schema": 3,
+      "name": "Vortex validation",
+      "effect": {
+        "family": "distortion",
+        "distortion_mode": "vortex",
+        "distortion_contract": 1
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "excessive vortex twist",
+    "document": {
+      "schema": 3,
+      "name": "Vortex validation",
+      "effect": {
+        "family": "distortion",
+        "distortion_mode": "vortex",
+        "distortion_twist": 721
+      }
+    },
+    "valid": false
   }
 ]

@@ -28,6 +28,7 @@ SHOWCASE_PRESETS = (
     "slice-exchange",
     "pixel-transfer",
     "soft-phase",
+    "vortex-fold",
 )
 
 

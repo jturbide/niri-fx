@@ -1,8 +1,30 @@
 // SPDX-License-Identifier: MIT
 // Original NiriFX travelling shock front, radial ripples and planar wave folds.
 @NOISE@
+vec4 distortion_vortex(vec3 coords_geo, vec3 size_geo, float p) {
+    vec2 size = max(size_geo.xy, vec2(1.0));
+    vec2 origin = vec2(@DISTORTION_X@, @DISTORTION_Y@);
+    float flight = smoothstep(0.0, 1.0, p);
+    // A positive uniform scale followed by a radius-dependent rotation has
+    // an exact inverse: undo the scale, recover the unchanged source radius,
+    // then undo its rotation. No iterative search or folded radial mapping.
+    float scale = 1.0 - @DISTORTION_CONTRACT@ * flight; // >= .05
+    vec2 delta = (coords_geo.xy - origin) * size / scale;
+    float radius = max(length(max(origin, 1.0 - origin) * size), 1.0);
+    float angle = radians(@DISTORTION_TWIST@) * flight
+                * exp(-@DISTORTION_FALLOFF@ * length(delta) / radius);
+    float c = cos(angle), s = sin(angle);
+    vec2 source = origin + vec2(c * delta.x + s * delta.y, -s * delta.x + c * delta.y) / size;
+    if (p <= 0.0) source = coords_geo.xy;
+    if (any(lessThan(source, vec2(0.0))) || any(greaterThanEqual(source, vec2(1.0)))) return vec4(0.0);
+    // Closing keeps winding inward until transparent; opening retraces that
+    // path. Logical-pixel rotation preserves proportions on wide/tall windows.
+    return texture2D(niri_tex, (niri_geo_to_tex * vec3(source, 1.0)).xy)
+         * (1.0 - smoothstep(@DISTORTION_FADE@, 1.0, p));
+}
 vec4 distortion_color(vec3 coords_geo, vec3 size_geo, float p) {
     if (p >= 1.0) return vec4(0.0);
+    if (@DISTORTION_MODE@ == 4) return distortion_vortex(coords_geo, size_geo, p);
     vec2 uv = coords_geo.xy, size = max(size_geo.xy, vec2(1.0));
     vec2 origin = vec2(@DISTORTION_X@, @DISTORTION_Y@);
     // Radial distances use logical pixels, keeping circular fronts circular
