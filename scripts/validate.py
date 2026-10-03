@@ -10,6 +10,7 @@ from dataclasses import replace
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from niri_fx.catalog import STYLES
 from niri_fx.effects import (
     FAMILIES,
     PRESETS,
@@ -94,14 +95,14 @@ def main():
             selector = root / "animations.kdl"
             config = root / "main.kdl"
             config.write_text('include "animations.kdl"\n')
-            for name in PRESETS:
+            for name in STYLES:
                 selector.write_text(
                     f'include "./nirifx-presets/nirifx-{name}.kdl"\nanimations {{ slowdown 1.0; }}\n'
                 )
                 subprocess.run(
                     [niri, "validate", "-c", str(config)], check=True, capture_output=True
                 )
-            print(f"OK {len(PRESETS)} exported preset files through picker-style includes")
+            print(f"OK {len(STYLES)} exported styles and profiles through picker-style includes")
     print("Validation does not prove compositor GPU performance or visual acceptance.")
 
 

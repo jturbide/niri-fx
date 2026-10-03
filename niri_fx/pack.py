@@ -4,7 +4,8 @@ import json
 import re
 from pathlib import Path
 
-from .effects import PRESETS, render_kdl
+from .catalog import STYLES
+from .effects import render_kdl
 from .setup import change
 from .storage import digest, read_bytes
 
@@ -37,7 +38,7 @@ def plan_pack(output):
     if manifest.is_symlink():
         raise ValueError("Pack manifest cannot be a symlink")
     changes, files = [], {}
-    for name, effect in PRESETS.items():
+    for name, effect in STYLES.items():
         filename = f"nirifx-{name}.kdl"
         path = root / filename
         before = read_bytes(path)
@@ -54,7 +55,7 @@ def plan_pack(output):
     changes.append(change(manifest, content, original))
     return {
         "target": "preset-pack",
-        "selection": list(PRESETS),
+        "selection": list(STYLES),
         "effect": None,
         "activation": "Choose a preset in your shell picker or include one KDL file",
         "notes": [

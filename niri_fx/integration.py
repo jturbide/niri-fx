@@ -11,8 +11,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .branding import APP_ID
+from .catalog import PROFILES, STYLES, title
 from .documents import parse_document
-from .effects import PRESETS, animation_types, preset_description
+from .effects import animation_types, preset_description
 from .profiles import Profile
 from .storage import staged_write
 
@@ -102,13 +103,18 @@ def make_preset(identifier, label, effect, chosen, base_types):
 def make_presets(shell_registry, base_id="auto"):
     chosen, base_types = resolve_base(shell_registry, base_id)
     generated = []
-    for name, effect in PRESETS.items():
+    for name, effect in STYLES.items():
         generated.append(
             make_preset(
                 f"{OWNER}-{name}", name.replace("-", " ").title(), effect, chosen, base_types
             )
         )
     return generated
+
+
+def make_builtin_profile(shell_registry, name, base_id="auto"):
+    chosen, base_types = resolve_base(shell_registry, base_id)
+    return make_preset(f"{OWNER}-{name}", title(name), PROFILES[name], chosen, base_types)
 
 
 def make_custom_preset(shell_registry, data, base_id="auto"):

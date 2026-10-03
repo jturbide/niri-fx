@@ -5,7 +5,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **64 presets across nine effect families**. For further
+Pick a finished style from **64 presets across nine effect families and seven ready-made open/close pairings**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -100,6 +100,26 @@ These clips use Studio's real shaders with synthetic window content.
 Also explore [dust, wisps, iris reveals and shockwaves](docs/catalog.md).
 Ember Erosion and Signal Glitch start monochrome; their colors are configurable.
 Original NiriFX shaders are inspired by the wider [desktop-effects community](docs/related-projects.md).
+
+## Pick an opening and closing pair
+
+Choose a finished combination with no JSON editing. In the terminal guide, type
+`profiles`; in Studio, use **Ready-made open / close pairing**. The desktop pickers
+include the same collection. Resize stays off.
+
+| Fragment Flow | Burst and Drift | Frost and Fragments |
+| --- | --- | --- |
+| ![Balanced fragments arrive and implode on close](docs/gifs/profile-fragment-flow.gif) | ![Explosion opening with drifting pixel dust on close](docs/gifs/profile-burst-and-drift.gif) | ![Frost reveals the window before a pixel breakup](docs/gifs/profile-frost-and-fragments.gif) |
+| **Pixel Shuffle** | **Ribbon Exit** | **Spring and Ember** |
+| ![Pixels reveal and coarsen away](docs/gifs/profile-pixel-shuffle.gif) | ![Alternating strips arrive and fold away](docs/gifs/profile-ribbon-exit.gif) | ![A springy opening and monochrome erosion on close](docs/gifs/profile-spring-and-ember.gif) |
+
+```sh
+python3 -m niri_fx list --profiles --text
+python3 -m niri_fx studio --profile fragment-flow
+```
+
+[All seven pairings, commands and downloads](docs/profiles.md) ·
+[Ghost and Shockwave](docs/gifs/profile-ghost-and-shockwave.gif)
 
 ## Resize — opt-in
 

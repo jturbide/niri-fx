@@ -21,9 +21,11 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.nested import NestedSession, encode_gif, record, save_clips, source_hashes, stop, wait_for
 
-from niri_fx.effects import PRESETS, render_kdl
+from niri_fx.catalog import STYLES
+from niri_fx.effects import render_kdl
 
 BASE = """hotkey-overlay { skip-at-startup; }
+input { keyboard { repeat-rate 0; }; }
 layout { background-color "#11171c"; gaps 18; }
 animations { window-resize { duration-ms 170; curve "ease-out-cubic"; }; }
 """
@@ -57,9 +59,16 @@ def controller_check(gjs):
         config = root / "config/niri/config.kdl"
         config.parent.mkdir()
         config.write_text(BASE)
+        builtin = root / "builtin.kdl"
+        builtin.write_text(render_kdl(STYLES["burst-and-drift"]))
         profile = root / "Profile with spaces.json"
         shutil.copyfile(ROOT / "examples/profiles/elastic-resize.json", profile)
-        env.update(environment(root, config), NIRIFX_TEST_PROFILE=str(profile))
+        env.update(
+            environment(root, config),
+            NIRIFX_TEST_PROFILE=str(profile),
+            NIRIFX_TEST_CATALOG_SIZE=str(len(STYLES)),
+            NIRIFX_TEST_BUILTIN=str(builtin),
+        )
         subprocess.run(
             [gjs, "-m", "scripts/fixtures/gtk-controller-check.mjs"],
             cwd=ROOT,
@@ -134,16 +143,17 @@ def view_check(gjs, recording):
 
         recorder = None
         try:
-            settled(lambda d: d["count"] == len(PRESETS))
+            settled(lambda d: d["count"] == len(STYLES))
             window = show_window(session)
             time.sleep(0.5)
             if recording:
                 recorder, video = record(session, "workflow-gtk-picker")
                 time.sleep(1)
-            keyboard(session, "f")
-            session.keys("-d", "90", "explosion")
-            session.keys("-k", "Return")
-            settled(lambda d: d["selected"] == "explosion")
+            session.focus()
+            session.keys(
+                "-M", "ctrl", "-k", "f", "-k", "a", "-m", "ctrl", "fragment-flow", "-k", "Return"
+            )
+            settled(lambda d: d["selected"] == "fragment-flow")
             if recording:
                 time.sleep(1)
             keyboard(session, "r")
@@ -154,7 +164,7 @@ def view_check(gjs, recording):
             session.capture("gtk-review")
             keyboard(session, "Return")
             settled(lambda d: bool(d["undo"]))
-            assert include.read_text().endswith(render_kdl(PRESETS["explosion"]))
+            assert include.read_text().endswith(render_kdl(STYLES["fragment-flow"]))
             assert "window-resize" not in include.read_text()
             if recording:
                 time.sleep(1.5)
@@ -251,16 +261,17 @@ def ags_check(ags):
         window = show_window(session)
         include = session.config.parent / "nirifx/animations.kdl"
         time.sleep(1)
-        keyboard(session, "f")
-        session.keys("explosion")
-        session.keys("-k", "Return")
+        session.focus()
+        session.keys(
+            "-M", "ctrl", "-k", "f", "-k", "a", "-m", "ctrl", "fragment-flow", "-k", "Return"
+        )
         keyboard(session, "r")
         time.sleep(1)
         session.capture("ags-reviewed")
         assert session.config.read_text() == BASE and not include.exists()
         keyboard(session, "Return")
         wait_for(include.exists, "AGS apply")
-        assert include.read_text().endswith(render_kdl(PRESETS["explosion"]))
+        assert include.read_text().endswith(render_kdl(STYLES["fragment-flow"]))
         time.sleep(1)
         session.capture("ags-applied")
         session.keys("-M", "ctrl", "-M", "alt", "-k", "u", "-m", "alt", "-m", "ctrl")

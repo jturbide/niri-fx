@@ -9,6 +9,7 @@ import os
 from copy import copy
 from pathlib import Path
 
+from .catalog import PROFILE_RECIPES, PROFILES, STYLES, families
 from .effects import FAMILIES, PRESETS
 from .setup import apply_plan, plan_setup, restore, summarize
 
@@ -27,25 +28,30 @@ RECOMMENDED = {
 }
 
 
-def catalog(query="", family=None, recommended=False):
+def catalog(query="", family=None, recommended=False, *, profiles=False, all_styles=False):
     query = query.casefold().replace("-", " ").strip()
+    source = PROFILES if profiles else STYLES if all_styles else PRESETS
     return [
         key
-        for key in (RECOMMENDED if recommended else PRESETS)
-        if (not family or PRESETS[key].family == family)
+        for key, style in source.items()
+        if (not recommended or key in RECOMMENDED or key in PROFILES)
+        and (not family or family in families(style))
         and query
-        in f"{key.replace('-', ' ')} {PRESETS[key].family} {RECOMMENDED.get(key, '')}".casefold()
+        in f"{key.replace('-', ' ')} {' '.join(families(style))} {PROFILE_RECIPES[key][2] if key in PROFILES else RECOMMENDED.get(key, '')}".casefold()
     ]
 
 
 def describe(key):
+    if key in PROFILES:
+        opening, closing, description = PROFILE_RECIPES[key]
+        return f"{key:<21} {description} · {opening} → {closing}"
     effect = PRESETS[key]
     text = RECOMMENDED.get(key, FAMILIES[effect.family]["label"])
     return f"{key:<21} {text} ({effect.open_ms}/{effect.close_ms} ms)"
 
 
 def print_catalog(keys, write=print, numbered=False):
-    write(("    " if numbered else "") + "Preset                 Look (open/close timing)")
+    write(("    " if numbered else "") + "Style                  Look (open → close)")
     for index, key in enumerate(keys, 1):
         write(f"{index:2}. {describe(key)}" if numbered else describe(key))
 
@@ -82,19 +88,21 @@ def choose(default, read=input, write=print):
     while True:
         write("")
         print_catalog(keys, write, numbered=True)
-        write("Use all, /search, a preset name, undo, or q to leave.")
+        write("Use profiles for open/close pairings, all, /search, a name, undo, or q.")
         answer = read(f"Choose a style [{default}]: ").strip().lower()
         if answer in ("q", "quit", "undo"):
             return answer
         if not answer:
             return default
         if answer == "all":
-            keys = catalog()
+            keys = catalog(all_styles=True)
+        elif answer == "profiles":
+            keys = catalog(profiles=True)
         elif answer.startswith("/"):
-            keys = catalog(answer[1:])
+            keys = catalog(answer[1:], all_styles=True)
             if not keys:
                 write("No matching styles. Try another search or all.")
-        elif answer in PRESETS:
+        elif answer in STYLES:
             return answer
         elif answer.isdecimal() and 1 <= int(answer) <= len(keys):
             return keys[int(answer) - 1]
@@ -126,23 +134,25 @@ def guide(arguments, read=input, write=print):
         if answer != "":
             write("Cancelled. No settings changed.")
             return
-        args.preset = "balanced"
+        args.preset, args.profile = "balanced", None
     else:
         write("\nStandalone Niri — choose opening and closing effects.")
-        choice = choose(args.preset, read, write)
+        choice = choose(args.profile or args.preset, read, write)
         if choice == "undo":
             undo(args.state, read, write)
             return
         if choice in ("q", "quit"):
             write("Cancelled. No settings changed.")
             return
-        args.preset = choice
+        args.profile = choice if choice in PROFILES else None
+        args.preset = choice if choice in PRESETS else "balanced"
     # Fix the selected backend before review; installing/removing a shell while
     # the prompt is open cannot silently switch the destination of this apply.
     args.target = target
-    effect = PRESETS[args.preset]
+    selection = args.profile or args.preset
+    effect = STYLES[selection]
     review = summarize(plan_setup(args, effect))
-    write(f"\n{'Built-in collection' if target == 'inir' else args.preset} — {target}")
+    write(f"\n{'Built-in collection' if target == 'inir' else selection} — {target}")
     for item in review["changes"]:
         write(f"  {item['action'].capitalize()} {display_path(item['path'])}")
     for note in review["notes"]:
@@ -155,9 +165,7 @@ def guide(arguments, read=input, write=print):
         return
     apply_plan(plan_setup(args, effect), args.state, expected=review["plan_sha256"])
     write(
-        "Collection added. Choose a style in iRiS."
-        if target == "inir"
-        else f"Applied {args.preset}."
+        "Collection added. Choose a style in iRiS." if target == "inir" else f"Applied {selection}."
     )
     write(f"History: {display_path(args.state)}")
     write("Undo: open this guide again and choose undo.")

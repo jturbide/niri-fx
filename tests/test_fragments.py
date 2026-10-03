@@ -6,6 +6,7 @@ from pathlib import Path
 
 from helpers import shell_registry
 
+from niri_fx.catalog import STYLES
 from niri_fx.cli import parser, selected_effect
 from niri_fx.documents import parse_document
 from niri_fx.effects import FAMILIES, PRESETS, Effect, movement_shader, render_kdl
@@ -25,7 +26,10 @@ class PresetTests(unittest.TestCase):
         for preset in presets:
             for name in ("workspace-switch", "window-resize"):
                 self.assertEqual(preset["types"][name], original["presets"][0]["types"][name])
-            self.assertFalse(preset["effect"]["resize"])
+            if "profile" in preset:
+                self.assertIsNone(preset["profile"]["actions"]["resize"])
+            else:
+                self.assertFalse(preset["effect"]["resize"])
             self.assertIn("open_color", preset["types"]["window-open"]["custom-shader"])
             self.assertIn("close_color", preset["types"]["window-close"]["custom-shader"])
         self.assertEqual(registry, original)
@@ -48,7 +52,7 @@ class PresetTests(unittest.TestCase):
         registry["active"] = ""
         with self.assertRaisesRegex(ValueError, "custom"):
             make_presets(registry)
-        self.assertEqual(len(make_presets(registry, "example")), len(PRESETS))
+        self.assertEqual(len(make_presets(registry, "example")), len(STYLES))
 
     def test_reregistration_resolves_original_base(self):
         registry = shell_registry()
@@ -99,7 +103,7 @@ class PresetTests(unittest.TestCase):
         data = merge_registry(data, [first])
         data = merge_registry(data, [second])
         data = merge_registry(data, builtins)
-        self.assertEqual(len(data["presets"]), len(PRESETS) + 2)
+        self.assertEqual(len(data["presets"]), len(STYLES) + 2)
         self.assertIn(first, data["presets"])
         self.assertIn(second, data["presets"])
         self.assertEqual(merge_registry(data, [], remove=True)["presets"], [])
@@ -152,7 +156,7 @@ class FileTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory:
             target = Path(directory) / "missing" / "presets.json"
             result = update_registry(target, make_presets(shell_registry()), dry_run=True)
-            self.assertEqual(len(result["registry"]["presets"]), len(PRESETS))
+            self.assertEqual(len(result["registry"]["presets"]), len(STYLES))
             self.assertFalse(target.parent.exists())
 
     def test_symlink_target_updated_without_replacing_link(self):
@@ -163,7 +167,7 @@ class FileTests(unittest.TestCase):
             link.symlink_to(target.name)
             update_registry(link, make_presets(shell_registry()))
             self.assertTrue(link.is_symlink())
-            self.assertEqual(len(json.loads(target.read_text())["presets"]), len(PRESETS))
+            self.assertEqual(len(json.loads(target.read_text())["presets"]), len(STYLES))
 
 
 class EffectTests(unittest.TestCase):

@@ -6,17 +6,51 @@ with Ember Erosion, and leave your existing resize behavior unchanged.
 
 ![Spring opening and ember closing in one profile](gifs/profile-spring-and-ember.gif)
 
-Other ready-to-import combinations are **Burst and Drift** (Explosion opening,
-Dust Drift closing), **Frost and Fragments** (Frost Vanish opening, Pixel Dust
-closing), and **Ghost and Shockwave** (Ghost Wisps opening, Shockwave closing).
-See [all four JSON files and preview commands](../examples/profiles/README.md)
-or [their gallery loops](catalog.md#combine-different-actions). Resize stays
-off in every example.
+## Choose a finished pairing
+
+The built-in collection contains seven profiles. Select **profiles** in the
+terminal guide, use **Ready-made open / close pairing** in Studio, or search a name
+in the Quickshell, GTK, DMS or iRiS picker. No JSON file is needed. Existing iNiR
+registrations and Noctalia preset packs need a reviewed update to add the new names.
+
+| Profile | Opens with | Closes with | Look |
+| --- | --- | --- | --- |
+| `fragment-flow` | Balanced | Implosion | Textured assembly followed by an inward collapse |
+| `burst-and-drift` | Explosion | Dust Drift | A strong arrival followed by drifting dust |
+| `frost-and-fragments` | Frost Vanish | Pixel Dust | A frosted reveal that breaks into pixels |
+| `spring-and-ember` | Spring Wobble | Ember Erosion | A playful spring with a monochrome fade |
+| `ghost-and-shockwave` | Ghost Wisps | Shockwave | Soft wisps followed by a ripple |
+| `pixel-shuffle` | Pixel Wipe | Pixelate | A pixel reveal and a chunky exit |
+| `ribbon-exit` | Alternating Blinds | Ribbon Fold | Alternating strips that fold away |
+
+These pairings reuse existing preset settings. All leave resize and experimental
+movement unset. Their shader cost is the cost of the chosen action; profiles do
+not add a second rendering pass. See [performance measurements](performance.md).
+
+```sh
+python3 -m niri_fx list --profiles --text
+python3 -m niri_fx studio --profile burst-and-drift
+# Review standalone activation, then append --apply to write that selection:
+python3 -m niri_fx setup --target standalone --profile burst-and-drift --no-launcher
+# Register just this pairing for selection in iRiS:
+python3 -m niri_fx register --profile burst-and-drift
+# Export editable JSON or stock Niri KDL:
+python3 -m niri_fx inspect --profile burst-and-drift > /tmp/burst-and-drift.json
+python3 -m niri_fx render --profile burst-and-drift > /tmp/burst-and-drift.kdl
+```
+
+`--profile` chooses both actions; `--preset` chooses one style for both. They cannot
+be combined. Effect override flags are deliberately rejected with `--profile`,
+so a change cannot silently target the wrong action. Open it in Studio to customize.
+[All JSON files and preview commands](../examples/profiles/README.md) and
+[gallery loops](showcases.md#different-effects-for-each-action) remain available.
+
+## Create your own combination
 
 In Studio, enable **Independent action effects**, choose **Editing action**, and
 pick/tune its style. Reconstruct previews the opening action; Deconstruct previews
 the closing action. Viewing Resize never enables it: tick **Enable resize effect**
-deliberately. Only Fragments currently supports resize. Turning independent
+deliberately. Fragments, Slices, Elastic and Distortion support resize. Turning independent
 effects off uses the opening style for both actions; Undo recovers the profile.
 
 Create the same profile from the CLI:

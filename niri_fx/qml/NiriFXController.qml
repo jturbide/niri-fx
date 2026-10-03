@@ -30,11 +30,7 @@ Item {
     readonly property bool busy: operation !== ""
     readonly property bool mutating: operation === "apply" || operation === "undo"
     readonly property string selectionKey: JSON.stringify([command, configPath, statePath, selectedPreset, customPath])
-    readonly property var selectedDocument: selectedPreset && presets[selectedPreset] ? ({
-            schema: 3,
-            name: title(selectedPreset),
-            effect: presets[selectedPreset]
-        }) : customDocument
+    readonly property var selectedDocument: selectedPreset && presets[selectedPreset] ? presets[selectedPreset] : customDocument
     readonly property string selectedName: selectedDocument ? selectedDocument.name : "Choose a style"
     readonly property var actions: selectedDocument ? (selectedDocument.kind === "profile" ? selectedDocument.actions : ({
                 open: selectedDocument.effect,
@@ -44,13 +40,13 @@ Item {
             })) : ({})
     readonly property bool changesResize: !!actions.resize
     readonly property bool canApply: !busy && !!reviewPlan && reviewPlan.changes.length > 0 && (!changesResize || allowResize)
-    readonly property var families: [""].concat([...new Set(Object.values(presets).map(p => p.family))].sort((a, b) => a === "fragments" ? -1 : b === "fragments" ? 1 : a.localeCompare(b)))
+    readonly property var families: [""].concat([...new Set(Object.values(presets).reduce((all, doc) => all.concat(documentFamilies(doc)), []))].sort((a, b) => a === "fragments" ? -1 : b === "fragments" ? 1 : a.localeCompare(b)))
     readonly property var items: {
         let rows = Object.keys(presets).map(id => ({
                     id,
-                    name: title(id),
-                    families: [presets[id].family],
-                    comment: title(presets[id].family)
+                    name: presets[id].name,
+                    families: documentFamilies(presets[id]),
+                    comment: presets[id].kind === "profile" ? "Open / close profile" : title(presets[id].effect.family)
                 }));
         if (customDocument) {
             const effects = customDocument.kind === "profile" ? Object.values(customDocument.actions).filter(Boolean) : [customDocument.effect];
@@ -62,11 +58,15 @@ Item {
             });
         }
         const text = query.toLowerCase().trim();
-        return rows.filter(row => (!family || row.families.includes(family)) && (row.name + " " + row.families.join(" ")).toLowerCase().includes(text));
+        return rows.filter(row => (!family || row.families.includes(family)) && (row.id + " " + row.name + " " + row.comment + " " + row.families.join(" ")).toLowerCase().includes(text));
     }
     signal completed(string action, bool success)
     signal studioRequested(var arguments)
 
+    function documentFamilies(doc) {
+        const effects = doc.kind === "profile" ? Object.values(doc.actions).filter(Boolean) : [doc.effect];
+        return [...new Set(effects.map(effect => effect.family))];
+    }
     function title(value) {
         return value.split("-").map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(" ");
     }
@@ -101,7 +101,7 @@ Item {
         status = "Selection only. Review changes before applying.";
     }
     function selectionArguments() {
-        return selectedPreset ? ["--preset", selectedPreset] : ["--custom", customPath];
+        return selectedPreset ? [selectedDocument.kind === "profile" ? "--profile" : "--preset", selectedPreset] : ["--custom", customPath];
     }
     function setupArguments() {
         return ["setup", "--target", "standalone", "--config", configPath, "--state", statePath, "--no-launcher"].concat(selectionArguments());
@@ -121,7 +121,7 @@ Item {
             invalidateReview();
             error = "";
             status = "Loading styles…";
-            request("catalog", ["list"]);
+            request("catalog", ["list", "--documents"]);
         }
     }
     function loadFile(file) {
@@ -194,7 +194,7 @@ Item {
                 presets = data;
                 if (!selectedDocument)
                     select("balanced");
-                status = Object.keys(data).length + " built-in styles available.";
+                status = Object.keys(data).length + " styles and profiles available.";
             } else if (action === "inspect") {
                 customDocument = data;
                 customPath = requestedFile;

@@ -14,12 +14,13 @@ After [installing](getting-started.md), run `niri-fx`. It starts the guide when
 input and output are terminals; redirected output prints help without prompting.
 Use `niri-fx setup --interactive` for an explicit interactive invocation.
 
-![Choose Explosion, review, apply and undo in the terminal](gifs/workflow-terminal.gif)
+![Choose Fragment Flow, review, apply and undo in the terminal](gifs/workflow-terminal.gif)
 
 ## Choose, review, apply
 
 On standalone Niri, the guide starts with nine recommended presets. Enter a
-number or preset name, use `all` to browse all 64, or search with `/slices`,
+number or preset name, use `profiles` for seven open/close pairings, `all` for all
+64 single styles and seven profiles, or search with `/slices`,
 `/wobble` or `/pixel`. An empty selection chooses Balanced. `q` leaves the guide.
 
 For an everyday starting point, try Balanced. Spring Wobble, Pixel Wipe and
@@ -70,6 +71,7 @@ the ordinary JSON setup/restore commands.
 
 ```sh
 niri-fx list --text --recommended
+niri-fx list --profiles --text
 niri-fx list --text --family slices
 niri-fx list --text --search pixel
 niri-fx doctor --text
@@ -81,6 +83,6 @@ dependencies. Missing Quickshell or GJS/GTK does not make a core installation
 unhealthy. Install a toolkit only if you want that graphical interface.
 
 For visual comparisons, use the [gallery](https://jturbide.github.io/niri-fx/gallery/).
-For custom parameters or independent action profiles, use [Studio](usage.md)
-or [scriptable setup](setup.md). The terminal guide selects the same built-ins as
+For custom parameters or editing independent action profiles, use [Studio](usage.md)
+or [scriptable setup](setup.md). The terminal guide selects the same styles and profiles as
 the catalog; it does not maintain a separate effect library.

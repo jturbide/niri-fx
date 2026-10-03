@@ -10,6 +10,25 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- Seven selectable open/close profiles: Fragment Flow, Burst and Drift, Frost and
+  Fragments, Spring and Ember, Ghost and Shockwave, Pixel Shuffle and Ribbon Exit.
+  They reuse existing presets and leave resize and movement unset.
+- `--profile` selection for setup, render, preview, Studio and iNiR registration;
+  `inspect --profile` exports editable JSON. The terminal guide adds a `profiles`
+  menu, while `list --profiles` and `list --documents` support browsing and pickers.
+- Built-in profile selection in Studio, Quickshell, GTK, DMS and exported preset
+  packs. Refresh all seven profile showcases and the affected workflow recordings.
+  The updated DMS adapter requires the matching CLI; see the upgrade guide.
+
+### Fixed
+
+- Normalize both actions when recording older profile JSON files that omit newer
+  defaults; opening shader parity now checks the same fully resolved settings.
+- Add content versions to gallery GIF/poster URLs so regenerated examples replace
+  browser-cached recordings while unchanged examples remain cacheable.
+
 ### Changed
 
 - Experimental movement now carries tile and column position velocity through

@@ -1,6 +1,6 @@
 # Noctalia and preset folders
 
-NiriFX can export a reversible folder of all 55 open/close presets for the
+NiriFX can export a reversible folder of 64 presets and 7 curated open/close pairings for the
 existing Noctalia **Niri Animations** picker. Export the pack, connect the picker
 and select a style. No additional daemon is required.
 
@@ -12,7 +12,7 @@ define this file contract. These instructions target **Noctalia 5 / Niri Animati
 uses a different plugin system; use [standalone setup](standalone.md) with that version.
 
 Tested with **Noctalia 5.2.1 and Niri Animations 0.2.0**: the picker loads all
-55 presets, applies a custom mixed-action profile and returns to the base settings.
+the exported pack, applies a mixed-action profile and returns to the base settings.
 [Watch the workflow](gifs/workflow-noctalia.gif) or read the
 [test details](validation.md#workflow-and-compositor-scenarios).
 
@@ -25,9 +25,11 @@ python3 -m niri_fx export-pack --output ~/.config/niri/nirifx-presets
 python3 -m niri_fx export-pack --output ~/.config/niri/nirifx-presets --apply
 ```
 
-This creates `nirifx-<preset>.kdl` files and `.nirifx-pack.json`, with a snapshot
+This creates `nirifx-<id>.kdl` files and `.nirifx-pack.json`, with a snapshot
 and restore command. Every file contains only opening and closing overrides;
 resize stays off. Exporting does not select a preset or edit Niri/Noctalia config.
+The [curated pairings](profiles.md#choose-a-finished-pairing), including Fragment Flow
+and Pixel Shuffle, appear alongside the single-effect choices.
 Unrelated files survive. Modified owned files, name collisions and per-file
 symlinks stop updates for review instead of being overwritten.
 

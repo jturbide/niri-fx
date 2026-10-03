@@ -16,7 +16,13 @@ from pathlib import Path
 from .branding import APP_ID, desktop_entry
 from .documents import effect_document
 from .effects import render_kdl
-from .integration import make_custom_preset, make_presets, merge_registry, read_shell_presets
+from .integration import (
+    make_builtin_profile,
+    make_custom_preset,
+    make_presets,
+    merge_registry,
+    read_shell_presets,
+)
 from .storage import atomic_write, digest, read_bytes
 
 BEGIN = "// BEGIN niri-fx managed include"
@@ -102,6 +108,8 @@ def plan_setup(args, effect, custom=None):
         shell = read_shell_presets(args.inir_root)
         if custom:
             generated = [make_custom_preset(shell, custom, args.base)]
+        elif getattr(args, "profile", None):
+            generated = [make_builtin_profile(shell, args.profile, args.base)]
         elif args.name:
             generated = [make_custom_preset(shell, effect_document(args.name, effect), args.base)]
         else:
@@ -189,8 +197,10 @@ def plan_setup(args, effect, custom=None):
         "observed": observed,
         "selection": [p["name"] for p in generated]
         if target == "inir"
-        else (custom["name"] if custom else args.preset),
-        "effect": asdict(effect) if target == "standalone" or custom or args.name else None,
+        else (custom["name"] if custom else getattr(args, "profile", None) or args.preset),
+        "effect": asdict(effect)
+        if target == "standalone" or custom or args.name or getattr(args, "profile", None)
+        else None,
         "activation": "select in iRiS" if target == "inir" else "Niri config reload",
         "validation_config": str(config) if target == "standalone" else None,
     }

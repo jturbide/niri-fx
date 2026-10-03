@@ -4,6 +4,7 @@ import unittest
 from dataclasses import replace
 from pathlib import Path
 
+from niri_fx.catalog import STYLES
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import PRESETS, Effect, movement_shader, shader
 from niri_fx.pack import plan_pack
@@ -76,12 +77,12 @@ class PackTests(unittest.TestCase):
     def test_preview_apply_idempotence_and_exact_restore(self):
         plan = plan_pack(self.output)
         self.assertFalse(self.output.exists())
-        self.assertEqual(len(plan["changes"]), len(PRESETS) + 1)
+        self.assertEqual(len(plan["changes"]), len(STYLES) + 1)
         self.output.mkdir()
         foreign = self.output / "another-provider.kdl"
         foreign.write_text("animations {}\n")
         apply_plan(plan, self.state)
-        self.assertEqual(len(list(self.output.glob("nirifx-*.kdl"))), len(PRESETS))
+        self.assertEqual(len(list(self.output.glob("nirifx-*.kdl"))), len(STYLES))
         self.assertFalse(plan_pack(self.output)["changes"])
         self.assertTrue(
             all(

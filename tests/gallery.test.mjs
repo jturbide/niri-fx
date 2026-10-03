@@ -16,7 +16,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       readySelector: "[data-gallery-ready]",
     });
     assert.equal(
-      await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
+      await browser.evaluate("document.querySelectorAll('img[src*=\".gif?\"]').length"),
       0,
     );
     assert.equal(
@@ -33,21 +33,21 @@ test("gallery starts paused, filters examples and plays only one animation", asy
     );
     await browser.evaluate("document.querySelector('article:not([hidden]) [data-play]').click()");
     assert.equal(
-      await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
+      await browser.evaluate("document.querySelectorAll('img[src*=\".gif?\"]').length"),
       1,
     );
     await browser.evaluate(
       "document.querySelectorAll('article:not([hidden]) [data-play]')[1].click()",
     );
     assert.equal(
-      await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
+      await browser.evaluate("document.querySelectorAll('img[src*=\".gif?\"]').length"),
       1,
     );
     await browser.evaluate(
       "document.getElementById('family').value='hexagons';document.getElementById('family').dispatchEvent(new Event('input'))",
     );
     assert.equal(
-      await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
+      await browser.evaluate("document.querySelectorAll('img[src*=\".gif?\"]').length"),
       0,
     );
     assert.equal(await browser.evaluate("document.getElementById('empty').hidden"), false);
@@ -62,7 +62,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       "document.querySelector('article:not([hidden]) [data-play]').click();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))",
     );
     assert.equal(
-      await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
+      await browser.evaluate("document.querySelectorAll('img[src*=\".gif?\"]').length"),
       0,
     );
   } finally {

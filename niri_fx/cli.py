@@ -8,6 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from . import __version__
+from .catalog import PROFILES, STYLES, documents, title
 from .documents import effect_document, load_document, parse_document
 from .effects import (
     FAMILIES,
@@ -29,7 +30,11 @@ EFFECT_FIELDS = tuple(PARAMETERS)
 
 
 def effect_options(command):
-    command.add_argument("--preset", choices=PRESETS, default="balanced")
+    selection = command.add_mutually_exclusive_group()
+    selection.add_argument("--preset", choices=PRESETS, default="balanced")
+    selection.add_argument(
+        "--profile", choices=PROFILES, help="Use a ready-made open/close pairing"
+    )
     density = command.add_mutually_exclusive_group()
     for name, spec in PARAMETERS.items():
         options = {
@@ -52,13 +57,25 @@ def effect_options(command):
 
 def selected_effect(arguments):
     if getattr(arguments, "custom", None):
-        if arguments.preset != "balanced" or any(
-            getattr(arguments, k, None) is not None for k in EFFECT_FIELDS
+        if (
+            arguments.profile
+            or arguments.preset != "balanced"
+            or any(getattr(arguments, k, None) is not None for k in EFFECT_FIELDS)
         ):
             raise ValueError(
                 "--custom uses the file's parameters; do not combine it with effect overrides"
             )
         return parse_document(load_document(arguments.custom))[2]
+    if getattr(arguments, "profile", None):
+        if getattr(arguments, "name", None):
+            raise ValueError(
+                "--profile uses its built-in name; omit --name or import a custom document"
+            )
+        if any(getattr(arguments, k, None) is not None for k in EFFECT_FIELDS):
+            raise ValueError(
+                "--profile uses independent action settings; customize it in Studio instead of combining effect overrides"
+            )
+        return PROFILES[arguments.profile]
     overrides = {
         k: getattr(arguments, k) for k in EFFECT_FIELDS if getattr(arguments, k, None) is not None
     }
@@ -85,6 +102,10 @@ def parser():
     root.add_argument("--version", action="version", version=__version__)
     commands = root.add_subparsers(dest="command", required=True)
     listing = commands.add_parser("list", help="List ready-made presets (JSON by default)")
+    listing.add_argument("--profiles", action="store_true", help="List curated open/close pairings")
+    listing.add_argument(
+        "--documents", action="store_true", help="Portable documents for all styles and profiles"
+    )
     listing.add_argument("--text", action="store_true", help="Readable preset names and timings")
     listing.add_argument("--recommended", action="store_true", help="Show the starter selection")
     listing.add_argument("--family", choices=FAMILIES)
@@ -93,7 +114,9 @@ def parser():
     inspect = commands.add_parser(
         "inspect", help="Validate and print normalized style/profile JSON"
     )
-    inspect.add_argument("--custom", type=Path, required=True)
+    document = inspect.add_mutually_exclusive_group(required=True)
+    document.add_argument("--custom", type=Path)
+    document.add_argument("--profile", choices=PROFILES)
     profile = commands.add_parser("profile", help="Create an independent action profile as JSON")
     profile.add_argument("--name", default="My Profile")
     profile.add_argument("--open-preset", choices=PRESETS, default="spring-wobble")
@@ -226,14 +249,27 @@ def main(argv=None):
         elif arguments.command == "list":
             from .terminal import catalog, print_catalog
 
-            keys = catalog(arguments.search, arguments.family, arguments.recommended)
+            keys = catalog(
+                arguments.search,
+                arguments.family,
+                arguments.recommended,
+                profiles=arguments.profiles,
+                all_styles=arguments.documents,
+            )
             if arguments.text:
                 print_catalog(keys)
             else:
-                presets = describe_presets()
+                presets = (
+                    documents(PROFILES if arguments.profiles else STYLES)
+                    if arguments.profiles or arguments.documents
+                    else describe_presets()
+                )
                 print(json.dumps({key: presets[key] for key in keys}, indent=2))
         elif arguments.command == "inspect":
-            name, _, effect = parse_document(load_document(arguments.custom))
+            if arguments.profile:
+                name, effect = title(arguments.profile), PROFILES[arguments.profile]
+            else:
+                name, _, effect = parse_document(load_document(arguments.custom))
             print(json.dumps(effect_document(name, effect), indent=2))
         elif arguments.command == "picker":
             from .picker import gtk_directory, launch_picker, qml_directory
@@ -321,7 +357,7 @@ def main(argv=None):
             )
             if (
                 plan["target"] == "inir"
-                and not (arguments.custom or arguments.name)
+                and not (arguments.custom or arguments.name or arguments.profile)
                 and (
                     arguments.preset != "balanced"
                     or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS)
@@ -338,7 +374,13 @@ def main(argv=None):
             print(json.dumps(result, indent=2, ensure_ascii=False))
         elif arguments.command in ("render", "preview", "studio"):
             effect = selected_effect(arguments)
-            name = load_document(arguments.custom)["name"] if arguments.custom else arguments.preset
+            name = (
+                load_document(arguments.custom)["name"]
+                if arguments.custom
+                else title(arguments.profile)
+                if arguments.profile
+                else arguments.preset
+            )
             if arguments.command == "render":
                 print(render_kdl(effect), end="")
             elif arguments.command == "preview":
@@ -357,20 +399,29 @@ def main(argv=None):
             if arguments.command == "register":
                 registry = read_shell_presets(arguments.inir_root)
                 if arguments.custom:
-                    if arguments.preset != "balanced" or any(
-                        getattr(arguments, k) is not None for k in EFFECT_FIELDS
+                    if (
+                        arguments.profile
+                        or arguments.preset != "balanced"
+                        or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS)
                     ):
                         raise ValueError(
                             "--custom uses the file's parameters; do not combine it with effect overrides"
                         )
                     document = load_document(arguments.custom)
                     generated = [make_custom_preset(registry, document, arguments.base)]
+                elif arguments.profile:
+                    from .integration import make_builtin_profile
+
+                    selected_effect(arguments)  # Reject ambiguous action overrides before writing.
+                    generated = [make_builtin_profile(registry, arguments.profile, arguments.base)]
                 elif arguments.name:
                     document = effect_document(arguments.name, selected_effect(arguments))
                     generated = [make_custom_preset(registry, document, arguments.base)]
                 else:
-                    if arguments.preset != "balanced" or any(
-                        getattr(arguments, k) is not None for k in EFFECT_FIELDS
+                    if (
+                        arguments.profile
+                        or arguments.preset != "balanced"
+                        or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS)
                     ):
                         raise ValueError(
                             "Add --name to save customized parameters, or omit overrides to register the built-in pack"

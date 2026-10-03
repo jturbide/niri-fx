@@ -90,6 +90,7 @@ def main():
         errors.append(f"Changelog needs a dated entry for {__version__}")
 
     manifest = json.loads((ROOT / "docs/gifs/manifest.json").read_text())
+    from niri_fx.catalog import PROFILES
     from niri_fx.cli import parser, selected_effect
     from niri_fx.documents import load_document, parse_document
     from niri_fx.effects import PRESETS, Effect
@@ -110,6 +111,11 @@ def main():
             profile_sources.add(str(source.relative_to(ROOT)))
         if source.stem in PRESETS and examples[source.stem] != asdict(PRESETS[source.stem]):
             errors.append(f"Built-in example differs from its preset: {source.stem}")
+    for name, profile in PROFILES.items():
+        if examples.get(name) != asdict(profile):
+            errors.append(f"Built-in profile needs its matching example: {name}")
+        if not any(clip["file"] == f"docs/gifs/profile-{name}.gif" for clip in manifest["clips"]):
+            errors.append(f"Built-in profile needs a dedicated recording: {name}")
     commands = "\n".join(doc.read_text() for doc in (ROOT / "examples").rglob("*.md"))
     commands = commands.replace("\\\n", "")
     checked_examples = set()

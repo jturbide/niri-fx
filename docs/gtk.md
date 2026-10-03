@@ -24,7 +24,7 @@ python3 -m niri_fx picker --toolkit gtk --custom examples/profiles/elastic-resiz
 After installing a version containing the picker, use `niri-fx picker --toolkit gtk`.
 The default `niri-fx picker` continues to open the [Quickshell UI](quickshell.md).
 
-1. Search by style or family, or **Load JSON** to import a local style/profile.
+1. Search by style, profile name or either action family, or **Load JSON** to import a local style/profile.
 2. **Preview in Studio** opens the selection for editing. Export the edited JSON
    and load it again when ready.
 3. **Review changes** validates the selection and lists the affected files.
@@ -32,7 +32,8 @@ The default `niri-fx picker` continues to open the [Quickshell UI](quickshell.md
 5. **Undo last change** restores the previous file bytes. Repeat to undo earlier
    changes from this picker's history.
 
-Browsing, importing and reviewing are read-only. Built-in styles use your base
+Search `profile` for the seven curated pairings, alongside the 64 single styles.
+Browsing, importing and reviewing are read-only. All built-ins use your base
 Niri resize settings. A custom selection with resize effects requires the visible
 consent checkbox before Apply. Replacing a previously applied NiriFX resize
 override with a built-in style removes that override, exposing the base settings.

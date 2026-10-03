@@ -16,8 +16,9 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.nested import NestedSession, encode_gif, record, save_clips, source_hashes, stop, wait_for
 
+from niri_fx.catalog import STYLES
 from niri_fx.documents import load_document, parse_document
-from niri_fx.effects import PRESETS, render_kdl
+from niri_fx.effects import render_kdl
 from niri_fx.integration import make_custom_preset, update_registry
 
 BASE = """hotkey-overlay { skip-at-startup; }
@@ -82,21 +83,21 @@ def dms(session, args):
         wait_for(lambda: info().get("selected") == selected, f"DMS result {selected}")
         time.sleep(0.8)
 
-    wait_for(lambda: info().get("count") == len(PRESETS), "DMS catalog", 40)
+    wait_for(lambda: info().get("count") == len(STYLES), "DMS catalog", 40)
     time.sleep(0.5)
     original = session.config.read_bytes()
     recorder = video = None
     try:
         if args.record:
             recorder, video = record(session, "workflow-dms")
-        present("fx balanced", "Balanced")
+        present("fx fragment flow", "Fragment Flow")
         session.capture("dms-search")
         session.keys("-k", "Return")
         effect_file = session.config.parent / "nirifx/animations.kdl"
         wait_for(lambda: effect_file.exists() and not info().get("busy"), "DMS apply")
         assert session.config.read_bytes().startswith(original)
         assert "window-resize" not in effect_file.read_text()
-        assert effect_file.read_text().endswith(render_kdl(PRESETS["balanced"]))
+        assert effect_file.read_text().endswith(render_kdl(STYLES["fragment-flow"]))
         present("fx undo", "Undo last NiriFX change")
         session.capture("dms-undo")
         session.keys("-k", "Return")
@@ -117,7 +118,7 @@ def dms(session, args):
             stop(recorder, signal.SIGINT)
         # Also prove Undo preserves an external edit. This refusal is a separate
         # acceptance check; the GIF shows the successful everyday workflow.
-        present("fx balanced", "Balanced")
+        present("fx fragment flow", "Fragment Flow")
         session.keys("-k", "Return")
         wait_for(lambda: effect_file.exists() and not info().get("busy"), "second apply")
         edited = session.config.read_bytes() + b"// Independent user edit\n"
@@ -231,7 +232,7 @@ def noctalia(session, args):
     if recorder:
         stop(recorder, signal.SIGINT)
     return video, [
-        "55 presets plus custom profile",
+        f"{len(STYLES)} built-in styles and profiles plus custom profile",
         "keyboard dropdown selection",
         "independent profile applied",
         "base restored",

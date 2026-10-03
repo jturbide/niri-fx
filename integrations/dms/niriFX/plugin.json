@@ -2,7 +2,7 @@
   "id": "niriFX",
   "name": "NiriFX",
   "description": "Choose Niri window effects, undo the last change, or open NiriFX Studio.",
-  "version": "0.7.0",
+  "version": "0.10.0-dev",
   "author": "Julien Turbide",
   "icon": "animation",
   "type": "launcher",

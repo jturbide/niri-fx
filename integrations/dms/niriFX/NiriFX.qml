@@ -25,8 +25,8 @@ Item {
             {name: "Refresh NiriFX styles", icon: "material:refresh", comment: status, action: "refresh", categories: ["NiriFX"]}
         ];
         for (const name of Object.keys(presets)) items.push({
-            name: name.split("-").map(word => word[0].toUpperCase() + word.slice(1)).join(" "),
-            icon: "material:animation", comment: "Apply " + presets[name].family + " · resize unchanged", action: "preset:" + name, categories: ["NiriFX"]
+            name: presets[name].name,
+            icon: "material:animation", comment: "Apply " + (presets[name].kind === "profile" ? presets[name].actions.open.family + " → " + presets[name].actions.close.family + " profile" : presets[name].effect.family) + " · resize unchanged", action: "preset:" + name, categories: ["NiriFX"]
         });
         const text = (query || "").toLowerCase();
         return items.filter(item => (item.name + " " + item.comment).toLowerCase().includes(text));
@@ -43,13 +43,13 @@ Item {
         } else if (item.action.startsWith("preset:")) {
             const name = item.action.slice(7);
             if (!Object.prototype.hasOwnProperty.call(presets, name)) return;
-            actionProcess.command = [executable, "setup", "--target", "standalone", "--config", configPath, "--state", statePath, "--preset", name, "--no-launcher", "--apply"];
+            actionProcess.command = [executable, "setup", "--target", "standalone", "--config", configPath, "--state", statePath, presets[name].kind === "profile" ? "--profile" : "--preset", name, "--no-launcher", "--apply"];
             actionProcess.running = true;
         }
     }
     Process {
         id: catalogProcess
-        command: [root.executable, "list"]
+        command: [root.executable, "list", "--documents"]
         stdout: StdioCollector { id: catalogOutput }
         stderr: StdioCollector { id: catalogError }
         onExited: (code, exitStatus) => {

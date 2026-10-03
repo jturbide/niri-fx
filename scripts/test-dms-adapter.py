@@ -51,10 +51,10 @@ ShellRoot {
             if (!adapter.item) return;
             const item = adapter.item;
             if (phase === 0 && Object.keys(item.presets).length > 0) {
-                if (!item.getItems("noise dissolve").some(entry => entry.action === "preset:noise-dissolve")) throw new Error("Catalog search failed");
+                if (!item.getItems("burst and drift").some(entry => entry.action === "preset:burst-and-drift")) throw new Error("Catalog search failed");
                 item.executeItem({action: "preset:../../bad"});
                 if (item.busy) throw new Error("Unknown action was executed");
-                item.executeItem({action: "preset:noise-dissolve"}); phase = 1;
+                item.executeItem({action: "preset:burst-and-drift"}); phase = 1;
             } else if (phase === 1 && !item.busy) {
                 if (!item.status.startsWith("NiriFX change applied")) throw new Error(item.status);
                 item.executeItem({action: "restore"}); phase = 2;

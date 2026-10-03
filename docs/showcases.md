@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **138 GIFs**, including all **64 built-in presets**. Use this
+The gallery has **141 GIFs**, including all **64 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -42,15 +42,18 @@ for every panel's exact settings. Preset loops retain their own default timing.
 
 ## Different effects for each action
 
-The four open/close [importable profiles](../examples/profiles/README.md) leave resize off.
+The seven built-in open/close [profiles](../examples/profiles/README.md) leave resize off.
 Opening and closing are independent; these are not application-specific rules.
 
 | Profile | Opens with | Closes with | Recording |
 | --- | --- | --- | --- |
+| [Fragment Flow](../examples/profiles/fragment-flow.json) | Balanced | Implosion | [Loop](gifs/profile-fragment-flow.gif) |
 | [Burst and Drift](../examples/profiles/burst-and-drift.json) | Explosion | Dust Drift | [Loop](gifs/profile-burst-and-drift.gif) |
 | [Frost and Fragments](../examples/profiles/frost-and-fragments.json) | Frost Vanish | Pixel Dust | [Loop](gifs/profile-frost-and-fragments.gif) |
 | [Spring and Ember](../examples/profiles/spring-and-ember.json) | Spring Wobble | Ember Erosion | [Loop](gifs/profile-spring-and-ember.gif) |
 | [Ghost and Shockwave](../examples/profiles/ghost-and-shockwave.json) | Ghost Wisps | Shockwave | [Loop](gifs/profile-ghost-and-shockwave.gif) |
+| [Pixel Shuffle](../examples/profiles/pixel-shuffle.json) | Pixel Wipe | Pixelate | [Loop](gifs/profile-pixel-shuffle.gif) |
+| [Ribbon Exit](../examples/profiles/ribbon-exit.json) | Alternating Blinds | Ribbon Fold | [Loop](gifs/profile-ribbon-exit.gif) |
 
 Use Studio's **Independent action effects** and **Editing action** controls to
 make your own. [The profile guide](profiles.md) also explains import/export,

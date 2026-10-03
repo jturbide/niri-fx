@@ -10,6 +10,7 @@ from unittest.mock import patch
 from helpers import shell_registry
 
 from niri_fx import setup
+from niri_fx.catalog import STYLES
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import PRESETS
 
@@ -216,7 +217,7 @@ class SetupTests(unittest.TestCase):
             self.assertFalse(self.plan()["changes"])
         data = json.loads(self.args.registry.read_text())
         self.assertEqual(data["presets"][0]["id"], "other")
-        self.assertEqual(len(data["presets"]), len(PRESETS) + 1)
+        self.assertEqual(len(data["presets"]), len(STYLES) + 1)
         setup.restore(self.state, apply=True)
         self.assertEqual(self.args.registry.read_bytes(), original)
         self.assertEqual(self.config.read_bytes(), self.original)

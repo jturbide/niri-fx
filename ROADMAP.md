@@ -14,8 +14,9 @@ Finished presets and smooth effects are the main product. The terminal guide,
 graphical pickers and Studio serve that workflow: choose a look, apply it, and
 customize when useful. New interface work should address a demonstrated need.
 
-- **Curated action profiles.** Make useful open/close pairings easier to discover,
-  with clear descriptions and faithful examples. Keep resize explicitly opt-in.
+Seven [ready-made action profiles](docs/profiles.md) now pair opening and closing
+styles across the existing CLI, Studio and pickers. Further curation should focus
+on distinct looks and useful timing, with resize kept explicitly opt-in.
 
 - **More hardware results.** Compare large windows and simultaneous animations on
   integrated GPUs and several refresh rates. Publish repeatable measurements with
