@@ -141,3 +141,23 @@ python3 -m niri_fx preview --custom examples/spring-wobble.json --output /tmp/sp
 python3 -m niri_fx preview --custom examples/rubber-band.json --output /tmp/rubber-band.html
 python3 -m niri_fx preview --custom examples/jelly.json --output /tmp/jelly.html
 ```
+
+## Piece shapes, hinges and elastic transforms
+
+These 12 presets keep resize off. Each command reproduces the corresponding
+JSON and the preset GIF in the main README.
+
+```sh
+python3 -m niri_fx preview --preset pixel-dust --output /tmp/pixel-dust.html
+python3 -m niri_fx preview --preset bubble-burst --output /tmp/bubble-burst.html
+python3 -m niri_fx preview --preset core-detonation --output /tmp/core-detonation.html
+python3 -m niri_fx preview --preset checker-scatter --output /tmp/checker-scatter.html
+python3 -m niri_fx preview --preset hinged-fan --output /tmp/hinged-fan.html
+python3 -m niri_fx preview --preset venetian-shutter --output /tmp/venetian-shutter.html
+python3 -m niri_fx preview --preset ribbon-fold --output /tmp/ribbon-fold.html
+python3 -m niri_fx preview --preset zipper --output /tmp/zipper.html
+python3 -m niri_fx preview --preset twist-snap --output /tmp/twist-snap.html
+python3 -m niri_fx preview --preset flag-wave --output /tmp/flag-wave.html
+python3 -m niri_fx preview --preset corner-spring --output /tmp/corner-spring.html
+python3 -m niri_fx preview --preset accordion --output /tmp/accordion.html
+```

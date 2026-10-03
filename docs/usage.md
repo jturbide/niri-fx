@@ -56,7 +56,7 @@ Live fragment controls include:
 - **Spread:** 0–240 logical pixels of initial radial scatter.
 - **Path dispersion:** 0–1; separates fragment speeds and curves their paths.
 - **Release stagger:** 0–0.4; varies when fragments separate and dissolve.
-- **Release direction:** together, or three waves starting at the left, right,
+- **Release pattern:** together; center-out, inward, diagonal or checkerboard groups; or waves starting at the left, right,
   top or bottom. **Wave span** (0–0.7) separates the first and last wave; larger
   values make the sweep more pronounced. Random stagger still varies individual pieces.
 - **Burst origin X/Y:** 0–1 within the window, from left/top to right/bottom.
@@ -143,9 +143,9 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
-The current checkout has 29 built-ins. The original styles are listed below;
+The current checkout has 41 built-ins. The original styles are listed below;
 [new styles and controls](effect-controls.md) cover five varied Fragments, four
-additional Slices and three Elastic presets.
+additional Fragments, Slices and Elastic presets, including piece shapes, hinges and spring transforms.
 
 
 | Preset | Motion |

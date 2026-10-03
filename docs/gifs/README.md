@@ -92,3 +92,26 @@ python3 scripts/record-native-gif.py --preset spring-wobble --name native-swap-s
 `--new-only` also regenerates Slide Apart and its count comparison after the
 default direction change. The original native swap remains a historical recording;
 new native demos display NiriFX and the preset name.
+
+## Piece shapes, hinges and spring transforms
+
+The gallery has 75 GIFs, including all 41 presets. The latest addition contains
+12 preset loops, five comparisons and three native swaps. Shape comparisons
+change corner rounding or shrink from the same baseline; hinge and collapse
+comparisons change one scalar; release comparisons change the spatial sequence;
+elastic comparisons add either twist or spatial ripples.
+
+Regenerate one or more exact clip names without touching the rest of the gallery:
+
+```sh
+node scripts/render-readme-gifs.mjs --only=preset-bubble-burst,compare-fragment-shapes
+node scripts/render-readme-gifs.mjs --only=compare-slice-hinges,compare-slice-collapse,compare-elastic-transforms
+python3 scripts/record-native-gif.py --preset bubble-burst --name native-swap-bubble-burst
+python3 scripts/record-native-gif.py --preset core-detonation --name native-swap-core-detonation
+python3 scripts/record-native-gif.py --preset twist-snap --name native-swap-twist-snap
+```
+
+`--only` accepts preset clip names (`preset-NAME`) and names from `showcases.json`.
+Unknown/empty names fail before any frames are recorded. Use one selection option
+at a time. Recordings use exact current parameters with resize off except the
+explicit resize examples.

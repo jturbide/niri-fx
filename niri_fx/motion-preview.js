@@ -51,6 +51,25 @@ class MotionPreview {
       ? Math.max(4, Math.sqrt((600 * 380) / parameters.particles))
       : parameters.tile_size;
     const list = [];
+    const releaseIndex = (x, y) => {
+      if (parameters.release === "together") return 0;
+      let axis = x;
+      if (parameters.release === "right") axis = 1 - x;
+      if (parameters.release === "up") axis = y;
+      if (parameters.release === "down") axis = 1 - y;
+      if (["center", "edges"].includes(parameters.release)) {
+        axis =
+          Math.hypot(
+            (x - parameters.origin_x) / Math.max(parameters.origin_x, 1 - parameters.origin_x),
+            (y - parameters.origin_y) / Math.max(parameters.origin_y, 1 - parameters.origin_y),
+          ) / Math.SQRT2;
+        if (parameters.release === "edges") axis = 1 - axis;
+      }
+      if (parameters.release === "diagonal") axis = (x + y) / 2;
+      if (parameters.release === "checkerboard")
+        return ((Math.floor(x * 6) + Math.floor(y * 6)) % 2) * 2;
+      return Math.max(0, Math.min(2, Math.floor(axis * 3)));
+    };
     const edge = (index, count, axis) =>
       index <= 0
         ? 0
@@ -65,7 +84,8 @@ class MotionPreview {
             r = hash(i),
             v = hash(i + 37),
             w = hash(i + 101);
-          const delay = parameters.stagger * 0.5 * r,
+          const group = releaseIndex(((col + 0.5) * tile) / 600, ((row + 0.5) * tile) / 380);
+          const delay = parameters.stagger * 0.5 * r + group * parameters.wave_span * 0.125,
             u = Math.max(0, Math.min(1, (p - delay) / (1 - 2 * delay))),
             t = smooth(u);
           const wave = Math.sin(Math.PI * t),
@@ -73,6 +93,8 @@ class MotionPreview {
             sy = edge(row, Math.ceil(380 / tile), 71),
             sw = Math.min(edge(col + 1, Math.ceil(600 / tile), 31), 600) - sx,
             sh = Math.min(edge(row + 1, Math.ceil(380 / tile), 71), 380) - sy;
+          // Jitter can put the final cell's lower boundary beyond the texture.
+          if (sw <= 0 || sh <= 0) continue;
           const offsetX = (sx + sw / 2 - 300) * 0.633333,
             offsetY = (sy + sh / 2 - 190) * 0.633333;
           const spread = (25 + parameters.scatter * 0.65) * parameters.dispersion;
@@ -121,7 +143,8 @@ class MotionPreview {
             sw,
             sh,
             angle,
-            scale: 0.633333 * (1 - 0.38 * wave),
+            scale: 0.633333 * (1 - 0.38 * wave) * (1 - 0.85 * parameters.fragment_shrink * wave),
+            roundness: parameters.fragment_roundness * wave,
             image: window.image,
             depth: w,
             id: window.id,
@@ -164,6 +187,19 @@ class MotionPreview {
       c.save();
       c.translate(part.x, part.y);
       c.rotate(part.angle);
+      if (part.roundness > 0) {
+        const width = part.sw * part.scale,
+          height = part.sh * part.scale;
+        c.beginPath();
+        c.roundRect(
+          -width / 2,
+          -height / 2,
+          width,
+          height,
+          Math.min(width, height) * 0.5 * part.roundness,
+        );
+        c.clip();
+      }
       c.drawImage(
         part.image,
         part.sx,

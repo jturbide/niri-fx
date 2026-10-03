@@ -31,6 +31,13 @@ const numeric = [
   "elastic_strength",
   "elastic_frequency",
   "elastic_damping",
+  "fragment_shrink",
+  "fragment_roundness",
+  "slice_pivot",
+  "slice_collapse",
+  "elastic_twist",
+  "elastic_stretch",
+  "elastic_ripple",
 ];
 const units = {
   tile_size: " px",
@@ -63,6 +70,13 @@ const units = {
   elastic_strength: "",
   elastic_frequency: " cycles",
   elastic_damping: "",
+  fragment_shrink: "",
+  fragment_roundness: "",
+  slice_pivot: "",
+  slice_collapse: "",
+  elastic_twist: "°",
+  elastic_stretch: "",
+  elastic_ripple: "×",
 };
 let parameters = { ...catalog.parameters },
   frame = 0,
@@ -103,6 +117,7 @@ function populate() {
     "slice_direction",
     "slice_order",
     "elastic_axis",
+    "elastic_anchor",
   ])
     byId(key).value = parameters[key];
   byId("resize").checked = parameters.resize;
@@ -150,6 +165,8 @@ function labels() {
     byId(key + "-value").textContent = Number(Number(byId(key).value).toFixed(3)) + units[key];
   for (const key of [
     "scatter",
+    "fragment_shrink",
+    "fragment_roundness",
     "dispersion",
     "stagger",
     "swirl",
@@ -178,8 +195,19 @@ function shaderFor(p, opening, resizing = false) {
     p.stagger === 0 &&
     p.release === "together" &&
     p.origin_x === 0.5 &&
-    p.origin_y === 0.5;
+    p.origin_y === 0.5 &&
+    !p.fragment_shrink &&
+    !p.fragment_roundness;
   const tokens = {
+    FRAGMENT_SHRINK: p.fragment_shrink.toFixed(6),
+    FRAGMENT_ROUNDNESS: p.fragment_roundness.toFixed(6),
+    SLICE_PIVOT: p.slice_pivot.toFixed(6),
+    SLICE_COLLAPSE: p.slice_collapse.toFixed(6),
+    ELASTIC_TWIST: p.elastic_twist.toFixed(6),
+    ELASTIC_STRETCH: p.elastic_stretch.toFixed(6),
+    ELASTIC_RIPPLE: p.elastic_ripple.toFixed(6),
+    ELASTIC_ORIGIN_X: catalog.elastic_anchors[p.elastic_anchor][0].toFixed(6),
+    ELASTIC_ORIGIN_Y: catalog.elastic_anchors[p.elastic_anchor][1].toFixed(6),
     ELASTIC_STRENGTH: p.elastic_strength.toFixed(6),
     ELASTIC_FREQUENCY: p.elastic_frequency.toFixed(6),
     ELASTIC_DAMPING: p.elastic_damping.toFixed(6),
@@ -263,6 +291,7 @@ function normalizePreset(doc) {
     slice_direction: catalog.slice_directions,
     slice_order: catalog.slice_orders,
     elastic_axis: catalog.elastic_axes,
+    elastic_anchor: Object.keys(catalog.elastic_anchors),
     gravity: catalog.gravities,
     rotation: catalog.rotations,
     release: catalog.releases,
@@ -515,6 +544,7 @@ try {
       "slice_direction",
       "slice_order",
       "elastic_axis",
+      "elastic_anchor",
     ])
       parameters[key] = byId(key).value;
     if (byId("density").value === "tile") parameters.particles = 0;
@@ -530,6 +560,7 @@ try {
     "slice_direction",
     "slice_order",
     "elastic_axis",
+    "elastic_anchor",
     "density",
     "resize",
   ])

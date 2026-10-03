@@ -28,6 +28,15 @@ class VariationTests(unittest.TestCase):
             ("elastic_axis", []),
             ("elastic_frequency", 0),
             ("elastic_damping", 9),
+            ("fragment_roundness", -0.01),
+            ("fragment_shrink", 1.1),
+            ("slice_pivot", -1.1),
+            ("slice_collapse", True),
+            ("elastic_twist", 91),
+            ("elastic_stretch", float("inf")),
+            ("elastic_ripple", 0),
+            ("elastic_anchor", []),
+            ("elastic_anchor", "missing"),
         ):
             with self.subTest(field=field), self.assertRaises(ValueError):
                 Effect(**{field: value})
@@ -35,6 +44,10 @@ class VariationTests(unittest.TestCase):
             ["--preset", "spring-wobble", "--particles", "400"],
             ["--preset", "slide-apart", "--elastic-strength", ".5"],
             ["--slice-order", "random"],
+            ["--preset", "jelly", "--fragment-shrink", "0.5"],
+            ["--preset", "slide-apart", "--fragment-roundness", "1"],
+            ["--slice-pivot", "-1"],
+            ["--elastic-anchor", "top-left"],
         ):
             with self.assertRaises(ValueError):
                 selected_effect(parser().parse_args(["render", *options]))

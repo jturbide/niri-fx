@@ -20,6 +20,8 @@ const float FX_DIRECTION = @DIRECTION_VARIATION@;
 const float FX_WAVE = @WAVE_STRENGTH@;
 const float FX_FREQUENCY = @WAVE_FREQUENCY@;
 const float FX_SPEED = @WAVE_SPEED@;
+const float FX_SHRINK = @FRAGMENT_SHRINK@;
+const float FX_ROUNDNESS = @FRAGMENT_ROUNDNESS@;
 const float FRAGMENTS_PI = 3.14159265359;
 
 vec2 fragments_hash(vec2 cell) {
@@ -58,6 +60,14 @@ int fragments_phase_index(vec2 geo) {
     if (FRAGMENTS_RELEASE == 2) axis = 1.0 - geo.x;
     if (FRAGMENTS_RELEASE == 3) axis = geo.y;
     if (FRAGMENTS_RELEASE == 4) axis = 1.0 - geo.y;
+    if (FRAGMENTS_RELEASE == 5 || FRAGMENTS_RELEASE == 6) {
+        vec2 radius = max(FRAGMENTS_ORIGIN, vec2(1.0) - FRAGMENTS_ORIGIN);
+        axis = length((geo - FRAGMENTS_ORIGIN) / radius) / sqrt(2.0);
+        if (FRAGMENTS_RELEASE == 6) axis = 1.0 - axis;
+    }
+    if (FRAGMENTS_RELEASE == 7) axis = (geo.x + geo.y) * 0.5;
+    if (FRAGMENTS_RELEASE == 8)
+        return int(mod(floor(geo.x * 6.0) + floor(geo.y * 6.0), 2.0)) * 2;
     return int(clamp(floor(axis * 3.0), 0.0, 2.0));
 }
 
@@ -124,6 +134,7 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
             // dissolve. Opening runs the same trajectory backwards to a seal.
             float shrink = field_shrink * (1.0 - 0.28 * release)
                            * (1.0 - 0.92 * smoothstep(0.58, 1.0, local_time));
+            shrink *= 1.0 - 0.85 * FX_SHRINK * release;
             float opacity = 1.0 - smoothstep(0.62, 1.0, local_time);
             vec2 waved_center = source_center + vec2(fragments_wave(source_center.y, size.y, breakup), 0.0);
             vec2 destination = field_center + field * ((waved_center - center) * scale);
@@ -154,6 +165,16 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
             vec2 edge = min(half_size - abs(local), min(source, size - source));
             float coverage = mix(1.0, smoothstep(0.0, 0.85, min(edge.x, edge.y) * shrink),
                                  smoothstep(0.0, 0.12, breakup));
+            // Rounded corners emerge after release; no gaps at the intact endpoint.
+            vec2 shape_half = half_size;
+            float radius = min(shape_half.x, shape_half.y) * FX_ROUNDNESS
+                         * smoothstep(0.0, 0.28, local_time);
+            if (radius > 0.0) {
+                vec2 corner = abs(local) - shape_half + radius;
+                float inside = radius - length(max(corner, vec2(0.0)))
+                             - min(max(corner.x, corner.y), 0.0);
+                coverage *= smoothstep(0.0, 0.85, inside * shrink);
+            }
             vec4 fragment = fragments_sample(source / size) * (opacity * coverage);
             result = fragment + result * (1.0 - fragment.a);
           }
@@ -167,7 +188,7 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
     if (breakup >= 1.0) return vec4(0.0);
     if (FRAGMENTS_RELEASE == 0) return fragments_phase(coords_geo, size_geo, breakup, 0);
     vec4 result = vec4(0.0);
-    // Three staggered source strips retain invertible fields and bounded lookup.
+    // Three staggered source groups retain invertible fields and bounded lookup.
     // Together uses 147 candidates; three release phases use up to 441.
     for (int phase = 0; phase < 3; phase++) {
         float delay = float(phase) * 0.5 * FRAGMENTS_WAVE_SPAN;

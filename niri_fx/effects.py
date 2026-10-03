@@ -6,12 +6,42 @@ from importlib.resources import files
 
 GRAVITIES = ("none", "down", "up", "left", "right", "center", "space")
 ROTATIONS = ("none", "random", "gravity")
-RELEASES = ("together", "left", "right", "up", "down")
+RELEASES = (
+    "together",
+    "left",
+    "right",
+    "up",
+    "down",
+    "center",
+    "edges",
+    "diagonal",
+    "checkerboard",
+)
 RESIZE_MODES = ("full", "edge", "soft")
 SLICE_DIRECTIONS = ("outward", "alternate", "positive", "negative", "random")
 SLICE_ORDERS = ("forward", "reverse", "center", "edges", "random", "together")
 ELASTIC_AXES = ("both", "horizontal", "vertical")
-ELASTIC_FIELDS = ("elastic_strength", "elastic_frequency", "elastic_damping", "elastic_axis")
+ELASTIC_ANCHORS = {
+    "center": (0.5, 0.5),
+    "top": (0.5, 0.0),
+    "bottom": (0.5, 1.0),
+    "left": (0.0, 0.5),
+    "right": (1.0, 0.5),
+    "top-left": (0.0, 0.0),
+    "top-right": (1.0, 0.0),
+    "bottom-left": (0.0, 1.0),
+    "bottom-right": (1.0, 1.0),
+}
+ELASTIC_FIELDS = (
+    "elastic_strength",
+    "elastic_frequency",
+    "elastic_damping",
+    "elastic_axis",
+    "elastic_twist",
+    "elastic_stretch",
+    "elastic_ripple",
+    "elastic_anchor",
+)
 MOTION_FIELDS = (
     "size_variation",
     "direction_variation",
@@ -54,6 +84,8 @@ FAMILY_FIELDS = (
     "slice_order",
     "slice_travel_variation",
     "slice_rotation_variation",
+    "slice_pivot",
+    "slice_collapse",
 )
 LIMITS = {
     "tile_size": (8, 128),
@@ -86,6 +118,13 @@ LIMITS = {
     "elastic_strength": (0, 1),
     "elastic_frequency": (1, 5),
     "elastic_damping": (0, 8),
+    "fragment_shrink": (0, 1),
+    "fragment_roundness": (0, 1),
+    "slice_pivot": (-1, 1),
+    "slice_collapse": (0, 1),
+    "elastic_twist": (-90, 90),
+    "elastic_stretch": (0, 1),
+    "elastic_ripple": (0.5, 4),
 }
 
 
@@ -101,6 +140,10 @@ class Effect:
     slice_order: str = "forward"
     slice_travel_variation: float = 0.1
     slice_rotation_variation: float = 0
+    slice_pivot: float = 0
+    slice_collapse: float = 0
+    fragment_shrink: float = 0
+    fragment_roundness: float = 0
     size_variation: float = 0
     direction_variation: float = 0
     wave_strength: float = 0
@@ -110,6 +153,10 @@ class Effect:
     elastic_frequency: float = 2
     elastic_damping: float = 2
     elastic_axis: str = "both"
+    elastic_twist: float = 0
+    elastic_stretch: float = 0
+    elastic_ripple: float = 1
+    elastic_anchor: str = "center"
     tile_size: float = 28
     scatter: float = 125
     open_ms: int = 520
@@ -155,6 +202,8 @@ class Effect:
             raise ValueError(f"slice_order must be one of {', '.join(SLICE_ORDERS)}")
         if self.elastic_axis not in ELASTIC_AXES:
             raise ValueError(f"elastic_axis must be one of {', '.join(ELASTIC_AXES)}")
+        if not isinstance(self.elastic_anchor, str) or self.elastic_anchor not in ELASTIC_ANCHORS:
+            raise ValueError(f"elastic_anchor must be one of {', '.join(ELASTIC_ANCHORS)}")
         if self.resize and not FAMILIES[self.family]["resize"]:
             raise ValueError(f"The {self.family} family does not support resize; use --no-resize")
         if self.particles and self.particles < 16:
@@ -184,6 +233,8 @@ class Effect:
             and self.release == "together"
             and self.origin_x == 0.5
             and self.origin_y == 0.5
+            and not self.fragment_shrink
+            and not self.fragment_roundness
         )
 
 
@@ -514,6 +565,141 @@ PRESETS = {
         open_ms=1200,
         close_ms=1100,
     ),
+    "pixel-dust": Effect(
+        particles=1800,
+        scatter=95,
+        gravity="up",
+        gravity_strength=0.65,
+        fragment_shrink=0.9,
+        fragment_roundness=0.25,
+        spin=150,
+        open_ms=850,
+        close_ms=800,
+    ),
+    "bubble-burst": Effect(
+        particles=180,
+        scatter=160,
+        gravity_strength=0.8,
+        fragment_roundness=1,
+        fragment_shrink=0.25,
+        spin=80,
+        open_ms=950,
+        close_ms=900,
+    ),
+    "core-detonation": Effect(
+        particles=1150,
+        scatter=210,
+        gravity_strength=1.4,
+        release="center",
+        wave_span=0.5,
+        size_variation=0.35,
+        fragment_roundness=0.15,
+        fragment_shrink=0.4,
+        spin=260,
+        open_ms=1000,
+        close_ms=950,
+    ),
+    "checker-scatter": Effect(
+        particles=500,
+        scatter=130,
+        gravity="none",
+        gravity_strength=0,
+        release="checkerboard",
+        wave_span=0.55,
+        size_variation=0.3,
+        fragment_shrink=0.35,
+        spin=90,
+        open_ms=1050,
+        close_ms=1000,
+    ),
+    "hinged-fan": Effect(
+        family="slices",
+        slice_count=9,
+        slice_distance=80,
+        slice_rotation=45,
+        slice_direction="positive",
+        slice_pivot=-1,
+        slice_stagger=0.5,
+        slice_collapse=0.15,
+        open_ms=950,
+        close_ms=900,
+    ),
+    "venetian-shutter": Effect(
+        family="slices",
+        slice_count=18,
+        slice_distance=0,
+        slice_collapse=1,
+        slice_stagger=0.6,
+        slice_order="center",
+        open_ms=950,
+        close_ms=900,
+    ),
+    "ribbon-fold": Effect(
+        family="slices",
+        slice_count=14,
+        slice_angle=90,
+        slice_distance=180,
+        slice_rotation=-30,
+        slice_direction="alternate",
+        slice_pivot=1,
+        slice_collapse=0.8,
+        wave_strength=0.5,
+        size_variation=0.3,
+        open_ms=1050,
+        close_ms=1000,
+    ),
+    "zipper": Effect(
+        family="slices",
+        slice_count=22,
+        slice_direction="alternate",
+        slice_stagger=0.65,
+        slice_distance=300,
+        slice_collapse=0.5,
+        open_ms=1050,
+        close_ms=1000,
+    ),
+    "twist-snap": Effect(
+        family="elastic",
+        elastic_twist=65,
+        elastic_strength=0.55,
+        elastic_frequency=1.5,
+        elastic_damping=1,
+        elastic_stretch=0.25,
+        open_ms=1000,
+        close_ms=900,
+    ),
+    "flag-wave": Effect(
+        family="elastic",
+        elastic_axis="vertical",
+        elastic_ripple=3,
+        elastic_strength=1,
+        elastic_frequency=2,
+        elastic_damping=0.6,
+        elastic_anchor="left",
+        open_ms=1200,
+        close_ms=1100,
+    ),
+    "corner-spring": Effect(
+        family="elastic",
+        elastic_twist=-32,
+        elastic_stretch=0.5,
+        elastic_anchor="bottom-left",
+        elastic_frequency=1.5,
+        elastic_damping=1,
+        open_ms=1050,
+        close_ms=1000,
+    ),
+    "accordion": Effect(
+        family="elastic",
+        elastic_axis="horizontal",
+        elastic_ripple=2,
+        elastic_stretch=0.9,
+        elastic_frequency=1.25,
+        elastic_strength=0.55,
+        elastic_damping=1.2,
+        open_ms=1150,
+        close_ms=1100,
+    ),
 }
 
 
@@ -588,6 +774,10 @@ def _expand(template, effect, opening):
         .replace("@SLICE_ORDER@", str(SLICE_ORDERS.index(effect.slice_order)))
         .replace("@SLICE_TRAVEL_VARIATION@", f"{effect.slice_travel_variation:.6f}")
         .replace("@SLICE_ROTATION_VARIATION@", f"{effect.slice_rotation_variation:.6f}")
+        .replace("@SLICE_PIVOT@", f"{effect.slice_pivot:.6f}")
+        .replace("@SLICE_COLLAPSE@", f"{effect.slice_collapse:.6f}")
+        .replace("@FRAGMENT_SHRINK@", f"{effect.fragment_shrink:.6f}")
+        .replace("@FRAGMENT_ROUNDNESS@", f"{effect.fragment_roundness:.6f}")
         .replace("@SIZE_VARIATION@", f"{effect.size_variation:.6f}")
         .replace("@DIRECTION_VARIATION@", f"{effect.direction_variation:.6f}")
         .replace("@WAVE_STRENGTH@", f"{effect.wave_strength:.6f}")
@@ -597,6 +787,11 @@ def _expand(template, effect, opening):
         .replace("@ELASTIC_FREQUENCY@", f"{effect.elastic_frequency:.6f}")
         .replace("@ELASTIC_DAMPING@", f"{effect.elastic_damping:.6f}")
         .replace("@ELASTIC_AXIS@", str(ELASTIC_AXES.index(effect.elastic_axis)))
+        .replace("@ELASTIC_TWIST@", f"{effect.elastic_twist:.6f}")
+        .replace("@ELASTIC_STRETCH@", f"{effect.elastic_stretch:.6f}")
+        .replace("@ELASTIC_RIPPLE@", f"{effect.elastic_ripple:.6f}")
+        .replace("@ELASTIC_ORIGIN_X@", f"{ELASTIC_ANCHORS[effect.elastic_anchor][0]:.6f}")
+        .replace("@ELASTIC_ORIGIN_Y@", f"{ELASTIC_ANCHORS[effect.elastic_anchor][1]:.6f}")
         .replace("@SCATTER@", f"{effect.scatter:.6f}")
         .replace("@PARTICLES@", f"{effect.particles:.6f}")
         .replace("@GRAVITY@", str(GRAVITIES.index(effect.gravity)))
