@@ -22,6 +22,11 @@ On standalone Niri, the guide starts with nine recommended presets. Enter a
 number or preset name, use `all` to browse all 64, or search with `/slices`,
 `/wobble` or `/pixel`. An empty selection chooses Balanced. `q` leaves the guide.
 
+For an everyday starting point, try Balanced. Spring Wobble, Pixel Wipe and
+Shockwave offer distinct looks with low measured shader costs on the tested GPU.
+Core Detonation is a heavier spectacle; see the [performance comparisons](performance.md)
+when choosing effects for large windows or frequent animations.
+
 The review lists the files to create or update. Type **apply** to write those
 changes; Enter cancels. Apply rebuilds and verifies the reviewed plan, so external
 edits while the prompt is open require a fresh review. It activates the selected

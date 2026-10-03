@@ -118,6 +118,16 @@ test("hosted gallery settings load, edit, share and download without local endpo
     await browser.navigate(base + "/studio/?preset=__proto__");
     assert.equal(await browser.evaluate("parameters.family"), "fragments");
     assert.equal(await browser.evaluate('byId("preset").value'), "balanced");
+    // Browser tests use software rendering: a load batch must still refuse to
+    // report it as hardware performance, and malformed counts fail explicitly.
+    const timing = await browser.evaluate("window.niriFxBenchmark({draws: 4, samples: 10})");
+    assert.equal(timing.draws, 4);
+    assert.equal(timing.status, "unsupported");
+    for (const draws of [0, 9, 1.5])
+      await assert.rejects(
+        browser.evaluate(`window.niriFxBenchmark({draws: ${draws}})`),
+        /Invalid benchmark/,
+      );
     assert(!requests.some((path) => ["/save", "/ping", "/preferences"].includes(path)));
   } finally {
     await browser?.close();

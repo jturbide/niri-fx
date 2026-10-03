@@ -12,6 +12,9 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-gpu.json
 # Choose a smaller comparison:
 node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-compare.json \
   --presets=balanced,core-detonation,iris-bloom --sizes=1920x1080,3840x2160 --samples=120
+# Compare independent draw batches, with no desktop capture:
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-load.json \
+  --presets=balanced,core-detonation --sizes=1920x1080,3840x2160 --draws=1,2,4
 ```
 
 Set `CHROME_BIN` if needed. The script uses an isolated temporary browser profile,
@@ -20,6 +23,11 @@ parameters, seed, browser version, raw GPU samples, p50/p95/p99 and counts above
 60/120/144 Hz frame budgets. The window occupies 60% of output width and 50% of
 height. It warms up with 12 draws, then samples intermediate animation positions.
 These budget counts are shader costs, not measured missed presentation deadlines.
+`--draws` accepts counts from 1 to 8. Each sample times that many independent window
+passes with staggered animation phases; each pass includes its normal framebuffer
+clear. The result is the cost of the whole batch. It does not reproduce simultaneous
+compositor windows, their damage/occlusion, or cross-window blending. Omitting
+`--draws` retains the single-draw measurement.
 
 Software renderers and unavailable GPU timers produce **unsupported** reports
 and exit 2. Disjoint timing, context loss, invalid results and timeouts fail the
@@ -112,6 +120,39 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-lookup.json \
 node scripts/compare-fragment-renderers.mjs /path/to/reference-checkout
 ```
 
+## Independent window-draw batches
+
+Measured on 2026-10-03 with the same RTX 4070 Ti / Chromium ANGLE/OpenGL setup,
+60 samples after 12 warmup batches. The table shows p95 milliseconds for the
+**whole batch at 3840×2160**, with each synthetic window occupying 60% of output
+width and 50% of height:
+
+| Preset | 1 draw | 2 draws | 4 draws |
+| --- | ---: | ---: | ---: |
+| Balanced | 0.805 | 1.295 | 2.179 |
+| Core Detonation | 7.846 | 14.591 | 27.128 |
+| Spring Wobble | 0.341 | 0.481 | 0.601 |
+| Pixel Wipe | 0.438 | 0.498 | 0.620 |
+| Shockwave | 0.393 | 0.540 | 0.609 |
+
+[Raw 1080p/4K samples and complete parameters](benchmarks/window-batches.json)
+include all 30 cases. This supports Balanced as an everyday starting point and
+Spring Wobble, Pixel Wipe or Shockwave as inexpensive alternatives on the measured
+hardware. Core Detonation remains a more demanding choice, especially for large
+windows or repeated effects. No automatic preset changes or quality reductions
+are applied.
+
+Batches repeat independent passes, including clears. GPU scheduling and reuse
+make the results non-linear; do not multiply single-window results to predict
+desktop performance. Physical presentation, mixed effects and integrated GPUs
+still need separate measurements.
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-window-batches.json \
+  --presets=balanced,core-detonation,spring-wobble,pixel-wipe,shockwave \
+  --sizes=1920x1080,3840x2160 --samples=60 --draws=1,2,4
+```
+
 ## Native capture-delivery diagnostic
 
 ```sh
@@ -122,8 +163,11 @@ python3 scripts/measure-native-movement.py --output /tmp/nirifx-capture.json
 This opens an isolated 1280×800 nested compositor and records six alternating
 1200 ms swaps. Fixed-rate encoder resampling is disabled; the report retains
 raw captured timestamps and IPC acknowledgement times. The current local sample
-reported capture-interval p95 values of 4 ms for Balanced and 10 ms for Core
-Detonation, with IPC acknowledgements below 13 ms at p95.
+reported capture-interval p95 values of 4 ms for Balanced and 9 ms for Core
+Detonation, with IPC acknowledgements below 14 ms at p95.
+The [before/after diagnostic samples](benchmarks/native-continuity.json) record
+the position-handoff patch comparison. Both use uninterrupted swaps; deterministic
+state tests and the interruption recordings cover retarget behavior separately.
 
 These unexpectedly short intervals illustrate the measurement boundary: the
 nested backend can deliver captures faster than its advertised 60 Hz output.

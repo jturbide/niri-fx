@@ -20,9 +20,9 @@ content is captured.
   These are not recordings of compositor movement or promises of its appearance.
 - `compare-swap-styles.gif`: three labelled Canvas swap concepts.
 - `native-swap-crosswind.gif`, `native-swap-orbital-ribbons.gif`,
-  `native-swap-spring-wobble.gif`: actual native swaps for the new styles.
+  `native-swap-spring-wobble.gif`: actual native swaps for these styles.
   Parameters, byte sizes and backend are recorded in `native-manifest.json`.
-- `native-swap.gif`: actual recording of two synthetic Alacritty windows inside
+- `native-swap.gif`: actual recording of two synthetic Quickshell app cards inside
   the separately built, patched Niri compositor. This remains experimental.
 
 Shader-gallery loops are sampled at 20 fps, with holds at endpoints. GIF palette reduction

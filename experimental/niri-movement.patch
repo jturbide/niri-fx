@@ -120,6 +120,281 @@ index 329b76696d817c54c77e4f29a1ea5e4779508996..554bed226d12ae6c880ea2902c70ed2d
                  window_resize: WindowResizeAnim {
                      anim: Animation {
                          off: false,
+diff --git a/src/animation/mod.rs b/src/animation/mod.rs
+index 73a79c5e435f7f29d96f5ea7aea1bfd41d88df39..21e65f1071ff009870840cb22b5a259a4ea3efb9 100644
+--- a/src/animation/mod.rs
++++ b/src/animation/mod.rs
+@@ -3,6 +3,9 @@ use std::time::Duration;
+ use keyframe::functions::{EaseOutCubic, EaseOutQuad};
+ use keyframe::EasingFunction;
+ 
++mod movement;
++pub(crate) use movement::MoveAnimation;
++
+ mod bezier;
+ use bezier::CubicBezier;
+ 
+diff --git a/src/animation/movement.rs b/src/animation/movement.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c01ec8be9
+--- /dev/null
++++ b/src/animation/movement.rs
+@@ -0,0 +1,255 @@
++//! Position continuity for the optional movement-shader experiment.
++//!
++//! Layout still owns the destination. Only an interrupted, opted-in movement
++//! uses a Hermite segment: its incoming position and velocity are preserved,
++//! and it reaches the new destination at rest on the original animation clock.
++
++use std::time::Duration;
++
++use super::Animation;
++
++#[derive(Debug)]
++pub(crate) struct MoveAnimation {
++    pub anim: Animation,
++    pub from: f64,
++    handoff: Option<Handoff>,
++}
++
++#[derive(Debug)]
++struct Handoff {
++    position: f64,
++    velocity: f64,
++    start: Duration,
++    end: Duration,
++}
++
++impl Handoff {
++    fn sample(&self, at: Duration) -> (f64, f64) {
++        let seconds = self.end.saturating_sub(self.start).as_secs_f64();
++        if seconds <= 0. || at >= self.end {
++            return (0., 0.);
++        }
++        let t = at.saturating_sub(self.start).as_secs_f64() / seconds;
++        let t2 = t * t;
++        let t3 = t2 * t;
++        let slope = self.velocity * seconds;
++        (
++            self.position * (2. * t3 - 3. * t2 + 1.) + slope * (t3 - 2. * t2 + t),
++            (self.position * (6. * t2 - 6. * t) + slope * (3. * t2 - 4. * t + 1.)) / seconds,
++        )
++    }
++}
++
++impl MoveAnimation {
++    /// `velocity` is in logical pixels per compositor-clock second, already
++    /// adjusted for slow motion. Do not apply the clock rate a second time.
++    pub fn new(anim: Animation, from: f64, velocity: Option<f64>) -> Self {
++        let handoff = velocity
++            .filter(|_| !anim.is_done())
++            .map(|velocity| Handoff {
++                position: from,
++                velocity,
++                start: anim.start_time(),
++                end: anim.end_time(),
++            });
++        Self {
++            anim,
++            from,
++            handoff,
++        }
++    }
++
++    pub fn offset(&self) -> f64 {
++        if let Some(handoff) = &self.handoff {
++            if self.anim.is_done() {
++                return 0.;
++            }
++            handoff.sample(self.anim.clock.now()).0
++        } else {
++            // Keep upstream behavior, including animations-off event-loop
++            // semantics, for initial moves and moves without a custom shader.
++            self.from * self.anim.value()
++        }
++    }
++
++    pub fn velocity(&self) -> f64 {
++        if self.anim.is_done() {
++            return 0.;
++        }
++        let at = self.anim.clock.now();
++        if let Some(handoff) = &self.handoff {
++            return handoff.sample(at).1;
++        }
++        // Sample upstream easing/spring equations instead of duplicating them.
++        // Use the unclamped value: a spring can cross its target before resting.
++        let step = Duration::from_micros(100);
++        let before = at.saturating_sub(step).max(self.anim.start_time());
++        let after = (at + step).min(self.anim.end_time());
++        if after <= before {
++            return 0.;
++        }
++        self.from * (self.anim.value_at(after) - self.anim.value_at(before))
++            / (after - before).as_secs_f64()
++    }
++
++    /// Adjust an ongoing layout offset without discarding its momentum or
++    /// extending its deadline. Upstream's tiny-tail behavior remains unchanged
++    /// for the ordinary animation path.
++    pub fn offset_current(&mut self, offset: f64) {
++        if self.handoff.is_some() && !self.anim.is_done() {
++            self.handoff = Some(Handoff {
++                position: self.offset() + offset,
++                velocity: self.velocity(),
++                start: self.anim.clock.now(),
++                end: self.anim.end_time(),
++            });
++        }
++        let value = self.anim.value();
++        if value > 0.001 {
++            self.from += offset / value;
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::animation::{Clock, Curve, Spring, SpringParams};
++
++    fn ease(clock: &Clock) -> Animation {
++        Animation::ease(clock.clone(), 1., 0., 0., 1000, Curve::EaseOutCubic)
++    }
++
++    fn near(a: f64, b: f64) {
++        assert!((a - b).abs() < 1e-6, "{a} != {b}");
++    }
++
++    #[test]
++    fn reversals_preserve_position_and_velocity_and_settle() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let mut movement = MoveAnimation::new(ease(&clock), -700., None);
++        for (i, delta) in [700., -700., 700., -700., 0., 700.].into_iter().enumerate() {
++            clock.set_unadjusted(Duration::from_millis(120 * (i as u64 + 1)));
++            let old = movement.offset();
++            let speed = movement.velocity();
++            movement = MoveAnimation::new(ease(&clock), delta + old, Some(speed));
++            near(movement.offset() - delta, old);
++            near(movement.velocity(), speed);
++            // Check the rendered path's derivative, not just the stored value.
++            let now = clock.now();
++            clock.set_unadjusted(now + Duration::from_micros(1));
++            let measured = (movement.offset() - delta - old) / 1e-6;
++            assert!((measured - speed).abs() < 0.02);
++        }
++        clock.set_unadjusted(movement.anim.end_time());
++        near(movement.offset(), 0.);
++        near(movement.velocity(), 0.);
++    }
++
++    #[test]
++    fn zero_distance_can_retain_nonzero_momentum() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let movement = MoveAnimation::new(ease(&clock), 0., Some(500.));
++        near(movement.offset(), 0.);
++        near(movement.velocity(), 500.);
++        clock.set_unadjusted(Duration::from_millis(100));
++        assert!(movement.offset() > 0.);
++        clock.set_unadjusted(Duration::from_secs(1));
++        near(movement.offset(), 0.);
++    }
++
++    #[test]
++    fn layout_adjustments_keep_velocity_and_deadline() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let mut movement = MoveAnimation::new(ease(&clock), -500., Some(650.));
++        clock.set_unadjusted(Duration::from_millis(350));
++        let position = movement.offset();
++        let velocity = movement.velocity();
++        movement.offset_current(90.);
++        near(movement.offset(), position + 90.);
++        near(movement.velocity(), velocity);
++        clock.set_unadjusted(Duration::from_secs(1));
++        near(movement.offset(), 0.);
++    }
++
++    #[test]
++    fn ordinary_easing_and_spring_moves_keep_upstream_values() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let spring = Animation::spring(
++            clock.clone(),
++            Spring {
++                from: 1.,
++                to: 0.,
++                initial_velocity: 0.,
++                params: SpringParams::new(0.8, 800., 0.0001),
++            },
++        );
++        for anim in [ease(&clock), spring] {
++            let movement = MoveAnimation::new(anim.clone(), -500., None);
++            for milliseconds in [0, 10, 80, 180, 350, 1000] {
++                clock.set_unadjusted(Duration::from_millis(milliseconds));
++                near(movement.offset(), -500. * anim.value());
++            }
++        }
++    }
++
++    #[test]
++    fn spring_handoff_uses_actual_unclamped_velocity() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let anim = Animation::spring(
++            clock.clone(),
++            Spring {
++                from: 1.,
++                to: 0.,
++                initial_velocity: 0.,
++                params: SpringParams::new(0.3, 100., 0.0001),
++            },
++        );
++        let old = MoveAnimation::new(anim, -500., None);
++        clock.set_unadjusted(Duration::from_millis(220));
++        assert!(old.anim.is_clamped_done());
++        assert!(old.velocity().abs() > 1.);
++        let movement = MoveAnimation::new(ease(&clock), old.offset() + 500., Some(old.velocity()));
++        near(movement.velocity(), old.velocity());
++    }
++
++    #[test]
++    fn slow_and_frozen_clocks_do_not_rescale_velocity_twice() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        clock.set_rate(0.5);
++        let movement = MoveAnimation::new(ease(&clock), -500., Some(650.));
++        clock.set_unadjusted(Duration::from_millis(200));
++        near(
++            movement.offset(),
++            movement
++                .handoff
++                .as_ref()
++                .unwrap()
++                .sample(Duration::from_millis(100))
++                .0,
++        );
++        let position = movement.offset();
++        clock.set_rate(0.);
++        clock.set_unadjusted(Duration::from_millis(800));
++        near(movement.offset(), position);
++        clock.set_complete_instantly(true);
++        near(movement.offset(), 0.);
++        near(movement.velocity(), 0.);
++    }
++
++    #[test]
++    fn disabled_animation_preserves_event_loop_semantics() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let mut config = niri_config::animations::WindowMovementAnim::default().anim;
++        config.off = true;
++        let movement = MoveAnimation::new(
++            Animation::new(clock.clone(), 1., 0., 0., config),
++            -500.,
++            Some(650.),
++        );
++        near(movement.offset(), -500.);
++        assert!(movement.handoff.is_none());
++        clock.set_unadjusted(Duration::from_millis(1));
++        near(movement.offset(), 0.);
++    }
++}
 diff --git a/src/backend/tty.rs b/src/backend/tty.rs
 index 5368c7eca0ebd0c2876d350a7cb8f630e27519da..e61d1f553379abe2f50f6b0a89115c90be1aaf6c 100644
 --- a/src/backend/tty.rs
@@ -402,10 +677,32 @@ index 5ba97a3598ec7dcb7e5797d5e764298be28ec4d7..6877db315a48a588eb3b14f1d3c1f9d2
          self.anim.is_done()
      }
 diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
-index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f4be80c93 100644
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e5533618b 100644
 --- a/src/layout/scrolling.rs
 +++ b/src/layout/scrolling.rs
-@@ -920,11 +920,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -16,7 +16,7 @@ use super::tab_indicator::{TabIndicator, TabIndicatorRenderElement, TabInfo};
+ use super::tile::{Tile, TileRenderElement, TileRenderSnapshot};
+ use super::workspace::{InteractiveResize, ResolvedSize};
+ use super::{ConfigureIntent, HitType, InteractiveResizeData, LayoutElement, Options, RemovedTile};
+-use crate::animation::{Animation, Clock};
++use crate::animation::{Animation, Clock, MoveAnimation};
+ use crate::input::swipe_tracker::SwipeTracker;
+ use crate::layout::SizingMode;
+ use crate::niri_render_elements;
+@@ -276,12 +276,6 @@ pub enum ScrollDirection {
+     Right,
+ }
+ 
+-#[derive(Debug)]
+-struct MoveAnimation {
+-    anim: Animation,
+-    from: f64,
+-}
+-
+ impl<W: LayoutElement> ScrollingSpace<W> {
+     pub fn new(
+         view_size: Size<f64, Logical>,
+@@ -920,11 +914,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              if target_column.active_tile_idx == tile_idx {
                  // Fade out the previously active tile.
                  let tile = &mut target_column.tiles[prev_active_tile_idx];
@@ -419,7 +716,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
              }
          }
  
-@@ -993,7 +993,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -993,7 +987,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          // Animate movement of other columns.
          let offset = self.column_x(idx + 1) - self.column_x(idx);
@@ -428,7 +725,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
          if self.active_column_idx <= idx {
              for col in &mut self.columns[idx + 1..] {
                  col.animate_move_from_with_config(-offset, config);
-@@ -1070,7 +1070,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1070,7 +1064,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
          let column = &mut self.columns[column_idx];
          let prev_width = self.data[column_idx].width;
  
@@ -437,7 +734,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
  
          // Animate movement of other tiles.
          // FIXME: tiles can move by X too, in a centered or resizing layout with one window smaller
-@@ -1165,7 +1165,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1165,7 +1159,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
          anim_config: Option<niri_config::Animation>,
      ) -> Column<W> {
          // Animate movement of the other columns.
@@ -446,7 +743,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
          let offset = self.column_x(column_idx + 1) - self.column_x(column_idx);
          if self.active_column_idx <= column_idx {
              for col in &mut self.columns[column_idx + 1..] {
-@@ -1530,7 +1530,14 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1530,7 +1524,14 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          let scale = Scale::from(self.scale);
          let res = ClosingWindow::new(
@@ -462,7 +759,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
          );
          match res {
              Ok(closing) => {
-@@ -1711,7 +1718,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1711,7 +1712,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              }
          }
  
@@ -474,7 +771,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
      }
  
      pub fn move_left(&mut self) -> bool {
-@@ -1825,7 +1835,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1825,7 +1829,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -483,7 +780,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1851,7 +1861,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1851,7 +1855,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -492,7 +789,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
              );
  
              if source_tile_was_active {
-@@ -1921,7 +1931,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1921,7 +1925,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -501,7 +798,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1945,7 +1955,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1945,7 +1949,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -510,7 +807,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
              );
  
              offset.x += if self.active_column_idx <= target_column_idx {
-@@ -2019,7 +2029,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2019,7 +2023,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              false,
              removed.width,
              removed.is_full_width,
@@ -519,7 +816,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
          );
  
          offset.x += cur_x - self.column_x(target_col_idx);
-@@ -2957,9 +2967,20 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2957,9 +2961,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  }
  
                  let xray_pos = xray_pos.offset(tile_pos);
@@ -537,13 +834,17 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
 +                            Point::from((-m.from, 0.)),
 +                            self.clock.now(),
 +                        )
++                        .with_layout(
++                            Point::from((-m.offset(), 0.)),
++                            Point::from((m.velocity(), 0.)),
++                        )
 +                    }),
 +                    &mut |elem| push(elem.into()),
 +                );
              }
          }
      }
-@@ -3997,7 +4018,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -3997,7 +4016,7 @@ impl<W: LayoutElement> Column<W> {
              // Usually new columns are created together with window movement actions. For new
              // windows, we handle that in start_open_animation().
              rv.tab_indicator
@@ -552,7 +853,16 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
          }
  
          rv
-@@ -4166,7 +4187,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4157,7 +4176,7 @@ impl<W: LayoutElement> Column<W> {
+         let mut offset = Point::from((0., 0.));
+ 
+         if let Some(move_) = &self.move_animation {
+-            offset.x += move_.from * move_.anim.value();
++            offset.x += move_.offset();
+         }
+ 
+         offset
+@@ -4166,7 +4185,7 @@ impl<W: LayoutElement> Column<W> {
      pub fn animate_move_from(&mut self, from_x_offset: f64) {
          self.animate_move_from_with_config(
              from_x_offset,
@@ -561,7 +871,49 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
          );
      }
  
-@@ -5149,7 +5170,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4178,23 +4197,31 @@ impl<W: LayoutElement> Column<W> {
+         let current_offset = self
+             .move_animation
+             .as_ref()
+-            .map_or(0., |move_| move_.from * move_.anim.value());
++            .map_or(0., |move_| move_.offset());
+ 
+         let anim = Animation::new(self.clock.clone(), 1., 0., 0., config);
+-        self.move_animation = Some(MoveAnimation {
++        let velocity = self
++            .move_animation
++            .as_ref()
++            .filter(|movement| {
++                self.options
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .is_some()
++                    && !movement.anim.is_done()
++            })
++            .map(MoveAnimation::velocity);
++        self.move_animation = Some(MoveAnimation::new(
+             anim,
+-            from: from_x_offset + current_offset,
+-        });
++            from_x_offset + current_offset,
++            velocity,
++        ));
+     }
+ 
+     pub fn offset_move_anim_current(&mut self, offset: f64) {
+         if let Some(move_) = self.move_animation.as_mut() {
+-            // If the anim is almost done, there's little point trying to offset it; we can let
+-            // things jump. If it turns out like a bad idea, we could restart the anim instead.
+-            let value = move_.anim.value();
+-            if value > 0.001 {
+-                move_.from += offset / value;
+-            }
++            move_.offset_current(offset);
+         }
+     }
+ 
+@@ -5149,7 +5176,7 @@ impl<W: LayoutElement> Column<W> {
                  } else {
                      (0., 1.)
                  };
@@ -570,7 +922,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..467d8b331ac3fbab98f3f658312ba68f
              }
          }
  
-@@ -5157,7 +5178,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5157,7 +5184,7 @@ impl<W: LayoutElement> Column<W> {
          if display == ColumnDisplay::Tabbed {
              self.tab_indicator.start_open_animation(
                  self.clock.clone(),
@@ -602,7 +954,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..b12d5d9a6d3cdd57c4b3b18fa5b9df29
  
      // The resize is in progress.
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a171cb1cb 100644
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..8ba40549e0793bd7e92de34ba4891bd4d46cd3e2 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,4 +1,5 @@
@@ -611,7 +963,15 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
  use std::rc::Rc;
  
  use niri_config::utils::MergeWith as _;
-@@ -22,9 +23,12 @@ use crate::render_helpers::background_effect::BackgroundEffectElement;
+@@ -15,16 +16,19 @@ use super::{
+     HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
+     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
+ };
+-use crate::animation::{Animation, Clock};
++use crate::animation::{Animation, Clock, MoveAnimation};
+ use crate::layout::SizingMode;
+ use crate::niri_render_elements;
+ use crate::render_helpers::background_effect::BackgroundEffectElement;
  use crate::render_helpers::border::BorderRenderElement;
  use crate::render_helpers::clipped_surface::{ClippedSurfaceRenderElement, RoundedCornerDamage};
  use crate::render_helpers::damage::ExtraDamage;
@@ -656,7 +1016,20 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
  
  #[derive(Debug)]
  struct ResizeAnimation {
-@@ -204,6 +215,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -156,12 +167,6 @@ struct ResizeAnimation {
+     expanded_progress: Option<Animation>,
+ }
+ 
+-#[derive(Debug)]
+-struct MoveAnimation {
+-    anim: Animation,
+-    from: f64,
+-}
+-
+ #[derive(Debug)]
+ pub(super) struct AlphaAnimation {
+     pub(super) anim: Animation,
+@@ -204,6 +209,7 @@ impl<W: LayoutElement> Tile<W> {
              resize_animation: None,
              move_x_animation: None,
              move_y_animation: None,
@@ -664,7 +1037,20 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -578,7 +590,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -547,10 +553,10 @@ impl<W: LayoutElement> Tile<W> {
+         let mut offset = Point::from((0., 0.));
+ 
+         if let Some(move_) = &self.move_x_animation {
+-            offset.x += move_.from * move_.anim.value();
++            offset.x += move_.offset();
+         }
+         if let Some(move_) = &self.move_y_animation {
+-            offset.y += move_.from * move_.anim.value();
++            offset.y += move_.offset();
+         }
+ 
+         offset += self.interactive_move_offset;
+@@ -578,51 +584,64 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn animate_move_x_from(&mut self, from: f64) {
@@ -673,7 +1059,32 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
      }
  
      pub fn animate_move_x_from_with_config(&mut self, from: f64, config: niri_config::Animation) {
-@@ -597,7 +609,7 @@ impl<W: LayoutElement> Tile<W> {
+         let current_offset = self.render_offset().x;
+ 
+         // Preserve the previous config if ongoing.
+-        let anim = self.move_x_animation.take().map(|move_| move_.anim);
++        let previous = self.move_x_animation.take();
++        let velocity = previous
++            .as_ref()
++            .filter(|movement| {
++                self.options
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .is_some()
++                    && !movement.anim.is_done()
++            })
++            .map(MoveAnimation::velocity);
++        let anim = previous.map(|move_| move_.anim);
+         let anim = anim
+             .map(|anim| anim.restarted(1., 0., 0.))
+             .unwrap_or_else(|| Animation::new(self.clock.clone(), 1., 0., 0., config));
+ 
+-        self.move_x_animation = Some(MoveAnimation {
+-            anim,
+-            from: from + current_offset,
+-        });
++        self.move_x_animation = Some(MoveAnimation::new(anim, from + current_offset, velocity));
      }
  
      pub fn animate_move_y_from(&mut self, from: f64) {
@@ -682,7 +1093,47 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
      }
  
      pub fn animate_move_y_from_with_config(&mut self, from: f64, config: niri_config::Animation) {
-@@ -1315,11 +1327,25 @@ impl<W: LayoutElement> Tile<W> {
+         let current_offset = self.render_offset().y;
+ 
+         // Preserve the previous config if ongoing.
+-        let anim = self.move_y_animation.take().map(|move_| move_.anim);
++        let previous = self.move_y_animation.take();
++        let velocity = previous
++            .as_ref()
++            .filter(|movement| {
++                self.options
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .is_some()
++                    && !movement.anim.is_done()
++            })
++            .map(MoveAnimation::velocity);
++        let anim = previous.map(|move_| move_.anim);
+         let anim = anim
+             .map(|anim| anim.restarted(1., 0., 0.))
+             .unwrap_or_else(|| Animation::new(self.clock.clone(), 1., 0., 0., config));
+ 
+-        self.move_y_animation = Some(MoveAnimation {
+-            anim,
+-            from: from + current_offset,
+-        });
++        self.move_y_animation = Some(MoveAnimation::new(anim, from + current_offset, velocity));
+     }
+ 
+     pub fn offset_move_y_anim_current(&mut self, offset: f64) {
+         if let Some(move_) = self.move_y_animation.as_mut() {
+-            // If the anim is almost done, there's little point trying to offset it; we can let
+-            // things jump. If it turns out like a bad idea, we could restart the anim instead.
+-            let value = move_.anim.value();
+-            if value > 0.001 {
+-                move_.from += offset / value;
+-            }
++            move_.offset_current(offset);
+         }
+     }
+ 
+@@ -1315,11 +1334,25 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn render<R: NiriRenderer>(
@@ -708,7 +1159,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render");
-@@ -1334,6 +1360,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1334,6 +1367,45 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -723,7 +1174,18 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
 +                } else {
 +                    Point::from((0., -movement.from))
 +                };
-+                let own = MovementState::from_animation(&movement.anim, delta, self.clock.now());
++                let remaining = if horizontal {
++                    Point::from((-movement.offset(), 0.))
++                } else {
++                    Point::from((0., -movement.offset()))
++                };
++                let velocity = if horizontal {
++                    Point::from((movement.velocity(), 0.))
++                } else {
++                    Point::from((0., movement.velocity()))
++                };
++                let own = MovementState::from_animation(&movement.anim, delta, self.clock.now())
++                    .with_layout(remaining, velocity);
 +                motion = Some(motion.map_or(own, |state| state.combined(own)));
 +            }
 +        }
@@ -743,7 +1205,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
          if let Some(open) = &self.open_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1361,6 +1415,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1361,6 +1433,34 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }
@@ -778,7 +1240,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1415,8 +1497,28 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1415,8 +1515,28 @@ impl<W: LayoutElement> Tile<W> {
      ) -> TileRenderSnapshot {
          let _span = tracy_client::span!("Tile::render_snapshot");
  
@@ -808,7 +1270,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
              RenderCtx {
                  target: RenderTarget::Output,
                  renderer,
-@@ -1467,7 +1569,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1467,7 +1587,8 @@ impl<W: LayoutElement> Tile<W> {
                  xray.backdrop[output_idx] = screencast_backdrop.clone().unwrap();
  
                  let mut contents = Vec::new();
@@ -818,7 +1280,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
                      RenderCtx {
                          target: RenderTarget::Output,
                          renderer,
-@@ -1487,7 +1590,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1487,7 +1608,8 @@ impl<W: LayoutElement> Tile<W> {
  
          // A bit of a hack to render blocked out as for screencast, but I think it's fine here.
          let mut blocked_out_contents = Vec::new();
@@ -828,7 +1290,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..de79dc96a3ce7b58a437036bbe6bc54a
              RenderCtx {
                  target: RenderTarget::Screencast,
                  renderer,
-@@ -1510,15 +1614,18 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1510,15 +1632,18 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
@@ -890,10 +1352,10 @@ index 474437af4511b5d34de9aec66c2a0451949ef8b7..fe6157cd893d9d8e9414b8c3a08134fc
  pub mod render_elements;
 diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f6807b165
+index 0000000000000000000000000000000000000000..1712d7e9bcc763358027ed917a822ab53d89deb8
 --- /dev/null
 +++ b/src/render_helpers/movement.rs
-@@ -0,0 +1,459 @@
+@@ -0,0 +1,519 @@
 +//! Experimental movement shader path. The regular renderer is the fallback.
 +use super::offscreen::{OffscreenBuffer, OffscreenData};
 +use super::shader_element::ShaderRenderElement;
@@ -921,6 +1383,7 @@ index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f
 +    end: Duration,
 +    velocity: f64,
 +    travel_velocity: Point<f64, Logical>,
++    remaining: Point<f64, Logical>,
 +}
 +
 +impl MovementState {
@@ -944,7 +1407,20 @@ index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f
 +            end: animation.end_time(),
 +            velocity,
 +            travel_velocity: delta.upscale(velocity),
++            remaining: delta.upscale(1. - progress),
 +        }
++    }
++
++    /// Position handoffs are independent of shader phase. Closing must follow
++    /// the actual layout path, including momentum through a direction change.
++    pub fn with_layout(
++        mut self,
++        remaining: Point<f64, Logical>,
++        velocity: Point<f64, Logical>,
++    ) -> Self {
++        self.remaining = remaining;
++        self.travel_velocity = velocity;
++        self
 +    }
 +
 +    pub fn combined(self, other: Self) -> Self {
@@ -956,6 +1432,7 @@ index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f
 +        Self {
 +            delta: self.delta + other.delta,
 +            travel_velocity: self.travel_velocity + other.travel_velocity,
++            remaining: self.remaining + other.remaining,
 +            end: self.end.max(other.end),
 +            ..driver
 +        }
@@ -1139,7 +1616,7 @@ index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f
 +        let motion = state.previous?;
 +        let at = self.clock.now();
 +        let (phase, impulse) = state.values_at(at);
-+        let remaining = motion.delta.upscale(1. - motion.progress);
++        let remaining = motion.remaining;
 +        let (phase, impulse) = state.curves.unwrap_or_else(|| {
 +            (
 +                Curve::phase(phase, at, motion.end),
@@ -1268,6 +1745,7 @@ index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f
 +            end: Duration::from_secs_f64(end),
 +            velocity: 1.,
 +            travel_velocity: Point::from((x, 0.)),
++            remaining: Point::from((x * (1. - progress), 0.)),
 +        }
 +    }
 +
@@ -1351,6 +1829,50 @@ index 0000000000000000000000000000000000000000..e0fc1123200421b6cde7d9a54e98ba8f
 +        let (phase, _, travel) = path.sample();
 +        assert!(((phase - 0.4) / 1e-6 - 1.).abs() < 1e-4);
 +        assert!((travel.x / 1e-6 - 500.).abs() < 0.01);
++    }
++
++    #[test]
++    fn closing_after_retarget_uses_actual_layout_path() {
++        use crate::animation::{Curve as EasingCurve, MoveAnimation};
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let anim = Animation::ease(clock.clone(), 1., 0., 0., 1000, EasingCurve::EaseOutCubic);
++        // Destination is now to the left, but momentum still carries right.
++        let movement = MoveAnimation::new(anim, 200., Some(450.));
++        clock.set_unadjusted(Duration::from_millis(200));
++        let expected_remaining = -movement.offset();
++        let expected_velocity = movement.velocity();
++        let effect = MovementEffect::new(clock.clone());
++        let motion = MovementState::from_animation(
++            &movement.anim,
++            Point::from((-movement.from, 0.)),
++            clock.now(),
++        )
++        .with_layout(
++            Point::from((expected_remaining, 0.)),
++            Point::from((expected_velocity, 0.)),
++        );
++        assert!((motion.remaining.x - motion.delta.x * (1. - motion.progress)).abs() > 1.);
++        effect.continuity.borrow_mut().sample(motion);
++        let crate::layout::closing_window::AnimationContinuation::Movement { path, .. } =
++            effect.continuation().unwrap()
++        else {
++            panic!("movement path");
++        };
++        clock.set_unadjusted(Duration::from_micros(200_001));
++        assert!((path.sample().2.x / 1e-6 - expected_velocity).abs() < 0.01);
++        clock.set_unadjusted(Duration::from_secs(1));
++        assert!((path.sample().2.x - expected_remaining).abs() < 1e-9);
++    }
++
++    #[test]
++    fn combined_axes_keep_both_remaining_distances_and_velocities() {
++        let column =
++            state(0.3, 500., 0., 1.).with_layout(Point::from((250., 0.)), Point::from((450., 0.)));
++        let tile =
++            state(0.5, 0., 0., 1.).with_layout(Point::from((0., -80.)), Point::from((0., 75.)));
++        let combined = column.combined(tile);
++        assert_eq!(combined.remaining, Point::from((250., -80.)));
++        assert_eq!(combined.travel_velocity, Point::from((450., 75.)));
 +    }
 +}
 diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs

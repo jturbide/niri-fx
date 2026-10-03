@@ -65,6 +65,11 @@ texture and geometry matrices as the opening shader, plus `niri_move_delta`
 Retargeting preserves shader phase and its sampled speed, then continues toward
 reconstruction. Cubic direction transitions also carry their incoming speed,
 including another reversal before the first transition finishes.
+With a custom movement shader configured, interrupted tile and column offsets
+retain their sampled velocity through a cubic position handoff. The new path ends
+at the destination with zero velocity on the movement clock. Initial moves keep
+the configured easing/spring curve. A reversal can briefly continue in its previous
+direction; it does not clamp away momentum or guarantee acceleration continuity.
 Output colors use premultiplied alpha. The geometry follows Niri's animated
 position; shaders should deform around it rather than translate by the full
 movement again. Fragments uses a symmetric breakup/reassembly pulse.
@@ -84,7 +89,8 @@ clock into a fading continuation. Particles keep approaching their destinations;
 they do not reverse into a fresh explosion. Closing during movement similarly
 retains its phase, impulse, seed and remaining displacement while fading. The
 continuation uses the compositor clock and starts its translation with the
-sampled layout velocity; fading has its own closing clock.
+sampled layout velocity and actual remaining offset; shader phase no longer
+determines the remaining travel distance. Fading has its own closing clock.
 This interruption path takes precedence over the usual closing style, including
 when a profile has different opening and closing families.
 
@@ -113,8 +119,9 @@ This is not the complete transaction/particle engine described in
 - It follows existing tile/column animation clocks. Direct pointer dragging and
   workspace/camera panning do not get a new particle timeline.
 - Repeated actions preserve shader phase, seed and the sampled phase/direction
-  derivatives. Layout-position velocity, acceleration and one shared swap
-  transaction remain separate work.
+  derivatives. Interrupted tile/column position paths retain velocity too;
+  acceleration, camera transitions and one shared swap transaction remain
+  separate work.
 - Two streams overlap, but each window is still a separate render element.
   Particle-level interleaving/collisions and shared physics are not implemented.
 - Large excursions can clip at output/workspace boundaries. The expanded draw
