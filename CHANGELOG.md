@@ -10,6 +10,19 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Changed
+
+- Experimental movement now carries tile and column position velocity through
+  interrupted swaps, with a cubic path that settles at the new destination.
+  Initial moves retain their configured easing/spring, and the change requires
+  the pinned compositor patch with a movement shader configured. Close continuations
+  follow the actual remaining layout distance and speed independently of shader phase.
+- Refresh all ten native swap GIFs and four interruption scenarios from the revised
+  release build. Add deterministic position/close handoff regressions.
+- Extend the hardware GPU benchmark with batches of 1–8 independent window draws.
+  Publish 1080p/4K results for five presets at 1, 2 and 4 draws; these are synthetic
+  shader costs, not compositor frame times or physical presentation measurements.
+
 ## 0.9.0 — 2026-10-03
 
 ### Added

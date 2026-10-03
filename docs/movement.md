@@ -35,11 +35,17 @@ and remaining displacement while fading. This avoids re-fragmenting a snapshot
 with a newly seeded close effect. It intentionally takes precedence over the
 usual close style during those interruptions.
 
-The shader phase and impulse transitions match their incoming first derivative;
-close movement also starts with the sampled translation speed. This does not
-change Niri's layout easing during a swap, preserve acceleration, or create
-shared particle physics. The windows still render as separate elements. The pinned patch is required; a stock Niri install or a
-shell event listener cannot provide the same state handoff.
+With a movement shader configured, interrupted tile and column positions also
+retain their sampled velocity. A cubic path starts at the current offset and speed,
+then reaches the new destination at rest. Direction reversals can briefly keep
+moving the original way before turning. Initial moves keep Niri's configured
+easing or spring; closing follows the actual remaining position path independently
+of shader phase.
+
+These handoffs preserve first derivatives, not acceleration. Camera scrolling,
+direct pointer dragging and shared particle physics remain separate work. The
+windows still render as separate elements. The pinned patch is required; a stock
+Niri install or a shell event listener cannot provide the same state handoff.
 
 ## Prototype and longer-term compositor design
 

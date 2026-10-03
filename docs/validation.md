@@ -33,9 +33,10 @@ file contract and Studio save flow, not assumed from those older recordings.
 
 The experimental patch applies to Niri revision
 `8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 19 config tests,
-one config integration test, 12 layout-animation tests and five continuity tests.
-The latter check uninterrupted motion, retained phase/direction derivatives across
-reversals, monotone late handoffs, finite-difference speed and a clocked close path.
+one config integration test, 12 layout-animation tests, seven shader-continuity tests
+and seven position-continuity tests. These check repeated reversals, first derivatives,
+monotone phase handoffs, zero-distance momentum, spring input, slow/frozen clocks,
+disabled animation semantics and closing along the actual layout path.
 
 Ten native swap recordings passed final-position and intact-color checks with
 clean render logs. Interrupted swapping, eight rapid wobble reversals, closing
@@ -45,8 +46,10 @@ commands must arrive within the bounded interruption window.
 Retargets retain deformation phase, seed and sampled phase/direction speed. Cubic
 phase curves shorten when needed to stay monotone. Close movement retains those
 clocks and starts translation at the sampled layout speed while fading separately.
-Niri still owns layout easing during swaps: this is not a guarantee of physical
-velocity or acceleration continuity across every event. Windows remain separate
+Interrupted tile/column offsets now use cubic paths that retain their sampled
+velocity when a movement shader is configured. Initial moves keep upstream easing.
+This is not a guarantee of physical velocity or acceleration continuity across
+every event, camera motion or pointer dragging. Windows remain separate
 render elements. Mixed-output handoffs, capture/block-out combinations, shader
 removal during close continuation and graphics-reset interactions need broader testing.
 
@@ -100,7 +103,7 @@ All content is synthetic. See [recording commands](gifs/README.md).
   multiple outputs and mixed scaling; capture/encoder timing cannot substitute for it.
 - Broader transparency, decorations, fullscreen and output-edge clipping. Client-side
   shadows outside the window geometry are omitted during breakup.
-- Layout-position velocity across retargets, direct dragging, broader application
+- Acceleration continuity, camera transitions, direct dragging, broader application
   resize/close coverage, shared per-particle ordering and graphics-reset behavior.
 - Full iRiS, DMS and Noctalia desktop sessions across versions beyond the controlled
   component/picker workflows documented below.

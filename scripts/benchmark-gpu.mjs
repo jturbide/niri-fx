@@ -10,8 +10,8 @@ import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 const options = Object.fromEntries(
   process.argv.slice(2).map((arg) => {
     assert(
-      /^--(output|presets|sizes|samples|software)=.+/.test(arg),
-      "Use --output=report.json --presets=balanced,iris-bloom --sizes=1920x1080,2560x1440 --samples=60 [--software=true for rejection testing]",
+      /^--(output|presets|sizes|samples|draws|software)=.+$/.test(arg),
+      "Use --output=report.json --presets=balanced,iris-bloom --sizes=1920x1080,2560x1440 --samples=60 --draws=1,2,4 [--software=true for rejection testing]",
     );
     const split = arg.indexOf("=");
     return [arg.slice(2, split), arg.slice(split + 1)];
@@ -37,6 +37,11 @@ try {
     return value.split("x").map(Number);
   });
   const results = [];
+  const batches = (options.draws || "1").split(",").map(Number);
+  assert(
+    batches.every((draws) => Number.isInteger(draws) && draws >= 1 && draws <= 8),
+    "Draw counts must be integers from 1 to 8",
+  );
   for (const preset of presets) {
     assert(
       await evaluate(`Object.hasOwn(catalog.presets, ${JSON.stringify(preset)})`),
@@ -46,13 +51,15 @@ try {
       `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
     );
     for (const [width, height] of sizes) {
-      const result = await evaluate(
-        `window.niriFxBenchmark(${JSON.stringify({ width, height, samples: Number(options.samples || 60) })})`,
-      );
-      results.push(result);
-      console.log(
-        `${preset} ${width}x${height}: ${result.status}${result.p95 ? " p95=" + result.p95.toFixed(3) + "ms" : " (" + result.reason + ")"}`,
-      );
+      for (const draws of batches) {
+        const result = await evaluate(
+          `window.niriFxBenchmark(${JSON.stringify({ width, height, draws, samples: Number(options.samples || 60) })})`,
+        );
+        results.push(result);
+        console.log(
+          `${preset} ${width}x${height} ${draws} draw(s): ${result.status}${result.p95 ? " p95=" + result.p95.toFixed(3) + "ms" : " (" + result.reason + ")"}`,
+        );
+      }
     }
   }
   writeFileSync(
@@ -62,7 +69,7 @@ try {
         schema: 1,
         recorded: new Date().toISOString(),
         scope:
-          "Single synthetic window, browser WebGL GPU draw time. Excludes compositor, capture, input latency and scanout. Budget exceedances are not measured dropped frames.",
+          "Browser WebGL GPU time for a batch of independent synthetic-window draws, each including a framebuffer clear. Excludes compositor concurrency, capture, input latency and scanout. Budget exceedances are not measured dropped frames.",
         results,
       },
       null,

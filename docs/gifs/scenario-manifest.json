@@ -692,9 +692,68 @@
       "bytes": 936887
     },
     {
+      "name": "workflow-quickshell-picker",
+      "backend": "packaged Quickshell picker UI in stock nested Niri",
+      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/qml/NiriFXController.qml": "40d873e2cb383eaad7764e3dbcbc8fbdab99c158ad6882c8fe8a22928759527c",
+        "niri_fx/qml/NiriFXPicker.qml": "b1a3e02ea2134037fb098c16fbee2a48b9e02e7c67b1d241cd315ffd4f48f8cb",
+        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
+      },
+      "file": "docs/gifs/workflow-quickshell-picker.gif",
+      "bytes": 429009
+    },
+    {
+      "name": "workflow-gtk-picker",
+      "backend": "packaged GTK 4 picker UI in stock nested Niri",
+      "version": "gjs 1.88.1",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved",
+        "close during apply"
+      ],
+      "sources": {
+        "niri_fx/gtk/controller.mjs": "9bfa150a1c1c4dfe806c3903f64866e60297512a435df669cb6917201fbb42df",
+        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
+        "niri_fx/gtk/picker.mjs": "e635dbd221ee477a43b3244c7da1b5b92e7bd38090273fc941fa484857f0ca4b",
+        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
+        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
+      },
+      "file": "docs/gifs/workflow-gtk-picker.gif",
+      "bytes": 554818
+    },
+    {
+      "name": "workflow-terminal",
+      "backend": "real CLI terminal workflow in stock nested Niri",
+      "version": "niri 26.04 (8ed0da4)",
+      "checks": [
+        "preset selection",
+        "read-only review",
+        "confirmed apply",
+        "exact Undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/terminal.py": "6953d0a00e5daa71d1528224972d0fa37d0ee41444a73c6ab77a3f815773e4e7",
+        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
+      },
+      "file": "docs/gifs/workflow-terminal.gif",
+      "bytes": 2184482
+    },
+    {
       "name": "native-interrupted",
       "file": "docs/gifs/native-interrupted.gif",
-      "bytes": 8081091,
+      "bytes": 8118806,
       "preset": "explosion",
       "effect": {
         "family": "fragments",
@@ -817,18 +876,18 @@
         },
         {
           "action": "move-column-right",
-          "offset_ms": 359
+          "offset_ms": 361
         },
         {
           "action": "move-column-left",
-          "offset_ms": 719
+          "offset_ms": 723
         }
       ],
       "sources": {
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
+      "patch_sha256": "03415db91e7f9aa00cbb521575ae498feacb77923eb872b72ae7bf17371c0386",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "interruption timing",
@@ -839,7 +898,7 @@
     {
       "name": "native-rapid-reversals",
       "file": "docs/gifs/native-rapid-reversals.gif",
-      "bytes": 3093826,
+      "bytes": 2813337,
       "preset": "spring-wobble",
       "effect": {
         "family": "elastic",
@@ -962,38 +1021,38 @@
         },
         {
           "action": "move-column-right",
-          "offset_ms": 129
+          "offset_ms": 132
         },
         {
           "action": "move-column-left",
-          "offset_ms": 257
+          "offset_ms": 265
         },
         {
           "action": "move-column-right",
-          "offset_ms": 388
+          "offset_ms": 398
         },
         {
           "action": "move-column-left",
-          "offset_ms": 520
+          "offset_ms": 529
         },
         {
           "action": "move-column-right",
-          "offset_ms": 652
+          "offset_ms": 661
         },
         {
           "action": "move-column-left",
-          "offset_ms": 783
+          "offset_ms": 793
         },
         {
           "action": "move-column-right",
-          "offset_ms": 915
+          "offset_ms": 925
         }
       ],
       "sources": {
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
+      "patch_sha256": "03415db91e7f9aa00cbb521575ae498feacb77923eb872b72ae7bf17371c0386",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "interruption timing",
@@ -1004,7 +1063,7 @@
     {
       "name": "native-close-during-move",
       "file": "docs/gifs/native-close-during-move.gif",
-      "bytes": 6408229,
+      "bytes": 6651178,
       "preset": "explosion",
       "effect": {
         "family": "fragments",
@@ -1134,7 +1193,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
+      "patch_sha256": "03415db91e7f9aa00cbb521575ae498feacb77923eb872b72ae7bf17371c0386",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "interruption timing",
@@ -1145,7 +1204,7 @@
     {
       "name": "native-close-during-open",
       "file": "docs/gifs/native-close-during-open.gif",
-      "bytes": 3431991,
+      "bytes": 3471867,
       "preset": "explosion",
       "overrides": {
         "open_ms": 1500,
@@ -1268,7 +1327,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "afb238ae30bb246c98a3668d14a4e9063b5068e888b372866f6a9a43f96c88e2",
+      "patch_sha256": "03415db91e7f9aa00cbb521575ae498feacb77923eb872b72ae7bf17371c0386",
       "backend": "pinned patched Niri nested winit; synthetic client",
       "checks": [
         "close before opening duration",
@@ -1276,65 +1335,6 @@
         "no surviving surface",
         "shader render log"
       ]
-    },
-    {
-      "name": "workflow-quickshell-picker",
-      "backend": "packaged Quickshell picker UI in stock nested Niri",
-      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
-      "checks": [
-        "keyboard search and selection",
-        "read-only review",
-        "reviewed apply",
-        "exact undo",
-        "resize preserved"
-      ],
-      "sources": {
-        "niri_fx/qml/NiriFXController.qml": "40d873e2cb383eaad7764e3dbcbc8fbdab99c158ad6882c8fe8a22928759527c",
-        "niri_fx/qml/NiriFXPicker.qml": "b1a3e02ea2134037fb098c16fbee2a48b9e02e7c67b1d241cd315ffd4f48f8cb",
-        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
-      },
-      "file": "docs/gifs/workflow-quickshell-picker.gif",
-      "bytes": 429009
-    },
-    {
-      "name": "workflow-gtk-picker",
-      "backend": "packaged GTK 4 picker UI in stock nested Niri",
-      "version": "gjs 1.88.1",
-      "checks": [
-        "keyboard search and selection",
-        "read-only review",
-        "reviewed apply",
-        "exact undo",
-        "resize preserved",
-        "close during apply"
-      ],
-      "sources": {
-        "niri_fx/gtk/controller.mjs": "9bfa150a1c1c4dfe806c3903f64866e60297512a435df669cb6917201fbb42df",
-        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
-        "niri_fx/gtk/picker.mjs": "e635dbd221ee477a43b3244c7da1b5b92e7bd38090273fc941fa484857f0ca4b",
-        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
-        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
-      },
-      "file": "docs/gifs/workflow-gtk-picker.gif",
-      "bytes": 554818
-    },
-    {
-      "name": "workflow-terminal",
-      "backend": "real CLI terminal workflow in stock nested Niri",
-      "version": "niri 26.04 (8ed0da4)",
-      "checks": [
-        "preset selection",
-        "read-only review",
-        "confirmed apply",
-        "exact Undo",
-        "resize preserved"
-      ],
-      "sources": {
-        "niri_fx/terminal.py": "6953d0a00e5daa71d1528224972d0fa37d0ee41444a73c6ab77a3f815773e4e7",
-        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
-      },
-      "file": "docs/gifs/workflow-terminal.gif",
-      "bytes": 2184482
     }
   ]
 }

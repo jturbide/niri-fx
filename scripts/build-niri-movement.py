@@ -68,6 +68,7 @@ def main():
     if args.test:
         run("cargo", "test", "--locked", "-p", "niri-config", cwd=SOURCE, env=env)
         run("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=SOURCE, env=env)
+        run("cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=SOURCE, env=env)
         run(
             "cargo", "test", *flags, "--lib", "render_helpers::movement::tests", cwd=SOURCE, env=env
         )

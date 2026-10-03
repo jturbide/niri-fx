@@ -537,17 +537,24 @@ try {
     }
   }
   // Shader-only GPU microbenchmark. No screen capture or compositor timing claims.
-  window.niriFxBenchmark = async ({ width = 1920, height = 1080, samples = 60 } = {}) => {
+  window.niriFxBenchmark = async ({
+    width = 1920,
+    height = 1080,
+    samples = 60,
+    draws = 1,
+  } = {}) => {
     if (
-      ![width, height, samples].every(Number.isInteger) ||
+      ![width, height, samples, draws].every(Number.isInteger) ||
       width < 320 ||
       height < 240 ||
       width > 7680 ||
       height > 4320 ||
       samples < 10 ||
-      samples > 1000
+      samples > 1000 ||
+      draws < 1 ||
+      draws > 8
     )
-      throw new Error("Invalid benchmark dimensions or sample count");
+      throw new Error("Invalid benchmark dimensions, sample count or draw count");
     const debug = gl.getExtension("WEBGL_debug_renderer_info");
     const renderer = debug ? gl.getParameter(debug.UNMASKED_RENDERER_WEBGL) : "unavailable";
     const vendor = debug ? gl.getParameter(debug.UNMASKED_VENDOR_WEBGL) : "unavailable";
@@ -559,6 +566,7 @@ try {
       width,
       height,
       samples,
+      draws,
       preset: byId("preset").value,
       effect: { ...parameters },
       seed,
@@ -584,7 +592,10 @@ try {
         try {
           gl.getParameter(timer.GPU_DISJOINT_EXT);
           timer.beginQueryEXT(timer.TIME_ELAPSED_EXT, query);
-          draw(0.1 + (((index + 12) % 31) / 31) * 0.8);
+          // Time a batch of independent window passes, each with its normal
+          // framebuffer clear. This is GPU load, not compositor concurrency.
+          for (let pass = 0; pass < draws; pass++)
+            draw(0.1 + (((index + 12 + pass * 7) % 31) / 31) * 0.8);
           timer.endQueryEXT(timer.TIME_ELAPSED_EXT);
           gl.flush();
           const deadline = performance.now() + 10000;

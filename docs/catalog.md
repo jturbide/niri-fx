@@ -487,7 +487,10 @@ The Frost example uses a single scaled output; mixed-monitor testing is still pl
 
 **Change direction or close a moving window.** These experimental Niri recordings
 show windows reconstructing after repeated moves and after one window closes.
-Interrupted effects retain their phase and seed; direction impulses blend on retarget. Physical velocity continuity remains future work.
+Interrupted effects retain their phase and seed; direction impulses blend on retarget.
+The experimental compositor also preserves sampled tile/column position velocity
+through interrupted moves. Acceleration, camera motion and direct dragging remain
+separate work; see [movement behavior](movement.md).
 
 | Reverse direction during movement | Close during movement |
 | --- | --- |

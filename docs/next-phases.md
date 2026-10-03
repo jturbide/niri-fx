@@ -13,8 +13,11 @@ fully reconstructed snapshot can produce a visible jump even when position is co
 The experimental patch carries shader phase through swaps, blends direction
 impulses and continues an interrupted opening trajectory while fading out. This
 preserves visual state and sampled deformation speed through cubic handoffs.
-Layout-position velocity, acceleration and shared particle physics remain separate
-problems. Phase curves must stay bounded without discarding their incoming speed.
+Interrupted tile and column offsets also retain their sampled position velocity
+when a movement shader is configured. Their cubic path ends at the new destination
+with zero speed; unchanged moves use Niri's configured curve. Acceleration,
+camera motion and shared particle physics remain separate problems. Phase curves
+must stay bounded without discarding their incoming speed.
 
 Changes to this path should include deterministic state tests and native recordings
 of reversal, repeated retargets, close-during-open, close-during-move and shader
