@@ -1,24 +1,27 @@
 # NiriFX
 
-**Slice windows apart. Explode them into pixels. Bring them back together.**
+**Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX is a configurable window effects studio for Niri, formerly **Niri
-Fragments**. Choose from **17 presets across Fragments and Slices**, preview the
+Fragments**. Choose from **29 presets across Fragments, Slices and Elastic**, preview the
 actual shaders, and tune the controls for each family. The optional iNiR/iRiS
-adapter adds your styles to its settings picker.
+adapter adds your styles to its settings picker. A preset-folder export also
+feeds Noctalia’s existing animation picker.
 
 [Get started](docs/getting-started.md) · [Studio & controls](docs/usage.md) ·
 [Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md)
 
-**Public prerelease · 0.6.0.** Opening and closing work on stock Niri 26.04.
+**Development checkout after 0.6.0.** The new waves, variation, wobble and Noctalia
+pack below are not in the published 0.6.0 prerelease. Opening and closing work on
+stock Niri 26.04.
 Resize fragments are **off by default and strictly opt-in**. Native move/swap
 fragmentation requires the separate experimental Niri patch. Performance and
 appearance still need testing across GPUs, applications and display scales.
 
 ## See it in motion
 
-[Slices](#three-slice-styles) · [Fragments](#fourteen-fragment-styles) · [Compare the controls](#one-control-at-a-time) ·
+[Fragments](#nineteen-fragment-styles) · [Slices](#seven-slice-styles) · [Wobble](#three-elastic-styles) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
@@ -30,31 +33,7 @@ These clips use Studio's real shader renderer with synthetic content at 20 fps.
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](docs/gifs/opening.gif) | ![Closing explodes a window into fragments](docs/gifs/closing.gif) |
 
-### Three slice styles
-
-**New in 0.6.** Whole strips of the window slide, rotate and reassemble. Slice
-count, angle, travel distance, direction, stagger and rotation are adjustable.
-These effects use stock Niri opening/closing shaders; slice resize and movement
-are not supported in this release.
-
-| Slide Apart | Alternating Blinds | Diagonal Shear |
-| --- | --- | --- |
-| ![Horizontal strips slide apart and return](docs/gifs/preset-slide-apart.gif) | ![Vertical strips travel in alternating directions and rotate](docs/gifs/preset-alternating-blinds.gif) | ![Diagonal strips shear away and reconstruct](docs/gifs/preset-diagonal-shear.gif) |
-| 12 horizontal slices | 16 vertical strips · 16° rotation | 10 diagonal strips · alternating travel |
-| [Settings JSON](examples/slide-apart.json) | [Settings JSON](examples/alternating-blinds.json) | [Settings JSON](examples/diagonal-shear.json) |
-
-**Slice count — 4 / 12 / 32.** Same timing, texture and motion, with different strip widths.
-
-![Synchronized comparison of four, twelve and thirty-two slices](docs/gifs/compare-slice-count.gif)
-
-Choose **Slices** in Studio, or try it offline:
-
-```sh
-python3 -m niri_fx preview --preset diagonal-shear --output /tmp/nirifx-slices.html
-xdg-open /tmp/nirifx-slices.html
-```
-
-### Fourteen fragment styles
+### Nineteen fragment styles
 
 Every loop closes and opens at that preset's configured timing. Start with
 **Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
@@ -83,6 +62,24 @@ Counts are targets, not exact totals; square tiles adapt to each window's shape.
 | ![Directional Wave releases three sections from left to right](docs/gifs/preset-directional-wave.gif) | ![Corner Burst explodes from an off-center origin](docs/gifs/preset-corner-burst.gif) | ![Orbital Collapse spirals fragments into a central point](docs/gifs/preset-orbital-collapse.gif) |
 | 900 pieces · staged release | 1,200 pieces · lower-left origin | 1,400 pieces · 300° orbit |
 | [Settings JSON](examples/directional-wave.json) | [Settings JSON](examples/corner-burst.json) | [Settings JSON](examples/orbital-collapse.json) |
+
+### Five new fragment variations
+
+Unequal pieces, travelling waves and seeded direction variation add more organic
+motion. These controls also feed the separate native movement experiment.
+
+| Tidal Fragments | Mosaic Burst | Chaotic Confetti |
+| --- | --- | --- |
+| ![Tidal Fragments travel along a broad wave](docs/gifs/preset-tidal-fragments.gif) | ![Mosaic Burst uses unequal rectangular pieces](docs/gifs/preset-mosaic-burst.gif) | ![Chaotic Confetti tumbles along varied paths](docs/gifs/preset-chaotic-confetti.gif) |
+| [Settings JSON](examples/tidal-fragments.json) | [Settings JSON](examples/mosaic-burst.json) | [Settings JSON](examples/chaotic-confetti.json) |
+| **Crosswind** | **Orbital Ribbons** | |
+| ![Crosswind carries fragments sideways in a wave](docs/gifs/preset-crosswind.gif) | ![Orbital Ribbons curve toward the center](docs/gifs/preset-orbital-ribbons.gif) | |
+| [Settings JSON](examples/crosswind.json) | [Settings JSON](examples/orbital-ribbons.json) | |
+
+**Uniform / unequal cells / travelling wave.** Same starting preset and timing;
+size variation and wave motion are shown separately.
+
+![Comparison of uniform fragments, unequal cells and a travelling wave](docs/gifs/compare-fragment-variation.gif)
 
 ### One control at a time
 
@@ -137,6 +134,56 @@ Use the other JSON filenames to add those styles too. Registration does not
 activate an effect. [Preview commands and standalone export instructions](examples/README.md)
 let you try the same examples without iNiR or any desktop configuration changes.
 
+### Seven slice styles
+
+Whole strips slide, rotate and reassemble. **Slide Apart now alternates adjacent
+horizontal strips**, while **Split Curtain** keeps the original outward split.
+Choose random directions, release order, unequal widths and travelling waves.
+Slices uses stock Niri open/close shaders; resize and movement are unsupported.
+
+| Slide Apart | Alternating Blinds | Diagonal Shear |
+| --- | --- | --- |
+| ![Adjacent horizontal strips slide in alternating directions](docs/gifs/preset-slide-apart.gif) | ![Vertical strips travel alternately and rotate](docs/gifs/preset-alternating-blinds.gif) | ![Diagonal strips shear away](docs/gifs/preset-diagonal-shear.gif) |
+| [Settings JSON](examples/slide-apart.json) | [Settings JSON](examples/alternating-blinds.json) | [Settings JSON](examples/diagonal-shear.json) |
+| **Split Curtain** | **Ribbon Wave** | **Shuffled Slats** |
+| ![Split Curtain retains the outward split](docs/gifs/preset-split-curtain.gif) | ![Ribbon Wave moves alternating strips along a wave](docs/gifs/preset-ribbon-wave.gif) | ![Shuffled Slats uses unequal sizes and random directions](docs/gifs/preset-shuffled-slats.gif) |
+| [Settings JSON](examples/split-curtain.json) | [Settings JSON](examples/ribbon-wave.json) | [Settings JSON](examples/shuffled-slats.json) |
+| **Venetian Sweep** | | |
+| ![Venetian Sweep releases vertical strips from the center](docs/gifs/preset-venetian-sweep.gif) | | |
+| [Settings JSON](examples/venetian-sweep.json) | | |
+
+**Direction — split halves / alternate / random.** Each random strip chooses its
+own direction; there is no forced 50/50 distribution.
+
+![Slice direction comparison with otherwise identical settings](docs/gifs/compare-slice-directions.gif)
+
+**Release order — forward / center / random.** Control where separation begins.
+
+![Slice release order comparison](docs/gifs/compare-slice-order.gif)
+
+**Slice count — 4 / 12 / 32.** Same timing, texture and alternating motion.
+
+![Comparison of four, twelve and thirty-two slices](docs/gifs/compare-slice-count.gif)
+
+### Three elastic styles
+
+A Compiz-inspired spring feel: bend the whole window, let it oscillate, then
+settle. Tune strength, frequency, damping and axis. These are timed open/close
+shaders; native swaps use the experimental compositor. Interactive drag physics
+and resize wobble are not implemented.
+
+| Spring Wobble | Rubber Band | Jelly |
+| --- | --- | --- |
+| ![Spring Wobble bends and settles](docs/gifs/preset-spring-wobble.gif) | ![Rubber Band stretches sideways](docs/gifs/preset-rubber-band.gif) | ![Jelly oscillates in both axes](docs/gifs/preset-jelly.gif) |
+| [Settings JSON](examples/spring-wobble.json) | [Settings JSON](examples/rubber-band.json) | [Settings JSON](examples/jelly.json) |
+
+**Same duration, different springs:** compare all three at matched timing.
+
+![Synchronized Spring Wobble, Rubber Band and Jelly comparison](docs/gifs/compare-elastic.gif)
+
+[Controls, CLI examples and costs](docs/effect-controls.md) explain the new
+parameters. Resize remains off in all built-ins.
+
 ### Resize — opt-in
 
 **Disabled by default.** When explicitly enabled, the actual resize shader breaks
@@ -165,6 +212,18 @@ compositor. Both streams overlap during the swap; particles are still rendered
 per window, with no shared collision simulation or particle-level interleaving.
 
 ![Two real demo windows fragment, exchange columns and reconstruct in patched Niri](docs/gifs/native-swap.gif)
+
+Three more **actual native swaps**, each recorded in the isolated patched Niri:
+
+| Crosswind | Orbital Ribbons | Spring Wobble |
+| --- | --- | --- |
+| ![Native Crosswind swap](docs/gifs/native-swap-crosswind.gif) | ![Native Orbital Ribbons swap](docs/gifs/native-swap-orbital-ribbons.gif) | ![Native Spring Wobble swap](docs/gifs/native-swap-spring-wobble.gif) |
+| Sideways fragment wave | Curved fragment streams | Continuous elastic windows |
+
+**Studio concept comparison — Crosswind / Orbital Ribbons / Tidal Fragments.**
+This is the Canvas choreography preview, separate from the native recordings.
+
+![Three labelled Studio swap concepts](docs/gifs/compare-swap-styles.gif)
 
 **Studio design concepts:** the two clips below show the intended move/swap
 choreography. They are Canvas previews, with different trajectories and particle
@@ -232,6 +291,7 @@ Then follow the [standalone installation guide](docs/getting-started.md#standalo
 to include it after your existing animation settings. The Niri configuration
 path is shell-independent; a DMS-native picker has **not** been implemented or
 runtime-tested. See [DMS setup and the roadmap](docs/compatibility.md).
+For Noctalia’s existing picker, use the [preset-pack setup guide](docs/noctalia.md).
 
 ## Make it yours
 
@@ -239,10 +299,11 @@ runtime-tested. See [DMS setup and the roadmap](docs/compatibility.md).
 python3 -m niri_fx studio
 ```
 
-![Family-specific slice controls in NiriFX Studio](docs/studio-slices.png)
+![Fragment controls in NiriFX Studio](docs/studio.png)
 
-Select an effect family to see its controls. Tune slices by count, angle and
-travel, or fragments by particles, gravity, spin and orbit. Opening and closing
+Select an effect family to see its controls. Tune fragments by particles, gravity,
+spin, orbit and waves; slices by count, angle, direction and release order; or
+elastic motion by spring strength, frequency and damping. Opening and closing
 have separate timings. Studio opens as a dedicated Chromium app window,
 with a browser fallback. **Import preset** opens any showcase JSON in the editor.
 Tune release direction, burst origin and resize style, then export JSON/KDL or
@@ -257,18 +318,19 @@ CLI examples are in the [usage guide](docs/usage.md).
 
 The `niri-fragments` executable and `python3 -m niri_fragments` still work. Existing
 JSON, iNiR preset IDs, setup snapshots, launchers and configuration paths are
-preserved. Fragment exports remain schema 1; slices use schema 2 and require
-NiriFX 0.6+. See [the migration guide](docs/migration-0.6.md) before replacing an
+preserved. Legacy fragment exports remain schema 1; legacy slices use schema 2.
+New variation/wave controls and Elastic use schema 3 and require this checkout. See [the migration guide](docs/migration-0.6.md) before replacing an
 installed package or updating your presets.
 
 ## What works where?
 
 | Feature | Stock Niri | Extra requirement |
 | --- | --- | --- |
-| Open / close effects, 17 presets in two families | Yes; validated on 26.04 | Enable Niri animations |
+| Open / close effects, 29 presets in three families | Yes; validated on 26.04 | Enable Niri animations |
 | Optional resize (Fragments family only) | Yes; disabled by default | Studio checkbox or `--resize` |
 | Studio preview and KDL / JSON export | Yes | WebGL browser |
 | Preset registration and Studio save | Yes | iNiR external preset support |
+| Noctalia preset picker | KDL file integration | [Export pack and setup](docs/noctalia.md); UI acceptance pending |
 | Native movement / column swaps | No | [Pinned experimental Niri build](experimental/README.md) |
 | Studio Move / Swap tabs | Visual concepts | Do not activate desktop movement |
 | Hyprland, KWin, GNOME | No current backend | Separate compositor work |
@@ -293,7 +355,7 @@ use the [security policy](SECURITY.md) for vulnerabilities.
 
 ## License
 
-Original Fragments code, shaders and demo assets are [MIT licensed](LICENSE).
+Original NiriFX code, shaders and demo assets are [MIT licensed](LICENSE).
 The optional Niri movement patch is **GPL-3.0-or-later** and ships with
 [its license](experimental/COPYING-NIRI). See [third-party notices](THIRD_PARTY.md)
-for the exact scope. Independent project, not affiliated with Niri, iNiR or DMS.
+for the exact scope. Independent project, not affiliated with Niri, iNiR, DMS or Noctalia.

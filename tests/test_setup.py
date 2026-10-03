@@ -1,16 +1,16 @@
-from argparse import Namespace
-from copy import deepcopy
 import json
 import os
-from pathlib import Path
 import tempfile
 import unittest
+from argparse import Namespace
+from pathlib import Path
 from unittest.mock import patch
 
-from niri_fragments.cli import main, parser, selected_effect
-from niri_fragments.effects import PRESETS
-from niri_fragments import setup
 from test_fragments import shell_registry
+
+from niri_fx import setup
+from niri_fx.cli import parser, selected_effect
+from niri_fx.effects import PRESETS
 
 
 class SetupTests(unittest.TestCase):
@@ -22,11 +22,18 @@ class SetupTests(unittest.TestCase):
         self.original = b'// User config\ninclude "base.kdl"\n\n'
         self.config.write_bytes(self.original)
         (self.config.parent / "base.kdl").write_text("animations {}\n")
-        self.args = Namespace(config=self.config, target="standalone", inir_root=self.root / "no-shell",
-                              registry=self.root / "registry.json", base="auto", launcher=False,
-                              name=None, preset="balanced")
+        self.args = Namespace(
+            config=self.config,
+            target="standalone",
+            inir_root=self.root / "no-shell",
+            registry=self.root / "registry.json",
+            base="auto",
+            launcher=False,
+            name=None,
+            preset="balanced",
+        )
         self.state = self.root / "state"
-        self.validate = patch("niri_fragments.setup.validate_config")
+        self.validate = patch("niri_fx.setup.validate_config")
         self.validator = self.validate.start()
 
     def tearDown(self):
@@ -97,10 +104,12 @@ class SetupTests(unittest.TestCase):
     def test_failed_second_write_recovers_first_file(self):
         plan = self.plan()
         real_write = setup.atomic_write
+
         def fail_root(path, data, mode=0o600):
             if path == self.config:
                 raise OSError("disk write failed")
             return real_write(path, data, mode)
+
         with patch.object(setup, "atomic_write", side_effect=fail_root):
             with self.assertRaisesRegex(OSError, "disk write failed"):
                 setup.apply_plan(plan, self.state)
@@ -136,7 +145,7 @@ class SetupTests(unittest.TestCase):
         self.args.target = "inir"
         original = b'{"presets":[{"id":"other","name":"Keep"}],"note":42}\n'
         self.args.registry.write_bytes(original)
-        with patch("niri_fragments.setup.read_shell_presets", return_value=shell_registry()):
+        with patch("niri_fx.setup.read_shell_presets", return_value=shell_registry()):
             setup.apply_plan(self.plan(), self.state)
             self.assertFalse(self.plan()["changes"])
         data = json.loads(self.args.registry.read_text())
@@ -157,11 +166,18 @@ class SetupTests(unittest.TestCase):
     def test_multiple_setups_restore_newest_first(self):
         from dataclasses import replace
         from types import SimpleNamespace
-        with patch.object(setup.uuid, "uuid4", side_effect=[SimpleNamespace(hex="f" * 32), SimpleNamespace(hex="a" * 32)]):
+
+        with patch.object(
+            setup.uuid,
+            "uuid4",
+            side_effect=[SimpleNamespace(hex="f" * 32), SimpleNamespace(hex="a" * 32)],
+        ):
             first = setup.apply_plan(self.plan(), self.state)
             second_plan = setup.plan_setup(self.args, replace(PRESETS["balanced"], origin_x=0.1))
             second = setup.apply_plan(second_plan, self.state)
-        self.assertEqual(setup.restore(self.state, apply=True)["transaction"], second["transaction"])
+        self.assertEqual(
+            setup.restore(self.state, apply=True)["transaction"], second["transaction"]
+        )
         self.assertEqual(setup.restore(self.state, apply=True)["transaction"], first["transaction"])
         self.assertEqual(self.config.read_bytes(), self.original)
 
@@ -180,12 +196,24 @@ class SetupTests(unittest.TestCase):
         self.assertFalse(parser().parse_args(["setup"]).apply)
         self.assertFalse(parser().parse_args(["restore"]).apply)
         document = self.root / "custom.json"
-        document.write_text(json.dumps({"schema": 1, "name": "Portable", "effect": {"gravity": "up", "resize_mode": "edge"}}))
-        effect = selected_effect(parser().parse_args(["preview", "--custom", str(document), "--output", "unused"]))
+        document.write_text(
+            json.dumps(
+                {
+                    "schema": 1,
+                    "name": "Portable",
+                    "effect": {"gravity": "up", "resize_mode": "edge"},
+                }
+            )
+        )
+        effect = selected_effect(
+            parser().parse_args(["preview", "--custom", str(document), "--output", "unused"])
+        )
         self.assertEqual(effect.gravity, "up")
         self.assertFalse(effect.resize)
         with self.assertRaisesRegex(ValueError, "combine"):
-            selected_effect(parser().parse_args(["render", "--custom", str(document), "--particles", "100"]))
+            selected_effect(
+                parser().parse_args(["render", "--custom", str(document), "--particles", "100"])
+            )
 
 
 if __name__ == "__main__":

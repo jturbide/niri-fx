@@ -1,3 +1,3 @@
-"""Reversible window fragment effects for Niri."""
+"""Legacy import namespace; the implementation lives in niri_fx."""
 
-__version__ = "0.6.0"
+from niri_fx import __version__ as __version__

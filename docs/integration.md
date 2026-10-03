@@ -71,7 +71,7 @@ boundaries; none of these future integrations are implied by current registratio
 The public brand/CLI is NiriFX as of 0.6. Registry `generator` ownership and ID
 prefixes remain `niri-fragments` so updates and removal recognize existing entries.
 Display labels use NiriFX. `effect.family` selects the shader; missing family in
-legacy JSON defaults to `fragments`. Fragment exports remain schema 1; slices
-use schema 2. Never infer capabilities from the selected shell: Slices currently
-supports only open/close, while Fragment movement still requires patched Niri.
+legacy JSON defaults to `fragments`. Legacy fragment exports remain schema 1; legacy slices use schema 2.
+New wave/variation controls and Elastic use schema 3. Never infer capabilities from the selected shell: Slices currently
+supports only open/close, while Fragment and Elastic movement still requires patched Niri.
 See [migration](migration-0.6.md).

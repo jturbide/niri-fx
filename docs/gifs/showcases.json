@@ -370,6 +370,174 @@
           }
         }
       ]
+    },
+    {
+      "name": "compare-fragment-variation",
+      "new": true,
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Uniform",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Unequal cells",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "size_variation": 1
+          }
+        },
+        {
+          "label": "Travelling wave",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "wave_strength": 1,
+            "wave_frequency": 0.5,
+            "wave_speed": 1.5
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-slice-directions",
+      "new": true,
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Split halves",
+          "preset": "slide-apart",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "slice_direction": "outward"
+          }
+        },
+        {
+          "label": "Alternating",
+          "preset": "slide-apart",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Random directions",
+          "preset": "slide-apart",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "slice_direction": "random"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-slice-order",
+      "new": true,
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Forward",
+          "preset": "slide-apart",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Center first",
+          "preset": "slide-apart",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "slice_order": "center"
+          }
+        },
+        {
+          "label": "Random release",
+          "preset": "slide-apart",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850,
+            "slice_order": "random"
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-elastic",
+      "new": true,
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Spring Wobble",
+          "preset": "spring-wobble",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Rubber Band",
+          "preset": "rubber-band",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Jelly",
+          "preset": "jelly",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        }
+      ]
+    },
+    {
+      "name": "compare-swap-styles",
+      "new": true,
+      "mode": "swap",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Crosswind",
+          "preset": "crosswind",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Orbital Ribbons",
+          "preset": "orbital-ribbons",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        },
+        {
+          "label": "Tidal Fragments",
+          "preset": "tidal-fragments",
+          "overrides": {
+            "open_ms": 850,
+            "close_ms": 850
+          }
+        }
+      ]
     }
   ]
 }

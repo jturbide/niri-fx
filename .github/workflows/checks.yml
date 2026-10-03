@@ -8,12 +8,34 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: checks-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
 jobs:
+  lint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+          cache: npm
+      - run: python -m pip install -r requirements-dev.txt
+      - run: npm ci --ignore-scripts
+      - run: ruff check . && ruff format --check .
+      - run: npm run lint && npm run format:check
+
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
-        python: ['3.10', '3.14']
+        python: ["3.10", "3.14"]
     steps:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
@@ -23,7 +45,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y glslang-tools
-          python -m pip install build
+          python -m pip install -r requirements-dev.txt
       - name: Test registry safety and effect generation
         run: python -m unittest discover -s tests -v
       - name: Check documentation, media and changelog
@@ -42,6 +64,10 @@ jobs:
           /tmp/niri-fragments-package/bin/niri-fragments render --preset diagonal-shear > slices-legacy.kdl
           cmp slices.kdl slices-legacy.kdl
           /tmp/niri-fragments-package/bin/python -m niri_fx --version
+          /tmp/niri-fragments-package/bin/niri-fx render --preset spring-wobble > elastic.kdl
+          /tmp/niri-fragments-package/bin/niri-fx render --preset crosswind > varied.kdl
+          /tmp/niri-fragments-package/bin/niri-fx export-pack --output /tmp/nirifx-pack --state /tmp/nirifx-pack-state --apply
+          /tmp/niri-fragments-package/bin/niri-fx restore --state /tmp/nirifx-pack-state --apply
 
   browser:
     runs-on: ubuntu-24.04
@@ -50,13 +76,11 @@ jobs:
       - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
-          python-version: '3.14'
+          python-version: "3.14"
       - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
         with:
-          node-version: '22'
-      - name: Test Studio rendering, parity and JSON import
+          node-version: "22"
+      - name: Test Studio rendering, import and real save flow
         env:
           CHROME_BIN: google-chrome
-        run: |
-          python -m niri_fragments preview --output /tmp/fragments-browser.html
-          node scripts/browser-smoke.mjs file:///tmp/fragments-browser.html
+        run: python scripts/studio-e2e.py

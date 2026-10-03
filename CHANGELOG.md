@@ -10,6 +10,43 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- Five varied Fragment presets: Tidal Fragments, Mosaic Burst, Chaotic Confetti,
+  Crosswind and Orbital Ribbons. Shared controls add unequal cell sizes, seeded
+  heading variation and travelling waves with strength/frequency/speed.
+- Four more Slice presets: Split Curtain, Ribbon Wave, Shuffled Slats and Venetian
+  Sweep. Add independent random directions, six release orders, unequal widths,
+  travel/spin variation and transverse waves.
+- Elastic family: Spring Wobble, Rubber Band and Jelly, with strength, frequency,
+  damping and axis controls. Stock open/close and experimental native movement
+  bend the whole window. Interactive drag physics and resize wobble are not included.
+- Schema 3 presets, 12 importable examples, 12 preset GIFs, five comparisons and
+  three native swap recordings. Regenerate Slide Apart and its count comparison;
+  keep Fragments first in the README gallery.
+- Reversible `export-pack` for the existing Noctalia Niri Animations picker and
+  other KDL consumers. Preserve unrelated files, refuse edited/colliding paths,
+  keep ownership metadata and restore snapshots. Noctalia UI acceptance is pending.
+- Ruff lint/format, ESLint, Prettier, editor conventions and pinned development
+  dependencies. Actions now includes lint and a real CLI/browser/HTTP/helper/save
+  E2E flow for all families, alongside unit/integration/GLSL/docs/package checks.
+- Compatibility alias tests, schema/pack ownership tests, visible and deterministic
+  browser variation checks, and native wobble/interrupted-swap checks.
+
+### Changed
+
+- Slide Apart alternates adjacent horizontal strips instead of splitting halves.
+  Split Curtain retains the old look; saved legacy JSON keeps its saved direction.
+- Canonical implementation/resources move to `niri_fx`; `niri_fragments` modules
+  alias the same objects. Existing commands, IDs, state paths, snapshots and
+  launcher identities remain supported. Fresh launcher commands use `niri_fx`.
+- Studio JavaScript and CSS become readable, separately linted source files,
+  assembled into the same self-contained offline HTML export.
+- All 14 original Fragment presets retain their exact shader sources. New varied
+  Fragments use a separate, more expensive bounded renderer. Resize stays opt-in
+  and uses its existing renderer without the new wave/variation controls.
+
+
 ## 0.6.0 — 2026-10-02
 
 Niri Fragments becomes **NiriFX**, a window effects studio with multiple families.

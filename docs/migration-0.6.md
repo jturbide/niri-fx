@@ -72,3 +72,15 @@ Slices does not inherit fragment physics. Studio shows only the selected family'
 controls; incompatible CLI options and unsupported slice resize/movement requests
 fail explicitly. `niri-fx families` lists renderer capabilities; movement support
 for Fragments still requires the separate experimental patched compositor.
+
+## Development after 0.6
+
+The implementation and resources now live in `niri_fx`. Legacy Python submodules
+are aliases of the same module objects, including monkeypatch behavior, rather
+than duplicated implementations. Fresh launcher commands use `niri_fx`; stable
+launcher/profile/state identities are deliberately retained.
+
+New waves/variation and Elastic presets use schema 3. Legacy-only exports retain
+schema 1/2. Slide Apart now alternates adjacent strips; Split Curtain preserves
+the former outward split. Existing saved slice documents keep their own direction.
+See [new controls](effect-controls.md) and [Noctalia setup](noctalia.md).

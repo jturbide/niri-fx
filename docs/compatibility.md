@@ -10,6 +10,7 @@ do not need iNiR installed.
 | Niri + iNiR/iRiS | Native preset registration and Studio save | Tested locally. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
 | Niri + DankMaterialShell | The same KDL include and exported presets | Compatible at the Niri configuration layer; DMS-specific UI/runtime acceptance is pending. |
+| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | File/include contract validated; Noctalia UI acceptance pending. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current Fragments backend | Installing a shell does not supply Niri's shader interface. |
 | Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
@@ -69,7 +70,8 @@ The regular Studio app can also export, but its save adapter still expects iNiR.
 
 ## Recommended scope
 
-The next integration should be a **small DMS plugin for Niri users**: a preset
+Noctalia can reuse its existing picker through `export-pack`; see the
+[setup guide](noctalia.md). A possible next integration is a **small DMS plugin for Niri users**: a preset
 picker, an explicitly opt-in resize switch, restore action, and an Open Studio
 button. It should reuse the Python generator, validate KDL before replacing its
 own file, and detect the compositor before enabling any controls. It should

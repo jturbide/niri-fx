@@ -28,11 +28,22 @@ Issues = "https://github.com/jturbide/niri-fx/issues"
 Source = "https://github.com/jturbide/niri-fx"
 
 [project.scripts]
-niri-fx = "niri_fragments.cli:main"
-niri-fragments = "niri_fragments.cli:main"
+niri-fx = "niri_fx.cli:main"
+niri-fragments = "niri_fx.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["niri_fragments*", "niri_fx*"]
 
 [tool.setuptools.package-data]
-niri_fragments = ["shaders/*.glsl", "preview.html", "motion-preview.js"]
+niri_fx = ["shaders/*.glsl", "preview.html", "*.js", "*.css"]
+
+[tool.ruff]
+target-version = "py310"
+line-length = 100
+extend-exclude = ["artifacts"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"scripts/*.py" = ["E402"] # Source-checkout tools add the repository root to sys.path.

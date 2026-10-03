@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Check local documentation links, release versions and recorded GIF metadata."""
+
 import json
-from dataclasses import asdict, replace
-from pathlib import Path
 import re
 import shlex
 import sys
+from dataclasses import asdict, replace
+from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -28,10 +29,13 @@ def anchors(text):
 
 def main():
     errors = []
-    docs = sorted(set(ROOT.glob("*.md")) | set((ROOT / "docs").rglob("*.md"))
-                  | set((ROOT / "examples").rglob("*.md"))
-                  | set((ROOT / "experimental").glob("*.md"))
-                  | set((ROOT / ".github").rglob("*.md")))
+    docs = sorted(
+        set(ROOT.glob("*.md"))
+        | set((ROOT / "docs").rglob("*.md"))
+        | set((ROOT / "examples").rglob("*.md"))
+        | set((ROOT / "experimental").glob("*.md"))
+        | set((ROOT / ".github").rglob("*.md"))
+    )
     links = 0
     for doc in docs:
         text = without_fences(doc.read_text())
@@ -45,11 +49,18 @@ def main():
             dest = (doc.parent / unquote(url.path)).resolve() if url.path else doc
             if not dest.is_relative_to(ROOT) or not dest.exists():
                 errors.append(f"{doc.relative_to(ROOT)}: missing/outside local target {target}")
-            elif url.fragment and dest.suffix == ".md" and unquote(url.fragment) not in anchors(dest.read_text()):
+            elif (
+                url.fragment
+                and dest.suffix == ".md"
+                and unquote(url.fragment) not in anchors(dest.read_text())
+            ):
                 errors.append(f"{doc.relative_to(ROOT)}: missing heading {target}")
 
-    from niri_fragments import __version__
-    package_version = re.search(r'^version = "([^"]+)"$', (ROOT / "pyproject.toml").read_text(), re.M)
+    from niri_fx import __version__
+
+    package_version = re.search(
+        r'^version = "([^"]+)"$', (ROOT / "pyproject.toml").read_text(), re.M
+    )
     if not package_version or package_version[1] != __version__:
         errors.append("Package and runtime versions differ")
     changelog = (ROOT / "CHANGELOG.md").read_text()
@@ -59,19 +70,22 @@ def main():
         errors.append(f"Changelog needs a dated entry for {__version__}")
 
     manifest = json.loads((ROOT / "docs/gifs/manifest.json").read_text())
-    from niri_fragments.effects import Effect, PRESETS
-    from niri_fragments.cli import parser, selected_effect
+    from niri_fx.cli import parser, selected_effect
+    from niri_fx.effects import PRESETS, Effect
+
     examples = {}
     for source in sorted((ROOT / "examples").glob("*.json")):
         document = json.loads(source.read_text())
-        if document.get("schema") not in (1, 2) or not document.get("name"):
+        if document.get("schema") not in (1, 2, 3) or not document.get("name"):
             errors.append(f"Invalid example document: {source.relative_to(ROOT)}")
         examples[source.stem] = asdict(Effect(**document["effect"]))
         if source.stem in PRESETS and examples[source.stem] != asdict(PRESETS[source.stem]):
             errors.append(f"Built-in example differs from its preset: {source.stem}")
     commands = (ROOT / "examples/README.md").read_text().replace("\\\n", "")
     checked_examples = set()
-    for command in re.findall(r"^python3 -m (?:niri_fragments|niri_fx) preview .+$", commands, re.M):
+    for command in re.findall(
+        r"^python3 -m (?:niri_fragments|niri_fx) preview .+$", commands, re.M
+    ):
         args = parser().parse_args(shlex.split(command)[3:])
         if args.custom:
             args.custom = ROOT / args.custom
@@ -99,13 +113,25 @@ def main():
         if actual != expected:
             errors.append(f"Showcase settings changed; regenerate {spec['name']}.gif")
     for clip in manifest["clips"]:
-        if "preset" in clip and "effect" in clip and asdict(Effect(**clip["effect"])) != asdict(PRESETS[clip["preset"]]):
+        if (
+            "preset" in clip
+            and "effect" in clip
+            and asdict(Effect(**clip["effect"])) != asdict(PRESETS[clip["preset"]])
+        ):
             errors.append(f"Preset recording settings changed: {clip['preset']}")
         dest = ROOT / clip["file"]
         if not dest.exists() or dest.stat().st_size != clip["bytes"]:
             errors.append(f"GIF manifest size differs: {clip['file']}")
+    native = json.loads((ROOT / "docs/gifs/native-manifest.json").read_text())["clips"]
+    for clip in native:
+        dest = ROOT / clip["file"]
+        if not dest.exists() or dest.stat().st_size != clip["bytes"]:
+            errors.append(f"Native GIF manifest size differs: {clip['file']}")
+        if asdict(Effect(**clip["effect"])) != asdict(PRESETS[clip["preset"]]):
+            errors.append(f"Native preset settings changed: {clip['preset']}")
     gifs = list((ROOT / "docs/gifs").glob("*.gif"))
     listed = {clip["file"] for clip in manifest["clips"]} | {"docs/gifs/native-swap.gif"}
+    listed |= {clip["file"] for clip in native}
     if {str(gif.relative_to(ROOT)) for gif in gifs} != listed:
         errors.append("GIF files and manifest differ (native swap is recorded separately)")
     for gif in gifs:
@@ -115,7 +141,9 @@ def main():
     if errors:
         print("\n".join(errors), file=sys.stderr)
         return 1
-    print(f"Checked {len(docs)} documents, {links} local links, {len(gifs)} GIFs and version {__version__}")
+    print(
+        f"Checked {len(docs)} documents, {links} local links, {len(gifs)} GIFs and version {__version__}"
+    )
     return 0
 
 

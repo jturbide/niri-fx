@@ -1,28 +1,38 @@
-from argparse import Namespace
 import json
-from pathlib import Path
 import tempfile
-from threading import Thread
 import unittest
+from argparse import Namespace
+from pathlib import Path
+from threading import Thread
 from unittest.mock import patch
 from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
-from niri_fragments.effects import PRESETS
-from niri_fragments.studio import make_server, valid_save_request
 from test_fragments import shell_registry
+
+from niri_fx.effects import PRESETS
+from niri_fx.studio import make_server, valid_save_request
 
 
 class RequestTests(unittest.TestCase):
     def test_foreign_origins_hosts_and_missing_tokens_rejected(self):
         origin, token = "http://127.0.0.1:12345", "session-token"
-        good = {"Host": "127.0.0.1:12345", "Origin": origin,
-                "Content-Type": "application/json", "X-Fragments-Token": token}
+        good = {
+            "Host": "127.0.0.1:12345",
+            "Origin": origin,
+            "Content-Type": "application/json",
+            "X-Fragments-Token": token,
+        }
         self.assertTrue(valid_save_request(good, origin, token))
-        for key, value in (("Host", "attacker.example:12345"), ("Origin", "https://example.com"),
-                           ("Origin", "null"), ("Content-Type", "text/plain"),
-                           ("X-Fragments-Token", ""), ("X-Fragments-Token", "é")):
+        for key, value in (
+            ("Host", "attacker.example:12345"),
+            ("Origin", "https://example.com"),
+            ("Origin", "null"),
+            ("Content-Type", "text/plain"),
+            ("X-Fragments-Token", ""),
+            ("X-Fragments-Token", "é"),
+        ):
             with self.subTest(key=key, value=value):
                 self.assertFalse(valid_save_request(dict(good, **{key: value}), origin, token))
 
@@ -31,7 +41,9 @@ class ServerTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.registry = Path(self.directory.name) / "presets.json"
-        args = Namespace(port=0, preset="earth", base="auto", registry=self.registry, inir_root="unused")
+        args = Namespace(
+            port=0, preset="earth", base="auto", registry=self.registry, inir_root="unused"
+        )
         self.server = make_server(args, PRESETS["earth"])
         self.thread = Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
@@ -44,24 +56,36 @@ class ServerTests(unittest.TestCase):
         self.directory.cleanup()
 
     def request(self, document, **overrides):
-        headers = {"Content-Type": "application/json", "Origin": self.server.origin,
-                   "X-Fragments-Token": self.token}
+        headers = {
+            "Content-Type": "application/json",
+            "Origin": self.server.origin,
+            "X-Fragments-Token": self.token,
+        }
         headers.update(overrides)
-        return Request(self.server.origin + "/save", json.dumps(document).encode(), headers, method="POST")
+        return Request(
+            self.server.origin + "/save", json.dumps(document).encode(), headers, method="POST"
+        )
 
     def test_session_page_and_actual_named_preset_save(self):
         with urlopen(self.server.session_url, timeout=5) as response:
             html = response.read().decode()
             self.assertIn("NiriFX Studio", html)
             self.assertNotIn("@EFFECT_JSON@", html)
-        with patch("niri_fragments.studio.read_shell_presets", return_value=shell_registry()):
-            document = {"schema": 1, "name": "My Meteor", "effect": {"gravity": "down", "particles": 500, "rotation": "random"}}
+        with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
+            document = {
+                "schema": 1,
+                "name": "My Meteor",
+                "effect": {"gravity": "down", "particles": 500, "rotation": "random"},
+            }
             with urlopen(self.request(document), timeout=5) as response:
                 saved = json.load(response)
         self.assertEqual(saved["id"], "niri-fragments-custom-my-meteor")
         registered = json.loads(self.registry.read_text())["presets"][0]
         self.assertEqual(registered["effect"]["particles"], 500)
-        self.assertEqual(registered["types"]["workspace-switch"], shell_registry()["presets"][0]["types"]["workspace-switch"])
+        self.assertEqual(
+            registered["types"]["workspace-switch"],
+            shell_registry()["presets"][0]["types"]["workspace-switch"],
+        )
         self.assertEqual(list(Path(self.directory.name).glob("*.kdl")), [])
 
     def test_cross_origin_save_and_parameter_injection_do_not_write(self):
@@ -72,7 +96,7 @@ class ServerTests(unittest.TestCase):
         caught.exception.close()
         self.assertFalse(self.registry.exists())
         document["effect"] = {"custom-shader": "not accepted"}
-        with patch("niri_fragments.studio.read_shell_presets", return_value=shell_registry()):
+        with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
             with self.assertRaises(HTTPError) as caught:
                 urlopen(self.request(document), timeout=5)
         self.assertEqual(caught.exception.code, 400)
@@ -81,13 +105,16 @@ class ServerTests(unittest.TestCase):
 
     def test_slice_schema_two_is_saved_without_replacing_base_resize(self):
         document = {"schema": 2, "name": "Sliced", "effect": {"family": "slices", "slice_count": 9}}
-        with patch("niri_fragments.studio.read_shell_presets", return_value=shell_registry()):
+        with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
             with urlopen(self.request(document), timeout=5) as response:
                 saved = json.load(response)
         self.assertEqual(saved["id"], "niri-fragments-custom-sliced")
         registered = json.loads(self.registry.read_text())["presets"][0]
         self.assertIn("slices_color", registered["types"]["window-close"]["custom-shader"])
-        self.assertEqual(registered["types"]["window-resize"], shell_registry()["presets"][0]["types"]["window-resize"])
+        self.assertEqual(
+            registered["types"]["window-resize"],
+            shell_registry()["presets"][0]["types"]["window-resize"],
+        )
 
 
 if __name__ == "__main__":
