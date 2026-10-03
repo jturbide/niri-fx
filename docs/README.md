@@ -27,6 +27,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | I want to… | Guide |
 | --- | --- |
 | Choose a first look | [Nine starter presets](https://jturbide.github.io/niri-fx/gallery/?collection=starter), [open/close pairings](https://jturbide.github.io/niri-fx/gallery/?collection=profiles) |
+| Find exact preset IDs, timings and settings JSON | [Preset reference](presets.md) |
 | Find a look or compare settings | [Click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/), [scenario guide](showcases.md), [full catalog](catalog.md) |
 | Try effects without installation or share settings | [Web Studio](web-studio.md) |
 | Learn Studio's controls | [Studio and controls](usage.md) |
@@ -40,8 +41,9 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | See planned improvements | [Roadmap](../ROADMAP.md), [integration plans](roadmap.md) |
 
 Opening and closing use stock Niri shaders. Resize is opt-in for Fragments, Elastic, Slices and Distortion. Native
-movement requires the experimental compositor patch; Studio's Move/Swap tabs
-show concepts and do not install movement effects.
+movement requires the experimental compositor patch. Studio previews the actual
+movement shader on a synthetic path; its older Move/Swap sketches are labelled
+concepts. Previewing does not activate effects.
 
 ## Contribute and learn more
 

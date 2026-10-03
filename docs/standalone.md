@@ -45,7 +45,7 @@ python3 -m niri_fx setup --target standalone --custom /path/to/my-style.json --a
 ```
 
 This also accepts [independent action profiles](profiles.md). Resize is left at
-your existing behavior unless the JSON explicitly opts into fragment resize.
+your existing behavior unless the JSON explicitly opts into a resize effect.
 
 ## Nonstandard or generated configs
 

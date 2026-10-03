@@ -1,11 +1,13 @@
 # Full effect catalog
 
 Prefer a lighter page? Use the [searchable, click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/).
-This reference keeps every preset and control comparison together.
+This reference keeps every preset and control comparison together. The
+[preset reference](presets.md) lists exact IDs, timings, family capabilities and
+JSON downloads for every built-in style and pairing.
 
 ## See it in motion
 
-[Fragments](#twenty-seven-fragment-styles) · [Slices](#twelve-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
+[Fragments](#fragment-styles) · [Slices](#slice-styles) · [Wobble](#elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
@@ -21,7 +23,7 @@ These clips use Studio's real shader renderer with synthetic content at 20 fps.
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](gifs/opening.gif) | ![Closing explodes a window into fragments](gifs/closing.gif) |
 
-### Twenty-seven fragment styles
+### Fragment styles
 
 Every loop closes and opens at that preset's configured timing. Start with
 **Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
@@ -112,6 +114,12 @@ The [shape guide](fragment-shapes.md) covers every choice, CLI flag and comparis
 
 ![Compare silhouette emergence timing](gifs/compare-fragment-emergence.gif)
 
+**Fragment Wake.** Triangular pieces form a directional wake. Stock opening and
+closing use the same shaped renderer; native movement is a separate experimental
+action.
+
+![Fragment Wake stock opening and closing](gifs/preset-fragment-wake.gif)
+
 ### One control at a time
 
 These synchronized comparisons use the **same texture, seed, timing and other
@@ -175,7 +183,7 @@ pulls the same lattice inward. Radius, spread, rotation and stagger are adjustab
 | ![Hexagonal tiles burst outward](gifs/preset-hexagon-burst.gif) | ![Hexagonal tiles collapse inward](gifs/preset-hive-collapse.gif) |
 | [Settings](../examples/hexagon-burst.json) | [Settings](../examples/hive-collapse.json) |
 
-### Twelve slice styles
+### Slice styles
 
 Whole strips slide, rotate and reassemble. **Slide Apart alternates adjacent
 horizontal strips**; **Split Curtain** separates the window into outward-moving halves.
@@ -226,7 +234,12 @@ own direction; there is no forced 50/50 distribution.
 
 ![Comparison of four, twelve and thirty-two slices](gifs/compare-slice-count.gif)
 
-### Seven elastic styles
+**Ribbon Transfer.** Alternating strips reveal and clear the window. Its
+directional movement controls apply only in the experimental compositor.
+
+![Ribbon Transfer stock opening and closing](gifs/preset-ribbon-transfer.gif)
+
+### Elastic styles
 
 A Compiz-inspired spring feel: bend the whole window, let it oscillate, then
 settle. Tune strength, frequency, damping and axis. These are timed open/close
@@ -261,6 +274,11 @@ added control in each comparison panel.
 
 [Controls and CLI examples](effect-controls.md) explain how to tune these
 styles. Resize remains off in all built-ins.
+
+**Momentum Glide.** A restrained elastic arrival and exit. Experimental movement
+adds directional emphasis; this preview shows stock opening and closing.
+
+![Momentum Glide stock opening and closing](gifs/preset-momentum-glide.gif)
 
 ### Dissolve and iris reveals
 
@@ -419,10 +437,16 @@ search, favorites and a pinned A/B comparison. [Profile guide](profiles.md).
 
 ![One profile opens with spring motion and closes with ember erosion](gifs/profile-spring-and-ember.gif)
 
-Ten built-in pairings can be selected by name with `--profile`, through the
+Built-in pairings can be selected by name with `--profile`, through the
 terminal guide's `profiles` menu, or in Studio and the existing pickers. These loops
 close, then open, using each action's own timing. **Resize stays off.**
 See the [complete pairing table](profiles.md#choose-a-finished-pairing).
+
+| Fragment Flow | Geometric Flow | Ribbon Current |
+| --- | --- | --- |
+| ![Balanced fragments arrive and implode on close](gifs/profile-fragment-flow.gif) | ![Triangles assemble and hexagons drift away](gifs/profile-geometric-flow.gif) | ![Waving ribbons arrive and alternating strips leave](gifs/profile-ribbon-current.gif) |
+| **Soft Landing** | **Pixel Shuffle** | **Ribbon Exit** |
+| ![A gentle elastic arrival and a frosted exit](gifs/profile-soft-landing.gif) | ![Pixels reveal and coarsen away](gifs/profile-pixel-shuffle.gif) | ![Alternating strips arrive and fold away](gifs/profile-ribbon-exit.gif) |
 
 | Burst and Drift | Frost and Fragments | Ghost and Shockwave |
 | --- | --- | --- |

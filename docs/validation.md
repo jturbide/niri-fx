@@ -4,6 +4,16 @@ Evidence updated on **2026-10-03** for 0.14.0. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
+## Public catalog checks
+
+The development branch also checks catalog completeness. The generated
+[preset reference](presets.md) covers every named preset and pairing with its
+actual action timings and portable settings. Missing or duplicate recording IDs,
+mismatched effect parameters, stale reference tables, missing visual-catalog
+previews and outdated README counts fail validation. Three regressions exercise
+completeness, independent pairing timing and rejected recording/settings errors.
+These checks complement the 0.14.0 release evidence below.
+
 ## Stock effects and editor
 
 | Check | Observed result |

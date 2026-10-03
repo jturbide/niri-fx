@@ -53,7 +53,7 @@ export parity; it is not a compositor GPU benchmark. See
 | --- | --- |
 | `niri_fx/` | Canonical implementation, module entry point and packaged assets |
 | `niri_fx/model.py`, `parameters.py`, `presets.py` | Shared parameter catalog, validation and built-in styles |
-| `niri_fx/catalog.py` | Shared starter selection, curated open/close pairings, normalized picker documents and shared family labels |
+| `niri_fx/catalog.py` | Shared starter selection, curated collections and open/close pairings, normalized picker documents and shared family labels |
 | `niri_fx/documents.py`, `profiles.py` | Shell-independent document validation, serialization and action choices |
 | `niri_fx/effects.py`, `shaders/` | Shader assembly and stock/experimental export boundaries |
 | `niri_fx/setup.py`, `pack.py`, `storage.py` | Setup plans, preset folders, shared atomic writes, snapshots and conflict-aware restore |
@@ -129,6 +129,17 @@ including menus and status messages; text inside images is not covered by a
 source secret scan. Keep local investigations under ignored `artifacts/`.
 
 After changing recordings or gallery metadata, run `python3 scripts/build-gallery.py` (Pillow required), then `python3 scripts/build-gallery.py --check`. GitHub Pages publishes the checked static gallery after changes reach main. Posters load first; playback is explicit and limited to one GIF.
+
+The [preset reference](docs/presets.md) is generated from the same canonical
+catalog and recording documents as the gallery. Do not edit its tables by hand.
+Run `python3 scripts/build-gallery.py` after catalog or recording changes; check
+mode rejects missing or duplicate recordings, mismatched parameters and a stale
+reference. Keep every preset and pairing visible in the [visual catalog](docs/catalog.md).
+
+A finished preset should have a clear visual purpose, a recognizable name and a
+faithful preview at its actual configured timing. Prefer useful variations over
+near-identical entries. Document the effect's supported actions and a simple way
+to try it. Add focused parameter comparisons when they explain a meaningful choice.
 
 Before submitting, inspect `git diff --cached`, check new files for private data
 and run the documentation check. A clean scanner result complements manual review;

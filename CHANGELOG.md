@@ -10,6 +10,20 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- A generated preset reference with all built-in IDs, action timings, family
+  capabilities, shader previews and portable settings downloads. Gallery checks
+  reject missing or duplicate recordings and mismatched catalog settings.
+
+### Fixed
+
+- Complete the visual catalog with three missing preset previews and six missing
+  pairing previews. Use stable family headings instead of outdated counts.
+- Describe actual movement shader preview and explicit resize choices consistently
+  across the documentation and standalone setup guides.
+
+
 ## 0.14.0 — 2026-10-03
 
 ### Added
