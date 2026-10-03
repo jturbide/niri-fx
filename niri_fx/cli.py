@@ -138,12 +138,17 @@ def parser():
     )
     from .setup import default_config, default_state
 
-    picker = commands.add_parser("picker", help="Open the optional Quickshell style/profile picker")
+    picker = commands.add_parser("picker", help="Open an optional desktop style/profile picker")
+    picker.add_argument("--toolkit", choices=("quickshell", "gtk"), default="quickshell")
     picker.add_argument("--config", type=Path, default=default_config())
-    picker.add_argument("--state", type=Path, default=default_state().parent / "quickshell")
+    picker.add_argument("--state", type=Path, help="Undo snapshots (default: separate per toolkit)")
     picker.add_argument("--custom", type=Path, help="Start with an exported style or profile")
-    picker.add_argument(
+    location = picker.add_mutually_exclusive_group()
+    location.add_argument(
         "--qml-dir", action="store_true", help="Print the reusable QML component directory"
+    )
+    location.add_argument(
+        "--gtk-dir", action="store_true", help="Print the reusable GTK module directory"
     )
     studio.add_argument(
         "--state", type=Path, default=default_state().parent, help="Studio preferences directory"
@@ -208,10 +213,12 @@ def main(argv=None):
             name, _, effect = parse_document(load_document(arguments.custom))
             print(json.dumps(effect_document(name, effect), indent=2))
         elif arguments.command == "picker":
-            from .picker import launch_picker, qml_directory
+            from .picker import gtk_directory, launch_picker, qml_directory
 
             if arguments.qml_dir:
                 print(qml_directory())
+            elif arguments.gtk_dir:
+                print(gtk_directory())
             else:
                 launch_picker(arguments)
         elif arguments.command == "profile":

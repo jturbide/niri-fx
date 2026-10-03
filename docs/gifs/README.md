@@ -204,6 +204,17 @@ The first command uses offscreen Qt and temporary configs. The second records
 keyboard search, Review, Apply and Undo in a nested compositor, then checks failure
 paths. It never captures the parent output or edits installed settings.
 
+The GTK alternative uses GJS, GTK 4.10+, Niri and wtype:
+
+```sh
+python3 scripts/test-gtk-picker.py --record
+python3 scripts/test-gtk-picker.py --ags /path/to/ags
+```
+
+The first command records the same keyboard workflow and checks close-during-Apply
+in a private nested session. The optional AGS 3 run tests the supplied entry point
+separately; it is not a recording of an entire Astal desktop. See the [GTK guide](../gtk.md).
+
 To record other shell pickers, supply your **actual release source/binary paths**. The examples
 below use placeholder paths; `--version` labels the tested release, while metadata
 also fingerprints the source components or binary. Sources are read/symlinked into

@@ -47,6 +47,7 @@ class PickerTests(unittest.TestCase):
 
     def test_launcher_uses_arrays_and_packaged_resources(self):
         args = Namespace(
+            toolkit="quickshell",
             config=Path("/tmp/config with spaces.kdl"),
             state=Path("/tmp/state"),
             custom=Path("/tmp/style ; literal.json"),
@@ -70,13 +71,34 @@ class PickerTests(unittest.TestCase):
     def test_missing_quickshell_has_an_actionable_error(self):
         with patch.object(picker.shutil, "which", return_value=None):
             with self.assertRaisesRegex(ValueError, "requires Quickshell"):
-                picker.launch_picker(Namespace())
+                picker.launch_picker(Namespace(toolkit="quickshell"))
+
+    def test_gtk_launcher_uses_separate_default_history_and_resources(self):
+        args = Namespace(toolkit="gtk", config=Path("/tmp/config.kdl"), custom=None, state=None)
+        with (
+            patch.object(picker.shutil, "which", return_value="/usr/bin/gjs"),
+            patch.object(picker.subprocess, "run") as run,
+        ):
+            picker.launch_picker(args)
+        self.assertEqual(
+            run.call_args.args[0], ["/usr/bin/gjs", "-m", str(picker.gtk_directory() / "app.mjs")]
+        )
+        self.assertTrue(run.call_args.kwargs["env"]["NIRIFX_STATE"].endswith("/niri-fx/gtk"))
+        self.assertEqual(run.call_args.kwargs["env"]["NIRIFX_CUSTOM"], "")
+        for name in ("app.mjs", "picker.mjs", "controller.mjs", "transport.mjs", "picker.css"):
+            self.assertTrue((picker.gtk_directory() / name).is_file())
 
     def test_component_location_does_not_require_quickshell(self):
         output = subprocess.check_output(
             [sys.executable, "-m", "niri_fx", "picker", "--qml-dir"], text=True
         )
         self.assertEqual(Path(output.strip()), picker.qml_directory())
+
+    def test_component_location_does_not_require_gjs(self):
+        output = subprocess.check_output(
+            [sys.executable, "-m", "niri_fx", "picker", "--gtk-dir"], text=True
+        )
+        self.assertEqual(Path(output.strip()), picker.gtk_directory())
 
 
 if __name__ == "__main__":

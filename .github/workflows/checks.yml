@@ -99,7 +99,9 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
           /tmp/niri-fx-package/bin/python -m niri_fx --version
           /tmp/niri-fx-package/bin/niri-fx picker --qml-dir
+          /tmp/niri-fx-package/bin/niri-fx picker --gtk-dir
           /tmp/niri-fx-package/bin/python -c "from niri_fx.picker import qml_directory; assert all((qml_directory() / name).is_file() for name in ('shell.qml', 'NiriFXController.qml', 'NiriFXPicker.qml'))"
+          /tmp/niri-fx-package/bin/python -c "from niri_fx.picker import gtk_directory; assert all((gtk_directory() / name).is_file() for name in ('app.mjs', 'picker.mjs', 'controller.mjs', 'transport.mjs', 'picker.css'))"
           /tmp/niri-fx-package/bin/python -c "from importlib import metadata, resources, util; assert util.find_spec('niri_fragments') is None; assert [e.name for e in metadata.distribution('niri-fx').entry_points] == ['niri-fx']; assert b'<svg' in resources.files('niri_fx').joinpath('assets/niri-fx.svg').read_bytes()"
           /tmp/niri-fx-package/bin/niri-fx render --preset spring-wobble > elastic.kdl
           /tmp/niri-fx-package/bin/niri-fx render --preset crosswind > varied.kdl

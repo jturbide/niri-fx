@@ -12,6 +12,13 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
+- Optional GTK 4/GJS picker (`niri-fx picker --toolkit gtk`) with reusable widgets
+  and an AGS 3 example. Includes search, JSON profiles, Studio dispatch, reviewed
+  Apply, explicit resize consent and separate Undo history; closing the window
+  waits for active CLI operations. Neither Quickshell nor AGS is required for the
+  standalone GTK window.
+- GTK/AGS setup and embedding guide, keyboard workflow GIF, portable controller
+  tests and isolated runtime checks for conflicts, restoration and close-during-Apply.
 - Optional Quickshell picker with style/family search, JSON profile loading,
   Studio launch, reviewed Apply and dedicated Undo history. Reusable controller
   and view components ship in the Python package; `niri-fx picker` opens them.

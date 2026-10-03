@@ -25,7 +25,8 @@ if you want to run it from elsewhere.
 | Niri + DankMaterialShell | `python3 -m niri_fx studio --target standalone` | Use a managed include or the optional `fx` launcher. [DMS guide](dms.md). |
 | Niri + Noctalia Niri Animations | `python3 -m niri_fx export-pack --output ~/.config/niri/nirifx-presets` | Review/export the pack and connect the existing picker. [Noctalia guide](noctalia.md). |
 | Niri + Quickshell | `python3 -m niri_fx picker` | Browse styles, load profiles, review/apply and Undo. [Quickshell picker](quickshell.md). |
-| Niri + AGS/Astal or Waybar | `python3 -m niri_fx setup --target standalone --preset balanced` | The same Niri include works independently of the UI. [Custom shell/bar guide](custom-shells.md). |
+| Niri + GTK 4 / AGS 3 | `python3 -m niri_fx picker --toolkit gtk` | Standalone GTK picker and a reusable widget. [AGS example and guide](gtk.md). |
+| Niri + Waybar or another UI | `python3 -m niri_fx setup --target standalone --preset balanced` | The same Niri include works independently of the UI. [Custom shell/bar guide](custom-shells.md). |
 | A config managed by Nix/Home Manager or another generator | `python3 -m niri_fx render --preset balanced` | Put the output into that manager's source and include it after base animations; avoid editing generated files with `setup`. |
 | Different effects on opening and closing | `python3 -m niri_fx studio --target standalone` | Enable Independent action effects. [Profiles guide](profiles.md). |
 | Native movement/swap experiment | `python3 scripts/nested-demo.py` | Requires the separately built patched compositor. [Experimental guide](../experimental/README.md). |
