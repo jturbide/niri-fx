@@ -38,3 +38,23 @@ To make a new combination, use Studio's **Independent action effects** or
 `python3 -m niri_fx profile --help`. See the [profile guide](../../docs/profiles.md)
 for editing, saving and explicit resize opt-in; follow [setup and restore](../../docs/setup.md)
 when ready to apply a profile.
+
+## Optional resize profiles
+
+These four profiles keep Balanced opening and closing and explicitly enable a
+separate resize effect. They require current `main` after 0.10.0. See the
+[resize guide](../../docs/resize.md) for controls and limitations.
+
+| Profile | Showcase |
+| --- | --- |
+| [Edge Ripple Subtle](edge-ripple-subtle.json) | [GIF](../../docs/gifs/edge-ripple-subtle.gif) |
+| [Edge Ripple Expressive](edge-ripple-expressive.json) | [GIF](../../docs/gifs/edge-ripple-expressive.gif) |
+| [Torsion Subtle](torsion-subtle.json) | [GIF](../../docs/gifs/torsion-subtle.gif) |
+| [Torsion Expressive](torsion-expressive.json) | [GIF](../../docs/gifs/torsion-expressive.gif) |
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/edge-ripple-subtle.json --output /tmp/edge-ripple-subtle.html
+python3 -m niri_fx preview --custom examples/profiles/edge-ripple-expressive.json --output /tmp/edge-ripple-expressive.html
+python3 -m niri_fx preview --custom examples/profiles/torsion-subtle.json --output /tmp/torsion-subtle.html
+python3 -m niri_fx preview --custom examples/profiles/torsion-expressive.json --output /tmp/torsion-expressive.html
+```

@@ -233,10 +233,21 @@ function labels() {
     byId(id).disabled = parameters.pixel_mode !== "dust";
   byId("pixel_direction").disabled = parameters.pixel_mode === "pixelate";
   const resizeDistortion = mode === "resize" || (actions && editingAction === "resize");
+  const torsion = resizeDistortion && parameters.distortion_resize_mode === "torsion";
+  byId("distortion_resize_mode").disabled = !resizeDistortion;
+  byId("resize_twist").disabled = !torsion;
+  byId("distortion_falloff").disabled = !!torsion;
+  for (const id of ["distortion_x", "distortion_y"])
+    byId(id).disabled = resizeDistortion && parameters.distortion_resize_mode !== "ripple";
+  byId("resize-direction-label").hidden = mode !== "resize";
+  byId("open").textContent =
+    mode === "resize" ? "Shrink" : mode === "effect" ? "Reconstruct" : "Reverse";
+  byId("close").textContent =
+    mode === "resize" ? "Grow" : mode === "effect" ? "Deconstruct" : "Play";
   const vortex = parameters.distortion_mode === "vortex" && !resizeDistortion;
   for (const id of ["distortion_twist", "distortion_contract"]) byId(id).disabled = !vortex;
   for (const id of ["distortion_strength", "distortion_wavelength", "distortion_cycles"])
-    byId(id).disabled = vortex;
+    byId(id).disabled = vortex || !!torsion;
   byId("distortion_mode").disabled = !!resizeDistortion;
   for (const id of ["glitch_bands", "glitch_chroma"])
     byId(id).disabled = resizeDistortion || parameters.distortion_mode !== "glitch";
@@ -291,6 +302,7 @@ byId("share").onclick = async () => {
       progress: String(progress),
       action: editingAction,
       mode,
+      ...(mode === "resize" ? { direction: byId("resize-direction").value } : {}),
     });
     byId("share-url").value = url.href;
     byId("share-result").hidden = false;
@@ -463,12 +475,12 @@ try {
       source = shaderFor(comparing ? pinned.parameters : parameters, false, resizing);
     if (source === lastSource) return;
     const uniforms = resizing
-      ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;"
+      ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;uniform mat3 niri_curr_geo_to_prev_geo;uniform vec2 fx_resize_from;uniform vec2 fx_resize_to;"
       : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;";
     const geometry = resizing
-      ? "mix(vec2(600.0,380.0),vec2(800.0,440.0),niri_clamped_progress)"
+      ? "mix(fx_resize_from,fx_resize_to,niri_clamped_progress)"
       : "fx_window";
-    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(vec2(1000.0,760.0)-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
+    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
     const vs = compile(gl.VERTEX_SHADER, vertex),
       fs = compile(gl.FRAGMENT_SHADER, fragment),
       next = gl.createProgram();
@@ -507,21 +519,38 @@ try {
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_surface"), canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_window"), ...(benchmarkWindow || [600, 380]));
-      gl.uniformMatrix3fv(
-        gl.getUniformLocation(program, "niri_curr_geo_to_next_geo"),
-        false,
-        new Float32Array([
-          (600 + 200 * value) / 800,
-          0,
-          0,
-          0,
-          (380 + 60 * value) / 440,
-          0,
-          0,
-          0,
-          1,
-        ]),
-      );
+      // A shrink is a new forward transition, with both geometry and textures
+      // exchanged. Reversing growth frames gives the wrong direction to shaders.
+      const shrinking = mode === "resize" && byId("resize-direction").value === "shrink";
+      const small = benchmarkWindow || [600, 380];
+      const large = benchmarkWindow
+        ? [Math.round(canvas.width * 0.8), Math.round(canvas.height * 0.7)]
+        : [800, 440];
+      const from = shrinking ? large : small;
+      const to = shrinking ? small : large;
+      gl.uniform2f(gl.getUniformLocation(program, "fx_resize_from"), ...from);
+      gl.uniform2f(gl.getUniformLocation(program, "fx_resize_to"), ...to);
+      gl.uniform1i(gl.getUniformLocation(program, "niri_tex_prev"), shrinking ? 1 : 0);
+      gl.uniform1i(gl.getUniformLocation(program, "niri_tex_next"), shrinking ? 0 : 1);
+      for (const [suffix, size] of [
+        ["prev", from],
+        ["next", to],
+      ])
+        gl.uniformMatrix3fv(
+          gl.getUniformLocation(program, "niri_curr_geo_to_" + suffix + "_geo"),
+          false,
+          new Float32Array([
+            (from[0] + (to[0] - from[0]) * value) / size[0],
+            0,
+            0,
+            0,
+            (from[1] + (to[1] - from[1]) * value) / size[1],
+            0,
+            0,
+            0,
+            1,
+          ]),
+        );
       gl.uniform1f(gl.getUniformLocation(program, "niri_clamped_progress"), value);
       gl.uniform1f(
         gl.getUniformLocation(program, "niri_random_seed"),
@@ -543,7 +572,7 @@ try {
       const count = Math.ceil(600 / tile) * Math.ceil(380 / tile);
       const caption =
         mode === "resize"
-          ? `Resize · ${parameters.resize_ms} ms · ${parameters.resize ? "Included when you save" : "Preview only — resize is disabled for this style"}`
+          ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
           : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
       byId("caption").textContent = (comparing ? "Pinned A · " : pinned ? "B · " : "") + caption;
       document.documentElement.dataset.shaderStatus = "ready";
@@ -577,6 +606,8 @@ try {
     const timer = gl.getExtension("EXT_disjoint_timer_query");
     const report = {
       kind: "webgl-shader-gpu",
+      action: mode === "resize" ? "resize" : "close",
+      ...(mode === "resize" ? { direction: byId("resize-direction").value } : {}),
       renderer,
       vendor,
       width,
@@ -594,8 +625,8 @@ try {
         status: "unsupported",
         reason: !timer ? "GPU timer queries unavailable" : "Hardware renderer not verified",
       };
-    if (mode !== "effect" || comparing)
-      throw new Error("Use the current open/close preview, with A/B comparison off");
+    if (!["effect", "resize"].includes(mode) || comparing)
+      throw new Error("Use open/close or resize preview, with A/B comparison off");
     cancelAnimationFrame(frame);
     const original = { width: canvas.width, height: canvas.height, progress };
     const measurements = [];
@@ -636,6 +667,9 @@ try {
         ...report,
         status: "measured",
         window: benchmarkWindow,
+        ...(mode === "resize"
+          ? { resizeLarge: [Math.round(width * 0.8), Math.round(height * 0.7)] }
+          : {}),
         warmup: 12,
         milliseconds: measurements,
         p50: percentile(0.5),
@@ -692,8 +726,9 @@ try {
       populate();
       refresh();
     }
+    if (mode === "resize") byId("resize-direction").value = opening ? "shrink" : "grow";
     if (byId("reduced-motion").checked) {
-      draw(opening ? 0 : 1);
+      draw(mode === "resize" ? 1 : opening ? 0 : 1);
       return;
     }
     const start = performance.now(),
@@ -707,7 +742,7 @@ try {
             : Math.max(900, parameters.open_ms + parameters.close_ms);
     function tick(now) {
       const p = Math.min(1, (now - start) / duration);
-      draw(opening ? 1 - p : p);
+      draw(mode === "resize" ? p : opening ? 1 - p : p);
       if (p < 1) frame = requestAnimationFrame(tick);
     }
     frame = requestAnimationFrame(tick);
@@ -722,6 +757,10 @@ try {
     cancelAnimationFrame(frame);
   });
   byId("reduced-motion").onchange = () => cancelAnimationFrame(frame);
+  byId("resize-direction").onchange = () => {
+    cancelAnimationFrame(frame);
+    draw(progress);
+  };
   byId("pause").onclick = () => cancelAnimationFrame(frame);
   byId("open").onclick = () => animate(true);
   byId("close").onclick = () => animate(false);
@@ -904,6 +943,7 @@ try {
         }
       }
       populate();
+      byId("resize-direction").value = shared.get("direction") === "shrink" ? "shrink" : "grow";
       const requested = shared.get("mode"),
         button = [...document.querySelectorAll("[data-mode]")].find(
           (item) => item.dataset.mode === requested,

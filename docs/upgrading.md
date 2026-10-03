@@ -13,8 +13,10 @@ before importing a vortex document. Existing preset values and appearance are
 unchanged. Re-register or re-export a shell pack to add the new styles.
 
 The experimental compositor patch is unchanged from 0.10. Regenerate its movement
-shader to try Vortex Fold. Resize continues to use Ripple Resize and remains off
-in all built-ins.
+shader to try Vortex Fold. Resize remains off in all built-ins. Its default distortion mode remains Ripple.
+Edge Ripple, Torsion Resize and their four opt-in profiles also require current
+`main`. Update the CLI before importing them. Missing `distortion_resize_mode`
+and `resize_twist` fields receive defaults; existing resize choices are preserved.
 
 ## From 0.9 to 0.10
 

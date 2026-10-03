@@ -47,6 +47,13 @@
         ><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button
         ><button id="pin">Pin A</button
         ><button id="compare" disabled aria-pressed="false">Show A</button>
+        <label id="resize-direction-label" hidden
+          >Direction
+          <select id="resize-direction">
+            <option value="grow">Grow</option>
+            <option value="shrink">Shrink</option>
+          </select>
+        </label>
         <label
           ><span id="timeline-label">Breakup</span>
           <input id="progress" type="range" min="0" max="1000" value="450" /><output id="amount"

@@ -44,7 +44,7 @@ def main():
         "--presets", help="Check a comma-separated preset selection without recording"
     )
     parser.add_argument(
-        "--resize-profiles", action="store_true", help="Also check the three resize examples"
+        "--resize-profiles", action="store_true", help="Also check all seven resize profiles"
     )
     args = parser.parse_args()
     cases = (
@@ -60,6 +60,7 @@ def main():
             parser.error("--presets requires known presets and cannot be combined with --record")
         cases = tuple((f"stock-{name}", name, 600, 400, 1.0) for name in names)
     results = []
+    resize_results = []
     with NestedSession(BASE + render_kdl(PRESETS["balanced"])) as session:
         for name, preset, width, height, scale in cases:
             effect = replace(PRESETS[preset], open_ms=1400, close_ms=1400)
@@ -128,7 +129,15 @@ def main():
             results.append(result)
             print(f"PASS {name}: {counts}", flush=True)
         if args.resize_profiles:
-            for name in ("elastic-resize", "accordion-resize", "ripple-resize"):
+            for name in (
+                "elastic-resize",
+                "accordion-resize",
+                "ripple-resize",
+                "edge-ripple-subtle",
+                "edge-ripple-expressive",
+                "torsion-subtle",
+                "torsion-expressive",
+            ):
                 profile = parse_document(load_document(ROOT / f"examples/profiles/{name}.json"))[2]
                 session.reload(BASE + render_kdl(profile))
                 empty = session.capture(name + "-empty")
@@ -160,12 +169,22 @@ def main():
                     and changed_pixels(session.capture(name + "-gone"), empty) == 0
                 )
                 stop(client)
+                resize_results.append(
+                    {
+                        "profile": name,
+                        "widths": widths,
+                        "intermediate_frames": True,
+                        "empty_endpoint": True,
+                    }
+                )
                 print(
                     f"PASS {name}: grow/shrink to {widths}, intermediate frames, empty close",
                     flush=True,
                 )
         session.check_render_log()
-        (session.root / "checks.json").write_text(json.dumps(results, indent=2) + "\n")
+        (session.root / "checks.json").write_text(
+            json.dumps(results + resize_results, indent=2) + "\n"
+        )
         print(f"Evidence: {session.root}", flush=True)
     if args.record:
         save_clips(results)

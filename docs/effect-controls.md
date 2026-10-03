@@ -251,8 +251,9 @@ All modes return the exact intact texture and transparent image at the endpoints
 Only Glitch uses a random seed. Vortex preserves source alpha and uses one texture
 sample with no particle search; see [measured costs](performance.md#vortex-distortion).
 
-Distortion also supports experimental movement and a separate opt-in Ripple
-Resize. Twist and contraction do not alter resize. Studio disables controls that
+Distortion also supports experimental movement and separate opt-in Ripple, Edge
+Ripple and Torsion Resize modes. Vortex twist and contraction do not alter resize;
+Torsion has its own `--resize-twist` control. See the [resize guide](resize.md). Studio disables controls that
 do not affect the selected action. Use an independent [profile](profiles.md) to
 combine families. [GPU benchmark scope](performance.md).
 
@@ -275,7 +276,7 @@ Distortion's `--distortion-mode glitch` produces seeded horizontal signal bands.
 `--glitch-bands` accepts 4–96 and `--glitch-chroma` controls color separation
 from 0 (monochrome) to 1. Displacement and travel cycles adjust shift distance
 and signal changes. Its stepped cadence is intentional; the seed remains fixed
-within an animation. The Distortion resize renderer always uses smooth ripples.
+within an animation. Resize uses the independently selected `--distortion-resize-mode`.
 
 ## Native movement and resize
 

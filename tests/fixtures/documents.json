@@ -324,5 +324,61 @@
       }
     },
     "valid": false
+  },
+  {
+    "name": "resize edge ripple",
+    "document": {
+      "schema": 3,
+      "name": "resize edge ripple",
+      "effect": {
+        "distortion_resize_mode": "edge-ripple"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "resize signed torsion",
+    "document": {
+      "schema": 3,
+      "name": "resize signed torsion",
+      "effect": {
+        "distortion_resize_mode": "torsion",
+        "resize_twist": -45
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "resize unknown mode",
+    "document": {
+      "schema": 3,
+      "name": "resize unknown mode",
+      "effect": {
+        "distortion_resize_mode": "wave"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "resize excessive twist",
+    "document": {
+      "schema": 3,
+      "name": "resize excessive twist",
+      "effect": {
+        "resize_twist": 46
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "resize boolean twist",
+    "document": {
+      "schema": 3,
+      "name": "resize boolean twist",
+      "effect": {
+        "resize_twist": true
+      }
+    },
+    "valid": false
   }
 ]

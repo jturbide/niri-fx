@@ -1368,6 +1368,86 @@
           }
         }
       ]
+    },
+    {
+      "name": "edge-ripple-subtle",
+      "title": "Edge Ripple Subtle",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Edge Ripple Subtle",
+          "source": "examples/profiles/edge-ripple-subtle.json"
+        }
+      ]
+    },
+    {
+      "name": "edge-ripple-expressive",
+      "title": "Edge Ripple Expressive",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Edge Ripple Expressive",
+          "source": "examples/profiles/edge-ripple-expressive.json"
+        }
+      ]
+    },
+    {
+      "name": "torsion-subtle",
+      "title": "Torsion Subtle",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Torsion Subtle",
+          "source": "examples/profiles/torsion-subtle.json"
+        }
+      ]
+    },
+    {
+      "name": "torsion-expressive",
+      "title": "Torsion Expressive",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Torsion Expressive",
+          "source": "examples/profiles/torsion-expressive.json"
+        }
+      ]
+    },
+    {
+      "name": "compare-edge-ripple-resize",
+      "title": "Edge Ripple resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Subtle",
+          "source": "examples/profiles/edge-ripple-subtle.json"
+        },
+        {
+          "label": "Expressive",
+          "source": "examples/profiles/edge-ripple-expressive.json"
+        }
+      ]
+    },
+    {
+      "name": "compare-torsion-resize",
+      "title": "Torsion resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Subtle",
+          "source": "examples/profiles/torsion-subtle.json"
+        },
+        {
+          "label": "Expressive",
+          "source": "examples/profiles/torsion-expressive.json"
+        }
+      ]
     }
   ]
 }

@@ -22,6 +22,9 @@ on distinct looks and useful timing, with resize kept explicitly opt-in.
 warps with a pronounced spiral and a gentler everyday variation. Their showcases
 include stock-style previews and a native swap, with [measured shader costs](docs/performance.md#vortex-distortion).
 
+[Edge Ripple and Torsion Resize](docs/resize.md) add Subtle and Expressive options
+for animated size changes. These separate profiles explicitly opt into resize.
+
 - **More hardware results.** Compare large windows and simultaneous animations on
   integrated GPUs and several refresh rates. Publish repeatable measurements with
   their hardware and renderer details.

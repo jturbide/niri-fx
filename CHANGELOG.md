@@ -10,12 +10,21 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+- Edge Ripple and Torsion Resize modes, each with separate Subtle and Expressive
+  opt-in profiles, dedicated recordings and side-by-side comparisons. All built-in
+  styles and open/close pairings still leave resize disabled.
+- Studio Grow/Shrink previews now exchange geometry and textures and run time
+  forward in both directions. All resize showcase clips use this corrected flow.
+- Signed resize twist and independent resize-pattern controls, plus browser checks
+  for growth, shrinkage, endpoints, extreme aspect ratios and zero strength.
+- Resize profile coverage in the nested compositor interruption harness.
+
 ### Added
 
 - Vortex distortion with signed twist, contraction, falloff and origin controls.
   Vortex Fold makes a pronounced spiral collapse; Soft Swirl is a shorter, gentler
   counterclockwise warp. Both support stock open/close and experimental movement.
-  Resize remains opt-in and uses the separate ripple renderer.
+  Resize remains opt-in and uses a separate renderer.
 - Preset loops, a twist-direction comparison and a native vortex swap showcase,
   with importable settings and measured shader costs.
 

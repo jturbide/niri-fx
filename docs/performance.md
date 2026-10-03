@@ -255,3 +255,36 @@ nested backend can deliver captures faster than its advertised 60 Hz output.
 Host compositor, screencopy and encoder scheduling all contribute. Do not convert
 these numbers into physical FPS, input latency or dropped-frame estimates.
 Presentation feedback on a real output is still needed for those claims.
+
+
+## Resize distortion
+
+Measured on 2026-10-03 with an RTX 4070 Ti through Chromium ANGLE/OpenGL,
+120 samples after 12 warmup batches. These are p95 GPU shader milliseconds,
+not compositor frame times. The synthetic client grows from 60% of output width
+and 50% of height to 80% and 70%, using separate old/new textures. Each sample
+covers intermediate animation phases; multi-draw batches include a clear per pass.
+
+| Profile | 1080p, one draw | 4K, one draw | 4K, four draws |
+| --- | ---: | ---: | ---: |
+| Ripple Resize | 0.101 | 0.373 | 0.578 |
+| Edge Ripple Subtle | 0.098 | 0.358 | 0.520 |
+| Edge Ripple Expressive | 0.099 | 0.359 | 0.520 |
+| Torsion Subtle | 0.098 | 0.357 | 0.512 |
+| Torsion Expressive | 0.097 | 0.358 | 0.511 |
+
+[Raw samples, parameters and renderer](benchmarks/resize-motion.json) include both
+output sizes and draw counts. Edge Ripple and Torsion use two texture samples
+without a particle search. Similar Subtle/Expressive costs are expected: strength
+changes the displacement, not the number of samples. These single-run observations
+do not predict integrated-GPU cost, shrinking, mixed effects or Niri presentation.
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-resize-gpu.json \
+  --resize-profiles=ripple-resize,edge-ripple-subtle,edge-ripple-expressive,torsion-subtle,torsion-expressive \
+  --sizes=1920x1080,3840x2160 --samples=120 --draws=1,4
+```
+
+`--resize-profiles` accepts enabled resize profile names from `examples/profiles`
+and cannot be combined with `--presets`. Resize reports identify the action,
+preview direction and both window sizes. Hardware timers are still required.
