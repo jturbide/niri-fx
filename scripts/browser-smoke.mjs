@@ -607,11 +607,150 @@ try {
   await evaluate(
     "byId('preset').value='balanced';byId('preset').dispatchEvent(new Event('change'))",
   );
+  // Independent actions must survive selection, editing, undo and export.
+  await evaluate(
+    `byId('preset').value='spring-wobble';byId('preset').dispatchEvent(new Event('change'));byId('independent').checked=true;byId('independent').dispatchEvent(new Event('change'));byId('action').value='close';byId('action').dispatchEvent(new Event('change'));byId('preset').value='ember-erosion';byId('preset').dispatchEvent(new Event('change'));byId('name').value='Browser Profile';`,
+  );
+  const profileDocument = await evaluate("effectDocument()");
+  assert.equal(profileDocument.actions.open.family, "elastic");
+  assert.equal(profileDocument.actions.close.family, "dissolve");
+  assert.equal(profileDocument.actions.resize, null);
+  const profileExpected = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        "import json,sys;from niri_fx.integration import custom_document;from niri_fx.effects import animation_types;print(json.dumps(animation_types(custom_document(json.load(sys.stdin))[2])))",
+      ],
+      { input: JSON.stringify(profileDocument), encoding: "utf8" },
+    ),
+  );
+  for (const action of ["open", "close"])
+    assert.equal(
+      await evaluate(`shaderFor(effectDocument().actions.${action}, ${action === "open"})`),
+      profileExpected["window-" + action]["custom-shader"],
+    );
+  assert(!(await evaluate("kdlDocument().includes('window-resize')")));
+  await evaluate(
+    "byId('action').value='open';byId('action').dispatchEvent(new Event('change'));byId('elastic_twist').value=33;byId('elastic_twist').dispatchEvent(new Event('input'))",
+  );
+  assert.equal(await evaluate("effectDocument().actions.open.elastic_twist"), 33);
+  assert.equal(await evaluate("effectDocument().actions.close.family"), "dissolve");
+  await evaluate("byId('undo').click()");
+  assert.equal(await evaluate("effectDocument().actions.open.elastic_twist"), 0);
+  await evaluate("byId('redo').click()");
+  assert.equal(await evaluate("effectDocument().actions.open.elastic_twist"), 33);
+  await evaluate("document.querySelector('[data-reset=elastic_twist]').click()");
+  assert.equal(await evaluate("effectDocument().actions.open.elastic_twist"), 0);
+  const profileSaved = await evaluate("effectDocument()");
+  await evaluate("byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))");
+  assert.equal((await importFile(JSON.stringify(profileSaved))).error, "");
+  assert.equal(await evaluate("byId('action').value"), "open", "import selects the shown action");
+  assert.deepEqual(await evaluate("effectDocument()"), profileSaved);
+  await evaluate("byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))");
+  assert.equal(
+    await evaluate("effectDocument().actions.resize"),
+    null,
+    "viewing resize never enables it",
+  );
+  await evaluate(
+    "byId('action-enabled').checked=true;byId('action-enabled').dispatchEvent(new Event('change'))",
+  );
+  assert(await evaluate("kdlDocument().includes('window-resize')"));
+  assert.equal(await evaluate("effectDocument().actions.open.family"), "elastic");
+  const resizeProfile = await evaluate("effectDocument()");
+  const resizeImport = await importFile(JSON.stringify(resizeProfile));
+  assert.equal(resizeImport.error, "");
+  assert.match(resizeImport.status, /Resize is enabled in this document/);
+  assert.deepEqual(resizeImport.effect, resizeProfile);
+  await evaluate("byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))");
+  await evaluate(
+    "byId('action-enabled').checked=false;byId('action-enabled').dispatchEvent(new Event('change'))",
+  );
+  assert(!(await evaluate("kdlDocument().includes('window-resize')")));
+  if (process.argv.includes("--save-test")) {
+    await evaluate("byId('name').value='Browser Profile';byId('save').click()");
+    for (let i = 0; i < 100 && (await evaluate("byId('save').disabled")); i++) await sleep(100);
+    assert.equal(await evaluate("byId('error').textContent"), "");
+    assert.match(await evaluate("byId('status').textContent"), /^Saved NiriFX/);
+  }
+  await importFile(JSON.stringify({ schema: 3, name: "Reveal Test", effect: { family: "iris" } }));
+  for (const [preset, changes] of Object.entries({
+    "ember-erosion": {
+      dissolve_scale: 12,
+      dissolve_softness: 0.2,
+      dissolve_direction: "left",
+      dissolve_bias: 0.1,
+      edge_width: 0.3,
+      edge_hue: 220,
+    },
+    "diamond-turn": {
+      iris_shape: "square",
+      iris_direction: "outward",
+      iris_softness: 0.2,
+      iris_twist: -140,
+      iris_x: 0.1,
+      iris_y: 0.85,
+    },
+  })) {
+    for (const [key, value] of Object.entries(changes)) {
+      await evaluate(
+        `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
+      );
+      await setProgress(0.45);
+      const before = await pixelHash();
+      await evaluate(
+        `byId(${JSON.stringify(key)}).value=${JSON.stringify(value)};byId(${JSON.stringify(key)}).dispatchEvent(new Event('input'))`,
+      );
+      assert.notEqual(await pixelHash(), before, key + " independently changes pixels");
+      assert.equal((await sample()).error, 0);
+    }
+  }
+  await evaluate("byId('pin').click()");
+  const pinnedHash = await pixelHash();
+  await evaluate("byId('iris_x').value=0.9;byId('iris_x').dispatchEvent(new Event('input'))");
+  const editedHash = await pixelHash(),
+    editedDocument = await evaluate("effectDocument()");
+  assert.notEqual(editedHash, pinnedHash);
+  await evaluate("byId('compare').click()");
+  assert.equal(await pixelHash(), pinnedHash);
+  assert.deepEqual(await evaluate("effectDocument()"), editedDocument, "A/B is non-destructive");
+  await evaluate("byId('compare').click()");
+  assert.equal(await pixelHash(), editedHash);
+  await evaluate(
+    "byId('preset').value='iris-bloom';byId('preset').dispatchEvent(new Event('change'));byId('favorite').click();byId('search').value='bloom';byId('search').dispatchEvent(new Event('input'))",
+  );
+  assert.deepEqual(
+    await evaluate(
+      "Array.from(byId('preset').options).filter(option => option.value && !option.hidden).map(option => option.value)",
+    ),
+    ["iris-bloom"],
+  );
+  await evaluate("byId('search').value='';byId('search').dispatchEvent(new Event('input'))");
+  const roundingDoc = {
+    schema: 3,
+    name: "Rounding",
+    effect: { family: "slices", wave_strength: 0.0078125, slice_rotation: -0.0078125 },
+  };
+  await importFile(JSON.stringify(roundingDoc));
+  const rounded = execFileSync(
+    "python3",
+    [
+      "-c",
+      "import sys,json;from niri_fx.integration import custom_document;from niri_fx.effects import shader;print(shader(custom_document(json.load(sys.stdin))[2],False),end='')",
+    ],
+    { input: JSON.stringify(roundingDoc), encoding: "utf8" },
+  );
+  assert.equal(await evaluate("shaderFor(parameters,false)"), rounded);
+  const unsupported = await evaluate("window.niriFxBenchmark({samples:10})");
+  assert.equal(unsupported.status, "unsupported", "software WebGL must not claim GPU performance");
   if (process.argv.includes("--save-test")) {
     for (const [family, preset] of Object.entries({
       fragments: "bubble-burst",
       slices: "hinged-fan",
       elastic: "corner-spring",
+      dissolve: "ember-erosion",
+      iris: "diamond-turn",
     })) {
       await evaluate(
         `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'));byId('name').value=${JSON.stringify("Browser " + family)};byId('save').click()`,

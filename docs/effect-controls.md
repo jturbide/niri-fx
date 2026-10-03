@@ -1,8 +1,7 @@
 # Shapes, hinges, waves and wobble
 
-These additions are in the **development checkout after 0.6.0**. The published
-0.6.0 package has the earlier Fragments and Slices controls. Use the current
-checkout for the examples below; all built-ins still leave resize disabled.
+These controls are included in **0.7.0**. Earlier packages contain a smaller
+selection. All built-ins leave resize disabled.
 
 ## Fragments
 
@@ -125,3 +124,36 @@ bounded lookup counts, not benchmark results. Slices checks up to its configured
 2–48 strips; Elastic uses a whole-window warp without particle searches. Window
 area and expanded drawing bounds matter, and fewer particles alone do not
 necessarily make a shader faster. See [validation limits](validation.md).
+
+## Dissolve
+
+Noise Dissolve erodes the texture without moving its contents. Ember Erosion and
+Frost Vanish add a colored edge and a directional bias. These are procedural masks,
+not simulated flames or ice. All preserve the source texture's premultiplied alpha.
+
+| CLI flag | Range / meaning |
+| --- | --- |
+| `--dissolve-scale` | 4–160 logical pixels; noise cell size |
+| `--dissolve-softness` | 0.005–0.25; feathering around the erosion boundary |
+| `--dissolve-direction` | none, left, right, up, down, center; starting region |
+| `--dissolve-bias` | 0–1; blend from noise order toward directional order |
+| `--edge-width` | 0–0.3; colored boundary width; zero disables it |
+| `--edge-hue` | 0–360 degrees around the hue wheel |
+
+## Iris
+
+Iris Bloom closes inward. Portal Out expands a hole instead. Diamond Turn rotates
+the reveal mask; the window texture itself remains stationary. Distances use
+logical pixels to preserve shape proportions on wide or tall windows.
+
+| CLI flag | Range / meaning |
+| --- | --- |
+| `--iris-shape` | circle, diamond, square |
+| `--iris-direction` | inward or outward during closing; opening reverses it |
+| `--iris-softness` | 0.005–0.3; feathered mask edge |
+| `--iris-twist` | −180–180 degrees of mask rotation; visible on non-circular shapes |
+| `--iris-x`, `--iris-y` | 0–1; reveal origin within the window |
+
+Both families support stock opening and closing only. Use an independent
+[profile](profiles.md) to combine them with other families. Neither adds resize
+or native movement support. [GPU benchmark scope](performance.md).

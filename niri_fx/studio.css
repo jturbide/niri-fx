@@ -189,3 +189,47 @@ small {
     vertical-align: middle;
     margin-right: 8px;
 }
+
+.parameter {
+    position: relative;
+    padding-bottom: 14px;
+}
+.reset-parameter {
+    font-size: 10px;
+    padding: 2px 6px;
+    float: right;
+    opacity: 0.75;
+}
+.parameter-group {
+    clear: both;
+}
+.profile-controls {
+    border-bottom: 1px solid #334155;
+    padding-bottom: 14px;
+}
+input[type="search"] {
+    box-sizing: border-box;
+    width: 100%;
+    padding: 9px 12px;
+    border: 1px solid #3c5368;
+    border-radius: 7px;
+    background: #233647;
+    color: #e0edf5;
+    font: inherit;
+}
+#favorite {
+    margin-top: 6px;
+    font-size: 12px;
+}
+#variation-controls {
+    margin: 16px 0;
+    clear: both;
+}
+#variation-controls summary {
+    cursor: pointer;
+    color: #a5e8dd;
+}
+button[aria-pressed="true"] {
+    border-color: #8ed8d0;
+    background: #305c61;
+}

@@ -14,6 +14,7 @@ from pathlib import Path
 
 from .branding import APP_ID
 from .effects import PRESET_SCHEMA, PRESETS, Effect, animation_types, preset_description
+from .profiles import Profile, parse_profile
 
 OWNER = APP_ID
 
@@ -70,6 +71,7 @@ def resolve_base(shell_registry, base_id="auto"):
 
 
 def make_preset(identifier, label, effect, chosen, base_types):
+    family = "profile" if isinstance(effect, Profile) else effect.family
     types = deepcopy(base_types)
     types.update(animation_types(effect))
     return {
@@ -78,15 +80,19 @@ def make_preset(identifier, label, effect, chosen, base_types):
         "description": preset_description(effect),
         "keywords": [
             "nirifx",
-            effect.family,
+            family,
             "animation",
             "reconstruct",
-            {"fragments": "particles", "slices": "strips", "elastic": "wobble"}[effect.family],
+            {"fragments": "particles", "slices": "strips", "elastic": "wobble"}.get(family, family),
         ],
         "generator": OWNER,
         "schema-version": 2,
         "base-preset": chosen,
-        "effect": asdict(effect),
+        **(
+            {"profile": effect.document(label)}
+            if isinstance(effect, Profile)
+            else {"effect": asdict(effect)}
+        ),
         "types": types,
     }
 
@@ -104,7 +110,8 @@ def make_presets(shell_registry, base_id="auto"):
 
 
 def custom_document(data):
-    if (
+    profile = isinstance(data, dict) and data.get("kind") == "profile"
+    if not profile and (
         not isinstance(data, dict)
         or type(data.get("schema")) is not int
         or data["schema"] != PRESET_SCHEMA
@@ -120,7 +127,7 @@ def custom_document(data):
         )
     slug = re.sub(r"[ _-]+", "-", name.lower()).rstrip("-")
     try:
-        effect = Effect(**data["effect"])
+        effect = parse_profile(data) if profile else Effect(**data["effect"])
     except TypeError as error:
         raise ValueError(f"Unsupported effect parameters: {error}") from error
     return name, slug, effect

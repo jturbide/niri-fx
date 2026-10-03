@@ -5,7 +5,7 @@ from copy import deepcopy
 from pathlib import Path
 
 from niri_fx.cli import parser, selected_effect
-from niri_fx.effects import PRESETS, Effect, movement_shader, render_kdl
+from niri_fx.effects import FAMILIES, PRESETS, Effect, movement_shader, render_kdl
 from niri_fx.integration import (
     custom_document,
     make_custom_preset,
@@ -229,7 +229,7 @@ class EffectTests(unittest.TestCase):
     def test_movement_is_separate_from_stock_config(self):
         for effect in PRESETS.values():
             self.assertNotIn("window-movement", render_kdl(effect))
-            if effect.family == "slices":
+            if not FAMILIES[effect.family]["movement"]:
                 with self.assertRaisesRegex(ValueError, "does not support"):
                     movement_shader(effect)
                 continue

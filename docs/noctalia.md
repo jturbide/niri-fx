@@ -1,8 +1,7 @@
 # Noctalia and preset folders
 
-NiriFX can export a reversible folder of all 41 open/close presets for the
-existing Noctalia **Niri Animations** picker. This support is in the development
-checkout after 0.6.0. It adds no daemon and does not modify Noctalia source.
+NiriFX can export a reversible folder of all 47 open/close presets for the
+existing Noctalia **Niri Animations** picker. This support is included in 0.7.0. It adds no daemon and does not modify Noctalia source.
 
 The [community plugin](https://noctalia.dev/plugins/community/niri-animations)
 reads `.kdl` files from `presets_dir` and writes a dedicated `target_file` containing
@@ -13,7 +12,10 @@ Shell 4 uses a different QML plugin system. These instructions target the curren
 plugin, not an interchangeable plugin for both versions.
 
 The exported configs and picker-style include chain have been validated with
-stock Niri. **The Noctalia UI has not been exercised locally.** For legacy
+stock Niri. **Noctalia 5.2.1 with Niri Animations 0.2.0 passed an isolated UI test:**
+the picker found all 47 styles, keyboard dropdown selection applied Iris Bloom
+and Ember Erosion, and selecting the base pack removed the preset include.
+Niri validated the resulting configurations. For legacy
 Noctalia or a picker without this contract, use [standalone setup](setup.md).
 
 ## Export without changing the active desktop
@@ -65,3 +67,7 @@ picker's active include no longer points into the pack. Then run the exact
 Restoration refuses to overwrite later edits. Noctalia's target file and your
 main config remain under your control. The same pack can feed other Niri pickers
 that consume standalone KDL animation files.
+
+Studio can also download a single named KDL file: select **Noctalia preset file**
+as its save target. This supports [independent profiles](profiles.md), including
+different families for opening and closing. Put the file in `presets_dir`.

@@ -12,8 +12,8 @@
     <span class="badge">LOCAL STUDIO</span>
   </header>
   <p>
-    Shape how windows open and close. Explore fragments, slices and elastic motion, then save your
-    own style.
+    Shape how windows open and close. Explore fragments, slices, elastic motion and reveals, then
+    save your own style.
   </p>
   <div class="layout">
     <main>
@@ -43,7 +43,9 @@
       ></canvas>
       <div class="controls">
         <button id="open">Reconstruct</button><button id="close">Deconstruct</button
-        ><button id="seed">New variation</button>
+        ><button id="seed">New variation</button><button id="undo" disabled>Undo</button
+        ><button id="redo" disabled>Redo</button><button id="pin">Pin A</button
+        ><button id="compare" disabled aria-pressed="false">Show A</button>
         <label
           ><span id="timeline-label">Breakup</span>
           <input id="progress" type="range" min="0" max="1000" value="450" /><output id="amount"
@@ -58,7 +60,12 @@
           id="export"
         >
           Export preset</button
-        ><button id="kdl">Export Niri config</button><button id="save">Save to iRiS</button>
+        ><button id="kdl">Export Niri config</button> <label for="save-target">Save target</label
+        ><select id="save-target">
+          <option value="inir">iNiR / iRiS</option>
+          <option value="noctalia">Noctalia preset file</option>
+          <option value="standalone">Standalone Niri file</option></select
+        ><button id="save">Save to iRiS</button>
       </div>
       <p id="status" role="status" aria-live="polite"></p>
       <small
@@ -73,8 +80,34 @@
         ><select id="family">
           <option value="fragments">Fragments</option>
           <option value="slices">Slices</option>
-          <option value="elastic">Elastic</option></select
+          <option value="elastic">Elastic</option>
+          <option value="dissolve">Dissolve</option>
+          <option value="iris">Iris</option></select
         ><small id="family-note"></small>
+      </div>
+      <div class="wide profile-controls">
+        <label><input id="independent" type="checkbox" /> Independent action effects</label>
+        <div id="action-controls" hidden>
+          <label for="action">Editing action</label
+          ><select id="action">
+            <option value="open">Open</option>
+            <option value="close">Close</option>
+            <option value="resize">Resize (opt-in)</option>
+          </select>
+          <label id="action-enable-label" hidden
+            ><input id="action-enabled" type="checkbox" /> Enable resize effect</label
+          >
+          <small
+            >Each action keeps its own settings. Disabled resize leaves your existing Niri resize
+            behavior unchanged.</small
+          >
+        </div>
+      </div>
+      <div class="wide">
+        <label for="search">Find a style</label
+        ><input id="search" type="search" placeholder="Search presets" />
+        <label><input id="favorites-only" type="checkbox" /> Favorites only</label>
+        <button id="favorite" type="button" aria-pressed="false">Favorite this style</button>
       </div>
       <div class="wide">
         <label for="preset">Starting style</label
@@ -84,305 +117,7 @@
         <label for="name">Your preset name</label
         ><input id="name" type="text" maxlength="48" value="My Fragments" autocomplete="off" />
       </div>
-      <div id="fragment-controls" class="wide">
-        <div>
-          <label for="gravity">Gravity direction</label
-          ><select id="gravity">
-            <option value="none">None</option>
-            <option value="down">Down / Earth</option>
-            <option value="up">Up</option>
-            <option value="left">Left</option>
-            <option value="right">Right</option>
-            <option value="center">Center / Black Hole</option>
-            <option value="space">Outward / Space</option>
-          </select>
-        </div>
-        <div>
-          <label for="gravity_strength"
-            >Gravity strength <output id="gravity_strength-value"></output></label
-          ><input id="gravity_strength" type="range" min="0" max="3" step="0.05" />
-        </div>
-        <div>
-          <label for="density">Particle sizing</label
-          ><select id="density">
-            <option value="count">Target particle count</option>
-            <option value="tile">Fixed square size</option>
-          </select>
-        </div>
-        <div id="count-control">
-          <label for="particles"
-            >Particles, approximately <output id="particles-value"></output></label
-          ><input id="particles" type="range" min="16" max="4096" step="1" />
-        </div>
-        <div id="tile-control">
-          <label for="tile_size">Square size <output id="tile_size-value"></output></label
-          ><input id="tile_size" type="range" min="8" max="128" step="1" />
-        </div>
-        <div>
-          <label for="scatter">Initial spread <output id="scatter-value"></output></label
-          ><input id="scatter" type="range" min="0" max="240" step="1" />
-        </div>
-        <div>
-          <label for="dispersion">Path dispersion <output id="dispersion-value"></output></label
-          ><input id="dispersion" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="stagger">Release stagger <output id="stagger-value"></output></label
-          ><input id="stagger" type="range" min="0" max="0.4" step="0.01" />
-        </div>
-        <div>
-          <label for="rotation">Particle rotation</label
-          ><select id="rotation">
-            <option value="none">None</option>
-            <option value="random">Random spin</option>
-            <option value="gravity">Follow travel direction</option>
-          </select>
-        </div>
-        <div>
-          <label for="spin">Spin / alignment limit <output id="spin-value"></output></label
-          ><input id="spin" type="range" min="0" max="720" step="5" />
-        </div>
-        <div>
-          <label for="release">Release pattern</label
-          ><select id="release">
-            <option value="together">Together</option>
-            <option value="left">Wave from left</option>
-            <option value="right">Wave from right</option>
-            <option value="up">Wave from top</option>
-            <option value="down">Wave from bottom</option>
-            <option value="center">Burst origin outward</option>
-            <option value="edges">Outer regions inward</option>
-            <option value="diagonal">Diagonal sweep</option>
-            <option value="checkerboard">Checkerboard groups</option>
-          </select>
-        </div>
-        <div>
-          <label for="wave_span">Wave separation <output id="wave_span-value"></output></label
-          ><input id="wave_span" type="range" min="0" max="0.7" step="0.01" />
-        </div>
-        <div>
-          <label for="origin_x"
-            >Burst center · horizontal <output id="origin_x-value"></output></label
-          ><input id="origin_x" type="range" min="0" max="1" step="0.01" />
-        </div>
-        <div>
-          <label for="origin_y">Burst center · vertical <output id="origin_y-value"></output></label
-          ><input id="origin_y" type="range" min="0" max="1" step="0.01" />
-        </div>
-        <div>
-          <label for="swirl">Orbit around center <output id="swirl-value"></output></label
-          ><input id="swirl" type="range" min="-360" max="360" step="5" />
-        </div>
-        <div>
-          <label for="fragment_shrink"
-            >Extra piece shrink <output id="fragment_shrink-value"></output
-          ></label>
-          <input id="fragment_shrink" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="fragment_roundness"
-            >Rounded corners <output id="fragment_roundness-value"></output
-          ></label>
-          <input id="fragment_roundness" type="range" min="0" max="1" step="0.05" />
-          <small>These shape controls affect open/close and native movement, not resize.</small>
-        </div>
-      </div>
-      <div id="slice-controls" class="wide" hidden>
-        <div>
-          <label for="slice_count">Slice count <output id="slice_count-value"></output></label
-          ><input id="slice_count" type="range" min="2" max="48" step="1" />
-        </div>
-        <div>
-          <label for="slice_angle">Slice angle <output id="slice_angle-value"></output></label
-          ><input id="slice_angle" type="range" min="-90" max="90" step="1" /><small
-            >0° is horizontal; ±90° is vertical.</small
-          >
-        </div>
-        <div>
-          <label for="slice_direction">Travel direction</label
-          ><select id="slice_direction">
-            <option value="outward">Split outward</option>
-            <option value="alternate">Alternate strips</option>
-            <option value="positive">Along the angle</option>
-            <option value="negative">Against the angle</option>
-            <option value="random">Random per strip</option>
-          </select>
-        </div>
-        <div>
-          <label for="slice_order">Release order</label
-          ><select id="slice_order">
-            <option value="forward">First to last</option>
-            <option value="reverse">Last to first</option>
-            <option value="center">Center outward</option>
-            <option value="edges">Edges inward</option>
-            <option value="random">Random</option>
-            <option value="together">All together</option>
-          </select>
-        </div>
-        <div>
-          <label for="slice_distance"
-            >Travel distance <output id="slice_distance-value"></output></label
-          ><input id="slice_distance" type="range" min="0" max="600" step="1" />
-        </div>
-        <div>
-          <label for="slice_stagger"
-            >Release stagger <output id="slice_stagger-value"></output></label
-          ><input id="slice_stagger" type="range" min="0" max="0.75" step="0.01" />
-        </div>
-        <div>
-          <label for="slice_rotation"
-            >Strip rotation <output id="slice_rotation-value"></output></label
-          ><input id="slice_rotation" type="range" min="-60" max="60" step="1" />
-        </div>
-        <div>
-          <label for="slice_pivot">Hinge position <output id="slice_pivot-value"></output></label>
-          <input id="slice_pivot" type="range" min="-1" max="1" step="0.05" />
-          <small
-            >Along the strip: −1 first end, 0 center, +1 other end. Combine with rotation.</small
-          >
-        </div>
-        <div>
-          <label for="slice_collapse"
-            >Width collapse <output id="slice_collapse-value"></output
-          ></label>
-          <input id="slice_collapse" type="range" min="0" max="1" step="0.05" />
-        </div>
-      </div>
-      <div id="elastic-controls" class="wide" hidden>
-        <div>
-          <label for="elastic_strength"
-            >Wobble strength <output id="elastic_strength-value"></output></label
-          ><input id="elastic_strength" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="elastic_frequency"
-            >Spring oscillations <output id="elastic_frequency-value"></output></label
-          ><input id="elastic_frequency" type="range" min="1" max="5" step="0.05" />
-        </div>
-        <div>
-          <label for="elastic_damping">Damping <output id="elastic_damping-value"></output></label
-          ><input id="elastic_damping" type="range" min="0" max="8" step="0.05" />
-        </div>
-        <div>
-          <label for="elastic_axis">Wobble axis</label
-          ><select id="elastic_axis">
-            <option value="both">Both axes</option>
-            <option value="horizontal">Horizontal</option>
-            <option value="vertical">Vertical</option>
-          </select>
-        </div>
-        <div>
-          <label for="elastic_twist">Spring twist <output id="elastic_twist-value"></output></label>
-          <input id="elastic_twist" type="range" min="-90" max="90" step="0.05" />
-        </div>
-        <div>
-          <label for="elastic_stretch"
-            >Extra stretching <output id="elastic_stretch-value"></output
-          ></label>
-          <input id="elastic_stretch" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="elastic_ripple"
-            >Spatial bend frequency <output id="elastic_ripple-value"></output
-          ></label>
-          <input id="elastic_ripple" type="range" min="0.5" max="4" step="0.05" />
-        </div>
-        <div>
-          <label for="elastic_anchor">Transform origin</label
-          ><select id="elastic_anchor">
-            <option value="center">Center</option>
-            <option value="top">Top</option>
-            <option value="bottom">Bottom</option>
-            <option value="left">Left</option>
-            <option value="right">Right</option>
-            <option value="top-left">Top Left</option>
-            <option value="top-right">Top Right</option>
-            <option value="bottom-left">Bottom Left</option>
-            <option value="bottom-right">Bottom Right</option></select
-          ><small
-            >Origin for rotation, stretch and collapse; this does not pin the window edge.</small
-          >
-        </div>
-        <small
-          >Timed spring motion. Interactive drag physics requires additional compositor
-          support.</small
-        >
-      </div>
-      <details id="variation-controls" class="wide" open>
-        <summary>Waves &amp; variation</summary>
-        <small>Move rigid pieces along a wave. New variation changes the seeded pattern.</small>
-        <div>
-          <label for="size_variation"
-            >Unequal piece sizes <output id="size_variation-value"></output></label
-          ><input id="size_variation" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="direction_variation"
-            >Direction variation <output id="direction_variation-value"></output></label
-          ><input id="direction_variation" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="wave_strength">Wave strength <output id="wave_strength-value"></output></label
-          ><input id="wave_strength" type="range" min="0" max="1" step="0.05" />
-        </div>
-        <div>
-          <label for="wave_frequency"
-            >Wave frequency <output id="wave_frequency-value"></output></label
-          ><input id="wave_frequency" type="range" min="0.25" max="4" step="0.05" />
-        </div>
-        <div>
-          <label for="wave_speed">Wave speed <output id="wave_speed-value"></output></label
-          ><input id="wave_speed" type="range" min="0" max="4" step="0.1" />
-        </div>
-        <div id="slice-variation">
-          <div>
-            <label for="slice_travel_variation"
-              >Travel variation <output id="slice_travel_variation-value"></output></label
-            ><input id="slice_travel_variation" type="range" min="0" max="1" step="0.05" />
-          </div>
-          <div>
-            <label for="slice_rotation_variation"
-              >Rotation variation <output id="slice_rotation_variation-value"></output></label
-            ><input id="slice_rotation_variation" type="range" min="0" max="1" step="0.05" />
-          </div>
-        </div>
-        <small id="variation-note"></small>
-      </details>
-      <div>
-        <label for="open_ms">Opening time <output id="open_ms-value"></output></label
-        ><input id="open_ms" type="range" min="100" max="1500" step="10" />
-      </div>
-      <div>
-        <label for="close_ms">Closing time <output id="close_ms-value"></output></label
-        ><input id="close_ms" type="range" min="100" max="1500" step="10" />
-      </div>
-      <div id="resize-controls" class="wide">
-        <div class="wide divider"></div>
-        <div class="wide">
-          <label><input id="resize" type="checkbox" /> Fragment windows when resizing</label
-          ><small
-            >Supported animated resizes, such as changing column width. Compact fragments stay
-            within the changing window.</small
-          >
-        </div>
-        <div>
-          <label for="resize_mode">Resize style</label
-          ><select id="resize_mode">
-            <option value="full">Full breakup</option>
-            <option value="edge">Edge rebuild</option>
-            <option value="soft">Soft reflow</option></select
-          ><small>Choosing a style does not enable resize.</small>
-        </div>
-        <div>
-          <label for="resize_ms">Resize time <output id="resize_ms-value"></output></label
-          ><input id="resize_ms" type="range" min="100" max="1500" step="10" />
-        </div>
-        <div>
-          <label for="resize_strength"
-            >Resize breakup <output id="resize_strength-value"></output></label
-          ><input id="resize_strength" type="range" min="0" max="1" step="0.05" />
-        </div>
-      </div>
+      @PARAMETER_CONTROLS@
       <div id="fragment-note" class="wide">
         <small
           >Count is approximate. Size variation creates unequal rectangular pieces. Gravity is an

@@ -143,7 +143,7 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
-The current checkout has 41 built-ins. The original styles are listed below;
+The current checkout has 47 built-ins. The original styles are listed below;
 [new styles and controls](effect-controls.md) cover five varied Fragments, four
 additional Fragments, Slices and Elastic presets, including piece shapes, hinges and spring transforms.
 
@@ -189,3 +189,7 @@ presets keep their explicit choices; JSON without `resize` opts out.
 
 See [installation, updating and rollback](getting-started.md) before applying
 exports. The CLI's `--help` and subcommand `--help` list every available option.
+
+See [independent profiles and Studio workflow](profiles.md) for action selection,
+undo/redo, favorites, A/B comparison and shell save targets. The [effect controls](effect-controls.md)
+also cover Dissolve and Iris; the [GPU harness](performance.md) measures shader draw cost.

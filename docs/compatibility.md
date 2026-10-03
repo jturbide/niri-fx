@@ -9,10 +9,10 @@ do not need iNiR installed.
 | --- | --- | --- |
 | Niri + iNiR/iRiS | Native preset registration and Studio save | Tested locally. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
-| Niri + DankMaterialShell | The same KDL include and exported presets | Compatible at the Niri configuration layer; DMS-specific UI/runtime acceptance is pending. |
-| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | File/include contract validated; Noctalia UI acceptance pending. |
+| Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | Real QML/CLI apply/restore tested; full DMS launcher UI acceptance pending. |
+| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 47 files validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
-| DMS on another compositor | No current Fragments backend | Installing a shell does not supply Niri's shader interface. |
+| DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
 | Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
 
 Resize fragments are **opt-in everywhere**. The standard preset pack and KDL
@@ -22,10 +22,10 @@ exports change only opening and closing. Enable resize deliberately with
 ## Niri + DankMaterialShell
 
 DMS documents its Niri integration as several included KDL files for layout,
-colors and keybindings. Keep Fragments in its own file, outside the `dms/`
+colors and keybindings. Keep NiriFX in its own file, outside the `dms/`
 directory, so DMS does not own that file. This is an integration recommendation
 based on the [official compositor setup](https://danklinux.com/docs/dankmaterialshell/compositors#niri-configuration),
-not a claim that a DMS plugin has been shipped or tested.
+the optional launcher adapter automates the reversible standalone setup.
 
 From this checkout:
 
@@ -51,7 +51,7 @@ include "nirifx/animations.kdl"
 ```
 
 Then run `niri validate`. To switch styles, generate, validate and copy again with
-a different `--preset`. To revert, remove the Fragments include. Niri merges
+a different `--preset`. To revert, remove the NiriFX include. Niri merges
 included configuration in order; a later animation override takes precedence.
 See [Niri includes](https://niri-wm.github.io/niri/Configuration:-Include.html).
 Avoid combining this include with another animation preset manager for the
@@ -64,26 +64,19 @@ python3 -m niri_fx preview --output /tmp/fragments-preview.html
 xdg-open /tmp/fragments-preview.html
 ```
 
-Use **Export Niri config**, then put the exported contents in the Fragments
+Use **Export Niri config**, then put the exported contents in the NiriFX
 include file. **Save to iRiS** is specific to iNiR; it is not a DMS save action.
-The regular Studio app can also export, but its save adapter still expects iNiR.
+Choose the standalone save target for a KDL download; iRiS registration requires iNiR.
 
-## Recommended scope
+## Shell adapters
 
-Noctalia can reuse its existing picker through `export-pack`; see the
-[setup guide](noctalia.md). A possible next integration is a **small DMS plugin for Niri users**: a preset
-picker, an explicitly opt-in resize switch, restore action, and an Open Studio
-button. It should reuse the Python generator, validate KDL before replacing its
-own file, and detect the compositor before enabling any controls. It should
-preserve other animation timings and avoid editing DMS-generated config.
+The optional [DMS launcher adapter](dms.md) now provides searchable built-in
+styles, Studio and reversible apply/undo. Its real QML component passed an
+isolated Quickshell/CLI test; full launcher UI acceptance is tracked separately.
+Noctalia reuses its existing picker through [export-pack](noctalia.md). Studio's
+save-target selector also downloads individual Noctalia or standalone KDL files,
+including independent profiles. Only the iNiR target writes its native registry.
 
-DMS exposes QML plugins with settings, launcher actions and Control Center
-widgets, so that is a supported extension route rather than a shell fork.
-See the [official plugin overview](https://danklinux.com/docs/dankmaterialshell/plugins-overview).
-This adapter is a recommendation, not an implemented feature in this release.
-
-Keep one Niri renderer and add shell adapters around it. A Hyprland, KWin or
-GNOME version would be a separate compositor backend with its own lifecycle,
-texture, damage and input contracts. Defer those ports until the current Niri
-effects and experimental movement behavior are settled. The **NiriFX** name reflects multiple effect families while retaining Niri as
-the supported renderer. Shell support does not imply support for another compositor.
+Shell integrations share the same CLI and effect model. Quickshell is a toolkit;
+there is no universal settings registry shared by every shell. Native movement
+still needs Niri rendering support regardless of shell.

@@ -69,6 +69,10 @@ boundaries; none of these future integrations are implied by current registratio
 ## NiriFX identity
 
 The CLI, registry generator and ID prefix are `niri-fx`; the Python package is
-`niri_fx`. All preset documents use schema 3. Slices supports open/close only;
+`niri_fx`. Single-effect documents use schema 3; independent action profiles use kind `profile`, schema 1. Slices supports open/close only;
 Fragments and Elastic movement requires patched niri. Registry paths remain
 those defined by iNiR's external-preset API, including its config-root selection.
+
+Profile registration replaces opening and closing independently, and only overrides
+base resize when its separate resize slot is present. Experimental movement is
+preserved in the source document but excluded from stock iRiS animation types.

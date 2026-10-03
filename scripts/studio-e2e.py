@@ -36,6 +36,8 @@ def main():
                 "--no-browser",
                 "--registry",
                 str(registry),
+                "--state",
+                str(root / "studio-state"),
                 "--inir-root",
                 str(root),
             ],
@@ -65,12 +67,16 @@ def main():
             )
             presets = json.loads(registry.read_text())["presets"]
             assert unrelated in presets, "Saving replaced an unrelated preset"
-            for family in ("fragments", "slices", "elastic"):
+            for family in ("fragments", "slices", "elastic", "dissolve", "iris"):
                 saved = next(p for p in presets if p["id"] == f"niri-fx-custom-browser-{family}")
                 assert saved["effect"]["family"] == family
                 assert not saved["effect"]["resize"]
                 for kind, value in base_types.items():
                     assert saved["types"][kind] == value, kind
+            profile = next(p for p in presets if p["id"] == "niri-fx-custom-browser-profile")
+            assert "elastic_color" in profile["types"]["window-open"]["custom-shader"]
+            assert "fx_noise" in profile["types"]["window-close"]["custom-shader"]
+            assert profile["types"]["window-resize"] == base_types["window-resize"]
             print(
                 "PASS: actual CLI → browser → HTTP → helper → registry; all families, base settings and unrelated presets preserved"
             )

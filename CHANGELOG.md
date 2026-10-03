@@ -10,62 +10,63 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.7.0 — 2026-10-02
+
 ### Added
 
-- Twelve additional presets: Pixel Dust, Bubble Burst, Core Detonation, Checker
-  Scatter, Hinged Fan, Venetian Shutter, Ribbon Fold, Zipper, Twist Snap, Flag Wave,
-  Corner Spring and Accordion. The pack now has 41 styles: 23 Fragments, 11 Slices
-  and seven Elastic, all with resize off.
-- Fragment corner rounding and extra shrink; four spatial release patterns;
-  slice hinge position and width collapse; elastic twist, stretch, spatial bend
-  frequency and nine transform origins. Controls work in Studio, JSON and CLI.
-- Twelve importable examples and preset GIFs, five controlled comparisons, and
-  three actual native swap recordings. Keep Fragments first in the 75-GIF gallery.
-- Targeted GIF regeneration through `--only=clip-name,clip-name` and browser
-  regressions for visible control changes, reduced piece area, distinct release
-  sequences, round trips, endpoints and maximum control combinations.
-
-- Five varied Fragment presets: Tidal Fragments, Mosaic Burst, Chaotic Confetti,
-  Crosswind and Orbital Ribbons. Shared controls add unequal cell sizes, seeded
-  heading variation and travelling waves with strength/frequency/speed.
-- Four more Slice presets: Split Curtain, Ribbon Wave, Shuffled Slats and Venetian
-  Sweep. Add independent random directions, six release orders, unequal widths,
-  travel/spin variation and transverse waves.
-- Elastic family: Spring Wobble, Rubber Band and Jelly, with strength, frequency,
-  damping and axis controls. Stock open/close and experimental native movement
-  bend the whole window. Interactive drag physics and resize wobble are not included.
-- Schema 3 presets, 12 importable examples, 12 preset GIFs, five comparisons and
-  three native swap recordings. Regenerate Slide Apart and its count comparison;
-  keep Fragments first in the README gallery.
-- Reversible `export-pack` for the existing Noctalia Niri Animations picker and
-  other KDL consumers. Preserve unrelated files, refuse edited/colliding paths,
-  keep ownership metadata and restore snapshots. Noctalia UI acceptance is pending.
-- Ruff lint/format, ESLint, Prettier, editor conventions and pinned development
-  dependencies. Actions now includes lint and a real CLI/browser/HTTP/helper/save
-  E2E flow for all families, alongside unit/integration/GLSL/docs/package checks.
-- Current-schema and pack ownership tests, visible and deterministic
-  browser variation checks, and native wobble/interrupted-swap checks.
+- Thirty new presets since 0.6: varied Fragments, additional Slices, Elastic
+  wobble, Dissolve and Iris reveals. The catalog now has 47 styles across five
+  families, all with resize off by default.
+- Fragment rounding, shrink, unequal sizes, seeded directions and travelling
+  waves; spatial release patterns; slice release order, hinge and collapse;
+  elastic twist, stretch, bend frequency and transform origins; twelve controls
+  for noise erosion, colored edges and geometric iris masks.
+- Independent action profiles: separate opening and closing styles, optional
+  fragment resize, CLI generation, Studio editing, import/export and iRiS saving.
+- Studio search, persistent favorites, 100-state undo/redo, individual reset,
+  pinned A/B comparison and iNiR/Noctalia/standalone save targets.
+- Importable examples, controlled comparisons and actual native swap recordings.
+  The gallery now contains 84 GIFs, with Fragments first and an independent-profile
+  showcase. Targeted regeneration supports `--only=clip-name,clip-name`.
+- Reversible `export-pack` for Noctalia's existing Niri Animations picker and other
+  KDL consumers, with ownership checks and restore snapshots. Noctalia 5.2.1 /
+  Niri Animations 0.2.0 passed style selection and return to base in nested Niri.
+- Optional DMS launcher adapter for search, Studio, reversible apply and undo;
+  tested through real offscreen Quickshell and DMS 1.6.2 PluginService. Full
+  launcher visual acceptance remains pending.
+- Hardware GPU timing harness with raw samples, percentiles, frame-budget
+  comparisons and explicit rejection of software/disjoint timing results.
+- Ruff, ESLint, Prettier and pinned development dependencies. Actions includes
+  lint, Python 3.10/3.14, GLSL/docs/package checks and actual CLI/browser/HTTP/save
+  E2E coverage of all families and independent profiles.
 
 ### Changed
 
-- Slide Apart alternates adjacent horizontal strips instead of splitting halves.
-  Split Curtain supplies the former split direction.
 - One current NiriFX identity: `niri_fx` package, `niri-fx` CLI/registry IDs/state
-  and launcher names. Remove the legacy package, executable and schema 1/2 preset
-  support. All examples and exports use schema 3. Historical snapshots remain
-  recovery records; the application does not migrate old formats.
-- Studio JavaScript and CSS become readable, separately linted source files,
+  and launcher names. Remove the legacy package, executable and schema 1/2 style
+  support. Single-style documents use schema 3; independent profiles use kind
+  `profile`, schema 1. Historical snapshots remain recovery records; the
+  application does not migrate old formats. See [upgrading](docs/upgrading.md).
+- One parameter catalog drives Python validation, CLI options, Studio controls,
+  shader tokens and labels. Model, built-in preset data and renderers are separate.
+- Studio JavaScript and CSS are readable, separately linted source files,
   assembled into the same self-contained offline HTML export.
+- Shared shader bodies have explicit action entry points. Movement generation no
+  longer cuts a function out of generated source text.
+- Python/JavaScript shader numbers use identical rounding, including halfway values.
+- Slide Apart alternates adjacent horizontal strips. Split Curtain supplies the
+  former split direction.
 - Compact and varied Fragments use separate bounded renderers with different
-  costs. Historical shader hashes no longer constrain development. Resize stays opt-in
-  and uses its existing renderer without the new wave/variation controls.
+  costs. Resize retains its existing renderer without wave/variation controls.
+- Run branch checks on pull requests and main pushes, avoiding duplicate feature
+  branch push/PR runs.
 
 ### Branding and discoverability
 
 - Original pixel-N application icon, README banner, searchable desktop metadata,
   expanded package/GitHub keywords and accurate Built with / Integrations credits.
-- Updated related-project research and a community contribution plan, including
-  a focused awesome-niri listing proposal and Noctalia documentation suggestion.
+- Related-project research and a community contribution plan, including a focused
+  awesome-niri listing proposal and Noctalia documentation suggestion.
 - Fix issue-template links that still pointed at the old repository name.
 
 ## 0.6.0 — 2026-10-02

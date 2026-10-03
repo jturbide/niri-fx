@@ -8,6 +8,9 @@
 | Tune fragments, slices, wobble or optional resize | [Studio and controls](usage.md) |
 | Try the custom styles shown in the README | [Showcase examples](../examples/README.md) |
 | Tune waves, randomness and elastic motion | [New effect controls](effect-controls.md) |
+| Combine different opening and closing styles | [Profiles and Studio workflow](profiles.md) |
+| Measure shader cost on your GPU | [GPU harness and measurements](performance.md) |
+| Use the DMS launcher adapter | [DMS plugin](dms.md) |
 | Use Noctalia’s animation picker | [Noctalia preset pack](noctalia.md) |
 | Use DankMaterialShell or another shell | [Compatibility](compatibility.md) |
 | Fix an installation or rendering problem | [Troubleshooting](troubleshooting.md) |
