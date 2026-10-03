@@ -35,7 +35,7 @@ provides search, file review, Apply and Undo. Customize only when you want to;
 the finished presets use the same effects as Studio and the shell pickers.
 
 ```sh
-git clone https://github.com/jturbide/niri-fx.git
+git clone --depth 1 https://github.com/jturbide/niri-fx.git
 cd niri-fx
 python3 -m niri_fx --version
 python3 -m niri_fx preview --output /tmp/fragments-preview.html

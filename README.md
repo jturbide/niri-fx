@@ -22,7 +22,7 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.10.0](https://github.com/jturbide/niri-fx/releases/tag/v0.10.0)
+release. [Download v0.11.0](https://github.com/jturbide/niri-fx/releases/tag/v0.11.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
@@ -32,10 +32,11 @@ or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-f
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-On Niri with Python 3.10+, start the guided preset workflow:
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0110-prerelease).
+On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
-git clone https://github.com/jturbide/niri-fx.git
+git clone --depth 1 https://github.com/jturbide/niri-fx.git
 cd niri-fx
 python3 -m niri_fx
 ```
@@ -108,7 +109,7 @@ Original NiriFX shaders are inspired by the wider [desktop-effects community](do
 
 **Vortex Fold** curls the window into its center; **Soft Swirl** gives it a quicker,
 gentler counterclockwise turn. Change twist direction, contraction, falloff and
-origin in Studio. Available on `main` after v0.10.0.
+origin in Studio. Available since v0.11.0.
 
 | Vortex Fold | Soft Swirl |
 | --- | --- |
@@ -150,7 +151,7 @@ widths. They do not add pointer-driven wobble while dragging an edge.
 [Ripple profile](examples/profiles/ripple-resize.json)
 
 **Edge Ripple** and **Torsion Resize** each offer Subtle and Expressive profiles
-on current `main` after v0.10.0. Compare both strengths below, then download a
+since v0.11.0. Compare both strengths below, then download a
 profile from the [resize guide](docs/resize.md#edge-ripple-and-torsion-resize).
 
 | Edge Ripple | Torsion Resize |

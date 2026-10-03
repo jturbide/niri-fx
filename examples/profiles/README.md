@@ -42,7 +42,7 @@ when ready to apply a profile.
 ## Optional resize profiles
 
 These four profiles keep Balanced opening and closing and explicitly enable a
-separate resize effect. They require current `main` after 0.10.0. See the
+separate resize effect. They require NiriFX 0.11 or newer. See the
 [resize guide](../../docs/resize.md) for controls and limitations.
 
 | Profile | Showcase |
