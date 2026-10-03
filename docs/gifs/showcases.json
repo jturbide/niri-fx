@@ -262,6 +262,80 @@
           "source": "examples/reverse-gravity.json"
         }
       ]
+    },
+    {
+      "name": "compare-origin",
+      "title": "Burst origin",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Center",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "origin_x": 0.5,
+            "origin_y": 0.5
+          }
+        },
+        {
+          "label": "Top left",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "origin_x": 0.15,
+            "origin_y": 0.15
+          }
+        },
+        {
+          "label": "Bottom right",
+          "preset": "balanced",
+          "overrides": {
+            "open_ms": 750,
+            "close_ms": 750,
+            "origin_x": 0.85,
+            "origin_y": 0.85
+          }
+        }
+      ]
+    },
+    {
+      "name": "resize-full",
+      "title": "Full Breakup",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Full Breakup \u00b7 Opt-in",
+          "source": "examples/resize-full.json"
+        }
+      ]
+    },
+    {
+      "name": "resize-edge",
+      "title": "Edge Rebuild",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Edge Rebuild \u00b7 Opt-in",
+          "source": "examples/resize-edge.json"
+        }
+      ]
+    },
+    {
+      "name": "resize-soft",
+      "title": "Soft Reflow",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Soft Reflow \u00b7 Opt-in",
+          "source": "examples/resize-soft.json"
+        }
+      ]
     }
   ]
 }

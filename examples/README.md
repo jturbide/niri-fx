@@ -1,14 +1,24 @@
 # Custom showcase examples
 
-These are named custom styles built with the existing controls, not new built-in
-presets. The checked-in JSON is the source of the README recordings. All three
-explicitly disable resize fragments.
+The checked-in JSON supplies the exact settings used in the README recordings.
+Use **Import preset** in Studio to inspect any file without applying it. The
+three recipes and three new built-in examples leave resize off; the three
+resize examples explicitly enable it.
 
 | Example | Starting preset | Main changes |
 | --- | --- | --- |
 | [Meteor Shower](meteor-shower.json) | Earth | 1,800 pieces, heavier downward gravity and tumbling |
 | [Orbit Burst](orbit-burst.json) | Explosion | 1,500 pieces, an outward sweep and 180° orbit |
 | [Reverse Gravity](reverse-gravity.json) | Updraft | 1,000 pieces, stronger lift and randomized spin |
+
+| New example | Behavior | Resize |
+| --- | --- | --- |
+| [Directional Wave](directional-wave.json) | Three sections release from left to right | Off |
+| [Corner Burst](corner-burst.json) | Burst from a lower-left origin | Off |
+| [Orbital Collapse](orbital-collapse.json) | Strong center pull and 300° orbit | Off |
+| [Full Breakup](resize-full.json) | Whole-window resize fragmentation | **On** |
+| [Edge Rebuild](resize-edge.json) | Fragment changing edges, preserve the center | **On** |
+| [Soft Reflow](resize-soft.json) | Lighter breakup over a readable window | **On** |
 
 ## Import into iNiR / iRiS
 
@@ -66,14 +76,29 @@ the preview and follow the [standalone guide](../docs/getting-started.md#standal
 You can also replace `preview` with `render`, remove `--output`, and redirect
 stdout to a KDL file. Validate the generated file before including it.
 
+## New preset and resize previews
+
+The same JSON works with `preview`, `studio`, `render`, `register` and `setup`.
+These commands only create offline editors. Importing a resize example does not
+change the desktop until you apply its generated configuration or select it in iRiS.
+
+```sh
+python3 -m niri_fragments preview --custom examples/directional-wave.json --output /tmp/directional-wave.html
+python3 -m niri_fragments preview --custom examples/corner-burst.json --output /tmp/corner-burst.html
+python3 -m niri_fragments preview --custom examples/orbital-collapse.json --output /tmp/orbital-collapse.html
+python3 -m niri_fragments preview --custom examples/resize-full.json --output /tmp/resize-full.html
+python3 -m niri_fragments preview --custom examples/resize-edge.json --output /tmp/resize-edge.html
+python3 -m niri_fragments preview --custom examples/resize-soft.json --output /tmp/resize-soft.html
+```
+
 ## Reproducing the gallery
 
-The four synchronized comparisons and these three custom examples are defined
+The five synchronized comparisons, three custom recipes and three resize examples are defined
 in [showcases.json](../docs/gifs/showcases.json). Each comparison changes just one
 parameter between its panels and uses the same seed and timeline. The rotation
 comparison uses larger pieces to make their orientation visible.
 
-Run `node scripts/render-readme-gifs.mjs --showcase-only` to regenerate these seven
+Run `node scripts/render-readme-gifs.mjs --showcase-only` to regenerate these eleven
 GIFs. The renderer validates the parameters, compares browser/Python shader output
 and records the resolved settings in the GIF manifest. The documentation check
 detects mismatches between this page's preview commands, the JSON and recorded

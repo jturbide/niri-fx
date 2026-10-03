@@ -131,6 +131,30 @@
       "bytes": 464718
     },
     {
+      "file": "docs/gifs/preset-directional-wave.gif",
+      "preset": "directional-wave",
+      "mode": "effect",
+      "frames": 67,
+      "fps": 20,
+      "bytes": 340164
+    },
+    {
+      "file": "docs/gifs/preset-corner-burst.gif",
+      "preset": "corner-burst",
+      "mode": "effect",
+      "frames": 58,
+      "fps": 20,
+      "bytes": 802926
+    },
+    {
+      "file": "docs/gifs/preset-orbital-collapse.gif",
+      "preset": "orbital-collapse",
+      "mode": "effect",
+      "frames": 67,
+      "fps": 20,
+      "bytes": 343979
+    },
+    {
       "file": "docs/gifs/compare-density.gif",
       "mode": "effect",
       "frames": 57,
@@ -153,7 +177,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "balanced",
           "label": "180 · Chunky"
@@ -174,7 +203,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "balanced",
           "label": "720 · Balanced"
@@ -195,7 +229,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "balanced",
           "label": "2,400 · Fine"
@@ -225,7 +264,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "balanced",
           "label": "Down · Earth"
@@ -246,7 +290,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "balanced",
           "label": "Center · Black hole"
@@ -267,7 +316,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "balanced",
           "label": "Outward · Space"
@@ -297,7 +351,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "earth",
           "label": "0.3× · Gentle"
@@ -318,7 +377,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "earth",
           "label": "1.0× · Earth"
@@ -339,7 +403,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "earth",
           "label": "2.0× · Heavy"
@@ -369,7 +438,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "earth",
           "label": "No rotation"
@@ -390,7 +464,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "earth",
           "label": "Random spin"
@@ -411,7 +490,12 @@
             "stagger": 0.15,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "preset": "earth",
           "label": "Follow travel"
@@ -441,7 +525,12 @@
             "stagger": 0.28,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "source": "examples/meteor-shower.json",
           "label": "Meteor Shower"
@@ -471,7 +560,12 @@
             "stagger": 0.16,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "source": "examples/orbit-burst.json",
           "label": "Orbit Burst"
@@ -501,10 +595,207 @@
             "stagger": 0.22,
             "resize": false,
             "resize_ms": 450,
-            "resize_strength": 0.65
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
           },
           "source": "examples/reverse-gravity.json",
           "label": "Reverse Gravity"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/compare-origin.gif",
+      "mode": "effect",
+      "frames": 57,
+      "fps": 20,
+      "bytes": 1992475,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 125,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 0.7,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.7,
+            "stagger": 0.18,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
+          },
+          "preset": "balanced",
+          "label": "Center"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 125,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 0.7,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.7,
+            "stagger": 0.18,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.15,
+            "origin_y": 0.15,
+            "resize_mode": "full"
+          },
+          "preset": "balanced",
+          "label": "Top left"
+        },
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 125,
+            "open_ms": 750,
+            "close_ms": 750,
+            "gravity": "space",
+            "gravity_strength": 0.7,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.7,
+            "stagger": 0.18,
+            "resize": false,
+            "resize_ms": 450,
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.85,
+            "origin_y": 0.85,
+            "resize_mode": "full"
+          },
+          "preset": "balanced",
+          "label": "Bottom right"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/resize-full.gif",
+      "mode": "resize",
+      "frames": 55,
+      "fps": 20,
+      "bytes": 981526,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 125,
+            "open_ms": 520,
+            "close_ms": 480,
+            "gravity": "space",
+            "gravity_strength": 0.7,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.7,
+            "stagger": 0.18,
+            "resize": true,
+            "resize_ms": 700,
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "full"
+          },
+          "source": "examples/resize-full.json",
+          "label": "Full Breakup · Opt-in"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/resize-edge.gif",
+      "mode": "resize",
+      "frames": 55,
+      "fps": 20,
+      "bytes": 728095,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 125,
+            "open_ms": 520,
+            "close_ms": 480,
+            "gravity": "space",
+            "gravity_strength": 0.7,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.7,
+            "stagger": 0.18,
+            "resize": true,
+            "resize_ms": 700,
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "edge"
+          },
+          "source": "examples/resize-edge.json",
+          "label": "Edge Rebuild · Opt-in"
+        }
+      ]
+    },
+    {
+      "file": "docs/gifs/resize-soft.gif",
+      "mode": "resize",
+      "frames": 55,
+      "fps": 20,
+      "bytes": 733950,
+      "panels": [
+        {
+          "effect": {
+            "tile_size": 28,
+            "scatter": 125,
+            "open_ms": 520,
+            "close_ms": 480,
+            "gravity": "space",
+            "gravity_strength": 0.7,
+            "particles": 720,
+            "rotation": "random",
+            "spin": 180,
+            "swirl": 0,
+            "dispersion": 0.7,
+            "stagger": 0.18,
+            "resize": true,
+            "resize_ms": 700,
+            "resize_strength": 0.65,
+            "release": "together",
+            "wave_span": 0.55,
+            "origin_x": 0.5,
+            "origin_y": 0.5,
+            "resize_mode": "soft"
+          },
+          "source": "examples/resize-soft.json",
+          "label": "Soft Reflow · Opt-in"
         }
       ]
     }

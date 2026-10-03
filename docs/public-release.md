@@ -1,9 +1,10 @@
 # Public-release preparation
 
-Prepared on **2026-10-02**. The project is suitable for review as an **early
-prototype**, with explicit capability and validation limits. This record does
-not mean that repository visibility, a GitHub release or a package publication
-has been changed.
+Reviewed on **2026-10-02** for the first public **0.5.0 prerelease**, with explicit
+capability and validation limits. This page records the audit scope; see the
+[repository](https://github.com/jturbide/niri-fragments) and
+[release page](https://github.com/jturbide/niri-fragments/releases/tag/v0.5.0)
+for current publication status. No PyPI or AUR publication is configured.
 
 ## Prepared content
 
@@ -17,7 +18,7 @@ has been changed.
 - Project metadata/topics, package links, complete source assets, and a CI check
   for local documentation links, GIF metadata and version/changelog consistency.
 
-## Inspection record
+## Initial inspection record
 
 The initial audit covered all five existing development commits through
 `7ac916d5e1381fe52db9aaac9741c326e708f0ba`, 83 unique historical file blobs and the
@@ -56,20 +57,35 @@ checks outside the checkout. The native GIF recorder was rerun successfully in
 its own nested session. See [validation limits](validation.md); DMS runtime and
 broad desktop performance acceptance remain open.
 
+## 0.5.0 launch review
+
+The new gallery has 31 GIFs (about 30 MiB), including seven new preset/origin/resize
+clips. Synthetic sources and representative frames were inspected. Setup and
+restore use temporary fixtures during tests; the maintainer's active desktop
+configuration is not part of the release assets. The release adds a browser CI
+job with pinned actions and read-only token permissions.
+
+Current validation is recorded in [validation.md](validation.md). The first
+public artifact is a **prerelease**: stock open/close and optional resize,
+app-style Studio, iNiR registration and standalone setup. Native movement is an
+isolated experiment; DMS-native settings, seamless swap retargeting and broad GPU
+performance acceptance remain future work.
+
 ## Visibility and launch settings
 
-The repository remains **private** during preparation. No history rewrite was
-needed based on the inspection results. No tags, releases or public package
-uploads were created as part of this update.
+The repository was private during the initial audit. The maintainer subsequently
+approved public visibility and a signed v0.5.0 GitHub prerelease, after validation
+and final inspection. No history rewrite was needed based on the audit results.
 
-The branch-protection API returned HTTP 403: the current plan requires GitHub Pro
-or a public repository for that feature. Configure protection after the visibility
-decision. Private vulnerability reporting and public security features also need
-verification at launch; the security policy includes a fallback contact request
-while private reporting is unavailable.
+During private preparation the branch-protection API returned HTTP 403 because
+of the account plan. Branch protection and public security features must be
+configured and verified once visibility permits them. Required checks are
+`validate (3.10)`, `validate (3.14)` and `browser`; force pushes and deletion must
+be blocked. The owner/admin retains a recovery bypass for emergency maintenance;
+normal changes should use pull requests and successful checks.
 
 Before changing visibility, review the final commit and require its Checks run
-to pass. After the owner approves publication, follow [the launch steps](releasing.md#first-public-launch)
+to pass. For the approved publication, follow [the launch steps](releasing.md#first-public-launch)
 for anonymous access, branch rules, security reporting and README/media rendering.
 Re-run the audit if additional code, assets, issues or workflow output are added
 before launch.

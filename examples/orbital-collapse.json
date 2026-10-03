@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "name": "Orbital Collapse",
+  "effect": {
+    "tile_size": 28,
+    "scatter": 15,
+    "open_ms": 1000,
+    "close_ms": 1000,
+    "gravity": "center",
+    "gravity_strength": 1.5,
+    "particles": 1400,
+    "rotation": "gravity",
+    "spin": 320,
+    "swirl": 300,
+    "dispersion": 0.8,
+    "stagger": 0.25,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65,
+    "release": "together",
+    "wave_span": 0.55,
+    "origin_x": 0.5,
+    "origin_y": 0.5,
+    "resize_mode": "full"
+  }
+}

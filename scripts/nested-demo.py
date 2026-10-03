@@ -150,6 +150,18 @@ blinking = "Never"
                 for initial, fragmented, final in zip(before, middle, after):
                     assert initial > 1000 and 0 < fragmented < initial * 0.85, (before, middle, after)
                     assert abs(final - initial) < initial * 0.02, (before, after)
+                # Retarget while movement is still running. An even number of
+                # swaps must return both windows intact to their starting slots.
+                for index in range(6):
+                    msg("action", "move-column-right" if index % 2 == 0 else "move-column-left")
+                    time.sleep(0.12)
+                time.sleep(args.duration_ms / 1000 + 0.3)
+                repeated = colors(capture("repeated"))
+                repeated_windows = json.loads(msg("-j", "windows"))
+                assert {w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in repeated_windows} == {
+                    w["id"]: w["layout"]["pos_in_scrolling_layout"] for w in windows_after}
+                for initial, final in zip(after, repeated):
+                    assert abs(final - initial) < initial * 0.02, (after, repeated)
                 msg("action", "set-column-width", "60%")
                 time.sleep(0.43)
                 capture("resize")
@@ -162,11 +174,25 @@ blinking = "Never"
                 time.sleep(args.duration_ms / 2000)
                 capture("fallback")
                 time.sleep(args.duration_ms / 1000)
+                # Re-enable, swap, then close the moving client. After closing
+                # and layout settlement, no fragments from it may remain.
+                cfg.write_text(config(effect, args.duration_ms, source))
+                time.sleep(0.6)
+                msg("action", "move-column-left")
+                time.sleep(0.15)
+                msg("action", "close-window", "--id", str(right["id"]))
+                time.sleep(max(effect.close_ms, args.duration_ms) / 1000 + 1)
+                closed = colors(capture("close-during-movement"))
+                remaining = json.loads(msg("-j", "windows"))
+                assert len(remaining) == 1 and remaining[0]["id"] != right["id"]
+                victim_index = 0 if "blue" in right["title"] else 1
+                assert closed[victim_index] == 0 and closed[1 - victim_index] > 1000, closed
                 assert process.poll() is None
                 errors = re.findall(r".*(?:error compiling|error rendering|panicked|error loading config).*", (root / "niri.log").read_text())
                 assert not errors, errors
-                (root / "checks.json").write_text(json.dumps({"before": before, "movement": middle, "after": after, "errors": errors}, indent=2))
-                print("PASS: both real windows fragmented, swapped and reconstructed; resize and shader-removal captures saved.")
+                (root / "checks.json").write_text(json.dumps({"before": before, "movement": middle, "after": after,
+                    "repeated": repeated, "close_during_movement": closed, "errors": errors}, indent=2))
+                print("PASS: real swap, six interrupted swaps, close during movement, resize and shader-removal fallback.")
             else:
                 process.wait()
         finally:

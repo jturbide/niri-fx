@@ -89,7 +89,8 @@ class PresetTests(unittest.TestCase):
         invalid = [[], {"schema": 1, "name": "Bad", "effect": {"shader": "arbitrary"}},
                    {"schema": 1, "name": "../outside", "effect": {}},
                    {"schema": 1, "name": "Bad", "effect": {"gravity": "typo"}},
-                   {"schema": 2, "name": "Future", "effect": {}}]
+                   {"schema": 2, "name": "Future", "effect": {}},
+                   {"schema": True, "name": "Boolean schema", "effect": {}}]
         for data in invalid:
             with self.subTest(data=data), self.assertRaises(ValueError):
                 custom_document(data)
@@ -146,7 +147,10 @@ class EffectTests(unittest.TestCase):
                           {"open_ms": 2.5}, {"close_ms": 0}, {"tile_size": True},
                           {"particles": 10}, {"particles": 100.5}, {"gravity_strength": -1},
                           {"gravity": "bad"}, {"rotation": "bad"}, {"swirl": 400}, {"spin": float("nan")},
-                          {"dispersion": 1.1}, {"stagger": -0.1}, {"stagger": 0.5}, {"resize": 1}, {"resize_strength": 1.1}, {"resize_ms": 0}):
+                          {"dispersion": 1.1}, {"stagger": -0.1}, {"stagger": 0.5}, {"resize": 1}, {"resize_strength": 1.1}, {"resize_ms": 0},
+                          {"origin_x": -0.1}, {"origin_y": 1.1}, {"origin_x": True},
+                          {"wave_span": 0.71}, {"wave_span": float("nan")},
+                          {"release": "diagonal"}, {"resize_mode": "typo"}):
             with self.subTest(overrides=overrides), self.assertRaises(ValueError):
                 Effect(**overrides)
 
@@ -165,7 +169,7 @@ class EffectTests(unittest.TestCase):
             self.assertNotIn("@", movement_shader(effect))
 
     def test_resize_requires_explicit_opt_in(self):
-        for options in ([], ["--no-resize"]):
+        for options in ([], ["--no-resize"], ["--resize-mode", "edge"], ["--resize-mode", "soft"]):
             effect = selected_effect(parser().parse_args(["render", *options]))
             self.assertNotIn("window-resize", render_kdl(effect))
             self.assertEqual(render_kdl(effect).count('custom-shader r"'), 2)

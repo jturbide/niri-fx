@@ -3,7 +3,7 @@
 **Explode windows into pixels. Pull them back together.**
 
 Niri Fragments gives application windows textured particle animations: outward
-bursts, inward collapses, gravity, orbit and rotation. Choose from 11 presets or
+bursts, inward collapses, gravity, orbit and rotation. Choose from 14 presets or
 build your own in Fragments Studio. Niri renders the effects; the optional
 iNiR/iRiS adapter adds them to your existing settings picker.
 
@@ -11,14 +11,14 @@ iNiR/iRiS adapter adds them to your existing settings picker.
 [Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md)
 
-**Early prototype · 0.4.1.** Opening and closing work on stock Niri 26.04.
+**Public prerelease · 0.5.0.** Opening and closing work on stock Niri 26.04.
 Resize fragments are **off by default and strictly opt-in**. Native move/swap
 fragmentation requires the separate experimental Niri patch. Performance and
 appearance still need testing across GPUs, applications and display scales.
 
 ## See it in motion
 
-[Presets](#eleven-starting-styles) · [Compare the controls](#one-control-at-a-time) ·
+[Presets](#fourteen-starting-styles) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
@@ -30,7 +30,7 @@ These clips use Studio's real shader renderer with synthetic content at 20 fps.
 | --- | --- |
 | ![Opening reconstructs an intact window from fragments](docs/gifs/opening.gif) | ![Closing explodes a window into fragments](docs/gifs/closing.gif) |
 
-### Eleven starting styles
+### Fourteen starting styles
 
 Every loop closes and opens at that preset's configured timing. Start with
 **Balanced** for an everyday burst, **Explosion** for a stronger outward blast,
@@ -51,6 +51,14 @@ or **Implosion** for an inward collapse.
 | Tumbling shower · 1,600 pieces | Upward pull + gentle orbit | |
 
 Counts are targets, not exact totals; square tiles adapt to each window's shape.
+
+**New in 0.5: release waves, movable burst origins and a deeper orbital collapse.**
+
+| Directional Wave | Corner Burst | Orbital Collapse |
+| --- | --- | --- |
+| ![Directional Wave releases three sections from left to right](docs/gifs/preset-directional-wave.gif) | ![Corner Burst explodes from an off-center origin](docs/gifs/preset-corner-burst.gif) | ![Orbital Collapse spirals fragments into a central point](docs/gifs/preset-orbital-collapse.gif) |
+| 900 pieces · staged release | 1,200 pieces · lower-left origin | 1,400 pieces · 300° orbit |
+| [Settings JSON](examples/directional-wave.json) | [Settings JSON](examples/corner-burst.json) | [Settings JSON](examples/orbital-collapse.json) |
 
 ### One control at a time
 
@@ -78,10 +86,15 @@ orientation easier to see; all three use the same 180-particle target.
 
 ![Larger fragments with no rotation, random spin and orientation following travel](docs/gifs/compare-rotation.gif)
 
+**Burst origin — center / upper left / lower right.** Move the point from which
+pieces scatter and around which they orbit; everything else is held constant.
+
+![Identical bursts with centered, upper-left and lower-right origins](docs/gifs/compare-origin.gif)
+
 ### Three custom examples
 
 Combine the controls to create your own style. These downloadable examples use
-existing capabilities; they are separate from the 11 built-ins. **Resize is off
+existing capabilities; they are separate from the 14 built-ins. **Resize is off
 in all three.** The JSON files contain the exact parameters used for the GIFs.
 
 | Meteor Shower | Orbit Burst | Reverse Gravity |
@@ -109,6 +122,16 @@ up the old window texture and rebuilds the contents at the new size.
 
 Enable **Fragment windows when resizing** in Studio or pass `--resize` when
 saving/rendering a style. Ordinary resizing stays in place unless you opt in.
+
+Three styles let you choose how much of the window breaks apart. **The example
+JSON below explicitly enables resize**; importing it loads that choice into the
+editor, and applying the resulting preset enables it on the desktop.
+
+| Full Breakup | Edge Rebuild | Soft Reflow |
+| --- | --- | --- |
+| ![Full Breakup fragments the whole window during resize](docs/gifs/resize-full.gif) | ![Edge Rebuild concentrates fragments around changing edges](docs/gifs/resize-edge.gif) | ![Soft Reflow keeps a readable window beneath lighter fragments](docs/gifs/resize-soft.gif) |
+| Whole-window effect | Preserves the center | Gentler blend |
+| [Opt-in JSON](examples/resize-full.json) | [Opt-in JSON](examples/resize-edge.json) | [Opt-in JSON](examples/resize-soft.json) |
 
 ### Experimental movement and swaps
 
@@ -150,6 +173,19 @@ xdg-open /tmp/fragments-preview.html
 The offline preview changes no desktop settings. Use a new output filename if
 you already have that file; existing previews are never overwritten.
 
+For installation with diagnostics and a restore snapshot:
+
+```sh
+python3 -m niri_fragments doctor
+python3 -m niri_fragments setup            # Review the detected target and file changes
+python3 -m niri_fragments setup --apply    # Apply that setup
+```
+
+Setup detects iNiR or standalone Niri and adds an application launcher if absent.
+On iNiR it registers styles for you to select; standalone setup validates and adds
+a managed include that Niri hot reloads. See [setup and restore](docs/setup.md)
+for custom paths, updates and recovery.
+
 ### Niri + iNiR/iRiS
 
 ```sh
@@ -183,7 +219,9 @@ python3 -m niri_fragments studio
 
 Tune particle count, gravity direction and strength, spin, orbit, scatter,
 release stagger and timing. Studio opens as a dedicated Chromium app window,
-with a browser fallback. Export JSON/KDL anywhere, or **Save to iRiS** and then
+with a browser fallback. **Import preset** opens any showcase JSON in the editor.
+Tune release direction, burst origin and resize style, then export JSON/KDL or
+**Save to iRiS** and
 select your custom style in Settings. Saving does not activate it.
 
 The default Balanced preset targets 720 pieces; Explosion uses 1,200 and
@@ -194,7 +232,7 @@ CLI examples are in the [usage guide](docs/usage.md).
 
 | Feature | Stock Niri | Extra requirement |
 | --- | --- | --- |
-| Open / close fragments, 11 presets | Yes; validated on 26.04 | Enable Niri animations |
+| Open / close fragments, 14 presets | Yes; validated on 26.04 | Enable Niri animations |
 | Optional resize fragments | Yes; disabled by default | Studio checkbox or `--resize` |
 | Studio preview and KDL / JSON export | Yes | WebGL browser |
 | Preset registration and Studio save | Yes | iNiR external preset support |

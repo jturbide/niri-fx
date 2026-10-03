@@ -7,10 +7,12 @@ content is captured.
   Resize is shown as an opt-in feature; recording it does not change a preset.
 - `preset-*.gif`: each built-in style closes and opens at its configured timing.
 - `compare-*.gif`: synchronized three-panel comparisons of density, gravity
-  direction, gravity strength and rotation. Within each clip only the named
+  direction, gravity strength, rotation and burst origin. Within each clip only the named
   control changes; texture, seed, other parameters and timing match.
 - `recipe-*.gif`: custom Meteor Shower, Orbit Burst and Reverse Gravity settings
   from the importable JSON in [examples](../../examples/README.md).
+- `resize-full.gif`, `resize-edge.gif`, `resize-soft.gif`: opt-in resize styles
+  using the corresponding example JSON files.
 - `move-concept.gif`, `swap-concept.gif`: Studio's labelled Canvas design previews.
   These are not recordings of compositor movement or promises of its appearance.
 - `native-swap.gif`: actual recording of two synthetic Alacritty windows inside
@@ -35,7 +37,7 @@ frames with FFmpeg. Sources remain under ignored `artifacts/`; the browser
 profile is removed. `manifest.json` records the Studio clips' frame counts,
 modes and file sizes.
 
-To render just the four comparisons and three custom examples:
+To render just the five comparisons, three custom recipes and three resize styles:
 
 ```sh
 node scripts/render-readme-gifs.mjs --showcase-only

@@ -6,6 +6,13 @@ import math
 
 GRAVITIES = ("none", "down", "up", "left", "right", "center", "space")
 ROTATIONS = ("none", "random", "gravity")
+RELEASES = ("together", "left", "right", "up", "down")
+RESIZE_MODES = ("full", "edge", "soft")
+LIMITS = {"tile_size": (8, 128), "scatter": (0, 240), "open_ms": (100, 1500),
+          "close_ms": (100, 1500), "gravity_strength": (0, 3), "particles": (0, 4096),
+          "spin": (0, 720), "swirl": (-360, 360), "dispersion": (0, 1), "stagger": (0, 0.4),
+          "resize_ms": (100, 1500), "resize_strength": (0, 1), "origin_x": (0, 1),
+          "origin_y": (0, 1), "wave_span": (0, 0.7)}
 
 
 @dataclass(frozen=True)
@@ -25,14 +32,14 @@ class Effect:
     resize: bool = False
     resize_ms: int = 450
     resize_strength: float = 0.65
+    release: str = "together"
+    wave_span: float = 0.55
+    origin_x: float = 0.5
+    origin_y: float = 0.5
+    resize_mode: str = "full"
 
     def __post_init__(self):
-        for name, low, high in (("tile_size", 8, 128), ("scatter", 0, 240),
-                                ("open_ms", 100, 1500), ("close_ms", 100, 1500),
-                                ("gravity_strength", 0, 3), ("particles", 0, 4096),
-                                ("spin", 0, 720), ("swirl", -360, 360),
-                                ("dispersion", 0, 1), ("stagger", 0, 0.4),
-                                ("resize_ms", 100, 1500), ("resize_strength", 0, 1)):
+        for name, (low, high) in LIMITS.items():
             value = getattr(self, name)
             if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or not low <= value <= high:
                 raise ValueError(f"{name} must be a finite number between {low} and {high}")
@@ -46,11 +53,16 @@ class Effect:
             raise ValueError(f"gravity must be one of {', '.join(GRAVITIES)}")
         if self.rotation not in ROTATIONS:
             raise ValueError(f"rotation must be one of {', '.join(ROTATIONS)}")
+        if self.release not in RELEASES:
+            raise ValueError(f"release must be one of {', '.join(RELEASES)}")
+        if self.resize_mode not in RESIZE_MODES:
+            raise ValueError(f"resize_mode must be one of {', '.join(RESIZE_MODES)}")
 
     @property
     def classic(self):
         return (self.gravity == "none" and not self.particles and self.rotation == "none"
-                and self.swirl == 0 and self.dispersion == 0 and self.stagger == 0)
+                and self.swirl == 0 and self.dispersion == 0 and self.stagger == 0
+                and self.release == "together" and self.origin_x == 0.5 and self.origin_y == 0.5)
 
 
 PRESETS = {
@@ -65,6 +77,9 @@ PRESETS = {
     "vortex": Effect(scatter=25, open_ms=720, close_ms=720, gravity="center", gravity_strength=1.15, particles=720, rotation="gravity", spin=240, swirl=160, dispersion=0.65, stagger=0.25),
     "confetti": Effect(scatter=115, open_ms=650, close_ms=720, gravity="down", gravity_strength=0.85, particles=1600, spin=480, dispersion=1, stagger=0.3),
     "updraft": Effect(scatter=60, open_ms=600, close_ms=640, gravity="up", gravity_strength=0.9, particles=600, rotation="gravity", spin=180, swirl=-25, dispersion=0.8, stagger=0.24),
+    "directional-wave": Effect(scatter=90, open_ms=1000, close_ms=1000, gravity="up", gravity_strength=0.6, particles=900, spin=180, release="left", wave_span=0.6),
+    "corner-burst": Effect(scatter=180, open_ms=780, close_ms=740, gravity="space", gravity_strength=1.1, particles=1200, spin=300, origin_x=0.15, origin_y=0.8, dispersion=0.8),
+    "orbital-collapse": Effect(scatter=15, open_ms=1000, close_ms=1000, gravity="center", gravity_strength=1.5, particles=1400, rotation="gravity", spin=320, swirl=300, dispersion=0.8, stagger=0.25),
 }
 
 def shader_templates():
@@ -108,6 +123,11 @@ def _expand(template, effect, opening):
             .replace("@DISPERSION@", f"{effect.dispersion:.6f}")
             .replace("@RESIZE@", f"{effect.resize_strength:.6f}")
             .replace("@STAGGER@", f"{effect.stagger:.6f}")
+            .replace("@RELEASE@", str(RELEASES.index(effect.release)))
+            .replace("@WAVE_SPAN@", f"{effect.wave_span:.6f}")
+            .replace("@ORIGIN_X@", f"{effect.origin_x:.6f}")
+            .replace("@ORIGIN_Y@", f"{effect.origin_y:.6f}")
+            .replace("@RESIZE_MODE@", str(RESIZE_MODES.index(effect.resize_mode)))
             .replace("@ENTRY@", "open_color" if opening else "close_color")
             .replace("@PROGRESS@", "1.0 - niri_clamped_progress" if opening else "niri_clamped_progress"))
 

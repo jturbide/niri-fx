@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "name": "Directional Wave",
+  "effect": {
+    "tile_size": 28,
+    "scatter": 90,
+    "open_ms": 1000,
+    "close_ms": 1000,
+    "gravity": "up",
+    "gravity_strength": 0.6,
+    "particles": 900,
+    "rotation": "random",
+    "spin": 180,
+    "swirl": 0,
+    "dispersion": 0.7,
+    "stagger": 0.18,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65,
+    "release": "left",
+    "wave_span": 0.6,
+    "origin_x": 0.5,
+    "origin_y": 0.5,
+    "resize_mode": "full"
+  }
+}

@@ -13,13 +13,14 @@ import time
 from urllib.parse import parse_qs, urlsplit
 import webbrowser
 
-from .effects import GRAVITIES, ROTATIONS, describe_presets, shader_templates
+from .effects import Effect, GRAVITIES, ROTATIONS, RELEASES, RESIZE_MODES, LIMITS, describe_presets, shader_templates
 from .integration import make_custom_preset, read_shell_presets, update_registry
 
 
 def preview_document(effect, name="balanced", connection=None):
     payload = {"parameters": asdict(effect), "name": name, "presets": describe_presets(),
                "templates": shader_templates(), "gravities": GRAVITIES, "rotations": ROTATIONS,
+               "releases": RELEASES, "resize_modes": RESIZE_MODES, "limits": LIMITS, "defaults": asdict(Effect()),
                "connection": connection}
     data = json.dumps(payload).replace("</", "<\\/")
     root = files("niri_fragments")
@@ -88,7 +89,7 @@ def make_server(arguments, effect):
             if request.path == "/ping":
                 self.respond(200, {"ok": True})
                 return
-            self.respond(200, preview_document(effect, arguments.preset,
+            self.respond(200, preview_document(effect, getattr(arguments, "custom_name", arguments.preset),
                          {"origin": self.server.origin, "token": token}), "text/html")
 
         def do_POST(self):

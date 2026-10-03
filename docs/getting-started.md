@@ -40,6 +40,10 @@ there is no official PyPI, AUR or Flatpak release yet.
 
 ## iNiR and iRiS
 
+For a planned installation with diagnostics, launcher creation and exact-file
+restore snapshots, use [the setup workflow](setup.md). `setup` previews changes;
+`setup --apply` performs them. The manual registration workflow remains available:
+
 ```sh
 python3 -m niri_fragments register --dry-run
 python3 -m niri_fragments register
@@ -81,6 +85,10 @@ its registry is used instead. The helper is normally under `~/.local/share/inir`
 symlinks are preserved and backup paths are printed by the command.
 
 ## Standalone Niri
+
+For a managed include and restore snapshot, use `setup --target standalone`,
+review the plan, then repeat with `--apply`. See [setup and restore](setup.md).
+The manual export workflow below is useful when another tool manages your config.
 
 This path also applies to Niri with DankMaterialShell or another shell. Keep the
 generated file outside shell-managed directories. First generate and validate:

@@ -3,6 +3,7 @@
 | I want to… | Read |
 | --- | --- |
 | Preview, install, update or remove Fragments | [Getting started](getting-started.md) |
+| Diagnose, plan an installation or restore setup | [Setup and restore](setup.md) |
 | Tune gravity, particles, rotation or optional resize | [Studio and controls](usage.md) |
 | Try the custom styles shown in the README | [Showcase examples](../examples/README.md) |
 | Use DankMaterialShell or another shell | [Compatibility](compatibility.md) |

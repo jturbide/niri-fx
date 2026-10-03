@@ -64,9 +64,10 @@ try{
   let count;
   for(const [index,panel] of panels.entries()){
    const directory=join(scratch,spec.name+'-'+index);mkdirSync(directory);
-   const effect=panel.source?JSON.parse(readFileSync(join(root,panel.source),'utf8')).effect:{...presets[panel.preset],...panel.overrides};
+   let effect=panel.source?JSON.parse(readFileSync(join(root,panel.source),'utf8')).effect:{...presets[panel.preset],...panel.overrides};
    // Python validation and shader parity keep the examples faithful to CLI exports.
-   const sources=JSON.parse(execFileSync('python3',['-c','import json,sys;from niri_fragments.effects import Effect,shader;p=Effect(**json.load(sys.stdin));print(json.dumps([shader(p,True),shader(p,False)]))'],{input:JSON.stringify(effect),encoding:'utf8'}));
+   const generated=JSON.parse(execFileSync('python3',['-c','import json,sys;from dataclasses import asdict;from niri_fragments.effects import Effect,shader;p=Effect(**json.load(sys.stdin));print(json.dumps({"effect":asdict(p),"sources":[shader(p,True),shader(p,False)]}))'],{input:JSON.stringify(effect),encoding:'utf8'}));
+   effect=generated.effect;const sources=generated.sources;
    const concept=['move','swap'].includes(spec.mode);
    // Show actual preset durations, sampled at 20 fps; a hold separates endpoints.
    const forward=spec.mode==='resize'?effect.resize_ms:concept?1100:effect.close_ms;

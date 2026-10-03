@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "name": "Corner Burst",
+  "effect": {
+    "tile_size": 28,
+    "scatter": 180,
+    "open_ms": 780,
+    "close_ms": 740,
+    "gravity": "space",
+    "gravity_strength": 1.1,
+    "particles": 1200,
+    "rotation": "random",
+    "spin": 300,
+    "swirl": 0,
+    "dispersion": 0.8,
+    "stagger": 0.18,
+    "resize": false,
+    "resize_ms": 450,
+    "resize_strength": 0.65,
+    "release": "together",
+    "wave_span": 0.55,
+    "origin_x": 0.15,
+    "origin_y": 0.8,
+    "resize_mode": "full"
+  }
+}

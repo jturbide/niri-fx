@@ -1,0 +1,192 @@
+from argparse import Namespace
+from copy import deepcopy
+import json
+import os
+from pathlib import Path
+import tempfile
+import unittest
+from unittest.mock import patch
+
+from niri_fragments.cli import main, parser, selected_effect
+from niri_fragments.effects import PRESETS
+from niri_fragments import setup
+from test_fragments import shell_registry
+
+
+class SetupTests(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.root = Path(self.temp.name)
+        self.config = self.root / "niri/config.kdl"
+        self.config.parent.mkdir()
+        self.original = b'// User config\ninclude "base.kdl"\n\n'
+        self.config.write_bytes(self.original)
+        (self.config.parent / "base.kdl").write_text("animations {}\n")
+        self.args = Namespace(config=self.config, target="standalone", inir_root=self.root / "no-shell",
+                              registry=self.root / "registry.json", base="auto", launcher=False,
+                              name=None, preset="balanced")
+        self.state = self.root / "state"
+        self.validate = patch("niri_fragments.setup.validate_config")
+        self.validator = self.validate.start()
+
+    def tearDown(self):
+        self.validate.stop()
+        self.temp.cleanup()
+
+    def plan(self):
+        return setup.plan_setup(self.args, PRESETS["balanced"])
+
+    def test_plan_does_not_change_configs_or_create_state(self):
+        plan = self.plan()
+        self.assertEqual(len(plan["changes"]), 2)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse(self.state.exists())
+        self.assertFalse((self.config.parent / "fragments").exists())
+        self.assertFalse(list(self.config.parent.glob(".fragments-check-*")))
+
+    def test_standalone_apply_idempotence_and_exact_restore(self):
+        self.config.chmod(0o640)
+        result = setup.apply_plan(self.plan(), self.state)
+        self.assertTrue(result["changed"])
+        self.assertIn(setup.BEGIN, self.config.read_text())
+        self.assertEqual(self.config.stat().st_mode & 0o777, 0o640)
+        self.assertFalse(setup.apply_plan(self.plan(), self.state)["changed"])
+        preview = setup.restore(self.state)
+        self.assertTrue(preview["dry_run"])
+        self.assertIn(setup.BEGIN, self.config.read_text())
+        setup.restore(self.state, result["transaction"], True)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse((self.config.parent / "fragments/niri-fragments.kdl").exists())
+        with self.assertRaisesRegex(ValueError, "No applied"):
+            setup.restore(self.state)
+
+    def test_post_install_edits_block_all_restore_writes(self):
+        setup.apply_plan(self.plan(), self.state)
+        include = self.config.parent / "fragments/niri-fragments.kdl"
+        installed = include.read_bytes()
+        self.config.write_text(self.config.read_text() + "// Later user edit\n")
+        with self.assertRaisesRegex(ValueError, "changed"):
+            setup.restore(self.state, apply=True)
+        self.assertEqual(include.read_bytes(), installed)
+        self.assertIn("Later user edit", self.config.read_text())
+
+    def test_file_change_after_plan_blocks_apply(self):
+        plan = self.plan()
+        self.config.write_text("// Concurrent edit\n")
+        with self.assertRaisesRegex(ValueError, "changed"):
+            setup.apply_plan(plan, self.state)
+        self.assertFalse((self.config.parent / "fragments").exists())
+
+    def test_config_edit_during_validation_blocks_the_plan(self):
+        self.validator.side_effect = lambda _: self.config.write_text("// Concurrent edit\n")
+        with self.assertRaisesRegex(ValueError, "changed while preparing"):
+            self.plan()
+        self.assertEqual(self.config.read_text(), "// Concurrent edit\n")
+        self.assertFalse(self.state.exists())
+
+    def test_validation_failure_rolls_back_all_applied_files(self):
+        plan = self.plan()
+        self.validator.side_effect = ValueError("failed validation")
+        with self.assertRaisesRegex(ValueError, "failed validation"):
+            setup.apply_plan(plan, self.state)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse((self.config.parent / "fragments/niri-fragments.kdl").exists())
+        manifest = json.loads(next(self.state.glob("*/manifest.json")).read_text())
+        self.assertEqual(manifest["status"], "failed")
+
+    def test_failed_second_write_recovers_first_file(self):
+        plan = self.plan()
+        real_write = setup.atomic_write
+        def fail_root(path, data, mode=0o600):
+            if path == self.config:
+                raise OSError("disk write failed")
+            return real_write(path, data, mode)
+        with patch.object(setup, "atomic_write", side_effect=fail_root):
+            with self.assertRaisesRegex(OSError, "disk write failed"):
+                setup.apply_plan(plan, self.state)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse((self.config.parent / "fragments/niri-fragments.kdl").exists())
+
+    def test_unowned_include_and_damaged_markers_are_rejected(self):
+        include = self.config.parent / "fragments/niri-fragments.kdl"
+        include.parent.mkdir()
+        include.write_text("// Somebody else's file\n")
+        with self.assertRaisesRegex(ValueError, "unowned"):
+            self.plan()
+        include.unlink()
+        self.config.write_text(self.original.decode() + setup.BEGIN + "\n")
+        with self.assertRaisesRegex(ValueError, "markers"):
+            self.plan()
+
+    def test_symlink_is_preserved_and_retargeting_blocks_restore(self):
+        target = self.root / "actual.kdl"
+        self.config.rename(target)
+        self.config.symlink_to(target)
+        setup.apply_plan(self.plan(), self.state)
+        self.assertTrue(self.config.is_symlink())
+        replacement = self.root / "other.kdl"
+        replacement.write_text("// Another config\n")
+        self.config.unlink()
+        self.config.symlink_to(replacement)
+        with self.assertRaisesRegex(ValueError, "changed"):
+            setup.restore(self.state, apply=True)
+        self.assertEqual(replacement.read_text(), "// Another config\n")
+
+    def test_inir_setup_and_restore_preserve_original_registry(self):
+        self.args.target = "inir"
+        original = b'{"presets":[{"id":"other","name":"Keep"}],"note":42}\n'
+        self.args.registry.write_bytes(original)
+        with patch("niri_fragments.setup.read_shell_presets", return_value=shell_registry()):
+            setup.apply_plan(self.plan(), self.state)
+            self.assertFalse(self.plan()["changes"])
+        data = json.loads(self.args.registry.read_text())
+        self.assertEqual(data["presets"][0]["id"], "other")
+        self.assertEqual(len(data["presets"]), len(PRESETS) + 1)
+        setup.restore(self.state, apply=True)
+        self.assertEqual(self.args.registry.read_bytes(), original)
+        self.assertEqual(self.config.read_bytes(), self.original)
+
+    def test_tampered_snapshot_is_never_restored(self):
+        setup.apply_plan(self.plan(), self.state)
+        saved = next(self.state.glob("*/1.before"))
+        saved.write_text("tampered")
+        with self.assertRaisesRegex(ValueError, "hash check"):
+            setup.restore(self.state, apply=True)
+        self.assertIn(setup.BEGIN, self.config.read_text())
+
+    def test_multiple_setups_restore_newest_first(self):
+        from dataclasses import replace
+        from types import SimpleNamespace
+        with patch.object(setup.uuid, "uuid4", side_effect=[SimpleNamespace(hex="f" * 32), SimpleNamespace(hex="a" * 32)]):
+            first = setup.apply_plan(self.plan(), self.state)
+            second_plan = setup.plan_setup(self.args, replace(PRESETS["balanced"], origin_x=0.1))
+            second = setup.apply_plan(second_plan, self.state)
+        self.assertEqual(setup.restore(self.state, apply=True)["transaction"], second["transaction"])
+        self.assertEqual(setup.restore(self.state, apply=True)["transaction"], first["transaction"])
+        self.assertEqual(self.config.read_bytes(), self.original)
+
+    def test_launcher_uses_xdg_and_is_removed_by_restore(self):
+        self.args.launcher = True
+        with patch.dict(os.environ, {"XDG_DATA_HOME": str(self.root / "data with spaces")}):
+            plan = self.plan()
+            setup.apply_plan(plan, self.state)
+            launcher = self.root / "data with spaces/applications/niri-fragments-studio.desktop"
+            self.assertTrue(launcher.exists())
+            self.assertFalse(self.plan()["changes"])
+            setup.restore(self.state, apply=True)
+            self.assertFalse(launcher.exists())
+
+    def test_setup_requires_apply_and_custom_cli_uses_exact_document(self):
+        self.assertFalse(parser().parse_args(["setup"]).apply)
+        self.assertFalse(parser().parse_args(["restore"]).apply)
+        document = self.root / "custom.json"
+        document.write_text(json.dumps({"schema": 1, "name": "Portable", "effect": {"gravity": "up", "resize_mode": "edge"}}))
+        effect = selected_effect(parser().parse_args(["preview", "--custom", str(document), "--output", "unused"]))
+        self.assertEqual(effect.gravity, "up")
+        self.assertFalse(effect.resize)
+        with self.assertRaisesRegex(ValueError, "combine"):
+            selected_effect(parser().parse_args(["render", "--custom", str(document), "--particles", "100"]))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -20,14 +20,22 @@ a browser tab. Live controls include:
   very small windows also have a four-pixel minimum tile size.
 - **Rotation:** none, random spin, or orientation toward the travel direction.
 - **Spin:** 0–720 degrees; the random spin range or the alignment limit.
-- **Orbit:** −360 to +360 degrees around the window center.
+- **Orbit:** −360 to +360 degrees around the selected burst origin.
 - **Spread:** 0–240 logical pixels of initial radial scatter.
 - **Path dispersion:** 0–1; separates fragment speeds and curves their paths.
 - **Release stagger:** 0–0.4; varies when fragments separate and dissolve.
+- **Release direction:** together, or three waves starting at the left, right,
+  top or bottom. **Wave span** (0–0.7) separates the first and last wave; larger
+  values make the sweep more pronounced. Random stagger still varies individual pieces.
+- **Burst origin X/Y:** 0–1 within the window, from left/top to right/bottom.
+  The same point controls scatter, central attraction and orbit.
 - **Timing:** independent opening, closing and resizing durations, 100–1500 ms.
 - **Resize (off by default):** enable switch and breakup strength (0–1); bounded fragments
   reconstruct the window at its new size. Resize shares particle count, gravity
   direction and rotation; its strength is separate from open/close gravity.
+  Choose **Full Breakup**, **Edge Rebuild** (keeps the center intact) or **Soft
+  Reflow** (lighter breakup over the ordinary resize image). Selecting a style
+  alone does not enable resize.
 
 The editor uses the same shader templates as the CLI. Click **Reconstruct** or
 **Deconstruct**, or scrub the timeline. Set a name and choose **Save to iRiS**;
@@ -65,7 +73,20 @@ python3 -m niri_fragments preview --preset earth --output /tmp/fragments.html
 xdg-open /tmp/fragments.html
 ```
 
-Offline mode can export a preset JSON file or standalone KDL. Import JSON with:
+Both offline and app-style Studio support **Import preset**, JSON export and
+standalone KDL export. Import validates the entire file before replacing editor
+settings; it does not save or activate anything. Files are limited to 16 KiB and
+contain named parameters, never arbitrary shaders. Missing fields use defaults;
+legacy files without `resize` keep it off. An explicit `resize: true` is retained.
+
+Open the same file directly from the CLI:
+
+```sh
+python3 -m niri_fragments studio --custom examples/corner-burst.json
+python3 -m niri_fragments render --custom examples/corner-burst.json > /tmp/corner-burst.kdl
+```
+
+Use `--custom` without effect overrides. To save an imported file to iNiR:
 
 ```sh
 python3 -m niri_fragments register --custom ~/Downloads/niri-fragments-preset.json
@@ -101,6 +122,9 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 | Vortex | Spirals inward while pieces follow their travel direction |
 | Confetti | Small tumbling pieces with downward gravity |
 | Updraft | Rises with a slight orbit and direction-following rotation |
+| Directional Wave | Three stages release from left to right, with upward drift |
+| Corner Burst | 1,200 pieces scatter from a lower-left origin |
+| Orbital Collapse | 1,400 pieces spiral inward with 300° orbit |
 
 Particle targets are approximate and depend on window geometry. Opening reverses
 the closing trajectory with its own duration; the effect is artistic rather than
@@ -108,12 +132,12 @@ a physical simulation. There are no particle collisions.
 
 ## Resize is opt-in
 
-New presets, built-in presets and Studio sessions all start with fragment resize
-disabled. Enable **Fragment windows when resizing**, or pass `--resize`:
+All built-in presets and fresh Studio sessions start with fragment resize
+disabled. Imported custom presets retain their explicit choice. Enable **Fragment windows when resizing**, or pass `--resize`:
 
 ```sh
 python3 -m niri_fragments register --name "Resize experiment" --preset balanced --resize
-python3 -m niri_fragments render --preset balanced --resize > /tmp/fragments-resize.kdl
+python3 -m niri_fragments render --preset balanced --resize --resize-mode edge > /tmp/fragments-resize.kdl
 ```
 
 `--no-resize` suppresses the override. With the iNiR adapter, the base preset's

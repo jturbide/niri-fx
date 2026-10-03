@@ -71,6 +71,8 @@ def main():
     checked_examples = set()
     for command in re.findall(r"^python3 -m niri_fragments preview .+$", commands, re.M):
         args = parser().parse_args(shlex.split(command)[3:])
+        if args.custom:
+            args.custom = ROOT / args.custom
         name = args.output.stem
         if name not in examples or asdict(selected_effect(args)) != examples[name]:
             errors.append(f"Example preview command differs from saved JSON: {name}")

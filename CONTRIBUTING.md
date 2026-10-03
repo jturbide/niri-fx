@@ -24,7 +24,7 @@ configuration checks. CI requires GLSL validation; local `--require-niri` also
 checks stock Niri config parsing. Tests use temporary files and a loopback server,
 so local socket access must be available. Do not point tests at your real registry.
 
-For editor/rendering changes, use Node 22+ and Chromium:
+For editor/rendering changes, use Node 22+ and Chromium/Chrome (or `CHROME_BIN`):
 
 ```sh
 python3 -m niri_fragments preview --output /tmp/fragments-review.html
@@ -41,6 +41,7 @@ export parity; it is not a compositor GPU benchmark. See
 | Location | Responsibility |
 | --- | --- |
 | `niri_fragments/effects.py`, `shaders/` | Validated parameters, presets and shader generation |
+| `niri_fragments/setup.py` | Setup plans, snapshots, conflict-aware restore and diagnostics |
 | `niri_fragments/integration.py` | iNiR helper contract and safe registry updates |
 | `niri_fragments/studio.py`, `preview.html`, `motion-preview.js` | Local editor, actual shader previews and labelled movement concepts |
 | `tests/`, `scripts/validate.py`, `scripts/browser-smoke.mjs` | Behavioral, compilation and browser checks |

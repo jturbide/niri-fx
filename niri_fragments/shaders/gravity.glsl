@@ -12,6 +12,9 @@ const float FRAGMENTS_SPIN = @SPIN@;
 const float FRAGMENTS_SWIRL = @SWIRL@;
 const float FRAGMENTS_DISPERSION = @DISPERSION@;
 const float FRAGMENTS_STAGGER = @STAGGER@;
+const int FRAGMENTS_RELEASE = @RELEASE@;
+const float FRAGMENTS_WAVE_SPAN = @WAVE_SPAN@;
+const vec2 FRAGMENTS_ORIGIN = vec2(@ORIGIN_X@, @ORIGIN_Y@);
 const float FRAGMENTS_PI = 3.14159265359;
 
 vec2 fragments_hash(vec2 cell) {
@@ -32,11 +35,19 @@ vec4 fragments_sample(vec2 geo) {
     return texture2D(niri_tex, uv);
 }
 
-vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
-    if (breakup <= 0.0) return fragments_sample(coords_geo.xy);
+int fragments_phase_index(vec2 geo) {
+    if (FRAGMENTS_RELEASE == 0) return 0;
+    float axis = geo.x;
+    if (FRAGMENTS_RELEASE == 2) axis = 1.0 - geo.x;
+    if (FRAGMENTS_RELEASE == 3) axis = geo.y;
+    if (FRAGMENTS_RELEASE == 4) axis = 1.0 - geo.y;
+    return int(clamp(floor(axis * 3.0), 0.0, 2.0));
+}
+
+vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
     if (breakup >= 1.0) return vec4(0.0);
     vec2 size = max(size_geo.xy, vec2(1.0));
-    vec2 center = size * 0.5;
+    vec2 center = size * FRAGMENTS_ORIGIN;
     vec2 pixel = coords_geo.xy * size;
     // Target count is approximate because tiles remain square at every aspect
     // ratio; a 4-logical-pixel floor bounds density on very small windows.
@@ -51,6 +62,10 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
     if (FRAGMENTS_GRAVITY == 4) direction = vec2(1.0, 0.0);
     vec2 count = ceil(size / tile);
     vec2 grid_origin = (size - count * tile) * 0.5;
+    if (breakup <= 0.0) {
+        vec2 source_center = grid_origin + (floor((pixel - grid_origin) / tile) + 0.5) * tile;
+        return fragments_phase_index(source_center / size) == phase ? fragments_sample(coords_geo.xy) : vec4(0.0);
+    }
     vec4 result = vec4(0.0);
     // Three interleaved velocity bands break up the expanding-sheet look.
     // Each piece belongs to one band, with its own invertible flight field.
@@ -74,16 +89,18 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
         float c = abs(cos(orbit)), s = abs(sin(orbit));
         vec2 extent = vec2(c * span.x + s * span.y, s * span.x + c * span.y)
                     + vec2(tile * (0.72 * FRAGMENTS_DISPERSION * scale + 0.71 * field_shrink));
-        if (any(greaterThan(abs(pixel - field_center), extent))) continue;
+        vec2 bounds_center = field_center + field * ((size * 0.5 - center) * scale);
+        if (any(greaterThan(abs(pixel - bounds_center), extent))) continue;
         // Inverse wander <= .72 tiles, half-diagonal <= .708. Total < 1.5:
         // a 3x3 neighborhood per band covers all contributors (27 candidates).
         for (int y = -1; y <= 1; y++) {
           for (int x = -1; x <= 1; x++) {
             vec2 cell = candidate + vec2(float(x), float(y));
             if (any(lessThan(cell, vec2(0.0))) || any(greaterThanEqual(cell, count))) continue;
+            vec2 source_center = grid_origin + (cell + 0.5) * tile;
+            if (fragments_phase_index(source_center / size) != phase) continue;
             vec2 random = fragments_hash(cell);
             if (int(floor(random.x * 3.0)) != band) continue;
-            vec2 source_center = grid_origin + (cell + 0.5) * tile;
             float wave = dot(source_center / size - 0.5, direction) + 0.5;
             float delay = FRAGMENTS_STAGGER * (0.65 * random.x + 0.35 * wave);
             float local_time = clamp((breakup - delay) / (1.0 - delay), 0.0, 1.0);
@@ -125,6 +142,22 @@ vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
             result = fragment + result * (1.0 - fragment.a);
           }
         }
+    }
+    return result;
+}
+
+vec4 fragments_color(vec3 coords_geo, vec3 size_geo, float breakup) {
+    if (breakup <= 0.0) return fragments_sample(coords_geo.xy);
+    if (breakup >= 1.0) return vec4(0.0);
+    if (FRAGMENTS_RELEASE == 0) return fragments_phase(coords_geo, size_geo, breakup, 0);
+    vec4 result = vec4(0.0);
+    // Three staggered source strips retain invertible fields and bounded lookup.
+    // Together mode still uses one field (27 candidates); waves use up to 81.
+    for (int phase = 0; phase < 3; phase++) {
+        float delay = float(phase) * 0.5 * FRAGMENTS_WAVE_SPAN;
+        float p = clamp((breakup - delay) / (1.0 - FRAGMENTS_WAVE_SPAN), 0.0, 1.0);
+        vec4 layer = fragments_phase(coords_geo, size_geo, p, phase);
+        result = layer + result * (1.0 - layer.a);
     }
     return result;
 }

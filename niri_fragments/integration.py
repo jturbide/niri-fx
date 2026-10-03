@@ -76,7 +76,7 @@ def make_presets(shell_registry, base_id="auto"):
 
 
 def custom_document(data):
-    if not isinstance(data, dict) or data.get("schema") != 1 or not isinstance(data.get("effect"), dict):
+    if not isinstance(data, dict) or type(data.get("schema")) is not int or data["schema"] != 1 or not isinstance(data.get("effect"), dict):
         raise ValueError("Custom preset must contain schema: 1, name, and an effect object")
     name = data.get("name")
     if not isinstance(name, str) or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9 _-]{0,47}", name):

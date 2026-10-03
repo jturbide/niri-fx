@@ -7,6 +7,7 @@ const float FR_STRENGTH = @RESIZE@;
 const float FR_SPIN = @SPIN@;
 const int FR_ROTATION = @ROTATION@;
 const int FR_GRAVITY = @GRAVITY@;
+const int FR_MODE = @RESIZE_MODE@;
 
 vec2 fr_hash(vec2 cell) {
     return fract(sin(vec2(dot(cell, vec2(127.1, 311.7)),
@@ -63,6 +64,14 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
         vec2 edge_cells = min(cell, count - 1.0 - cell);
         float edge_factor = smoothstep(0.0, 1.0, min(edge_cells.x, edge_cells.y));
         float local_pulse = pulse;
+        if (FR_MODE == 1) {
+            // Concentrate breakup near the outer bands of changing dimensions.
+            // This leaves the central content intact while the boundary rebuilds.
+            vec2 changing = step(vec2(0.0001), abs(next_scale - vec2(1.0)));
+            vec2 edge_distance = abs(center / size - 0.5) * 2.0 * changing;
+            local_pulse *= smoothstep(0.5, 0.95, max(edge_distance.x, edge_distance.y));
+        }
+        if (FR_MODE == 2) local_pulse *= 0.28;
         vec2 drift = direction * (0.2 + 0.2 * random.y) * local_pulse * edge_factor;
         float angle = (random.y * 2.0 - 1.0) * FR_SPIN * 0.01745329252 * 0.35;
         if (FR_ROTATION == 0) angle = 0.0;
@@ -79,5 +88,6 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
         result = color + result * (1.0 - color.a);
       }
     }
+    if (FR_MODE == 2) return mix(fr_sample(coords_curr_geo.xy, blend), result, 0.65);
     return result;
 }

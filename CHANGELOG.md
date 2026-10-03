@@ -10,9 +10,24 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.5.0 — 2026-10-02
+
+First public prerelease. Earlier versions were private development milestones.
+
 ### Added
 
-- GIF gallery for open, close, opt-in resize, all 11 presets, Studio movement
+- `doctor` diagnostics, preview-first `setup`, managed standalone includes,
+  optional launcher creation and hash-checked restore snapshots.
+- Studio JSON import with shared parameter validation, legacy defaults and exact
+  numeric preservation. CLI `--custom` support for render, preview, Studio and setup.
+- Directional Wave, Corner Burst and Orbital Collapse, bringing the pack to 14;
+  three-stage release waves, wave span and adjustable burst/orbit origin.
+- Full Breakup, Edge Rebuild and Soft Reflow resize styles, all strictly opt-in.
+- Seven new GIFs with matching JSON and visible README showcases: three presets,
+  one origin comparison and three resize styles. The gallery now has 31 clips.
+- Setup/restore failure and conflict tests, three-mode resize validation, browser
+  import checks in CI, and repeated/interrupted native movement smoke checks.
+- GIF gallery for open, close, opt-in resize, all 14 presets, Studio movement
   concepts and an actual nested-compositor column swap; reproducible recorders.
 - Four synchronized control comparisons for particle count, gravity direction,
   gravity strength and rotation, plus Meteor Shower, Orbit Burst and Reverse
@@ -31,7 +46,12 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 - Added package project links and made the source archive include its demo assets,
   experimental patch and corresponding license notices.
 
-No animation defaults change in this documentation update. Resize remains opt-in.
+Migration: re-register the built-in pack and reselect a style in iRiS, or
+regenerate your standalone include. Existing JSON remains compatible; absent
+new fields use centered origins, simultaneous release and Full Breakup. Resize
+remains off unless an imported/saved custom preset explicitly enables it.
+Setup snapshots cover setup changes only; earlier manual registrations use
+`unregister` and their printed backups. Native move/swap remains experimental.
 
 ## 0.4.1 — 2026-10-02
 
