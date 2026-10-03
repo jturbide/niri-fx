@@ -51,9 +51,14 @@ __all__ = [
 
 def shader_templates():
     root = files("niri_fx").joinpath("shaders")
-    return {
+    noise = root.joinpath("noise.glsl").read_text().rstrip()
+    edge_color = root.joinpath("edge-color.glsl").read_text().rstrip()
+    templates = {
         "dissolve": root.joinpath("dissolve.glsl").read_text(),
         "iris": root.joinpath("iris.glsl").read_text(),
+        "pixels": root.joinpath("pixels.glsl").read_text(),
+        "wisps": root.joinpath("wisps.glsl").read_text(),
+        "distortion": root.joinpath("distortion.glsl").read_text(),
         "classic": root.joinpath("fragments.glsl")
         .read_text()
         .replace("@ACTION_ENTRY@", root.joinpath("fragments-entry.glsl").read_text().rstrip()),
@@ -70,6 +75,10 @@ def shader_templates():
         "varied": root.joinpath("varied.glsl")
         .read_text()
         .replace("@ACTION_ENTRY@", root.joinpath("varied-entry.glsl").read_text().rstrip()),
+    }
+    return {
+        name: source.replace("@NOISE@", noise).replace("@EDGE_COLOR@", edge_color)
+        for name, source in templates.items()
     }
 
 
@@ -192,8 +201,8 @@ def preset_description(effect):
 
     if isinstance(effect, Profile):
         return f"Open: {effect.open.family}; close: {effect.close.family}; resize: {effect.resize.family if effect.resize else 'unchanged'}."
-    if effect.family in ("dissolve", "iris"):
-        return f"{FAMILIES[effect.family]['label']} reveal; {effect.open_ms}/{effect.close_ms}ms open/close."
+    if effect.family not in ("fragments", "slices", "elastic"):
+        return f"{FAMILIES[effect.family]['label']} effect; {effect.open_ms}/{effect.close_ms}ms open/close."
     if effect.family == "elastic":
         return f"Spring wobble {effect.elastic_strength:g}×, {effect.elastic_frequency:g} cycles, {effect.elastic_axis}; {effect.open_ms}/{effect.close_ms}ms open/close."
     if effect.family == "slices":

@@ -10,6 +10,39 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- Eight presets across three new stock open/close families: Pixels (Pixel Wipe,
+  Pixelate, Dust Drift), Wisps (Ghost Wisps, Ink Current), and Distortion
+  (Shockwave, Ripple Collapse, Wave Fold). The catalog now has 55 styles in
+  eight families, with resize still opt-in and no new movement hooks.
+- Thirty-two controls for layered erosion, edge palettes, pixel release/drift,
+  curling wisps and wave distortion, shared by CLI, Studio and JSON presets.
+- Eleven new showcase GIFs: eight preset loops and comparisons of Ember palettes,
+  pixel modes and distortion patterns. Five existing clips were regenerated for
+  the revised Dissolve effects; the gallery now has 95 GIFs.
+- README TL;DR before the gallery, a scenario selector, a complete standalone
+  guide and custom-shell/bar guidance. Prioritized integration roadmap for
+  custom Quickshell, AGS/Astal, Caelestia and ML4W; Waybar needs no shader adapter.
+- Browser checks for transparent input, downloadable standalone/Noctalia files
+  and every new control; stock Niri open/close smoke of all new/revised styles.
+
+### Changed
+
+- Ember Erosion defaults to a white rim and charcoal band. Hue, saturation and
+  brightness are configurable; Frost retains its cool palette. Dissolve gains
+  layered detail and flowing noise.
+- Studio accepts `--target auto|inir|noctalia|standalone`. Auto selects iNiR when
+  its helper is installed, otherwise standalone; offline previews default to
+  file downloads. Save instructions follow the selected target.
+- Effect-family choices come from the shared catalog rather than a separate
+  hardcoded HTML list.
+
+### Fixed
+
+- Browser automation tolerates the brief absence of a document during navigation
+  instead of failing before Studio is ready.
+
 ## 0.7.0 — 2026-10-02
 
 ### Added

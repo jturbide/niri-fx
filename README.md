@@ -4,7 +4,7 @@
 
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
-NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **47 presets across Fragments, Slices, Elastic, Dissolve and Iris**, preview the
+NiriFX is a configurable window effects studio for the **niri Wayland compositor**. Choose from **55 presets across eight effect families**, preview the
 actual shaders, and tune the controls for each family. The optional iNiR/iRiS
 adapter adds your styles to its settings picker. A preset-folder export also
 feeds Noctalia’s existing animation picker. Independent action profiles combine different
@@ -14,15 +14,41 @@ opening and closing styles; the optional DMS launcher adapter offers preset sele
 [Compatibility](docs/compatibility.md) · [Changelog](CHANGELOG.md) ·
 [Contributing](CONTRIBUTING.md) · [GPU measurements](docs/performance.md)
 
-**0.7.0 prerelease.** Includes independent profiles, five effect families, shell
-adapters and GPU measurements. Opening and closing work on stock Niri 26.04.
+**Development checkout after the 0.7.0 prerelease.** Includes independent profiles,
+eight effect families, shell adapters and GPU measurements. See [Unreleased](CHANGELOG.md)
+for changes newer than the tagged release. Opening and closing work on stock Niri 26.04.
 Resize fragments are **off by default and strictly opt-in**. Native move/swap
 fragmentation requires the separate experimental Niri patch. Performance and
 appearance still need testing across GPUs, applications and display scales.
 
+## TL;DR — try it or install it
+
+**Works standalone on Niri. Quickshell and desktop-shell plugins are optional.**
+Linux, Python 3.10+ and a WebGL browser are enough to try Studio:
+
+```sh
+git clone https://github.com/jturbide/niri-fx.git
+cd niri-fx
+python3 -m niri_fx studio --target standalone
+```
+
+Previewing changes no active animations. To install an effect on plain Niri,
+review the setup plan, then apply it:
+
+```sh
+python3 -m niri_fx setup --target standalone --preset balanced
+python3 -m niri_fx setup --target standalone --preset balanced --apply
+```
+
+Already using a shell's animation picker? Follow its guide instead of adding a
+second manager: [iNiR / iRiS](docs/getting-started.md#inir-and-iris) ·
+[DMS](docs/dms.md) · [Noctalia](docs/noctalia.md). Other paths:
+[Standalone / Waybar](docs/standalone.md) · [Choose your scenario](docs/scenarios.md) ·
+[Custom shells and future priorities](docs/roadmap.md).
+
 ## See it in motion
 
-[Fragments](#twenty-three-fragment-styles) · [Slices](#eleven-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
+[Fragments](#twenty-three-fragment-styles) · [Slices](#eleven-slice-styles) · [Wobble](#seven-elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Install](#try-it)
 
@@ -253,7 +279,7 @@ These are stock Niri open/close shaders. Resize stays off.
 
 | Noise Dissolve | Ember Erosion | Frost Vanish |
 | --- | --- | --- |
-| ![Noise erodes and rebuilds the window](docs/gifs/preset-noise-dissolve.gif) | ![A warm edge follows directional erosion](docs/gifs/preset-ember-erosion.gif) | ![A cool edge sweeps through fine noise](docs/gifs/preset-frost-vanish.gif) |
+| ![Noise erodes and rebuilds the window](docs/gifs/preset-noise-dissolve.gif) | ![Charcoal and white edges follow layered erosion](docs/gifs/preset-ember-erosion.gif) | ![A cool edge sweeps through fine noise](docs/gifs/preset-frost-vanish.gif) |
 | [Settings](examples/noise-dissolve.json) | [Settings](examples/ember-erosion.json) | [Settings](examples/frost-vanish.json) |
 | **Iris Bloom** | **Diamond Turn** | **Portal Out** |
 | ![Circular reveal closes inward and reconstructs](docs/gifs/preset-iris-bloom.gif) | ![A rotating diamond mask reveals the window](docs/gifs/preset-diamond-turn.gif) | ![An off-center hole expands and closes](docs/gifs/preset-portal-out.gif) |
@@ -266,6 +292,55 @@ These are stock Niri open/close shaders. Resize stays off.
 **Reveal shape — circle / diamond / square.** Same origin, softness and timing.
 
 ![Three iris mask shapes compared](docs/gifs/compare-iris-shapes.gif)
+
+**Ember now defaults to charcoal and white.** Saturation and brightness are
+configurable alongside hue: choose white, black or bring back a warm edge.
+Layered noise, flowing detail and a narrower rim improve the transition.
+Frost keeps its cool, fine-grained look.
+
+![White, black and warm Ember edge palettes](docs/gifs/compare-ember-palette.gif)
+
+### Pixel wipes and dust
+
+A radial grid wipe, progressive pixelation, or fine grains drifting on the wind.
+Choose the starting point, wipe direction, grain size, randomness and dust travel.
+The origin is a configured point in the window, not the live mouse pointer.
+
+| Pixel Wipe | Pixelate | Dust Drift |
+| --- | --- | --- |
+| ![A radial wave removes and rebuilds grid pixels](docs/gifs/preset-pixel-wipe.gif) | ![A window pixelates into disappearing blocks](docs/gifs/preset-pixelate.gif) | ![Window-textured dust lifts away from a moving front](docs/gifs/preset-dust-drift.gif) |
+| [Settings](examples/pixel-wipe.json) | [Settings](examples/pixelate.json) | [Settings](examples/dust-drift.json) |
+
+![Pixel wipe, pixelation and drifting dust at the same grain size and timing](docs/gifs/compare-pixel-modes.gif)
+
+### Wisps and currents
+
+Threaded erosion and flowing texture distortion produce wisps. Adjust curl,
+drift, thread density, direction and highlight color; the original texture alpha
+is preserved. These are shader flows, not a fluid simulation.
+
+| Ghost Wisps | Ink Current |
+| --- | --- |
+| ![Pale curling threads carry the window away](docs/gifs/preset-ghost-wisps.gif) | ![Dark diagonal currents dissolve and rebuild the window](docs/gifs/preset-ink-current.gif) |
+| [Settings](examples/ghost-wisps.json) | [Settings](examples/ink-current.json) |
+
+### Shockwaves and distortions
+
+Bend the actual window texture with an expanding shock front, concentric ripples
+or travelling planar waves. Control displacement, wavelength, falloff and origin.
+These use stock Niri open/close shaders; resize and native movement stay unsupported.
+
+| Shockwave | Ripple Collapse | Wave Fold |
+| --- | --- | --- |
+| ![An expanding ring warps and clears the window](docs/gifs/preset-shockwave.gif) | ![Concentric ripples distort a fading window](docs/gifs/preset-ripple-collapse.gif) | ![Travelling waves fold and restore the window texture](docs/gifs/preset-wave-fold.gif) |
+| [Settings](examples/shockwave.json) | [Settings](examples/ripple-collapse.json) | [Settings](examples/wave-fold.json) |
+
+![Shock front, radial ripples and planar waves with matched settings](docs/gifs/compare-distortion-patterns.gif)
+
+[Burn My Windows](https://github.com/Schneegans/Burn-My-Windows) supplied the visual
+references for pixel wipes, disintegration and wisps. These NiriFX shaders are
+original implementations; no upstream shaders or preview assets are bundled.
+[Controls and limits](docs/effect-controls.md).
 
 ### Combine different actions
 
@@ -422,7 +497,7 @@ removed. Read [the update policy](docs/upgrading.md) when upgrading a checkout.
 
 | Feature | Stock Niri | Extra requirement |
 | --- | --- | --- |
-| Open / close effects, 47 presets in five families | Yes; validated on 26.04 | Enable Niri animations |
+| Open / close effects, 55 presets in eight families | Yes; validated on 26.04 | Enable Niri animations |
 | Optional resize (Fragments family only) | Yes; disabled by default | Studio checkbox or `--resize` |
 | Studio preview and KDL / JSON export | Yes | WebGL browser |
 | Independent open/close profiles | Yes | [Studio or CLI](docs/profiles.md) |

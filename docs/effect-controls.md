@@ -1,7 +1,7 @@
-# Shapes, hinges, waves and wobble
+# Effect controls
 
-These controls are included in **0.7.0**. Earlier packages contain a smaller
-selection. All built-ins leave resize disabled.
+This guide follows **main**, including the additions after 0.7.0 listed in
+[Unreleased](../CHANGELOG.md#unreleased). All built-ins leave resize disabled.
 
 ## Fragments
 
@@ -127,9 +127,10 @@ necessarily make a shader faster. See [validation limits](validation.md).
 
 ## Dissolve
 
-Noise Dissolve erodes the texture without moving its contents. Ember Erosion and
-Frost Vanish add a colored edge and a directional bias. These are procedural masks,
-not simulated flames or ice. All preserve the source texture's premultiplied alpha.
+Noise Dissolve erodes the texture with layered noise. Ember Erosion now defaults
+to a **white rim and charcoal band**; Frost Vanish retains its cool blue edge.
+The window contents keep their original colors. These are procedural masks,
+not simulated flames or ice. Highlights preserve the source texture's alpha.
 
 | CLI flag | Range / meaning |
 | --- | --- |
@@ -137,8 +138,24 @@ not simulated flames or ice. All preserve the source texture's premultiplied alp
 | `--dissolve-softness` | 0.005–0.25; feathering around the erosion boundary |
 | `--dissolve-direction` | none, left, right, up, down, center; starting region |
 | `--dissolve-bias` | 0–1; blend from noise order toward directional order |
-| `--edge-width` | 0–0.3; colored boundary width; zero disables it |
+| `--dissolve-detail` | 0–1; finer noise layered over the main cells |
+| `--dissolve-flow` | 0–2; noise-field motion during the animation |
+| `--edge-width` | 0–0.3; boundary band width; zero disables it |
 | `--edge-hue` | 0–360 degrees around the hue wheel |
+| `--edge-saturation` | 0–1; zero gives grayscale edges and makes hue irrelevant |
+| `--edge-brightness` | 0–1; zero gives black highlights, one gives full brightness |
+| `--edge-char` | 0–1; darkens the wider band behind the narrow highlight |
+
+Color is configurable in Studio with **Edge color hue**, **Edge saturation**
+and **Edge brightness**. For a warm Ember:
+
+```sh
+python3 -m niri_fx preview --preset ember-erosion --edge-hue 25 \
+  --edge-saturation 0.9 --edge-brightness 1 --output /tmp/warm-ember.html
+```
+
+Use saturation `0` and brightness `0` for a black edge, or saturation `0` and
+brightness `1` for white. A nonzero edge width makes the palette visible.
 
 ## Iris
 
@@ -154,6 +171,71 @@ logical pixels to preserve shape proportions on wide or tall windows.
 | `--iris-twist` | −180–180 degrees of mask rotation; visible on non-circular shapes |
 | `--iris-x`, `--iris-y` | 0–1; reveal origin within the window |
 
-Both families support stock opening and closing only. Use an independent
-[profile](profiles.md) to combine them with other families. Neither adds resize
-or native movement support. [GPU benchmark scope](performance.md).
+## Pixels
+
+**Pixel Wipe** removes cells in a configurable sequence. **Pixelate** coarsens
+the sampled texture while blocks disappear. **Dust Drift** erodes a front into
+small pieces of the original texture that drift, shrink and fade. Closing
+disintegrates; opening reverses the path. The origin is configured, not read
+from the live pointer.
+
+| CLI flag | Range / meaning |
+| --- | --- |
+| `--pixel-mode` | `wipe`, `pixelate`, `dust` |
+| `--pixel-size` | 4–64 logical pixels per cell; smaller cells give finer grains |
+| `--pixel-direction` | center, edges, left, right, up, down; release sequence for wipe/dust |
+| `--pixel-randomness` | 0–1; mixes spatial release with stable per-cell randomness |
+| `--pixel-softness` | 0.01–0.4; release feathering |
+| `--pixel-travel` | 0–8 **cells**, dust only; physical distance also scales with cell size |
+| `--pixel-wind` | right, left, up, down; dust travel direction, independent of release order |
+| `--pixel-x`, `--pixel-y` | 0–1; origin for radial release |
+
+Dust searches 33 candidate cells per output pixel. It is a bounded texture
+animation, without persistent particles or collisions. Wipe/pixelate have no
+candidate search. Studio disables mode-specific controls when they do not apply.
+
+## Wisps
+
+**Ghost Wisps** creates pale curling threads; **Ink Current** creates a dark,
+diagonal flow. Both combine texture warping with a directional noise mask.
+They are threaded shader flows, not a fluid or emitted-particle simulation.
+
+| CLI flag | Range / meaning |
+| --- | --- |
+| `--wisp-scale` | 12–128 logical pixels; noise-field size |
+| `--wisp-strands` | 1–10; elongation of the noise field into threads |
+| `--wisp-curl` | 0–2; flow curvature |
+| `--wisp-drift` | 0–240 logical pixels of travel |
+| `--wisp-angle` | −180–180°; flow direction |
+| `--wisp-speed` | 0–4; field evolution during the animation |
+| `--wisp-glow` | 0–1; boundary highlight strength |
+| `--wisp-softness` | 0.01–0.3; mask feathering |
+
+Hue, saturation and brightness use the same edge-color controls as Dissolve.
+The highlight respects source alpha and cannot turn transparent input opaque.
+
+## Distortion
+
+**Shockwave** sends a radial front through the texture and clears behind it.
+**Ripple Collapse** combines concentric ripples with fading. **Wave Fold** uses
+a travelling planar warp. Opening reverses the configured path. They distort
+the window image; they do not move the actual window or affect neighboring apps.
+
+| CLI flag | Range / meaning |
+| --- | --- |
+| `--distortion-mode` | shockwave, ripple, wave |
+| `--distortion-strength` | 0–80 logical pixels of displacement |
+| `--distortion-wavelength` | 12–240 logical pixels between waves |
+| `--distortion-width` | 10–240 logical pixels; shockwave front width |
+| `--distortion-cycles` | 0.25–4; temporal wave cycles |
+| `--distortion-falloff` | 0–4; radial attenuation |
+| `--distortion-angle` | −180–180°; planar wave direction only |
+| `--distortion-fade` | 0.15–0.85; fade timing for ripple/wave |
+| `--distortion-x`, `--distortion-y` | 0–1; wave origin |
+
+Distortion uses no random seed. All three modes return the exact intact texture
+and transparent image at the animation endpoints.
+
+Dissolve, Iris, Pixels, Wisps and Distortion support stock opening and closing
+only. Use an independent [profile](profiles.md) to combine families. None adds
+resize or native movement support. [GPU benchmark scope](performance.md).

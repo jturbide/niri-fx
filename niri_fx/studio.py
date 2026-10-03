@@ -119,6 +119,7 @@ def preview_document(effect, name="balanced", connection=None, preferences=None)
         "elastic_axes": ELASTIC_AXES,
         "elastic_anchors": ELASTIC_ANCHORS,
         "connection": connection,
+        "save_target": connection.get("target", "inir") if connection else "standalone",
     }
     data = json.dumps(payload).replace("</", "<\\/")
     root = files("niri_fx")
@@ -127,6 +128,13 @@ def preview_document(effect, name="balanced", connection=None, preferences=None)
         .read_text()
         .replace("@EFFECT_JSON@", data)
         .replace("@PARAMETER_CONTROLS@", parameter_controls())
+        .replace(
+            "@FAMILY_OPTIONS@",
+            "".join(
+                f'<option value="{name}">{spec["label"]}</option>'
+                for name, spec in FAMILIES.items()
+            ),
+        )
         .replace(
             "@APP_ICON@",
             base64.b64encode(root.joinpath("assets/niri-fx.svg").read_bytes()).decode(),
@@ -187,6 +195,13 @@ def valid_save_request(headers, origin, token):
 
 def make_server(arguments, effect):
     token = secrets.token_urlsafe(32)
+    target = getattr(arguments, "target", "auto")
+    if target == "auto":
+        target = (
+            "inir"
+            if (Path(arguments.inir_root) / "scripts/niri-config.py").is_file()
+            else "standalone"
+        )
     preferences_path = (
         Path(getattr(arguments, "state", Path(arguments.registry).parent))
         / "studio-preferences.json"
@@ -238,7 +253,7 @@ def make_server(arguments, effect):
                 preview_document(
                     effect,
                     getattr(arguments, "custom_name", arguments.preset),
-                    {"origin": self.server.origin, "token": token},
+                    {"origin": self.server.origin, "token": token, "target": target},
                     read_preferences(),
                 ),
                 "text/html",
@@ -298,6 +313,7 @@ def make_server(arguments, effect):
             self.connection.settimeout(10)
 
     server = HTTPServer(("127.0.0.1", arguments.port), Handler)
+    server.save_target = target
     server.origin = f"http://127.0.0.1:{server.server_port}"
     server.session_url = server.origin + "/?token=" + token
     server.last_seen = time.monotonic()
@@ -310,7 +326,7 @@ def serve(arguments, effect):
     with make_server(arguments, effect) as server:
         print(f"NiriFX Studio: {server.session_url}", flush=True)
         print(
-            "Save adds a preset to iRiS; select it there to activate. Ctrl+C stops the editor.",
+            "Choose a save target in Studio. Previewing does not activate effects. Ctrl+C stops the editor.",
             flush=True,
         )
         if not arguments.no_browser:

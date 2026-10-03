@@ -1,17 +1,17 @@
 # Validation and known limits
 
-Evidence recorded on **2026-10-02**, updated for 0.7.0. This is a prototype validation record, not a GPU performance certification.
+Evidence updated on **2026-10-03** for main after 0.7.0. This is a prototype validation record, not a GPU performance certification.
 For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 
 ## Stock effects and editor
 
 | Check | Observed result |
 | --- | --- |
-| Python regression suite | 53 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
-| GLSL ES 1.00 compilation | All 193 shaders compiled: 138 fragment variants, 22 slice, 21 elastic and 12 reveal variants |
-| Stock Niri config parsing | All 47 default and 69 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
-| iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves all five families and independent profiles through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
-| Noctalia file contract | All 47 exported files validated through picker-style relative includes with stock Niri; Noctalia 5.2.1 / Niri Animations 0.2.0 UI selected Iris Bloom, Ember Erosion and returned to base. |
+| Python regression suite | 57 tests passed: validation, preset ownership/preservation, backups, atomic writes, symlinks and actual loopback saving/rejection |
+| GLSL ES 1.00 compilation | All 209 shaders compiled: 138 fragment variants, 22 slice, 21 elastic and 28 reveal variants |
+| Stock Niri config parsing | All 55 default and 69 explicitly enabled fragment resize exports validated with Niri 26.04 (`8ed0da4`) |
+| iNiR adapter | 0.6 verified all 17 presets through the installed helper in temporary config. Current E2E saves all eight families and independent profiles through a synthetic helper and actual CLI/browser/HTTP path, preserving base resize and other providers. |
+| Noctalia file contract | All 55 exported files validated through picker-style relative includes with stock Niri; the 0.7.0 pack passed Noctalia 5.2.1 / Niri Animations 0.2.0 UI selection of Iris Bloom, Ember Erosion and return to base. |
 | Code conventions | Ruff, ESLint and Prettier pass; Actions runs them with pinned development dependencies. |
 | Setup / restore | Real standalone setup, repeat apply and exact restoration passed with Niri, relative includes and a Unicode config path; conflict, failure and symlink cases covered in tests |
 | JSON import | Current documents and rejected obsolete schemas, explicit resize, fractional values, malformed/oversized documents and unsupported fields checked in Chromium |
@@ -22,22 +22,32 @@ For version-by-version behavior changes, see the [changelog](../CHANGELOG.md).
 | Browser / Python parity | Generated shader exports matched across built-ins; extreme controls rendered without WebGL errors |
 | Gravity checks | Earth moved downward, Updraft upward and Black Hole contracted |
 | Concept move / swap | Synthetic windows arrived intact in their correct columns; these are not compositor movement checks |
-| Packaging | Clean wheel/source builds; installed current CLI, icon and offline Studio checked outside the checkout; obsolete namespace/entry point absent; all 47 exported presets restored exactly |
+| Packaging | Clean wheel/source builds; installed current CLI, icon and offline Studio checked outside the checkout; obsolete namespace/entry point absent; all exported presets restored exactly |
 | Branding and local registration | Canonical Studio/demo launchers installed; iNiR recognizes renamed preset ownership/IDs while the selected shader and resize settings remain unchanged |
 
-Current browser checks exercised all 47 presets, exact endpoints, extreme
+Current browser checks exercised all 55 presets, exact endpoints, extreme
 parameters, all family controls/capability limits, schema 3 round trips and rejected schema 1/2 imports and three
 fragment resize styles. Each new shape/hinge/elastic control independently changes
 rendered pixels and survives an import round trip. Shrink, rounding and strip
 collapse reduce occupied area. Four spatial release modes produce distinct
 patterns. Extreme rounded/unequal Canvas pieces remain drawable at texture edges.
-Browser parity and behavioral checks validate current effects.
+Every new Pixels/Wisps/Distortion and erosion control visibly changes rendered
+pixels. New/revised shaders preserve fully transparent input. Standalone and
+Noctalia downloads match the generated KDL exactly, with target-specific help;
+all eight families and a profile save through the real Studio HTTP path into
+isolated iNiR state. Browser parity and behavioral checks validate current effects.
 
 The three original 0.6 slice effects also opened and closed a synthetic Alacritty client in
 an isolated **stock Niri 26.04** session. Intermediate captures differed from the
 intact window, the opening completed intact, and closing left no window-colored
 pixels. No shader/render/config errors appeared. These are functional checks,
 not performance certification across hardware.
+
+The revised Ember Erosion and Frost Vanish, plus all eight new Pixels, Wisps and
+Distortion presets, also passed actual opening and closing in isolated stock Niri
+on 2026-10-03. Intermediate frames visibly changed, opening settled intact and
+closing left no window-colored pixels; shader/render/config logs stayed clean.
+The login compositor and its active settings were not changed.
 
 ## Native movement experiment
 
@@ -70,10 +80,11 @@ use the same separately built compositor; the compositor patch is unchanged.
 
 ## Documentation recordings
 
-The gallery contains 84 GIFs: all 47 presets, open/close and opt-in resize,
+The gallery contains 95 GIFs: all 55 presets, open/close and opt-in resize,
 control/style comparisons, custom recipes, labelled Canvas movement concepts,
-and seven actual nested Niri swaps. The latest addition is six reveal preset loops,
-two comparisons and an independent opening/closing profile. Earlier additions
+and seven actual nested Niri swaps. The latest addition is eight preset loops and
+three comparisons for Pixels, Wisps, Distortion and Ember palettes, plus five
+regenerated clips for revised Dissolve behavior. Earlier additions
 cover piece shapes, spatial release, slice hinges/collapse and elastic transforms.
 All current clips include exact
 parameter metadata, apart from the separately documented original native swap.
@@ -110,7 +121,7 @@ Reproduce checks through [Contributing](../CONTRIBUTING.md), report issues with
 minimal synthetic examples, and distinguish successful automated checks from
 visual preference or desktop performance claims.
 
-## Profiles, reveals and integration hardening
+## Earlier 0.7.0 acceptance: profiles and integrations
 
 Independent action profiles passed CLI JSON round trips, separate shader/timing
 exports, opt-in resize, preservation of base iRiS resize, malformed action rejection,

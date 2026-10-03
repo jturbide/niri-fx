@@ -1,6 +1,6 @@
 # Licensing and third-party notices
 
-## Original Fragments work
+## Original NiriFX work
 
 The original Python application, GLSL effects, browser editor, scripts,
 documentation and synthetic demonstration assets are copyright 2026 Julien
@@ -36,3 +36,10 @@ iNiR/iRiS and DankMaterialShell are separate projects; their code is not vendore
 Integration references do not imply affiliation or endorsement. Chromium,
 FFmpeg, Alacritty and capture tools used for validation/recording are separately
 installed tools. Demo recordings show synthetic content created for this project.
+
+## Visual references
+
+[Burn My Windows](https://github.com/Schneegans/Burn-My-Windows) by Simon Schneegans
+and contributors inspired the requested pixel wipe, disintegration and wisp
+behaviors. NiriFX implements its own GLSL for Niri; no Burn My Windows shader
+source, textures or preview recordings are included.

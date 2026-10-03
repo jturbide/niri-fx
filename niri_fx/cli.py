@@ -125,10 +125,18 @@ def parser():
     unregister = commands.add_parser(
         "unregister", help="Remove NiriFX-owned entries from the user preset registry"
     )
-    studio = commands.add_parser("studio", help="Open the local editor with Save to iRiS support")
+    studio = commands.add_parser(
+        "studio", help="Open the local editor for standalone or shell presets"
+    )
     effect_options(studio)
     studio.add_argument("--custom", type=Path)
     studio.add_argument("--no-browser", action="store_true")
+    studio.add_argument(
+        "--target",
+        choices=("auto", "inir", "noctalia", "standalone"),
+        default="auto",
+        help="Initial save target; auto uses iNiR when its helper is installed, otherwise standalone",
+    )
     studio.add_argument(
         "--browser", action="store_true", help="Open a browser tab instead of an app-style window"
     )

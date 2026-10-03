@@ -70,7 +70,8 @@ Live fragment controls include:
   alone does not enable resize.
 
 The editor uses the same shader templates as the CLI. Click **Reconstruct** or
-**Deconstruct**, or scrub the timeline. Set a name and choose **Save to iRiS**;
+**Deconstruct**, or scrub the timeline. With the iNiR save target, set a name and
+choose **Save to iRiS**;
 then select that named style in iRiS's existing picker. Saving does not activate
 it. Saving the same name updates that custom preset, with a backup.
 
@@ -84,7 +85,8 @@ The controls live in NiriFX Studio. iRiS's native page lists the resulting
 presets; its stock thumbnail still shows generic timing rather than this shader.
 
 The editor binds only to loopback and uses a per-session save token and origin
-checks. It reads the installed iNiR helper and writes only the preset registry.
+checks. The iNiR save target reads its installed helper and writes its preset
+registry. Standalone and Noctalia targets download files without activation.
 The editor page makes no external network requests. It exits within 15 minutes of the app window or tab
 closing (or immediately with Ctrl+C when launched from a terminal).
 
@@ -143,7 +145,7 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
-The current checkout has 47 built-ins. The original styles are listed below;
+The current checkout has 55 built-ins across eight families. The original styles are listed below;
 [new styles and controls](effect-controls.md) cover five varied Fragments, four
 additional Fragments, Slices and Elastic presets, including piece shapes, hinges and spring transforms.
 
@@ -192,4 +194,4 @@ exports. The CLI's `--help` and subcommand `--help` list every available option.
 
 See [independent profiles and Studio workflow](profiles.md) for action selection,
 undo/redo, favorites, A/B comparison and shell save targets. The [effect controls](effect-controls.md)
-also cover Dissolve and Iris; the [GPU harness](performance.md) measures shader draw cost.
+also cover Dissolve, Iris, Pixels, Wisps and Distortion; the [GPU harness](performance.md) measures shader draw cost.

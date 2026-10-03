@@ -98,11 +98,11 @@ try {
   });
   await rpc("Page.navigate", { url });
   for (let i = 0; i < 100; i++) {
-    if (await evaluate("document.documentElement.dataset.shaderStatus")) break;
+    if (await evaluate("document.documentElement?.dataset.shaderStatus")) break;
     await sleep(100);
   }
   assert.equal(
-    await evaluate("document.documentElement.dataset.shaderStatus"),
+    await evaluate("document.documentElement?.dataset.shaderStatus"),
     "ready",
     await evaluate("byId('error').textContent"),
   );
@@ -131,7 +131,7 @@ try {
     await evaluate(
       `byId('preset').value=${JSON.stringify(name)};byId('preset').dispatchEvent(new Event('change'))`,
     );
-    assert.equal(await evaluate("document.documentElement.dataset.shaderStatus"), "ready", name);
+    assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready", name);
     assert.equal(
       createHash("sha256")
         .update(await evaluate("shaderFor(parameters,false)"))
@@ -162,6 +162,16 @@ try {
         "tidal-fragments",
         "mosaic-burst",
         "spring-wobble",
+        "ember-erosion",
+        "frost-vanish",
+        "pixel-wipe",
+        "pixelate",
+        "dust-drift",
+        "ghost-wisps",
+        "ink-current",
+        "shockwave",
+        "ripple-collapse",
+        "wave-fold",
       ].includes(name)
     ) {
       const capture = await rpc("Page.captureScreenshot", { format: "png" });
@@ -193,7 +203,7 @@ try {
     );
   await setProgress(0.5);
   assert.equal((await sample()).error, 0);
-  assert.equal(await evaluate("document.documentElement.dataset.shaderStatus"), "ready");
+  assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
   // Exercise the real resize shader, two texture inputs and stable endpoints.
   const resizeExpected = JSON.parse(
     execFileSync(
@@ -643,6 +653,21 @@ try {
   await evaluate("document.querySelector('[data-reset=elastic_twist]').click()");
   assert.equal(await evaluate("effectDocument().actions.open.elastic_twist"), 0);
   const profileSaved = await evaluate("effectDocument()");
+  await evaluate(`window.downloadFixture={click:HTMLAnchorElement.prototype.click,url:URL.createObjectURL};
+    HTMLAnchorElement.prototype.click=function(){downloadFixture.name=this.download};
+    URL.createObjectURL=function(blob){downloadFixture.blob=blob;return downloadFixture.url.call(URL,blob)};`);
+  for (const target of ["standalone", "noctalia"]) {
+    await evaluate(
+      `byId('save-target').value=${JSON.stringify(target)};byId('save-target').dispatchEvent(new Event('change'));byId('save').click()`,
+    );
+    assert.equal(await evaluate("byId('save').disabled"), false);
+    assert.match(await evaluate("downloadFixture.name"), /^nirifx-.+\.kdl$/);
+    assert.equal(await evaluate("downloadFixture.blob.text()"), await evaluate("kdlDocument()"));
+    assert(!(await evaluate("byId('save-help').textContent.includes('iRiS Settings')")));
+  }
+  await evaluate(
+    "HTMLAnchorElement.prototype.click=downloadFixture.click;URL.createObjectURL=downloadFixture.url;delete window.downloadFixture;byId('save-target').value=catalog.save_target;byId('save-target').dispatchEvent(new Event('change'))",
+  );
   await evaluate("byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))");
   assert.equal((await importFile(JSON.stringify(profileSaved))).error, "");
   assert.equal(await evaluate("byId('action').value"), "open", "import selects the shown action");
@@ -683,7 +708,42 @@ try {
       dissolve_bias: 0.1,
       edge_width: 0.3,
       edge_hue: 220,
+      dissolve_detail: 0,
+      dissolve_flow: 1.5,
+      edge_saturation: 1,
+      edge_brightness: 0,
+      edge_char: 0,
     },
+    "pixel-wipe": {
+      pixel_size: 32,
+      pixel_direction: "down",
+      pixel_randomness: 0.85,
+      pixel_softness: 0.38,
+      pixel_x: 0.1,
+      pixel_y: 0.1,
+    },
+    "dust-drift": { pixel_travel: 1, pixel_wind: "right" },
+    "ghost-wisps": {
+      wisp_scale: 90,
+      wisp_strands: 8,
+      wisp_curl: 1.6,
+      wisp_drift: 220,
+      wisp_angle: 35,
+      wisp_speed: 3,
+      wisp_glow: 0,
+      wisp_softness: 0.28,
+    },
+    shockwave: {
+      distortion_mode: "ripple",
+      distortion_strength: 65,
+      distortion_wavelength: 160,
+      distortion_width: 220,
+      distortion_cycles: 3.5,
+      distortion_falloff: 3.8,
+      distortion_x: 0.1,
+      distortion_y: 0.1,
+    },
+    "wave-fold": { distortion_angle: -45, distortion_fade: 0.8 },
     "diamond-turn": {
       iris_shape: "square",
       iris_direction: "outward",
@@ -698,6 +758,10 @@ try {
         `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
       );
       await setProgress(0.45);
+      if (key === "edge_hue")
+        await evaluate(
+          "byId('edge_saturation').value=1;byId('edge_saturation').dispatchEvent(new Event('input'))",
+        );
       const before = await pixelHash();
       await evaluate(
         `byId(${JSON.stringify(key)}).value=${JSON.stringify(value)};byId(${JSON.stringify(key)}).dispatchEvent(new Event('input'))`,
@@ -744,6 +808,36 @@ try {
   assert.equal(await evaluate("shaderFor(parameters,false)"), rounded);
   const unsupported = await evaluate("window.niriFxBenchmark({samples:10})");
   assert.equal(unsupported.status, "unsupported", "software WebGL must not claim GPU performance");
+  // Generated edge highlights must never make a fully transparent source opaque.
+  await evaluate(`(()=>{
+    const context=byId('stage').getContext('webgl');context.activeTexture(context.TEXTURE0);
+    window.alphaFixture={context,original:context.getParameter(context.TEXTURE_BINDING_2D),texture:context.createTexture()};
+    context.bindTexture(context.TEXTURE_2D,alphaFixture.texture);
+    context.texImage2D(context.TEXTURE_2D,0,context.RGBA,600,380,0,context.RGBA,context.UNSIGNED_BYTE,new Uint8Array(600*380*4));
+    for(const key of [context.TEXTURE_MIN_FILTER,context.TEXTURE_MAG_FILTER])context.texParameteri(context.TEXTURE_2D,key,context.LINEAR);
+    for(const key of [context.TEXTURE_WRAP_S,context.TEXTURE_WRAP_T])context.texParameteri(context.TEXTURE_2D,key,context.CLAMP_TO_EDGE);
+  })()`);
+  for (const preset of [
+    "ember-erosion",
+    "frost-vanish",
+    "pixel-wipe",
+    "pixelate",
+    "dust-drift",
+    "ghost-wisps",
+    "ink-current",
+    "shockwave",
+    "ripple-collapse",
+    "wave-fold",
+  ]) {
+    await evaluate(
+      `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,
+    );
+    await setProgress(0.45);
+    assert.equal((await sample()).occupied, 0, preset + " preserves transparent source pixels");
+  }
+  await evaluate(
+    "alphaFixture.context.bindTexture(alphaFixture.context.TEXTURE_2D,alphaFixture.original);alphaFixture.context.deleteTexture(alphaFixture.texture);delete window.alphaFixture",
+  );
   if (process.argv.includes("--save-test")) {
     for (const [family, preset] of Object.entries({
       fragments: "bubble-burst",
@@ -751,6 +845,9 @@ try {
       elastic: "corner-spring",
       dissolve: "ember-erosion",
       iris: "diamond-turn",
+      pixels: "dust-drift",
+      wisps: "ghost-wisps",
+      distortion: "shockwave",
     })) {
       await evaluate(
         `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'));byId('name').value=${JSON.stringify("Browser " + family)};byId('save').click()`,

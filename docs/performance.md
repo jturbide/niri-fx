@@ -53,3 +53,26 @@ slice count for less strip work. See [validation limits](validation.md).
 The next performance acceptance step is a release-built nested compositor with
 presentation timing, mixed output scales and interrupted animations. The existing
 debug movement build and GIF recordings cannot establish those results.
+
+## New reveal and distortion sample
+
+Measured on 2026-10-03 on the same RTX 4070 Ti / Chromium ANGLE/OpenGL setup,
+60 samples per case. Again, these are p95 **shader draw times**, not Niri frame
+times, and the synthetic window occupies 60% of output width and 50% of height.
+
+| Preset | 1920×1080 | 3840×2160 |
+| --- | ---: | ---: |
+| Ember Erosion (revised) | 0.099 ms | 0.376 ms |
+| Dust Drift | 0.296 ms | 1.143 ms |
+| Ghost Wisps | 0.106 ms | 0.401 ms |
+| Shockwave | 0.095 ms | 0.359 ms |
+| Wave Fold | 0.109 ms | 0.424 ms |
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-new-styles.json \
+  --presets=ember-erosion,dust-drift,ghost-wisps,shockwave,wave-fold \
+  --sizes=1920x1080,3840x2160 --samples=60
+```
+
+Dust's bounded 33-cell search costs more than the other new effects in this run.
+The figures do not predict performance on integrated GPUs or under compositor load.

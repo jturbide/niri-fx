@@ -65,7 +65,7 @@ FAMILIES.update(
             "movement": False,
             "concept": False,
         }
-        for name in ("dissolve", "iris")
+        for name in ("dissolve", "iris", "pixels", "wisps", "distortion")
     }
 )
 
@@ -489,7 +489,7 @@ class Effect:
     )
     edge_width: float = parameter(
         0.08,
-        label="Glowing edge width",
+        label="Edge band width",
         families=("dissolve",),
         group="dissolve",
         limits=(0, 0.3),
@@ -498,8 +498,8 @@ class Effect:
     edge_hue: float = parameter(
         30,
         label="Edge color hue",
-        families=("dissolve",),
-        group="dissolve",
+        families=("dissolve", "wisps"),
+        group="color",
         limits=(0, 360),
         unit="°",
         token="EDGE_HUE",
@@ -552,6 +552,271 @@ class Effect:
         group="iris",
         limits=(0, 1),
         token="IRIS_Y",
+    )
+
+    dissolve_detail: float = parameter(
+        0.55,
+        label="Fine erosion detail",
+        families=("dissolve",),
+        group="dissolve",
+        limits=(0, 1),
+        token="DISSOLVE_DETAIL",
+    )
+    dissolve_flow: float = parameter(
+        0.25,
+        label="Noise flow",
+        families=("dissolve",),
+        group="dissolve",
+        limits=(0, 2),
+        token="DISSOLVE_FLOW",
+    )
+    edge_saturation: float = parameter(
+        0,
+        label="Edge saturation",
+        families=("dissolve", "wisps"),
+        group="color",
+        limits=(0, 1),
+        token="EDGE_SATURATION",
+    )
+    edge_brightness: float = parameter(
+        1,
+        label="Edge brightness",
+        families=("dissolve", "wisps"),
+        group="color",
+        limits=(0, 1),
+        token="EDGE_BRIGHTNESS",
+    )
+    edge_char: float = parameter(
+        0.65,
+        label="Charcoal band",
+        families=("dissolve",),
+        group="dissolve",
+        limits=(0, 1),
+        token="EDGE_CHAR",
+    )
+    pixel_mode: str = parameter(
+        "wipe",
+        label="Pixel motion",
+        families=("pixels",),
+        group="pixels",
+        choices=("wipe", "pixelate", "dust"),
+        token="PIXEL_MODE",
+    )
+    pixel_size: float = parameter(
+        12,
+        label="Pixel size",
+        families=("pixels",),
+        group="pixels",
+        limits=(4, 64),
+        token="PIXEL_SIZE",
+        unit=" px",
+    )
+    pixel_direction: str = parameter(
+        "center",
+        label="Wipe direction",
+        families=("pixels",),
+        group="pixels",
+        choices=("center", "edges", "left", "right", "up", "down"),
+        token="PIXEL_DIRECTION",
+    )
+    pixel_randomness: float = parameter(
+        0.22,
+        label="Release randomness",
+        families=("pixels",),
+        group="pixels",
+        limits=(0, 1),
+        token="PIXEL_RANDOMNESS",
+    )
+    pixel_softness: float = parameter(
+        0.12,
+        label="Pixel fade softness",
+        families=("pixels",),
+        group="pixels",
+        limits=(0.01, 0.4),
+        token="PIXEL_SOFTNESS",
+    )
+    pixel_travel: float = parameter(
+        6,
+        label="Dust travel in cells",
+        families=("pixels",),
+        group="pixels",
+        limits=(0, 8),
+        token="PIXEL_TRAVEL",
+    )
+    pixel_wind: str = parameter(
+        "right",
+        label="Dust wind",
+        families=("pixels",),
+        group="pixels",
+        choices=("right", "left", "up", "down"),
+        token="PIXEL_WIND",
+    )
+    pixel_x: float = parameter(
+        0.5,
+        label="Pixel origin · horizontal",
+        families=("pixels",),
+        group="pixels",
+        limits=(0, 1),
+        token="PIXEL_X",
+    )
+    pixel_y: float = parameter(
+        0.5,
+        label="Pixel origin · vertical",
+        families=("pixels",),
+        group="pixels",
+        limits=(0, 1),
+        token="PIXEL_Y",
+    )
+    wisp_scale: float = parameter(
+        48,
+        label="Wisp size",
+        families=("wisps",),
+        group="wisps",
+        limits=(12, 128),
+        token="WISP_SCALE",
+        unit=" px",
+    )
+    wisp_strands: float = parameter(
+        3,
+        label="Thread density",
+        families=("wisps",),
+        group="wisps",
+        limits=(1, 10),
+        token="WISP_STRANDS",
+    )
+    wisp_curl: float = parameter(
+        0.65,
+        label="Curl strength",
+        families=("wisps",),
+        group="wisps",
+        limits=(0, 2),
+        token="WISP_CURL",
+    )
+    wisp_drift: float = parameter(
+        110,
+        label="Drift distance",
+        families=("wisps",),
+        group="wisps",
+        limits=(0, 240),
+        token="WISP_DRIFT",
+        unit=" px",
+    )
+    wisp_angle: float = parameter(
+        -90,
+        label="Drift direction",
+        families=("wisps",),
+        group="wisps",
+        limits=(-180, 180),
+        token="WISP_ANGLE",
+        unit="°",
+    )
+    wisp_speed: float = parameter(
+        1.2,
+        label="Flow speed",
+        families=("wisps",),
+        group="wisps",
+        limits=(0, 4),
+        token="WISP_SPEED",
+    )
+    wisp_glow: float = parameter(
+        0.55,
+        label="Thread highlight",
+        families=("wisps",),
+        group="wisps",
+        limits=(0, 1),
+        token="WISP_GLOW",
+    )
+    wisp_softness: float = parameter(
+        0.1,
+        label="Thread softness",
+        families=("wisps",),
+        group="wisps",
+        limits=(0.01, 0.3),
+        token="WISP_SOFTNESS",
+    )
+    distortion_mode: str = parameter(
+        "shockwave",
+        label="Distortion pattern",
+        families=("distortion",),
+        group="distortion",
+        choices=("shockwave", "ripple", "wave"),
+        token="DISTORTION_MODE",
+    )
+    distortion_strength: float = parameter(
+        28,
+        label="Displacement",
+        families=("distortion",),
+        group="distortion",
+        limits=(0, 80),
+        token="DISTORTION_STRENGTH",
+        unit=" px",
+    )
+    distortion_wavelength: float = parameter(
+        70,
+        label="Wavelength",
+        families=("distortion",),
+        group="distortion",
+        limits=(12, 240),
+        token="DISTORTION_WAVELENGTH",
+        unit=" px",
+    )
+    distortion_width: float = parameter(
+        100,
+        label="Shock front width",
+        families=("distortion",),
+        group="distortion",
+        limits=(10, 240),
+        token="DISTORTION_WIDTH",
+        unit=" px",
+    )
+    distortion_cycles: float = parameter(
+        1.5,
+        label="Wave travel cycles",
+        families=("distortion",),
+        group="distortion",
+        limits=(0.25, 4),
+        token="DISTORTION_CYCLES",
+    )
+    distortion_falloff: float = parameter(
+        1,
+        label="Distance falloff",
+        families=("distortion",),
+        group="distortion",
+        limits=(0, 4),
+        token="DISTORTION_FALLOFF",
+    )
+    distortion_angle: float = parameter(
+        0,
+        label="Planar wave angle",
+        families=("distortion",),
+        group="distortion",
+        limits=(-180, 180),
+        token="DISTORTION_ANGLE",
+        unit="°",
+    )
+    distortion_fade: float = parameter(
+        0.3,
+        label="Fade starts at",
+        families=("distortion",),
+        group="distortion",
+        limits=(0.15, 0.85),
+        token="DISTORTION_FADE",
+    )
+    distortion_x: float = parameter(
+        0.5,
+        label="Wave origin · horizontal",
+        families=("distortion",),
+        group="distortion",
+        limits=(0, 1),
+        token="DISTORTION_X",
+    )
+    distortion_y: float = parameter(
+        0.5,
+        label="Wave origin · vertical",
+        families=("distortion",),
+        group="distortion",
+        limits=(0, 1),
+        token="DISTORTION_Y",
     )
 
     def __post_init__(self):
