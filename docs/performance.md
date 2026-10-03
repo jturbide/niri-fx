@@ -153,6 +153,62 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-window-batches.json \
   --sizes=1920x1080,3840x2160 --samples=60 --draws=1,2,4
 ```
 
+## Varied-fragment flight bounds
+
+The varied renderer now rejects pixels outside each velocity group's conservative
+flight envelope before searching cells. It also rejects cells belonging to other
+groups before calculating jittered boundaries. The envelope includes size
+variation, wave displacement, rotation, inward scaling, wander and rotated piece
+size. Particle counts, release timing and trajectories are unchanged.
+
+The [reference comparison](../scripts/compare-fragment-renderers.mjs) checks rendered
+pixels against the earlier shader. Extended cases include all gravity directions,
+maximum variation, low/high wave frequency, offset origins, staged release,
+tiny/wide/tall/fractional-size windows and a texture with transparent margins,
+a hole and partial alpha. Readbacks use a dedicated framebuffer to isolate them
+from displayed-canvas presentation. Hardware mode requires an identified hardware
+renderer; software WebGL remains the default.
+
+Measured on 2026-10-03 on the RTX 4070 Ti / Chromium ANGLE/OpenGL setup,
+with 120 samples per case after 12 warmup batches. The baseline is commit
+`1398399`. Values are p95 **WebGL shader milliseconds before → after**, for the
+whole batch; each window occupies 60% of output width and 50% of output height.
+
+| Preset | Output | 1 draw (ms) | 4 draws (ms) |
+| --- | --- | ---: | ---: |
+| Balanced | 1920×1080 | 0.243 → 0.247 | 0.650 → 0.653 |
+| Balanced | 3840×2160 | 0.797 → 0.797 | 2.177 → 2.175 |
+| Core Detonation | 1920×1080 | 2.391 → 1.629 | 8.030 → 5.365 |
+| Core Detonation | 3840×2160 | 7.860 → 5.034 | 27.165 → 17.080 |
+| Mosaic Burst | 1920×1080 | 0.910 → 0.723 | 3.088 → 2.394 |
+| Mosaic Burst | 3840×2160 | 2.948 → 2.300 | 10.342 → 7.813 |
+| Orbital Ribbons | 1920×1080 | 1.155 → 0.828 | 3.511 → 2.400 |
+| Orbital Ribbons | 3840×2160 | 4.298 → 2.929 | 13.141 → 7.834 |
+
+The three varied presets show about 20–40% lower p95 cost in this sample.
+Balanced uses a separate compact renderer and is effectively unchanged. The
+measurements cover synthetic shader draws; compositor presentation and other
+GPUs still need separate measurements. Large batches of demanding effects can
+remain expensive even after this improvement.
+
+All 525 extended reference-frame pairs matched byte-for-byte on each renderer
+(1,050 pairs across SwiftShader and hardware ANGLE). Existing showcases retain
+the same appearance. [Raw GPU samples, source hashes and frame comparisons](benchmarks/fragment-culling.json)
+include the exact settings and renderer metadata.
+
+```sh
+# Baseline before flight-envelope and early group rejection:
+git worktree add --detach /tmp/nirifx-reference 1398399f4fc6d7c7a6e6abaa0453b602e24b58d3
+node scripts/compare-fragment-renderers.mjs /tmp/nirifx-reference --extended
+node scripts/compare-fragment-renderers.mjs /tmp/nirifx-reference --extended --hardware
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-fragment-culling.json \
+  --presets=balanced,core-detonation,mosaic-burst,orbital-ribbons \
+  --sizes=1920x1080,3840x2160 --samples=120 --draws=1,4
+```
+
+Re-render or re-register your effects to use the optimized shader. Updating NiriFX
+alone does not rewrite shaders already saved in your compositor configuration.
+
 ## Native capture-delivery diagnostic
 
 ```sh
