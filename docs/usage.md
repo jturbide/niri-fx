@@ -13,11 +13,19 @@ If Chromium is unavailable, Studio opens in your default browser; use
 controls follow the selected family. Switching families starts with that family's
 first preset; export a custom style before switching if you want to keep it.
 
+## Try and share online
+
+[Web Studio](https://jturbide.github.io/niri-fx/studio/) uses the same editor and
+shader templates without a local server. Gallery cards open their recorded settings.
+**Share settings** copies a link with the document and preview position; JSON
+and Niri config downloads work without installation. See [Web Studio](web-studio.md)
+for local import, sharing limits and the distinction between previews and activation.
+
 ## Slices
 
 Slices preserve broad strips of the actual window texture. They support opening
-and closing on stock Niri; resize and movement controls are unavailable for this
-family. Opening reverses the closing path with its own duration.
+and closing on stock Niri, with opt-in Accordion resize. Native slice movement
+requires the experimental build. Opening reverses the closing path with its own duration.
 
 | Control | Range / meaning |
 | --- | --- |

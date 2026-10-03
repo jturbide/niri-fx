@@ -4,6 +4,21 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.7 to 0.8
+
+Schema 3 styles and schema 1 action profiles remain supported. Back up custom
+JSON and restore snapshots before updating. New defaults, including the monochrome
+Ember palette, take effect only when you regenerate or select those presets.
+Your active files are not rewritten by a package upgrade. Resize stays opt-in.
+
+The experimental movement patch changed. Rebuild it from the 0.8 source using
+`python3 scripts/build-niri-movement.py --release --test`; an older patched source
+checkout is deliberately rejected. Keep that checkout and use a fresh 0.8 source
+directory for a separate build. The build helper never replaces the login compositor.
+
+[Web Studio](web-studio.md) and the gallery track `main`. Use the local editor from
+your installed tag for version-specific exports. Keep a JSON copy of shared settings.
+
 ## Update the application
 
 From a clean source checkout:

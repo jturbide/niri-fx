@@ -82,6 +82,8 @@ jobs:
         run: python -m unittest discover -s tests -v
       - name: Check documentation, media and changelog
         run: python scripts/check-docs.py
+      - name: Build the static gallery and Studio
+        run: python scripts/build-site.py --output "$RUNNER_TEMP/nirifx-site"
       - name: Compile all shader variants
         if: needs.changes.outputs.full == 'true'
         run: python scripts/validate.py --require-glsl

@@ -31,12 +31,13 @@ def main():
     from PIL import Image
 
     binary, build, config = experiment()
-    effect = PRESETS["explosion"]
-    cfg = config(effect, 1200, movement_shader(effect))
     palette = PALETTE
     rgb = {name: tuple(bytes.fromhex(color[1:])) for name, color in palette.items()}
     clips = []
-    for scenario in ("interrupted", "close-during-move"):
+    for scenario in ("interrupted", "rapid-reversals", "close-during-move"):
+        preset = "spring-wobble" if scenario == "rapid-reversals" else "explosion"
+        effect = PRESETS[preset]
+        cfg = config(effect, 1200, movement_shader(effect))
         name = "native-" + scenario
         with NestedSession(cfg, binary=binary, width=1280, height=800) as session:
             for label, color in palette.items():
@@ -59,12 +60,21 @@ def main():
 
             time.sleep(0.5)
             timed_action(session, actions, "move-column-left")
-            time.sleep(0.35)
-            if scenario == "interrupted":
+            if scenario == "rapid-reversals":
+                for index in range(7):
+                    time.sleep(0.12)
+                    timed_action(
+                        session,
+                        actions,
+                        "move-column-right" if index % 2 == 0 else "move-column-left",
+                    )
+            elif scenario == "interrupted":
+                time.sleep(0.35)
                 timed_action(session, actions, "move-column-right")
                 time.sleep(0.35)
                 timed_action(session, actions, "move-column-left")
             else:
+                time.sleep(0.35)
                 timed_action(session, actions, "close-window", "--id", str(right["id"]))
             time.sleep(1.5)
             after = session.capture("after")
@@ -72,13 +82,16 @@ def main():
             # otherwise add long, machine-dependent holds at the end of the GIF.
             stop(recorder, signal.SIGINT)
             settled = session.windows()
-            if scenario == "interrupted":
+            if scenario in {"interrupted", "rapid-reversals"}:
                 assert len(settled) == 2
                 assert all(
-                    next(w for w in settled if w["id"] == old["id"])["layout"][
-                        "pos_in_scrolling_layout"
-                    ][0]
-                    != old["layout"]["pos_in_scrolling_layout"][0]
+                    (
+                        next(w for w in settled if w["id"] == old["id"])["layout"][
+                            "pos_in_scrolling_layout"
+                        ][0]
+                        != old["layout"]["pos_in_scrolling_layout"][0]
+                    )
+                    == (scenario == "interrupted")
                     for old in windows
                 )
                 with Image.open(before) as a, Image.open(after) as b:
@@ -107,7 +120,7 @@ def main():
                     "name": name,
                     "file": str(dest.relative_to(ROOT)),
                     "bytes": dest.stat().st_size,
-                    "preset": "explosion",
+                    "preset": preset,
                     "effect": asdict(effect),
                     "duration_ms": 1200,
                     "fps": 50,

@@ -128,36 +128,36 @@
     "poster": "afc86ef6bfcd95594eb0a529032ff0eabd126dd402e9a9ad5cd0916d465602db"
   },
   "native-close-during-move": {
-    "source": "ef06bf92ce9d98e3c1fb65d5da701277e08afeb768a1d4d707855b01e0aa1de7",
-    "poster": "6b237b6e78cfa2e9662e1b1a76319118b765c425918f579e7da302118b1f969b"
+    "source": "735e373356b4fc23432d017c2d29384cb35022b012eab42110e10807b7db3cb7",
+    "poster": "0b7d0a726641182f7af09c7344f6f9f2dbdf1ccbb7d2baa6cbdf002ea20087f6"
   },
   "native-close-during-open": {
-    "source": "e3d11b47dff6c8cd21b909425bf266c1a755745aae338fd4a7753687fccda668",
-    "poster": "88e9534fd4491ef74b6de3bb8f673d93e7ede05597bb6635d0b19ec4cdadfc32"
+    "source": "cd198efaac9d643ea87a3360743ec492d3b116d12906bf18ce87cae02ea5d46c",
+    "poster": "938231db4df012f330f59c8364fe68b02ca8a4d8b39e11a45f891aedaf0cadd7"
   },
   "native-interrupted": {
-    "source": "b3e22db36b5cd407189b21e9e29c5aeb80ab1ea33c532ce238bc84773469282e",
-    "poster": "3e1ef3bddf89d6c53b807f258e0ca8f3d74654d66d5bdbc45b8626bb8e4d1c5c"
+    "source": "767928a1e1f4c36b53f62598c489e9ec8bf78407c56e6198175c318f0d370a8f",
+    "poster": "d8d8d222543f5317519dde1c88618ef5f9bf3626765b235055d41dcd6fca0d13"
   },
   "native-swap": {
-    "source": "bb3e223ef86e7644784f7fcf364ee4a7102ded63abbf381dd51930249f50eba0",
-    "poster": "7307056012cd4f67c589a29745ff348c2238d1847a79cb9c2ebd5f7e2110f074"
+    "source": "08d30182e1a72f84e10543025839c974e1f41a501eab85dac36acd56206d2901",
+    "poster": "a328ceddf3c945f17639ea66f89f262742c4bf4c435ff9f776c5a9f1730dddb1"
   },
   "native-swap-bubble-burst": {
-    "source": "2ac93322646ce6981bf68f368727b008869ce01b8e8c3a3b2d0f60f74f4c4020",
-    "poster": "e49df969b9b73f9e1d9517d315fdbef6264a924707e096ff9ab1428addc091ef"
+    "source": "db7f325d261e83ddb232d711859ae5fce22936098db294128ffe76d0a212bc20",
+    "poster": "595794e5f844f5d435a787e9ae536ade00a9e1f543154aac27612bfbbad2156f"
   },
   "native-swap-core-detonation": {
-    "source": "a116ea89ab6b3705a95d6afa2c9a4d87c467652e747b074425c58857586418c7",
-    "poster": "a4d95522f2d6dd6e0c26fb8db72967d43407b9da6d6e9082b5a2caa4e53363f0"
+    "source": "8a933ea7b91aef70d58668bd62cba914a1cd4ae4c664b712ca355b6365316464",
+    "poster": "318266348c9f50a493218741440636451620e5bc7b1c67828932ec1f07042915"
   },
   "native-swap-crosswind": {
-    "source": "191c36562536461cb14ac49da67b0283d28f51e05f2880833049564fd03d5fec",
-    "poster": "ae785271fdcadd123368c4179e2da27528ddaa3cfe209bae03e430a203cf0b49"
+    "source": "9376cb864d66f6aa8222f80d48a554099b37c015186aead5c6d8c3fe60b0414a",
+    "poster": "bd16860f3a528672b6a592d497c2bf0a4326614133de1f265584e8d3a8b110f7"
   },
   "native-swap-orbital-ribbons": {
-    "source": "109ad34f9be0df8983abb26fde12e246543fb658b772834972d80913703cc178",
-    "poster": "f51576ef7141abecca34732017288354e385c2681d12ab3d0f6bbabe8b4fc337"
+    "source": "e82791160327b5e3c554bf324429be0b25320bd0ddac9f061df408405cf426a0",
+    "poster": "3bac9e53187c3a82a0fe4962b1806323d884a0836ba74764e0d859a3f6cd2ddf"
   },
   "profile-burst-and-drift": {
     "source": "3ee3eddb18e3d7fc01aa8c3298d40097bd70eb8601b5d8b3fe60f11df3450b1e",
@@ -272,8 +272,8 @@
     "poster": "2eaf865410d6a24b9385e715f198303097853e65478ca37c960e6836ee6045db"
   },
   "native-swap-slice-exchange": {
-    "source": "9a17448e311831538e8b1f3f5178dbf2a06ee81a3cd0848eb620012484538529",
-    "poster": "cb1ffe5e95a4daa472a739327fff0bf85d77b55d7e061c0a6317e5a5f2c5195e"
+    "source": "e63e3753e4a93225c31ee52d8618667ccfc123d673084187a714f020ba2715c0",
+    "poster": "67335d2bcc14cdb9f5d802227c764c5b7a5b0bb315d420b967a27c33c8208017"
   },
   "preset-accordion": {
     "source": "6c76c84fb4102dcd8571371e02577b08724dfe61fbede53851f1ac30a3533cab",
@@ -315,13 +315,17 @@
     "source": "e182d669786f6a3430b673ffb2bbbfaaa4cbbca2b1f81a243a4f2a739d0e92c3",
     "poster": "7baf718c770a55886d081ec10116a622f2b4f489bf91542622dcf6682a95b5ad"
   },
+  "native-rapid-reversals": {
+    "source": "6e4f232b5978dd59b96936a5818a099b013d271dc5131b593dc8927beece71e0",
+    "poster": "9a34ab2320fab7c0762affc76d55f6de71767ea496dc473cca03e924a1f395eb"
+  },
   "native-swap-spring-wobble": {
-    "source": "4dcb57a83127b9bdcda52a23b0737352aa8a727c47f41a188966f9534d463723",
-    "poster": "6dc0ec84370b31699f3628d37e332eb0dc00ff682a737cbed7945cf6e0ec6b1a"
+    "source": "d0d79893e7f51ecd9c856cc93d89a6b8c6279f52c905b8eb903fc524081d4e8d",
+    "poster": "b596508a2b3abe9ea45fde8c1c65cad2a94a01926eb2af2c54d339acf5f9c1fe"
   },
   "native-swap-twist-snap": {
-    "source": "948e013369cbc0d87691b4d7b9d0dfd45495b05f8abef6b2a36a6a09eab44903",
-    "poster": "98b8829bf9b8d43cbb6dce4ade7b715dd96cf4fefef1f45e76663dc41a37e388"
+    "source": "b1094f0fb58b01ef56ec3b4a3653dfd1c600670352722d9457ffbe5c3adcf4a0",
+    "poster": "0c91e243b45ce7b969d45cae56fd63cce908658e5e0aa25de01aaa10b1a9475b"
   },
   "profile-spring-and-ember": {
     "source": "bad5052309b57ca79be3288cac1f254690b28c8fb30dca1e71b70816de64f5f3",
@@ -412,8 +416,8 @@
     "poster": "54c5d1df5560e7a50c58d425999caf022cd16a9c44e56557d63baa5332d5885a"
   },
   "native-swap-pixel-transfer": {
-    "source": "0812598eaf8039ab625e94d72fe074cacfff25271a827d9be74d2ae8154c8a26",
-    "poster": "cf767c339e2ec19c09ac7c4750c69290322e208835aeefbbb81a5ca3123be5c2"
+    "source": "a738b3c95f1e029cc0e98481a86fc19ea216eb50db9469eec9e3557dc419c59d",
+    "poster": "3c5511906aa1e32354aa29d825cf0edaf2d4587404a9380012fea36c0f9d1bf4"
   },
   "stock-tall-pixels": {
     "source": "a951929917927c0549bc79c8dd056a6d9f02b43aa0f101e22756f3f2fae0095f",
@@ -480,8 +484,8 @@
     "poster": "ca37b939593c791b8f4c3d02d91a84b33f55a9d2401fad8955aa31e03709dbbc"
   },
   "native-swap-soft-phase": {
-    "source": "e454931c9d640f483e55bd7d4705f09302f9641ce09efc0ff7ce5f69f2504765",
-    "poster": "09c393b53988f2432ce727c01d92db173cc0d37b64bb8076aea9dd9cfaa40fc2"
+    "source": "d004dd0888a4b05749da3f4919a971f0ea383a7e13ad190a643f41c8c8143b4d",
+    "poster": "c994527926e61f09e45b0b060d5c63d43f96992c985850aff7075e496d02ac4e"
   },
   "ripple-resize": {
     "source": "3e3a5dea9c1d6740d144bf794328e69f898673c8d555d2e1a50b85828944d5d6",

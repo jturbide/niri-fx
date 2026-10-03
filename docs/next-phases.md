@@ -12,8 +12,9 @@ fully reconstructed snapshot can produce a visible jump even when position is co
 
 The experimental patch carries shader phase through swaps, blends direction
 impulses and continues an interrupted opening trajectory while fading out. This
-preserves visual state; it is not a full physical particle simulation. Matching
-velocity and acceleration across every layout change remains a separate problem.
+preserves visual state and sampled deformation speed through cubic handoffs.
+Layout-position velocity, acceleration and shared particle physics remain separate
+problems. Phase curves must stay bounded without discarding their incoming speed.
 
 Changes to this path should include deterministic state tests and native recordings
 of reversal, repeated retargets, close-during-open, close-during-move and shader

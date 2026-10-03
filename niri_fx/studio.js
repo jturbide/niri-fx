@@ -3,7 +3,8 @@
 const catalog = JSON.parse(document.getElementById("effect-catalog").textContent);
 const byId = (id) => document.getElementById(id);
 const specs = catalog.specifications;
-const { shaderFor, normalizePreset, renderKdl } = createEffectCore(catalog);
+const { shaderFor, normalizePreset, renderKdl, encodeShareDocument, decodeShareDocument } =
+  createEffectCore(catalog);
 const numeric = Object.keys(specs).filter((key) => specs[key].type === "number");
 const choices = Object.keys(specs).filter(
   (key) => specs[key].type === "choice" && key !== "family",
@@ -16,7 +17,11 @@ let parameters = { ...catalog.parameters },
   lastSource = "",
   mode = "effect";
 const query = new URLSearchParams(location.search);
-if (catalog.presets[query.get("preset")]) parameters = { ...catalog.presets[query.get("preset")] };
+const initialPreset = Object.hasOwn(catalog.presets, query.get("preset"))
+  ? query.get("preset")
+  : catalog.name;
+if (Object.hasOwn(catalog.presets, initialPreset))
+  parameters = { ...catalog.presets[initialPreset] };
 let progress = Number(query.get("breakup") ?? 0.45);
 progress = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0.45;
 const title = (s) => s.replaceAll("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -30,7 +35,7 @@ for (const name of Object.keys(catalog.presets)) {
   option.textContent = title(name);
   byId("preset").append(option);
 }
-byId("preset").value = query.get("preset") || (catalog.presets[catalog.name] ? catalog.name : "");
+byId("preset").value = Object.hasOwn(catalog.presets, initialPreset) ? initialPreset : "";
 byId("name").value = catalog.presets[catalog.name]
   ? "My " + title(byId("preset").value)
   : catalog.name;
@@ -260,6 +265,32 @@ function kdlDocument() {
   return renderKdl(effectDocument());
 }
 byId("kdl").onclick = () => download("nirifx.kdl", kdlDocument(), "text/plain");
+byId("share").onclick = async () => {
+  try {
+    // Never copy the current local session URL: it may carry an HTTP save token.
+    const url = new URL("https://jturbide.github.io/niri-fx/studio/");
+    url.hash = new URLSearchParams({
+      style: encodeShareDocument(effectDocument()),
+      seed: String(seed),
+      progress: String(progress),
+      action: editingAction,
+      mode,
+    });
+    byId("share-url").value = url.href;
+    byId("share-result").hidden = false;
+    try {
+      await navigator.clipboard.writeText(url.href);
+      byId("status").textContent =
+        "Copied preview link. Anyone with the link can preview these settings.";
+    } catch {
+      byId("share-url").select();
+      byId("status").textContent =
+        "Copy the preview link below. Anyone with the link can preview these settings.";
+    }
+  } catch (error) {
+    byId("error").textContent = error.message;
+  }
+};
 function saveTarget() {
   const target = byId("save-target").value;
   byId("save").disabled = target === "inir" && !catalog.connection;
@@ -281,7 +312,9 @@ if (catalog.connection)
   );
 if (!catalog.connection)
   byId("status").textContent =
-    "Offline preview: download a Niri preset or export editable JSON. Previewing does not activate effects.";
+    "Preview only: download a Niri preset or export editable JSON. Previewing does not activate effects.";
+byId("studio-kind").textContent = catalog.hosted ? "WEB STUDIO" : "LOCAL STUDIO";
+byId("hosted-note").hidden = !catalog.hosted;
 byId("save").onclick = async () => {
   const target = byId("save-target").value;
   if (target !== "inir") {
@@ -811,6 +844,42 @@ try {
   populate();
   refresh();
   recordHistory();
+  function loadSharedSettings() {
+    const shared = new URLSearchParams(location.hash.slice(1));
+    if (!shared.has("style")) return;
+    try {
+      const doc = decodeShareDocument(shared.get("style"));
+      const action = ["open", "close", "resize"].includes(shared.get("action"))
+        ? shared.get("action")
+        : "open";
+      cancelAnimationFrame(frame);
+      loadDocument(doc, action);
+      byId("preset").value = "";
+      for (const key of ["seed", "progress"]) {
+        const value = Number(shared.get(key));
+        if (shared.has(key) && Number.isFinite(value) && value >= 0 && value <= 1) {
+          if (key === "seed") seed = value;
+          else progress = value;
+        }
+      }
+      populate();
+      const requested = shared.get("mode"),
+        button = [...document.querySelectorAll("[data-mode]")].find(
+          (item) => item.dataset.mode === requested,
+        );
+      if (button && !button.disabled) button.click();
+      refresh();
+      recordHistory();
+      byId("status").textContent =
+        "Shared settings loaded. Resize is " +
+        ((actions ? actions.resize : parameters.resize) ? "enabled in this document" : "off") +
+        ". Previewing does not activate effects.";
+    } catch (error) {
+      byId("error").textContent = "Cannot open shared settings: " + error.message;
+    }
+  }
+  loadSharedSettings();
+  addEventListener("hashchange", loadSharedSettings);
 } catch (error) {
   byId("error").textContent = error.message;
   document.documentElement.dataset.shaderStatus = "error";

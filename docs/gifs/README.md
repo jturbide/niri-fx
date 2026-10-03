@@ -122,7 +122,7 @@ closing effects. Metadata includes both parameter sets.
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **134 GIFs**, including all **64 presets**. The earlier eight
+The gallery contains **135 GIFs**, including all **64 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -228,10 +228,11 @@ python3 scripts/record-movement-scenarios.py
 
 The script verifies the binary and patch hashes, records repeated movement and
 close-during-movement with two synthetic app cards, and checks final IDs/positions
-and reconstructed color populations. It writes `native-interrupted.gif` and
-`native-close-during-move.gif` at 50 fps using mint/violet cards and a compact 32-color
-palette at 720 px wide. Use `python3 scripts/build-niri-movement.py --release` for an optimized
-build; these two recordings use that profile.
+and reconstructed color populations. It writes `native-interrupted.gif`,
+`native-rapid-reversals.gif`, `native-close-during-move.gif` and
+`native-close-during-open.gif` at 50 fps using mint/violet cards and a compact
+32-color palette at 720 px wide. Use `python3 scripts/build-niri-movement.py
+--release` for an optimized build; these recordings use that profile.
 
 The harness raises its owned nested window so host occlusion cannot stall frame
 callbacks and IPC. Each interruption must be acknowledged within 600 ms of the
@@ -250,18 +251,33 @@ node scripts/render-readme-gifs.mjs --only=preset-slice-exchange,preset-pixel-tr
 node scripts/render-readme-gifs.mjs --only=elastic-resize,accordion-resize,ripple-resize,compare-resize-families
 python3 scripts/build-niri-movement.py --release --test
 python3 scripts/record-native-gif.py --all
-python3 scripts/record-movement-scenarios.py --record
+python3 scripts/record-movement-scenarios.py
 python3 scripts/build-gallery.py
 python3 scripts/check-docs.py
 ```
 
 Native clips use the mint/violet app-card fixture at 50 fps. Their manifests record
 preset values, fixture and patch hashes, release profile and acceptance checks.
-The three interruption scenarios cover retargeted swaps, closing during movement
-and closing during opening. Stock Niri cannot reproduce the state handoff.
+The four interruption scenarios cover retargeted swaps, eight rapid wobble reversals,
+closing during movement and closing during opening. Stock Niri cannot reproduce the state handoff.
 
 The [hosted gallery](https://jturbide.github.io/niri-fx/gallery/) uses generated WebP
 posters. It loads a GIF only after Play, pauses the previous GIF and stops playback
 when filtering, pressing Escape or hiding the tab. It also works by opening
 `docs/gallery/index.html` locally. Run `build-gallery.py --check` to verify the
-catalog and poster hashes without Pillow.
+catalog, downloadable documents and poster hashes without Pillow. Stage the
+complete site, including hosted Studio, with `python3 scripts/build-site.py
+--output /tmp/nirifx-site` (choose a new directory).
+
+Additional checks without new recordings:
+
+```sh
+python3 scripts/test-interruptions.py
+python3 scripts/test-interruptions.py --experimental
+```
+
+These use transparent clients at sequential 1×, 1.5× and 2× scales for rapid
+open/close, close during resize and fullscreen transitions. The experimental
+run also checks eight rapid swaps and movement-shader removal. They verify
+state, cleanup and logs; they do not measure physical presentation or certify
+mixed-monitor behavior.

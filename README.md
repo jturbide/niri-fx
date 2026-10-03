@@ -6,13 +6,14 @@
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
 Choose from **64 presets across nine effect families**, then tune them in the
-local Studio. Use different effects for opening and closing, from a quiet ripple
+Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
 Works **standalone** or with **iNiR/iRiS, DankMaterialShell and Noctalia**.
 Quickshell is optional. Studio opens as an app-style window or a browser tab.
 
 [Interactive gallery](https://jturbide.github.io/niri-fx/gallery/) ·
+[Web Studio](https://jturbide.github.io/niri-fx/studio/) ·
 [All presets & comparisons](docs/catalog.md) · [Documentation](docs/README.md) ·
 [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
@@ -24,6 +25,11 @@ This README describes `main`, which can include features newer than the latest
 release. See [choosing a version](docs/releases.md).
 
 ## Quick start
+
+**Try without installing:** open [Web Studio](https://jturbide.github.io/niri-fx/studio/),
+or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-fx/gallery/).
+Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
+[Bring a downloaded style to Niri](docs/web-studio.md).
 
 Linux, Python 3.10+ and a WebGL browser are enough to try Studio:
 
@@ -50,7 +56,9 @@ The [scenario guide](docs/scenarios.md) helps choose the right setup and restore
 
 The [interactive gallery](https://jturbide.github.io/niri-fx/gallery/) has search,
 family/scenario filters and click-to-play previews. It starts paused and loads one
-animation at a time. The [full catalog](docs/catalog.md) includes every preset,
+animation at a time. Style cards link to editable settings, JSON downloads and
+a local Studio command. Share a filtered view or a customized Studio link.
+The [full catalog](docs/catalog.md) includes every preset,
 control comparison and downloadable example.
 
 ### Fragments first
@@ -120,6 +128,10 @@ particle field.
 | Redirect a moving window | Close during opening |
 | --- | --- |
 | ![Repeated swaps keep their deformation](docs/gifs/native-interrupted.gif) | ![Opening particles continue their path as the window closes](docs/gifs/native-close-during-open.gif) |
+
+Eight quick direction changes, carrying the wobble through each retarget:
+
+![Wobble continues through eight rapid reversals](docs/gifs/native-rapid-reversals.gif)
 
 [Run the nested demo](experimental/README.md) · [Movement behavior and limits](docs/movement.md) ·
 [All native swaps and interruption recordings](docs/showcases.md#resize-movement-and-swaps)

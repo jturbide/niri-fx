@@ -31,12 +31,14 @@ test("gallery starts paused, filters examples and plays only one animation", asy
         "[...document.querySelectorAll('article:not([hidden])')].every(c=>c.dataset.search.includes('ink'))",
       ),
     );
-    await browser.evaluate("document.querySelector('article:not([hidden]) button').click()");
+    await browser.evaluate("document.querySelector('article:not([hidden]) [data-play]').click()");
     assert.equal(
       await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
       1,
     );
-    await browser.evaluate("document.querySelectorAll('article:not([hidden]) button')[1].click()");
+    await browser.evaluate(
+      "document.querySelectorAll('article:not([hidden]) [data-play]')[1].click()",
+    );
     assert.equal(
       await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),
       1,
@@ -57,7 +59,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       2,
     );
     await browser.evaluate(
-      "document.querySelector('article:not([hidden]) button').click();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))",
+      "document.querySelector('article:not([hidden]) [data-play]').click();document.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape'}))",
     );
     assert.equal(
       await browser.evaluate("document.querySelectorAll('img[src$=\".gif\"]').length"),

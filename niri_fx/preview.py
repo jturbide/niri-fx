@@ -79,8 +79,10 @@ def parameter_controls():
     return "".join(result)
 
 
-def preview_catalog(effect, name="balanced", connection=None, preferences=None):
+def preview_catalog(effect, name="balanced", connection=None, preferences=None, *, hosted=False):
     """Build the browser contract from the validated Python catalog, without I/O writes."""
+    if hosted and connection is not None:
+        raise ValueError("Hosted Studio must not contain a local session connection")
     profile = effect.document(name) if isinstance(effect, Profile) else None
     if profile:
         effect = effect.open
@@ -102,13 +104,14 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None):
         "families": FAMILIES,
         "elastic_anchors": ELASTIC_ANCHORS,
         "connection": connection,
+        "hosted": hosted,
         "save_target": connection.get("target", "inir") if connection else "standalone",
     }
 
 
-def preview_document(effect, name="balanced", connection=None, preferences=None):
+def preview_document(effect, name="balanced", connection=None, preferences=None, *, hosted=False):
     """Inline assets so local HTTP and offline files execute identical source."""
-    payload = preview_catalog(effect, name, connection, preferences)
+    payload = preview_catalog(effect, name, connection, preferences, hosted=hosted)
     # Escape HTML's script-end delimiter even inside an inert JSON script block.
     data = json.dumps(payload).replace("</", "<\\/")
     root = files("niri_fx")

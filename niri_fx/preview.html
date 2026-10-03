@@ -9,7 +9,7 @@
     <h1>
       <img class="brand-mark" src="data:image/svg+xml;base64,@APP_ICON@" alt="" /> NiriFX Studio
     </h1>
-    <span class="badge">LOCAL STUDIO</span>
+    <span id="studio-kind" class="badge">LOCAL STUDIO</span>
   </header>
   <p>
     Shape how windows open and close. Explore fragments, slices, elastic motion and reveals, then
@@ -60,19 +60,28 @@
       >
       <small>Preview preference only. Use the timeline to inspect individual frames.</small>
       <p id="caption"></p>
+      <p id="hosted-note" hidden>
+        Preview and customize here, then download a preset to use with your local NiriFX
+        installation. <a href="https://jturbide.github.io/niri-fx/gallery/">Browse the gallery</a> ·
+        <a href="https://github.com/jturbide/niri-fx#quick-start">Install NiriFX</a>
+      </p>
       <div class="controls">
         <button id="import">Import preset</button
         ><input id="import-file" type="file" accept=".json,application/json" hidden /><button
           id="export"
         >
-          Export preset</button
-        ><button id="kdl">Export Niri config</button> <label for="save-target">Save target</label
+          Export JSON</button
+        ><button id="kdl">Export Niri config</button><button id="share">Share settings</button>
+        <label for="save-target">Save target</label
         ><select id="save-target">
           <option value="inir">iNiR / iRiS</option>
           <option value="noctalia">Noctalia preset file</option>
           <option value="standalone">Standalone Niri file</option></select
         ><button id="save">Save to iRiS</button>
       </div>
+      <label id="share-result" hidden
+        >Preview link<input id="share-url" type="text" readonly
+      /></label>
       <p id="status" role="status" aria-live="polite"></p>
       <small id="save-help"
         >Saving adds a style to Settings → Windows → Movement → Style. Your current animation stays

@@ -39,7 +39,60 @@ function filter() {
   document.getElementById("count").textContent = `${count} ${count === 1 ? "example" : "examples"}`;
   document.getElementById("empty").hidden = count > 0;
 }
-for (const input of Object.values(filters)) input.addEventListener("input", filter);
+function readFilters() {
+  const query = new URLSearchParams(location.search);
+  filters.search.value = (query.get("search") || "").slice(0, 160);
+  for (const key of ["family", "action", "kind"])
+    filters[key].value = [...filters[key].options].some((option) => option.value === query.get(key))
+      ? query.get(key)
+      : "";
+  filter();
+}
+for (const input of Object.values(filters))
+  input.addEventListener("input", () => {
+    filter();
+    const query = new URLSearchParams();
+    for (const [key, control] of Object.entries(filters))
+      if (control.value) query.set(key, control.value);
+    const url = new URL(location.href);
+    url.search = query.toString();
+    // file:// previews can deny history changes; filtering must still work.
+    try {
+      history.replaceState(null, "", url);
+    } catch {
+      /* Local preview. */
+    }
+  });
+addEventListener("popstate", readFilters);
+readFilters();
+async function copy(text, label, note) {
+  document.getElementById("copy-result").hidden = false;
+  document.getElementById("copy-label").textContent = label;
+  const field = document.getElementById("copy-text");
+  field.value = text;
+  try {
+    await navigator.clipboard.writeText(text);
+    document.getElementById("copy-note").textContent = "Copied. " + note;
+  } catch {
+    field.select();
+    document.getElementById("copy-note").textContent = "Select and copy the text above. " + note;
+  }
+}
+for (const button of document.querySelectorAll("[data-command]"))
+  button.addEventListener("click", () =>
+    copy(
+      button.dataset.command,
+      "Local Studio command",
+      "Download the JSON first, then run this from its folder with NiriFX installed.",
+    ),
+  );
+document.getElementById("share-view").addEventListener("click", () => {
+  const url = new URL("https://jturbide.github.io/niri-fx/gallery/");
+  for (const [key, control] of Object.entries(filters))
+    if (control.value) url.searchParams.set(key, control.value);
+  url.hash = location.hash;
+  copy(url.href, "Gallery link", "The link preserves filters; previews still start paused.");
+});
 document.getElementById("pause-all").addEventListener("click", pause);
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) pause();

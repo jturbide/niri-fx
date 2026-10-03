@@ -62,7 +62,9 @@ texture and geometry matrices as the opening shader, plus `niri_move_delta`
 (total displacement in logical pixels). `niri_clamped_progress` runs 0 to 1;
 `niri_random_seed` is stable while that tile's movement effect is active.
 `niri_move_impulse` blends direction changes without snapping the shader's orientation.
-Retargeting preserves the current shader phase and continues toward reconstruction.
+Retargeting preserves shader phase and its sampled speed, then continues toward
+reconstruction. Cubic direction transitions also carry their incoming speed,
+including another reversal before the first transition finishes.
 Output colors use premultiplied alpha. The geometry follows Niri's animated
 position; shaders should deform around it rather than translate by the full
 movement again. Fragments uses a symmetric breakup/reassembly pulse.
@@ -80,7 +82,9 @@ custom-shader behavior; without a previous shader, ordinary rendering remains.
 Closing while a window is opening carries its original opening shader, seed and
 clock into a fading continuation. Particles keep approaching their destinations;
 they do not reverse into a fresh explosion. Closing during movement similarly
-retains its phase, impulse, seed and remaining displacement while fading.
+retains its phase, impulse, seed and remaining displacement while fading. The
+continuation uses the compositor clock and starts its translation with the
+sampled layout velocity; fading has its own closing clock.
 This interruption path takes precedence over the usual closing style, including
 when a profile has different opening and closing families.
 
@@ -108,13 +112,15 @@ This is not the complete transaction/particle engine described in
 
 - It follows existing tile/column animation clocks. Direct pointer dragging and
   workspace/camera panning do not get a new particle timeline.
-- Repeated actions preserve shader phase, seed and direction continuity. Fully
-  matching velocity/acceleration and one shared swap transaction remain future work.
+- Repeated actions preserve shader phase, seed and the sampled phase/direction
+  derivatives. Layout-position velocity, acceleration and one shared swap
+  transaction remain separate work.
 - Two streams overlap, but each window is still a separate render element.
   Particle-level interleaving/collisions and shared physics are not implemented.
 - Large excursions can clip at output/workspace boundaries. The expanded draw
   region and offscreen pass cost GPU work; there is no frame-time acceptance yet.
-- Fractional scaling, mixed outputs, capture restrictions, fullscreen/popups,
+- Sequential 1×/1.5×/2× scales and resize/fullscreen interruptions have a nested
+  stress harness. Real mixed outputs, capture restrictions, popups,
   interrupted resize/close and graphics-reset behavior need broader validation
   before replacing a login compositor. The TTY path compiles but was not activated.
 

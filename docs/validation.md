@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for development after 0.7.0. These checks
+Evidence updated on **2026-10-03** for the 0.8.0 prerelease. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -8,11 +8,11 @@ See the [changelog](../CHANGELOG.md) for user-visible changes.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 72 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities and conservative CI scope selection |
-| Portable JavaScript | 28 Node checks; all 64 presets' supported stock shaders match Python |
+| Python | 74 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities and conservative CI scope selection |
+| Portable JavaScript | 30 Node checks; all 64 presets' supported stock shaders match Python |
 | Real Chromium | 64 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
-| Browser lifecycle and gallery | Three tests cover failed startup, bounded requests, disconnect/cleanup, gallery filtering, reduced-motion startup and single-GIF playback |
+| Browser lifecycle and gallery | Four tests cover failed startup, bounded requests, disconnect/cleanup, gallery filtering, reduced-motion startup, single-GIF playback and hosted Studio share/download flows |
 | GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 64 default exports, supported resize exports and 64 picker-style includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Resize profiles | Elastic, Accordion and Ripple grow and shrink a synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
@@ -33,24 +33,41 @@ file contract and Studio save flow, not assumed from those older recordings.
 
 The experimental patch applies to Niri revision
 `8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 19 config tests,
-one config integration test, 12 layout-animation tests and three new continuity
-state tests for uninterrupted motion, reversal and repeated retargets/render passes.
+one config integration test, 12 layout-animation tests and five continuity tests.
+The latter check uninterrupted motion, retained phase/direction derivatives across
+reversals, monotone late handoffs, finite-difference speed and a clocked close path.
 
 Ten native swap recordings passed final-position and intact-color checks with
-clean render logs. Interrupted swapping, closing during movement and closing
-during opening also passed visible-transition and final-cleanup checks. Recording
+clean render logs. Interrupted swapping, eight rapid wobble reversals, closing
+during movement and closing during opening also passed transition and cleanup checks. Recording
 commands must arrive within the bounded interruption window.
 
-Retargets retain the deformation phase and seed, with smoothly blended direction
-impulses. Close interruptions continue the original effect while fading. This is
-visual-state continuity, not a claim of continuous physical velocity or acceleration
-across every layout change. Windows remain separate render elements. Mixed-output
-handoffs, capture/block-out combinations, shader removal during close continuation,
-fullscreen and graphics-reset interactions need broader testing.
+Retargets retain deformation phase, seed and sampled phase/direction speed. Cubic
+phase curves shorten when needed to stay monotone. Close movement retains those
+clocks and starts translation at the sampled layout speed while fading separately.
+Niri still owns layout easing during swaps: this is not a guarantee of physical
+velocity or acceleration continuity across every event. Windows remain separate
+render elements. Mixed-output handoffs, capture/block-out combinations, shader
+removal during close continuation and graphics-reset interactions need broader testing.
 
 The older smoke checks covered resize and shader-removal fallback, repeated swaps
 and closure of moving windows. The current recordings are described in
 [the experiment guide](../experimental/README.md). The TTY path was not activated.
+
+## Interruption stress coverage
+
+`test-interruptions.py` passed against stock Niri 26.04 and the pinned release-built
+experiment. Each run checked three rapid open/close cycles, close during a reversed
+resize, four rapid width changes and a fullscreen round trip, at each of 1×, 1.5×
+and 2×. All 15 cases per compositor ended with no surviving window or changed pixels
+against the empty scene. Fullscreen dimensions and the restored floating width
+matched expectations; render logs were clean.
+
+The experimental run additionally passed eight column reversals with unchanged
+window IDs and final columns, and removing the movement shader during transit.
+These checks use transparent synthetic Quickshell clients in one nested output.
+They establish state and cleanup, not perceptual seamlessness or physical mixed-output
+behavior. Timing and shader-state tests complement the recordings.
 
 ## Performance evidence
 
@@ -67,8 +84,8 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**134 GIFs**, including all **64 presets**, resize profiles and comparisons, custom
-recipes, labelled Canvas concepts, ten native swaps and twelve workflow/compositor
+**135 GIFs**, including all **64 presets**, resize profiles and comparisons, custom
+recipes, labelled Canvas concepts, ten native swaps and thirteen workflow/compositor
 scenarios. Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
 
@@ -83,8 +100,8 @@ All content is synthetic. See [recording commands](gifs/README.md).
   multiple outputs and mixed scaling; capture/encoder timing cannot substitute for it.
 - Broader transparency, decorations, fullscreen and output-edge clipping. Client-side
   shadows outside the window geometry are omitted during breakup.
-- Continuous physical velocity across retargets, direct dragging, simultaneous
-  resize/close, shared per-particle ordering and graphics-reset behavior.
+- Layout-position velocity across retargets, direct dragging, broader application
+  resize/close coverage, shared per-particle ordering and graphics-reset behavior.
 - Full iRiS, DMS and Noctalia desktop sessions across versions beyond the controlled
   component/picker workflows documented below.
 

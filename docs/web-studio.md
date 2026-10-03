@@ -1,0 +1,75 @@
+# Try, customize and share online
+
+Open [Web Studio](https://jturbide.github.io/niri-fx/studio/) in a WebGL-capable
+browser. No Niri installation is needed to preview effects. The hosted editor
+uses the same shader templates and controls as local Studio, with synthetic
+window content. It cannot change desktop settings or capture your windows.
+
+## Start from a showcase
+
+1. Browse the [gallery](https://jturbide.github.io/niri-fx/gallery/). Filter by family,
+   scenario or renderer, then press **Play**. Only one animation plays at a time.
+2. Choose **Try in Studio** to load that example's recorded settings. Comparisons
+   offer a separate link and JSON file for each style. Experimental movement and
+   concept cards say **Edit open/close style**: Web Studio does not run a compositor.
+3. Adjust the controls. Use **Basic** for the main look or **Advanced** for detailed
+   tuning. **Pause** and the timeline let you inspect a single frame.
+4. **Export JSON** keeps editable settings; **Export Niri config** exports shaders.
+   Neither download activates an effect. Resize remains off unless the document
+   explicitly enables it, such as one of the labelled resize profiles.
+
+Workflow recordings demonstrate shell interactions and may not have downloadable
+style settings. Their setup guides describe the corresponding integration.
+
+## Use the result locally
+
+Install NiriFX using [Getting started](getting-started.md). Download a gallery
+style's JSON, then use **Copy local command** from that card. Run it from the folder
+containing the downloaded file, in the environment where NiriFX is installed.
+
+For a file exported by Studio, run this from the source checkout, using the actual
+path to your download:
+
+```sh
+python3 -m niri_fx studio --custom /path/to/nirifx-preset.json --target standalone
+```
+
+You can also choose **Import preset** inside local Studio. To activate an effect,
+follow [standalone setup](standalone.md), [iNiR/iRiS](getting-started.md#inir-and-iris),
+[DMS](dms.md) or [Noctalia](noctalia.md). Those guides cover reviewing changes and
+restoring the prior configuration.
+
+## Share settings or a gallery view
+
+**Share settings** creates a public Studio link containing the style/profile,
+selected action, preview mode, random seed and timeline position. It never copies
+local save tokens. The link preserves values, not playback, history or favorites.
+If clipboard access is unavailable, select and copy the displayed URL.
+
+The document is encoded in the URL fragment and decoded in the browser. There is
+no preset-upload service, but anyone who receives the complete link can read its
+name and settings. Treat it as shared content. Links accept validated parameter
+data only, with the same 16 KiB document limit as JSON imports. Malformed links
+show an error without replacing the current settings. Keep a JSON export as your
+editable copy; development versions may change the format or defaults.
+
+**Share this view** in the gallery keeps its filters and current example anchor.
+Previews start paused when someone opens the link.
+
+## Hosted, local and offline
+
+| Mode | Preview and JSON/config export | Save to the local iRiS registry |
+| --- | --- | --- |
+| Web Studio | Yes | No |
+| Local `studio` command | Yes | With the iNiR target and installed helper |
+| Exported `preview` HTML | Yes, without a server | No |
+
+The hosted page is a static GitHub Pages site. It has no analytics or preset
+backend. For use without hosting, generate the self-contained editor:
+
+```sh
+python3 -m niri_fx preview --preset explosion --output /tmp/nirifx-studio.html
+```
+
+Open that HTML file in a browser. See [Studio controls](usage.md),
+[independent profiles](profiles.md) and [movement limits](movement.md).
