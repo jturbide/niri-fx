@@ -12,7 +12,7 @@ Requires Python 3.10+, Niri, GJS (`gjs`) and GTK 4.10 or newer, including their
 GObject introspection data. Quickshell, AGS and Astal are not required for the
 standalone window. Install these optional desktop dependencies through your
 distribution; installing the Python package does not install GTK or GJS.
-This feature is available on `main`, after v0.8.0.
+Available since v0.9.0.
 
 From a [source checkout](getting-started.md):
 

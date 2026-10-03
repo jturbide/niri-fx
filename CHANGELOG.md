@@ -10,6 +10,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.9.0 — 2026-10-03
+
 ### Added
 
 - Guided preset selection through `niri-fx` in a terminal or `setup --interactive`:

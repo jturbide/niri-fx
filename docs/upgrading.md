@@ -4,6 +4,22 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.8 to 0.9
+
+Run `niri-fx` in a terminal for guided preset selection. With redirected input or
+output, it prints help instead. Existing `list`, `doctor`, `setup` and `restore`
+JSON workflows remain available; add `--text` to `list` or `doctor` for readable
+output. The terminal guide omits the Studio launcher unless explicitly requested.
+
+The optional [Quickshell](quickshell.md) and [GTK](gtk.md) pickers ship in the
+package. Install only the chosen UI's toolkit; neither is needed for the CLI.
+Their Undo histories are separate from CLI setup. `inspect --custom` validates
+portable JSON, and `setup --expect-plan` binds activation to a reviewed plan.
+
+Preset values, shader sources and the experimental compositor patch are unchanged
+from 0.8. Schema 3 styles and schema 1 profiles remain supported. Upgrading does
+not change active effects; resize stays opt-in. Keep your custom JSON and snapshots.
+
 ## From 0.7 to 0.8
 
 Schema 3 styles and schema 1 action profiles remain supported. Back up custom

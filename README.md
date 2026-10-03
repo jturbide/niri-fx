@@ -178,7 +178,7 @@ Both provide reusable components for custom settings pages.
 
 Only the chosen UI's toolkit is needed; the GTK picker also works without AGS.
 Studio and standalone setup remain independent of both toolkits.
-Available on `main` after v0.8.0.
+Available in [v0.9.0](https://github.com/jturbide/niri-fx/releases/tag/v0.9.0).
 
 ## Performance and compatibility
 
