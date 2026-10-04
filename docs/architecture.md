@@ -39,6 +39,7 @@ import-boundary test enforces that separation.
 | [library.py](../niri_fx/library.py) | Document storage and reviewed activation adapters. Launch arguments fix all paths; Apply and Restore use existing transactions scoped to the same config and adapter. |
 | [studio.js](../niri_fx/studio.js) | UI state, history, action editing, synthetic WebGL preview and user-triggered save/download. |
 | [motion-preview.js](../niri_fx/motion-preview.js) | Labelled Canvas move/swap concepts. Not a compositor renderer. |
+| [pointer-preview.js](../niri_fx/pointer-preview.js) | Browser adaptation of the native analytical drag spring and inverse texture mapping, plus a deterministic synthetic input trace. No compositor input, layout or configuration writes. |
 | [studio.py](../niri_fx/studio.py) | On-demand app launch and authenticated loopback HTTP transport. Delegates validation and writes. |
 | [integration.py](../niri_fx/integration.py) | iNiR base inheritance, ownership-aware registration and backups. Never selects a style. |
 | [picker.py](../niri_fx/picker.py), [qml/](../niri_fx/qml/), [gtk/](../niri_fx/gtk/) | Optional desktop launchers and reusable pickers. Toolkit views call the CLI through argument arrays; no shader renderer or configuration writer is duplicated in the UI. |
@@ -78,12 +79,32 @@ still requires integer controls. Shared fixtures cover both acceptance and rejec
 an explicit profile choice. Stock calls omit the node even for strength zero.
 The browser uses equivalent options. Pointer and timed movement are composed into
 one `window-movement` block; desktop springs retain their existing separate blocks.
-No fifth shader action or browser pointer simulation is introduced. The built-in
-pointer renderer belongs to the optional compositor extension.
+Pointer remains profile metadata rather than a fifth shader slot. Its live
+renderer belongs to the optional compositor extension; Studio previews that
+renderer separately on its synthetic window texture.
 
 The three pointer presets and bounds are canonical in `pointer.py`.
 `scripts/lib/pointer_wobble.py` re-exports them for source-checkout harnesses;
 recording helpers do not maintain their own copies.
+
+The browser spring uses milliseconds at its API boundary and seconds in the
+native analytical equations. It carries displacement and velocity through release
+and repeat grabs, bounds injected energy, blends the grab anchor over 80 ms and
+finishes the release tail within two seconds. Its shader adapts the native inverse
+mapping to Studio's texture coordinates, retaining the five sampling iterations
+and deformation limit of 64 logical pixels or 12% of the shorter window edge.
+
+Scripted pointer playback uses a fixed input trace and reconstructs its state for
+each requested timestamp. This makes captures and backwards seeks deterministic;
+rendering another frame never generates another input event. The browser preview
+does not reproduce compositor input routing, layout ownership, capture policy or
+presentation latency. Runtime capability checks remain separate from previewing.
+
+The interactive view owns a temporary spring, pointer capture and animation
+clock. It restores the editor view when stopped, cancelled or hidden without
+writing profile settings. Absent and zero-strength pointer choices cannot start
+the preview and add no combo stage. Reduced motion removes spring deformation
+and settling from interactive input and omits scripted pointer playback.
 
 ## Agent consumers
 

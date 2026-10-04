@@ -48,8 +48,22 @@
         width="1000"
         height="760"
         aria-label="Interactive preview of NiriFX window effects"
+        tabindex="0"
       ></canvas>
-      <div class="controls">
+      <section id="pointer-preview-tools" aria-label="Pointer drag preview" hidden>
+        <p id="pointer-preview-status" role="status"></p>
+        <div class="controls">
+          <button id="pointer-demo" type="button">Play drag demo</button>
+          <button id="pointer-reset" type="button">Reset position</button>
+          <button id="pointer-stop" type="button">Return to effects</button>
+        </div>
+        <small
+          >Drag the sample window, or play the demo with your keyboard. Escape returns to effects.
+          This browser uses the native spring and shader math with synthetic content; it does not
+          verify your compositor.</small
+        >
+      </section>
+      <div class="controls" id="effect-playback-controls">
         <button id="preview-combo" type="button" aria-pressed="false">Preview combo</button>
         <button id="open">Reconstruct</button><button id="close">Deconstruct</button
         ><button id="pause">Pause</button><button id="seed">New variation</button
@@ -168,6 +182,9 @@
           <option value="disabled">Disabled</option>
         </select>
         <small id="pointer-description"></small>
+        <button id="try-pointer" type="button" aria-pressed="false" disabled>
+          Try pointer drag
+        </button>
         <details id="pointer-tuning">
           <summary>Customize pointer drag</summary>
           <div class="pointer-fields">
@@ -181,8 +198,8 @@
         </details>
         <small id="pointer-availability"></small>
         <small
-          >Pointer drag is saved in JSON. The canvas and Preview combo do not simulate
-          dragging.</small
+          >Try pointer drag to move the sample window. Preview combo includes a scripted drag when
+          pointer strength is above zero. Browser previews do not activate effects.</small
         >
         <a
           href="https://github.com/jturbide/niri-fx/blob/main/docs/pointer-wobble.md"
@@ -319,6 +336,7 @@
   <!--@EFFECT_CORE_JS@-->
   <!--@MOTION_JS@-->
   <!--@LIBRARY_JS@-->
+  <!--@POINTER_PREVIEW_JS@-->
   <!--@COMBO_PREVIEW_JS@-->
   <!--@STUDIO_JS@-->
 </html>

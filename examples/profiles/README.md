@@ -49,6 +49,30 @@ To make a new combination, use Library's combo builder, Studio's **Independent a
 for editing, saving and explicit resize opt-in; follow [setup and restore](../../docs/setup.md)
 when ready to apply a profile.
 
+## Pointer preview combos
+
+These source-checkout examples add the three experimental drag presets to
+Fragment Flow. Opening and closing work on stock Niri; pointer deformation
+requires the optional compositor extension for live use. Resize and timed
+movement stay unset.
+
+| Portable JSON | Studio showcase |
+| --- | --- |
+| [Gentle Fragments](pointer-preview-gentle.json) | [GIF](../../docs/gifs/pointer-preview-gentle.gif) |
+| [Rubber Sheet Fragments](pointer-preview-rubber-sheet.json) | [GIF](../../docs/gifs/pointer-preview-rubber-sheet.gif) |
+| [Release Settle Fragments](pointer-preview-release-settle.json) | [GIF](../../docs/gifs/pointer-preview-release-settle.gif) |
+
+Import one into [Web Studio](https://jturbide.github.io/niri-fx/studio/) and choose
+**Preview combo**, or use **Try pointer drag** in Library for interactive dragging.
+The recordings use native spring/shader math with synthetic input and textures.
+They do not measure compositor input, capture behavior or display latency.
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/pointer-preview-gentle.json --output /tmp/pointer-preview-gentle.html
+python3 -m niri_fx preview --custom examples/profiles/pointer-preview-rubber-sheet.json --output /tmp/pointer-preview-rubber-sheet.html
+python3 -m niri_fx preview --custom examples/profiles/pointer-preview-release-settle.json --output /tmp/pointer-preview-release-settle.html
+```
+
 ## Optional resize profiles
 
 These four profiles keep Balanced opening and closing and explicitly enable a

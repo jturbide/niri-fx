@@ -63,7 +63,9 @@ let workspace = null;
 // Playback renders a frozen document through a separate view. Editor settings,
 // history and the selected action never become temporary animation state.
 let comboPreviewFrame = null;
+let pointerPreviewFrame = null;
 let cancelComboPreview = () => {};
+let cancelPointerPreview = () => {};
 let favorites = [];
 try {
   favorites = JSON.parse(localStorage.getItem("nirifx-favorites") || "[]").filter(
@@ -110,6 +112,7 @@ function chooseAction(action) {
   byId("action").value = action;
 }
 function loadDocument(doc, action = "open") {
+  cancelPointerPreview();
   cancelComboPreview();
   editingAction = action;
   actions = doc.actions ? structuredClone(doc.actions) : null;
@@ -595,20 +598,27 @@ try {
   uploadTexture(sample, 0);
   uploadTexture(nextSample, 1);
   function rebuild() {
-    const renderMode = comboPreviewFrame?.mode || mode,
+    const previewFrame = pointerPreviewFrame || comboPreviewFrame,
+      renderMode = previewFrame?.mode || mode,
       resizing = renderMode === "resize",
       moving = renderMode === "movement",
-      renderEffect = comboPreviewFrame?.effect || (comparing ? pinned.parameters : parameters),
-      source = shaderFor(renderEffect, false, resizing, moving);
-    const renderKey = source + (comboPreviewFrame ? "\n// centered combo geometry" : "");
+      pointer = renderMode === "pointer",
+      renderEffect = previewFrame?.effect || (comparing ? pinned.parameters : parameters),
+      source = pointer ? POINTER_PREVIEW_SHADER : shaderFor(renderEffect, false, resizing, moving);
+    const renderKey = source + (previewFrame ? "\n// centered preview geometry" : "");
     if (renderKey === lastSource) return;
     const uniforms = resizing
       ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;uniform mat3 niri_curr_geo_to_prev_geo;uniform vec2 fx_resize_from;uniform vec2 fx_resize_to;"
-      : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;uniform vec2 fx_move_origin;";
+      : pointer
+        ? "uniform vec2 fx_move_origin;"
+        : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;uniform vec2 fx_move_origin;";
     const geometry = resizing
       ? "mix(fx_resize_from,fx_resize_to,niri_clamped_progress)"
       : "fx_window";
-    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : moving ? "fx_move_origin" : comboPreviewFrame ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : moving ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
+    const color = pointer
+      ? "pointer_color((pixel-origin)/size,size)"
+      : `${resizing ? "resize_color" : moving ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0))`;
+    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : moving || pointer ? "fx_move_origin" : previewFrame ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${color};}`;
     const vs = compile(gl.VERTEX_SHADER, vertex),
       fs = compile(gl.FRAGMENT_SHADER, fragment),
       next = gl.createProgram();
@@ -641,8 +651,9 @@ try {
   }
   let benchmarkWindow = null;
   function draw(value) {
-    if (!comboPreviewFrame) progress = value;
-    const renderMode = comboPreviewFrame?.mode || mode;
+    const previewFrame = pointerPreviewFrame || comboPreviewFrame;
+    if (!previewFrame) progress = value;
+    const renderMode = previewFrame?.mode || mode;
     if (["move", "swap"].includes(renderMode)) motionPreview.draw(value, mode, parameters, seed);
     else {
       gl.viewport(0, 0, canvas.width, canvas.height);
@@ -656,10 +667,16 @@ try {
       const travel = 160 * (value * value * (3 - 2 * value) - 0.5);
       gl.uniform2f(
         gl.getUniformLocation(program, "fx_move_origin"),
-        (canvas.width - windowSize[0]) * 0.5 +
-          (comboPreviewFrame?.offset[0] ?? direction[0] * travel),
-        (canvas.height - windowSize[1]) * 0.5 +
-          (comboPreviewFrame?.offset[1] ?? direction[1] * travel),
+        (canvas.width - windowSize[0]) * 0.5 + (previewFrame?.offset[0] ?? direction[0] * travel),
+        (canvas.height - windowSize[1]) * 0.5 + (previewFrame?.offset[1] ?? direction[1] * travel),
+      );
+      gl.uniform2f(
+        gl.getUniformLocation(program, "niri_pointer_anchor"),
+        ...(previewFrame?.pointer?.anchor || [0.5, 0.06]),
+      );
+      gl.uniform2f(
+        gl.getUniformLocation(program, "niri_pointer_deformation"),
+        ...(previewFrame?.pointer?.deformation || [0, 0]),
       );
       gl.uniform2f(gl.getUniformLocation(program, "niri_move_impulse"), ...direction);
       gl.uniform2f(
@@ -708,8 +725,10 @@ try {
       );
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
-    byId("progress").value = Math.round(value * 1000);
-    byId("amount").textContent = Math.round(value * 100) + "%";
+    if (!pointerPreviewFrame) {
+      byId("progress").value = Math.round(value * 1000);
+      byId("amount").textContent = Math.round(value * 100) + "%";
+    }
   }
   function refresh() {
     try {
@@ -733,6 +752,278 @@ try {
       document.documentElement.dataset.shaderStatus = "error";
     }
   }
+  // Pointer interaction owns a temporary view and clock, never a profile action.
+  // Restoring the view leaves the editor's progress, seed and history untouched.
+  let pointerView = null,
+    pointerSpring = null,
+    pointerRaf = 0,
+    pointerId = null,
+    pointerLast = null,
+    pointerOffset = [0, 0],
+    pointerDemo = null;
+  const pointerWindow = [600, 380];
+  const pointerReduced = () => byId("reduced-motion").checked;
+  const pointerConfig = () => ({
+    ...pointerView.settings,
+    ...(pointerReduced() ? { strength: 0 } : {}),
+  });
+  function releasePointerCapture() {
+    const id = pointerId;
+    pointerId = null;
+    pointerLast = null;
+    if (id !== null && canvas.hasPointerCapture(id)) canvas.releasePointerCapture(id);
+  }
+  function pointerPoint(event) {
+    // object-fit:contain can letterbox the canvas when max-height applies. Map
+    // the visible bitmap, not its outer CSS box; canvas units are logical pixels.
+    const rect = canvas.getBoundingClientRect();
+    const scale = Math.min(canvas.clientWidth / canvas.width, canvas.clientHeight / canvas.height);
+    return [
+      (event.clientX -
+        rect.left -
+        canvas.clientLeft -
+        (canvas.clientWidth - canvas.width * scale) / 2) /
+        scale,
+      (event.clientY -
+        rect.top -
+        canvas.clientTop -
+        (canvas.clientHeight - canvas.height * scale) / 2) /
+        scale,
+    ];
+  }
+  function pointerOrigin() {
+    return pointerWindow.map(
+      (size, axis) => ((axis ? canvas.height : canvas.width) - size) / 2 + pointerOffset[axis],
+    );
+  }
+  function paintPointer(sample, phase) {
+    if (!pointerView) return;
+    pointerPreviewFrame = { mode: "pointer", pointer: sample, offset: [...pointerOffset] };
+    rebuild();
+    draw(0);
+    document.documentElement.dataset.pointerPreview = phase;
+    byId("pointer-preview-status").textContent = pointerReduced()
+      ? "Reduced motion: direct movement, no deformation or settling."
+      : phase === "demo"
+        ? "Scripted drag and release. Reset position to return to interactive dragging."
+        : phase === "dragging"
+          ? "Dragging the sample window. Reverse direction, then let go."
+          : phase === "settling"
+            ? "Released. The spring is settling at the same window position."
+            : "Drag the sample window to try these pointer settings.";
+    document.documentElement.dataset.shaderStatus = "ready";
+  }
+  function pointerTick(now) {
+    pointerRaf = 0;
+    if (!pointerView) return;
+    try {
+      if (pointerDemo) {
+        const elapsed = Math.min(pointerDemo.demo.durationMs, now - pointerDemo.started);
+        const state = pointerDemo.demo.sample(elapsed);
+        pointerOffset = [...state.offset];
+        paintPointer(state, "demo");
+        if (elapsed < pointerDemo.demo.durationMs) pointerRaf = requestAnimationFrame(pointerTick);
+        else {
+          pointerDemo = null;
+          pointerSpring = createPointerSpring(pointerView.settings, state.anchor, now);
+          paintPointer(pointerSpring.sample(now), "ready");
+        }
+      } else {
+        const state = pointerSpring.sample(now);
+        paintPointer(state, pointerId !== null ? "dragging" : state.moving ? "settling" : "ready");
+        if (state.moving && !pointerReduced()) pointerRaf = requestAnimationFrame(pointerTick);
+      }
+    } catch (error) {
+      cancelPointerPreview();
+      byId("error").textContent = "Cannot preview pointer drag: " + error.message;
+    }
+  }
+  function advancePointer(now = performance.now()) {
+    cancelAnimationFrame(pointerRaf);
+    pointerTick(now);
+  }
+  function resetPointer() {
+    if (!pointerView) return;
+    cancelAnimationFrame(pointerRaf);
+    releasePointerCapture();
+    pointerDemo = null;
+    pointerOffset = [0, 0];
+    pointerView.grabbed = false;
+    const now = performance.now();
+    pointerSpring = createPointerSpring(pointerConfig(), [0.5, 0.06], now);
+    advancePointer(now);
+  }
+  cancelPointerPreview = () => {
+    if (!pointerView) return;
+    cancelAnimationFrame(pointerRaf);
+    pointerRaf = 0;
+    releasePointerCapture();
+    pointerDemo = null;
+    pointerSpring = null;
+    pointerPreviewFrame = null;
+    for (const [id, hidden] of Object.entries(pointerView.visibility)) byId(id).hidden = hidden;
+    for (const [tab, pressed] of pointerView.tabs) tab.setAttribute("aria-pressed", pressed);
+    pointerView = null;
+    byId("pointer-preview-tools").hidden = true;
+    byId("try-pointer").textContent = "Try pointer drag";
+    byId("try-pointer").setAttribute("aria-pressed", "false");
+    delete document.documentElement.dataset.pointerPreview;
+    refresh();
+  };
+  byId("try-pointer").onclick = () => {
+    if (pointerView) {
+      cancelPointerPreview();
+      return;
+    }
+    const settings = normalizePreset(effectDocument()).pointer;
+    if (!settings || settings.strength <= 0) return;
+    cancelComboPreview();
+    cancelAnimationFrame(frame);
+    pointerView = {
+      settings: structuredClone(settings),
+      visibility: Object.fromEntries(
+        [
+          "stage",
+          "motion-stage",
+          "concept-note",
+          "effect-playback-controls",
+          "caption",
+          "combo-preview-status",
+        ].map((id) => [id, byId(id).hidden]),
+      ),
+      tabs: [...document.querySelectorAll("[data-mode]")].map((tab) => [
+        tab,
+        tab.getAttribute("aria-pressed"),
+      ]),
+    };
+    canvas.hidden = false;
+    for (const id of [
+      "motion-stage",
+      "concept-note",
+      "effect-playback-controls",
+      "caption",
+      "combo-preview-status",
+    ])
+      byId(id).hidden = true;
+    for (const [tab] of pointerView.tabs) tab.setAttribute("aria-pressed", "false");
+    byId("pointer-preview-tools").hidden = false;
+    byId("try-pointer").textContent = "Stop pointer preview";
+    byId("try-pointer").setAttribute("aria-pressed", "true");
+    resetPointer();
+    canvas.focus({ preventScroll: true });
+  };
+  function playPointerDemo() {
+    if (!pointerView) return;
+    resetPointer();
+    if (pointerReduced()) return;
+    pointerDemo = { demo: createPointerDemo(pointerView.settings), started: performance.now() };
+    advancePointer(pointerDemo.started);
+  }
+  byId("pointer-demo").onclick = playPointerDemo;
+  byId("pointer-reset").onclick = resetPointer;
+  byId("pointer-stop").onclick = cancelPointerPreview;
+  canvas.addEventListener("pointerdown", (event) => {
+    if (!pointerView || pointerDemo || pointerId !== null || event.button !== 0 || !event.isPrimary)
+      return;
+    const point = pointerPoint(event),
+      origin = pointerOrigin();
+    const anchor = point.map((value, axis) => (value - origin[axis]) / pointerWindow[axis]);
+    if (anchor.some((value) => value < 0 || value > 1)) return;
+    event.preventDefault();
+    canvas.setPointerCapture(event.pointerId);
+    pointerId = event.pointerId;
+    pointerLast = point;
+    const now = performance.now();
+    const previous = pointerSpring.sample(now);
+    // Native tiles create a spring at the first grab point. Only a spring that
+    // still owns deformation blends a new anchor into its existing motion.
+    if (!pointerView.grabbed || (previous.released && !previous.moving))
+      pointerSpring = createPointerSpring(pointerConfig(), anchor, now);
+    else pointerSpring.grab(anchor, now);
+    pointerView.grabbed = true;
+    advancePointer(now);
+  });
+  canvas.addEventListener("pointermove", (event) => {
+    if (!pointerView || pointerId !== event.pointerId) return;
+    event.preventDefault();
+    const point = pointerPoint(event);
+    const next = pointerOffset.map((value, axis) => {
+      const limit = Math.max(
+        0,
+        ((axis ? canvas.height : canvas.width) - pointerWindow[axis]) / 2 - 66,
+      );
+      return Math.max(-limit, Math.min(limit, value + point[axis] - pointerLast[axis]));
+    });
+    const delta = next.map((value, axis) => value - pointerOffset[axis]);
+    pointerLast = point;
+    pointerOffset = next;
+    const now = performance.now();
+    pointerSpring.push(delta, now);
+    advancePointer(now);
+  });
+  canvas.addEventListener("pointerup", (event) => {
+    if (!pointerView || pointerId !== event.pointerId) return;
+    releasePointerCapture();
+    const now = performance.now();
+    pointerSpring.release(now);
+    advancePointer(now);
+  });
+  for (const type of ["pointercancel", "lostpointercapture"])
+    canvas.addEventListener(type, (event) => {
+      if (pointerId === event.pointerId) cancelPointerPreview();
+    });
+  canvas.addEventListener("keydown", (event) => {
+    if (!pointerView) return;
+    if (["Enter", " "].includes(event.key)) {
+      event.preventDefault();
+      playPointerDemo();
+    }
+  });
+  document.addEventListener("keydown", (event) => {
+    if (pointerView && event.key === "Escape") {
+      event.preventDefault();
+      cancelPointerPreview();
+    }
+  });
+  for (const type of ["click", "input", "change"])
+    document.addEventListener(
+      type,
+      (event) => {
+        if (
+          !pointerView ||
+          !(event.target instanceof Element) ||
+          event.target.closest("#try-pointer,#pointer-preview-tools,#stage,#reduced-motion") ||
+          !event.target.closest("button,input,select")
+        )
+          return;
+        cancelPointerPreview();
+      },
+      true,
+    );
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) cancelPointerPreview();
+  });
+  addEventListener("blur", cancelPointerPreview);
+  addEventListener("resize", cancelPointerPreview);
+  // Read-only lifecycle diagnostics let real-browser checks verify that stopping
+  // a preview releases capture and leaves no scheduled animation behind.
+  window.niriFxPointerPreview = {
+    get active() {
+      return !!pointerView;
+    },
+    snapshot() {
+      return structuredClone({
+        active: !!pointerView,
+        captured: pointerId !== null,
+        scheduled: !!pointerRaf,
+        demo: !!pointerDemo,
+        offset: pointerOffset,
+        frame: pointerPreviewFrame,
+      });
+    },
+    stop: () => cancelPointerPreview(),
+  };
+
   let comboView = null;
   function comboButton(active) {
     byId("preview-combo").textContent = active ? "Stop preview" : "Preview combo";
@@ -741,6 +1032,7 @@ try {
   const comboPreview = createComboPreview({
     normalizeDocument: normalizePreset,
     families: catalog.families,
+    pointerDemo: createPointerDemo,
     render(state) {
       comboPreviewFrame = state;
       try {
@@ -748,11 +1040,7 @@ try {
         draw(state.progress);
         byId("error").textContent = "";
         byId("combo-preview-status").textContent =
-          state.label +
-          (state.phase === "hold" ? " · Pause" : "") +
-          " · " +
-          state.support +
-          (pointerSettings ? " · Pointer drag is not played" : "");
+          state.label + (state.phase === "hold" ? " · Pause" : "") + " · " + state.support;
         document.documentElement.dataset.comboAction = state.action;
         document.documentElement.dataset.shaderStatus = "ready";
       } catch (error) {
@@ -787,6 +1075,7 @@ try {
     refresh();
   };
   byId("preview-combo").onclick = () => {
+    cancelPointerPreview();
     if (comboPreview.active) {
       cancelComboPreview();
       return;
@@ -849,6 +1138,8 @@ try {
     samples = 60,
     draws = 1,
   } = {}) => {
+    cancelPointerPreview();
+    cancelComboPreview();
     if (
       ![width, height, samples, draws].every(Number.isInteger) ||
       width < 320 ||
@@ -1031,8 +1322,12 @@ try {
     cancelComboPreview();
     byId("reduced-motion").checked = event.matches;
     cancelAnimationFrame(frame);
+    resetPointer();
   });
-  byId("reduced-motion").onchange = () => cancelAnimationFrame(frame);
+  byId("reduced-motion").onchange = () => {
+    cancelAnimationFrame(frame);
+    resetPointer();
+  };
   byId("resize-direction").onchange = () => {
     cancelAnimationFrame(frame);
     draw(progress);

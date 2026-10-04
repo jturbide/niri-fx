@@ -29,7 +29,9 @@ hooks. Stock desktop springs are described and recorded separately in the
 
 Library also stores experimental **Pointer drag** presets and custom strength,
 damping and frequency. Online Studio can edit, share and download these settings;
-combo playback does not simulate dragging. **Export stock Niri config** omits
+combo playback includes a scripted drag when strength is above zero. **Try pointer
+drag** lets you drag the synthetic window with native spring and shader math.
+These previews do not verify compositor support. **Export stock Niri config** omits
 experimental nodes. **Export experimental config** includes selected pointer and
 movement settings for the matching native build. Read the
 [pointer guide](pointer-wobble.md) before using that configuration.

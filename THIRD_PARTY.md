@@ -4,7 +4,7 @@
 
 The original Python application, GLSL effects, browser editor, scripts,
 documentation and synthetic demonstration assets are copyright 2026 Julien
-Turbide and licensed under [MIT](LICENSE), except for the Niri-derived patches below.
+Turbide and licensed under [MIT](LICENSE), except for the Niri-derived components below.
 No community shader collection is vendored. Related projects are credited as
 references in [the research notes](docs/related-projects.md).
 
@@ -21,10 +21,17 @@ The patches add an optional movement shader hook, pointer-driven deformation,
 rendering integration and associated configuration/testing changes; see
 [the experiment](experimental/README.md).
 
+The browser spring and deformation adapter in `niri_fx/pointer-preview.js` is
+derived from the pointer patch and also uses **GPL-3.0-or-later**. Its header links
+to the corresponding source and license. Studio includes this component in its
+offline HTML and hosted page; the installed package includes the same readable
+JavaScript and license text.
+
 The source distribution includes the patches and both license texts, so project
 distribution metadata lists `MIT AND GPL-3.0-or-later`. The installed Python
-package does not contain or install a patched compositor: its original code
-remains MIT licensed. This combined metadata does not relicense the MIT files.
+package does not contain or install a patched compositor. Its original Python
+code remains MIT licensed; the embedded pointer preview has the license described
+above. This combined metadata does not relicense the MIT files.
 
 The build helper fetches Niri and Cargo dependencies separately into ignored
 build directories. Those projects retain their own licenses. No Niri binary,

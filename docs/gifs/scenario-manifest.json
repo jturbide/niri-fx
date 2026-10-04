@@ -2319,21 +2319,116 @@
       ]
     },
     {
+      "name": "pointer-preview-gentle",
+      "file": "docs/gifs/pointer-preview-gentle.gif",
+      "mode": "pointer",
+      "source": "examples/profiles/pointer-preview-gentle.json",
+      "frames": 125,
+      "fps": 25,
+      "bytes": 1005046,
+      "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "sources": {
+        "examples/profiles/pointer-preview-gentle.json": "2a9049652d7a170d7bfd40f0070c42eda0619adf3ed287c476aa338f31fd5d37",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
+        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
+        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
+        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
+        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
+      },
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ]
+    },
+    {
+      "name": "pointer-preview-rubber-sheet",
+      "file": "docs/gifs/pointer-preview-rubber-sheet.gif",
+      "mode": "pointer",
+      "source": "examples/profiles/pointer-preview-rubber-sheet.json",
+      "frames": 125,
+      "fps": 25,
+      "bytes": 1057815,
+      "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "sources": {
+        "examples/profiles/pointer-preview-rubber-sheet.json": "bd4c24355ea56916cb1115cbdde491a543de600642812bebd27f9287a569d884",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
+        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
+        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
+        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
+        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
+      },
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ]
+    },
+    {
+      "name": "pointer-preview-release-settle",
+      "file": "docs/gifs/pointer-preview-release-settle.gif",
+      "mode": "pointer",
+      "source": "examples/profiles/pointer-preview-release-settle.json",
+      "frames": 125,
+      "fps": 25,
+      "bytes": 1025613,
+      "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "sources": {
+        "examples/profiles/pointer-preview-release-settle.json": "64a5bd84f733c4f5f4c4e25aa431644df9d75f847d048dfef111dbe5216f562b",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
+        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
+        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
+        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
+        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
+      },
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ]
+    },
+    {
       "name": "workflow-library",
       "file": "docs/gifs/workflow-library.gif",
-      "bytes": 3917677,
+      "bytes": 4719703,
       "backend": "actual offline library UI / synthetic WebGL texture",
       "fps": 20,
-      "frames": 625,
+      "frames": 784,
       "sources": {
-        "niri_fx/library.js": "f9a6ea5095b01789d34c31f98ab4f4000e7d1d78c64895fcf065ffbb7d1d609c",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
         "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
-        "niri_fx/studio.js": "d101fc0843f752d1b47371896eb6167bd507589436e3450faf2b2d4dc3384c65",
-        "niri_fx/preview.html": "7102d61edd82b8e606b2947907beb270b389d40f79b069b40926c352d1dc9c42",
-        "niri_fx/studio.css": "ce396fb1a87fb350b02bdeb96bbc2c0bb0006299a85fe1090b65d9d1e3f256d1",
-        "scripts/record-library-workflow.mjs": "aaf757fe3db88345483c81d4759e00c5617a327806a69acba5224080cb4cf548"
+        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
+        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
+        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "scripts/record-library-workflow.mjs": "ee46c2f6fc7fb8f6d58d2e29e1ab556570ddbb1bb5b52792022dbecde4b082fb"
       },
       "checks": [
         "recommended selection",
@@ -2358,17 +2453,19 @@
     {
       "name": "workflow-studio-profile",
       "file": "docs/gifs/workflow-studio-profile.gif",
-      "bytes": 760469,
+      "bytes": 760427,
       "backend": "actual offline Studio UI / synthetic WebGL texture",
       "sources": {
         "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
-        "niri_fx/library.js": "f9a6ea5095b01789d34c31f98ab4f4000e7d1d78c64895fcf065ffbb7d1d609c",
-        "niri_fx/studio.js": "d101fc0843f752d1b47371896eb6167bd507589436e3450faf2b2d4dc3384c65",
-        "niri_fx/preview.html": "7102d61edd82b8e606b2947907beb270b389d40f79b069b40926c352d1dc9c42",
-        "niri_fx/studio.css": "ce396fb1a87fb350b02bdeb96bbc2c0bb0006299a85fe1090b65d9d1e3f256d1",
-        "scripts/record-studio-workflow.mjs": "41ffd3f9e74bc623685d4d9f5acb0d6ae8e033a7aaf120d84b4330e44e7eac13"
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
+        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "scripts/record-studio-workflow.mjs": "3d4b5a546c9c85df87d2010b5d45a62fc81a697f654a527b4acc0e8930ddb44d"
       },
       "fps": 10,
       "frames": 140,

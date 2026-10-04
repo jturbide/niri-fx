@@ -187,7 +187,11 @@ Grab a window, change direction and let it settle. The optional pointer extensio
 adds actual drag response to the isolated experimental compositor. It is available
 from source; Studio's timed Elastic effects remain separate.
 Choose **Pointer drag** in Library to save a preset or tune its strength, damping
-and frequency. Portable JSON retains the choice on every setup. Live activation
+and frequency. Use **Try pointer drag** to drag the sample window, or **Play drag
+demo** for a repeatable comparison. **Preview combo** includes dragging when
+pointer strength is above zero. These browser previews use native spring and shader math with
+synthetic input; they work online without changing your desktop.
+Portable JSON retains the choice on every setup. Live activation
 requires the verified experimental compositor and an explicit standalone Apply.
 
 | Gentle | Rubber Sheet | Release Settle |
@@ -196,6 +200,14 @@ requires the verified experimental compositor and an explicit standalone Apply.
 
 These recordings use real pointer events and synthetic windows in nested Niri.
 [Try the prototype and its three presets](docs/pointer-wobble.md).
+
+These complete Studio combos pair Fragment Flow with each drag preset. Import
+the [portable examples](examples/profiles/README.md#pointer-preview-combos) to try
+them online; they are available from the source checkout until the next release.
+
+| Gentle Fragments | Rubber Sheet Fragments | Release Settle Fragments |
+| --- | --- | --- |
+| ![Fragment opening, gentle drag and fragment closing in Studio](docs/gifs/pointer-preview-gentle.gif) | ![Fragment opening, rubber sheet drag and fragment closing in Studio](docs/gifs/pointer-preview-rubber-sheet.gif) | ![Fragment opening, spring settling and fragment closing in Studio](docs/gifs/pointer-preview-release-settle.gif) |
 
 ### Pixels, ink and distortion
 
@@ -413,6 +425,7 @@ Contributions are welcome: presets, documentation, hardware results and code.
 ## License
 
 Original code, shaders and sample artwork are [MIT licensed](LICENSE).
-The optional Niri patch is **GPL-3.0-or-later**, with [its license](experimental/COPYING-NIRI).
+The optional Niri patches and derived browser pointer preview use
+**GPL-3.0-or-later**, with [their license](experimental/COPYING-NIRI).
 See [third-party notices](THIRD_PARTY.md). NiriFX is independent and is not affiliated
 with Niri, iNiR, DMS or Noctalia.

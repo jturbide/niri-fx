@@ -5,11 +5,14 @@ function createComboPreview({
   normalizeDocument,
   families,
   render,
+  pointerDemo,
   onFinish = () => {},
   requestFrame = (callback) => requestAnimationFrame(callback),
   cancelFrame = (id) => cancelAnimationFrame(id),
   now = () => performance.now(),
 }) {
+  // Keep spring replay state outside the serializable, immutable timeline.
+  const pointerDemos = new WeakMap();
   function freeze(value) {
     if (value && typeof value === "object") {
       for (const child of Object.values(value)) freeze(child);
@@ -89,6 +92,28 @@ function createComboPreview({
       add("movement", "right", [0, 0], [160, 0]);
       add("movement", "left", [160, 0], [0, 0]);
     }
+    if (snapshot.kind === "profile" && snapshot.pointer?.strength > 0 && !reducedMotion) {
+      if (typeof pointerDemo !== "function") throw new Error("Pointer preview is unavailable.");
+      const demo = pointerDemo(snapshot.pointer);
+      const stage = {
+        action: "pointer",
+        mode: "pointer",
+        effect: actions.open,
+        pointerSettings: snapshot.pointer,
+        direction: null,
+        fromOffset: [0, 0],
+        toOffset: [0, 0],
+        label: "Pointer drag preview",
+        support: "Native spring and shader math; synthetic input, not compositor validation",
+        actionDurationMs: demo.durationMs,
+        phase: "animation",
+        startMs: totalMs,
+        durationMs: demo.durationMs,
+      };
+      pointerDemos.set(stage, demo);
+      stages.push(stage);
+      totalMs += stage.durationMs;
+    }
     add("close", null, [0, 0], [0, 0], false);
     return freeze({ document: snapshot, stages, seed, reducedMotion, totalMs });
   }
@@ -106,15 +131,29 @@ function createComboPreview({
         ? 1
         : (elapsedMs - stage.startMs) / stage.durationMs;
     const eased = fraction * fraction * (3 - 2 * fraction);
+    let pointer;
+    if (stage.action === "pointer") {
+      let demo = pointerDemos.get(stage);
+      // Serialized plans can be replayed by capture tools, including backwards.
+      if (!demo) {
+        if (typeof pointerDemo !== "function") throw new Error("Pointer preview is unavailable.");
+        demo = pointerDemo(stage.pointerSettings);
+        pointerDemos.set(stage, demo);
+      }
+      pointer = demo.sample(elapsedMs - stage.startMs);
+    }
     return {
       action: stage.action,
       mode: stage.mode,
       effect: stage.effect,
       direction: stage.direction,
       progress: stage.action === "open" ? 1 - fraction : fraction,
-      offset: stage.fromOffset.map((from, index) => from + (stage.toOffset[index] - from) * eased),
+      offset:
+        pointer?.offset ||
+        stage.fromOffset.map((from, index) => from + (stage.toOffset[index] - from) * eased),
+      ...(pointer ? { pointer } : {}),
       seed: plan.seed,
-      phase: stage.phase,
+      phase: pointer?.phase || stage.phase,
       label: stage.label,
       support: stage.support,
       actionDurationMs: stage.actionDurationMs,

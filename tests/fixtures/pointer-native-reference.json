@@ -1,0 +1,3080 @@
+{
+  "schema": 1,
+  "provenance": "Native Rust compiled unchanged from experimental/niri-pointer-wobble.patch; Config and Point containers are stubbed; no graphics or desktop state.",
+  "source_sha256": {
+    "src/animation/pointer_wobble.rs": "bf6e08711f2759af60e1a80e80b2a0ebb12691cf035746177f785743df5fab63",
+    "src/render_helpers/shaders/pointer_wobble.frag": "b869b142f527a5c4332ff8a8de4d264ef86f943312b0a4fb7a1851b17ec4fdb6"
+  },
+  "cases": [
+    {
+      "name": "impulse-release-and-long-frame",
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            40,
+            -15
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 0,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              -12.53526139142721,
+              4.700723021785204
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              -12.53526139142721,
+              4.700723021785204
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 16
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              -12.53526139142721,
+              4.700723021785204
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 75,
+          "expected": {
+            "deformation": [
+              -0.8682286999288094,
+              0.3255857624733037
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 270,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        },
+        {
+          "op": "sample",
+          "at": 7000,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "config": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": 8
+      },
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "reversal-and-anchor-blend",
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            60,
+            40
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 30,
+          "expected": {
+            "deformation": [
+              -18.895381216903775,
+              -12.596920811269182
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 30,
+          "value": [
+            -105,
+            -40
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 60,
+          "expected": {
+            "deformation": [
+              16.530409586467908,
+              4.404378737269998
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 60
+        },
+        {
+          "op": "sample",
+          "at": 76,
+          "expected": {
+            "deformation": [
+              13.218223251853562,
+              4.5815175222012146
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "grab",
+          "at": 76,
+          "value": [
+            0.8,
+            0.9
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 76,
+          "expected": {
+            "deformation": [
+              13.218223251853562,
+              4.5815175222012146
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 96,
+          "expected": {
+            "deformation": [
+              5.608423988077803,
+              2.4366787239364025
+            ],
+            "anchor": [
+              0.29375,
+              0.39375
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 116,
+          "expected": {
+            "deformation": [
+              0.6362082898065122,
+              0.590745693188648
+            ],
+            "anchor": [
+              0.5,
+              0.6000000000000001
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 156,
+          "expected": {
+            "deformation": [
+              -0.9535492450094977,
+              -0.32191942640049437
+            ],
+            "anchor": [
+              0.8,
+              0.9
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 160,
+          "value": [
+            15,
+            25
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 190,
+          "expected": {
+            "deformation": [
+              -4.8758463964804815,
+              -7.956694373482175
+            ],
+            "anchor": [
+              0.8,
+              0.9
+            ],
+            "released": false,
+            "moving": true
+          }
+        }
+      ],
+      "config": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": 8
+      },
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "slow-release-taper-regrab",
+      "config": {
+        "strength": 2,
+        "damping": 10,
+        "frequency": 2
+      },
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            300,
+            -80
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 50,
+          "expected": {
+            "deformation": [
+              -34.1576039627325,
+              9.108694390062
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 50
+        },
+        {
+          "op": "sample",
+          "at": 1500,
+          "expected": {
+            "deformation": [
+              0.8902948998254105,
+              -0.23741197328677574
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1550,
+          "expected": {
+            "deformation": [
+              -4.485269238783648,
+              1.196071797008973
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1800,
+          "expected": {
+            "deformation": [
+              1.5938695799482887,
+              -0.42503188798621044
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "grab",
+          "at": 1800,
+          "value": [
+            0.1,
+            0.75
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 1800,
+          "expected": {
+            "deformation": [
+              1.5938695799482887,
+              -0.42503188798621044
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1820,
+          "expected": {
+            "deformation": [
+              1.9549942058745822,
+              -0.5213317882332219
+            ],
+            "anchor": [
+              0.184375,
+              0.3703125
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 1820,
+          "value": [
+            75,
+            40
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 1880,
+          "expected": {
+            "deformation": [
+              -34.32222862719825,
+              -19.69079538818593
+            ],
+            "anchor": [
+              0.1,
+              0.75
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 1880
+        },
+        {
+          "op": "sample",
+          "at": 3880,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.1,
+              0.75
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "slow-release-exact-deadline",
+      "config": {
+        "strength": 2,
+        "damping": 10,
+        "frequency": 2
+      },
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            300,
+            0
+          ]
+        },
+        {
+          "op": "release",
+          "at": 0
+        },
+        {
+          "op": "sample",
+          "at": 100,
+          "expected": {
+            "deformation": [
+              -53.83878574209751,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1499,
+          "expected": {
+            "deformation": [
+              1.0442113454404234,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1500,
+          "expected": {
+            "deformation": [
+              0.9214062370719054,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1750,
+          "expected": {
+            "deformation": [
+              -0.3923709071750178,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1900,
+          "expected": {
+            "deformation": [
+              0.3357373498852124,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1999,
+          "expected": {
+            "deformation": [
+              5.743811122057339e-08,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 2000,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        },
+        {
+          "op": "sample",
+          "at": 9000,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "critical-damping",
+      "config": {
+        "strength": 0.9,
+        "damping": 100,
+        "frequency": 2
+      },
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            200,
+            -150
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 0,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1,
+          "expected": {
+            "deformation": [
+              -0.6353635840869575,
+              0.4765226880652181
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              -8.419372431854896,
+              6.314529323891171
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 70,
+          "expected": {
+            "deformation": [
+              -18.687555089446974,
+              14.015666317085227
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 140,
+          "expected": {
+            "deformation": [
+              -15.50804678496093,
+              11.631035088720697
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 140
+        },
+        {
+          "op": "sample",
+          "at": 200,
+          "expected": {
+            "deformation": [
+              -10.423384000312295,
+              7.81753800023422
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 2140,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "maximum-frequency",
+      "config": {
+        "strength": 2,
+        "damping": 10,
+        "frequency": 16
+      },
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            1e+308,
+            -1e+308
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 0,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 1,
+          "expected": {
+            "deformation": [
+              -4.496497594430437,
+              4.496497594430437
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 7,
+          "expected": {
+            "deformation": [
+              -27.315905086548227,
+              27.315905086548227
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              -38.70798439722226,
+              38.70798439722226
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 42,
+          "expected": {
+            "deformation": [
+              26.005037626282444,
+              -26.005037626282444
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 70,
+          "expected": {
+            "deformation": [
+              -14.815807599182172,
+              14.815807599182172
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 70,
+          "value": [
+            -1e+308,
+            1e+308
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 71,
+          "expected": {
+            "deformation": [
+              -10.492803190658558,
+              10.492803190658558
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 71
+        },
+        {
+          "op": "sample",
+          "at": 2071,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "disabled",
+      "config": {
+        "strength": 0,
+        "damping": 65,
+        "frequency": 8
+      },
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            1e+308,
+            -1e+308
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": false
+          }
+        },
+        {
+          "op": "release",
+          "at": 16
+        },
+        {
+          "op": "sample",
+          "at": 100,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "defensive-resume-after-release",
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            50,
+            0
+          ]
+        },
+        {
+          "op": "release",
+          "at": 16
+        },
+        {
+          "op": "sample",
+          "at": 70,
+          "expected": {
+            "deformation": [
+              -2.1088398771821693,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 70,
+          "value": [
+            10,
+            25
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 70,
+          "expected": {
+            "deformation": [
+              -2.1088398771821693,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 100,
+          "expected": {
+            "deformation": [
+              -2.0479226691671606,
+              -7.8730755070432386
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 90,
+          "expected": {
+            "deformation": [
+              -2.0479226691671606,
+              -7.8730755070432386
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "sample",
+          "at": 100,
+          "expected": {
+            "deformation": [
+              -2.0479226691671606,
+              -7.8730755070432386
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        }
+      ],
+      "config": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": 8
+      },
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "name": "adversarial-saturation",
+      "config": {
+        "strength": 2,
+        "damping": 10,
+        "frequency": 2
+      },
+      "events": [
+        {
+          "op": "push",
+          "at": 0,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 1,
+          "expected": {
+            "deformation": [
+              -0.5679600303233832,
+              0.5679600303233832
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 1,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 2,
+          "expected": {
+            "deformation": [
+              -1.274233236705817e-05,
+              1.1358433403050316
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 2,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 3,
+          "expected": {
+            "deformation": [
+              -0.5678705025147064,
+              1.7036371254983387
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 3,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 4,
+          "expected": {
+            "deformation": [
+              -0.00010210904497403304,
+              2.271251938647597
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 4,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 5,
+          "expected": {
+            "deformation": [
+              -0.567691565249507,
+              2.838687830653551
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 5,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 6,
+          "expected": {
+            "deformation": [
+              -0.00028086407210722804,
+              3.405855389544643
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 6,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 7,
+          "expected": {
+            "deformation": [
+              -0.5674232890536789,
+              3.972754715582868
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 7,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 8,
+          "expected": {
+            "deformation": [
+              -0.0005489228126445843,
+              4.539296446153503
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 8,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 9,
+          "expected": {
+            "deformation": [
+              -0.5670657726166352,
+              5.1054807449652015
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 9,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 10,
+          "expected": {
+            "deformation": [
+              -0.0009061725174228964,
+              5.67121831281502
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 10,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 11,
+          "expected": {
+            "deformation": [
+              -0.5666191427671077,
+              6.23650939093272
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 11,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 12,
+          "expected": {
+            "deformation": [
+              -0.0013524723178442641,
+              6.801264757559953
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 12,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 13,
+          "expected": {
+            "deformation": [
+              -0.5660835544402258,
+              7.365484745506758
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 13,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 14,
+          "expected": {
+            "deformation": [
+              -0.001887653263177645,
+              7.929080224465674
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 14,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 15,
+          "expected": {
+            "deformation": [
+              -0.5654591906359402,
+              8.492051632866637
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 15,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 16,
+          "expected": {
+            "deformation": [
+              -0.0025115183664953028,
+              9.054309945828493
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 16,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 17,
+          "expected": {
+            "deformation": [
+              -0.5647462623688533,
+              9.615855721416903
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 17,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 18,
+          "expected": {
+            "deformation": [
+              -0.003223842659184158,
+              10.176600054117202
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 18,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 19,
+          "expected": {
+            "deformation": [
+              -0.563945008609523,
+              10.736543635618634
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 19,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 20,
+          "expected": {
+            "deformation": [
+              -0.0040243732539626325,
+              11.295597693673676
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 20,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 21,
+          "expected": {
+            "deformation": [
+              -0.5630556962173064,
+              11.85376306755089
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 21,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 22,
+          "expected": {
+            "deformation": [
+              -0.0049128294163311385,
+              12.410951132126689
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 22,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 23,
+          "expected": {
+            "deformation": [
+              -0.562078619864823,
+              12.967162888168506
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 23,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 24,
+          "expected": {
+            "deformation": [
+              -0.005888902644380244,
+              13.522309871485373
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 24,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 25,
+          "expected": {
+            "deformation": [
+              -0.5610141019541134,
+              14.076393258222906
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 25,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 26,
+          "expected": {
+            "deformation": [
+              -0.006952256756870378,
+              14.629324758879086
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 26,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 27,
+          "expected": {
+            "deformation": [
+              -0.559862492524586,
+              15.181105738812832
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 27,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 28,
+          "expected": {
+            "deformation": [
+              -0.00810252798949724,
+              15.731648096910835
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 28,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 29,
+          "expected": {
+            "deformation": [
+              -0.5586241691528383,
+              16.280953401532326
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 29,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 30,
+          "expected": {
+            "deformation": [
+              -0.009339325099244775,
+              16.828933753591734
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 30,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 31,
+          "expected": {
+            "deformation": [
+              -0.5572995368444593,
+              17.37559093818366
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 31,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 32,
+          "expected": {
+            "deformation": [
+              -0.010662229476724948,
+              17.920837271824414
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 32,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 33,
+          "expected": {
+            "deformation": [
+              -0.5558890279179163,
+              18.464674770023308
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 33,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 34,
+          "expected": {
+            "deformation": [
+              -0.012070795266389633,
+              19.0070159784037
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 34,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 35,
+          "expected": {
+            "deformation": [
+              -0.554393101880643,
+              19.54786315650955
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 35,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 36,
+          "expected": {
+            "deformation": [
+              -0.013564549494503204,
+              20.087129092503407
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 36,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 37,
+          "expected": {
+            "deformation": [
+              -0.552812245297454,
+              20.624816303520774
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 37,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 38,
+          "expected": {
+            "deformation": [
+              -0.015142992204736989,
+              21.16083783361851
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 38,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 39,
+          "expected": {
+            "deformation": [
+              -0.5511469716514192,
+              21.69519647101403
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 39,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 40,
+          "expected": {
+            "deformation": [
+              -0.01680559660125918,
+              22.227805528932592
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 40,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 41,
+          "expected": {
+            "deformation": [
+              -0.5493978211973446,
+              22.758668080093937
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 41,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 42,
+          "expected": {
+            "deformation": [
+              -0.018551809199161884,
+              23.287697720080942
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 42,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 43,
+          "expected": {
+            "deformation": [
+              -0.5475653608080129,
+              23.81489781946279
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 43,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 44,
+          "expected": {
+            "deformation": [
+              -0.020381049982071794,
+              24.34018226928044
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 44,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 45,
+          "expected": {
+            "deformation": [
+              -0.5456501838133551,
+              24.863554751223123
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 45,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 46,
+          "expected": {
+            "deformation": [
+              -0.022292712566765256,
+              25.384929464797835
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 46,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 47,
+          "expected": {
+            "deformation": [
+              -0.5436529098327351,
+              25.9043104160049
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 47,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 48,
+          "expected": {
+            "deformation": [
+              -0.02428616437460273,
+              26.42161212572905
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 48,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 49,
+          "expected": {
+            "deformation": [
+              -0.541574184600545,
+              26.936838937390203
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 49,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 50,
+          "expected": {
+            "deformation": [
+              -0.026360746809578967,
+              27.449905706062665
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 50,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 51,
+          "expected": {
+            "deformation": [
+              -0.5394146797853262,
+              27.960817125609058
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 51,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 52,
+          "expected": {
+            "deformation": [
+              -0.028515775442764138,
+              28.469488398001698
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 52,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 53,
+          "expected": {
+            "deformation": [
+              -0.5371750928026534,
+              28.975924580481013
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 53,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 54,
+          "expected": {
+            "deformation": [
+              -0.030750540202900186,
+              29.480041234518836
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 54,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 55,
+          "expected": {
+            "deformation": [
+              -0.53485614662203,
+              29.98184379357799
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 55,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 56,
+          "expected": {
+            "deformation": [
+              -0.033064305572882736,
+              30.481248191121093
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 56,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 57,
+          "expected": {
+            "deformation": [
+              -0.5324585895680788,
+              30.97826024958511
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 57,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 58,
+          "expected": {
+            "deformation": [
+              -0.03545631079184636,
+              31.472796286801152
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 58,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 59,
+          "expected": {
+            "deformation": [
+              -0.529983195116333,
+              31.96486252683716
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 59,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 60,
+          "expected": {
+            "deformation": [
+              -0.037925770062536376,
+              32.45437568415379
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 60,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 61,
+          "expected": {
+            "deformation": [
+              -0.5274307616839563,
+              32.941342397009905
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 61,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 62,
+          "expected": {
+            "deformation": [
+              -0.04047187276362071,
+              33.425679788637076
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 62,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 63,
+          "expected": {
+            "deformation": [
+              -0.5248021124157669,
+              33.907394923946576
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 63,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 64,
+          "expected": {
+            "deformation": [
+              -0.04309378366656255,
+              34.38640534695965
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 64,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 65,
+          "expected": {
+            "deformation": [
+              -0.5220980949659656,
+              34.86271856160161
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 65,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 66,
+          "expected": {
+            "deformation": [
+              -0.045790643156633434,
+              35.33625254457681
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 66,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 67,
+          "expected": {
+            "deformation": [
+              -0.519319581276018,
+              35.807015251085296
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 67,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 68,
+          "expected": {
+            "deformation": [
+              -0.04856156745760028,
+              36.27492510228011
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 68,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 69,
+          "expected": {
+            "deformation": [
+              -0.5164674673491884,
+              36.739990516794954
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 69,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 70,
+          "expected": {
+            "deformation": [
+              -0.05140564885957194,
+              37.20213037186691
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 70,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 71,
+          "expected": {
+            "deformation": [
+              -0.5135426730222772,
+              37.66135356162021
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 71,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 72,
+          "expected": {
+            "deformation": [
+              -0.05432195594943105,
+              38.11757943087892
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 72,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 73,
+          "expected": {
+            "deformation": [
+              -0.5105461417351778,
+              38.57081736121254
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 73,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 74,
+          "expected": {
+            "deformation": [
+              -0.057309533843207694,
+              39.02098717640072
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 74,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 75,
+          "expected": {
+            "deformation": [
+              -0.507478840298942,
+              39.46809875731135
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 75,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 76,
+          "expected": {
+            "deformation": [
+              -0.06036740441967756,
+              39.912072417912356
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 76,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 77,
+          "expected": {
+            "deformation": [
+              -0.5043417586631274,
+              40.35291855012239
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 77,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 78,
+          "expected": {
+            "deformation": [
+              -0.06349456655437637,
+              40.790557969193046
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 78,
+          "value": [
+            1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 79,
+          "expected": {
+            "deformation": [
+              -0.5011359096832991,
+              41.22500158974703
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "push",
+          "at": 79,
+          "value": [
+            -1000000.0,
+            -1000000.0
+          ]
+        },
+        {
+          "op": "sample",
+          "at": 80,
+          "expected": {
+            "deformation": [
+              -0.06668999635312084,
+              41.65617073927663
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": false,
+            "moving": true
+          }
+        },
+        {
+          "op": "release",
+          "at": 80
+        },
+        {
+          "op": "sample",
+          "at": 2080,
+          "expected": {
+            "deformation": [
+              0.0,
+              0.0
+            ],
+            "anchor": [
+              0.2,
+              0.3
+            ],
+            "released": true,
+            "moving": false
+          }
+        }
+      ],
+      "anchor": [
+        0.2,
+        0.3
+      ]
+    }
+  ]
+}

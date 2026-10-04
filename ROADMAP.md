@@ -58,7 +58,7 @@ Goal: make finished combinations easy to compare, choose and install.
 
 The source checkout includes opt-in pointer-wobble profiles, Studio controls and
 capability-verified standalone Apply/Restore (Epic 4). Next are broader native
-acceptance and a faithful pointer preview. Agent discovery and reusable guidance
+acceptance and physical presentation checks. Agent discovery and reusable guidance
 are available through the same CLI (Epic 9).
 
 ## Released foundation
@@ -142,8 +142,10 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 - [x] Add pointer settings to portable profiles and Studio, with preset-first controls.
 - [x] Add capability-verified standalone Apply/Restore and explicit experimental exports.
 - [x] Test pointer-only, combined movement and disabled profiles against the running renderer.
-- [ ] Add faithful pointer playback to combo previews, with clear native support limits.
-- [ ] Verify cancellation, output removal, capture restrictions and graphics resets.
+- [x] Add native-math pointer playback to combo previews, with clear native support limits.
+- [x] Add interactive dragging, keyboard demo playback and reduced-motion behavior in Studio.
+- [x] Publish portable pointer combos and browser showcases with reproducible input traces.
+- [ ] Verify native cancellation, output removal, capture restrictions and graphics resets.
 - [x] Report input acknowledgements and nested output submissions separately.
 - [ ] Measure physical input-to-photon latency and presentation across mixed outputs.
 

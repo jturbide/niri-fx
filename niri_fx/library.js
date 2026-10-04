@@ -179,7 +179,8 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
         ? "disabled"
         : match?.[1].name || "custom";
     element("editor-pointer-summary").textContent =
-      "Pointer drag: " + summary + ". Dragging is not simulated in the canvas.";
+      "Pointer drag: " + summary + ". Try it from the Library or Preview combo.";
+    element("try-pointer").disabled = !settings || settings.strength <= 0;
     element("pointer-export-note").hidden = element("pointer-kdl").hidden = !settings;
     const consentValue = JSON.stringify(settings || null);
     if (pointerConsentValue !== consentValue) element("activate-pointer").checked = false;

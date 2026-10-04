@@ -195,19 +195,25 @@ test("pointer choices survive Library editing, JSON, sharing and stock-safe expo
     assert.equal(await evaluate("effectDocument().actions.movement"), null);
     assert.equal(await evaluate('byId("pointer-kdl").hidden'), false);
     const beforePreview = await evaluate("effectDocument()");
-    await evaluate(
-      'byId("preview-combo").click();niriFxComboPreview.seek(niriFxComboPreview.currentPlan.totalMs)',
+    await evaluate('byId("preview-combo").click()');
+    const pointerStage = await evaluate(
+      'niriFxComboPreview.currentPlan.stages.find(stage=>stage.action==="pointer")',
     );
+    assert(pointerStage);
+    await evaluate(`niriFxComboPreview.seek(${pointerStage.startMs + 600})`);
     assert.match(
       await evaluate('byId("combo-preview-status").textContent'),
-      /Pointer drag is not played/,
+      /Native spring and shader math; synthetic input, not compositor validation/,
     );
+    assert.equal(await evaluate("document.documentElement.dataset.shaderStatus"), "ready");
+    assert.equal(await evaluate("document.documentElement.dataset.comboAction"), "pointer");
+    await evaluate("niriFxComboPreview.seek(niriFxComboPreview.currentPlan.totalMs)");
     assert.deepEqual(await evaluate("effectDocument()"), beforePreview);
     assert.deepEqual(
       await evaluate(
         'niriFxComboPreview.currentPlan.stages.filter(s=>s.phase==="animation").map(s=>s.action)',
       ),
-      ["open", "close"],
+      ["open", "pointer", "close"],
     );
     await evaluate(
       'byId("combo-close").value="frost-vanish";byId("combo-close").dispatchEvent(new Event("change"))',

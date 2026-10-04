@@ -7,9 +7,10 @@ and settles after release. Its spring responds to actual drag events.
 This is an **opt-in native experiment**, available from the source checkout.
 It requires the separate pointer extension to the pinned Niri build. Stock Niri,
 Studio's timed Elastic styles and the 0.17.0 package do not provide this drag hook.
-The current checkout includes portable profiles and Studio controls, with
-reviewed standalone Apply/Restore when the running renderer verifies support.
-Browser previews do not simulate pointer dragging.
+The current, unreleased checkout includes portable profiles, interactive browser
+previews and Studio controls, with reviewed standalone Apply/Restore when the
+running renderer verifies support. Browser previews work without this extension;
+they use synthetic window content and do not establish native support.
 
 ## Try it
 
@@ -52,6 +53,23 @@ In **Library**, keep your chosen opening and closing effects, then use **Pointer
 drag** to choose a preset. Expand its controls to adjust strength, damping and
 frequency. **Use desktop settings** leaves the pointer choice unset; **Disabled**
 stores a zero-strength override. Resize and timed movement remain separate choices.
+
+Choose **Try pointer drag** to drag the sample window in the preview. Reverse
+direction, release it, or grab it again while it settles. **Play drag demo** runs
+a repeatable drag and release; Enter or Space starts the demo when the canvas has
+keyboard focus. **Reset position** recenters the sample. **Return to effects** or
+Escape restores the previous editor view without changing your profile.
+
+**Preview combo** adds a scripted pointer phase after the selected shader actions
+and before closing when pointer strength is above zero. An unset pointer choice
+or **Disabled** does not add that phase. With **Reduced motion**, interactive
+dragging moves the sample directly without bending or settling, while the scripted
+pointer phase is skipped. The demo button leaves the sample at rest.
+
+The browser uses the native analytical spring and inverse texture mapping. It
+lets you compare strength, damping and frequency without a compositor build, but
+does not reproduce Niri's input routing, layout or capture rules, or measure
+display latency. Use the isolated native demo above to check compositor behavior.
 
 Save the result to **My profiles**, share it or export JSON. These paths work
 online, offline and in every local shell integration. **Export stock Niri config**

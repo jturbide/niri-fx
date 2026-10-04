@@ -12,6 +12,12 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ### Added
 
+- Interactive pointer dragging in Studio and a deterministic drag/reverse/release
+  phase in complete combo previews. Both use the experimental compositor's spring
+  and deformation math, with a keyboard demo and reduced-motion behavior.
+- Three portable pointer example combos and browser showcases with JSON downloads.
+  Browser playback previews synthetic input; live dragging still requires the
+  experimental compositor.
 - An opt-in pointer-wobble prototype for the pinned experimental compositor.
   Windows bend around the grab point, respond to direction changes and settle
   after release, with bounded spring motion and ordinary input/layout behavior.
@@ -40,6 +46,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   and physical presentation milestones, each with a concrete checklist.
 - Distinguish native KDL downloads from Studio JSON in the showcase gallery.
 - Refresh Library, Studio, combo and pointer recordings for the current controls.
+- Verify browser pointer math against traces generated from the native Rust
+  spring and retain GPL attribution for the derived browser adapter.
 - Allow pointer-only portable profiles in the isolated native demo.
 
 ### Fixed
