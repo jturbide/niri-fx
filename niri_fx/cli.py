@@ -169,7 +169,7 @@ def parser():
     profile.add_argument(
         "--movement-preset",
         choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["movement"]],
-        help="Save an explicit experimental movement action; activation remains opt-in",
+        help="Save an experimental movement action in JSON; activate it separately",
     )
     for name, help_text in (
         ("render", "Print a standalone Niri KDL animation override"),
@@ -554,7 +554,7 @@ def main(argv=None):
                 )
             ):
                 raise ValueError(
-                    "Use --name to save customized iNiR settings; built-in registration leaves resize off"
+                    "Use --name to save customized iNiR settings; built-in registration preserves resize settings"
                 )
             result = (
                 apply_plan(plan, arguments.state, arguments.expect_plan)

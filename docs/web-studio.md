@@ -47,8 +47,8 @@ movement settings for the matching native build. Read the
 3. Adjust the controls. Use **Basic** for the main look or **Advanced** for detailed
    tuning. **Pause** and the timeline let you inspect a single frame.
 4. **Export JSON** keeps editable settings; **Export stock Niri config** exports stock shaders.
-   Neither download activates an effect. Resize remains off unless the document
-   explicitly enables it, such as one of the labelled resize profiles.
+   Neither download activates an effect. The config preserves existing resize
+   settings unless the document selects a resize effect, as the labelled resize profiles do.
 
 Workflow recordings demonstrate shell interactions and may not have downloadable
 style settings. Their setup guides describe the corresponding integration.

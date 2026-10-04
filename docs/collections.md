@@ -56,8 +56,8 @@ The last command produces a catalog keyed by style ID. Use
 importable document. Collection labels and membership stay outside style/profile
 schemas, so sharing or customizing a look does not change its effect parameters.
 
-Every built-in style keeps resize off, and every built-in pairing leaves resize
-and experimental movement unset. See [action profiles](profiles.md),
+Built-in styles and pairings preserve existing resize settings. Pairings also
+leave experimental movement unset. See [action profiles](profiles.md),
 [setup and restore](setup.md), and the [complete visual catalog](catalog.md).
 
 The three [desktop motion packs](desktop-motion.md) and three [coordinated action sets](action-sets.md) intentionally replace the stock workspace, camera and overview springs. Other profiles preserve them.

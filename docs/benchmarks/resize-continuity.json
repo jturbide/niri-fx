@@ -1,0 +1,191 @@
+{
+  "schema": 1,
+  "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+  "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+  "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
+  "baseline": {
+    "tag": "v0.18.0",
+    "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
+    "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+    "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+    "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+    "build_metadata": {},
+    "metadata_not_comparable": [
+      "build_profile",
+      "build_flags",
+      "rustc"
+    ]
+  },
+  "config_sha256": "066449ef984b0024e5203e09950e026b5f236a2755ee4a6b237cb1e9f9fc98a8",
+  "sources": {
+    "scripts/record-resize-comparison.py": "454958d60c787ffbabe1e5ac4151081c6bfd2e51c38a24f51d4fd43175a8ef89",
+    "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+    "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+    "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
+  },
+  "scope": "Native resize geometry with identical passthrough shaders; no assertion of shader-phase, close, minimum-size-clamp or config-reload continuity.",
+  "clips": [
+    {
+      "case": "before-width",
+      "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+      "version": "niri 26.04 (8ed0da4-modified)",
+      "owned_output": "winit",
+      "dimensions": [
+        1280,
+        900
+      ],
+      "fps": 50,
+      "actions": [
+        {
+          "extent": 700,
+          "request_s": 0.700066217003041,
+          "ack_s": 0.7074533209961373
+        },
+        {
+          "extent": 360,
+          "request_s": 1.3075258339958964,
+          "ack_s": 1.3164977809938136
+        }
+      ],
+      "final_size": [
+        360,
+        868
+      ],
+      "same_window_ids": true,
+      "video_sha256": "cdb9e1b6a7890f0f003c3ab8e40a8186b8449e29c78b365863e5f2444e0b05c8",
+      "gif_sha256": "effa4e0beda5044b8a59a6b7d513918190c3c26b86c190adc070ce97b8d93e7e",
+      "edges": {
+        "decoded_frames": 142,
+        "nominal_gap_px": 16,
+        "min_gap_px": 7,
+        "max_gap_px": 83,
+        "codec_edge_tolerance_px": 4,
+        "max_far_edge_px": 952
+      }
+    },
+    {
+      "case": "before-height",
+      "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+      "version": "niri 26.04 (8ed0da4-modified)",
+      "owned_output": "winit",
+      "dimensions": [
+        1280,
+        900
+      ],
+      "fps": 50,
+      "actions": [
+        {
+          "extent": 500,
+          "request_s": 0.7000671489950037,
+          "ack_s": 0.7066711009974824
+        },
+        {
+          "extent": 300,
+          "request_s": 1.3067401589942165,
+          "ack_s": 1.3142328729882138
+        }
+      ],
+      "final_size": [
+        650,
+        300
+      ],
+      "same_window_ids": true,
+      "video_sha256": "d0312d6088ac40f5063078bb80bf05e6588e37eb8c2eeb59a67ec44620352c69",
+      "gif_sha256": "d679edd4a585f1d62505285feff3000c6d0afd2a3012796cbcb6cd735a205dda",
+      "edges": {
+        "decoded_frames": 142,
+        "nominal_gap_px": 16,
+        "min_gap_px": 10,
+        "max_gap_px": 56,
+        "codec_edge_tolerance_px": 4,
+        "max_far_edge_px": 900
+      }
+    },
+    {
+      "case": "after-width",
+      "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
+      "version": "niri 26.04 (8ed0da4-modified)",
+      "owned_output": "winit",
+      "dimensions": [
+        1280,
+        900
+      ],
+      "fps": 50,
+      "actions": [
+        {
+          "extent": 700,
+          "request_s": 0.7000693820009474,
+          "ack_s": 0.7076800960057881
+        },
+        {
+          "extent": 360,
+          "request_s": 1.3077462190121878,
+          "ack_s": 1.3142323610081803
+        }
+      ],
+      "final_size": [
+        360,
+        868
+      ],
+      "same_window_ids": true,
+      "video_sha256": "1514a3b0233bb1d48d1ee48711e2e40e064f6387c9d75b5b32e63c5327f61c7e",
+      "gif_sha256": "6f00be5a42260dd60cf911fe44d01f7c97afdf9d385013b9cc6bcbbe6e79719c",
+      "edges": {
+        "decoded_frames": 142,
+        "nominal_gap_px": 16,
+        "min_gap_px": 17,
+        "max_gap_px": 18,
+        "codec_edge_tolerance_px": 4,
+        "max_far_edge_px": 949
+      }
+    },
+    {
+      "case": "after-height",
+      "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
+      "version": "niri 26.04 (8ed0da4-modified)",
+      "owned_output": "winit",
+      "dimensions": [
+        1280,
+        900
+      ],
+      "fps": 50,
+      "actions": [
+        {
+          "extent": 500,
+          "request_s": 0.7000683840014972,
+          "ack_s": 0.7065642060042592
+        },
+        {
+          "extent": 300,
+          "request_s": 1.3066290440037847,
+          "ack_s": 1.3156274710054277
+        }
+      ],
+      "final_size": [
+        650,
+        300
+      ],
+      "same_window_ids": true,
+      "video_sha256": "f291fc526186b0e95a01304f9f8842e39f3a678f3cc893c20676ef8af1e7d5b3",
+      "gif_sha256": "b39226efce3fe000d6b16eacd66c09dcd554ddf46dae2cd31e5901ea86f2be4e",
+      "edges": {
+        "decoded_frames": 142,
+        "nominal_gap_px": 16,
+        "min_gap_px": 16,
+        "max_gap_px": 18,
+        "codec_edge_tolerance_px": 4,
+        "max_far_edge_px": 884
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "file": "docs/gifs/native-resize-width-comparison.gif",
+      "gif_sha256": "c5e3a5521168bd9ddc4b50c0bf3ab7ca11dca353b5b48b0fced408dea7a8e04c"
+    },
+    {
+      "file": "docs/gifs/native-resize-height-comparison.gif",
+      "gif_sha256": "9d04474558898b16233a0cd04ea62ec8b7f4d50bb8727b1452eaa621a6460298"
+    }
+  ]
+}

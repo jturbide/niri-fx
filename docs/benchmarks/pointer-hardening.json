@@ -3,8 +3,8 @@
   "date": "2026-10-04",
   "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
   "patches": {
-    "experimental/niri-movement.patch": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-    "experimental/niri-pointer-wobble.patch": "86c4248abc45fadf5bbf810f1ea9a4145beb0fd860fe8c56a28530777c907016"
+    "experimental/niri-movement.patch": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+    "experimental/niri-pointer-wobble.patch": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a"
   },
   "sources": {
     "scripts/test-pointer-hardening.py": "b42c60cfe02025c8deeb22461cffb61ae6183b12a07440154ce11ea2551d242f",
@@ -45,7 +45,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 244060
+              "redaction": 243625
             }
           }
         },
@@ -55,7 +55,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 247402
+              "redaction": 247675
             }
           }
         },
@@ -73,7 +73,7 @@
           "phase": "unblocked-during-grab",
           "counts": {
             "screen_capture": {
-              "protected": 131470,
+              "protected": 131472,
               "public": 130628,
               "redaction": 0
             }
@@ -85,7 +85,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 248094
+              "redaction": 248385
             }
           },
           "settled_counts": {
@@ -116,7 +116,7 @@
           "phase": "protected-drag",
           "counts": {
             "screen_capture": {
-              "protected": 127792,
+              "protected": 128138,
               "public": 130627,
               "redaction": 0
             }
@@ -126,7 +126,7 @@
           "phase": "protected-drag",
           "counts": {
             "screen_capture": {
-              "protected": 129901,
+              "protected": 130030,
               "public": 130627,
               "redaction": 0
             }
@@ -136,7 +136,7 @@
           "phase": "protected-drag",
           "counts": {
             "screen_capture": {
-              "protected": 131366,
+              "protected": 131376,
               "public": 130627,
               "redaction": 0
             }
@@ -146,7 +146,7 @@
           "phase": "unblocked-during-grab",
           "counts": {
             "screen_capture": {
-              "protected": 131471,
+              "protected": 131470,
               "public": 130627,
               "redaction": 0
             }
@@ -156,7 +156,7 @@
           "phase": "protected-close-snapshot",
           "counts": {
             "screen_capture": {
-              "protected": 129836,
+              "protected": 130326,
               "public": 130627,
               "redaction": 0
             }

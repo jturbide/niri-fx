@@ -134,6 +134,20 @@ determines the remaining travel distance. Fading has its own closing clock.
 This interruption path takes precedence over the usual closing style, including
 when a profile has different opening and closing families.
 
+With a custom movement shader configured and resize animation enabled,
+interrupted resizing also retains the displayed width and height and their
+sampled velocities. Each axis owns its curve: changing width leaves an ongoing
+height transition on its original deadline. Matching neighbor movement keeps
+stacked and adjacent edges together through the tested reversals. Stock rendering
+and explicitly disabled resize keep their existing behavior. Profiles preserve
+existing resize settings unless a resize style is selected.
+
+This geometry handoff does not preserve the resize shader's phase or continue
+its deformation when closing. Extreme minimum-size clamps and changing animation
+timing during a resize can still separate neighboring paths. See the
+[width and height comparisons](../docs/validation.md#resize-geometry-continuity)
+and their [reproduction guide](../docs/gifs/README.md#native-resize-geometry-comparisons).
+
 The path retains separate normal/blocked-out snapshots for Niri capture rules.
 It does not make a cross-window particle simulation or guarantee velocity
 continuity for every layout event. See the [recordings](../docs/showcases.md).
@@ -150,8 +164,9 @@ only their own nested compositor with synthetic mint/violet app cards.
 
 Verified locally: column swaps with both textured windows fragmented, intact
 arrival, animated resize, shader removal on hot reload, legacy config parsing,
-repeated retargets, close-during-open and close-during-move,
-and existing resize/cancellation layout regression tests.
+repeated retargets, close-during-open and close-during-move, width/height reversal
+with matching neighbor geometry, orthogonal resize retargets,
+and resize/cancellation layout regression tests.
 
 This is not the complete transaction/particle engine described in
 [the movement design](../docs/movement.md):

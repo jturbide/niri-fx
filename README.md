@@ -104,7 +104,7 @@ These clips use Studio's real shaders with synthetic window content.
 **Triangle Shatter**, **Circle Burst**, **Rectangle Confetti** and **Hex Swarm**
 combine new geometry with the existing gravity and spin controls. Studio also
 supports ellipses, diamonds and stars, with adjustable proportions, orientation
-and silhouette timing. Available since v0.12.0; resize stays off.
+and silhouette timing. Available since v0.12.0; existing resize settings are preserved.
 
 | Triangle Shatter | Circle Burst |
 | --- | --- |
@@ -239,7 +239,7 @@ origin in Studio. Available since v0.11.0.
 
 Choose a finished combination with no JSON editing. In the terminal guide, type
 `profiles`; in Studio, start with **Library** and **Preview combo**. The desktop pickers
-include the same collection. Resize stays off.
+include the same collection. Existing resize settings are preserved.
 
 The five recommended combos balance arrival and departure timing. Resize and
 movement stay off until selected. These clips show the complete shader cycle with
@@ -325,6 +325,18 @@ workspace effects remain on the [roadmap](ROADMAP.md).
 ![Consume, vertical reorder and expel](docs/gifs/native-rearrangement.gif)
 
 [Controls, profile export and isolated demos](docs/movement.md#movement-presets-and-general-rearrangement)
+
+### Smoother resize reversals
+
+The development compositor after 0.18 keeps neighboring edges aligned in the
+resize reversals below. These native comparisons show the 0.18 baseline beside the
+updated geometry, using plain synthetic cards.
+
+| Width reversal | Height reversal |
+| --- | --- |
+| ![Native width reversal before and after](docs/gifs/native-resize-width-comparison.gif) | ![Native height reversal before and after](docs/gifs/native-resize-height-comparison.gif) |
+
+[Behavior, requirements and limits](docs/resize.md#resize-reversals-in-the-experimental-compositor)
 
 ### Shaped resize
 

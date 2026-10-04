@@ -652,27 +652,281 @@
       "bytes": 936887
     },
     {
-      "name": "workflow-terminal",
-      "backend": "real CLI terminal workflow in stock nested Niri",
-      "version": "niri 26.04 (8ed0da4)",
+      "name": "workflow-dms",
+      "backend": "actual dms picker UI in stock nested Niri",
+      "version": "DMS 1.6.2 / Quickshell 0.3.1",
       "checks": [
-        "preset selection",
-        "read-only review",
-        "confirmed apply",
-        "exact Undo",
+        "real DMS launcher search",
+        "keyboard selection",
+        "apply",
+        "exact undo",
+        "Studio app launch",
+        "undo refuses external edits",
         "resize preserved"
       ],
-      "sources": {
-        "niri_fx/terminal.py": "898f57c9b47455b920004ad839b73ea06521725a955564f753b2d549e9e0840d",
-        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
+      "tested_sources": {
+        "PluginService.qml": "516935e0ae66ce76db1a61575809a7fc1b609386a92b457c3ed943d98291430d",
+        "DankLauncherV2Modal.qml": "56ed0cf48a3d64129af50a3ec531f7da298fa4a40755910b246ea1bd313f63b5"
       },
-      "file": "docs/gifs/workflow-terminal.gif",
-      "bytes": 2548662
+      "file": "docs/gifs/workflow-dms.gif",
+      "bytes": 570333
+    },
+    {
+      "name": "stock-gentle-motion",
+      "file": "docs/gifs/stock-gentle-motion.gif",
+      "title": "Gentle Motion",
+      "mode": "desktop",
+      "source": "examples/profiles/gentle-motion.json",
+      "bytes": 1893997,
+      "fps": 50,
+      "palette": {
+        "Notes": "#b7e8db",
+        "Library": "#d6c5ef"
+      },
+      "backend": "stock Niri nested winit; synthetic clients",
+      "version": "niri 26.04 (8ed0da4)",
+      "sources": {
+        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "examples/profiles/gentle-motion.json": "803b26205f883d4bcf1332338d33bbd70d3d1a52606d3c1c3bbf59cfab2edd2a"
+      },
+      "checks": [
+        "workspace round trip",
+        "camera round trip",
+        "overview open/close",
+        "same window IDs",
+        "render log"
+      ]
+    },
+    {
+      "name": "stock-balanced-motion",
+      "file": "docs/gifs/stock-balanced-motion.gif",
+      "title": "Balanced Motion",
+      "mode": "desktop",
+      "source": "examples/profiles/balanced-motion.json",
+      "bytes": 1549934,
+      "fps": 50,
+      "palette": {
+        "Notes": "#b7e8db",
+        "Library": "#d6c5ef"
+      },
+      "backend": "stock Niri nested winit; synthetic clients",
+      "version": "niri 26.04 (8ed0da4)",
+      "sources": {
+        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "examples/profiles/balanced-motion.json": "3b42ccf66ea7b9efe7d0c7ad1f2e0468cc45a9a6105d5401095af1a8f85edcf5"
+      },
+      "checks": [
+        "workspace round trip",
+        "camera round trip",
+        "overview open/close",
+        "same window IDs",
+        "render log"
+      ]
+    },
+    {
+      "name": "stock-playful-motion",
+      "file": "docs/gifs/stock-playful-motion.gif",
+      "title": "Playful Motion",
+      "mode": "desktop",
+      "source": "examples/profiles/playful-motion.json",
+      "bytes": 1594282,
+      "fps": 50,
+      "palette": {
+        "Notes": "#b7e8db",
+        "Library": "#d6c5ef"
+      },
+      "backend": "stock Niri nested winit; synthetic clients",
+      "version": "niri 26.04 (8ed0da4)",
+      "sources": {
+        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "examples/profiles/playful-motion.json": "7ca0a7c40231e9eac8b73d51bb31c38520c38a199642337888c41aa2192bf878"
+      },
+      "checks": [
+        "workspace round trip",
+        "camera round trip",
+        "overview open/close",
+        "same window IDs",
+        "render log"
+      ]
+    },
+    {
+      "name": "pointer-preview-gentle",
+      "file": "docs/gifs/pointer-preview-gentle.gif",
+      "mode": "pointer",
+      "source": "examples/profiles/pointer-preview-gentle.json",
+      "frames": 125,
+      "fps": 25,
+      "bytes": 1005046,
+      "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "sources": {
+        "examples/profiles/pointer-preview-gentle.json": "2a9049652d7a170d7bfd40f0070c42eda0619adf3ed287c476aa338f31fd5d37",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
+        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
+        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
+      },
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ]
+    },
+    {
+      "name": "pointer-preview-rubber-sheet",
+      "file": "docs/gifs/pointer-preview-rubber-sheet.gif",
+      "mode": "pointer",
+      "source": "examples/profiles/pointer-preview-rubber-sheet.json",
+      "frames": 125,
+      "fps": 25,
+      "bytes": 1057815,
+      "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "sources": {
+        "examples/profiles/pointer-preview-rubber-sheet.json": "bd4c24355ea56916cb1115cbdde491a543de600642812bebd27f9287a569d884",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
+        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
+        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
+      },
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ]
+    },
+    {
+      "name": "pointer-preview-release-settle",
+      "file": "docs/gifs/pointer-preview-release-settle.gif",
+      "mode": "pointer",
+      "source": "examples/profiles/pointer-preview-release-settle.json",
+      "frames": 125,
+      "fps": 25,
+      "bytes": 1025613,
+      "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "sources": {
+        "examples/profiles/pointer-preview-release-settle.json": "64a5bd84f733c4f5f4c4e25aa431644df9d75f847d048dfef111dbe5216f562b",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
+        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
+        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
+      },
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ]
+    },
+    {
+      "name": "native-resize-width-comparison",
+      "file": "docs/gifs/native-resize-width-comparison.gif",
+      "title": "Interrupted width resize: baseline and updated",
+      "mode": "resize",
+      "bytes": 3133598,
+      "fps": 50,
+      "width": 1200,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+      "baseline": {
+        "tag": "v0.18.0",
+        "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+        "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+        "build_metadata": {},
+        "metadata_not_comparable": [
+          "build_profile",
+          "build_flags",
+          "rustc"
+        ]
+      },
+      "sources": {
+        "scripts/record-resize-comparison.py": "454958d60c787ffbabe1e5ac4151081c6bfd2e51c38a24f51d4fd43175a8ef89",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
+      },
+      "checks": [
+        "verified build identities",
+        "bounded interruption timing",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
+    },
+    {
+      "name": "native-resize-height-comparison",
+      "file": "docs/gifs/native-resize-height-comparison.gif",
+      "title": "Interrupted height resize: baseline and updated",
+      "mode": "resize",
+      "bytes": 2355309,
+      "fps": 50,
+      "width": 750,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+      "baseline": {
+        "tag": "v0.18.0",
+        "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+        "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+        "build_metadata": {},
+        "metadata_not_comparable": [
+          "build_profile",
+          "build_flags",
+          "rustc"
+        ]
+      },
+      "sources": {
+        "scripts/record-resize-comparison.py": "454958d60c787ffbabe1e5ac4151081c6bfd2e51c38a24f51d4fd43175a8ef89",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
+      },
+      "checks": [
+        "verified build identities",
+        "bounded interruption timing",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
     },
     {
       "name": "native-interrupted",
       "file": "docs/gifs/native-interrupted.gif",
-      "bytes": 8163634,
+      "bytes": 8115370,
       "preset": "explosion",
       "effect": {
         "family": "fragments",
@@ -808,18 +1062,18 @@
         },
         {
           "action": "move-column-right",
-          "offset_ms": 364
+          "offset_ms": 361
         },
         {
           "action": "move-column-left",
-          "offset_ms": 730
+          "offset_ms": 722
         }
       ],
       "sources": {
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "interruption timing",
@@ -830,7 +1084,7 @@
     {
       "name": "native-rapid-reversals",
       "file": "docs/gifs/native-rapid-reversals.gif",
-      "bytes": 2772273,
+      "bytes": 2766247,
       "preset": "spring-wobble",
       "effect": {
         "family": "elastic",
@@ -966,38 +1220,38 @@
         },
         {
           "action": "move-column-right",
-          "offset_ms": 131
+          "offset_ms": 128
         },
         {
           "action": "move-column-left",
-          "offset_ms": 264
+          "offset_ms": 260
         },
         {
           "action": "move-column-right",
-          "offset_ms": 398
+          "offset_ms": 392
         },
         {
           "action": "move-column-left",
-          "offset_ms": 532
+          "offset_ms": 524
         },
         {
           "action": "move-column-right",
-          "offset_ms": 664
+          "offset_ms": 658
         },
         {
           "action": "move-column-left",
-          "offset_ms": 799
+          "offset_ms": 789
         },
         {
           "action": "move-column-right",
-          "offset_ms": 933
+          "offset_ms": 921
         }
       ],
       "sources": {
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "interruption timing",
@@ -1008,7 +1262,7 @@
     {
       "name": "native-close-during-move",
       "file": "docs/gifs/native-close-during-move.gif",
-      "bytes": 6600537,
+      "bytes": 6645501,
       "preset": "explosion",
       "effect": {
         "family": "fragments",
@@ -1144,14 +1398,14 @@
         },
         {
           "action": "close-window",
-          "offset_ms": 358
+          "offset_ms": 362
         }
       ],
       "sources": {
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "interruption timing",
@@ -1162,7 +1416,7 @@
     {
       "name": "native-close-during-open",
       "file": "docs/gifs/native-close-during-open.gif",
-      "bytes": 3425297,
+      "bytes": 3422186,
       "preset": "explosion",
       "overrides": {
         "open_ms": 1500,
@@ -1298,7 +1552,7 @@
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic client",
       "checks": [
         "close before opening duration",
@@ -1434,14 +1688,14 @@
       },
       "duration_ms": 850,
       "fps": 50,
-      "bytes": 5422642,
+      "bytes": 5419556,
       "palette": {
         "Notes": "#b7e8db",
         "Library": "#d6c5ef"
       },
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "sources": {
         "scripts/test-movement.py": "8757d1645adc474521bddec78c8282ce9db8098a30ecacd75d5059dbd2f69021",
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
@@ -1582,14 +1836,14 @@
       },
       "duration_ms": 850,
       "fps": 50,
-      "bytes": 3888374,
+      "bytes": 4125502,
       "palette": {
         "Notes": "#b7e8db",
         "Library": "#d6c5ef"
       },
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "sources": {
         "scripts/test-movement.py": "8757d1645adc474521bddec78c8282ce9db8098a30ecacd75d5059dbd2f69021",
         "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
@@ -1724,7 +1978,7 @@
         "movement_ms": 800
       },
       "duration_ms": 800,
-      "bytes": 4752497,
+      "bytes": 4757307,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1739,7 +1993,7 @@
         "examples/profiles/fragments-motion-native.json": "53336c3ff7bb5723bbf85f5bdc649e627bde0983e41c8ee3afad7b8adee5fd80"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1872,7 +2126,7 @@
         "movement_ms": 800
       },
       "duration_ms": 800,
-      "bytes": 1849827,
+      "bytes": 1902333,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1887,7 +2141,7 @@
         "examples/profiles/ribbons-motion-native.json": "42ad365cd976f4ef3762dc607d89c27dadf68f52ea3413c6b35d9afeca516a82"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2020,7 +2274,7 @@
         "movement_ms": 750
       },
       "duration_ms": 750,
-      "bytes": 1450101,
+      "bytes": 1538726,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2035,7 +2289,7 @@
         "examples/profiles/elastic-motion-native.json": "255824b9763ec2667aa63beec8ffc71ecd313a4423fd085788c3eec82bf1c5cf"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2046,310 +2300,6 @@
       "name": "native-swap-elastic-motion",
       "source": "examples/profiles/elastic-motion-native.json",
       "mode": "movement"
-    },
-    {
-      "name": "workflow-quickshell-picker",
-      "backend": "packaged Quickshell picker UI in stock nested Niri",
-      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
-      "checks": [
-        "keyboard search and selection",
-        "read-only review",
-        "reviewed apply",
-        "exact undo",
-        "resize preserved"
-      ],
-      "sources": {
-        "niri_fx/qml/NiriFXController.qml": "f813c55358fc375f6391755be4b489b2134aeec2e4f7189811c82898db686c64",
-        "niri_fx/qml/NiriFXPicker.qml": "b1a3e02ea2134037fb098c16fbee2a48b9e02e7c67b1d241cd315ffd4f48f8cb",
-        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
-      },
-      "file": "docs/gifs/workflow-quickshell-picker.gif",
-      "bytes": 437196
-    },
-    {
-      "name": "workflow-gtk-picker",
-      "backend": "packaged GTK 4 picker UI in stock nested Niri",
-      "version": "gjs 1.88.1",
-      "checks": [
-        "keyboard search and selection",
-        "read-only review",
-        "reviewed apply",
-        "exact undo",
-        "resize preserved",
-        "close during apply"
-      ],
-      "sources": {
-        "niri_fx/gtk/controller.mjs": "7052b5ebea8fb445b0893f8bc76971712db23bd6a207f30a11c256e171527c88",
-        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
-        "niri_fx/gtk/picker.mjs": "23030e2ad67631daf86537d5bdfbb3202cd866cae5ef6aacc02582868fff884e",
-        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
-        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
-      },
-      "file": "docs/gifs/workflow-gtk-picker.gif",
-      "bytes": 514395
-    },
-    {
-      "name": "workflow-dms",
-      "backend": "actual dms picker UI in stock nested Niri",
-      "version": "DMS 1.6.2 / Quickshell 0.3.1",
-      "checks": [
-        "real DMS launcher search",
-        "keyboard selection",
-        "apply",
-        "exact undo",
-        "Studio app launch",
-        "undo refuses external edits",
-        "resize preserved"
-      ],
-      "tested_sources": {
-        "PluginService.qml": "516935e0ae66ce76db1a61575809a7fc1b609386a92b457c3ed943d98291430d",
-        "DankLauncherV2Modal.qml": "56ed0cf48a3d64129af50a3ec531f7da298fa4a40755910b246ea1bd313f63b5"
-      },
-      "file": "docs/gifs/workflow-dms.gif",
-      "bytes": 570333
-    },
-    {
-      "name": "stock-gentle-motion",
-      "file": "docs/gifs/stock-gentle-motion.gif",
-      "title": "Gentle Motion",
-      "mode": "desktop",
-      "source": "examples/profiles/gentle-motion.json",
-      "bytes": 1893997,
-      "fps": 50,
-      "palette": {
-        "Notes": "#b7e8db",
-        "Library": "#d6c5ef"
-      },
-      "backend": "stock Niri nested winit; synthetic clients",
-      "version": "niri 26.04 (8ed0da4)",
-      "sources": {
-        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
-        "examples/profiles/gentle-motion.json": "803b26205f883d4bcf1332338d33bbd70d3d1a52606d3c1c3bbf59cfab2edd2a"
-      },
-      "checks": [
-        "workspace round trip",
-        "camera round trip",
-        "overview open/close",
-        "same window IDs",
-        "render log"
-      ]
-    },
-    {
-      "name": "stock-balanced-motion",
-      "file": "docs/gifs/stock-balanced-motion.gif",
-      "title": "Balanced Motion",
-      "mode": "desktop",
-      "source": "examples/profiles/balanced-motion.json",
-      "bytes": 1549934,
-      "fps": 50,
-      "palette": {
-        "Notes": "#b7e8db",
-        "Library": "#d6c5ef"
-      },
-      "backend": "stock Niri nested winit; synthetic clients",
-      "version": "niri 26.04 (8ed0da4)",
-      "sources": {
-        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
-        "examples/profiles/balanced-motion.json": "3b42ccf66ea7b9efe7d0c7ad1f2e0468cc45a9a6105d5401095af1a8f85edcf5"
-      },
-      "checks": [
-        "workspace round trip",
-        "camera round trip",
-        "overview open/close",
-        "same window IDs",
-        "render log"
-      ]
-    },
-    {
-      "name": "stock-playful-motion",
-      "file": "docs/gifs/stock-playful-motion.gif",
-      "title": "Playful Motion",
-      "mode": "desktop",
-      "source": "examples/profiles/playful-motion.json",
-      "bytes": 1594282,
-      "fps": 50,
-      "palette": {
-        "Notes": "#b7e8db",
-        "Library": "#d6c5ef"
-      },
-      "backend": "stock Niri nested winit; synthetic clients",
-      "version": "niri 26.04 (8ed0da4)",
-      "sources": {
-        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
-        "examples/profiles/playful-motion.json": "7ca0a7c40231e9eac8b73d51bb31c38520c38a199642337888c41aa2192bf878"
-      },
-      "checks": [
-        "workspace round trip",
-        "camera round trip",
-        "overview open/close",
-        "same window IDs",
-        "render log"
-      ]
-    },
-    {
-      "name": "pointer-preview-gentle",
-      "file": "docs/gifs/pointer-preview-gentle.gif",
-      "mode": "pointer",
-      "source": "examples/profiles/pointer-preview-gentle.json",
-      "frames": 125,
-      "fps": 25,
-      "bytes": 1005046,
-      "backend": "Studio native-math pointer preview / synthetic input and texture",
-      "sources": {
-        "examples/profiles/pointer-preview-gentle.json": "2a9049652d7a170d7bfd40f0070c42eda0619adf3ed287c476aa338f31fd5d37",
-        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
-        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
-        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
-        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
-        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
-        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
-      },
-      "checks": [
-        "actual Preview combo button",
-        "deterministic drag, reverse and release",
-        "selected pointer controls",
-        "complete open and close cycle",
-        "document and Undo history unchanged"
-      ]
-    },
-    {
-      "name": "pointer-preview-rubber-sheet",
-      "file": "docs/gifs/pointer-preview-rubber-sheet.gif",
-      "mode": "pointer",
-      "source": "examples/profiles/pointer-preview-rubber-sheet.json",
-      "frames": 125,
-      "fps": 25,
-      "bytes": 1057815,
-      "backend": "Studio native-math pointer preview / synthetic input and texture",
-      "sources": {
-        "examples/profiles/pointer-preview-rubber-sheet.json": "bd4c24355ea56916cb1115cbdde491a543de600642812bebd27f9287a569d884",
-        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
-        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
-        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
-        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
-        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
-        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
-      },
-      "checks": [
-        "actual Preview combo button",
-        "deterministic drag, reverse and release",
-        "selected pointer controls",
-        "complete open and close cycle",
-        "document and Undo history unchanged"
-      ]
-    },
-    {
-      "name": "pointer-preview-release-settle",
-      "file": "docs/gifs/pointer-preview-release-settle.gif",
-      "mode": "pointer",
-      "source": "examples/profiles/pointer-preview-release-settle.json",
-      "frames": 125,
-      "fps": 25,
-      "bytes": 1025613,
-      "backend": "Studio native-math pointer preview / synthetic input and texture",
-      "sources": {
-        "examples/profiles/pointer-preview-release-settle.json": "64a5bd84f733c4f5f4c4e25aa431644df9d75f847d048dfef111dbe5216f562b",
-        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
-        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
-        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
-        "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
-        "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
-        "scripts/record-pointer-preview.mjs": "972c42a988844f5e46ed74156b4451eff3fbaf4b7e54f7979dd109eeb4cd7fe0"
-      },
-      "checks": [
-        "actual Preview combo button",
-        "deterministic drag, reverse and release",
-        "selected pointer controls",
-        "complete open and close cycle",
-        "document and Undo history unchanged"
-      ]
-    },
-    {
-      "name": "workflow-library",
-      "file": "docs/gifs/workflow-library.gif",
-      "bytes": 4719703,
-      "backend": "actual offline library UI / synthetic WebGL texture",
-      "fps": 20,
-      "frames": 784,
-      "sources": {
-        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
-        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
-        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
-        "scripts/record-library-workflow.mjs": "ee46c2f6fc7fb8f6d58d2e29e1ab556570ddbb1bb5b52792022dbecde4b082fb"
-      },
-      "checks": [
-        "recommended selection",
-        "independent open/close",
-        "resize opt-in",
-        "actual Preview combo button",
-        "complete action-specific open/resize/close cycle",
-        "stable seed and unchanged document/history",
-        "shared style",
-        "explicit pointer preset and bounded custom controls",
-        "pointer metadata survives shared window styles and JSON export",
-        "stock KDL omits pointer while experimental export includes it",
-        "pointer restored to inherited desktop settings",
-        "saved profile",
-        "explicit save confirmation",
-        "copy and rename",
-        "remove Library copy only",
-        "actual JSON and KDL downloads",
-        "stock Niri validation"
-      ]
-    },
-    {
-      "name": "workflow-studio-profile",
-      "file": "docs/gifs/workflow-studio-profile.gif",
-      "bytes": 760427,
-      "backend": "actual offline Studio UI / synthetic WebGL texture",
-      "sources": {
-        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
-        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
-        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
-        "scripts/record-studio-workflow.mjs": "3d4b5a546c9c85df87d2010b5d45a62fc81a697f654a527b4acc0e8930ddb44d"
-      },
-      "fps": 10,
-      "frames": 140,
-      "checks": [
-        "file import",
-        "independent close edit",
-        "visible advanced wind control",
-        "A/B",
-        "undo/redo",
-        "actual JSON and KDL downloads",
-        "stock Niri validation",
-        "resize absent"
-      ]
     },
     {
       "name": "native-pointer-gentle",
@@ -2364,14 +2314,14 @@
         "frequency": 10
       },
       "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
-      "bytes": 1558030,
+      "bytes": 1537118,
       "fps": 50,
       "width": 800,
       "colors": 64,
       "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-      "pointer_patch_sha256": "86c4248abc45fadf5bbf810f1ea9a4145beb0fd860fe8c56a28530777c907016",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+      "pointer_patch_sha256": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a",
       "sources": {
         "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
         "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
@@ -2408,14 +2358,14 @@
         "frequency": 6
       },
       "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
-      "bytes": 1889679,
+      "bytes": 1919710,
       "fps": 50,
       "width": 800,
       "colors": 64,
       "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-      "pointer_patch_sha256": "86c4248abc45fadf5bbf810f1ea9a4145beb0fd860fe8c56a28530777c907016",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+      "pointer_patch_sha256": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a",
       "sources": {
         "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
         "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
@@ -2452,14 +2402,14 @@
         "frequency": 8
       },
       "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
-      "bytes": 1764518,
+      "bytes": 1775448,
       "fps": 50,
       "width": 800,
       "colors": 64,
       "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-      "pointer_patch_sha256": "86c4248abc45fadf5bbf810f1ea9a4145beb0fd860fe8c56a28530777c907016",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+      "pointer_patch_sha256": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a",
       "sources": {
         "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
         "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
@@ -2482,6 +2432,134 @@
         "disable-during-grab",
         "close-cancels-grab-survivor-input"
       ]
+    },
+    {
+      "name": "workflow-quickshell-picker",
+      "backend": "packaged Quickshell picker UI in stock nested Niri",
+      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/qml/NiriFXController.qml": "f813c55358fc375f6391755be4b489b2134aeec2e4f7189811c82898db686c64",
+        "niri_fx/qml/NiriFXPicker.qml": "9ea732397003962294167bf24627266b4ba7c5b514f7aa0e3f9ccbc76c0e3e0d",
+        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
+      },
+      "file": "docs/gifs/workflow-quickshell-picker.gif",
+      "bytes": 418409
+    },
+    {
+      "name": "workflow-gtk-picker",
+      "backend": "packaged GTK 4 picker UI in stock nested Niri",
+      "version": "gjs 1.88.1",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved",
+        "close during apply"
+      ],
+      "sources": {
+        "niri_fx/gtk/controller.mjs": "7052b5ebea8fb445b0893f8bc76971712db23bd6a207f30a11c256e171527c88",
+        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
+        "niri_fx/gtk/picker.mjs": "cdf86ca57ae399f42eb9117b516b3dccdbb7e343b45b2e73bd844968b7dda8de",
+        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
+        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
+      },
+      "file": "docs/gifs/workflow-gtk-picker.gif",
+      "bytes": 533538
+    },
+    {
+      "name": "workflow-library",
+      "file": "docs/gifs/workflow-library.gif",
+      "bytes": 4759542,
+      "backend": "actual offline library UI / synthetic WebGL texture",
+      "fps": 20,
+      "frames": 784,
+      "sources": {
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "scripts/record-library-workflow.mjs": "e51254f63c5de1b5b2df483555922aba071de8816bd004e1bd65790d2cb7d6a3"
+      },
+      "checks": [
+        "recommended selection",
+        "independent open/close",
+        "resize selection",
+        "actual Preview combo button",
+        "complete action-specific open/resize/close cycle",
+        "stable seed and unchanged document/history",
+        "shared style",
+        "explicit pointer preset and bounded custom controls",
+        "pointer metadata survives shared window styles and JSON export",
+        "stock KDL omits pointer while experimental export includes it",
+        "pointer restored to inherited desktop settings",
+        "saved profile",
+        "explicit save confirmation",
+        "copy and rename",
+        "remove Library copy only",
+        "actual JSON and KDL downloads",
+        "stock Niri validation"
+      ]
+    },
+    {
+      "name": "workflow-studio-profile",
+      "file": "docs/gifs/workflow-studio-profile.gif",
+      "bytes": 735652,
+      "backend": "actual offline Studio UI / synthetic WebGL texture",
+      "sources": {
+        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/library.js": "c7f322e8930fb4ae84127f2d568fb12fc322cc09ed518a3ff2138bb7ca889371",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
+        "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
+        "scripts/record-studio-workflow.mjs": "3d4b5a546c9c85df87d2010b5d45a62fc81a697f654a527b4acc0e8930ddb44d"
+      },
+      "fps": 10,
+      "frames": 140,
+      "checks": [
+        "file import",
+        "independent close edit",
+        "visible advanced wind control",
+        "A/B",
+        "undo/redo",
+        "actual JSON and KDL downloads",
+        "stock Niri validation",
+        "resize absent"
+      ]
+    },
+    {
+      "name": "workflow-terminal",
+      "backend": "real CLI terminal workflow in stock nested Niri",
+      "version": "niri 26.04 (8ed0da4)",
+      "checks": [
+        "preset selection",
+        "read-only review",
+        "confirmed apply",
+        "exact Undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/terminal.py": "79000da27033b8c0be2b46711441d7837ec10d3575cf43cff47ec4616b5fb01f",
+        "scripts/fixtures/terminal-session.py": "f6e07ff11ca3750c43080a60233a49d71f657f049cc4a0362ed54cd26fccffcd"
+      },
+      "file": "docs/gifs/workflow-terminal.gif",
+      "bytes": 2447238
     }
   ]
 }

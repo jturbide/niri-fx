@@ -7,7 +7,7 @@ settings; older releases do not include them.
 
 In Studio, choose **Fragments**, then **Piece shape**. Open Advanced controls for
 proportions, orientation and emergence timing. For a finished look, choose one of
-the four presets below. Every preset leaves resize off.
+the four presets below. Every preset preserves existing resize settings.
 
 | Triangle Shatter | Circle Burst |
 | --- | --- |

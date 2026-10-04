@@ -4,8 +4,8 @@
   "backend": "Pinned Niri pointer extension, nested winit, optimized release build",
   "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
   "patches": {
-    "experimental/niri-movement.patch": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-    "experimental/niri-pointer-wobble.patch": "86c4248abc45fadf5bbf810f1ea9a4145beb0fd860fe8c56a28530777c907016"
+    "experimental/niri-movement.patch": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+    "experimental/niri-pointer-wobble.patch": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a"
   },
   "output": {
     "width": 1280,
@@ -36,7 +36,7 @@
       "checks": [
         {
           "case": "floating-reversals-release",
-          "changed_pixels": 8674,
+          "changed_pixels": 8719,
           "geometry": [
             490.0,
             200.0,
@@ -84,30 +84,30 @@
         }
       ],
       "timing": {
-        "native_frames": 194,
-        "winit_interval_p95_ms": 10.486918,
-        "winit_interval_max_ms": 98.141955,
+        "native_frames": 201,
+        "winit_interval_p95_ms": 8.375871,
+        "winit_interval_max_ms": 95.944796,
         "pointer_motion_socket_flush": {
           "samples": 269,
-          "p95_ms": 0.07239000115077943,
-          "max_ms": 0.6034599937265739
+          "p95_ms": 0.09237999620381743,
+          "max_ms": 0.5804810061817989
         },
         "pointer_server_roundtrip": {
           "samples": 42,
-          "p95_ms": 11.49153700680472,
-          "max_ms": 11.928347012144513
+          "p95_ms": 10.375033001764677,
+          "max_ms": 12.789296000846662
         }
       },
       "recording": {
-        "gif_bytes": 1558030,
-        "gif_sha256": "ade6e24c031a1cc304ed82e3d6a048efcb85cb29837f2773b9409f66e4b5806e",
+        "gif_bytes": 1537118,
+        "gif_sha256": "035201767aa1aab202df3cad0f287ab20c3c01f12a67e8448d65267e44df9b61",
         "gif_frames": 215,
         "gif_duration_ms": 4300,
         "frame_durations_ms": [
           20
         ],
         "round_trip_changed_pixels": 0,
-        "encoded_endpoint_changed_pixels": 266
+        "encoded_endpoint_changed_pixels": 360
       }
     },
     {
@@ -120,7 +120,7 @@
       "checks": [
         {
           "case": "floating-reversals-release",
-          "changed_pixels": 26814,
+          "changed_pixels": 27256,
           "geometry": [
             490.0,
             200.0,
@@ -168,30 +168,30 @@
         }
       ],
       "timing": {
-        "native_frames": 221,
-        "winit_interval_p95_ms": 8.750577,
-        "winit_interval_max_ms": 95.369995,
+        "native_frames": 220,
+        "winit_interval_p95_ms": 9.066511,
+        "winit_interval_max_ms": 95.630101,
         "pointer_motion_socket_flush": {
           "samples": 269,
-          "p95_ms": 0.08085000445134938,
-          "max_ms": 0.33012000494636595
+          "p95_ms": 0.13880099868401885,
+          "max_ms": 1.6515419993083924
         },
         "pointer_server_roundtrip": {
           "samples": 42,
-          "p95_ms": 12.278676993446425,
-          "max_ms": 12.70964699506294
+          "p95_ms": 10.987073997966945,
+          "max_ms": 12.542415992356837
         }
       },
       "recording": {
-        "gif_bytes": 1889679,
-        "gif_sha256": "661f147886957cc5f6d683281d46f6e91f08c3ff8d5f98f52c17b30035dbee02",
+        "gif_bytes": 1919710,
+        "gif_sha256": "038fdb4ab274c99eb5d3d50ee65021b17b5a818c1ccbd71772ae487c2706b934",
         "gif_frames": 215,
         "gif_duration_ms": 4300,
         "frame_durations_ms": [
           20
         ],
         "round_trip_changed_pixels": 0,
-        "encoded_endpoint_changed_pixels": 244
+        "encoded_endpoint_changed_pixels": 501
       }
     },
     {
@@ -204,7 +204,7 @@
       "checks": [
         {
           "case": "floating-reversals-release",
-          "changed_pixels": 16447,
+          "changed_pixels": 15761,
           "geometry": [
             490.0,
             200.0,
@@ -252,30 +252,30 @@
         }
       ],
       "timing": {
-        "native_frames": 203,
-        "winit_interval_p95_ms": 9.439657,
-        "winit_interval_max_ms": 96.100234,
+        "native_frames": 199,
+        "winit_interval_p95_ms": 10.350973,
+        "winit_interval_max_ms": 95.818597,
         "pointer_motion_socket_flush": {
           "samples": 269,
-          "p95_ms": 0.05904999852646142,
-          "max_ms": 0.6772599881514907
+          "p95_ms": 0.06982000195421278,
+          "max_ms": 0.39597100112587214
         },
         "pointer_server_roundtrip": {
           "samples": 42,
-          "p95_ms": 10.59790700674057,
-          "max_ms": 12.492747002397664
+          "p95_ms": 11.181762994965538,
+          "max_ms": 11.858523008413613
         }
       },
       "recording": {
-        "gif_bytes": 1764518,
-        "gif_sha256": "aa31ef88951a7ea15052f2d5b49bc105dfc8c5ac65ee2c627db41fcd22ba7220",
+        "gif_bytes": 1775448,
+        "gif_sha256": "bf0e1d32596efa09a6485ae9d51cad7afad41f87c5b4416b2ad244ee5b3a97e5",
         "gif_frames": 215,
         "gif_duration_ms": 4300,
         "frame_durations_ms": [
           20
         ],
         "round_trip_changed_pixels": 0,
-        "encoded_endpoint_changed_pixels": 307
+        "encoded_endpoint_changed_pixels": 232
       }
     }
   ],

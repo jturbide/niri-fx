@@ -27,7 +27,8 @@ python3 -m niri_fx export-pack --output ~/.config/niri/nirifx-presets --apply
 
 This creates `nirifx-<id>.kdl` files and `.nirifx-pack.json`, with a snapshot
 and restore command. Every file contains only opening and closing overrides;
-resize stays off. Exporting does not select a preset or edit Niri/Noctalia config.
+existing resize settings are preserved. Exporting does not select a preset or
+edit Niri/Noctalia config.
 The [curated pairings](profiles.md#choose-a-finished-pairing), including Fragment Flow
 and Pixel Shuffle, appear alongside the single-effect choices.
 Unrelated files survive. Modified owned files, name collisions and per-file

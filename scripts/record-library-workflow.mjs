@@ -184,7 +184,7 @@ try {
     checks: [
       "recommended selection",
       "independent open/close",
-      "resize opt-in",
+      "resize selection",
       "actual Preview combo button",
       "complete action-specific open/resize/close cycle",
       "stable seed and unchanged document/history",

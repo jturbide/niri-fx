@@ -143,7 +143,7 @@ def guide(arguments, read=input, write=print):
     """
     args = copy(arguments)
     write("NiriFX — pick a finished style")
-    write("No editor needed. Built-in presets leave resize effects off.")
+    write("No editor needed. Built-in presets preserve existing resize settings.")
     target = args.target
     if target == "auto":
         target = "inir" if (args.inir_root / "scripts/niri-config.py").is_file() else "standalone"

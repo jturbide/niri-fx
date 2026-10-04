@@ -59,7 +59,7 @@ def plan_pack(output):
         "effect": None,
         "activation": "Choose a preset in your shell picker or include one KDL file",
         "notes": [
-            "Exports open/close presets; resize remains off. No active Niri or shell configuration is edited.",
+            "Exports open/close presets without a resize override. No active Niri or shell configuration is edited.",
             "Configure Noctalia Niri Animations presets_dir/include_prefix to match this folder.",
             "Restore the printed snapshot to undo this export. Preserve the pack while a preset is active.",
         ],

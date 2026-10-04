@@ -98,7 +98,7 @@ The Checker Scatter preset above releases alternating groups of pieces.
 ### Fragment shapes
 
 Choose a joined triangular or hexagonal layout, rectangular confetti, or a
-silhouette that emerges as pieces separate. All four new presets leave resize off.
+silhouette that emerges as pieces separate. All four presets preserve existing resize settings.
 The [shape guide](fragment-shapes.md) covers every choice, CLI flag and comparison.
 
 | Triangle Shatter | Circle Burst | Rectangle Confetti | Hex Swarm |
@@ -124,7 +124,7 @@ action.
 
 **Mixed Confetti** combines squares and triangles with downward gravity.
 **Orbiting Shapes** combines circles and hexagons around a central attraction.
-Both leave resize off. [Mixture controls](fragment-shapes.md#mix-two-shapes).
+Both preserve existing resize settings. [Mixture controls](fragment-shapes.md#mix-two-shapes).
 
 | Mixed Confetti | Orbiting Shapes |
 | --- | --- |
@@ -286,7 +286,7 @@ added control in each comparison panel.
 ![Synchronized Spring Wobble, Rubber Band and Jelly comparison](gifs/compare-elastic.gif)
 
 [Controls and CLI examples](effect-controls.md) explain how to tune these
-styles. Resize remains off in all built-ins.
+styles. Built-ins preserve existing resize settings.
 
 **Momentum Glide.** A restrained elastic arrival and exit. Experimental movement
 adds directional emphasis; this preview shows stock opening and closing.
@@ -296,7 +296,7 @@ adds directional emphasis; this preview shows stock opening and closing.
 ### Dissolve and iris reveals
 
 Erode the window through seeded noise, or reveal it with an aspect-correct mask.
-These are stock Niri open/close shaders. Resize stays off.
+These are stock Niri open/close shaders; existing resize settings are preserved.
 
 | Noise Dissolve | Ember Erosion | Frost Vanish |
 | --- | --- | --- |
@@ -452,7 +452,7 @@ search, favorites and a pinned A/B comparison. [Profile guide](profiles.md).
 
 Built-in pairings can be selected by name with `--profile`, through the
 terminal guide's `profiles` menu, or in Studio and the existing pickers. These loops
-close, then open, using each action's own timing. **Resize stays off.**
+show both actions using their own timing. **Existing resize settings are preserved.**
 See the [complete pairing table](profiles.md#choose-a-finished-pairing).
 
 | Fragment Flow | Geometric Flow | Ribbon Current |

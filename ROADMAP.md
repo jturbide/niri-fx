@@ -69,9 +69,13 @@ separate compositor build. Agent discovery and reusable guidance use the same CL
       native input/capture limitations.
 - [x] Reproduce the two native input/output failures against unmodified pinned
       Niri before assigning their cause or choosing a fix.
-- [ ] Reproduce interrupted-resize edge jumps with neighboring tiles and columns,
-      then retain matching size and position trajectories where supported.
-- [ ] Record native before/after resize reversals and orthogonal retargets.
+- [x] Reproduce interrupted-resize edge jumps with neighboring tiles and columns,
+      then retain matching size and position trajectories on the tested paths.
+- [x] Record native before/after width and height resize reversals.
+- [x] Select CI checks by reviewed file groups and cache dependency downloads,
+      keeping the full suite for renderer changes, releases and unknown paths.
+- [ ] Add native orthogonal-retarget recordings and resolve minimum-size clamp and
+      mid-animation timing-reload discontinuities.
 - [ ] Investigate retained resize shader state through retargeting and closing;
       distinguish geometric continuity from texture/deformation continuity.
 - [ ] Collect physical capture/presentation and another GPU result before adding

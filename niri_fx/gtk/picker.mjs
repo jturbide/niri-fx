@@ -151,7 +151,7 @@ export function createPicker(options = {}) {
   undoStatus.set_hexpand(true);
   footer.append(undo);
   footer.append(undoStatus);
-  footer.append(label("Resize stays opt-in", "nirifx-accent"));
+  footer.append(label("Choose resize separately", "nirifx-accent"));
   root.append(footer);
 
   // Retain actual widgets across state changes so search focus, keyboard

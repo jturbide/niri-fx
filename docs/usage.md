@@ -46,7 +46,7 @@ python3 -m niri_fx render --family slices --slice-count 20 --slice-angle 30 \
   --slice-direction alternate --slice-rotation 8 > /tmp/slices.kdl
 ```
 
-Built-in presets leave resize off. See [effect controls](effect-controls.md) for
+Built-in presets preserve existing resize settings. See [effect controls](effect-controls.md) for
 waves, variation, wobble, colors and distortion, with examples and performance notes.
 
 ## Fragments
@@ -187,8 +187,8 @@ a physical simulation. There are no particle collisions.
 Resize effects are available for **Fragments, Elastic, Slices and Distortion**.
 See the [resize guide](resize.md) for profiles, controls and supported Niri actions.
 
-All built-in presets and fresh Studio sessions start with fragment resize
-disabled. Imported custom presets retain their explicit choice. Enable **Resize**, or pass `--resize`:
+Built-in presets and fresh Studio sessions add no resize override. Imported
+custom presets retain their explicit choice. Enable **Resize**, or pass `--resize`:
 
 ```sh
 python3 -m niri_fx register --name "Resize experiment" --preset balanced --resize

@@ -43,8 +43,8 @@ removes the match. A saved resize or movement choice always takes precedence.
 
 ## Add matching resize
 
-Resize remains off in every built-in profile. These separate examples explicitly
-enable it on stock Niri; each keeps the same opening, closing and desktop timing.
+Built-in profiles preserve existing resize settings. These separate examples
+add a resize effect on stock Niri; each keeps the same opening, closing and desktop timing.
 
 | Fragments: edge rebuild | Ribbons: restrained wave | Elastic: gentle spring |
 | --- | --- | --- |

@@ -1,6 +1,7 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04** for the 0.18.0 prerelease, including pointer previews, integration and agent support. These checks
+Evidence updated on **2026-10-04**, including 0.18.0 pointer previews, integration
+and agent support, plus the subsequent experimental resize geometry fix. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -32,7 +33,7 @@ These checks complement the rendering and native evidence below.
 | Vortex distortion | Existing distortion presets match 126 reference-frame pairs against 0.10.0 byte-for-byte. Signed twist, contraction, origin, extreme geometry and transparent source pass browser checks. Both presets pass stock open/close and cleanup. Vortex Fold passes native swaps, six interrupted swaps, close during movement, resize and fallback. |
 | Resize profiles | All ten curated profiles (Elastic, Accordion, Ripple, Subtle/Expressive Edge Ripple and Torsion, plus Fragments/Ribbons/Elastic Motion) grow and shrink a transparent synthetic client to 900 and 400 pixels, produce intermediate frames, settle correctly and close without leftovers |
 | Resize rendering | Edge Ripple and Torsion pass forward-time grow/shrink, exact texture endpoints, signed and zero controls, filled bounds at extreme aspect ratios and Python/JavaScript shader parity checks |
-| Resize defaults | Every built-in leaves resize off; viewing controls never enables it; explicit profile slots and custom choices round-trip |
+| Resize defaults | Built-ins preserve existing resize settings; viewing controls never adds a resize override; explicit profile slots and custom choices round-trip |
 | Packaging | Wheel and source distribution build; installed CLI, shader resources, icon, offline Studio and profile exports work outside the checkout |
 | Documentation | Local links, example commands, preset/profile recordings, native source hashes and generated gallery/poster hashes are checked |
 
@@ -62,15 +63,21 @@ they do not certify the movement shader contract or rendering.
 
 The experimental patch applies to Niri revision
 `8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 19 config tests,
-one config integration test, 12 layout-animation tests, seven shader-continuity tests
-and seven position-continuity tests. These check repeated reversals, first derivatives,
-monotone phase handoffs, zero-distance momentum, spring input, slow/frozen clocks,
+one config integration test, 19 layout-animation tests, seven shader-continuity tests,
+seven position-continuity tests and five size-animation tests. These check repeated
+reversals, first derivatives, monotone phase handoffs, zero-distance momentum,
+spring input, slow/frozen clocks,
 disabled animation semantics and closing along the actual layout path.
 
-Ten native swap recordings passed final-position and intact-color checks with
-clean render logs. Interrupted swapping, eight rapid wobble reversals, closing
+Eighteen native swap presets and three coordinated action-set swaps passed
+final-position and intact-color checks with clean render logs. Interrupted swapping, eight rapid wobble reversals, closing
 during movement and closing during opening also passed transition and cleanup checks. Recording
 commands must arrive within the bounded interruption window.
+
+All 30 existing native clips were refreshed for the updated patches: 21 swaps,
+four interruption scenarios, two overlap/floating scenarios and three pointer
+styles. The original settings and durations were retained; each GIF uses 20 ms
+frame delays. Two additional resize comparisons document the geometry change below.
 
 Retargets retain deformation phase, seed and sampled phase/direction speed. Cubic
 phase curves shorten when needed to stay monotone. Close movement retains those
@@ -86,12 +93,69 @@ The older smoke checks covered resize and shader-removal fallback, repeated swap
 and closure of moving windows. The current recordings are described in
 [the experiment guide](../experimental/README.md). The TTY path was not activated.
 
+## Resize geometry continuity
+
+When an animated resize reverses, the experimental renderer now retains the
+displayed width and height and their sampled velocities. Adjacent columns and
+stacked windows follow matching paths. Retargeting one axis leaves the other
+axis's curve and finish time intact. This applies when a custom movement shader
+is configured and resize animation is enabled; stock rendering and explicitly
+disabled resize keep their existing behavior. No preset enables resize by default.
+
+The original regression reproduced a 12-pixel edge separation 100 ms after a
+resize reversal: the resized window restarted its size curve while its neighbor
+retained movement velocity. The current movement build passes 19 layout-animation
+tests and five size-animation tests; the pointer build passes 23 and five,
+respectively. Coverage includes repeated reversals, orthogonal retargets, small
+size changes, client-driven size changes, disabled resize, original easing and
+slow or frozen clocks.
+
+The [native comparison report](benchmarks/resize-continuity.json) records two
+sequential captures of each case: the verified v0.18.0 movement build and the
+updated build at the same pinned Niri revision. Identical passthrough shaders
+expose the geometry. Both use synthetic cards, a 1200 ms linear resize, a reversal
+after approximately 600 ms, and a nominal 16-pixel gap.
+
+| Case | Baseline gap range | Updated gap range | Recording |
+| --- | --- | --- | --- |
+| Width reversal beside another column | 7 to 83 px | 17 to 18 px | [Side-by-side width comparison](gifs/native-resize-width-comparison.gif) |
+| Height reversal above another window | 10 to 56 px | 16 to 18 px | [Side-by-side height comparison](gifs/native-resize-height-comparison.gif) |
+
+Each range covers 142 decoded native video frames. Edge detection allows four
+pixels for video conversion; measurements precede GIF scaling and palette
+reduction. The report verifies executable, patch, fixture and recorder hashes,
+unchanged window IDs, settled dimensions and bounded IPC timing. Historical
+build metadata absent from the v0.18.0 manifest is listed as unavailable rather
+than inferred. These are geometry checks, not frame-time or physical-display
+measurements.
+
+To reproduce, keep a v0.18.0 movement build in a separate checkout, with its
+executable and build manifest intact. Build the updated experiment, then run:
+
+```sh
+python3 scripts/build-niri-movement.py --release --test
+python3 scripts/record-resize-comparison.py \
+  --baseline-manifest /path/to/niri-fx-0.18/artifacts/niri-movement-build.json \
+  --baseline-tag v0.18.0
+```
+
+The recorder writes under `artifacts/resize-comparison/`. See the
+[recording guide](gifs/README.md#native-resize-geometry-comparisons) for dependencies,
+baseline verification and deliberate publication with `--publish`.
+
+The resize shader's deformation phase can still restart, and closing during
+resize still uses a snapshot. Extreme retargets can reach the one-pixel size
+clamp while a neighbor's movement curve continues past it. Changing animation
+timing during an active resize can also desynchronize neighboring paths. Those
+cases, acceleration continuity, camera movement and physical mixed-output
+behavior remain outside this fix.
+
 ## Pointer-driven wobble
 
 The separate pointer build passed 20 configuration tests, the wiki parse check,
-16 layout-animation tests, seven position-continuity tests, seven movement-shader
-state tests and seven analytical spring tests. The unchanged base movement patch
-and binary remain separately usable.
+23 layout-animation tests, seven position-continuity tests, five size-animation
+tests, seven movement-shader state tests and seven analytical spring tests. The
+base movement patch and binary remain separately usable.
 
 The native layout suite covers pointer-state grab/release and animation-disable
 behavior, plus three output-lifecycle regressions for both tiled and floating
@@ -230,7 +294,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**203 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**205 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

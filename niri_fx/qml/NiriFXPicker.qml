@@ -422,7 +422,7 @@ Pane {
             }
 
             Label {
-                text: "Resize stays opt-in"
+                text: "Choose resize separately"
                 color: "#d6c5ef"
             }
         }

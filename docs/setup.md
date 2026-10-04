@@ -174,7 +174,8 @@ Existing launchers are preserved. Nothing starts at login.
 | iNiR | Merge built-in styles and profiles into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
 | Standalone | Generate `nirifx/animations.kdl` beside the root config; append one marked include | Niri hot reloads the include when that config is loaded |
 
-All built-ins leave resize off; built-in profiles leave movement and pointer choices unset. To save an iNiR custom style, use
+Built-ins preserve existing resize settings; built-in profiles leave movement
+and pointer choices unset. To save an iNiR custom style, use
 `--name`; custom options cannot silently modify the whole built-in pack.
 
 ```sh

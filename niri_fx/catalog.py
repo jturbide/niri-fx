@@ -198,7 +198,7 @@ STYLES = PRESETS | PROFILES
 COLLECTIONS = {
     "action-sets": {
         "label": "Coordinated action sets",
-        "description": "Finished looks with matching opt-in resize and movement companions",
+        "description": "Finished looks with matching resize and movement choices",
         "styles": tuple(ACTION_SETS),
     },
     "desktop": {

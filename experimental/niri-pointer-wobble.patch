@@ -176,7 +176,7 @@ index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef06
  /// use estimated submission time and must never be described as physical scanout.
  #[derive(Serialize, Deserialize, Debug, Clone)]
 diff --git a/src/animation/mod.rs b/src/animation/mod.rs
-index 21e65f1071ff009870840cb22b5a259a4ea3efb9..f8551be42c1aad7a173a49524db4a9a247c39c63 100644
+index 0e5c10e0d18ca244b703372aa93d6ec020845291..266ce3bce650d27115cd8376ad6b120f2a7ade79 100644
 --- a/src/animation/mod.rs
 +++ b/src/animation/mod.rs
 @@ -3,6 +3,7 @@ use std::time::Duration;
@@ -597,10 +597,10 @@ index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71
              mon.dnd_scroll_gesture_end();
          }
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
-index b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d..c70e1e79516bbcf2ba4d0894c9819f3ef1a7dc99 100644
+index d0f18f85ab6da9fa25270f901c745862a1f3856f..2ee8d76a835fe68a15241e89262ea13d6c858a84 100644
 --- a/src/layout/tests/animations.rs
 +++ b/src/layout/tests/animations.rs
-@@ -1097,3 +1097,276 @@ fn width_resize_and_cancel_of_column_to_the_left() {
+@@ -1330,3 +1330,276 @@ fn width_resize_and_cancel_of_column_to_the_left() {
      200 × 200 at x:100 y:  0
      ");
  }
@@ -878,7 +878,7 @@ index b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d..c70e1e79516bbcf2ba4d0894c9819f3e
 +    }
 +}
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa0074c31225f 100644
+index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826e7bb4de0 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,5 +1,5 @@
@@ -893,7 +893,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
      SizeFrac, RESIZE_ANIMATION_THRESHOLD,
  };
 +use crate::animation::pointer_wobble::PointerWobble;
- use crate::animation::{Animation, Clock, MoveAnimation};
+ use crate::animation::{Animation, Clock, MoveAnimation, SizeAnimation};
  use crate::layout::SizingMode;
  use crate::niri_render_elements;
 @@ -25,6 +26,7 @@ use crate::render_helpers::clipped_surface::{ClippedSurfaceRenderElement, Rounde
@@ -916,7 +916,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
      /// The animation of the tile's opacity.
      pub(super) alpha_animation: Option<AlphaAnimation>,
  
-@@ -210,6 +217,9 @@ impl<W: LayoutElement> Tile<W> {
+@@ -219,6 +226,9 @@ impl<W: LayoutElement> Tile<W> {
              move_x_animation: None,
              move_y_animation: None,
              movement_effect: RefCell::new(None),
@@ -926,7 +926,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -237,6 +247,17 @@ impl<W: LayoutElement> Tile<W> {
+@@ -246,6 +256,17 @@ impl<W: LayoutElement> Tile<W> {
  
          self.view_size = view_size;
          self.scale = scale;
@@ -944,7 +944,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
          self.options = options;
  
          let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
-@@ -416,6 +437,56 @@ impl<W: LayoutElement> Tile<W> {
+@@ -475,6 +496,56 @@ impl<W: LayoutElement> Tile<W> {
          self.rounded_corner_damage.set_corner_radius(radius);
      }
  
@@ -1001,7 +1001,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
      pub fn advance_animations(&mut self) {
          if let Some(open) = &mut self.open_animation {
              if open.is_done() {
-@@ -440,6 +511,29 @@ impl<W: LayoutElement> Tile<W> {
+@@ -504,6 +575,29 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
@@ -1031,7 +1031,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
          if let Some(alpha) = &mut self.alpha_animation {
              if !alpha.hold_after_done && alpha.anim.is_done() {
                  self.alpha_animation = None;
-@@ -453,6 +547,10 @@ impl<W: LayoutElement> Tile<W> {
+@@ -517,6 +611,10 @@ impl<W: LayoutElement> Tile<W> {
  
      pub fn are_transitions_ongoing(&self) -> bool {
          self.open_animation.is_some()
@@ -1042,7 +1042,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
              || self.resize_animation.is_some()
              || self.move_x_animation.is_some()
              || self.move_y_animation.is_some()
-@@ -1367,6 +1465,13 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1441,6 +1539,13 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -1056,7 +1056,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
          let mut motion = parent_motion;
          for (movement, horizontal) in [
              (&self.move_x_animation, true),
-@@ -1401,8 +1506,14 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1475,8 +1580,14 @@ impl<W: LayoutElement> Tile<W> {
                      .program(ProgramType::Move)
                      .is_some()
          });
@@ -1072,7 +1072,7 @@ index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa007
              self.movement_effect.borrow_mut().take();
          }
  
-@@ -1433,6 +1544,35 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1507,6 +1618,35 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }

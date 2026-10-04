@@ -2,7 +2,6 @@
   "clips": [
     {
       "file": "docs/gifs/native-swap-mixed-confetti.gif",
-      "preset": "mixed-confetti",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -122,7 +121,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 8145802,
+      "bytes": 8216097,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -132,21 +131,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "mixed-confetti"
     },
     {
       "file": "docs/gifs/native-swap.gif",
-      "preset": "explosion",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -266,7 +266,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 11239289,
+      "bytes": 11191067,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -276,21 +276,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "explosion"
     },
     {
       "file": "docs/gifs/native-swap-crosswind.gif",
-      "preset": "crosswind",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -410,7 +411,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 9621272,
+      "bytes": 9905891,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -420,21 +421,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "crosswind"
     },
     {
       "file": "docs/gifs/native-swap-orbital-ribbons.gif",
-      "preset": "orbital-ribbons",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -554,7 +556,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 7027079,
+      "bytes": 7040437,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -564,21 +566,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "orbital-ribbons"
     },
     {
       "file": "docs/gifs/native-swap-spring-wobble.gif",
-      "preset": "spring-wobble",
       "effect": {
         "family": "elastic",
         "slice_count": 12,
@@ -698,7 +701,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 2652542,
+      "bytes": 2653036,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -708,21 +711,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "spring-wobble"
     },
     {
       "file": "docs/gifs/native-swap-bubble-burst.gif",
-      "preset": "bubble-burst",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -842,7 +846,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 6882274,
+      "bytes": 6837620,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -852,21 +856,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "bubble-burst"
     },
     {
       "file": "docs/gifs/native-swap-core-detonation.gif",
-      "preset": "core-detonation",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -986,7 +991,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 5962724,
+      "bytes": 5999922,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -996,21 +1001,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "core-detonation"
     },
     {
       "file": "docs/gifs/native-swap-twist-snap.gif",
-      "preset": "twist-snap",
       "effect": {
         "family": "elastic",
         "slice_count": 12,
@@ -1130,7 +1136,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 3381247,
+      "bytes": 3431325,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1140,21 +1146,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "twist-snap"
     },
     {
       "file": "docs/gifs/native-swap-slice-exchange.gif",
-      "preset": "slice-exchange",
       "effect": {
         "family": "slices",
         "slice_count": 14,
@@ -1274,7 +1281,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 4205397,
+      "bytes": 4217892,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1284,21 +1291,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "slice-exchange"
     },
     {
       "file": "docs/gifs/native-swap-pixel-transfer.gif",
-      "preset": "pixel-transfer",
       "effect": {
         "family": "pixels",
         "slice_count": 12,
@@ -1418,7 +1426,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 3962904,
+      "bytes": 3922684,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1428,21 +1436,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "pixel-transfer"
     },
     {
       "file": "docs/gifs/native-swap-soft-phase.gif",
-      "preset": "soft-phase",
       "effect": {
         "family": "distortion",
         "slice_count": 12,
@@ -1562,7 +1571,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 2646504,
+      "bytes": 2840394,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1572,21 +1581,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "soft-phase"
     },
     {
       "file": "docs/gifs/native-swap-vortex-fold.gif",
-      "preset": "vortex-fold",
       "effect": {
         "family": "distortion",
         "slice_count": 12,
@@ -1706,7 +1716,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 2457283,
+      "bytes": 2439668,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1716,21 +1726,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "vortex-fold"
     },
     {
       "file": "docs/gifs/native-swap-triangle-shatter.gif",
-      "preset": "triangle-shatter",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -1850,7 +1861,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 10173460,
+      "bytes": 10351304,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1860,21 +1871,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "triangle-shatter"
     },
     {
       "file": "docs/gifs/native-swap-hex-swarm.gif",
-      "preset": "hex-swarm",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -1994,7 +2006,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 9053384,
+      "bytes": 9095660,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2004,21 +2016,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "hex-swarm"
     },
     {
       "file": "docs/gifs/native-swap-fragment-wake.gif",
-      "preset": "fragment-wake",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -2138,7 +2151,7 @@
         "movement_ms": 850
       },
       "duration_ms": 850,
-      "bytes": 4751293,
+      "bytes": 4741795,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2148,21 +2161,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "fragment-wake"
     },
     {
       "file": "docs/gifs/native-swap-ribbon-transfer.gif",
-      "preset": "ribbon-transfer",
       "effect": {
         "family": "slices",
         "slice_count": 14,
@@ -2282,7 +2296,7 @@
         "movement_ms": 900
       },
       "duration_ms": 900,
-      "bytes": 2169224,
+      "bytes": 2067569,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2292,21 +2306,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "ribbon-transfer"
     },
     {
       "file": "docs/gifs/native-swap-momentum-glide.gif",
-      "preset": "momentum-glide",
       "effect": {
         "family": "elastic",
         "slice_count": 12,
@@ -2426,7 +2441,7 @@
         "movement_ms": 750
       },
       "duration_ms": 750,
-      "bytes": 1538824,
+      "bytes": 1474540,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2436,21 +2451,22 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "momentum-glide"
     },
     {
       "file": "docs/gifs/native-swap-orbiting-shapes.gif",
-      "preset": "orbiting-shapes",
       "effect": {
         "family": "fragments",
         "slice_count": 12,
@@ -2570,7 +2586,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 6001748,
+      "bytes": 5971882,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2580,17 +2596,19 @@
       },
       "build_profile": "release",
       "sources": {
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480"
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
         "round-trip window positions",
         "settled color populations",
         "shader render log"
-      ]
+      ],
+      "preset": "orbiting-shapes"
     }
   ]
 }

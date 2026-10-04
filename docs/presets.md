@@ -7,8 +7,8 @@ exact IDs, configured timing, shader preview and importable settings. For visual
 comparisons, see the [full effect catalog](catalog.md); to browse by character,
 use [preset collections](collections.md).
 
-Opening and closing work on stock Niri. Resize is off in every built-in
-preset and unset in every built-in pairing. Native movement requires the
+Opening and closing work on stock Niri. Built-in presets and pairings preserve
+existing resize settings. Native movement requires the
 [experimental compositor](../experimental/README.md). Family support in the
 table describes available actions, not effects enabled by choosing a preset.
 
