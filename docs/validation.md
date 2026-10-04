@@ -328,6 +328,8 @@ remain separate from compositor presentation evidence.
 The browser test files run sequentially so concurrent software WebGL contexts
 do not compete for a shared CI runner. Shader checks remain enabled; readiness
 timeouts report the observed state without exposing session URLs.
+The harness enables its Page and Runtime domains before navigation. A real-process
+regression verifies that startup hooks capture script errors on repeated reloads.
 
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited

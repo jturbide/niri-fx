@@ -211,6 +211,10 @@ export async function launchBrowser({
       launchTimeout,
       "Chrome debugging connection timed out",
     );
+    // Startup hooks are accepted while Page is disabled but never execute.
+    // Enable the lifecycle domains before callers register or navigate pages.
+    await rpc("Page.enable");
+    await rpc("Runtime.enable");
     return { rpc, evaluate, navigate, close, profile };
   } catch (error) {
     await close();

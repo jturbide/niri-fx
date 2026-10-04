@@ -51,3 +51,26 @@ test("browser protocol failures are bounded and cleanup rejects in-flight reques
     await browser.close();
   }
 });
+
+test("startup hooks capture script errors before page code on every reload", async () => {
+  const browser = await launchBrowser();
+  try {
+    await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
+      source:
+        'window.bootErrors=[];addEventListener("error",event=>window.bootErrors.push(event.message));',
+    });
+    const url =
+      "data:text/html," +
+      encodeURIComponent(
+        '<html><script>throw new Error("fixture startup error")</script><p data-boot-end>Ready</p></html>',
+      );
+    for (let reload = 0; reload < 2; reload++) {
+      await browser.navigate(url, { readySelector: "[data-boot-end]" });
+      assert.deepEqual(await browser.evaluate("window.bootErrors"), [
+        "Uncaught Error: fixture startup error",
+      ]);
+    }
+  } finally {
+    await browser.close();
+  }
+});
