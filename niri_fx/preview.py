@@ -166,6 +166,10 @@ def preview_document(effect, name="balanced", connection=None, preferences=None,
             "<!--@STUDIO_CSS@-->", "<style>" + root.joinpath("studio.css").read_text() + "</style>"
         )
         .replace(
+            "<!--@POINTER_PREVIEW_JS@-->",
+            "<script>" + root.joinpath("pointer-preview.js").read_text() + "</script>",
+        )
+        .replace(
             "<!--@COMBO_PREVIEW_JS@-->",
             "<script>" + root.joinpath("combo-preview.js").read_text() + "</script>",
         )

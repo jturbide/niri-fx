@@ -52,10 +52,24 @@ aside {
     display: none !important;
 }
 button:focus-visible,
+canvas:focus-visible,
 select:focus-visible,
 input:focus-visible {
     outline: 2px solid #8ed8d0;
     outline-offset: 3px;
+}
+#pointer-preview-tools {
+    padding: 12px 0;
+}
+html[data-pointer-preview] #stage {
+    touch-action: none;
+    cursor: grab;
+}
+html[data-pointer-preview="dragging"] #stage {
+    cursor: grabbing;
+}
+#try-pointer {
+    margin: 10px 0;
 }
 h1 {
     font-size: 28px;

@@ -77,9 +77,18 @@ Choose a card in Library, then press **Preview combo**. The sequence plays the
 opening effect, holds the intact window and plays the closing effect using each
 action's own style and duration. Selected resize and movement effects are included
 when those profile slots are enabled; leaving them at shell defaults skips them.
-Previewing never enables an optional action or applies desktop settings. Pointer
-drag settings are saved with the combo but are not simulated by the canvas or
-**Preview combo**; use the isolated native demo to try them.
+Previewing never enables an optional action or applies desktop settings. In the
+current, unreleased checkout, an explicit pointer choice with strength above
+zero adds a scripted drag and release before closing. Unset and disabled pointer
+choices add no animation. **Reduced motion** skips this pointer phase.
+
+Use **Try pointer drag** in Library for interactive dragging, or **Play drag demo**
+for a repeatable comparison. **Reset position** recenters the sample; **Return to
+effects** or Escape restores the editor view. With **Reduced motion**, interactive
+dragging moves the sample without bending or settling. These browser previews
+use native spring and shader math with synthetic window content; native input,
+layout, capture behavior and display latency require compositor checks. See
+[pointer-driven wobble](pointer-wobble.md).
 
 Resize requires an explicit choice. **Movement (experimental)** shows the shader
 on a synthetic path; live move/swap effects require the verified experimental

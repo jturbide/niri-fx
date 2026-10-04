@@ -125,6 +125,8 @@ try {
       [
         "examples/profiles/burst-and-drift.json",
         "niri_fx/effect-core.js",
+        "niri_fx/pointer-preview.js",
+        "niri_fx/preview.py",
         "niri_fx/combo-preview.js",
         "niri_fx/library.js",
         "niri_fx/studio.js",

@@ -176,7 +176,8 @@ Do not replace a contributor's login compositor to run tests. Explain any new
 capture, damage, rendering or interruption behavior and its validation limits.
 
 Original NiriFX contributions use [MIT](LICENSE). Changes derived from Niri
-in the movement and pointer patches use [GPL-3.0-or-later](experimental/COPYING-NIRI).
+in the movement/pointer patches and their browser pointer-preview adapter use
+[GPL-3.0-or-later](experimental/COPYING-NIRI).
 Preserve attribution for any imported code; see [third-party notices](THIRD_PARTY.md).
 There is no CLA. Follow the [release guide](docs/releasing.md) for maintainer tasks.
 

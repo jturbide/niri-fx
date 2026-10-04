@@ -291,6 +291,18 @@
     "source": "1013d822fe8d3fd42e7c9da016aae38e2f5649b18163ab527a3f8b96aa51f6f0",
     "poster": "7ddd74601b11d10fb7451f60b99bec3cb8a59dabe03bdcc9130fe5bc885148f8"
   },
+  "pointer-preview-gentle": {
+    "source": "ce94c89a267b83c96b3538a49a13105fa122dcdea857d71d9ef23562a49fce4c",
+    "poster": "c08f59c99e0803637041cf8f2439dcc065dc032fd3de1f6085de745ca8b751a8"
+  },
+  "pointer-preview-release-settle": {
+    "source": "71d32719fd54555f6dad857c6aaf5309c6fe315bf51e62a1e7d490e25fdec209",
+    "poster": "5a5420fbf25f07db48e9516aa94afc9957fa5cec428ac0f930c688e7eb0f9c52"
+  },
+  "pointer-preview-rubber-sheet": {
+    "source": "6719268c8ff87dd8471b148ca6f7b9ef3f81ae46bff378eb07faf4230c9e61f6",
+    "poster": "55b3ab54c994f93e31219bdb8e40665bb1b178854a924185c35ac524a4366758"
+  },
   "profile-balanced-motion": {
     "source": "9db6ce7fc9931f7908bbdf094ef4fbb5e5fa39dd1b990564c1724177970c2c8f",
     "poster": "b7003715de283eb23e618864b3aa3fb44284b4657a60767f064c9c2e7c36c191"
@@ -780,8 +792,8 @@
     "poster": "1765aaac814a80d1b257fdb2c8c3aa0f43dd7b8f51e49e9dbc47cb26873228e2"
   },
   "workflow-library": {
-    "source": "2c0ea1b7e987009c67f2ace9a94a22e84180954cbe3b7bb079022269657d1cd4",
-    "poster": "cd46e8d8e803d1ea2dd2c73c81427cebe2f1c86081cd8862902ea49149a19095"
+    "source": "033a9b986955a88815965adf5a065241a051a5948c9b32fd256b63ea6a1b4643",
+    "poster": "867c7da8ce3c0f8dc24f5ff6f26a0d83d81645663908577c13144eb7d0e02f2e"
   },
   "workflow-noctalia": {
     "source": "f82c439dfe7fe3db255adcff764251f4388b98cf961219918a89f404fc50ffbb",
@@ -792,8 +804,8 @@
     "poster": "c02b28e8c5523e6c14fa2ce4fa21f02b6c4726facc559ff5db1182e2c262d9bc"
   },
   "workflow-studio-profile": {
-    "source": "a0711bb7412dda4a7809d39ed21738729efe909ebdcd5737b676688389026bef",
-    "poster": "0ace420e20733fa82667a2107303f08bb4f6ce1046cc0679357a215e78e63e01"
+    "source": "5d636b6a6e7cec981298e081ac78b6f48043d10ac748a901b6595f46c4e3983c",
+    "poster": "83e02b166e8abf9c791e1812c676251b00434882ce15422b5503c6e16edd7599"
   },
   "workflow-terminal": {
     "source": "1ad6b521690d88dc444c18261d31dce122f95fffadfa30251238339fb66fc64d",

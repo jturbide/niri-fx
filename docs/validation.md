@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04** for 0.17.0, Unreleased pointer integration and agent support. These checks
+Evidence updated on **2026-10-04** for 0.17.0, Unreleased pointer previews, integration and agent support. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -118,7 +118,14 @@ can restore the native profile and then return exactly to the stock baseline.
 Browser checks cover preset/custom pointer controls, preservation through shared
 style changes and Undo, portable JSON and experimental downloads matching Python.
 The native download combines selected movement and pointer settings in one block.
-Pointer dragging is not part of combo playback.
+Pointer-enabled combos now include a repeatable drag/reverse/release phase.
+Interactive Studio dragging uses the same native spring and shader math with
+synthetic input. Nine Rust-generated reference traces cover 134 sampled states;
+Node checks compare the browser spring and shader against the unchanged native
+implementation. Real Chromium checks cover corner anchors, regrabbing during
+settling, CSS letterboxing, pointer capture loss, keyboard playback and Escape,
+reduced motion, view changes and unchanged profile/Undo state. These checks do
+not validate compositor input, capture, damage or presentation latency.
 
 [Reproduce the checks](pointer-wobble.md#reproduce-validation-and-showcases) or
 inspect the [sanitized results](benchmarks/pointer-wobble.json). These checks do
@@ -169,7 +176,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**200 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**203 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

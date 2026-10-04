@@ -26,6 +26,10 @@ const createComboPreview = runInNewContext(
     "\ncreateComboPreview",
   { structuredClone },
 );
+const createPointerDemo = runInNewContext(
+  readFileSync(new URL("../niri_fx/pointer-preview.js", import.meta.url), "utf8") +
+    "\ncreatePointerDemo",
+);
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const effect = (name, changes = {}) => ({ ...catalog.presets[name], resize: false, ...changes });
 const mixed = () => ({
@@ -48,6 +52,7 @@ function harness(extra = {}) {
   const controller = createComboPreview({
     normalizeDocument: core.normalizePreset,
     families: catalog.families,
+    pointerDemo: createPointerDemo,
     now: () => 1000,
     requestFrame: (callback) => {
       const id = nextFrame++;
@@ -89,6 +94,61 @@ test("a mixed combo plays each action's own style, duration and direction", () =
   assert.match(c.sample(plan, 980).support, /stock Niri exports omit movement/);
   assert.match(c.sample(plan, 480).support, /Opt-in stock Niri resize/);
   assert(c.sample(plan, 2340).complete);
+});
+
+test("selected pointer settings insert a deterministic drag and settle before closing", () => {
+  const { controller: c } = harness();
+  const document = mixed();
+  document.pointer = { strength: 0.9, damping: 50, frequency: 6 };
+  const before = structuredClone(document),
+    plan = c.plan(document, { holdMs: 100 });
+  assert.equal(plan.totalMs, 5540);
+  const index = plan.stages.findIndex((stage) => stage.action === "pointer"),
+    stage = plan.stages[index];
+  assert.equal(plan.stages[index - 1].action, "movement");
+  assert.equal(plan.stages[index + 1].action, "close");
+  assert(Object.isFrozen(stage.pointerSettings));
+  assert.deepEqual(plain(stage.pointerSettings), document.pointer);
+  assert.deepEqual(plain(c.sample(plan, stage.startMs).offset), [0, 0]);
+  const state = c.sample(plan, stage.startMs + 250);
+  assert.equal(state.mode, "pointer");
+  assert.equal(state.phase, "drag");
+  assert(state.pointer.deformation.some((value) => value !== 0));
+  assert.deepEqual(plain(state.offset), plain(state.pointer.offset));
+  assert.match(state.support, /not compositor validation/);
+  assert.equal(c.sample(plan, stage.startMs + 1400).phase, "settle");
+  assert.deepEqual(plain(c.sample(plan, stage.startMs + 3199).offset), [0, 0]);
+  assert.deepEqual(plain(c.sample(plan, stage.startMs + 3200).offset), [0, 0]);
+  assert.deepEqual(document, before);
+  // Capture scripts may serialize a plan and seek backwards without prior frames.
+  const restored = plain(plan);
+  for (const time of [1800, 1700, 3200, 1550, 4300, 1800])
+    assert.deepEqual(plain(c.sample(restored, time)), plain(c.sample(plan, time)));
+});
+
+test("disabled and reduced-motion profiles omit the pointer stage", () => {
+  const { controller: c } = harness();
+  const document = mixed();
+  for (const pointer of [null, { strength: 0, damping: 50, frequency: 6 }]) {
+    document.pointer = pointer;
+    assert(!c.plan(document).stages.some((stage) => stage.action === "pointer"));
+  }
+  document.pointer = { strength: 2, damping: 10, frequency: 2 };
+  assert(
+    !c.plan(document, { reducedMotion: true }).stages.some((stage) => stage.action === "pointer"),
+  );
+});
+
+test("unavailable pointer preview does not interrupt existing playback", () => {
+  const { controller: c, cancelled } = harness({ pointerDemo: undefined });
+  c.play(mixed());
+  const previous = c.currentPlan,
+    document = mixed();
+  document.pointer = { strength: 0.4, damping: 85, frequency: 10 };
+  assert.throws(() => c.play(document), /Pointer preview is unavailable/);
+  assert.equal(c.currentPlan, previous);
+  assert(c.active);
+  assert.deepEqual(cancelled, []);
 });
 
 test("paired movement keeps window position continuous and returns to the center", () => {

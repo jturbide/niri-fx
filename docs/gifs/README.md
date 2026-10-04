@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **200 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **203 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -394,6 +394,27 @@ size checks and bounded IPC reject unsuitable capture sessions. Native clips wer
 regenerated against the current patch. They remain appearance examples, not
 hardware presentation measurements.
 
+
+## Studio pointer previews
+
+The [Gentle](pointer-preview-gentle.gif), [Rubber Sheet](pointer-preview-rubber-sheet.gif)
+and [Release Settle](pointer-preview-release-settle.gif) combos use Studio’s actual
+Preview combo button. They play fragment opening, a fixed drag/reverse/release
+trace and fragment closing at 25 fps, using synthetic content throughout. The
+browser uses native spring/shader math; these clips are not compositor captures.
+Their portable JSON is linked from the gallery and [profile examples](../../examples/profiles/README.md#pointer-preview-combos).
+
+```sh
+node scripts/record-pointer-preview.mjs
+python3 scripts/pointer-preview-reference.py --check
+python3 scripts/build-gallery.py
+```
+
+The reference check compiles the unchanged spring extracted from the checked-in
+patch; it requires a working Rust compiler. Recording requires Node 22+, Chromium
+and FFmpeg. The recorder stores source hashes, checks unchanged documents/Undo
+and writes raw frames under ignored `artifacts/`. Run all recorders sequentially
+because they share manifest files.
 
 ## Pointer-driven wobble
 

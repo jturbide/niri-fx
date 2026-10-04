@@ -78,13 +78,14 @@ try {
   await evaluate(
     `byId('combo-pointer').value='gentle';byId('combo-pointer').dispatchEvent(new Event('change'));byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'));byId('library-panel').scrollTop+=byId('pointer-settings').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-80`,
   );
-  await frames("5 / Choose optional pointer drag / Requires the native extension", 1.25);
+  await frames("5 / Choose pointer drag / Live use requires the native extension", 1.25);
   await evaluate(
     `byId('pointer-tuning').open=true;byId('pointer-strength').value=.75;byId('pointer-strength').dispatchEvent(new Event('change'));byId('library-panel').scrollTop+=byId('pointer-settings').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-80`,
   );
   const pointerDocument = await evaluate("effectDocument()");
   assert.deepEqual(pointerDocument.pointer, { strength: 0.75, damping: 85, frequency: 10 });
-  await frames("Customize the spring / Pointer dragging is not played in this canvas", 1.25);
+  await frames("Customize the spring / Try pointer drag to preview the response", 1.25);
+  await comboFrames("Preview pointer drag and release together with your combo");
   await evaluate(`byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`);
   await frames("JSON keeps pointer settings / Stock config leaves them out", 1.25);
   assert.deepEqual(
@@ -170,6 +171,8 @@ try {
       [
         "niri_fx/library.js",
         "niri_fx/pointer.py",
+        "niri_fx/pointer-preview.js",
+        "niri_fx/preview.py",
         "niri_fx/effect-core.js",
         "niri_fx/combo-preview.js",
         "niri_fx/studio.js",

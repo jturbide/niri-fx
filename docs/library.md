@@ -29,8 +29,8 @@ keeps those edits. Refined actions show the matching combo name, such as
 match a built-in style or combo action. Undo/Redo also works for combo changes. Move and swap share the
 compositor's movement effect; they are not independent shader slots.
 
-**Pointer drag** is a separate native experiment available from the current
-source checkout. Choose Gentle, Rubber Sheet or Release Settle, then expand its
+**Pointer drag** is a separate native experiment with a browser preview in the
+current, unreleased source checkout. Choose Gentle, Rubber Sheet or Release Settle, then expand its
 controls to tune strength, damping and frequency. **Use desktop settings** leaves
 the existing pointer behavior alone; **Disabled** stores an explicit zero-strength
 override. Changing the shared window style preserves this independent choice.
@@ -48,8 +48,22 @@ The movement phase is labelled **experimental** and uses a synthetic path. It
 does not test native compositor movement or desktop springs. See the
 [movement guide](movement.md) for live support and the
 [desktop motion recordings](desktop-motion.md) for workspace, camera and overview
-behavior. Pointer drag is retained in the profile but is not played by the combo
-preview. Use **Tune** to adjust any shader action before previewing again.
+behavior. If the profile explicitly selects pointer drag with strength above
+zero, the combo also plays a scripted drag and release before closing. **Use
+desktop settings** and **Disabled** add no pointer phase. Use **Tune** to adjust
+any shader action before previewing again.
+
+For an interactive pointer preview, choose **Try pointer drag**, then drag the
+sample window, reverse direction and release. **Play drag demo** runs the same
+repeatable path used by the combo; Enter or Space also starts it while the canvas
+has keyboard focus. **Reset position** recenters the window, and **Return to
+effects** or Escape restores the editor view without changing the profile.
+
+These browser previews use the native spring and shader math with synthetic
+window content. They do not test compositor input routing, layout, capture
+behavior or display latency. With **Reduced motion**, interactive dragging moves
+the sample directly without deformation or settling, and combo playback skips
+the pointer phase. Previewing is available without a patched compositor.
 
 ## Save, export or apply
 
