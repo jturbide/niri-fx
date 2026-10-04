@@ -638,3 +638,16 @@ camera and overview springs. [Commands, native recordings and support](desktop-m
 | Gentle window effects | Balanced window effects | Playful window effects |
 | --- | --- | --- |
 | ![Gentle window shader pairing](gifs/profile-gentle-motion.gif) | ![Balanced window shader pairing](gifs/profile-balanced-motion.gif) | ![Playful window shader pairing](gifs/profile-playful-motion.gif) |
+
+## Coordinated action sets
+
+[Fragments, Ribbons and Elastic Motion](action-sets.md) pair window effects with
+stock desktop timing. Matching resize and native movement are separate opt-ins.
+
+| Fragments Motion | Ribbons Motion | Elastic Motion |
+| --- | --- | --- |
+| ![Mixed fragment pairing](gifs/profile-fragments-motion.gif) | ![Wave and zipper pairing](gifs/profile-ribbons-motion.gif) | ![Spring and rubber-sheet pairing](gifs/profile-elastic-motion.gif) |
+| [Resize preview](gifs/fragments-motion-resize.gif) | [Resize preview](gifs/ribbons-motion-resize.gif) | [Resize preview](gifs/elastic-motion-resize.gif) |
+| [Native swap](gifs/native-swap-fragments-motion.gif) | [Native swap](gifs/native-swap-ribbons-motion.gif) | [Native swap](gifs/native-swap-elastic-motion.gif) |
+
+[Base, resize-only and experimental settings](../examples/profiles/README.md#coordinated-action-sets).

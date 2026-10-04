@@ -9,7 +9,7 @@ with Ember Erosion, and leave your existing resize behavior unchanged.
 ## Choose a finished pairing
 
 Choose a built-in pairing. Select **profiles** in the
-terminal guide, use **Ready-made open / close pairing** in Studio, or search a name
+terminal guide, use **Ready-made profile** in Studio, or search a name
 in the Quickshell, GTK, DMS or iRiS picker. No JSON file is needed. Existing iNiR
 registrations and Noctalia preset packs need a reviewed update to add the new names.
 
@@ -28,13 +28,16 @@ registrations and Noctalia preset packs need a reviewed update to add the new na
 | `gentle-motion` | Momentum Glide | Frost Vanish | Gentle desktop springs |
 | `balanced-motion` | Balanced | Implosion | Restrained desktop springs |
 | `playful-motion` | Spring Wobble | Bubble Burst | Lightly bouncing desktop springs |
+| `fragments-motion` | Mixed Confetti | Orbiting Shapes | Mixed geometry with Balanced desktop timing |
+| `ribbons-motion` | Ribbon Wave | Zipper | Flowing strips with Gentle desktop timing |
+| `elastic-motion` | Spring Wobble | Rubber Band | Springy sheets with Playful desktop timing |
 
 | Geometric Flow | Ribbon Current | Soft Landing |
 | --- | --- | --- |
 | ![Triangles assemble and hexagons drift away](gifs/profile-geometric-flow.gif) | ![Waving ribbons arrive and alternating strips leave](gifs/profile-ribbon-current.gif) | ![A gentle elastic arrival and a frosted exit](gifs/profile-soft-landing.gif) |
 
 Browse by look in the [preset collections](collections.md). These pairings reuse
-existing preset settings. The three [motion packs](desktop-motion.md) additionally coordinate stock desktop springs. All leave resize and experimental
+existing preset settings. The [motion packs](desktop-motion.md) and [coordinated action sets](action-sets.md) additionally coordinate stock desktop springs. Action sets suggest separately enabled resize and movement companions in Studio or through `profile --action-set`. All leave resize and experimental
 movement unset. Their shader cost is the cost of the chosen action; profiles do
 not add a second rendering pass. See [performance measurements](performance.md).
 

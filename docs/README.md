@@ -32,6 +32,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Try effects without installation or share settings | [Web Studio](web-studio.md) |
 | Learn Studio's controls | [Studio and controls](usage.md) |
 | Adjust waves, randomness, colors and motion | [Effect controls](effect-controls.md) |
+| Choose coordinated actions with optional companions | [Action sets](action-sets.md) |
 | Enable a resize effect | [Resize styles and profiles](resize.md) |
 | Combine different opening and closing effects | [Profiles](profiles.md) |
 | Import a ready-made custom style | [Examples](../examples/README.md) |

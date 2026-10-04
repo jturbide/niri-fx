@@ -120,6 +120,9 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx render --custom profile.json > profile.kdl
           /tmp/niri-fx-package/bin/niri-fx inspect --custom profile.json > inspected-profile.json
           /tmp/niri-fx-package/bin/niri-fx preview --custom profile.json --output profile.html
+          /tmp/niri-fx-package/bin/niri-fx profile --action-set fragments-motion --include-resize --include-movement > action-set.json
+          /tmp/niri-fx-package/bin/niri-fx render --custom action-set.json > action-set.kdl
+          /tmp/niri-fx-package/bin/python -c "from pathlib import Path; p = Path('action-set.kdl').read_text(); assert 'window-resize' in p and 'window-movement' not in p and 'workspace-switch' in p"
           /tmp/niri-fx-package/bin/niri-fx export-pack --output /tmp/nirifx-pack --state /tmp/nirifx-pack-state --apply
           /tmp/niri-fx-package/bin/niri-fx restore --state /tmp/nirifx-pack-state --apply
 

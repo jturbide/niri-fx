@@ -17,9 +17,34 @@ with patch.object(sys, "path", [str(ROOT / "scripts"), *sys.path]):
     spec = importlib.util.spec_from_file_location("movement_demo", ROOT / "scripts/nested-demo.py")
     demo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(demo)
+    recorder_spec = importlib.util.spec_from_file_location(
+        "movement_recorder", ROOT / "scripts/record-native-gif.py"
+    )
+    recorder = importlib.util.module_from_spec(recorder_spec)
+    recorder_spec.loader.exec_module(recorder)
 
 
 class MovementDemoTests(unittest.TestCase):
+    def test_recorder_preserves_profile_actions_and_requires_public_explicit_movement(self):
+        from niri_fx.action_sets import ACTION_SETS
+
+        for name, recipe in ACTION_SETS.items():
+            source = ROOT / f"examples/profiles/{name}-native.json"
+            document, effect, relative, duration = recorder.selection(custom=source)
+            self.assertEqual(document, recipe.profile(include_resize=True, include_movement=True))
+            self.assertEqual(effect, recipe.movement)
+            self.assertEqual(relative, str(source.relative_to(ROOT)))
+            self.assertEqual(duration, recipe.movement.movement_ms)
+            with self.assertRaisesRegex(ValueError, "explicitly include"):
+                recorder.selection(custom=ROOT / f"examples/profiles/{name}.json")
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "private.json"
+            source.write_text(json.dumps(document.document("Private")))
+            with self.assertRaises(ValueError):
+                recorder.selection(custom=source)
+        self.assertEqual(recorder.selection()[3], 1200)
+        self.assertEqual(recorder.selection(duration=500)[3], 500)
+
     def args(self):
         return SimpleNamespace(custom=None, preset=None, movement_strength=None, resize=False)
 

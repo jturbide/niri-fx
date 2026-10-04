@@ -8,6 +8,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from . import __version__
+from .action_sets import ACTION_SETS
 from .catalog import COLLECTIONS, PROFILES, STYLES, collection_documents, documents, title
 from .documents import effect_document, load_document, parse_document
 from .effects import (
@@ -134,9 +135,18 @@ def parser():
         choices=MOTION_PACKS,
         help="Include stock workspace, camera and overview timing",
     )
-    profile.add_argument("--name", default="My Profile")
-    profile.add_argument("--open-preset", choices=PRESETS, default="spring-wobble")
-    profile.add_argument("--close-preset", choices=PRESETS, default="core-detonation")
+    profile.add_argument("--name")
+    profile.add_argument("--open-preset", choices=PRESETS)
+    profile.add_argument("--close-preset", choices=PRESETS)
+    profile.add_argument("--action-set", choices=ACTION_SETS, help="Start with a coordinated look")
+    profile.add_argument(
+        "--include-resize", action="store_true", help="Include the set's matching resize effect"
+    )
+    profile.add_argument(
+        "--include-movement",
+        action="store_true",
+        help="Include the set's experimental movement choice in JSON; does not activate it",
+    )
     profile.add_argument(
         "--resize-preset", choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["resize"]]
     )
@@ -336,13 +346,41 @@ def main(argv=None):
             from .motion import MOTION_PACKS
             from .profiles import Profile
 
-            document = Profile(
-                open=PRESETS[arguments.open_preset],
-                close=PRESETS[arguments.close_preset],
-                resize=PRESETS[arguments.resize_preset] if arguments.resize_preset else None,
-                movement=PRESETS[arguments.movement_preset] if arguments.movement_preset else None,
-                motion=MOTION_PACKS[arguments.desktop_motion] if arguments.desktop_motion else None,
-            ).document(arguments.name)
+            if arguments.action_set:
+                if any(
+                    getattr(arguments, key) is not None
+                    for key in (
+                        "open_preset",
+                        "close_preset",
+                        "resize_preset",
+                        "movement_preset",
+                        "desktop_motion",
+                    )
+                ):
+                    raise ValueError(
+                        "--action-set supplies the styles and timing; omit preset overrides"
+                    )
+                effect = ACTION_SETS[arguments.action_set].profile(
+                    include_resize=arguments.include_resize,
+                    include_movement=arguments.include_movement,
+                )
+                name = arguments.name if arguments.name is not None else title(arguments.action_set)
+            else:
+                if arguments.include_resize or arguments.include_movement:
+                    raise ValueError("--include-resize and --include-movement require --action-set")
+                effect = Profile(
+                    open=PRESETS[arguments.open_preset or "spring-wobble"],
+                    close=PRESETS[arguments.close_preset or "core-detonation"],
+                    resize=PRESETS[arguments.resize_preset] if arguments.resize_preset else None,
+                    movement=PRESETS[arguments.movement_preset]
+                    if arguments.movement_preset
+                    else None,
+                    motion=MOTION_PACKS[arguments.desktop_motion]
+                    if arguments.desktop_motion
+                    else None,
+                )
+                name = arguments.name if arguments.name is not None else "My Profile"
+            document = effect.document(name)
             parse_document(document)
             print(json.dumps(document, indent=2))
         elif arguments.command == "doctor":

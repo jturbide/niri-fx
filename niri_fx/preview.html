@@ -125,9 +125,9 @@
         >
       </div>
       <div class="wide profile-controls">
-        <label for="profile">Ready-made open / close pairing</label>
+        <label for="profile">Ready-made profile</label>
         <select id="profile">
-          <option value="">Choose a pairing…</option>
+          <option value="">Choose a profile…</option>
         </select>
         <small id="profile-note"
           >Choose both effects together, then adjust either action if you like.</small
@@ -156,6 +156,7 @@
             ><input id="action-enabled" type="checkbox" />
             <span id="action-enable-text">Enable resize effect</span></label
           >
+          <small id="action-companion-note" hidden></small>
           <small
             >Each action keeps its own settings. Disabled resize leaves your existing Niri resize
             behavior unchanged. Movement is saved in JSON only and needs the experimental

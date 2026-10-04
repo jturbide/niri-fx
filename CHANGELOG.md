@@ -10,6 +10,32 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.16.0 — 2026-10-03
+
+### Added
+
+- Fragments Motion, Ribbons Motion and Elastic Motion coordinated profiles, with
+  opening, closing and stock desktop springs in the existing browsing flows.
+- Matching resize and experimental movement suggestions in Studio, and explicit
+  `profile --action-set` include flags for portable settings. Both actions remain
+  unset in every built-in profile.
+- An Action Sets collection, nine complete example documents and nine showcases,
+  including actual nested-compositor swaps with hashed source settings.
+
+### Fixed
+
+- Update the Studio suggestion label immediately when its action is enabled.
+- Sample both sides of native swap crossings instead of requiring unchanged
+  solid colors at an occluded or blended midpoint.
+
+### Upgrade
+
+Update NiriFX, then re-register or re-export shell packs to add the three profiles.
+Existing presets, document schemas and the experimental compositor patch are
+unchanged. Built-in sets leave resize and movement unset; optional example files
+state which actions they include. Updating registration does not activate a style.
+
+
 ## 0.15.0 — 2026-10-03
 
 ### Added

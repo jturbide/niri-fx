@@ -128,9 +128,13 @@ def main():
         session.msg("action", "focus-window", "--id", str(right["id"]))
         before = color_counts(session.capture("before"))
         session.msg("action", "move-column-left")
-        time.sleep(duration / 2000)
-        middle = color_counts(session.capture("middle"))
-        assert all(count > 0 for count in middle.values()), middle
+        started = time.monotonic()
+        # At the exact crossing, source colors can be blended or occluded by the
+        # other window. Sample on either side and verify both intact endpoints.
+        for fraction in (0.25, 0.75):
+            time.sleep(max(0, started + duration / 1000 * fraction - time.monotonic()))
+            middle = color_counts(session.capture(f"middle-{fraction}"))
+            assert all(count > 0 for count in middle.values()), (fraction, middle)
         time.sleep(duration / 1000 + 0.3)
         for index in range(7):
             session.msg("action", "move-column-right" if index % 2 == 0 else "move-column-left")

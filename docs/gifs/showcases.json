@@ -1844,6 +1844,78 @@
           }
         }
       ]
+    },
+    {
+      "name": "profile-fragments-motion",
+      "title": "Fragments Motion pairing",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Fragments Motion",
+          "source": "examples/profiles/fragments-motion.json"
+        }
+      ]
+    },
+    {
+      "name": "fragments-motion-resize",
+      "title": "Fragments Motion resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Fragments Motion",
+          "source": "examples/profiles/fragments-motion-resize.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-ribbons-motion",
+      "title": "Ribbons Motion pairing",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Ribbons Motion",
+          "source": "examples/profiles/ribbons-motion.json"
+        }
+      ]
+    },
+    {
+      "name": "ribbons-motion-resize",
+      "title": "Ribbons Motion resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Ribbons Motion",
+          "source": "examples/profiles/ribbons-motion-resize.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-elastic-motion",
+      "title": "Elastic Motion pairing",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Elastic Motion",
+          "source": "examples/profiles/elastic-motion.json"
+        }
+      ]
+    },
+    {
+      "name": "elastic-motion-resize",
+      "title": "Elastic Motion resize",
+      "mode": "resize",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "Elastic Motion",
+          "source": "examples/profiles/elastic-motion-resize.json"
+        }
+      ]
     }
   ]
 }

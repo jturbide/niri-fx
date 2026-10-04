@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **187 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **196 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -151,3 +151,14 @@ The resize clips render stock Niri-compatible shaders. Resize remains opt-in.
 - [Gentle](gifs/stock-gentle-motion.gif), [Balanced](gifs/stock-balanced-motion.gif) and [Playful](gifs/stock-playful-motion.gif): [stock desktop motion packs](desktop-motion.md).
 - [Floating / resize / tiled cycle](gifs/native-floating-cycle.gif): [explicit overlap fixture](../examples/profiles/movement-overlaps.json).
 - [Mixed Confetti swap](gifs/native-swap-mixed-confetti.gif) and [Orbiting Shapes swap](gifs/native-swap-orbiting-shapes.gif): native experimental shaders.
+
+## Coordinated action sets
+
+The [action-set guide](action-sets.md) shows each look across actions. Defaults
+include open/close and desktop springs; resize and movement remain explicit.
+
+| Set | Open/close shader | Optional resize shader | Experimental native swap |
+| --- | --- | --- | --- |
+| Fragments Motion | [Loop](gifs/profile-fragments-motion.gif) | [Resize](gifs/fragments-motion-resize.gif) | [Swap](gifs/native-swap-fragments-motion.gif) |
+| Ribbons Motion | [Loop](gifs/profile-ribbons-motion.gif) | [Resize](gifs/ribbons-motion-resize.gif) | [Swap](gifs/native-swap-ribbons-motion.gif) |
+| Elastic Motion | [Loop](gifs/profile-elastic-motion.gif) | [Resize](gifs/elastic-motion-resize.gif) | [Swap](gifs/native-swap-elastic-motion.gif) |

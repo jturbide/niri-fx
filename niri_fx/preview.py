@@ -10,6 +10,7 @@ from dataclasses import asdict
 from html import escape
 from importlib.resources import files
 
+from .action_sets import companion_documents
 from .catalog import PROFILE_RECIPES, PROFILES, collection_documents, documents
 from .documents import MAX_DOCUMENT_BYTES
 from .effects import (
@@ -100,6 +101,7 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "name": name,
         "presets": describe_presets(),
         "profiles": documents(PROFILES),
+        "action_companions": companion_documents(),
         "motion_packs": motion_documents(),
         "motion_defaults": asdict(Spring()),
         "motion_limits": SPRING_LIMITS,
