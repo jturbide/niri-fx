@@ -58,10 +58,14 @@ let editingAction = "open",
   comparing = false;
 let editHistory = [],
   historyIndex = -1;
+let workspace = null;
 let favorites = [];
 try {
-  favorites = JSON.parse(localStorage.getItem("nirifx-favorites") || "[]").filter((name) =>
-    Object.hasOwn(catalog.presets, name),
+  favorites = JSON.parse(localStorage.getItem("nirifx-favorites") || "[]").filter(
+    (name) =>
+      Object.hasOwn(catalog.presets, name) ||
+      Object.hasOwn(catalog.profiles, name) ||
+      /^custom-[a-z0-9-]+$/.test(name),
   );
 } catch {
   /* Storage may be unavailable in an offline file. */
@@ -126,6 +130,7 @@ function recordHistory() {
   if (editHistory.length > 100) editHistory.shift();
   historyIndex = editHistory.length - 1;
   historyButtons();
+  workspace?.sync();
 }
 function historyButtons() {
   byId("undo").disabled = historyIndex < 1;
@@ -864,7 +869,7 @@ try {
     frame = requestAnimationFrame(tick);
   }
   byId("advanced").onchange = () => {
-    document.querySelector("aside").dataset.view = byId("advanced").checked ? "advanced" : "basic";
+    byId("editor-panel").dataset.view = byId("advanced").checked ? "advanced" : "basic";
   };
   const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
   byId("reduced-motion").checked = motionPreference.matches;
@@ -1094,6 +1099,55 @@ try {
   }
   loadSharedSettings();
   addEventListener("hashchange", loadSharedSettings);
+  workspace = createFxLibrary({
+    catalog,
+    getDocument: effectDocument,
+    select: (doc, action) => {
+      cancelAnimationFrame(frame);
+      comparing = false;
+      loadDocument(normalizePreset(doc), action);
+      byId("preset").value = "";
+      populate();
+      document
+        .querySelector(`[data-mode=${["resize", "movement"].includes(action) ? action : "effect"}]`)
+        .click();
+      refresh();
+      recordHistory();
+    },
+    edit: (action) => {
+      if (!actions) byId("independent").click();
+      byId("action").value = action;
+      byId("action").dispatchEvent(new Event("change"));
+      workspace.edit();
+    },
+    favorites: () => favorites,
+    favorite: (id) => {
+      favorites = favorites.includes(id)
+        ? favorites.filter((name) => name !== id)
+        : [...favorites, id];
+      try {
+        localStorage.setItem("nirifx-favorites", JSON.stringify(favorites));
+      } catch {
+        /* Session-only favorites still work. */
+      }
+      if (catalog.connection)
+        fetch("/preferences", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "X-NiriFX-Token": catalog.connection.token,
+          },
+          body: JSON.stringify({ favorites }),
+        })
+          .then((response) => {
+            if (!response.ok) throw new Error("Could not save favorites");
+          })
+          .catch((error) => {
+            byId("error").textContent = error.message;
+          });
+      filterPresets();
+    },
+  });
 } catch (error) {
   byId("error").textContent = error.message;
   document.documentElement.dataset.shaderStatus = "error";

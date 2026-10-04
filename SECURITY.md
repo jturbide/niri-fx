@@ -18,9 +18,13 @@ and latest release; older prototype versions have no separate maintenance branch
 ## Security boundaries
 
 Studio binds to loopback and requires a per-session token and matching Origin for
-save operations. It accepts validated effect parameters, not arbitrary shader
+write operations. It accepts validated effect parameters, not arbitrary shader
 source or filesystem destinations. It writes the configured iNiR registry with
-backup/atomic replacement and does not activate the saved preset. The editor
+backup/atomic replacement and does not activate the saved preset. The separate
+Library Review/Apply endpoints use conflict-aware configuration snapshots and
+validate the resulting Niri config. Paths and executable choices are fixed at
+launch; browser requests cannot supply them. Restore refuses external edits.
+Hosted/offline Studio has no local activation endpoints. The editor
 does not fetch external page resources. Treat its session URL as a local secret;
 do not forward its port or embed it on an untrusted site.
 

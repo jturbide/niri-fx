@@ -31,6 +31,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Find a look or compare settings | [Click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/), [scenario guide](showcases.md), [full catalog](catalog.md) |
 | Try effects without installation or share settings | [Web Studio](web-studio.md) |
 | Learn Studio's controls | [Studio and controls](usage.md) |
+| Choose one look or mix styles for each action | [Library and combo builder](library.md) |
 | Adjust waves, randomness, colors and motion | [Effect controls](effect-controls.md) |
 | Choose coordinated actions with optional companions | [Action sets](action-sets.md) |
 | Enable a resize effect | [Resize styles and profiles](resize.md) |

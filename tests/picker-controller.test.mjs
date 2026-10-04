@@ -236,8 +236,11 @@ test("Studio arguments preserve a literal custom path without shell evaluation",
   assert.deepEqual(launches[0], [
     "/a path/niri-fx",
     "studio",
+    "--edit",
     "--target",
     "standalone",
+    "--config",
+    "/config.kdl",
     "--custom",
     "/styles/literal ; $(text).json",
   ]);

@@ -311,8 +311,11 @@ export class PickerController {
       this.launch([
         ...this.context.command,
         "studio",
+        "--edit",
         "--target",
         "standalone",
+        "--config",
+        this.context.configPath,
         ...this.selectionArguments(),
       ]);
       this.error = "";

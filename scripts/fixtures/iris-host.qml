@@ -30,6 +30,26 @@ ShellRoot {
         }
         IpcHandler {
             target: "record"
+            function fxInfo(): string {
+                function find(item) {
+                    if (item.objectName === "niriFXSection") return item;
+                    for (const child of item.children || []) { const found = find(child); if (found) return found; }
+                    return null;
+                }
+                const entry = find(gallery);
+                return JSON.stringify({available: entry?.available, selected: entry?.selected, restore: entry?.canRestore, active: entry?.active?.name});
+            }
+            function clickFX(label: string): bool {
+                function find(item) {
+                    if (item.text === label && typeof item.clicked === "function") return item;
+                    for (const child of item.children || []) { const found = find(child); if (found) return found; }
+                    return null;
+                }
+                const button = find(gallery);
+                if (!button || !button.enabled) return false;
+                button.clicked();
+                return true;
+            }
             function info(): string {
                 return JSON.stringify({ready: NiriAnimationPresets.loaded,
                     active: NiriAnimationPresets.activeId, error: NiriAnimationPresets.error});

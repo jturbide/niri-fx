@@ -11,7 +11,9 @@ from urllib.request import Request, urlopen
 
 from helpers import shell_registry
 
+from niri_fx.documents import effect_document
 from niri_fx.effects import PRESETS
+from niri_fx.profiles import Profile
 from niri_fx.studio import make_server, valid_save_request
 
 
@@ -41,8 +43,16 @@ class ServerTests(unittest.TestCase):
     def setUp(self):
         self.directory = tempfile.TemporaryDirectory()
         self.registry = Path(self.directory.name) / "presets.json"
+        config = Path(self.directory.name) / "niri/config.kdl"
+        config.parent.mkdir()
+        config.write_text("animations {}\n")
         args = Namespace(
-            port=0, preset="earth", base="auto", registry=self.registry, inir_root="unused"
+            port=0,
+            preset="earth",
+            base="auto",
+            registry=self.registry,
+            inir_root="unused",
+            config=config,
         )
         self.server = make_server(args, PRESETS["earth"])
         self.thread = Thread(target=self.server.serve_forever, daemon=True)
@@ -136,6 +146,68 @@ class ServerTests(unittest.TestCase):
             registered["types"]["window-resize"],
             shell_registry()["presets"][0]["types"]["window-resize"],
         )
+
+    def test_library_review_apply_and_restore_use_the_same_portable_selection(self):
+        config = Path(self.directory.name) / "niri/config.kdl"
+        original = config.read_bytes()
+        selection = {
+            "document": effect_document(
+                "Night Motion", Profile(PRESETS["zipper"], PRESETS["frost-vanish"])
+            ),
+            "allow_resize": False,
+            "allow_movement": False,
+        }
+
+        def post(route, body):
+            request = self.request(body)
+            request.full_url = self.server.origin + route
+            with urlopen(request, timeout=5) as response:
+                return json.load(response)
+
+        # This HTTP contract runs without Niri on CI. The native adapter harness
+        # separately checks Review and Apply against the real compositor parser.
+        with patch("niri_fx.setup.validate_config"):
+            review = post("/review", selection)
+            self.assertEqual(config.read_bytes(), original)
+            applied = post("/apply", {"selection": selection, "expected": review["plan_sha256"]})
+        self.assertTrue(applied["changed"])
+        self.assertIn("niri-fx managed", config.read_text())
+        rendered = (config.parent / "nirifx/animations.kdl").read_text()
+        self.assertNotIn("window-resize", rendered)
+        post("/restore", {})
+        self.assertEqual(config.read_bytes(), original)
+        self.assertFalse((config.parent / "nirifx/animations.kdl").exists())
+
+    def test_library_routes_require_the_session_and_reject_client_paths(self):
+        listing = self.server.origin + "/library?token=" + self.token
+        with urlopen(listing, timeout=5) as response:
+            self.assertEqual(json.load(response)["customs"], {})
+        with self.assertRaises(HTTPError) as caught:
+            urlopen(self.server.origin + "/library", timeout=5)
+        self.assertEqual(caught.exception.code, 403)
+        caught.exception.close()
+        doc = {"schema": 3, "name": "Saved Online Look", "effect": {"family": "slices"}}
+        for route in ("store", "review", "apply", "restore"):
+            request = self.request(doc, Origin="https://example.com")
+            request.full_url = self.server.origin + "/" + route
+            with self.assertRaises(HTTPError) as caught:
+                urlopen(request, timeout=5)
+            self.assertEqual(caught.exception.code, 403)
+            caught.exception.close()
+        request = self.request(doc)
+        request.full_url = self.server.origin + "/store"
+        with urlopen(request, timeout=5) as response:
+            self.assertEqual(json.load(response)["name"], doc["name"])
+        with urlopen(listing, timeout=5) as response:
+            self.assertIn("custom-saved-online-look", json.load(response)["customs"])
+        self.assertFalse(self.registry.exists())
+        for route in ("review", "apply", "restore"):
+            request = self.request({"path": "arbitrary", "command": "arbitrary"})
+            request.full_url = self.server.origin + "/" + route
+            with self.assertRaises(HTTPError) as caught:
+                urlopen(request, timeout=5)
+            self.assertEqual(caught.exception.code, 400)
+            caught.exception.close()
 
 
 if __name__ == "__main__":

@@ -232,6 +232,9 @@ def exercise(session, recording):
             "studio",
             "--target",
             "standalone",
+            "--config",
+            str(config),
+            "--edit",
             "--preset",
             "balanced",
         ]

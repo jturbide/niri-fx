@@ -55,6 +55,20 @@ under your own filename, outside the `nirifx-` prefix. The picker will discover 
 and pack updates will preserve it. Native move/swap effects still require the
 separate compositor patch; no shell plugin can supply that hook.
 
+## Shared NiriFX library
+
+Once the Niri Animations folder and target file are connected, use the
+[shared library](library.md#one-interface-different-configuration-owners) to
+combine and directly apply named profiles. Its reviewed changes preserve the
+picker's off/slowdown controls and have their own Restore history.
+
+An optional Noctalia 5 shortcut (plugin API 24+) lives in `integrations/noctalia/niriFX`.
+Copy it into your local Noctalia plugin directory, enable `jturbide/niri-fx`,
+add `jturbide/niri-fx:library` to the Control Center shortcuts,
+and set its **Preset folder** and **Animation target file** to the same values
+used by Niri Animations. The shortcut opens the shared app; it does not manage
+animations independently. The existing Niri Animations plugin remains available.
+
 ## Update or undo
 
 Run the same export command from a newer checkout to update generated files.
