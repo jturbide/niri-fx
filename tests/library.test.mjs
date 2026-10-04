@@ -26,7 +26,27 @@ test("library combines supported actions, preserves edits and saves offline with
   const url = `http://127.0.0.1:${server.address().port}/studio/`;
   const browser = await launchBrowser();
   try {
-    await browser.navigate(url);
+    await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
+      source: `window.libraryBootErrors=[];addEventListener('error',event=>window.libraryBootErrors.push(String(event.message).replace(/https?:\\/\\/\\S+/g,'[url]')));`,
+    });
+    async function reload() {
+      try {
+        await browser.navigate(url);
+      } catch (error) {
+        console.error(
+          "Library reload diagnostics",
+          await browser.evaluate(`({
+          readyState: document.readyState,
+          title: document.title,
+          scripts: Array.from(document.scripts, script=>({type:script.type,length:script.textContent.length})),
+          errors: window.libraryBootErrors,
+          bodyLength: document.body?.textContent.length
+        })`),
+        );
+        throw error;
+      }
+    }
+    await reload();
     const evaluate = browser.evaluate;
     assert.equal(await evaluate("document.documentElement.dataset.workspace"), "library");
     assert.equal(await evaluate('byId("activation-controls").hidden'), true);
@@ -71,7 +91,7 @@ test("library combines supported actions, preserves edits and saves offline with
     assert.equal(await evaluate('byId("profile-dialog").open'), true);
     await evaluate('byId("profile-confirm").click()');
     await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
-    await browser.navigate(url);
+    await reload();
     await evaluate(
       'byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"))',
     );
@@ -153,7 +173,7 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate(
       'localStorage.setItem("nirifx-my-profiles",JSON.stringify({...JSON.parse(localStorage.getItem("nirifx-my-profiles")),"custom-damaged":{schema:99}}))',
     );
-    await browser.navigate(url);
+    await reload();
     await evaluate(
       'byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"));document.querySelector("[data-style=custom-night-motion]").click();byId("store-profile").click()',
     );
