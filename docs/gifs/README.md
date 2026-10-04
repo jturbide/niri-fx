@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **197 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **200 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -389,3 +389,26 @@ the pinned experiment. Keep the host unlocked and the owned outer window visible
 size checks and bounded IPC reject unsuitable capture sessions. Native clips were
 regenerated against the current patch. They remain appearance examples, not
 hardware presentation measurements.
+
+
+## Pointer-driven wobble
+
+Build the optional extension and record all three native pointer presets:
+
+```sh
+python3 scripts/build-niri-movement.py --pointer-wobble --release --test
+python3 scripts/test-pointer-wobble.py --all --record
+python3 scripts/build-gallery.py
+```
+
+[Gentle](native-pointer-gentle.gif), [Rubber Sheet](native-pointer-rubber-sheet.gif)
+and [Release Settle](native-pointer-release-settle.gif) show real pointer input in
+an owned nested compositor, with synthetic mint app cards. Clips retain the
+actual clock and are encoded at 50 fps. The harness also checks tiled dragging,
+held-idle settling, repeated grabs, disabled effects, close cleanup and input.
+
+The scenario manifest records both compositor patch hashes, source hashes and
+exact pointer settings. Gallery cards link to experimental KDL and the
+[pointer guide](../pointer-wobble.md), since these settings are not Studio JSON.
+Input acknowledgements, nested output submissions and GIF frame cadence are
+separate measurements; none establishes physical input-to-photon latency.

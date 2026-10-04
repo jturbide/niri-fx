@@ -547,6 +547,18 @@
     "source": "e79048ae9e3bb8c55433138fb95394879359590f0be0123f90b1a9229822862d",
     "poster": "34225ba07f9067293eda3efef8a8a4954f84ccf9e761219a4ba039ee6d50599d"
   },
+  "native-pointer-gentle": {
+    "source": "c31845a06e19ce574ea17231820ca7cf9bc1dcf15ae2dda7f187a14e7e176fb1",
+    "poster": "083b28404bb61ab9b078fd6ea0f91cff27c669ee5c9f384d1edca9ad1ccbcf4b"
+  },
+  "native-pointer-release-settle": {
+    "source": "f83ff9b5e9b568efdb662d5d8ab82d08dc6e75aa15f4e20c7e6c26321eb885a1",
+    "poster": "f8a3f33329e6ac49814b2780410009ad72e781af79d3b7cbb822de169791f42c"
+  },
+  "native-pointer-rubber-sheet": {
+    "source": "3fdf8477e19f0c69ab624f8323d50441f7cd7bcb74ac90be31db6de3c40a5972",
+    "poster": "c3ae0ab8a477c05431f155c660f1f25a4f82bea6a3f617e9bd8ea234c8b967ff"
+  },
   "profile-elastic-motion": {
     "source": "d382b85da541c09d2ccefcd18414bbc4bdbf2bd57816f8e7c949b6aade48c743",
     "poster": "e2f12b28e01319a24bfcc34c982116e0407c48327cd40c764cc5cdfb376f59aa"

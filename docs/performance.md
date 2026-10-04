@@ -447,3 +447,30 @@ They exclude compositor load, input latency, capture and physical presentation.
 No integrated-GPU or concurrent-window result is implied. Choose the
 [resize companions](action-sets.md#add-matching-resize) explicitly; none is a
 built-in resize default.
+
+## Pointer prototype diagnostics
+
+The optional pointer build was checked with a 500 × 500 synthetic floating
+window inside a 1280 × 800 nested Winit output. Each preset follows the same
+1.2-second pointer path with reversals and release, while screencopy and recording
+are active. The optimized build reports native submission timestamps separately
+from the virtual pointer's dispatch acknowledgements.
+
+The host used an NVIDIA GeForce RTX 4070 Ti with driver 615.71.09. The nested
+output advertised 60 Hz; its submission intervals are not a measurement of the
+host display's refresh rate.
+
+| Preset | Native samples | Submission interval p95 | Dispatch round-trip p95 |
+| --- | ---: | ---: | ---: |
+| Gentle | 223 | 8.57 ms | 11.07 ms |
+| Rubber Sheet | 231 | 8.24 ms | 11.93 ms |
+| Release Settle | 226 | 8.30 ms | 10.86 ms |
+
+Submission intervals include idle holds while the window settles; maximum gaps
+were about 95–97 ms. They are not per-frame GPU cost. Dispatch acknowledgements
+include protocol and scheduling overhead. Neither measure is physical
+input-to-photon latency or a hardware presentation guarantee. The GIFs are encoded
+at 50 fps independently of these timestamps.
+
+[Recorded settings, checks and diagnostic scope](benchmarks/pointer-wobble.json) ·
+[Reproduce the native pointer run](pointer-wobble.md#reproduce-validation-and-showcases)

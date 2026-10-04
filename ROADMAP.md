@@ -56,7 +56,8 @@ Goal: make finished combinations easy to compare, choose and install.
       and exact Restore in isolated configurations.
 - [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
 
-Pointer-driven wobble is the next major FX milestone after this release (Epic 4).
+The next milestone is an isolated, opt-in pointer-wobble prototype (Epic 4).
+Studio integration follows native drag and release validation.
 
 ## Released foundation
 
@@ -121,15 +122,29 @@ A clean endpoint test is not evidence of uninterrupted velocity.
 
 Goal: responsive, Compiz-inspired deformation tied to actual dragging.
 
-- [ ] Design a grab-point anchor and a pointer-driven deformation state.
-- [ ] Keep visual deformation separate from input hit testing and layout ownership.
-- [ ] Preserve state through drag cancellation, release and tiling transitions.
-- [ ] Add gentle wobble, rubber-sheet and release-settle presets.
-- [ ] Measure input latency and frame times in a nested compositor.
-- [ ] Add reduced-motion behavior and ordinary-renderer fallback.
+### First native prototype
 
-This requires further compositor work. Existing timed Elastic effects do not
-simulate dragging.
+- [x] Add a grab-point anchor and bounded spring state driven by actual pointer motion.
+- [x] Keep deformation separate from input hit testing and layout ownership.
+- [x] Carry spring state through release and repeated grabs; verify tiled/floating transitions.
+- [x] Offer Gentle, Rubber Sheet and Release Settle in the isolated demo, with example configurations.
+- [x] Exercise real drag, reversal, release, close and disabled-effect paths with synthetic clients.
+- [x] Record native showcases and publish the tested compositor/renderer requirements.
+- [x] Respect disabled animations and retain the ordinary-renderer fallback.
+
+Try the [pointer prototype](docs/pointer-wobble.md). Native checks and their scope
+are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble).
+
+### Integration and broader acceptance
+
+- [ ] Add a capability-verified pointer action to portable profiles and Studio.
+- [ ] Add reviewed Apply/Restore and optional pointer playback to combo previews.
+- [ ] Verify cancellation, output removal, capture restrictions and graphics resets.
+- [x] Report pointer dispatch round trips and nested output submissions separately.
+- [ ] Measure physical input-to-photon latency and presentation across mixed outputs.
+
+Timed Elastic effects remain available on stock Niri. Pointer-driven deformation
+requires additional compositor support and starts in the isolated experiment.
 
 ## Epic 5: workspace, camera and overview motion
 

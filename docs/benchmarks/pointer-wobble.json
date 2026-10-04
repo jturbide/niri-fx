@@ -1,0 +1,223 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "backend": "Pinned Niri pointer extension, nested winit, optimized release build",
+  "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+  "patches": {
+    "experimental/niri-movement.patch": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+    "experimental/niri-pointer-wobble.patch": "c9c6e0b3df5432c0e96c10abf4c1b064d2256a432371f4f26539e56baa6c6c48"
+  },
+  "output": {
+    "width": 1280,
+    "height": 800,
+    "scale": 1,
+    "advertised_refresh_millihz": 60000
+  },
+  "window": {
+    "width": 500,
+    "height": 500
+  },
+  "workload": "Synthetic floating window with a 1.2-second pointer path, two reversals and release settling. Real virtual-pointer events; screencopy and 50 fps recording active.",
+  "limits": [
+    "Winit submission timestamps are not physical presentation or scanout.",
+    "Pointer dispatch round trips include protocol and scheduling overhead; they are not input-to-photon latency.",
+    "Submission intervals include idle holds during release settling; maximum intervals are not a per-frame GPU rendering cost.",
+    "One nested output and one machine; no physical, mixed-output or integrated-GPU acceptance.",
+    "The nested output advertises 60 Hz; Winit submission intervals and host callbacks must not be treated as measured physical refresh rate."
+  ],
+  "results": [
+    {
+      "preset": "gentle",
+      "settings": {
+        "strength": 0.4,
+        "damping": 85,
+        "frequency": 10
+      },
+      "checks": [
+        {
+          "case": "floating-reversals-release",
+          "changed_pixels": 4932,
+          "geometry": [
+            350.0,
+            200.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "idle-held-grab-settles"
+        },
+        {
+          "case": "release-regrab-input"
+        },
+        {
+          "case": "tiled-drag-layout-input"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "omitted"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "strength-zero"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "movement-off"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "animations-off"
+        },
+        {
+          "case": "close-cancels-grab-survivor-input"
+        }
+      ],
+      "timing": {
+        "native_frames": 223,
+        "winit_interval_p95_ms": 8.571366,
+        "winit_interval_max_ms": 96.50271,
+        "pointer_dispatch_p95_ms": 11.067965999245644,
+        "pointer_dispatch_max_ms": 15.262004002579488
+      },
+      "recording": {
+        "gif_bytes": 1137705,
+        "gif_frames": 141,
+        "gif_duration_ms": 2820,
+        "frame_durations_ms": [
+          20
+        ]
+      }
+    },
+    {
+      "preset": "rubber-sheet",
+      "settings": {
+        "strength": 0.9,
+        "damping": 50,
+        "frequency": 6
+      },
+      "checks": [
+        {
+          "case": "floating-reversals-release",
+          "changed_pixels": 11397,
+          "geometry": [
+            350.0,
+            200.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "idle-held-grab-settles"
+        },
+        {
+          "case": "release-regrab-input"
+        },
+        {
+          "case": "tiled-drag-layout-input"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "omitted"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "strength-zero"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "movement-off"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "animations-off"
+        },
+        {
+          "case": "close-cancels-grab-survivor-input"
+        }
+      ],
+      "timing": {
+        "native_frames": 231,
+        "winit_interval_p95_ms": 8.239536,
+        "winit_interval_max_ms": 96.32943,
+        "pointer_dispatch_p95_ms": 11.932466004509479,
+        "pointer_dispatch_max_ms": 17.342822000500746
+      },
+      "recording": {
+        "gif_bytes": 1312776,
+        "gif_frames": 142,
+        "gif_duration_ms": 2840,
+        "frame_durations_ms": [
+          20
+        ]
+      }
+    },
+    {
+      "preset": "release-settle",
+      "settings": {
+        "strength": 0.7,
+        "damping": 42,
+        "frequency": 8
+      },
+      "checks": [
+        {
+          "case": "floating-reversals-release",
+          "changed_pixels": 6134,
+          "geometry": [
+            350.0,
+            200.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "idle-held-grab-settles"
+        },
+        {
+          "case": "release-regrab-input"
+        },
+        {
+          "case": "tiled-drag-layout-input"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "omitted"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "strength-zero"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "movement-off"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "animations-off"
+        },
+        {
+          "case": "close-cancels-grab-survivor-input"
+        }
+      ],
+      "timing": {
+        "native_frames": 226,
+        "winit_interval_p95_ms": 8.295666,
+        "winit_interval_max_ms": 95.440011,
+        "pointer_dispatch_p95_ms": 10.86104501155205,
+        "pointer_dispatch_max_ms": 13.938164003775455
+      },
+      "recording": {
+        "gif_bytes": 1259151,
+        "gif_frames": 141,
+        "gif_duration_ms": 2820,
+        "frame_durations_ms": [
+          20
+        ]
+      }
+    }
+  ],
+  "host_gpu": {
+    "model": "NVIDIA GeForce RTX 4070 Ti",
+    "driver": "615.71.09"
+  }
+}

@@ -4,22 +4,24 @@
 
 The original Python application, GLSL effects, browser editor, scripts,
 documentation and synthetic demonstration assets are copyright 2026 Julien
-Turbide and licensed under [MIT](LICENSE), except for the Niri-derived patch below.
+Turbide and licensed under [MIT](LICENSE), except for the Niri-derived patches below.
 No community shader collection is vendored. Related projects are credited as
 references in [the research notes](docs/related-projects.md).
 
-## Experimental Niri patch
+## Experimental Niri patches
 
-`experimental/niri-movement.patch` contains modifications and context derived
+`experimental/niri-movement.patch` and its optional
+`experimental/niri-pointer-wobble.patch` extension contain modifications and context derived
 from [Niri](https://github.com/niri-wm/niri) at commit
 [`8ed0da44d974c32c6877d2f4630c314da0717ecb`](https://github.com/niri-wm/niri/tree/8ed0da44d974c32c6877d2f4630c314da0717ecb).
-That patch is **GPL-3.0-or-later**, matching the pinned upstream project's license.
+Both patches are **GPL-3.0-or-later**, matching the pinned upstream project's license.
 The full license text is included in [experimental/COPYING-NIRI](experimental/COPYING-NIRI).
 Upstream copyright notices remain in the source fetched by the build helper.
-The patch adds an optional movement shader hook, its rendering integration and
-associated configuration/testing changes; see [the experiment](experimental/README.md).
+The patches add an optional movement shader hook, pointer-driven deformation,
+rendering integration and associated configuration/testing changes; see
+[the experiment](experimental/README.md).
 
-The source distribution includes the patch and both license texts, so project
+The source distribution includes the patches and both license texts, so project
 distribution metadata lists `MIT AND GPL-3.0-or-later`. The installed Python
 package does not contain or install a patched compositor: its original code
 remains MIT licensed. This combined metadata does not relicense the MIT files.

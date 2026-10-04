@@ -2248,6 +2248,126 @@
         "stock Niri validation",
         "resize absent"
       ]
+    },
+    {
+      "name": "native-pointer-gentle",
+      "file": "docs/gifs/native-pointer-gentle.gif",
+      "title": "Gentle pointer drag",
+      "mode": "pointer",
+      "pointer_preset": "gentle",
+      "config_source": "examples/experimental/pointer-wobble-gentle.kdl",
+      "pointer_wobble": {
+        "strength": 0.4,
+        "damping": 85,
+        "frequency": 10
+      },
+      "bytes": 1137705,
+      "fps": 50,
+      "width": 800,
+      "colors": 64,
+      "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "pointer_patch_sha256": "c9c6e0b3df5432c0e96c10abf4c1b064d2256a432371f4f26539e56baa6c6c48",
+      "sources": {
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "scripts/fixtures/pointer.c": "45b349cce1fcb2b7a70f850bc30fa3745341751d71402f34d18d18c4b03a7519",
+        "scripts/lib/pointer.py": "ec3e8d05e6b27ef8b251621633b0e4beeb3b0c480270e5e7acd4521b40074b91",
+        "scripts/lib/pointer_wobble.py": "11b1cf955dfc14bc8b09d18ef29412a82fee440b905103a8ec3ad15fa0c0fe88",
+        "scripts/test-pointer-wobble.py": "95ed497cf72741f9a2257bd82208fdde117042df62565a5bf1c834fe57f53c50",
+        "examples/experimental/pointer-wobble-gentle.kdl": "ab46c49b3eaa30e3a1a577688392523ec7df2aafb5dadc3c405030b216bad0cb"
+      },
+      "checks": [
+        "floating-reversals-release",
+        "idle-held-grab-settles",
+        "release-regrab-input",
+        "tiled-drag-layout-input",
+        "disable-during-grab",
+        "disable-during-grab",
+        "disable-during-grab",
+        "disable-during-grab",
+        "close-cancels-grab-survivor-input"
+      ]
+    },
+    {
+      "name": "native-pointer-rubber-sheet",
+      "file": "docs/gifs/native-pointer-rubber-sheet.gif",
+      "title": "Rubber Sheet pointer drag",
+      "mode": "pointer",
+      "pointer_preset": "rubber-sheet",
+      "config_source": "examples/experimental/pointer-wobble-rubber-sheet.kdl",
+      "pointer_wobble": {
+        "strength": 0.9,
+        "damping": 50,
+        "frequency": 6
+      },
+      "bytes": 1312776,
+      "fps": 50,
+      "width": 800,
+      "colors": 64,
+      "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "pointer_patch_sha256": "c9c6e0b3df5432c0e96c10abf4c1b064d2256a432371f4f26539e56baa6c6c48",
+      "sources": {
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "scripts/fixtures/pointer.c": "45b349cce1fcb2b7a70f850bc30fa3745341751d71402f34d18d18c4b03a7519",
+        "scripts/lib/pointer.py": "ec3e8d05e6b27ef8b251621633b0e4beeb3b0c480270e5e7acd4521b40074b91",
+        "scripts/lib/pointer_wobble.py": "11b1cf955dfc14bc8b09d18ef29412a82fee440b905103a8ec3ad15fa0c0fe88",
+        "scripts/test-pointer-wobble.py": "95ed497cf72741f9a2257bd82208fdde117042df62565a5bf1c834fe57f53c50",
+        "examples/experimental/pointer-wobble-rubber-sheet.kdl": "ebea904ceb81622cb6fa615c94f0ec42bb664ae0d9be332be2f0b77b0a0957ed"
+      },
+      "checks": [
+        "floating-reversals-release",
+        "idle-held-grab-settles",
+        "release-regrab-input",
+        "tiled-drag-layout-input",
+        "disable-during-grab",
+        "disable-during-grab",
+        "disable-during-grab",
+        "disable-during-grab",
+        "close-cancels-grab-survivor-input"
+      ]
+    },
+    {
+      "name": "native-pointer-release-settle",
+      "file": "docs/gifs/native-pointer-release-settle.gif",
+      "title": "Release Settle pointer drag",
+      "mode": "pointer",
+      "pointer_preset": "release-settle",
+      "config_source": "examples/experimental/pointer-wobble-release-settle.kdl",
+      "pointer_wobble": {
+        "strength": 0.7,
+        "damping": 42,
+        "frequency": 8
+      },
+      "bytes": 1259151,
+      "fps": 50,
+      "width": 800,
+      "colors": 64,
+      "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+      "pointer_patch_sha256": "c9c6e0b3df5432c0e96c10abf4c1b064d2256a432371f4f26539e56baa6c6c48",
+      "sources": {
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "scripts/fixtures/pointer.c": "45b349cce1fcb2b7a70f850bc30fa3745341751d71402f34d18d18c4b03a7519",
+        "scripts/lib/pointer.py": "ec3e8d05e6b27ef8b251621633b0e4beeb3b0c480270e5e7acd4521b40074b91",
+        "scripts/lib/pointer_wobble.py": "11b1cf955dfc14bc8b09d18ef29412a82fee440b905103a8ec3ad15fa0c0fe88",
+        "scripts/test-pointer-wobble.py": "95ed497cf72741f9a2257bd82208fdde117042df62565a5bf1c834fe57f53c50",
+        "examples/experimental/pointer-wobble-release-settle.kdl": "8da036ad79a1a0e29301b109594041e51e69417eaa26de336395363d9c51abc5"
+      },
+      "checks": [
+        "floating-reversals-release",
+        "idle-held-grab-settles",
+        "release-regrab-input",
+        "tiled-drag-layout-input",
+        "disable-during-grab",
+        "disable-during-grab",
+        "disable-during-grab",
+        "disable-during-grab",
+        "close-cancels-grab-survivor-input"
+      ]
     }
   ]
 }

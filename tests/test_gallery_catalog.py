@@ -4,6 +4,7 @@ import importlib.util
 import re
 import unittest
 from copy import deepcopy
+from dataclasses import asdict
 from pathlib import Path
 
 from niri_fx.catalog import PROFILES, STYLES
@@ -53,3 +54,20 @@ class PublicCatalogTests(unittest.TestCase):
         clip["settings"][0]["document"] = effect_document("Balanced", PRESETS["explosion"])
         with self.assertRaisesRegex(ValueError, "Recorded settings differ.*preset-balanced"):
             gallery.preset_reference(clips)
+
+    def test_pointer_cards_offer_native_config_without_a_studio_import_claim(self):
+        preset = gallery.POINTER_PRESETS["gentle"]
+        recorded = {"pointer_preset": "gentle", "pointer_wobble": asdict(preset.wobble)}
+        native = gallery.pointer_settings(recorded)
+        card = deepcopy(self.clips[0])
+        card.update(settings=[], pointer=native, kind="experimental", action="pointer")
+        html = gallery.document([card])
+        self.assertIn("Download experimental KDL", html)
+        self.assertIn("--pointer-wobble gentle", html)
+        self.assertNotIn("Download JSON", html)
+        self.assertNotIn("data-studio", html)
+        self.assertNotIn("custom-shader", native["document"].split("animations {", 1)[1])
+        self.assertIsNone(gallery.pointer_settings({}))
+        recorded["pointer_wobble"]["strength"] = 0.9
+        with self.assertRaisesRegex(ValueError, "Recorded pointer settings changed"):
+            gallery.pointer_settings(recorded)

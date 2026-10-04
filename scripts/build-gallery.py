@@ -26,6 +26,8 @@ from niri_fx.catalog import (
 from niri_fx.documents import MAX_DOCUMENT_BYTES, effect_document, load_document, parse_document
 from niri_fx.effects import FAMILIES, PRESETS, Effect
 from niri_fx.profiles import Profile
+from scripts.lib.pointer_wobble import PRESETS as POINTER_PRESETS
+from scripts.lib.pointer_wobble import render_example
 
 OUT = ROOT / "docs/gallery"
 STUDIO = "https://jturbide.github.io/niri-fx/studio/"
@@ -96,6 +98,25 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def pointer_settings(clip):
+    """Pointer recordings link to native configuration, not portable Studio JSON."""
+    name = clip.get("pointer_preset")
+    if name is None:
+        return None
+    preset = POINTER_PRESETS[name]
+    if clip.get("pointer_wobble") != asdict(preset.wobble):
+        raise ValueError(f"Recorded pointer settings changed: {name}")
+    source = ROOT / f"examples/experimental/pointer-wobble-{name}.kdl"
+    document = render_example(name)
+    if source.read_text() != document:
+        raise ValueError(f"Pointer example changed: {name}")
+    return {
+        "filename": f"nirifx-pointer-{name}.kdl",
+        "document": document,
+        "command": f"python3 scripts/nested-demo.py --pointer-wobble {name}",
+    }
+
+
 def entries():
     clips = []
     for manifest in ("manifest", "native-manifest", "scenario-manifest"):
@@ -121,6 +142,10 @@ def entries():
             elif stem.startswith("workflow-"):
                 kind = "workflow"
             resolved_settings = settings(clip, stem)
+            pointer = pointer_settings(clip)
+            if pointer:
+                families.add("elastic")
+                title = "Pointer Wobble: " + POINTER_PRESETS[clip["pointer_preset"]].name
             for variant in resolved_settings:
                 families.update(style_families(parse_document(variant["document"])[2]))
             starter = (
@@ -138,6 +163,7 @@ def entries():
                     "kind": kind,
                     "action": action,
                     "settings": resolved_settings,
+                    "pointer": pointer,
                     "starter": starter,
                     "pairing": pairing,
                     "groups": collection_names(
@@ -304,6 +330,10 @@ def document(clips):
             controls.append(
                 f'''<div class="style-links">{label}<a href="{variant["url"]}" data-studio>{try_label}</a><a href="presets/{variant["filename"]}" download="{variant["filename"]}">Download JSON</a><button type="button" data-command="{html.escape(variant["command"], quote=True)}">Copy local command</button></div>'''
             )
+        if pointer := clip.get("pointer"):
+            controls.append(
+                f'''<div class="style-links"><a href="https://github.com/jturbide/niri-fx/blob/main/docs/pointer-wobble.md">Try the pointer prototype</a><a href="presets/{pointer["filename"]}" download="{pointer["filename"]}">Download experimental KDL</a><button type="button" data-command="{html.escape(pointer["command"], quote=True)}">Copy demo command</button></div>'''
+            )
         collections = "starter" if clip["starter"] else "profiles" if clip["pairing"] else ""
         recommendation = (
             f'<p class="starter-note">{html.escape(clip["starter"])}</p>' if clip["starter"] else ""
@@ -324,7 +354,7 @@ def document(clips):
 <form role="search" onsubmit="return false"><label>Search<input type="search" id="search" placeholder="Try explosion, resize, ink…"></label>
 <label>Collection<select id="collection"><option value="starter">Start here</option><option value="profiles">Open/close pairings</option><option value="all">All examples</option>{collection_options}</select></label>
 <details class="filters"><summary>Filter by family, scenario or renderer</summary><div class="filter-options"><label>Family<select id="family"><option value="">All families</option>{options}</select></label>
-<label>Scenario<select id="action"><option value="">All scenarios</option><option value="effect">Open / close</option><option value="desktop">Workspace / camera / overview</option><option value="resize">Resize</option><option value="swap">Swap</option><option value="movement">Native movement</option><option value="interruption">Interruption</option><option value="workflow">Workflow</option><option value="move">Move concept</option></select></label>
+<label>Scenario<select id="action"><option value="">All scenarios</option><option value="effect">Open / close</option><option value="desktop">Workspace / camera / overview</option><option value="resize">Resize</option><option value="swap">Swap</option><option value="movement">Native movement</option><option value="pointer">Pointer drag</option><option value="interruption">Interruption</option><option value="workflow">Workflow</option><option value="move">Move concept</option></select></label>
 <label>Renderer<select id="kind"><option value="">All renderers</option><option value="shader">Studio shader</option><option value="stock">Stock Niri</option><option value="experimental">Experimental Niri</option><option value="workflow">Workflow</option><option value="concept">Concept</option></select></label></div></details></form>
 <p id="count" role="status" aria-live="polite">{len(clips)} examples</p><button id="pause-all" type="button" hidden>Pause playback</button> <button id="share-view" type="button">Share this view</button>
 <div id="copy-result" hidden><label id="copy-label" for="copy-text">Copy</label><input id="copy-text" readonly><p id="copy-note" role="status"></p></div>
@@ -359,6 +389,9 @@ def main():
         for c in clips
         for v in c["settings"]
     }
+    configurations = {
+        c["pointer"]["filename"]: c["pointer"]["document"] for c in clips if c["pointer"]
+    }
     if args.check:
         assert REFERENCE.read_text() == reference, (
             "Preset reference changed; run scripts/build-gallery.py"
@@ -380,6 +413,13 @@ def main():
             assert (OUT / "presets" / filename).read_text() == source, (
                 f"Stale gallery download: {filename}"
             )
+        assert {p.name for p in (OUT / "presets").glob("*.kdl")} == set(configurations), (
+            "Gallery native configurations are stale"
+        )
+        for filename, source in configurations.items():
+            assert (OUT / "presets" / filename).read_text() == source, (
+                f"Stale gallery native configuration: {filename}"
+            )
     else:
         from PIL import Image
 
@@ -400,6 +440,8 @@ def main():
         metadata.write_text(json.dumps(current, indent=2) + "\n")
         (OUT / "presets").mkdir(exist_ok=True)
         for filename, source in documents.items():
+            (OUT / "presets" / filename).write_text(source)
+        for filename, source in configurations.items():
             (OUT / "presets" / filename).write_text(source)
     print(
         f"Checked {len(clips)} click-to-play examples"

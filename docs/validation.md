@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04** for 0.16.0 and the Unreleased Library changes. These checks
+Evidence updated on **2026-10-04** for 0.17.0 and the Unreleased pointer prototype. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -18,11 +18,11 @@ These checks complement the rendering and native evidence below.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 166 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
-| Portable JavaScript | 69 Node checks; all 75 presets' supported stock shaders match Python, with picker transaction and profile checks |
+| Python | Regression coverage for validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement diagnostics, isolated patch stacks and conservative CI scope selection |
+| Portable JavaScript | All 75 presets' supported stock shaders match Python, with picker transactions, profile checks and complete combo playback |
 | Real Chromium | 75 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
-| Browser lifecycle and gallery | Ten tests cover failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback hosted Studio share/download flows and explicit companion opt-in through import and Undo |
+| Browser lifecycle and gallery | Coverage includes failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback, hosted Studio share/download flows and explicit companion opt-in through import and Undo |
 | GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 75 default exports, supported resize exports and 91 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Curated pairings | Geometric Flow, Ribbon Current and Soft Landing render partial opening/closing frames, settle intact and close to an empty scene in stock Niri. Sampling uses an 8× slower isolated animation clock to avoid missing short phases during screencopy; this does not measure real-time presentation smoothness. |
@@ -86,6 +86,29 @@ The older smoke checks covered resize and shader-removal fallback, repeated swap
 and closure of moving windows. The current recordings are described in
 [the experiment guide](../experimental/README.md). The TTY path was not activated.
 
+## Pointer-driven wobble
+
+The separate pointer build passed 20 configuration tests, the wiki parse check,
+13 layout-animation tests, seven position-continuity tests, seven movement-shader
+state tests and seven new analytical spring tests. The layout suite includes an
+actual tiled/floating pointer-state lifecycle regression. The unchanged base
+movement patch and binary remain separately usable.
+
+All three pointer presets passed real Wayland input checks in an owned nested
+compositor: floating reversals and visible release settling, convergence while
+held still, regrab/input, a genuinely detached tiled drag, four disable paths
+during a grab, and close cancellation with input reaching the surviving client.
+The four disable paths are node removal, zero strength, movement off and all
+animations off. Render logs were clean, and the three public recordings retain
+50 fps playback with synthetic content.
+
+[Reproduce the checks](pointer-wobble.md#reproduce-validation-and-showcases) or
+inspect the [sanitized results](benchmarks/pointer-wobble.json). These checks do
+not certify physical input latency, capture restrictions, mixed outputs, popups
+or graphics-reset behavior. GPU-program failure uses the ordinary-renderer path
+in the implementation; injected GPU failure was not part of this run. Closing
+retains a snapshot of pointer deformation, not its ongoing spring simulation.
+
 ## Interruption stress coverage
 
 `test-interruptions.py` passed against stock Niri 26.04 and the pinned release-built
@@ -128,7 +151,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**197 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**200 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

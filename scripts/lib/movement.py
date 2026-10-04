@@ -10,25 +10,35 @@ from .nested import ROOT, wait_for
 PALETTE = {"Notes": "#b7e8db", "Library": "#d6c5ef"}
 
 
-def experiment():
-    manifest = json.loads((ROOT / "artifacts/niri-movement-build.json").read_text())
+def experiment(*, pointer_wobble=False):
+    name = "niri-pointer-wobble-build.json" if pointer_wobble else "niri-movement-build.json"
+    manifest = json.loads((ROOT / "artifacts" / name).read_text())
     binary = Path(manifest["binary"])
-    for path, expected in (
+    inputs = [
         (binary, manifest["binary_sha256"]),
         (ROOT / "experimental/niri-movement.patch", manifest["patch_sha256"]),
-    ):
+    ]
+    if pointer_wobble:
+        inputs.append(
+            (ROOT / "experimental/niri-pointer-wobble.patch", manifest["pointer_patch_sha256"])
+        )
+    for path, expected in inputs:
         if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
-            raise RuntimeError("Movement build changed; run scripts/build-niri-movement.py first")
+            option = " --pointer-wobble" if pointer_wobble else ""
+            raise RuntimeError(
+                f"Experiment changed; run scripts/build-niri-movement.py{option} first"
+            )
     spec = importlib.util.spec_from_file_location("nested_demo", ROOT / "scripts/nested-demo.py")
     demo = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(demo)
     return binary, manifest, demo.config
 
 
-def launch_cards(session):
+def launch_cards(session, *, pointer_wobble=False):
+    fixture = "pointer-card.qml" if pointer_wobble else "movement.qml"
     for label, color in PALETTE.items():
         session.launch(
-            ["qs", "-p", str(ROOT / "scripts/fixtures/movement.qml")],
+            ["qs", "-p", str(ROOT / "scripts/fixtures" / fixture)],
             label,
             env=session.env | {"NIRIFX_LABEL": label, "NIRIFX_COLOR": color},
             private_bus=True,

@@ -10,6 +10,25 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- An opt-in pointer-wobble prototype for the pinned experimental compositor.
+  Windows bend around the grab point, respond to direction changes and settle
+  after release, with bounded spring motion and ordinary input/layout behavior.
+- Gentle, Rubber Sheet and Release Settle drag presets, native KDL examples and
+  an isolated demo with draggable synthetic cards. This source-checkout feature
+  is separate from Studio's timed Elastic effects and portable profiles.
+- An optional compositor patch and separate build directory, with a dedicated
+  runtime capability query and real Wayland pointer lifecycle checks.
+- Three native pointer showcases with exact configuration downloads, input
+  acceptance results and separately labelled nested submission diagnostics.
+
+### Changed
+
+- Expand the roadmap into native-pointer acceptance, Studio/profile integration
+  and physical presentation milestones, each with a concrete checklist.
+- Distinguish native KDL downloads from Studio JSON in the showcase gallery.
+
 ## 0.17.0 — 2026-10-04
 
 ### Added

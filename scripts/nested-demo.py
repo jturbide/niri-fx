@@ -11,6 +11,8 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.movement import color_counts, experiment, launch_cards
 from lib.nested import NestedSession
+from lib.pointer_wobble import PRESETS as POINTER_PRESETS
+from lib.pointer_wobble import render_node
 
 from niri_fx.documents import load_document, parse_document
 from niri_fx.effects import FAMILIES, PRESETS, movement_shader, render_kdl
@@ -35,7 +37,7 @@ binds {
 """
 
 
-def config(effect, duration, source):
+def config(effect, duration, source, *, pointer_wobble=None):
     # One animations node per file. Stock exports never include this extension.
     common = render_kdl(effect).rstrip()
     assert common.endswith("}")
@@ -47,16 +49,18 @@ def config(effect, duration, source):
         curve "linear"
 """
         + (f'        custom-shader r"\n{source}\n"\n' if source is not None else "")
+        + (render_node(pointer_wobble) if pointer_wobble is not None else "")
         + "    }\n}\n"
     )
 
 
 def selection(args):
     """Resolve one action document before starting a compositor or any clients."""
+    default = "momentum-glide" if getattr(args, "pointer_wobble", None) else "explosion"
     document = (
         parse_document(load_document(args.custom))[2]
         if args.custom
-        else PRESETS[args.preset or "explosion"]
+        else PRESETS[args.preset or default]
     )
     movement = document.movement if isinstance(document, Profile) else document
     if movement is None:
@@ -103,6 +107,11 @@ def main():
         action="store_true",
         help="Check swaps, repeated reversals, fallback and cleanup, then exit",
     )
+    parser.add_argument(
+        "--pointer-wobble",
+        choices=list(POINTER_PRESETS),
+        help="Explicitly enable real drag deformation in the separate pointer prototype",
+    )
     args = parser.parse_args()
     if args.duration_ms is not None and not 100 <= args.duration_ms <= 3000:
         parser.error("duration must be 100 to 3000 ms")
@@ -110,16 +119,44 @@ def main():
         document, movement = selection(args)
     except (ValueError, OSError) as error:
         parser.error(str(error))
-    duration = args.duration_ms or movement.movement_ms
-    binary, _, _ = experiment()
-    source = movement_shader(movement)
-    with NestedSession(config(document, duration, source), binary=binary) as session:
-        windows = launch_cards(session)
-        print(
-            "Nested demo: Alt+Left/Right to swap columns, Alt+R to resize, Alt+Q to close.\nLogs: "
-            + str(session.root),
-            flush=True,
+    duration = args.duration_ms or (250 if args.pointer_wobble else movement.movement_ms)
+    pointer = POINTER_PRESETS[args.pointer_wobble].wobble if args.pointer_wobble else None
+    binary, _, _ = experiment(pointer_wobble=pointer is not None)
+    # The standalone pointer demo isolates actual dragging. An explicit style
+    # selection can also exercise the existing timed movement shader.
+    source = (
+        None
+        if pointer is not None and not args.preset and not args.custom
+        else movement_shader(movement)
+    )
+    with NestedSession(
+        config(document, duration, source, pointer_wobble=pointer), binary=binary
+    ) as session:
+        windows = launch_cards(session, pointer_wobble=pointer is not None)
+        if pointer is not None and not args.smoke:
+            # Start with immediate drag feedback. Niri's tiled title-bar gesture
+            # first chooses between viewport panning and detaching a window.
+            for index, window in enumerate(windows):
+                for action in (
+                    ("move-window-to-floating",),
+                    ("set-window-width", "500"),
+                    ("set-window-height", "500"),
+                    ("move-floating-window", "--x", str(150 + index * 610), "--y", "160"),
+                ):
+                    session.msg("action", action[0], "--id", str(window["id"]), *action[1:])
+        controls = (
+            "Drag a card by its title bar; Alt+Q to close."
+            if pointer is not None
+            else "Alt+Left/Right to swap columns, Alt+R to resize, Alt+Q to close."
         )
+        print(f"Nested demo: {controls}\nLogs: {session.root}", flush=True)
+        if pointer is not None:
+            print(
+                f"Pointer wobble: {POINTER_PRESETS[args.pointer_wobble].name}. "
+                "Drag a card by its title bar with the left button. "
+                "Release it to settle.",
+                flush=True,
+            )
         if not args.smoke:
             session.compositor.wait()
             return
@@ -159,7 +196,7 @@ def main():
         remaining = session.windows()
         assert len(remaining) == 1 and remaining[0]["id"] != right["id"]
         counts = color_counts(session.capture("close-during-movement"))
-        victim = right["title"].split(" / ")[-1]
+        victim = right["title"].split(" / ")[1]
         assert counts[victim] == 0 and sum(counts.values()) > 1000
         session.check_render_log()
         print(

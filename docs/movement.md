@@ -45,8 +45,9 @@ moving the original way before turning. Initial moves keep Niri's configured
 easing or spring; closing follows the actual remaining position path independently
 of shader phase.
 
-These handoffs preserve first derivatives, not acceleration. Camera scrolling,
-direct pointer dragging and shared particle physics remain separate work. The
+These handoffs preserve first derivatives, not acceleration. Camera scrolling
+and shared particle physics remain separate work. Direct dragging uses the
+optional [pointer-wobble prototype](pointer-wobble.md), with its own spring state. The
 windows still render as separate elements. The pinned patch is required; a stock
 Niri install or a shell event listener cannot provide the same state handoff.
 
@@ -140,8 +141,9 @@ The movement hook covers tile and column animation paths, including vertical
 reordering and consuming/expelling windows. The harness checks final layout,
 client identity, resize during movement, insertion/removal, repeated reversals
 and complete close cleanup. These checks establish coverage and endpoints; they
-do not prove continuous velocity for every overlap. Pointer dragging, workspace
-transitions and camera scrolling remain separate roadmap epics.
+do not prove continuous velocity for every overlap. Pointer dragging has a
+[separate optional prototype](pointer-wobble.md); workspace transitions and camera
+scrolling remain distinct roadmap epics.
 
 ## Additional overlap coverage
 
@@ -156,7 +158,7 @@ Rapid swaps and the existing close continuations retain their established state
 handoffs. New endpoint tests verify client identity, final layout and cleanup;
 they do not establish resize velocity continuity or shared particle state between
 windows. No new discontinuity was demonstrated by this matrix. Physical output
-changes and pointer-driven wobble remain on the [roadmap](../ROADMAP.md).
+changes and broader pointer-drag acceptance remain on the [roadmap](../ROADMAP.md).
 
 For coordinated stock workspace, camera and overview motion, use the
 [desktop motion packs](desktop-motion.md). These change spring timing and do not
