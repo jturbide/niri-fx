@@ -11,7 +11,14 @@ from html import escape
 from importlib.resources import files
 
 from .action_sets import companion_documents
-from .catalog import PROFILE_RECIPES, PROFILES, RECOMMENDED, collection_documents, documents
+from .catalog import (
+    PROFILE_RECIPES,
+    PROFILES,
+    RECOMMENDED,
+    RECOMMENDED_PROFILES,
+    collection_documents,
+    documents,
+)
 from .documents import MAX_DOCUMENT_BYTES
 from .effects import (
     ELASTIC_ANCHORS,
@@ -102,6 +109,7 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "presets": describe_presets(),
         "profiles": documents(PROFILES),
         "recommended": RECOMMENDED,
+        "recommended_profiles": RECOMMENDED_PROFILES,
         "action_companions": companion_documents(),
         "motion_packs": motion_documents(),
         "motion_defaults": asdict(Spring()),
@@ -152,6 +160,10 @@ def preview_document(effect, name="balanced", connection=None, preferences=None,
         )
         .replace(
             "<!--@STUDIO_CSS@-->", "<style>" + root.joinpath("studio.css").read_text() + "</style>"
+        )
+        .replace(
+            "<!--@COMBO_PREVIEW_JS@-->",
+            "<script>" + root.joinpath("combo-preview.js").read_text() + "</script>",
         )
         .replace(
             "<!--@STUDIO_JS@-->", "<script>" + root.joinpath("studio.js").read_text() + "</script>"

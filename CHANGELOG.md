@@ -10,8 +10,17 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.17.0 — 2026-10-04
+
 ### Added
 
+- One-click complete combo previews with per-action styles and durations, selected
+  resize/movement loops, stable variations and reduced-motion endpoints. Playback
+  leaves editing, Undo and saved documents unchanged.
+- Five refined recommended combos and complete opening/pause/closing showcases:
+  Fragment Flow, Soft Landing, Ribbon Current, Playful Motion and Geometric Flow.
+- An isolated upgrade check using the official 0.16 wheel and saved settings,
+  favorites, shell registration and exact Restore, including installed Studio.
 - A Library view in the existing NiriFX app, with recommended looks, collections,
   profile favorites, My profiles and a simple shared-style/per-action combo builder.
 - Reviewed Apply and Restore in the local app through standalone, iNiR and
@@ -35,11 +44,22 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   counts in the three public showcase guides during documentation checks.
 - Preserve other sessions' saved-profile edits and reject rename collisions.
   Skip damaged saved documents individually and report invalid names in the UI.
+- Wait for Chrome's debugging-port file to finish writing within the bounded
+  startup deadline, with regression coverage for incomplete and invalid ports.
 - Enable browser lifecycle domains before startup hooks and navigation, with
   regression coverage for error capture during repeated reloads and page-target
   discovery during startup. Library checks
   wait for completed operations and use an intact preview frame while separate
   rendering checks retain intermediate-frame coverage.
+
+### Upgrade
+
+Install the new package to use Library and combo previews. Existing exported JSON,
+favorites, shell entries and CLI Restore snapshots remain valid. Named Library
+profiles and Library Apply history are new in this version. Five built-in combos
+have refined settings; re-export or re-register a shell pack to refresh them.
+Updating a pack does not select an active style. Resize and movement remain unset
+in every built-in profile. See the [upgrade guide](docs/upgrading.md#from-016-to-017).
 
 ## 0.16.0 — 2026-10-03
 

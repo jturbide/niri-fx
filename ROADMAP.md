@@ -40,6 +40,24 @@ pointer-driven wobble on the validated motion foundation (Epic 4).
 - [x] Manage saved profiles with copy, rename and removal, explicit replacement
   choices, edit conflict detection and JSON transfer between local and online Studio.
 
+## Polished combo previews and 0.17 release milestone
+
+Goal: make finished combinations easy to compare, choose and install.
+
+- [x] Preview a whole combo with one button: opening, a pause and closing,
+      using each action's own style and duration.
+- [x] Include selected resize and experimental movement previews, with accurate
+      support labels, a stable variation and cancellation when settings change.
+- [x] Respect reduced motion and keep playback separate from editing, Undo and Apply.
+- [x] Refine five existing recommended combos: Fragment Flow, Soft Landing,
+      Ribbon Current, Playful Motion and Geometric Flow, with fragments first.
+- [x] Publish complete-cycle showcases and portable JSON for all five combos.
+- [x] Test the actual 0.16-to-0.17 upgrade with saved JSON, favorites, shell entries
+      and exact Restore in isolated configurations.
+- [ ] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
+
+Pointer-driven wobble is the next major FX milestone after this release (Epic 4).
+
 ## Released foundation
 
 - [x] Stock Niri opening and closing effects, standalone setup and shell adapters.

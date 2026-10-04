@@ -164,19 +164,19 @@ The three motion packs also coordinate [stock desktop timing](desktop-motion.md)
 
 | Profile ID | Opens with | Closes with | Open / close (ms) | Desktop timing | Preview | Settings |
 | --- | --- | --- | --- | --- | --- | --- |
-| `fragment-flow` | Balanced | Implosion | 520 / 680 | Preserved | [GIF](gifs/profile-fragment-flow.gif) | [JSON](gallery/presets/nirifx-profile-fragment-flow.json) |
+| `fragment-flow` | Balanced | Implosion | 560 / 520 | Preserved | [GIF](gifs/profile-fragment-flow.gif) | [JSON](gallery/presets/nirifx-profile-fragment-flow.json) |
 | `burst-and-drift` | Explosion | Dust Drift | 700 / 1200 | Preserved | [GIF](gifs/profile-burst-and-drift.gif) | [JSON](gallery/presets/nirifx-profile-burst-and-drift.json) |
 | `frost-and-fragments` | Frost Vanish | Pixel Dust | 950 / 800 | Preserved | [GIF](gifs/profile-frost-and-fragments.gif) | [JSON](gallery/presets/nirifx-profile-frost-and-fragments.json) |
 | `spring-and-ember` | Spring Wobble | Ember Erosion | 1000 / 1000 | Preserved | [GIF](gifs/profile-spring-and-ember.gif) | [JSON](gallery/presets/nirifx-profile-spring-and-ember.json) |
 | `ghost-and-shockwave` | Ghost Wisps | Shockwave | 1300 / 950 | Preserved | [GIF](gifs/profile-ghost-and-shockwave.gif) | [JSON](gallery/presets/nirifx-profile-ghost-and-shockwave.json) |
 | `pixel-shuffle` | Pixel Wipe | Pixelate | 1000 / 900 | Preserved | [GIF](gifs/profile-pixel-shuffle.gif) | [JSON](gallery/presets/nirifx-profile-pixel-shuffle.json) |
 | `ribbon-exit` | Alternating Blinds | Ribbon Fold | 820 / 1000 | Preserved | [GIF](gifs/profile-ribbon-exit.gif) | [JSON](gallery/presets/nirifx-profile-ribbon-exit.json) |
-| `geometric-flow` | Triangle Shatter | Hex Swarm | 820 / 830 | Preserved | [GIF](gifs/profile-geometric-flow.gif) | [JSON](gallery/presets/nirifx-profile-geometric-flow.json) |
-| `ribbon-current` | Ribbon Wave | Ribbon Transfer | 1100 / 650 | Preserved | [GIF](gifs/profile-ribbon-current.gif) | [JSON](gallery/presets/nirifx-profile-ribbon-current.json) |
-| `soft-landing` | Momentum Glide | Frost Vanish | 520 / 900 | Preserved | [GIF](gifs/profile-soft-landing.gif) | [JSON](gallery/presets/nirifx-profile-soft-landing.json) |
+| `geometric-flow` | Triangle Shatter | Hex Swarm | 680 / 620 | Preserved | [GIF](gifs/profile-geometric-flow.gif) | [JSON](gallery/presets/nirifx-profile-geometric-flow.json) |
+| `ribbon-current` | Ribbon Wave | Ribbon Transfer | 760 / 640 | Preserved | [GIF](gifs/profile-ribbon-current.gif) | [JSON](gallery/presets/nirifx-profile-ribbon-current.json) |
+| `soft-landing` | Momentum Glide | Frost Vanish | 480 / 600 | Preserved | [GIF](gifs/profile-soft-landing.gif) | [JSON](gallery/presets/nirifx-profile-soft-landing.json) |
 | `gentle-motion` | Momentum Glide | Frost Vanish | 520 / 900 | Coordinated | [GIF](gifs/profile-gentle-motion.gif) | [JSON](gallery/presets/nirifx-profile-gentle-motion.json) |
 | `balanced-motion` | Balanced | Implosion | 520 / 680 | Coordinated | [GIF](gifs/profile-balanced-motion.gif) | [JSON](gallery/presets/nirifx-profile-balanced-motion.json) |
-| `playful-motion` | Spring Wobble | Bubble Burst | 1000 / 900 | Coordinated | [GIF](gifs/profile-playful-motion.gif) | [JSON](gallery/presets/nirifx-profile-playful-motion.json) |
+| `playful-motion` | Spring Wobble | Bubble Burst | 760 / 620 | Coordinated | [GIF](gifs/profile-playful-motion.gif) | [JSON](gallery/presets/nirifx-profile-playful-motion.json) |
 | `fragments-motion` | Mixed Confetti | Orbiting Shapes | 950 / 950 | Coordinated | [GIF](gifs/profile-fragments-motion.gif) | [JSON](gallery/presets/nirifx-profile-fragments-motion.json) |
 | `ribbons-motion` | Ribbon Wave | Zipper | 1100 / 1000 | Coordinated | [GIF](gifs/profile-ribbons-motion.gif) | [JSON](gallery/presets/nirifx-profile-ribbons-motion.json) |
 | `elastic-motion` | Spring Wobble | Rubber Band | 1000 / 800 | Coordinated | [GIF](gifs/profile-elastic-motion.gif) | [JSON](gallery/presets/nirifx-profile-elastic-motion.json) |

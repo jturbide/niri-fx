@@ -1,9 +1,13 @@
 """Finished action pairings built from the same presets used by every interface.
 
 Keep recipes as preset references so a renderer or preset fix reaches all uses.
+Finished combos can apply a small set of action-specific refinements to those
+references without changing the single styles or their other uses.
 Single styles and profiles remain distinct documents; interfaces must not flatten
 a profile into its opening effect when reviewing or applying a selection.
 """
+
+from dataclasses import replace
 
 from .action_sets import ACTION_SETS
 from .documents import effect_document
@@ -77,8 +81,111 @@ PROFILE_RECIPES.update(
         for name, recipe in ACTION_SETS.items()
     }
 )
+
+# A compact complete-combo selection, independent of the single-style starters.
+# Keep fragments first and the descriptions sourced from the same recipes shown
+# in CLI, Studio and shell pickers. This is browsing metadata, not saved settings.
+RECOMMENDED_PROFILES = {
+    name: PROFILE_RECIPES[name][2]
+    for name in (
+        "fragment-flow",
+        "soft-landing",
+        "ribbon-current",
+        "playful-motion",
+        "geometric-flow",
+    )
+}
+
+# Refine only the action being used: choosing a finished combo must not mutate
+# its source presets or opt into resize/movement. Equal piece/strip counts help
+# paired effects feel related; shorter exits and damped springs keep the sequence
+# readable without delaying everyday interaction. Unlisted fields keep following
+# the source preset, so renderer fixes and shared settings still reach the combo.
+PROFILE_TUNING = {
+    "fragment-flow": {
+        "open": {"open_ms": 560, "scatter": 105, "spin": 140, "stagger": 0.12},
+        "close": {
+            "close_ms": 520,
+            "particles": 720,
+            "gravity_strength": 1.3,
+            "spin": 160,
+            "stagger": 0.12,
+        },
+    },
+    "soft-landing": {
+        "open": {
+            "open_ms": 480,
+            "elastic_strength": 0.28,
+            "elastic_damping": 3.6,
+            "elastic_stretch": 0.16,
+            "elastic_twist": 1,
+        },
+        "close": {"close_ms": 600, "edge_width": 0.06, "edge_saturation": 0.2},
+    },
+    "ribbon-current": {
+        "open": {
+            "open_ms": 760,
+            "slice_distance": 135,
+            "slice_stagger": 0.12,
+            "slice_rotation": 3,
+            "wave_strength": 0.75,
+        },
+        "close": {
+            "close_ms": 640,
+            "slice_count": 18,
+            "slice_distance": 135,
+            "slice_stagger": 0.1,
+            "slice_rotation": 3,
+            "wave_strength": 0.35,
+        },
+    },
+    "playful-motion": {
+        "open": {
+            "open_ms": 760,
+            "elastic_strength": 0.68,
+            "elastic_frequency": 2,
+            "elastic_damping": 2.4,
+        },
+        "close": {
+            "close_ms": 620,
+            "scatter": 130,
+            "gravity_strength": 0.65,
+            "spin": 65,
+            "stagger": 0.12,
+        },
+    },
+    "geometric-flow": {
+        "open": {
+            "open_ms": 680,
+            "particles": 480,
+            "scatter": 140,
+            "gravity_strength": 0.6,
+            "spin": 150,
+            "stagger": 0.07,
+        },
+        "close": {
+            "close_ms": 620,
+            "particles": 480,
+            "scatter": 120,
+            "spin": 90,
+            "swirl": 18,
+            "stagger": 0.07,
+        },
+    },
+}
+
+
+def _profile(name, opening, closing):
+    tuning = PROFILE_TUNING.get(name, {})
+    return Profile(
+        replace(PRESETS[opening], **tuning["open"]) if "open" in tuning else PRESETS[opening],
+        replace(PRESETS[closing], **tuning["close"]) if "close" in tuning else PRESETS[closing],
+        motion=PROFILE_MOTIONS.get(name),
+    )
+
+
 PROFILES = {
-    name: Profile(PRESETS[opening], PRESETS[closing], motion=PROFILE_MOTIONS.get(name))
+    name: _profile(name, opening, closing)
     for name, (opening, closing, _) in PROFILE_RECIPES.items()
 }
 PROFILES.update({name: recipe.profile() for name, recipe in ACTION_SETS.items()})

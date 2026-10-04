@@ -3,7 +3,7 @@
 // never reused. Software rendering is explicit so benchmark results cannot silently
 // switch to a CPU renderer and masquerade as hardware GPU timings.
 import { spawn, spawnSync } from "node:child_process";
-import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout as delay } from "node:timers/promises";
@@ -172,15 +172,38 @@ export async function launchBrowser({
   try {
     const deadline = Date.now() + launchTimeout;
     const portFile = join(profile, "DevToolsActivePort");
-    while (!existsSync(portFile)) {
+    let port, portProblem;
+    while (port === undefined) {
       if (launchError || closed || Date.now() >= deadline)
         throw new Error(
-          `Chrome did not start (${launchError?.message ?? (closed ? "exit " + browserProcess.exitCode : "timeout")}).\n${diagnostics}`,
+          `Chrome did not start (${launchError?.message ?? (closed ? "exit " + browserProcess.exitCode : "timeout")}).\n${portProblem ? portProblem + "\n" : ""}${diagnostics}`,
+          { cause: launchError },
         );
-      await delay(100);
+      try {
+        // Chrome creates this file before finishing its write. A digit-only
+        // prefix can itself be a valid port, so require the first line's newline
+        // before using it. The browser endpoint on line two need not end in one.
+        const contents = readFileSync(portFile, "utf8"),
+          lineEnd = contents.indexOf("\n"),
+          firstLine = contents.slice(0, lineEnd),
+          candidate = Number(firstLine);
+        if (
+          lineEnd >= 0 &&
+          /^\d+$/.test(firstLine) &&
+          Number.isInteger(candidate) &&
+          candidate >= 1 &&
+          candidate <= 65535
+        )
+          port = candidate;
+        else portProblem = "Chrome returned an incomplete or invalid debugging port";
+      } catch (error) {
+        if (error.code !== "ENOENT")
+          throw new Error("Chrome debugging port file could not be read.\n" + diagnostics, {
+            cause: error,
+          });
+      }
+      if (port === undefined) await delay(Math.max(0, Math.min(100, deadline - Date.now())));
     }
-    const port = readFileSync(portFile, "utf8").split("\n")[0];
-    if (!/^\d+$/.test(port)) throw new Error("Chrome returned an invalid debugging port");
     // The debugging port can be published before the initial page target.
     // Retry only an empty target list, within the same bounded startup window.
     let page;

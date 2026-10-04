@@ -1,6 +1,8 @@
 // Small real-process checks complement the full Studio rendering suite.
 import assert from "node:assert/strict";
+import fs from "node:fs";
 import { existsSync, readdirSync } from "node:fs";
+import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
 import { launchBrowser } from "../scripts/lib/browser.mjs";
@@ -8,6 +10,22 @@ import { launchBrowser } from "../scripts/lib/browser.mjs";
 const page = (status) =>
   "data:text/html," +
   encodeURIComponent(`<html data-shader-status="${status}"><p id="error">fixture error</p></html>`);
+
+function portFileReader(t, read) {
+  const original = fs.readFileSync;
+  t.mock.method(fs, "readFileSync", (path, ...options) =>
+    String(path).endsWith("/DevToolsActivePort")
+      ? read(() => original(path, ...options))
+      : original(path, ...options),
+  );
+  // The helper deliberately uses named built-in imports. Keep this test seam
+  // local to the file reader; real Chrome processes, files and CDP stay in use.
+  syncBuiltinESMExports();
+  t.after(() => {
+    t.mock.restoreAll();
+    syncBuiltinESMExports();
+  });
+}
 
 test("failed Chrome launch cleans its owned profile and reports the cause", async () => {
   const prefix = "niri-fx-missing-" + process.pid + "-";
@@ -94,4 +112,51 @@ test("browser startup waits for the initial page target after the debugging port
   } finally {
     await browser.close();
   }
+});
+
+test("browser startup waits for a complete valid debugging port line", async (t) => {
+  const incomplete = ["", "12", "0\n/devtools/browser/fixture", "65536\n/devtools/browser/fixture"],
+    observed = [];
+  portFileReader(t, (actual) => {
+    if (!incomplete.length) return actual();
+    const value = incomplete.shift();
+    observed.push(value);
+    return value;
+  });
+  const browser = await launchBrowser();
+  try {
+    assert.equal(observed.length, 4, "none of the partial or invalid snapshots starts CDP");
+    await browser.navigate(page("ready"));
+    assert.equal(await browser.evaluate("3 + 4"), 7);
+  } finally {
+    await browser.close();
+  }
+});
+
+test("a permanently invalid debugging port times out and cleans the owned profile", async (t) => {
+  const prefix = "niri-fx-invalid-port-" + process.pid + "-",
+    launchTimeout = 350,
+    started = Date.now();
+  let reads = 0;
+  portFileReader(t, () => {
+    reads++;
+    return "65536\n/devtools/browser/fixture";
+  });
+  await assert.rejects(
+    launchBrowser({ launchTimeout, profilePrefix: prefix }),
+    /Chrome did not start \(timeout\).*invalid debugging port/s,
+  );
+  assert(reads >= 2, "malformed contents are retried only within the startup deadline");
+  assert(Date.now() - started < launchTimeout + 7000, "startup and cleanup remain bounded");
+  assert(!readdirSync(tmpdir()).some((name) => name.startsWith(prefix)));
+});
+
+test("an incomplete port does not hide an exiting browser's startup diagnostics", async (t) => {
+  const prefix = "niri-fx-exiting-port-" + process.pid + "-";
+  portFileReader(t, () => "12");
+  await assert.rejects(
+    launchBrowser({ command: process.execPath, profilePrefix: prefix }),
+    /Chrome did not start \(exit \d+\).*bad option: --headless/s,
+  );
+  assert(!readdirSync(tmpdir()).some((name) => name.startsWith(prefix)));
 });

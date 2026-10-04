@@ -1308,87 +1308,6 @@
       ]
     },
     {
-      "name": "stock-gentle-motion",
-      "file": "docs/gifs/stock-gentle-motion.gif",
-      "title": "Gentle Motion",
-      "mode": "desktop",
-      "source": "examples/profiles/gentle-motion.json",
-      "bytes": 1893196,
-      "fps": 50,
-      "palette": {
-        "Notes": "#b7e8db",
-        "Library": "#d6c5ef"
-      },
-      "backend": "stock Niri nested winit; synthetic clients",
-      "version": "niri 26.04 (8ed0da4)",
-      "sources": {
-        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
-        "examples/profiles/gentle-motion.json": "803b26205f883d4bcf1332338d33bbd70d3d1a52606d3c1c3bbf59cfab2edd2a"
-      },
-      "checks": [
-        "workspace round trip",
-        "camera round trip",
-        "overview open/close",
-        "same window IDs",
-        "render log"
-      ]
-    },
-    {
-      "name": "stock-balanced-motion",
-      "file": "docs/gifs/stock-balanced-motion.gif",
-      "title": "Balanced Motion",
-      "mode": "desktop",
-      "source": "examples/profiles/balanced-motion.json",
-      "bytes": 1581734,
-      "fps": 50,
-      "palette": {
-        "Notes": "#b7e8db",
-        "Library": "#d6c5ef"
-      },
-      "backend": "stock Niri nested winit; synthetic clients",
-      "version": "niri 26.04 (8ed0da4)",
-      "sources": {
-        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
-        "examples/profiles/balanced-motion.json": "3b42ccf66ea7b9efe7d0c7ad1f2e0468cc45a9a6105d5401095af1a8f85edcf5"
-      },
-      "checks": [
-        "workspace round trip",
-        "camera round trip",
-        "overview open/close",
-        "same window IDs",
-        "render log"
-      ]
-    },
-    {
-      "name": "stock-playful-motion",
-      "file": "docs/gifs/stock-playful-motion.gif",
-      "title": "Playful Motion",
-      "mode": "desktop",
-      "source": "examples/profiles/playful-motion.json",
-      "bytes": 1560263,
-      "fps": 50,
-      "palette": {
-        "Notes": "#b7e8db",
-        "Library": "#d6c5ef"
-      },
-      "backend": "stock Niri nested winit; synthetic clients",
-      "version": "niri 26.04 (8ed0da4)",
-      "sources": {
-        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
-        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
-        "examples/profiles/playful-motion.json": "7a65f73d071da19c3f25a73fdb76959b417d17f422302b08ab83990c46c058ef"
-      },
-      "checks": [
-        "workspace round trip",
-        "camera round trip",
-        "overview open/close",
-        "same window IDs",
-        "render log"
-      ]
-    },
-    {
       "name": "native-rearrangement",
       "file": "docs/gifs/native-rearrangement.gif",
       "title": "Consume, vertical reorder and expel",
@@ -2190,20 +2109,109 @@
       "bytes": 570333
     },
     {
+      "name": "stock-gentle-motion",
+      "file": "docs/gifs/stock-gentle-motion.gif",
+      "title": "Gentle Motion",
+      "mode": "desktop",
+      "source": "examples/profiles/gentle-motion.json",
+      "bytes": 1893997,
+      "fps": 50,
+      "palette": {
+        "Notes": "#b7e8db",
+        "Library": "#d6c5ef"
+      },
+      "backend": "stock Niri nested winit; synthetic clients",
+      "version": "niri 26.04 (8ed0da4)",
+      "sources": {
+        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "examples/profiles/gentle-motion.json": "803b26205f883d4bcf1332338d33bbd70d3d1a52606d3c1c3bbf59cfab2edd2a"
+      },
+      "checks": [
+        "workspace round trip",
+        "camera round trip",
+        "overview open/close",
+        "same window IDs",
+        "render log"
+      ]
+    },
+    {
+      "name": "stock-balanced-motion",
+      "file": "docs/gifs/stock-balanced-motion.gif",
+      "title": "Balanced Motion",
+      "mode": "desktop",
+      "source": "examples/profiles/balanced-motion.json",
+      "bytes": 1549934,
+      "fps": 50,
+      "palette": {
+        "Notes": "#b7e8db",
+        "Library": "#d6c5ef"
+      },
+      "backend": "stock Niri nested winit; synthetic clients",
+      "version": "niri 26.04 (8ed0da4)",
+      "sources": {
+        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "examples/profiles/balanced-motion.json": "3b42ccf66ea7b9efe7d0c7ad1f2e0468cc45a9a6105d5401095af1a8f85edcf5"
+      },
+      "checks": [
+        "workspace round trip",
+        "camera round trip",
+        "overview open/close",
+        "same window IDs",
+        "render log"
+      ]
+    },
+    {
+      "name": "stock-playful-motion",
+      "file": "docs/gifs/stock-playful-motion.gif",
+      "title": "Playful Motion",
+      "mode": "desktop",
+      "source": "examples/profiles/playful-motion.json",
+      "bytes": 1594282,
+      "fps": 50,
+      "palette": {
+        "Notes": "#b7e8db",
+        "Library": "#d6c5ef"
+      },
+      "backend": "stock Niri nested winit; synthetic clients",
+      "version": "niri 26.04 (8ed0da4)",
+      "sources": {
+        "scripts/record-desktop-motion.py": "35768d5669a3097abcb05006b4ce1935b0c4ca01cf6392ccadd76fc1d68b09c7",
+        "scripts/fixtures/movement.qml": "ac04044dd209ea354a28bf7c3f867fb2a675042386271c7622ecec2fd4acb480",
+        "examples/profiles/playful-motion.json": "7ca0a7c40231e9eac8b73d51bb31c38520c38a199642337888c41aa2192bf878"
+      },
+      "checks": [
+        "workspace round trip",
+        "camera round trip",
+        "overview open/close",
+        "same window IDs",
+        "render log"
+      ]
+    },
+    {
       "name": "workflow-library",
       "file": "docs/gifs/workflow-library.gif",
-      "bytes": 4792090,
+      "bytes": 3829719,
       "backend": "actual offline library UI / synthetic WebGL texture",
       "fps": 20,
-      "frames": 420,
+      "frames": 535,
       "sources": {
-        "niri_fx/library.js": "45d1503c845c8094f1a46e241c5bc29ec686b7a4828a9eb3618ba51e8988fdfd",
-        "niri_fx/preview.html": "b48ddf62fb9e0bc52e0a5f8a7a43641a15154b4d8630c7feb2415f043f891237"
+        "niri_fx/library.js": "f29fff43add535ddfa1047110c855efb9a88847d5076a0fe9ff1029bd9390e1f",
+        "niri_fx/effect-core.js": "d50f74f966eaa75ece06be069ba0a7fa36981f7b0f659edf3b80b32d386932f1",
+        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
+        "niri_fx/studio.js": "892d16f13eb46e5194e756beece1f6f4983fce6a593cc19f881fb8faeda5f272",
+        "niri_fx/preview.html": "5d3d503e56edebcf096b0e8d2ef53f2cb9300f4f08f14f6fdf6897b167e9d942",
+        "niri_fx/studio.css": "9db4f37b68d58b3bc9ae093f215bc773dd70138eca53e3b64c8727472616f982",
+        "scripts/record-library-workflow.mjs": "e9318c17a095d244941c1aa97609b203ae8753b0c9a66027b89b1cdadaf8ed19"
       },
       "checks": [
         "recommended selection",
         "independent open/close",
         "resize opt-in",
+        "actual Preview combo button",
+        "complete action-specific open/resize/close cycle",
+        "stable seed and unchanged document/history",
         "shared style",
         "saved profile",
         "explicit save confirmation",
@@ -2216,18 +2224,24 @@
     {
       "name": "workflow-studio-profile",
       "file": "docs/gifs/workflow-studio-profile.gif",
-      "bytes": 752729,
+      "bytes": 754055,
       "backend": "actual offline Studio UI / synthetic WebGL texture",
       "sources": {
         "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
-        "niri_fx/studio.js": "af8b7fd1a5dca023f95adb68b52c709719514e188f0faf1663b5884ef4ac0467",
-        "niri_fx/preview.html": "b48ddf62fb9e0bc52e0a5f8a7a43641a15154b4d8630c7feb2415f043f891237"
+        "niri_fx/effect-core.js": "d50f74f966eaa75ece06be069ba0a7fa36981f7b0f659edf3b80b32d386932f1",
+        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
+        "niri_fx/library.js": "f29fff43add535ddfa1047110c855efb9a88847d5076a0fe9ff1029bd9390e1f",
+        "niri_fx/studio.js": "892d16f13eb46e5194e756beece1f6f4983fce6a593cc19f881fb8faeda5f272",
+        "niri_fx/preview.html": "5d3d503e56edebcf096b0e8d2ef53f2cb9300f4f08f14f6fdf6897b167e9d942",
+        "niri_fx/studio.css": "9db4f37b68d58b3bc9ae093f215bc773dd70138eca53e3b64c8727472616f982",
+        "scripts/record-studio-workflow.mjs": "41ffd3f9e74bc623685d4d9f5acb0d6ae8e033a7aaf120d84b4330e44e7eac13"
       },
       "fps": 10,
       "frames": 140,
       "checks": [
         "file import",
         "independent close edit",
+        "visible advanced wind control",
         "A/B",
         "undo/redo",
         "actual JSON and KDL downloads",

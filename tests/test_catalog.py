@@ -1,5 +1,7 @@
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -7,10 +9,15 @@ from pathlib import Path
 
 from helpers import shell_registry
 
+from niri_fx.action_sets import ACTION_SETS
 from niri_fx.catalog import (
     COLLECTIONS,
+    PROFILE_MOTIONS,
+    PROFILE_RECIPES,
+    PROFILE_TUNING,
     PROFILES,
     RECOMMENDED,
+    RECOMMENDED_PROFILES,
     STYLES,
     collection_documents,
     documents,
@@ -20,6 +27,7 @@ from niri_fx.cli import main, parser, selected_effect
 from niri_fx.documents import parse_document
 from niri_fx.effects import PRESETS, animation_types, render_kdl
 from niri_fx.integration import make_builtin_profile, make_presets
+from niri_fx.model import PARAMETERS
 from niri_fx.profiles import Profile
 from niri_fx.terminal import catalog
 
@@ -98,6 +106,97 @@ class CuratedProfileTests(unittest.TestCase):
             self.assertTrue(description.strip())
             self.assertFalse(PRESETS[name].resize)
             self.assertNotIn("window-resize", render_kdl(PRESETS[name]))
+
+    def test_recommended_combos_are_complete_and_keep_optional_actions_unset(self):
+        self.assertEqual(
+            tuple(RECOMMENDED_PROFILES),
+            (
+                "fragment-flow",
+                "soft-landing",
+                "ribbon-current",
+                "playful-motion",
+                "geometric-flow",
+            ),
+        )
+        for name, description in RECOMMENDED_PROFILES.items():
+            with self.subTest(name=name):
+                profile = PROFILES[name]
+                self.assertEqual(description, PROFILE_RECIPES[name][2])
+                self.assertTrue(description.strip())
+                self.assertIsNone(profile.resize)
+                self.assertIsNone(profile.movement)
+                self.assertFalse(profile.open.resize or profile.close.resize)
+                self.assertLessEqual(profile.open.open_ms, 800)
+                self.assertLessEqual(profile.close.close_ms, 800)
+                self.assertEqual(profile.motion, PROFILE_MOTIONS.get(name))
+                self.assertEqual(parse_document(documents()[name])[2], profile)
+                self.assertNotIn("window-resize", render_kdl(profile))
+
+    def test_combo_refinements_are_bounded_and_apply_to_supported_action_fields(self):
+        self.assertEqual(set(PROFILE_TUNING), set(RECOMMENDED_PROFILES))
+        for name, tuning in PROFILE_TUNING.items():
+            self.assertEqual(set(tuning), {"open", "close"})
+            for index, action in enumerate(("open", "close")):
+                effect = getattr(PROFILES[name], action)
+                source = PRESETS[PROFILE_RECIPES[name][index]]
+                self.assertEqual(effect.family, source.family)
+                self.assertFalse(effect.resize)
+                for field, value in tuning[action].items():
+                    with self.subTest(name=name, action=action, field=field):
+                        specification = PARAMETERS[field]
+                        self.assertNotIn(
+                            field,
+                            {"family", "resize", "open_ms" if action == "close" else "close_ms"},
+                        )
+                        self.assertNotIn(specification["group"], {"resize", "movement"})
+                        self.assertTrue(
+                            not specification["families"]
+                            or effect.family in specification["families"]
+                        )
+                        low, high = specification["limits"]
+                        self.assertLessEqual(low, value)
+                        self.assertLessEqual(value, high)
+                # The paired action keeps following the base style's unused timing.
+                other_timing = "close_ms" if action == "open" else "open_ms"
+                self.assertEqual(getattr(effect, other_timing), getattr(source, other_timing))
+        for name in ("fragment-flow", "geometric-flow"):
+            self.assertEqual(PROFILES[name].open.particles, PROFILES[name].close.particles)
+        ribbons = PROFILES["ribbon-current"]
+        self.assertEqual(ribbons.open.slice_count, ribbons.close.slice_count)
+
+    def test_combo_refinements_preserve_all_source_presets_and_other_profiles(self):
+        # A fresh import detects accidental mutation even when the test process
+        # already imported the finished catalog before this check.
+        result = subprocess.run(
+            [
+                sys.executable,
+                "-c",
+                "from dataclasses import asdict;from niri_fx.presets import PRESETS;"
+                "before={name:asdict(effect) for name,effect in PRESETS.items()};"
+                "import niri_fx.catalog;"
+                "assert before=={name:asdict(effect) for name,effect in PRESETS.items()}",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(PRESETS), 75)
+        self.assertEqual(len(PROFILES), 16)
+        for name, (opening, closing, _) in PROFILE_RECIPES.items():
+            if name in PROFILE_TUNING:
+                continue
+            with self.subTest(name=name):
+                expected = (
+                    ACTION_SETS[name].profile()
+                    if name in ACTION_SETS
+                    else Profile(
+                        PRESETS[opening], PRESETS[closing], motion=PROFILE_MOTIONS.get(name)
+                    )
+                )
+                self.assertEqual(PROFILES[name], expected)
+                self.assertIs(PROFILES[name].open, PRESETS[opening])
+                self.assertIs(PROFILES[name].close, PRESETS[closing])
 
     def test_profiles_filter_by_either_action_family(self):
         self.assertIn("burst-and-drift", catalog(family="fragments", profiles=True))

@@ -1,43 +1,54 @@
 # Independent action profiles
 
 A style describes one effect. A profile assigns separate styles to opening,
-closing and optionally resizing. For example: open with Spring Wobble, close
-with Ember Erosion, and leave your existing resize behavior unchanged.
+closing and optionally resizing or moving. For example: open with Balanced
+fragments, close with Implosion, and leave your existing resize behavior unchanged.
 
-![Spring opening and ember closing in one profile](gifs/profile-spring-and-ember.gif)
+![Textured fragments assemble and collapse inward in one profile](gifs/profile-fragment-flow.gif)
 
 ## Choose a finished pairing
 
-Choose a built-in pairing. Select **profiles** in the
-terminal guide, use **Ready-made profile** in Studio, or search a name
+Start with **Recommended** in Library for five complete combos: Fragment Flow,
+Soft Landing, Ribbon Current, Playful Motion and Geometric Flow. Their opening
+and closing effects have coordinated timing and modest refinements to travel,
+rotation or spring settling. The individual source presets keep their settings.
+
+Choose any built-in pairing by name. Select **profiles** in the
+terminal guide, use **Ready-made profile** in the detailed Studio controls, or search a name
 in the Quickshell, GTK, DMS or iRiS picker. No JSON file is needed. Existing iNiR
 registrations and Noctalia preset packs need a reviewed update to add the new names.
 
 | Profile | Opens with | Closes with | Look |
 | --- | --- | --- | --- |
-| `fragment-flow` | Balanced | Implosion | Textured assembly followed by an inward collapse |
+| `fragment-flow` | Balanced | Implosion | Everyday textured assembly and a compact inward collapse |
+| `soft-landing` | Momentum Glide | Frost Vanish | A gentle arrival and a quiet frosted exit |
+| `ribbon-current` | Ribbon Wave | Ribbon Transfer | Flowing waves and an exit with matching alternating strips |
+| `playful-motion` | Spring Wobble | Bubble Burst | A damped spring, light bubbles and bouncing desktop springs |
+| `geometric-flow` | Triangle Shatter | Hex Swarm | Triangles assemble and hexagons drift away at matching density |
 | `burst-and-drift` | Explosion | Dust Drift | A strong arrival followed by drifting dust |
 | `frost-and-fragments` | Frost Vanish | Pixel Dust | A frosted reveal that breaks into pixels |
 | `spring-and-ember` | Spring Wobble | Ember Erosion | A playful spring with a monochrome fade |
 | `ghost-and-shockwave` | Ghost Wisps | Shockwave | Soft wisps followed by a ripple |
 | `pixel-shuffle` | Pixel Wipe | Pixelate | A pixel reveal and a chunky exit |
 | `ribbon-exit` | Alternating Blinds | Ribbon Fold | Alternating strips that fold away |
-| `geometric-flow` | Triangle Shatter | Hex Swarm | Triangles assemble and hexagons drift away |
-| `ribbon-current` | Ribbon Wave | Ribbon Transfer | A flowing reveal and an alternating strip exit |
-| `soft-landing` | Momentum Glide | Frost Vanish | A gentle elastic arrival and a frosted exit |
 | `gentle-motion` | Momentum Glide | Frost Vanish | Gentle desktop springs |
 | `balanced-motion` | Balanced | Implosion | Restrained desktop springs |
-| `playful-motion` | Spring Wobble | Bubble Burst | Lightly bouncing desktop springs |
 | `fragments-motion` | Mixed Confetti | Orbiting Shapes | Mixed geometry with Balanced desktop timing |
 | `ribbons-motion` | Ribbon Wave | Zipper | Flowing strips with Gentle desktop timing |
 | `elastic-motion` | Spring Wobble | Rubber Band | Springy sheets with Playful desktop timing |
 
-| Geometric Flow | Ribbon Current | Soft Landing |
+| Fragment Flow | Soft Landing | Ribbon Current |
 | --- | --- | --- |
-| ![Triangles assemble and hexagons drift away](gifs/profile-geometric-flow.gif) | ![Waving ribbons arrive and alternating strips leave](gifs/profile-ribbon-current.gif) | ![A gentle elastic arrival and a frosted exit](gifs/profile-soft-landing.gif) |
+| ![Textured fragments assemble and collapse inward](gifs/profile-fragment-flow.gif) | ![A gentle elastic arrival and a quiet frosted exit](gifs/profile-soft-landing.gif) | ![Waving ribbons arrive and matching alternating strips leave](gifs/profile-ribbon-current.gif) |
 
-Browse by look in the [preset collections](collections.md). These pairings reuse
-existing preset settings. The [motion packs](desktop-motion.md) and [coordinated action sets](action-sets.md) additionally coordinate stock desktop springs. Action sets suggest separately enabled resize and movement companions in Studio or through `profile --action-set`. All leave resize and experimental
+| Playful Motion | Geometric Flow |
+| --- | --- |
+| ![A damped spring arrival and a light bubble exit](gifs/profile-playful-motion.gif) | ![Triangles assemble and hexagons drift away at matching density](gifs/profile-geometric-flow.gif) |
+
+Browse by look in the [preset collections](collections.md). Pairings build on
+the named source presets; the five recommended combos refine their action settings
+as described above. Their JSON files contain the exact resolved parameters.
+The [motion packs](desktop-motion.md) and [coordinated action sets](action-sets.md) additionally coordinate stock desktop springs. Action sets suggest separately enabled resize and movement companions in Studio or through `profile --action-set`. All leave resize and experimental
 movement unset. Their shader cost is the cost of the chosen action; profiles do
 not add a second rendering pass. See [performance measurements](performance.md).
 
@@ -58,6 +69,21 @@ be combined. Effect override flags are deliberately rejected with `--profile`,
 so a change cannot silently target the wrong action. Open it in Studio to customize.
 [All JSON files and preview commands](../examples/profiles/README.md) and
 [gallery loops](showcases.md#different-effects-for-each-action) remain available.
+
+## Preview a complete combo
+
+Choose a card in Library, then press **Preview combo**. The sequence plays the
+opening effect, holds the intact window and plays the closing effect using each
+action's own style and duration. Selected resize and movement effects are included
+when those profile slots are enabled; leaving them at shell defaults skips them.
+Previewing never enables either optional action or applies desktop settings.
+
+Resize requires an explicit choice. **Movement (experimental)** shows the shader
+on a synthetic path; live move/swap effects require the verified experimental
+compositor. See [movement support](movement.md). Playful Motion also includes stock
+desktop spring settings, whose workspace, camera and overview behavior is shown
+in the [native desktop recordings](desktop-motion.md), separately from the
+window shader preview.
 
 ## Create your own combination
 

@@ -6,7 +6,7 @@ import unittest
 from copy import deepcopy
 from pathlib import Path
 
-from niri_fx.catalog import STYLES
+from niri_fx.catalog import PROFILES, STYLES
 from niri_fx.documents import effect_document
 from niri_fx.effects import PRESETS
 
@@ -29,9 +29,14 @@ class PublicCatalogTests(unittest.TestCase):
         downloads = re.findall(r"\[JSON\]\(([^)]+)\)", reference)
         self.assertEqual(len(downloads), len(STYLES))
         self.assertTrue(all((ROOT / "docs" / name).is_file() for name in downloads))
-        # Pairing timing belongs to each selected action, not the opening
-        # effect's own close duration (Triangle Shatter uses 780 ms).
-        self.assertIn("| `geometric-flow` | Triangle Shatter | Hex Swarm | 820 / 830 |", reference)
+        # Pairing timing belongs to each refined action; its opening effect's
+        # close duration must not leak into the closing action's public table.
+        profile = PROFILES["geometric-flow"]
+        self.assertNotEqual(profile.open.close_ms, profile.close.close_ms)
+        self.assertIn(
+            f"| `geometric-flow` | Triangle Shatter | Hex Swarm | {profile.open.open_ms} / {profile.close.close_ms} |",
+            reference,
+        )
 
     def test_missing_or_duplicate_recordings_cannot_produce_a_catalog(self):
         for identifier in ("preset-balanced", "profile-geometric-flow"):

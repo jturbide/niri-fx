@@ -16,11 +16,14 @@ execFileSync("python3", ["-m", "niri_fx", "preview", "--output", page]);
 const browser = await launchBrowser();
 try {
   const { rpc, evaluate } = browser;
-  await browser.navigate(pathToFileURL(page).href, { width: 1280, height: 940 });
+  await browser.navigate(pathToFileURL(page).href, { width: 1280, height: 1080 });
   await evaluate("byId('show-editor').click()");
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(`
     seed=0.43;
+    const captureStyle=document.createElement('style');
+    captureStyle.textContent='canvas{max-height:400px;min-height:0}aside{max-height:calc(100vh - 270px)}';
+    document.head.append(captureStyle);
     const banner=document.createElement('div');banner.id='recording-step';
     banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:16px 24px;background:#172434;color:#e4efff;font:600 20px system-ui;z-index:100;box-shadow:0 -2px 12px #0005';
     document.body.append(banner);
@@ -42,7 +45,7 @@ try {
       );
     }
   }
-  await frames("1 / Import a profile — opening and closing have separate effects");
+  await frames("1 / Import a profile / Opening and closing have separate styles");
   const document = await rpc("DOM.getDocument");
   const input = await rpc("DOM.querySelector", {
     nodeId: document.root.nodeId,
@@ -59,26 +62,27 @@ try {
   assert.equal(await evaluate("effectDocument().kind"), "profile");
   await frames("Imported Burst and Drift / Explosion opens · Dust Drift closes");
   await evaluate(
-    "byId('action').value='close';byId('action').dispatchEvent(new Event('change'));byId('pin').click()",
+    "byId('action').value='close';byId('action').dispatchEvent(new Event('change'));byId('pin').click();byId('advanced').click()",
   );
-  await frames("2 / Edit Close and pin A — the opening effect stays independent");
+  await frames("2 / Edit Close, pin A and show advanced controls");
   await evaluate(
     "byId('pixel_wind').value='right';byId('pixel_wind').dispatchEvent(new Event('input'));byId('pixel_wind').scrollIntoView({block:'center'})",
   );
-  await frames("3 / Change dust wind to Right — only the closing action changes", 2, true);
+  assert.equal(await evaluate("byId('pixel_wind').getBoundingClientRect().height>0"), true);
+  await frames("3 / Set Dust wind to Right / Only closing changes", 2, true);
   await evaluate(
     "byId('progress').value=500;byId('progress').dispatchEvent(new Event('input'));byId('compare').click()",
   );
-  await frames("4 / Show A — compare the original wind at the same progress");
+  await frames("4 / Show A / Compare original wind at the same progress");
   await evaluate("byId('compare').click()");
   await frames("Show B — return to the edited closing effect");
   await evaluate("byId('undo').click()");
   assert.equal(await evaluate("effectDocument().actions.close.pixel_wind"), "up");
-  await frames("5 / Undo restores the earlier wind; Redo recovers your edit", 1);
+  await frames("5 / Undo restores Up / Redo recovers Right", 1);
   await evaluate(
     "byId('redo').click();byId('editor-panel').scrollTop=0;byId('name').value='Sideways Drift';byId('name').dispatchEvent(new Event('change'))",
   );
-  await frames("6 / Export the profile and Niri config — resize remains off");
+  await frames("6 / Export JSON and Niri config / Resize remains off");
   const expected = await evaluate("effectDocument()");
   assert.equal(expected.actions.close.pixel_wind, "right");
   assert.equal(expected.actions.open.family, "fragments");
@@ -118,15 +122,23 @@ try {
     bytes: statSync(destination).size,
     backend: "actual offline Studio UI / synthetic WebGL texture",
     sources: Object.fromEntries(
-      ["examples/profiles/burst-and-drift.json", "niri_fx/studio.js", "niri_fx/preview.html"].map(
-        (path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")],
-      ),
+      [
+        "examples/profiles/burst-and-drift.json",
+        "niri_fx/effect-core.js",
+        "niri_fx/combo-preview.js",
+        "niri_fx/library.js",
+        "niri_fx/studio.js",
+        "niri_fx/preview.html",
+        "niri_fx/studio.css",
+        "scripts/record-studio-workflow.mjs",
+      ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
     ),
     fps: 10,
     frames: count,
     checks: [
       "file import",
       "independent close edit",
+      "visible advanced wind control",
       "A/B",
       "undo/redo",
       "actual JSON and KDL downloads",
