@@ -5,6 +5,7 @@ Single styles and profiles remain distinct documents; interfaces must not flatte
 a profile into its opening effect when reviewing or applying a selection.
 """
 
+from .action_sets import ACTION_SETS
 from .documents import effect_document
 from .motion import MOTION_PACKS
 from .presets import PRESETS
@@ -70,16 +71,28 @@ PROFILE_RECIPES = {
     ),
 }
 PROFILE_MOTIONS = {f"{key}-motion": value for key, value in MOTION_PACKS.items()}
+PROFILE_RECIPES.update(
+    {
+        name: (recipe.opening, recipe.closing, recipe.description)
+        for name, recipe in ACTION_SETS.items()
+    }
+)
 PROFILES = {
     name: Profile(PRESETS[opening], PRESETS[closing], motion=PROFILE_MOTIONS.get(name))
     for name, (opening, closing, _) in PROFILE_RECIPES.items()
 }
+PROFILES.update({name: recipe.profile() for name, recipe in ACTION_SETS.items()})
 STYLES = PRESETS | PROFILES
 
 # Collections describe a look across renderer families. Membership is editorial,
 # not inferred from parameters: a changed shader must not silently move a style.
 # Keep document schemas free of this browsing metadata.
 COLLECTIONS = {
+    "action-sets": {
+        "label": "Coordinated action sets",
+        "description": "Finished looks with matching opt-in resize and movement companions",
+        "styles": tuple(ACTION_SETS),
+    },
     "desktop": {
         "label": "Desktop motion",
         "description": "Coordinated window effects and workspace, camera and overview springs",

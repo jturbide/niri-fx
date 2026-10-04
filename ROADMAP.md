@@ -22,6 +22,13 @@ order expresses priority, not a release date. See [available features](README.md
 Resize and experimental movement remain explicit choices. Later, build
 pointer-driven wobble on the validated motion foundation (Epic 4).
 
+## Coordinated action sets milestone
+
+- [x] Ship Fragments, Ribbons and Elastic sets with stock open/close and desktop timing.
+- [x] Suggest matching resize and movement in the existing Studio and CLI, with separate opt-in.
+- [x] Publish base, resize-only and experimental examples with faithful shader and native showcases.
+- [x] Verify import, editing, Undo, shell exports and native endpoints; document action limits.
+
 ## Released foundation
 
 - [x] Stock Niri opening and closing effects, standalone setup and shell adapters.
@@ -129,9 +136,9 @@ Published results and reproducible commands remain in the
 - [x] Add deterministic mixtures of selected built-in shapes.
 - [ ] Prototype one closed SVG outline, simplified at import time with bounded
       shader complexity. Filters, strokes and compound artwork remain out of scope.
-- [ ] Curate coordinated Fragments, Ribbons and Elastic motion profiles as actions
+- [x] Curate coordinated Fragments, Ribbons and Elastic motion profiles as actions
       become supported; preserve explicit resize and movement choices.
-- [ ] Give each new visual behavior an importable example and faithful showcase.
+- [x] Give each new visual behavior an importable example and faithful showcase.
 
 See [fragment shapes](docs/fragment-shapes.md) and [action profiles](docs/profiles.md).
 

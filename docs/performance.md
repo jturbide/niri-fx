@@ -423,3 +423,27 @@ comparison of shape kinds. Results on integrated GPUs remain open.
 node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-mixed.json \
   --presets=mixed-confetti,orbiting-shapes --sizes=1920x1080,3840x2160 --samples=60
 ```
+
+## Coordinated resize companions
+
+Measured on 2026-10-03 local time with the same RTX 4070 Ti / Chromium ANGLE
+setup, 60 samples per case. Values are p95 shader milliseconds for one draw;
+window dimensions and raw samples are in the [report](benchmarks/action-set-resize.json).
+
+| Explicit resize profile | 1920×1080 | 3840×2160 |
+| --- | ---: | ---: |
+| Fragments Motion | 0.269 | 1.008 |
+| Ribbons Motion | 0.097 | 0.366 |
+| Elastic Motion | 0.098 | 0.366 |
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-action-set-resize.json \
+  --resize-profiles=fragments-motion-resize,ribbons-motion-resize,elastic-motion-resize \
+  --sizes=1920x1080,3840x2160 --samples=60
+```
+
+These are synthetic growth-path shader costs, including framebuffer clearing.
+They exclude compositor load, input latency, capture and physical presentation.
+No integrated-GPU or concurrent-window result is implied. Choose the
+[resize companions](action-sets.md#add-matching-resize) explicitly; none is a
+built-in resize default.

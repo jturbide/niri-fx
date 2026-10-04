@@ -44,7 +44,7 @@ def main():
         "--presets", help="Check a comma-separated preset selection without recording"
     )
     parser.add_argument(
-        "--resize-profiles", action="store_true", help="Also check all seven resize profiles"
+        "--resize-profiles", action="store_true", help="Also check curated resize profiles"
     )
     args = parser.parse_args()
     cases = (
@@ -137,6 +137,9 @@ def main():
                 "edge-ripple-expressive",
                 "torsion-subtle",
                 "torsion-expressive",
+                "fragments-motion-resize",
+                "ribbons-motion-resize",
+                "elastic-motion-resize",
             ):
                 profile = parse_document(load_document(ROOT / f"examples/profiles/{name}.json"))[2]
                 session.reload(BASE + render_kdl(profile))
@@ -153,7 +156,7 @@ def main():
                 for width in (900, 400):
                     before = session.capture(f"{name}-{width}-before")
                     session.msg("action", "set-window-width", "--id", str(window["id"]), str(width))
-                    time.sleep(0.3)
+                    time.sleep(profile.resize.resize_ms / 2000)
                     middle = session.capture(f"{name}-{width}-middle")
                     time.sleep(1.1)
                     settled = session.capture(f"{name}-{width}-settled")

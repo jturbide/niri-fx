@@ -12,7 +12,7 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       "python3",
       [
         "-c",
-        'import json;from niri_fx.catalog import RECOMMENDED,PROFILES,COLLECTIONS;print(json.dumps({"recommended":list(RECOMMENDED),"profiles":len(PROFILES),"shapes":len(COLLECTIONS["shapes"]["styles"])}))',
+        'import json;from niri_fx.catalog import RECOMMENDED,PROFILES,COLLECTIONS;print(json.dumps({"recommended":list(RECOMMENDED),"profiles":len(PROFILES),"ribbons":[name for name in PROFILES if "ribbon" in name],"shapes":len(COLLECTIONS["shapes"]["styles"])}))',
       ],
       { cwd: projectRoot, encoding: "utf8" },
     ),
@@ -68,9 +68,11 @@ test("gallery starts paused, filters examples and plays only one animation", asy
     await browser.evaluate(
       "document.getElementById('search').value='ribbon';document.getElementById('search').dispatchEvent(new Event('input'))",
     );
-    assert.equal(
-      await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
-      2,
+    assert.deepEqual(
+      await browser.evaluate(
+        "[...document.querySelectorAll('article:not([hidden]) img')].map(image=>image.id.replace('profile-','')).sort()",
+      ),
+      catalog.ribbons.sort(),
     );
     await browser.evaluate(
       "document.querySelector('.collections [data-collection=starter]').click()",

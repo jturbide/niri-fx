@@ -103,3 +103,34 @@ python3 -m niri_fx preview --custom examples/profiles/balanced-motion.json --out
 python3 -m niri_fx preview --custom examples/profiles/playful-motion.json --output /tmp/playful-motion.html
 python3 -m niri_fx preview --custom examples/profiles/movement-overlaps.json --output /tmp/movement-overlaps.html
 ```
+
+## Coordinated action sets
+
+These NiriFX 0.16 examples include opening, closing and stock desktop timing.
+Base versions leave both optional actions unset. Resize versions explicitly
+include resize; native versions explicitly include resize **and** experimental
+movement. Importing or previewing never activates a style.
+[Action-set guide](../../docs/action-sets.md).
+
+| Look | Base JSON | Resize-only JSON | Resize and movement JSON |
+| --- | --- | --- | --- |
+| Fragments Motion | [Base](fragments-motion.json) | [Resize](fragments-motion-resize.json) | [Native](fragments-motion-native.json) |
+| Ribbons Motion | [Base](ribbons-motion.json) | [Resize](ribbons-motion-resize.json) | [Native](ribbons-motion-native.json) |
+| Elastic Motion | [Base](elastic-motion.json) | [Resize](elastic-motion-resize.json) | [Native](elastic-motion-native.json) |
+
+Preview any version from the checkout:
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/fragments-motion.json --output /tmp/fragments-motion.html
+python3 -m niri_fx preview --custom examples/profiles/fragments-motion-resize.json --output /tmp/fragments-motion-resize.html
+python3 -m niri_fx preview --custom examples/profiles/fragments-motion-native.json --output /tmp/fragments-motion-native.html
+python3 -m niri_fx preview --custom examples/profiles/ribbons-motion.json --output /tmp/ribbons-motion.html
+python3 -m niri_fx preview --custom examples/profiles/ribbons-motion-resize.json --output /tmp/ribbons-motion-resize.html
+python3 -m niri_fx preview --custom examples/profiles/ribbons-motion-native.json --output /tmp/ribbons-motion-native.html
+python3 -m niri_fx preview --custom examples/profiles/elastic-motion.json --output /tmp/elastic-motion.html
+python3 -m niri_fx preview --custom examples/profiles/elastic-motion-resize.json --output /tmp/elastic-motion-resize.html
+python3 -m niri_fx preview --custom examples/profiles/elastic-motion-native.json --output /tmp/elastic-motion-native.html
+```
+
+The [guide](../../docs/action-sets.md) links all nine recordings and explains
+which compositor each action needs.

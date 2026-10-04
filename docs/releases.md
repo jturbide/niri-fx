@@ -16,6 +16,26 @@ Read the notes for the version you install.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
+## 0.16.0 prerelease
+
+[Download v0.16.0](https://github.com/jturbide/niri-fx/releases/tag/v0.16.0) for
+75 presets, 16 profiles and nine collections. [Coordinated action sets](action-sets.md)
+combine Fragments, Ribbons and Elastic looks with stock desktop timing and
+separately enabled resize/movement companions. Nine portable examples and nine
+showcases cover their defaults and optional actions.
+[Upgrade notes](upgrading.md#from-015-to-016).
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install ./niri_fx-0.16.0-py3-none-any.whl
+.venv/bin/niri-fx list --collection action-sets --text
+.venv/bin/niri-fx studio --profile fragments-motion
+```
+
+Verify the download against the release's `SHA256SUMS` before installing.
+Installing and previewing do not activate a style. Resize works on stock Niri
+when explicitly enabled; native movement requires the experimental compositor.
+
 ## 0.15.0 prerelease
 
 [Download v0.15.0](https://github.com/jturbide/niri-fx/releases/tag/v0.15.0) for 75

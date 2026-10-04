@@ -201,16 +201,22 @@ def exercise(session, recording):
             recorder = None
 
         # Desktop timing must be reviewed alongside the independent actions.
-        action("select", "gentle-motion")
-        data = action("review")
-        assert data["canApply"] and data["review"]["desktop_motion"]["camera"]["stiffness"] == 450
-        action("apply")
-        settled(lambda d: bool(d["undo"]))
-        assert include.read_text().endswith(render_kdl(STYLES["gentle-motion"]))
-        assert "window-resize" not in include.read_text()
-        action("undo")
-        settled(lambda d: not d["undo"])
-        assert config.read_bytes() == original and not include.exists()
+        for name in ("gentle-motion", "fragments-motion", "ribbons-motion", "elastic-motion"):
+            action("select", name)
+            data = action("review")
+            assert data["canApply"] and data["review"]["desktop_motion"]
+            assert (
+                data["review"]["desktop_motion"]["camera"]["stiffness"]
+                == STYLES[name].motion.camera.stiffness
+            )
+            action("apply")
+            settled(lambda d: bool(d["undo"]))
+            assert include.read_text().endswith(render_kdl(STYLES[name]))
+            assert "window-resize" not in include.read_text()
+            assert "window-movement" not in include.read_text()
+            action("undo")
+            settled(lambda d: not d["undo"])
+            assert config.read_bytes() == original and not include.exists()
         action("select", "fragment-flow")
         # Filtering and selecting are read-only; arbitrary IDs cannot reach CLI.
         action("query", "")

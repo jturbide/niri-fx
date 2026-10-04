@@ -207,6 +207,10 @@
     "source": "b09dea50ca54a97514d8fa6d98e1441b2f94951b452e8a4d72786f37db742b33",
     "poster": "aeb5ea55e489051e9b77bff71e53b08fc4a63709b202a7d2e6bbbed717bf743b"
   },
+  "fragments-motion-resize": {
+    "source": "69f2521bf21692f95f3c21a93d8a862107224aac4d492c0fd86dc2280ebe6693",
+    "poster": "b9bcd9130e0fdcf365d61d2ef310f810b9b08745e91df84a72f7c179a2f5aa33"
+  },
   "hexagon-edge-rebuild": {
     "source": "e8a89df8874f13754dedd5f734388db5f7de754b883852b3318f108d9a4331f7",
     "poster": "e26b9a0996a3872c386556eb8900c29dace1b86e7fd00a8e1f37ddc41b9ad211"
@@ -259,6 +263,10 @@
     "source": "4b30bb7eb19c9763ff7ff04171d8e46fe311099636b47ae7ce8582f5e8dc94d3",
     "poster": "a064c59bb69b5ad01f13410a11c627a2e64ce8f9af1521ea3ec047a0567badf5"
   },
+  "native-swap-fragments-motion": {
+    "source": "4324d0c18e384df880abe9c4c105a9d73e6f9a3a8a8417dbc6f4f4d76901e9d0",
+    "poster": "e4d83151998535b3e8be49ba8f8cb15a5b4f32d7634707e6365c1f7049bb744d"
+  },
   "native-swap-hex-swarm": {
     "source": "083ed706b3c76dedabbc604ed380f6bacf9391ea55a69ac7777dea59e0bc4f1a",
     "poster": "99cec124b1a020f2668c583e6ab3a474faa4d2d7461ebefcfef8f720baf45127"
@@ -294,6 +302,10 @@
   "profile-fragment-flow": {
     "source": "1942263a8790502fad8f5358eb7f5b00bf39613b4681d48477b68c34921f6675",
     "poster": "9cebae898ea16fd3a247ddcb27bd7a4a004a917e5acf7a9edbddaddb90684156"
+  },
+  "profile-fragments-motion": {
+    "source": "8de35c9e3c866d25a82c5551328209356f4c7a9ffa2b7cb2f96752e77a04e28a",
+    "poster": "ffd099cd6a8d69f447f2683e3fc7a9f161e3f028c007ba4ec5eb869ba6c4d185"
   },
   "profile-frost-and-fragments": {
     "source": "e2be9ee12a40de6a8c4c697ce22216fe596447462e41c5dd6af67bf17fca69f9",
@@ -447,6 +459,10 @@
     "source": "0ef51987b2b6869320677fdd739a8823fbfd4dfc7e6f763f2027c77ebe020ada",
     "poster": "b2eb7a298ee6475ad555f4b4b533e29893e85c18654780589568948a9a06967f"
   },
+  "native-swap-ribbons-motion": {
+    "source": "45d02c4d9d854c7bfce25db0d1950291a594bd035591d9279f64ef2d6d30a6a4",
+    "poster": "c158f5e6c7357ac2a946e2937018f7a66fe219b1ea4698906d175719a8549b5b"
+  },
   "native-swap-slice-exchange": {
     "source": "16ee3982313a841efaa659b54bd0dea9ac227c687ac14f368ecb1a242c43a068",
     "poster": "4860a67e5723c7fb206ca01e94e82598b57a2b6771960af1000b673486186327"
@@ -458,6 +474,14 @@
   "profile-ribbon-exit": {
     "source": "e680e0b235ae50d947f42ad71005cb9eacd17f253f874a5626970c5615559bd7",
     "poster": "5752bdb43f5ff9fcb4b36d10160650ce25910548e537eaf7db19c1ec8f72f0c2"
+  },
+  "profile-ribbons-motion": {
+    "source": "9ce0b5a8d034deacb154c18edc03179870b85540a39c77980f698fa2f18c0e6e",
+    "poster": "6ce36f89f8cc1a548e3e83b694249c74cf4e98d19f97903ef6a6d9d816fd736f"
+  },
+  "ribbons-motion-resize": {
+    "source": "f7354c57dbf2213e0605f1b555807800a3f2ae182187e08731df18c79b69633f",
+    "poster": "9d68d6d9d5b5ad719d5da0b32f7e3bb51c685c6b111181a7b698cc43ccd1652c"
   },
   "preset-spring-wobble": {
     "source": "87a104f46f014f771401a1ccb9d9f7b6e5124626bebd9307470111a02f8f3fed",
@@ -499,9 +523,17 @@
     "source": "68845d43b3ef55ecaa20c07357a31e35205a9452b6f0c7a001516f3ee84717bd",
     "poster": "2c0fb613a569c405a41e2b2219ee974816c5c63a7785e461d9a6675bf6ce4a60"
   },
+  "elastic-motion-resize": {
+    "source": "78311f95d943eee5702fcb1144b6b9353934859b3a2239a64605b6006d729593",
+    "poster": "0af0f54b97c39bf4c0f75d0377530c99b0d2c030a312ab21c839b615775f70ea"
+  },
   "native-rapid-reversals": {
     "source": "219e544895b4a93bd0cbdb5faf3a74a8e1afbc14e8dd08e61cbf00e84d9ea190",
     "poster": "222e35bb051ccbb7e8d82cfbbbd713f0343f00a720b0c410a7e48ce7fbb0e758"
+  },
+  "native-swap-elastic-motion": {
+    "source": "62480174badb7336288d2eb55eaa7323128ca95cf1175baa0e822d7d2541316a",
+    "poster": "34f71f9417f4eac90404f8308b95903d08949e7f79a1c2ea36afd3c40a24cd75"
   },
   "native-swap-momentum-glide": {
     "source": "04c62a59126162e5fe6d7c9ef406d4298f089f2e71c13c153c954db13bc07a4a",
@@ -514,6 +546,10 @@
   "native-swap-twist-snap": {
     "source": "e79048ae9e3bb8c55433138fb95394879359590f0be0123f90b1a9229822862d",
     "poster": "34225ba07f9067293eda3efef8a8a4954f84ccf9e761219a4ba039ee6d50599d"
+  },
+  "profile-elastic-motion": {
+    "source": "d382b85da541c09d2ccefcd18414bbc4bdbf2bd57816f8e7c949b6aade48c743",
+    "poster": "e2f12b28e01319a24bfcc34c982116e0407c48327cd40c764cc5cdfb376f59aa"
   },
   "profile-gentle-motion": {
     "source": "767b326795cc9ac28e1425b6c18c42e5cc7378f0a85bcd4846ea597908d02604",

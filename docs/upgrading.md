@@ -4,6 +4,22 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.15 to 0.16
+
+Update the CLI and refresh registered or exported shell packs to add Fragments
+Motion, Ribbons Motion and Elastic Motion. Existing selections and preset settings
+stay unchanged. Each built-in set includes stock workspace, camera and overview
+springs while leaving resize and experimental movement unset.
+
+Studio suggests a matching optional action without enabling it. The CLI's
+`profile --action-set` creates a base document unless `--include-resize` or
+`--include-movement` is explicitly passed. Resize-only and native example files
+already include their named actions; review them before applying.
+[Action-set guide](action-sets.md).
+
+Document schemas and the experimental compositor patch are unchanged. A 0.15
+experimental build remains usable; stock exports continue to omit movement.
+
 ## From 0.14 to 0.15
 
 Update before importing the new mixture fields or optional profile `motion`

@@ -74,10 +74,29 @@ function commitAction() {
         ? null
         : { ...parameters, resize: false };
 }
+function matchingActionSet() {
+  if (!actions) return null;
+  // Names and chooser selection can change on import or Undo. Match normalized
+  // window settings instead; recommendations never alter a saved document.
+  return Object.keys(catalog.action_companions).find((id) =>
+    ["open", "close"].every((action) =>
+      Object.keys(catalog.defaults).every(
+        (key) => actions[action][key] === catalog.profiles[id].actions[action][key],
+      ),
+    ),
+  );
+}
+function actionParameters(action) {
+  return (
+    actions[action] ||
+    catalog.action_companions[matchingActionSet()]?.[action] ||
+    catalog.presets.balanced
+  );
+}
 function chooseAction(action) {
   commitAction();
   editingAction = action;
-  parameters = { ...(actions[action] || catalog.presets.balanced), resize: false };
+  parameters = { ...actionParameters(action), resize: false };
   byId("action-enabled").checked = !!actions[action];
   byId("action").value = action;
 }
@@ -86,7 +105,7 @@ function loadDocument(doc, action = "open") {
   actions = doc.actions ? structuredClone(doc.actions) : null;
   desktopMotion = doc.motion ? structuredClone(doc.motion) : null;
   if (!actions) editingAction = "open";
-  parameters = { ...(actions ? actions[editingAction] || catalog.presets.balanced : doc.effect) };
+  parameters = { ...(actions ? actionParameters(editingAction) : doc.effect) };
   byId("independent").checked = !!actions;
   byId("action").value = editingAction;
   byId("action-enabled").checked = !!actions?.[editingAction];
@@ -219,6 +238,12 @@ function labels() {
   byId("action-enable-label").hidden = !["resize", "movement"].includes(editingAction);
   byId("action-enable-text").textContent =
     editingAction === "movement" ? "Include experimental movement in JSON" : "Enable resize effect";
+  const companion = ["resize", "movement"].includes(editingAction) && matchingActionSet();
+  byId("action-companion-note").hidden = !companion || !!actions[editingAction];
+  if (companion)
+    byId("action-companion-note").textContent =
+      `Suggested ${editingAction} settings for ${catalog.profiles[companion].name}. ` +
+      "Enable this action to include them in your profile.";
   if (actions) {
     byId("resize").closest(".parameter").hidden = true;
     byId("open_ms").closest(".parameter").hidden = editingAction !== "open";
@@ -987,6 +1012,7 @@ try {
   };
   byId("action-enabled").onchange = () => {
     commitAction();
+    labels();
     refresh();
     recordHistory();
   };

@@ -69,3 +69,76 @@ test("Studio collections browse across families without changing the current eff
     await browser.close();
   }
 });
+
+test("action companions require explicit opt-in and survive import and Undo", async () => {
+  const directory = mkdtempSync(join(projectRoot, "artifacts/action-set-test-"));
+  const preview = join(directory, "studio.html");
+  execFileSync("python3", ["-m", "niri_fx", "preview", "--output", preview], { cwd: projectRoot });
+  const browser = await launchBrowser();
+  try {
+    await browser.navigate(pathToFileURL(preview).href);
+    await browser.evaluate(
+      "byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'))",
+    );
+    const companions = await browser.evaluate("catalog.action_companions");
+    for (const [name, suggestions] of Object.entries(companions)) {
+      await browser.evaluate(
+        `byId('profile').value=${JSON.stringify(name)};byId('profile').dispatchEvent(new Event('change'))`,
+      );
+      const before = await browser.evaluate("effectDocument()");
+      assert.equal(before.actions.resize, null);
+      assert.equal(before.actions.movement, null);
+      for (const action of ["resize", "movement"]) {
+        await browser.evaluate(
+          `byId('action').value='${action}';byId('action').dispatchEvent(new Event('change'))`,
+        );
+        assert.deepEqual(
+          await browser.evaluate("effectDocument()"),
+          before,
+          "viewing never opts in",
+        );
+        assert.deepEqual(await browser.evaluate("parameters"), suggestions[action]);
+        assert.equal(await browser.evaluate("byId('action-companion-note').hidden"), false);
+        await browser.evaluate(
+          "byId('action-enabled').checked=true;byId('action-enabled').dispatchEvent(new Event('change'))",
+        );
+        assert.deepEqual(
+          await browser.evaluate(`effectDocument().actions.${action}`),
+          suggestions[action],
+        );
+        assert.equal(await browser.evaluate("byId('action-companion-note').hidden"), true);
+        assert.equal(await browser.evaluate("kdlDocument().includes('window-movement')"), false);
+        await browser.evaluate("byId('undo').click()");
+        assert.equal(await browser.evaluate(`effectDocument().actions.${action}`), null);
+        await browser.evaluate("byId('redo').click()");
+        assert.deepEqual(
+          await browser.evaluate(`effectDocument().actions.${action}`),
+          suggestions[action],
+        );
+        await browser.evaluate(
+          "byId('action-enabled').checked=false;byId('action-enabled').dispatchEvent(new Event('change'))",
+        );
+        assert.deepEqual(await browser.evaluate("effectDocument()"), before);
+      }
+      await browser.evaluate(
+        `loadDocument(normalizePreset({...catalog.profiles[${JSON.stringify(name)}],name:'Renamed import'}));populate();refresh();byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))`,
+      );
+      assert.deepEqual(
+        await browser.evaluate("parameters"),
+        suggestions.resize,
+        "suggestions match normalized effects, not names",
+      );
+      await browser.evaluate(
+        "actions.open.open_ms+=1;byId('action').value='open';byId('action').dispatchEvent(new Event('change'));byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))",
+      );
+      assert.equal(await browser.evaluate("byId('action-companion-note').hidden"), true);
+      assert.deepEqual(
+        await browser.evaluate("parameters"),
+        await browser.evaluate("catalog.presets.balanced"),
+        "edited window effects do not silently select a companion",
+      );
+    }
+  } finally {
+    await browser.close();
+  }
+});
