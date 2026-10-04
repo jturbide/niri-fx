@@ -154,6 +154,8 @@ jobs:
         env:
           CHROME_BIN: google-chrome
         run: |
+          node --version
+          "$CHROME_BIN" --version
           npm run test:browser
           python scripts/studio-e2e.py
       - name: Explain skipped browser checks
