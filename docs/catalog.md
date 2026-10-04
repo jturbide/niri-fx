@@ -11,7 +11,7 @@ JSON downloads for every built-in style and pairing.
 [Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
-All **73 presets** have a recording. The [visual scenario index](showcases.md)
+All **75 presets** have a recording. The [visual scenario index](showcases.md)
 also helps you compare controls and choose a combination for everyday use,
 strong explosions, drifting dust, subtle distortion or different open/close actions.
 
@@ -119,6 +119,19 @@ closing use the same shaped renderer; native movement is a separate experimental
 action.
 
 ![Fragment Wake stock opening and closing](gifs/preset-fragment-wake.gif)
+
+### Mixed shapes
+
+**Mixed Confetti** combines squares and triangles with downward gravity.
+**Orbiting Shapes** combines circles and hexagons around a central attraction.
+Both leave resize off. [Mixture controls](fragment-shapes.md#mix-two-shapes).
+
+| Mixed Confetti | Orbiting Shapes |
+| --- | --- |
+| ![Mixed square and triangle confetti](gifs/preset-mixed-confetti.gif) | ![Orbiting circle and hexagon pieces](gifs/preset-orbiting-shapes.gif) |
+| [Settings](../examples/mixed-confetti.json) | [Settings](../examples/orbiting-shapes.json) |
+
+![Matched square-only, mixed and triangle-only breakup](gifs/compare-fragment-mixture.gif)
 
 ### One control at a time
 
@@ -616,3 +629,12 @@ opening/closing and opt into resize on stock Niri. [Controls and JSON downloads]
 
 ![Edge Ripple strength comparison](gifs/compare-edge-ripple-resize.gif)
 ![Torsion strength comparison](gifs/compare-torsion-resize.gif)
+
+## Desktop motion packs
+
+Gentle, Balanced and Playful coordinate window effects with stock workspace,
+camera and overview springs. [Commands, native recordings and support](desktop-motion.md).
+
+| Gentle window effects | Balanced window effects | Playful window effects |
+| --- | --- | --- |
+| ![Gentle window shader pairing](gifs/profile-gentle-motion.gif) | ![Balanced window shader pairing](gifs/profile-balanced-motion.gif) | ![Playful window shader pairing](gifs/profile-playful-motion.gif) |

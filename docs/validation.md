@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for 0.14.0. These checks
+Evidence updated on **2026-10-03** for 0.15.0. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -12,18 +12,18 @@ actual action timings and portable settings. Missing or duplicate recording IDs,
 mismatched effect parameters, stale reference tables, missing visual-catalog
 previews and outdated README counts fail validation. Three regressions exercise
 completeness, independent pairing timing and rejected recording/settings errors.
-These checks complement the 0.14.0 release evidence below.
+These checks complement the rendering and native evidence below.
 
 ## Stock effects and editor
 
 | Check | Observed result |
 | --- | --- |
-| Python | 133 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
-| Portable JavaScript | 67 Node checks; all 73 presets' supported stock shaders match Python, with picker transaction and profile checks |
-| Real Chromium | 73 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
+| Python | 147 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
+| Portable JavaScript | 69 Node checks; all 75 presets' supported stock shaders match Python, with picker transaction and profile checks |
+| Real Chromium | 75 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
-| Browser lifecycle and gallery | Five tests cover failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all seven cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback and hosted Studio share/download flows |
-| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 73 default exports, supported resize exports and 83 style/profile picker includes parse in stock Niri 26.04 |
+| Browser lifecycle and gallery | Five tests cover failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all eight cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback and hosted Studio share/download flows |
+| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 75 default exports, supported resize exports and 88 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Curated pairings | Geometric Flow, Ribbon Current and Soft Landing render partial opening/closing frames, settle intact and close to an empty scene in stock Niri. Sampling uses an 8× slower isolated animation clock to avoid missing short phases during screencopy; this does not measure real-time presentation smoothness. |
 | Fragment optimization | 1,050 reference-frame pairs across software WebGL and hardware ANGLE match byte-for-byte, including extreme settings and transparent input. Core Detonation, Mosaic Burst and Orbital Ribbons pass stock open/close checks; Core Detonation also passes native swaps, interruptions and fallback. See [measurements and reproduction](performance.md#varied-fragment-flight-bounds). |
@@ -128,8 +128,8 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**175 GIFs**, including all **73 presets**, resize profiles and comparisons, custom
-recipes, labelled Canvas concepts, thirteen native swaps and fourteen workflow/compositor
+**187 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+recipes, labelled Canvas concepts, eighteen native swaps and twenty-one workflow/compositor
 scenarios. Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
 
@@ -270,3 +270,33 @@ Recordings reject movement IPC calls of 150 ms or more while capture drives
 regular frames. Idle nested winit scheduling is recorded separately and is not a
 frame-time measurement. Synthetic test clients and their outer window are owned
 by the harness; the installed compositor and active desktop effect are preserved.
+
+## Coherent desktop motion validation
+
+- 147 Python tests cover portable spring validation, unchanged ordinary timing,
+  registry spring triples, separate window/desktop picker review, strict runtime capability parsing, refused activation
+  and Apply rechecks, alongside existing snapshot/Restore protections.
+- All 75 presets and 13 profiles have faithful shader previews and settings.
+  The three desktop packs additionally have stock workspace/camera/overview
+  recordings. Canvas previews show their window effects only.
+- Mixed-shape checks cover every primary/secondary pair in documents, mixture
+  endpoints and zero-mixture compatibility. Browser readbacks cover representative
+  mixtures at aspect 0.25, 1 and 4, joined translucent ownership, stable replay,
+  reversed opening/closing and a wider reference lookup.
+- The pinned release compositor built and passed config/layout, movement-state
+  and close-continuation tests. An owned nested session verified the runtime
+  handshake, explicit movement Apply and exact Restore with a clean render log.
+- Fragment Wake, Ribbon Transfer and Momentum Glide passed consume/expel, vertical
+  reordering, six reversals, floating/tiled changes, move+resize, insertion plus
+  resize/close and complete cleanup. Stock interruption tests and experimental
+  Mixed Confetti tests passed at sequential scales 1, 1.5 and 2.
+- All native patch recordings were refreshed. The harness now rejects unexpected
+  output dimensions; recording actions retain bounded acknowledgement checks.
+- Native timing tests keep outputs/workloads separate and require all three
+  presentation flags for hardware claims. The published nested run contains
+  estimated Winit submissions. Physical DRM acceptance remains open.
+
+This matrix demonstrated no additional visual discontinuity requiring a new
+continuation algorithm. Floating/tiled and resize endpoint checks do not prove
+velocity continuity. Physical mixed monitors, pointer dragging and shared particle
+state remain separate tasks in the [roadmap](../ROADMAP.md).

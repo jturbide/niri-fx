@@ -238,7 +238,7 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-vortex.json \
 
 ```sh
 python3 scripts/build-niri-movement.py --release --test
-python3 scripts/measure-native-movement.py --output /tmp/nirifx-capture.json
+python3 scripts/measure-native-movement.py --timing-source capture --output /tmp/nirifx-capture.json
 ```
 
 This opens an isolated 1280×800 nested compositor and records six alternating
@@ -360,3 +360,66 @@ drift. A wider reference search covers 72 shape/aspect/mode combinations per
 renderer. Software output matches exactly; hardware differences stay within one
 8-bit channel step with identical occupancy and overlap counts. Joined translucent
 layouts and exact endpoints are checked independently.
+
+## Native output feedback
+
+The experimental compositor retains a bounded history of native output feedback.
+Measure six owned swaps separately from encoder delivery:
+
+```sh
+python3 scripts/build-niri-movement.py --release --test
+python3 scripts/measure-native-movement.py --output /tmp/nirifx-output.json
+# On a deliberately installed experimental session, read recent feedback only:
+python3 scripts/measure-native-movement.py --running \
+  --movement-binary /path/to/patched/niri --output /tmp/nirifx-presentation.json
+```
+
+The first command path opens an isolated compositor. It groups frames by output
+and excludes gaps between separate swap workloads. Screencopy keeps the nested
+backend advancing, so its measurement load is included; timestamps come from
+compositor feedback, not encoded frame timestamps. Keep the host unlocked and
+the owned window visible. Stalled IPC invalidates the run.
+
+`--running` is read-only and creates no workload. Run it after your chosen
+workload; the recent 512-frame history includes idle gaps. Output names are
+omitted from reports. It requires a matching executable and verified runtime
+contract. Neither path measures input latency or GPU shader duration.
+
+Winit timestamps are estimated **submissions**, not physical scanout. DRM
+presentation timestamps qualify as hardware evidence only when every sample
+has VSYNC, HW_CLOCK and HW_COMPLETION flags. Other feedback remains estimated.
+A report without enough samples fails rather than inferring a rate.
+
+An unlocked nested run on 2026-10-03 produced these p95 submission intervals:
+
+| Preset | Native intervals | p95 (ms) | Hardware presentation |
+| --- | ---: | ---: | --- |
+| balanced | 1031 | 8.71 | No |
+| mixed-confetti | 1026 | 9.23 | No |
+
+[Raw feedback interval samples and patch identity](benchmarks/native-output-feedback.json).
+The host, screencopy and nested scheduling affect these intervals. They are not a
+physical refresh-rate claim, a dropped-frame count or a comparison of GPU costs.
+Physical DRM, mixed-output and integrated-GPU acceptance remain open.
+
+## Mixed fragment shapes
+
+Measured on 2026-10-03 with an RTX 4070 Ti through Chromium ANGLE/OpenGL,
+60 samples after warmup. Values are p95 milliseconds per synthetic window shader
+pass, including a framebuffer clear. They exclude compositor scheduling, input
+latency and scanout.
+
+| Preset | 1920×1080 | 3840×2160 |
+| --- | ---: | ---: |
+| Mixed Confetti | 1.340 ms | 4.483 ms |
+| Orbiting Shapes | 0.309 ms | 1.031 ms |
+
+[Raw samples, parameters and renderer](benchmarks/mixed-fragments.json). The
+triangle mixture uses more piece work than the circle/hexagon example. These
+styles also differ in physics; this is a preset-cost sample, not an isolated
+comparison of shape kinds. Results on integrated GPUs remain open.
+
+```sh
+node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-mixed.json \
+  --presets=mixed-confetti,orbiting-shapes --sizes=1920x1080,3840x2160 --samples=60
+```

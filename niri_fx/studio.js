@@ -52,6 +52,7 @@ for (const [id, doc] of Object.entries(catalog.profiles)) {
   byId("profile").append(option);
 }
 let actions = catalog.profile ? structuredClone(catalog.profile.actions) : null;
+let desktopMotion = catalog.profile?.motion ? structuredClone(catalog.profile.motion) : null;
 let editingAction = "open",
   pinned = null,
   comparing = false;
@@ -83,6 +84,7 @@ function chooseAction(action) {
 function loadDocument(doc, action = "open") {
   editingAction = action;
   actions = doc.actions ? structuredClone(doc.actions) : null;
+  desktopMotion = doc.motion ? structuredClone(doc.motion) : null;
   if (!actions) editingAction = "open";
   parameters = { ...(actions ? actions[editingAction] || catalog.presets.balanced : doc.effect) };
   byId("independent").checked = !!actions;
@@ -161,6 +163,13 @@ byId("favorite").onclick = () => {
   filterPresets();
 };
 function populate() {
+  const motionName = desktopMotion
+    ? Object.keys(catalog.motion_packs).find(
+        (name) => JSON.stringify(catalog.motion_packs[name]) === JSON.stringify(desktopMotion),
+      ) || "custom"
+    : "";
+  byId("desktop-motion").value = motionName;
+  byId("desktop-motion").querySelector('[value="custom"]').hidden = motionName !== "custom";
   for (const key of numeric) {
     byId(key).step = specs[key].integer ? "1" : "any";
     byId(key).value = key === "particles" ? parameters.particles || 240 : parameters[key];
@@ -302,6 +311,9 @@ function labels() {
   byId("wave_span").disabled = mode === "resize" || parameters.release === "together";
   byId("gravity_strength").disabled = mode === "resize" || byId("gravity").value === "none";
   byId("spin").disabled = byId("rotation").value === "none";
+  byId("fragment_secondary").disabled = parameters.fragment_mix === 0;
+  byId("fragment_shape_seed").disabled =
+    parameters.fragment_mix === 0 || parameters.fragment_mix === 1;
 }
 byId("import").onclick = () => byId("import-file").click();
 function effectDocument() {
@@ -312,6 +324,7 @@ function effectDocument() {
       schema: catalog.profile_schema,
       name: byId("name").value.trim(),
       actions: structuredClone(actions),
+      ...(desktopMotion ? { motion: structuredClone(desktopMotion) } : {}),
     };
   }
   return { schema: catalog.schema, name: byId("name").value.trim(), effect: { ...parameters } };
@@ -947,10 +960,16 @@ try {
       commitAction();
       parameters = { ...actions.open };
       actions = null;
+      desktopMotion = null;
       editingAction = "open";
     }
     populate();
     refresh();
+    recordHistory();
+  };
+  byId("desktop-motion").onchange = () => {
+    const name = byId("desktop-motion").value;
+    desktopMotion = name ? structuredClone(catalog.motion_packs[name]) : null;
     recordHistory();
   };
   byId("action").onchange = () => {

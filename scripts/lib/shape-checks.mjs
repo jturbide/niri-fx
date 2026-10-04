@@ -31,7 +31,19 @@ export function renderShape(
     canvas = gl?.canvas;
   if (!gl) throw new Error("WebGL unavailable");
   const shaders = [];
-  const program = gl.createProgram(),
+  const cache = (renderShape.programs ??= new Map());
+  const fragment = `precision highp float;
+      uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;
+      uniform float niri_random_seed;uniform float niri_clamped_progress;
+      uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;
+      uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;
+      uniform mat3 niri_curr_geo_to_prev_geo;uniform mat3 niri_curr_geo_to_next_geo;
+      uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;
+      ${source}
+      void main(){vec2 size=vec2(${width}.0,${height}.0);vec2 coords=(gl_FragCoord.xy-(vec2(240.,192.)-size)*.5)/size;
+        gl_FragColor=${entry}(vec3(coords,1.),vec3(size,1.)${entry === "fragments_phase" ? ",0.0,0" : ""});}`;
+  const cached = cache.has(fragment);
+  const program = cache.get(fragment) ?? gl.createProgram(),
     buffer = gl.createBuffer(),
     texture = gl.createTexture();
   const compile = (type, text) => {
@@ -44,29 +56,24 @@ export function renderShape(
     return shader;
   };
   try {
-    gl.attachShader(
-      program,
-      compile(gl.VERTEX_SHADER, "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"),
-    );
-    gl.attachShader(
-      program,
-      compile(
-        gl.FRAGMENT_SHADER,
-        `precision highp float;
-      uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;
-      uniform float niri_random_seed;uniform float niri_clamped_progress;
-      uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;
-      uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;
-      uniform mat3 niri_curr_geo_to_prev_geo;uniform mat3 niri_curr_geo_to_next_geo;
-      uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;
-      ${source}
-      void main(){vec2 size=vec2(${width}.0,${height}.0);vec2 coords=(gl_FragCoord.xy-(vec2(240.,192.)-size)*.5)/size;
-        gl_FragColor=${entry}(vec3(coords,1.),vec3(size,1.)${entry === "fragments_phase" ? ",0.0,0" : ""});}`,
-      ),
-    );
-    gl.linkProgram(program);
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS))
-      throw new Error(gl.getProgramInfoLog(program));
+    if (!cached) {
+      gl.attachShader(
+        program,
+        compile(gl.VERTEX_SHADER, "attribute vec2 p;void main(){gl_Position=vec4(p,0.,1.);}"),
+      );
+      gl.attachShader(program, compile(gl.FRAGMENT_SHADER, fragment));
+      gl.linkProgram(program);
+      if (!gl.getProgramParameter(program, gl.LINK_STATUS))
+        throw new Error(gl.getProgramInfoLog(program));
+      // Progress, texture alpha and impulses are uniforms. Reuse the same
+      // compiled program for replay/reversal checks, with bounded GPU storage.
+      if (cache.size === 8) {
+        const oldest = cache.keys().next().value;
+        gl.deleteProgram(cache.get(oldest));
+        cache.delete(oldest);
+      }
+      cache.set(fragment, program);
+    }
     gl.useProgram(program);
     gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
     gl.bufferData(
@@ -119,8 +126,10 @@ export function renderShape(
     gl.clear(gl.COLOR_BUFFER_BIT);
     // Exercise a new program before reading its settled framebuffer. This is
     // a rendering check, not a first-use shader compilation timing benchmark.
-    gl.drawArrays(gl.TRIANGLES, 0, 6);
-    gl.finish();
+    if (!cached) {
+      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.finish();
+    }
     gl.drawArrays(gl.TRIANGLES, 0, 6);
     gl.finish();
     const output = new Uint8Array(canvas.width * canvas.height * 4);
@@ -146,7 +155,7 @@ export function renderShape(
       ...(includePixels ? { pixels: Array.from(output) } : {}),
     };
   } finally {
-    gl.deleteProgram(program);
+    if (!cache.has(fragment)) gl.deleteProgram(program);
     gl.deleteBuffer(buffer);
     gl.deleteTexture(texture);
     for (const shader of shaders) gl.deleteShader(shader);
@@ -154,6 +163,7 @@ export function renderShape(
 }
 
 export async function checkShapes(evaluate) {
+  const started = performance.now();
   await evaluate(`window.niriFxShapeProbe=${renderShape.toString()}`);
   const shapes = [
     "square",
@@ -215,6 +225,47 @@ export async function checkShapes(evaluate) {
     6,
     "unit-aspect rectangles/squares and ellipses/circles coincide; other silhouettes differ",
   );
+  for (const [first, second] of [
+    ["square", "triangle"],
+    ["circle", "hexagon"],
+    ["triangle", "star"],
+    ["hexagon", "triangle"],
+  ]) {
+    for (const aspect of [0.25, 1, 4]) {
+      const effect = {
+        fragment_shape: first,
+        fragment_secondary: second,
+        fragment_mix: 0.45,
+        fragment_aspect: aspect,
+        fragment_orientation: 31,
+        particles: 120,
+        gravity: "none",
+        rotation: "random",
+        spin: 180,
+        dispersion: 0.6,
+        stagger: 0,
+        wave_strength: 0.3,
+      };
+      const expression = `{...catalog.defaults,...${JSON.stringify(effect)}}`;
+      const probe = (progress, extra = {}, opening = false) =>
+        evaluate(
+          `window.niriFxShapeProbe(shaderFor(${expression},${opening}),${JSON.stringify({ progress, entry: opening ? "open_color" : "close_color", ...extra })})`,
+        );
+      const intact = await probe(0, { entry: "fragments_phase" });
+      assert.equal(intact.occupied, 144 * 96, first + "/" + second + " joined coverage");
+      assert.equal(intact.overlap, 0, first + "/" + second + " disjoint ownership");
+      const flight = await probe(0.375);
+      assert(flight.occupied > 0 && flight.alpha < intact.alpha);
+      assert.deepEqual(await probe(0.375), flight);
+      assert.deepEqual(await probe(0.625, {}, true), flight);
+      // A wider independent inverse search must not find any missed pieces.
+      const wide = await evaluate(
+        `window.niriFxShapeProbe(shaderFor(${expression},false).replace(/int y = -[0-9]+; y <= [0-9]+; y\\+\\+/g,'int y = -10; y <= 10; y++').replace(/int x = -[0-9]+; x <= [0-9]+; x\\+\\+/g,'int x = -10; x <= 10; x++'),{progress:0.375})`,
+      );
+      assert.deepEqual(wide, flight, first + "/" + second + " bounded lookup");
+      assert.equal((await probe(1)).occupied, 0);
+    }
+  }
   const before = await evaluate("({document:effectDocument(),preset:byId('preset').value})");
   await evaluate(
     "byId('preset').value='triangle-shatter';byId('preset').dispatchEvent(new Event('change'))",
@@ -243,6 +294,6 @@ export async function checkShapes(evaluate) {
     "window.niriFxShapeProbe.context.getExtension('WEBGL_lose_context')?.loseContext();delete window.niriFxShapeProbe",
   );
   console.log(
-    "PASS: eight fragment shapes, joined translucent layouts, extreme aspects, reversibility and deterministic replay",
+    `PASS: eight fragment shapes, joined translucent layouts, extreme aspects, reversibility and deterministic replay (${Math.round(performance.now() - started)} ms)`,
   );
 }

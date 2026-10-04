@@ -54,4 +54,6 @@ concepts. Previewing does not activate effects.
 - [Release process](releasing.md), [changelog](../CHANGELOG.md) and [security policy](../SECURITY.md)
 - [Brand assets](branding.md), [related projects](related-projects.md) and [license notices](../THIRD_PARTY.md)
 
+[Desktop motion packs](desktop-motion.md) coordinate stock workspace, camera and overview springs.
+
 [Fragment shapes](fragment-shapes.md) covers joined layouts, emerging silhouettes and ready-made looks.

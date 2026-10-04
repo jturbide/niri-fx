@@ -127,11 +127,23 @@ def parser():
     document.add_argument("--custom", type=Path)
     document.add_argument("--profile", choices=PROFILES)
     profile = commands.add_parser("profile", help="Create an independent action profile as JSON")
+    from .motion import MOTION_PACKS
+
+    profile.add_argument(
+        "--desktop-motion",
+        choices=MOTION_PACKS,
+        help="Include stock workspace, camera and overview timing",
+    )
     profile.add_argument("--name", default="My Profile")
     profile.add_argument("--open-preset", choices=PRESETS, default="spring-wobble")
     profile.add_argument("--close-preset", choices=PRESETS, default="core-detonation")
     profile.add_argument(
         "--resize-preset", choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["resize"]]
+    )
+    profile.add_argument(
+        "--movement-preset",
+        choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["movement"]],
+        help="Save an explicit experimental movement action; activation remains opt-in",
     )
     for name, help_text in (
         ("render", "Print a standalone Niri KDL animation override"),
@@ -205,6 +217,16 @@ def parser():
     setup.add_argument("--target", choices=("auto", "inir", "standalone"), default="auto")
     setup.add_argument("--custom", type=Path)
     setup.add_argument("--name", help="Name customized settings for iNiR")
+    setup.add_argument(
+        "--enable-movement",
+        action="store_true",
+        help="Explicitly activate experimental movement on a verified running compositor (standalone only)",
+    )
+    setup.add_argument(
+        "--movement-binary",
+        type=Path,
+        help="Trusted Niri executable matching the running experimental session",
+    )
     setup.add_argument("--launcher", action=argparse.BooleanOptionalAction, default=None)
     setup.add_argument(
         "--interactive",
@@ -311,12 +333,15 @@ def main(argv=None):
             else:
                 launch_picker(arguments)
         elif arguments.command == "profile":
+            from .motion import MOTION_PACKS
             from .profiles import Profile
 
             document = Profile(
                 open=PRESETS[arguments.open_preset],
                 close=PRESETS[arguments.close_preset],
                 resize=PRESETS[arguments.resize_preset] if arguments.resize_preset else None,
+                movement=PRESETS[arguments.movement_preset] if arguments.movement_preset else None,
+                motion=MOTION_PACKS[arguments.desktop_motion] if arguments.desktop_motion else None,
             ).document(arguments.name)
             parse_document(document)
             print(json.dumps(document, indent=2))
@@ -365,6 +390,7 @@ def main(argv=None):
                 if (
                     arguments.custom
                     or arguments.name
+                    or arguments.enable_movement
                     or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS)
                 ):
                     raise ValueError(

@@ -244,7 +244,11 @@ export class PickerController {
         throw new Error("Update NiriFX to a version with reviewed-plan support.");
       // Re-read by the CLI: a file edited since import must not introduce an
       // unseen resize override or a different effect behind an old description.
-      if (JSON.stringify(canonical(data.effect)) !== JSON.stringify(canonical(shown)))
+      if (
+        JSON.stringify(canonical(data.effect)) !== JSON.stringify(canonical(shown)) ||
+        JSON.stringify(canonical(data.desktop_motion || null)) !==
+          JSON.stringify(canonical(this.document.motion || null))
+      )
         throw new Error(
           "The selection changed since loading. Reload its JSON or refresh the catalog, then review again.",
         );

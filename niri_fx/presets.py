@@ -793,3 +793,42 @@ PRESETS.update(
         ),
     }
 )
+
+
+PRESETS.update(
+    {
+        "mixed-confetti": Effect(
+            fragment_shape="square",
+            fragment_secondary="triangle",
+            fragment_mix=0.5,
+            particles=800,
+            gravity="down",
+            gravity_strength=1.1,
+            rotation="random",
+            spin=260,
+            dispersion=0.65,
+            stagger=0.12,
+            fragment_shrink=0.15,
+            wave_strength=0.18,
+            open_ms=950,
+            close_ms=1000,
+            movement_strength=0.45,
+        ),
+        "orbiting-shapes": Effect(
+            fragment_shape="circle",
+            fragment_secondary="hexagon",
+            fragment_mix=0.55,
+            particles=720,
+            gravity="center",
+            gravity_strength=1.05,
+            rotation="random",
+            spin=220,
+            swirl=1.1,
+            dispersion=0.45,
+            stagger=0.12,
+            open_ms=1000,
+            close_ms=950,
+            movement_strength=0.48,
+        ),
+    }
+)

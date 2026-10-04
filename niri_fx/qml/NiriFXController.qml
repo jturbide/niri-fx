@@ -210,7 +210,8 @@ Item {
                 // A file may have changed since import, before this review.
                 // Never approve an unseen resize override or stale description.
                 const shown = selectedDocument.kind === "profile" ? selectedDocument.actions : selectedDocument.effect;
-                if (JSON.stringify(data.effect) !== JSON.stringify(shown))
+                if (JSON.stringify(data.effect) !== JSON.stringify(shown)
+                    || JSON.stringify(data.desktop_motion || null) !== JSON.stringify(selectedDocument.motion || null))
                     throw new Error("The selection changed since loading. Reload its JSON or refresh the catalog, then review again.");
                 reviewPlan = data;
                 status = data.changes.length ? "Review ready. Apply activates this selection." : "This selection is already applied; no files need changing.";

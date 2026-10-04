@@ -90,8 +90,8 @@ python3 scripts/record-native-gif.py --preset spring-wobble --name native-swap-s
 ```
 
 `--new-only` also regenerates Slide Apart and its count comparison after the
-default direction change. The original native swap remains a historical recording;
-new native demos display NiriFX and the preset name.
+default direction change. The original native swap demonstrates the baseline Explosion style;
+curated native demos use synthetic app cards and current checked parameters.
 
 ## Piece shapes, hinges and spring transforms
 
@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **175 GIFs**, including all **73 presets**. The earlier eight
+The gallery contains **187 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -369,3 +369,22 @@ python3 scripts/build-gallery.py
 The movement shader preview is a synthetic directional path. Native swaps and
 rearrangement clips use the compositor's layout paths. See the
 [movement and resize showcases](../showcases.md#general-movement-and-shaped-resize).
+
+## Mixed shapes and coordinated desktop motion
+
+```sh
+node scripts/render-readme-gifs.mjs --only=preset-mixed-confetti,preset-orbiting-shapes,compare-fragment-mixture
+node scripts/render-readme-gifs.mjs --only=profile-gentle-motion,profile-balanced-motion,profile-playful-motion
+python3 scripts/record-desktop-motion.py
+python3 scripts/test-movement.py --record
+python3 scripts/record-native-gif.py --preset mixed-confetti --name native-swap-mixed-confetti
+python3 scripts/record-native-gif.py --preset orbiting-shapes --name native-swap-orbiting-shapes
+```
+
+Motion-pack shader loops show their window effects only. The `stock-*-motion`
+clips record actual workspace, camera and overview springs in stock Niri.
+`native-floating-cycle` records an explicitly enabled resize/movement profile in
+the pinned experiment. Keep the host unlocked and the owned outer window visible;
+size checks and bounded IPC reject unsuitable capture sessions. Native clips were
+regenerated against the current patch. They remain appearance examples, not
+hardware presentation measurements.

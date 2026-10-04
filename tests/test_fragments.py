@@ -25,7 +25,11 @@ class PresetTests(unittest.TestCase):
         presets = make_presets(registry)
         for preset in presets:
             for name in ("workspace-switch", "window-resize"):
-                self.assertEqual(preset["types"][name], original["presets"][0]["types"][name])
+                if name == "workspace-switch" and preset.get("profile", {}).get("motion"):
+                    motion = preset["profile"]["motion"]["workspace"]
+                    self.assertEqual(preset["types"][name]["spring"], list(motion.values()))
+                else:
+                    self.assertEqual(preset["types"][name], original["presets"][0]["types"][name])
             if "profile" in preset:
                 self.assertIsNone(preset["profile"]["actions"]["resize"])
             else:

@@ -10,7 +10,7 @@ from unittest.mock import patch
 from helpers import shell_registry
 
 from niri_fx import setup
-from niri_fx.catalog import STYLES
+from niri_fx.catalog import PROFILES, STYLES
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import PRESETS
 
@@ -54,6 +54,49 @@ class SetupTests(unittest.TestCase):
         self.assertFalse(self.state.exists())
         self.assertFalse((self.config.parent / "nirifx").exists())
         self.assertFalse(list(self.config.parent.glob(".nirifx-check-*")))
+
+    def test_movement_activation_requires_verified_explicit_standalone_support(self):
+        self.args.enable_movement = True
+        self.args.movement_binary = Path("/trusted/niri")
+        with patch(
+            "niri_fx.capabilities.movement_capability", return_value={"activation_ready": False}
+        ):
+            with self.assertRaisesRegex(ValueError, "verified running shader contract"):
+                self.plan()
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.args.target = "auto"
+        with self.assertRaisesRegex(ValueError, "explicit --target standalone"):
+            self.plan()
+
+    def test_movement_plan_rechecks_support_before_apply_and_restores_exactly(self):
+        self.args.enable_movement = True
+        report = {"activation_ready": True, "binary": "/trusted/niri"}
+        with patch("niri_fx.capabilities.movement_capability", return_value=report) as capability:
+            plan = self.plan()
+            self.assertIn(b"window-movement", plan["changes"][0]["after"])
+            self.assertNotIn(b"window-resize", plan["changes"][0]["after"])
+            capability.return_value = {"activation_ready": False}
+            with self.assertRaisesRegex(ValueError, "support changed"):
+                setup.apply_plan(plan, self.state)
+            self.assertFalse(self.state.exists())
+            capability.return_value = report
+            result = setup.apply_plan(plan, self.state)
+        setup.restore(self.state, result["transaction"], apply=True)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse((self.config.parent / "nirifx/animations.kdl").exists())
+
+    def test_profile_review_keeps_actions_and_desktop_timing_separate(self):
+        self.args.profile = "gentle-motion"
+        profile = PROFILES[self.args.profile]
+        plan = setup.plan_setup(self.args, profile)
+        document = profile.document("Selection")
+        self.assertEqual(plan["effect"], document["actions"])
+        self.assertEqual(plan["desktop_motion"], document["motion"])
+        reviewed = setup.summarize(plan)
+        self.assertEqual(reviewed["desktop_motion"], document["motion"])
+        fingerprint = reviewed["plan_sha256"]
+        plan["desktop_motion"]["camera"]["stiffness"] = 800
+        self.assertNotEqual(setup.summarize(plan)["plan_sha256"], fingerprint)
 
     def test_standalone_apply_idempotence_and_exact_restore(self):
         self.config.chmod(0o640)

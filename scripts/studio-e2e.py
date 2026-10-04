@@ -63,7 +63,10 @@ def main():
                 ],
                 cwd=ROOT,
                 check=True,
-                timeout=420,
+                # Software WebGL also renders enlarged reference searches for
+                # every shape/aspect. Slow shared CI runners need a bounded
+                # whole-suite budget beyond the per-request browser deadline.
+                timeout=900,
             )
             presets = json.loads(registry.read_text())["presets"]
             assert unrelated in presets, "Saving replaced an unrelated preset"

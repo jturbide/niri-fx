@@ -4,6 +4,23 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.14 to 0.15
+
+Update before importing the new mixture fields or optional profile `motion`
+settings. Single effects remain schema 3; profiles remain schema 1 with additive
+optional desktop timing. Old documents keep their existing defaults. Re-register
+or re-export shell packs to make the two presets and three profiles selectable.
+This does not activate them or change the current style.
+
+Choosing a desktop motion pack intentionally changes three stock springs.
+Ordinary presets and profiles preserve those timings. Resize and movement remain
+unset in every built-in profile. Review the [setup plan](setup.md) before Apply.
+
+Rebuild the experimental compositor to get contract 1 and frame feedback. Older
+experimental binaries still parse movement shaders but cannot pass verified live
+activation. NiriFX never replaces the login compositor; use an isolated demo or
+an explicitly selected experimental session. [Runtime requirements](../experimental/README.md#runtime-verification-and-output-feedback).
+
 ## From 0.13 to 0.14
 
 Seven curated collections and three new pairings require 0.14 or newer. Update the
@@ -154,7 +171,7 @@ For custom file locations, see [setup options](setup.md) and the
 ## From 0.12 to 0.13
 
 Update the CLI or checkout before importing the new movement parameters. The
-preset collection now has 73 styles. Re-register iNiR/iRiS or re-export your
+preset collection now has 88 styles and profiles. Re-register iNiR/iRiS or re-export your
 Noctalia pack to add Fragment Wake, Ribbon Transfer and Momentum Glide. Existing
 selection and restore snapshots remain under your control.
 

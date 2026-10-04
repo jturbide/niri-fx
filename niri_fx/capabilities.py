@@ -2,8 +2,8 @@
 
 A version string cannot distinguish stock Niri from a patched build. Validate a
 small isolated config instead, and only attribute that result to a running
-session when its IPC peer is the same executable. Parser acceptance says nothing
-about shader compilation, the movement ABI or which effects are active.
+session when its IPC peer is the same executable. The running renderer must
+separately verify the versioned movement contract before live activation.
 """
 
 import json
@@ -21,6 +21,63 @@ IPC_TIMEOUT = 2
 MAX_REPLY = 8192
 BASE_CONFIG = "animations { window-movement { duration-ms 200; %s }; }\n"
 SHADER_NODE = 'custom-shader "vec4 move_color(vec3 c, vec3 s) { return vec4(0.0); }";'
+MOVEMENT_CONTRACT = 1
+
+
+def _reply(connection, request):
+    """One bounded IPC reply; a slow peer cannot keep extending the deadline."""
+    connection.sendall(json.dumps(request).encode() + b"\n")
+    reply = bytearray()
+    deadline = time.monotonic() + IPC_TIMEOUT
+    while b"\n" not in reply:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError("IPC reply timed out")
+        connection.settimeout(remaining)
+        chunk = connection.recv(min(4096, MAX_REPLY + 1 - len(reply)))
+        if not chunk or len(reply) + len(chunk) > MAX_REPLY:
+            raise ValueError("incomplete or oversized IPC reply")
+        reply.extend(chunk)
+    return json.loads(reply.split(b"\n", 1)[0])
+
+
+def _contract(connection):
+    """Verify an advertised ABI and an isolated compile in the running renderer.
+
+    A response from a different interface version is unknown. This query neither
+    replaces the active shader nor proves an arbitrary user shader compiles.
+    """
+    unknown = {"status": "unknown", "detail": "Running movement shader contract is unverified."}
+    try:
+        data = _reply(connection, "NiriFxCapabilities")["Ok"]["NiriFxCapabilities"]
+        if (
+            set(data)
+            != {
+                "schema",
+                "movement_shader",
+                "renderer_verified",
+                "movement_configured",
+                "frame_timings",
+            }
+            or type(data["schema"]) is not int
+            or data["schema"] != 1
+            or type(data["movement_shader"]) is not int
+            or data["movement_shader"] != MOVEMENT_CONTRACT
+            or any(
+                type(data[key]) is not bool
+                for key in ("renderer_verified", "movement_configured", "frame_timings")
+            )
+        ):
+            return unknown
+        return {
+            **data,
+            "status": "verified" if data["renderer_verified"] else "unavailable",
+            "detail": "Movement interface compiled in the running renderer."
+            if data["renderer_verified"]
+            else "The running renderer could not verify the movement interface.",
+        }
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return unknown
 
 
 def _identity(path):
@@ -54,7 +111,15 @@ def _probe(binary):
 
 
 def _session(socket_path, identity):
-    result = {"connected": False, "version": None, "same_binary": None}
+    result = {
+        "connected": False,
+        "version": None,
+        "same_binary": None,
+        "contract": {
+            "status": "unknown",
+            "detail": "Running movement shader contract is unverified.",
+        },
+    }
     if not socket_path:
         return result | {"detail": "No Niri socket advertised; offline/SSH preview is available."}
     try:
@@ -68,19 +133,7 @@ def _session(socket_path, identity):
             )
             if uid != os.geteuid():
                 return result | {"detail": "IPC socket belongs to another user; not inspected."}
-            connection.sendall(b'"Version"\n')
-            reply = bytearray()
-            deadline = time.monotonic() + IPC_TIMEOUT
-            while b"\n" not in reply:
-                remaining = deadline - time.monotonic()
-                if remaining <= 0:
-                    raise TimeoutError("IPC version reply timed out")
-                connection.settimeout(remaining)
-                chunk = connection.recv(min(4096, MAX_REPLY + 1 - len(reply)))
-                if not chunk or len(reply) + len(chunk) > MAX_REPLY:
-                    raise ValueError("incomplete or oversized IPC version reply")
-                reply.extend(chunk)
-            version = json.loads(reply.split(b"\n", 1)[0])["Ok"]["Version"]
+            version = _reply(connection, "Version")["Ok"]["Version"]
             if not isinstance(version, str) or not version.strip():
                 raise ValueError("invalid IPC version reply")
             result.update(connected=True, version=version)
@@ -90,6 +143,8 @@ def _session(socket_path, identity):
                 )
             except OSError:
                 pass  # Sandboxed /proc or an exited peer is unknown, not a match.
+            if result["same_binary"] is True:
+                result["contract"] = _contract(connection)
     except (OSError, ValueError, KeyError, TypeError, AttributeError) as error:
         return result | {"detail": f"Could not inspect the advertised Niri session: {error}"}
     return result | {"detail": f"Connected to Niri {version}."}
@@ -131,4 +186,6 @@ def movement_capability(binary=None, *, socket_path=None):
         "scope": "configuration-parser",
         "detail": detail,
         "session": session,
+        "activation_ready": session["status"] == "supported"
+        and session["contract"]["status"] == "verified",
     }

@@ -14,6 +14,7 @@ sys.path.insert(0, str(ROOT))
 from lib.movement import PALETTE, color_counts, experiment, launch_cards
 from lib.nested import NestedSession, encode_gif, record, save_clips, source_hashes, stop, wait_for
 
+from niri_fx.documents import load_document, parse_document
 from niri_fx.effects import PRESETS, movement_shader
 from niri_fx.profiles import Profile
 
@@ -33,6 +34,8 @@ def main():
         "--record", action="store_true", help="Save a native rearrangement gallery clip"
     )
     args = parser.parse_args()
+    if args.record and args.preset != "fragment-wake":
+        parser.error("Recording uses the documented Fragment Wake overlap profile")
     binary, build, config = experiment()
     effect = PRESETS[args.preset]
     duration = effect.movement_ms
@@ -45,6 +48,11 @@ def main():
         ),
         effect,
     )
+    if args.record:
+        documented = parse_document(
+            load_document(ROOT / "examples/profiles/movement-overlaps.json")
+        )[2]
+        assert documented == profile, "Recording fixture differs from the portable example"
     with NestedSession(
         config(profile, duration, movement_shader(effect)), binary=binary, width=1280, height=800
     ) as session:
@@ -113,6 +121,7 @@ def main():
                         "title": "Consume, vertical reorder and expel",
                         "mode": "movement",
                         "preset": args.preset,
+                        "source": "examples/profiles/movement-overlaps.json",
                         "effect": asdict(effect),
                         "duration_ms": duration,
                         "fps": 50,
@@ -122,12 +131,68 @@ def main():
                         "revision": build["revision"],
                         "patch_sha256": build["patch_sha256"],
                         "sources": source_hashes(
-                            "scripts/test-movement.py", "scripts/fixtures/movement.qml"
+                            "scripts/test-movement.py",
+                            "scripts/fixtures/movement.qml",
+                            "examples/profiles/movement-overlaps.json",
                         ),
                         "checks": [
                             "bounded IPC",
                             "same window IDs",
                             "vertical and horizontal positions",
+                            "settled colors",
+                            "render log",
+                        ],
+                    }
+                ]
+            )
+        # Explicit layout changes exercise movement continuation around the
+        # floating boundary. Endpoint/ID checks do not assert velocity equality.
+        floating_id = expelled[0]["id"]
+        float_recorder = None
+        if args.record:
+            float_recorder, float_video = record(session, "floating-cycle", fps=50)
+            recording = True
+            time.sleep(0.35)
+        action("move-window-to-floating", "--id", str(floating_id))
+        time.sleep(0.18)
+        action("set-window-width", "--id", str(floating_id), "650")
+        time.sleep(0.18)
+        floating = settled("floating-resize")
+        assert next(w for w in floating if w["id"] == floating_id)["is_floating"]
+        action("move-window-to-tiling", "--id", str(floating_id))
+        expelled = settled("retiled")
+        assert not any(w["is_floating"] for w in expelled)
+        if float_recorder:
+            recording = False
+            stop(float_recorder, signal.SIGINT)
+            dest = ROOT / "docs/gifs/native-floating-cycle.gif"
+            encode_gif(float_video, dest, width=640, fps=50, colors=32)
+            save_clips(
+                [
+                    {
+                        "name": "native-floating-cycle",
+                        "file": str(dest.relative_to(ROOT)),
+                        "title": "Tiled to floating, resize and return",
+                        "mode": "movement",
+                        "preset": args.preset,
+                        "source": "examples/profiles/movement-overlaps.json",
+                        "effect": asdict(effect),
+                        "duration_ms": duration,
+                        "fps": 50,
+                        "bytes": dest.stat().st_size,
+                        "palette": PALETTE,
+                        "backend": "pinned patched Niri nested winit; synthetic clients",
+                        "revision": build["revision"],
+                        "patch_sha256": build["patch_sha256"],
+                        "sources": source_hashes(
+                            "scripts/test-movement.py",
+                            "scripts/fixtures/movement.qml",
+                            "examples/profiles/movement-overlaps.json",
+                        ),
+                        "checks": [
+                            "bounded IPC",
+                            "same window IDs",
+                            "floating and tiled states",
                             "settled colors",
                             "render log",
                         ],
@@ -160,8 +225,10 @@ def main():
         )
         newcomer = next(w for w in added if w["id"] not in ids)
         time.sleep(0.15)
+        action("set-window-width", "--id", str(newcomer["id"]), "800")
+        time.sleep(0.12)
         action("close-window", "--id", str(newcomer["id"]))
-        settled("insertion-close-during-open")
+        settled("insertion-resize-close-during-open")
         stop(third)
         # Closing a moving client exercises deformation continuation and removal.
         action("focus-window", "--id", str(right["id"]))
@@ -199,7 +266,7 @@ def main():
             + "\n"
         )
         print(
-            f"PASS {args.preset}: consume/expel, vertical reorder, reversals, move+resize, insertion/removal and cleanup; evidence: {session.root}",
+            f"PASS {args.preset}: consume/expel, vertical reorder, reversals, floating/tiled, move+resize, insertion/resize/removal and cleanup; evidence: {session.root}",
             flush=True,
         )
 

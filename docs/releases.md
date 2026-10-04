@@ -16,6 +16,28 @@ Read the notes for the version you install.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
+## 0.15.0 prerelease
+
+[Download v0.15.0](https://github.com/jturbide/niri-fx/releases/tag/v0.15.0) for 75
+presets, 13 profiles and eight collections. [Desktop motion packs](desktop-motion.md)
+coordinate stock workspace, camera and overview springs. [Mixed shapes](fragment-shapes.md#mix-two-shapes)
+add deterministic two-shape layouts and two finished looks. The experimental
+compositor adds verified activation and native output feedback. Resize and custom
+movement remain opt-in. Read [upgrade notes](upgrading.md#from-014-to-015).
+
+Install the wheel without the source gallery:
+
+```sh
+python3 -m venv .venv
+.venv/bin/python -m pip install ./niri_fx-0.15.0-py3-none-any.whl
+.venv/bin/niri-fx list --collection desktop --text
+.venv/bin/niri-fx
+```
+
+Download `SHA256SUMS` from the same release and verify your package with
+`sha256sum --ignore-missing -c SHA256SUMS` before installing. The signed tag and
+reviewed source archive are also available. Installing does not activate a style.
+
 ## 0.14.0 prerelease
 
 [Download v0.14.0](https://github.com/jturbide/niri-fx/releases/tag/v0.14.0) for 73

@@ -168,3 +168,23 @@ test("stock profile KDL keeps resize opt-in and never emits experimental movemen
   profile.actions.resize = catalog.presets.balanced;
   assert.match(core.renderKdl(profile), /window-resize/);
 });
+
+test("desktop motion survives share round-trips and exports the Python spring groups", () => {
+  for (const [name, doc] of Object.entries(catalog.profiles)) {
+    if (!doc.motion) continue;
+    const normalized = core.normalizePreset(doc);
+    assert.deepEqual(
+      plain(core.decodeShareDocument(core.encodeShareDocument(doc))),
+      plain(normalized),
+    );
+    const kdl = core.renderKdl(normalized);
+    for (const action of ["workspace-switch", "horizontal-view-movement", "overview-open-close"])
+      assert(kdl.includes(action), name + " " + action);
+    assert.doesNotMatch(kdl, /window-resize|window-movement/);
+    for (const bad of [true, NaN, Infinity, -1]) {
+      const invalid = structuredClone(doc);
+      invalid.motion.camera.stiffness = bad;
+      assert.throws(() => core.normalizePreset(invalid), /Motion/);
+    }
+  }
+});

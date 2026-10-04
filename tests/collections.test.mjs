@@ -38,6 +38,22 @@ test("Studio collections browse across families without changing the current eff
       ),
       ["triangle", "hexagon", null, null],
     );
+    await browser.evaluate(
+      "byId('preset-collection').value='desktop';byId('preset-collection').dispatchEvent(new Event('change'));byId('profile').value='gentle-motion';byId('profile').dispatchEvent(new Event('change'))",
+    );
+    assert.equal(await browser.evaluate("byId('desktop-motion').value"), "gentle");
+    assert.equal(await browser.evaluate("effectDocument().motion.camera.stiffness"), 450);
+    assert.equal(await browser.evaluate("effectDocument().actions.resize"), null);
+    await browser.evaluate(
+      "byId('desktop-motion').value='playful';byId('desktop-motion').dispatchEvent(new Event('change'))",
+    );
+    assert.equal(await browser.evaluate("effectDocument().motion.camera.damping_ratio"), 0.85);
+    await browser.evaluate("byId('undo').click()");
+    assert.equal(await browser.evaluate("byId('desktop-motion').value"), "gentle");
+    await browser.evaluate(
+      "byId('desktop-motion').value='';byId('desktop-motion').dispatchEvent(new Event('change'))",
+    );
+    assert.equal(await browser.evaluate("Object.hasOwn(effectDocument(),'motion')"), false);
     // Choosing a family returns to its full preset list instead of leaving
     // stale collection restrictions that can make every option disappear.
     await browser.evaluate(

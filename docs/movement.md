@@ -142,3 +142,23 @@ client identity, resize during movement, insertion/removal, repeated reversals
 and complete close cleanup. These checks establish coverage and endpoints; they
 do not prove continuous velocity for every overlap. Pointer dragging, workspace
 transitions and camera scrolling remain separate roadmap epics.
+
+## Additional overlap coverage
+
+![Tiled to floating, resize and return in the nested compositor](gifs/native-floating-cycle.gif)
+
+The overlap fixture now checks floating/tiled changes and closing a newly opened
+client while an explicit resize is active. [Portable fixture settings](../examples/profiles/movement-overlaps.json)
+include open, close, resize and movement actions. These are deliberately enabled
+for testing; applying an ordinary preset still leaves resize and movement off.
+
+Rapid swaps and the existing close continuations retain their established state
+handoffs. New endpoint tests verify client identity, final layout and cleanup;
+they do not establish resize velocity continuity or shared particle state between
+windows. No new discontinuity was demonstrated by this matrix. Physical output
+changes and pointer-driven wobble remain on the [roadmap](../ROADMAP.md).
+
+For coordinated stock workspace, camera and overview motion, use the
+[desktop motion packs](desktop-motion.md). These change spring timing and do not
+apply fragment shaders to workspaces. Live experimental movement is a separate,
+[explicitly verified setup option](setup.md#activate-experimental-movement).

@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **175 GIFs**, including all **73 built-in presets**. Use this
+The gallery has **187 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -143,3 +143,11 @@ The resize clips render stock Niri-compatible shaders. Resize remains opt-in.
 
 [Movement controls and requirements](movement.md#movement-presets-and-general-rearrangement) ·
 [Resize profiles](resize.md#shaped-resize) · [Profile JSON](../examples/profiles/README.md)
+
+## Mixed shapes and desktop motion
+
+- [Mixed Confetti](gifs/preset-mixed-confetti.gif) and [Orbiting Shapes](gifs/preset-orbiting-shapes.gif): [settings and limits](fragment-shapes.md#mix-two-shapes).
+- [Square / mixture / triangle comparison](gifs/compare-fragment-mixture.gif): identical physics and stable cell selection.
+- [Gentle](gifs/stock-gentle-motion.gif), [Balanced](gifs/stock-balanced-motion.gif) and [Playful](gifs/stock-playful-motion.gif): [stock desktop motion packs](desktop-motion.md).
+- [Floating / resize / tiled cycle](gifs/native-floating-cycle.gif): [explicit overlap fixture](../examples/profiles/movement-overlaps.json).
+- [Mixed Confetti swap](gifs/native-swap-mixed-confetti.gif) and [Orbiting Shapes swap](gifs/native-swap-orbiting-shapes.gif): native experimental shaders.

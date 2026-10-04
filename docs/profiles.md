@@ -25,13 +25,16 @@ registrations and Noctalia preset packs need a reviewed update to add the new na
 | `geometric-flow` | Triangle Shatter | Hex Swarm | Triangles assemble and hexagons drift away |
 | `ribbon-current` | Ribbon Wave | Ribbon Transfer | A flowing reveal and an alternating strip exit |
 | `soft-landing` | Momentum Glide | Frost Vanish | A gentle elastic arrival and a frosted exit |
+| `gentle-motion` | Momentum Glide | Frost Vanish | Gentle desktop springs |
+| `balanced-motion` | Balanced | Implosion | Restrained desktop springs |
+| `playful-motion` | Spring Wobble | Bubble Burst | Lightly bouncing desktop springs |
 
 | Geometric Flow | Ribbon Current | Soft Landing |
 | --- | --- | --- |
 | ![Triangles assemble and hexagons drift away](gifs/profile-geometric-flow.gif) | ![Waving ribbons arrive and alternating strips leave](gifs/profile-ribbon-current.gif) | ![A gentle elastic arrival and a frosted exit](gifs/profile-soft-landing.gif) |
 
 Browse by look in the [preset collections](collections.md). These pairings reuse
-existing preset settings. All leave resize and experimental
+existing preset settings. The three [motion packs](desktop-motion.md) additionally coordinate stock desktop springs. All leave resize and experimental
 movement unset. Their shader cost is the cost of the chosen action; profiles do
 not add a second rendering pass. See [performance measurements](performance.md).
 
@@ -85,8 +88,7 @@ document types, not compatibility aliases. [Complete example](../examples/profil
 The experimental `movement` slot is validated and preserved on import/export.
 Studio can edit it and preview the actual shader in **Movement (experimental shader)**.
 Tick **Include experimental movement in JSON** to store the choice; viewing it
-alone leaves the slot unset. Stock KDL and iRiS exports omit it;
-movement requires the separate [compositor experiment](../experimental/README.md).
+alone leaves the slot unset. Stock KDL and iRiS exports omit it by default; explicit standalone activation requires a verified running contract. See [Apply and Restore](setup.md#activate-experimental-movement). Movement requires the separate [compositor experiment](../experimental/README.md).
 Profiles do not add application-specific rules or interactive dragging hooks.
 
 ![Independent action editing in Studio](studio-profiles.png)

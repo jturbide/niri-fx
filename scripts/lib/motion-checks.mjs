@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { renderShape } from "./shape-checks.mjs";
 
 export async function checkMotion(evaluate, setProgress, sample) {
+  const started = performance.now();
   await evaluate(`window.niriFxMotionProbe=${renderShape.toString()}`);
   const before = await evaluate(
     '({document:effectDocument(),preset:byId("preset").value,resizeDirection:byId("resize-direction").value,movementDirection:byId("movement-direction").value})',
@@ -213,6 +214,6 @@ export async function checkMotion(evaluate, setProgress, sample) {
     `loadDocument(${JSON.stringify(before.document)});byId('preset').value=${JSON.stringify(before.preset)};byId('resize-direction').value=${JSON.stringify(before.resizeDirection)};byId('movement-direction').value=${JSON.stringify(before.movementDirection)};populate();document.querySelector('[data-mode=effect]').click();refresh();window.niriFxMotionProbe.context.getExtension('WEBGL_lose_context')?.loseContext();delete window.niriFxMotionProbe`,
   );
   console.log(
-    "PASS: shaped resize ownership, bounds, endpoints, eight silhouettes; directional movement and independent JSON-only editing",
+    `PASS: shaped resize ownership, bounds, endpoints, eight silhouettes; directional movement and independent JSON-only editing (${Math.round(performance.now() - started)} ms)`,
   );
 }

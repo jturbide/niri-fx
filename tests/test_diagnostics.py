@@ -13,7 +13,8 @@ UNKNOWN_MOVEMENT = {
     "binary": None,
     "status": "unknown",
     "detail": "Unavailable",
-    "session": {"detail": "Offline"},
+    "session": {"detail": "Offline", "contract": {"status": "unknown", "detail": "Unverified"}},
+    "activation_ready": False,
 }
 
 
