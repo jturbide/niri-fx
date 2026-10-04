@@ -10,6 +10,16 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Changed
+
+- Select expensive renderer checks by the changed paths while retaining unit,
+  package and documentation checks for native and agent changes. Unknown paths,
+  release and CI changes still run the full suite; Python dependency downloads
+  are cached alongside the existing npm cache.
+- Explain action choices, inherited desktop settings and compositor requirements
+  directly throughout the public guides. Track independent action disabling as
+  planned work rather than implying it is already available.
+
 ## 0.18.0 — 2026-10-04
 
 ### Added
@@ -20,7 +30,7 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 - Three portable pointer example combos and browser showcases with JSON downloads.
   Browser playback previews synthetic input; live dragging still requires the
   experimental compositor.
-- An opt-in pointer-wobble prototype for the pinned experimental compositor.
+- A pointer-wobble prototype for the pinned experimental compositor.
   Windows bend around the grab point, respond to direction changes and settle
   after release, with bounded spring motion and ordinary input/layout behavior.
 - Gentle, Rubber Sheet and Release Settle drag presets, native KDL examples and
@@ -192,8 +202,8 @@ state which actions they include. Updating registration does not activate a styl
 Update NiriFX before importing mixed-shape or desktop-motion settings. Re-register
 or re-export shell packs to add the new styles. Existing preset defaults are
 unchanged. Rebuild the experimental compositor for runtime verification and frame
-feedback; older patched builds cannot pass live activation checks. Resize and
-movement remain opt-in.
+feedback; older patched builds cannot pass live activation checks. Built-in profiles
+leave resize and movement settings unchanged.
 
 ## 0.14.0 — 2026-10-03
 
@@ -238,7 +248,7 @@ are unchanged. Package updates do not select a style or enable resize.
 
 ### Fixed
 
-- Studio's shape hint now includes opt-in resize. Setup and native demo guides
+- Studio's shape hint now covers selected resize effects. Setup and native demo guides
   reflect the current preset registry and Quickshell fixtures.
 
 ## 0.13.0 — 2026-10-03
@@ -633,12 +643,12 @@ First public prerelease. Earlier versions were private development milestones.
   numeric preservation. CLI `--custom` support for render, preview, Studio and setup.
 - Directional Wave, Corner Burst and Orbital Collapse, bringing the pack to 14;
   three-stage release waves, wave span and adjustable burst/orbit origin.
-- Full Breakup, Edge Rebuild and Soft Reflow resize styles, all strictly opt-in.
+- Full Breakup, Edge Rebuild and Soft Reflow resize styles, disabled in built-in presets.
 - Seven new GIFs with matching JSON and visible README showcases: three presets,
   one origin comparison and three resize styles. The gallery now has 31 clips.
 - Setup/restore failure and conflict tests, three-mode resize validation, browser
   import checks in CI, and repeated/interrupted native movement smoke checks.
-- GIF gallery for open, close, opt-in resize, all 14 presets, Studio movement
+- GIF gallery for open, close, resize, all 14 presets, Studio movement
   concepts and an actual nested-compositor column swap; reproducible recorders.
 - Four synchronized control comparisons for particle count, gravity direction,
   gravity strength and rotation, plus Meteor Shower, Orbit Burst and Reverse
@@ -692,7 +702,7 @@ shader/settings. Re-export standalone configurations. Custom styles are unchange
   verification and compositor regression checks.
 
 Historical default: this version enabled fragment resize in built-in presets.
-**0.4.1 supersedes that default with explicit opt-in.** Native movement remained
+**Since 0.4.1, built-in presets leave fragment resize disabled.** Native movement remained
 experimental and separate from stock exports and iNiR registration.
 
 ## 0.3.0 — 2026-10-02

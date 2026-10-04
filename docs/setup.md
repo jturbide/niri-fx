@@ -136,7 +136,7 @@ plans. Losing runtime support between review and Apply refuses the change.
 Retain the returned transaction and state path, or use **Restore** in the same
 Studio connection. CLI restoration supports the same review-first flow as stock
 setup. See [Restore a setup](#restore-a-setup), the [pointer guide](pointer-wobble.md)
-and the [isolated native demo](profiles.md#optional-pointer-drag).
+and the [isolated native demo](profiles.md#pointer-drag).
 
 ## Review a setup
 

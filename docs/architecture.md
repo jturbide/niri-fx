@@ -177,7 +177,7 @@ case; forced process termination remains outside that guarantee.
   searching it. Its envelope includes jittered centers, wave amplitude, field
   rotation/scale, wandering and the maximum rotated piece radius. Early rejection
   must preserve iteration/compositing order for every surviving fragment.
-- Preserve the distinction between stock open/close, opt-in resize,
+- Preserve the distinction between stock open/close, selected resize,
   Canvas concepts, timed native movement and the additional pointer renderer.
 
 The renderer-specific comments explain the applicable coordinate frames, search

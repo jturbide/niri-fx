@@ -44,8 +44,9 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Understand performance and known limits | [GPU measurements](performance.md), [testing](validation.md) |
 | See planned improvements | [Roadmap](../ROADMAP.md), [integration plans](roadmap.md) |
 
-Opening and closing use stock Niri shaders. Resize is opt-in for Fragments, Elastic, Slices and Distortion. Native
-movement requires the experimental compositor patch. Studio previews the actual
+Opening and closing use stock Niri shaders. Fragments, Elastic, Slices and
+Distortion also provide resize effects. Native movement requires the experimental
+compositor patch. Studio previews the actual
 movement shader on a synthetic path; its older Move/Swap sketches are labelled
 concepts. Previewing does not activate effects.
 

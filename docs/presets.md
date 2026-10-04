@@ -159,7 +159,7 @@ to review activation, or import a downloaded JSON file in [Studio](usage.md).
 ## Open/close pairings
 
 Each pairing chooses independent opening and closing styles. See
-[action profiles](profiles.md) for custom combinations and explicit resize opt-in.
+[action profiles](profiles.md) for custom combinations and resize selection.
 The three motion packs also coordinate [stock desktop timing](desktop-motion.md).
 
 | Profile ID | Opens with | Closes with | Open / close (ms) | Desktop timing | Preview | Settings |

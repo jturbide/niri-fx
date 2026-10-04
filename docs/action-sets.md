@@ -39,7 +39,7 @@ In Studio, choose **Ready-made profile**, then view Resize or Movement under
 enabling the action. Tick its enable checkbox to include it in saved JSON.
 Undo restores the prior choice. Imported or renamed sets retain suggestions when
 both opening and closing still match the original set; editing either action
-removes the match. A saved optional action always takes precedence.
+removes the match. A saved resize or movement choice always takes precedence.
 
 ## Add matching resize
 
@@ -77,7 +77,7 @@ clients in a nested compositor. Each returns to the initial window positions.
 | ![Two windows exchange positions as mixed fragments](gifs/native-swap-fragments-motion.gif) | ![Two windows exchange positions as waving ribbons](gifs/native-swap-ribbons-motion.gif) | ![Two windows glide and settle into exchanged positions](gifs/native-swap-elastic-motion.gif) |
 | [Resize and movement JSON](../examples/profiles/fragments-motion-native.json) | [Resize and movement JSON](../examples/profiles/ribbons-motion-native.json) | [Resize and movement JSON](../examples/profiles/elastic-motion-native.json) |
 
-Those three downloads deliberately include **both** optional actions. To include
+Those three downloads include **both resize and movement**. To include
 movement alone, use only `--include-movement`:
 
 ```sh

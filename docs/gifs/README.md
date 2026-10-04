@@ -4,7 +4,7 @@ The recordings use synthetic window contents. No personal desktop or application
 content is captured.
 
 - `opening.gif`, `closing.gif`, `resize.gif`: Studio's actual GLSL shader renderer.
-  Resize is shown as an opt-in feature; recording it does not change a preset.
+  Resize recordings use explicit selections; recording them does not change a preset.
 - `preset-*.gif`: each built-in style closes and opens at its configured timing.
   Each family uses its own real shader.
 - `compare-slice-count.gif`: four, twelve and thirty-two strips, with the same
@@ -14,7 +14,7 @@ content is captured.
   Elastic comparisons explicitly compare combinations/styles at matched timing.
 - `recipe-*.gif`: custom Meteor Shower, Orbit Burst and Reverse Gravity settings
   from the importable JSON in [examples](../../examples/README.md).
-- `resize-full.gif`, `resize-edge.gif`, `resize-soft.gif`: opt-in resize styles
+- `resize-full.gif`, `resize-edge.gif`, `resize-soft.gif`: resize styles
   using the corresponding example JSON files.
 - `move-concept.gif`, `swap-concept.gif`: Studio's labelled Canvas design previews.
   These are not recordings of compositor movement or promises of its appearance.

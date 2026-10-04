@@ -22,7 +22,7 @@ These checks complement the rendering and native evidence below.
 | Portable JavaScript | All 75 presets' supported stock shaders match Python, with picker transactions, profile checks and complete combo playback |
 | Real Chromium | 75 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
-| Browser lifecycle and gallery | Coverage includes failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback, hosted Studio share/download flows and explicit companion opt-in through import and Undo |
+| Browser lifecycle and gallery | Coverage includes failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback, hosted Studio share/download flows and explicit companion selection through import and Undo |
 | GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 75 default exports, supported resize exports and 91 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Curated pairings | Geometric Flow, Ribbon Current and Soft Landing render partial opening/closing frames, settle intact and close to an empty scene in stock Niri. Sampling uses an 8× slower isolated animation clock to avoid missing short phases during screencopy; this does not measure real-time presentation smoothness. |
@@ -257,7 +257,7 @@ automation, visual preference and hardware performance when reporting results.
 ## Earlier 0.7.0 acceptance: profiles and integrations
 
 Independent action profiles passed CLI JSON round trips, separate shader/timing
-exports, opt-in resize, preservation of base iRiS resize, malformed action rejection,
+exports, explicit resize selection, preservation of base iRiS resize, malformed action rejection,
 and actual CLI/browser/HTTP registration. Browser checks exercise independent edits,
 action switching, undo/redo, individual reset, profile import/export, viewing resize
 without activation, pinned A/B comparison without changing saved B, and search.
@@ -406,7 +406,7 @@ state remain separate tasks in the [roadmap](../ROADMAP.md).
 ## Coordinated action sets
 
 The 0.16.0 Fragments, Ribbons and Elastic sets pass all independent combinations
-of resize and movement opt-in, portable round trips, stock movement omission and
+of resize and movement selection, portable round trips, stock movement omission and
 shell preservation of unset resize. Browser checks exercise renamed imports,
 editing away from a match, suggested controls, exact Undo/Redo and JSON-only
 movement selection. All 91 stock style/profile includes parse in Niri 26.04.
@@ -457,7 +457,7 @@ operations to finish. This keeps queued software GPU draws out of UI timing;
 the full rendering suite still checks intermediate pixels, endpoints and parity.
 
 Complete combo preview checks cover per-action styles and durations, stable seeds,
-opt-in action omission, grow/shrink texture exchange and movement position
+omission of unselected actions, grow/shrink texture exchange and movement position
 continuity. The controller freezes a validated document and invalidates old frame
 callbacks when stopped. An actual offline Studio browser test verifies selected
 shader uniforms, the transparent closing endpoint, reduced motion, cancellation,

@@ -24,9 +24,9 @@ accessible text label when it carries meaning.
 
 ## Describing features and integrations
 
-NiriFX is built with **Python, GLSL and WebGL** for **niri**. Opening and closing
-work on stock Niri. Fragment resize is opt-in, and native movement/swaps require
-the separate experimental compositor patch.
+NiriFX is built with **Python, GLSL and WebGL** for **niri**. Opening, closing and resize
+shaders work on stock Niri. Native movement/swaps and pointer deformation require
+the separate experimental compositor build.
 
 | Integration | What it provides |
 | --- | --- |

@@ -25,14 +25,14 @@ pointer-driven wobble prototype builds on this motion foundation (Epic 4).
 ## Coordinated action sets milestone
 
 - [x] Ship Fragments, Ribbons and Elastic sets with stock open/close and desktop timing.
-- [x] Suggest matching resize and movement in the existing Studio and CLI, with separate opt-in.
+- [x] Suggest matching resize and movement in the existing Studio and CLI, with independent selection.
 - [x] Publish base, resize-only and experimental examples with faithful shader and native showcases.
 - [x] Verify import, editing, Undo, shell exports and native endpoints; document action limits.
 
 ## Library and action combos milestone
 
 - [x] Open on recommended looks, favorites and saved profiles, with Studio in the same app.
-- [x] Choose one shared style or separate opening, closing and optional resize/movement styles.
+- [x] Choose one shared style or separate opening, closing, resize and movement styles.
 - [x] Keep the same combo builder online, with portable JSON/config exports and browser-local profiles.
 - [x] Share reviewed Apply/Restore across standalone, iNiR and connected Noctalia configurations.
 - [x] Validate optional compact iRiS and Noctalia entries and accurate iRiS active-selection feedback.
@@ -56,7 +56,7 @@ Goal: make finished combinations easy to compare, choose and install.
       and exact Restore in isolated configurations.
 - [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
 
-Version 0.18 adds opt-in pointer profiles, Studio controls and capability-verified
+Version 0.18 adds pointer settings in profiles, Studio controls and capability-verified
 standalone Apply/Restore (Epic 4). Live pointer deformation still requires a
 separate compositor build. Agent discovery and reusable guidance use the same CLI
 (Epic 9).
@@ -65,7 +65,7 @@ separate compositor build. Agent discovery and reusable guidance use the same CL
 
 - [x] Verify the 0.17-to-0.18 upgrade with existing Library profiles, favorites,
       shell entries and exact CLI/Library Restore.
-- [ ] Publish the signed 0.18 prerelease with packages, checksums and explicit
+- [x] Publish the signed 0.18 prerelease with packages, checksums and explicit
       native input/capture limitations.
 - [x] Reproduce the two native input/output failures against unmodified pinned
       Niri before assigning their cause or choosing a fix.
@@ -76,6 +76,21 @@ separate compositor build. Agent discovery and reusable guidance use the same CL
       distinguish geometric continuity from texture/deformation continuity.
 - [ ] Collect physical capture/presentation and another GPU result before adding
       performance-driven quality choices.
+
+## Consistent action selection
+
+Goal: choose Preserve, a style or Off independently for each supported action.
+Move and swap share the compositor's movement action. Opening and closing
+currently require a style; the checklist below adds the missing choices.
+
+- [ ] Define Preserve / Style / Off for opening, closing, resize, movement and
+      pointer drag, including migration of existing profiles without changing behavior.
+- [ ] Represent the same choices in portable JSON, the CLI and Studio, including
+      previews, shared styles, per-action controls and Undo.
+- [ ] Carry the choices through stock/native exports and supported shell adapters,
+      preserving unrelated settings and reporting unavailable compositor features.
+- [ ] Verify reviewed Apply and exact Restore for partial profiles and all-off
+      profiles, with examples and complete workflow coverage.
 
 ## Released foundation
 
@@ -180,7 +195,7 @@ requires additional compositor support and starts in the isolated experiment.
 
 Goal: a coherent sense of motion across the desktop.
 
-- [x] Curate opt-in stock timing/spring profiles for workspace switching,
+- [x] Curate stock timing/spring profiles for workspace switching,
       horizontal camera scrolling and overview zoom.
 - [x] Keep camera motion separate from individual window movement effects.
 - [ ] Design an experimental workspace rendering hook with gesture reversal.

@@ -279,7 +279,7 @@ def preset_reference(clips):
             "## Open/close pairings",
             "",
             "Each pairing chooses independent opening and closing styles. See",
-            "[action profiles](profiles.md) for custom combinations and explicit resize opt-in.",
+            "[action profiles](profiles.md) for custom combinations and resize selection.",
             "The three motion packs also coordinate [stock desktop timing](desktop-motion.md).",
             "",
             "| Profile ID | Opens with | Closes with | Open / close (ms) | Desktop timing | Preview | Settings |",
@@ -349,7 +349,7 @@ def document(clips):
 <title>NiriFX · Effect gallery</title><link rel="stylesheet" href="gallery.css"><script src="gallery.js" defer></script></head>
 <body><header><a class="brand" href="https://github.com/jturbide/niri-fx">NiriFX</a><nav><a href="{STUDIO}">Open Studio</a> · <a href="#use-on-niri">Use on Niri</a></nav></header>
 <main><p class="eyebrow">WINDOWS IN MOTION</p><h1>Find your next effect.</h1><p class="intro">Preview a finished look, then use it on Niri.</p>
-<p class="legend">Stock Niri open/close. Resize is opt-in; movement needs the experimental build.</p>
+<p class="legend">Opening, closing and resize use stock Niri. Movement needs the experimental build.</p>
 <div class="collections" role="group" aria-label="Browse collections"><button type="button" data-collection="starter">Start here ({len(RECOMMENDED)})</button><button type="button" data-collection="profiles">Open/close pairings ({len(PROFILES)})</button><button type="button" data-collection="all">All {len(clips)} examples</button></div>
 <form role="search" onsubmit="return false"><label>Search<input type="search" id="search" placeholder="Try explosion, resize, ink…"></label>
 <label>Collection<select id="collection"><option value="starter">Start here</option><option value="profiles">Open/close pairings</option><option value="all">All examples</option>{collection_options}</select></label>

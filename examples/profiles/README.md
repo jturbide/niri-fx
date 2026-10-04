@@ -46,7 +46,7 @@ niri validate -c /tmp/burst-and-drift.kdl
 
 To make a new combination, use Library's combo builder, Studio's **Independent action effects** or
 `python3 -m niri_fx profile --help`. See the [profile guide](../../docs/profiles.md)
-for editing, saving and explicit resize opt-in; follow [setup and restore](../../docs/setup.md)
+for editing, saving and resize selection; follow [setup and restore](../../docs/setup.md)
 when ready to apply a profile.
 
 ## Pointer preview combos
@@ -73,7 +73,7 @@ python3 -m niri_fx preview --custom examples/profiles/pointer-preview-rubber-she
 python3 -m niri_fx preview --custom examples/profiles/pointer-preview-release-settle.json --output /tmp/pointer-preview-release-settle.html
 ```
 
-## Optional resize profiles
+## Resize profiles
 
 These four profiles keep Balanced opening and closing and explicitly enable a
 separate resize effect. They require NiriFX 0.11 or newer. See the
@@ -138,9 +138,8 @@ python3 -m niri_fx preview --custom examples/profiles/movement-overlaps.json --o
 ## Coordinated action sets
 
 These NiriFX 0.16 examples include opening, closing and stock desktop timing.
-Base versions leave both optional actions unset. Resize versions explicitly
-include resize; native versions explicitly include resize **and** experimental
-movement. Importing or previewing never activates a style.
+Base versions leave resize and movement unset. Resize versions include resize;
+native versions include resize **and** experimental movement. Importing or previewing never activates a style.
 [Action-set guide](../../docs/action-sets.md).
 
 | Look | Base JSON | Resize-only JSON | Resize and movement JSON |
