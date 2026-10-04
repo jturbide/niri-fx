@@ -5,9 +5,6 @@ New work goes in **Unreleased**; dated entries are frozen when a release is made
 Versions follow `MAJOR.MINOR.PATCH`; while 0.x, minor versions may change the
 prototype's interfaces. Migration notes accompany compatibility changes.
 
-The 0.1.0–0.4.1 entries below reconstruct the private development history from
-versioned commits on 2026-10-02. They were not published GitHub releases or tags.
-
 ## Unreleased
 
 ### Changed
