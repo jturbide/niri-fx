@@ -24,8 +24,9 @@ that cannot support an enabled optional action returns that action to shell
 defaults and explains the change.
 
 Use **Tune** beside an action for its detailed settings. Returning to Library
-keeps those edits; **Custom settings** identifies an action that no longer matches
-a built-in style. Undo/Redo also works for combo changes. Move and swap share the
+keeps those edits. Refined actions show the matching combo name, such as
+**Fragment Flow · Open**; **Custom settings** identifies settings that no longer
+match a built-in style or combo action. Undo/Redo also works for combo changes. Move and swap share the
 compositor's movement effect; they are not independent shader slots.
 
 ## Preview the sequence

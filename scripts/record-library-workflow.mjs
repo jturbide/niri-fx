@@ -18,7 +18,7 @@ try {
   const { evaluate, rpc } = browser;
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(
-    `const banner=document.createElement('div');banner.id='recording-step';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#172434;color:#e4efff;font:600 19px system-ui;z-index:100';document.body.append(banner);seed=.43;`,
+    `const style=document.createElement('style');style.textContent='canvas{max-height:470px;min-height:0}';document.head.append(style);const banner=document.createElement('div');banner.id='recording-step';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#172434;color:#e4efff;font:600 19px system-ui;z-index:100';document.body.append(banner);seed=.43;`,
   );
   let count = 0;
   async function frames(label, seconds = 1.5, animate = false) {
@@ -35,6 +35,33 @@ try {
       );
     }
   }
+  async function comboFrames(label) {
+    await evaluate(`byId('recording-step').textContent=${JSON.stringify(label)}`);
+    const before = await evaluate(
+      "({document:effectDocument(),history:editHistory,historyIndex,seed})",
+    );
+    const plan = await evaluate(`(() => {
+      byId('preview-combo').click();
+      if(!window.niriFxComboPreview?.active)throw new Error('Combo button did not start playback');
+      window.niriFxComboPreview.seek(0);
+      return window.niriFxComboPreview.currentPlan;
+    })()`);
+    const total = Math.ceil((plan.totalMs * 20) / 1000) + 1;
+    for (let index = 0; index < total; index++) {
+      const elapsed = Math.min(plan.totalMs, (index * 1000) / 20);
+      await evaluate(`window.niriFxComboPreview.seek(${elapsed})`);
+      const shot = await rpc("Page.captureScreenshot", { format: "png" });
+      writeFileSync(
+        join(root, String(count++).padStart(4, "0") + ".png"),
+        Buffer.from(shot.data, "base64"),
+      );
+    }
+    assert.equal(await evaluate("window.niriFxComboPreview.active"), false);
+    assert.deepEqual(
+      await evaluate("({document:effectDocument(),history:editHistory,historyIndex,seed})"),
+      before,
+    );
+  }
   await frames("1 / Start with a recommended look");
   await evaluate(`document.querySelector('[data-style=fragments-motion]').click()`);
   await frames("Fragments Motion / Resize and movement start off", 2, true);
@@ -46,14 +73,16 @@ try {
     `byId('combo-resize').value='spring-wobble';byId('combo-resize').dispatchEvent(new Event('change'))`,
   );
   await frames("3 / Add resize only when you want it", 2, true);
+  await comboFrames("4 / Preview your opening, resize and closing styles together");
+  await frames("Preview complete / Your combo and active desktop settings stay the same", 1);
   await evaluate(
     `byId('combo-mode').value='same';byId('combo-mode').dispatchEvent(new Event('change'))`,
   );
-  await frames("4 / Use the same style for every enabled action", 2, true);
+  await frames("5 / Use the same style for every enabled action", 2, true);
   await evaluate(
     `byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'));byId('combo-resize').value='';byId('combo-resize').dispatchEvent(new Event('change'));byId('combo-name').value='Night Motion';byId('combo-name').dispatchEvent(new Event('change'));byId('store-profile').click()`,
   );
-  await frames("5 / Name your combo before saving", 1);
+  await frames("6 / Name your combo before saving", 1);
   await evaluate(`byId('profile-confirm').click()`);
   await evaluate("byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'))");
   await evaluate("byId('store-profile').scrollIntoView({block:'center'})");
@@ -65,22 +94,22 @@ try {
   await evaluate(
     `byId('library-panel').scrollTop=0;byId('library-collection').value='customs';byId('library-collection').dispatchEvent(new Event('change'));byId('copy-profile').click()`,
   );
-  await frames("6 / Save a copy to try another variation", 1.5);
+  await frames("7 / Save a copy to try another variation", 1.5);
   await evaluate(`byId('profile-confirm').click()`);
   await frames("The original stays in My profiles", 1);
   await evaluate(
     `byId('rename-profile').click();byId('profile-save-name').value='Night Motion alternate';byId('profile-save-name').dispatchEvent(new Event('input'))`,
   );
-  await frames("7 / Give the copy a clearer name", 1.5);
+  await frames("8 / Give the copy a clearer name", 1.5);
   await evaluate(`byId('profile-confirm').click()`);
   await frames("Renamed / Active effects keep their original name", 1);
   await evaluate(`byId('remove-profile').click()`);
-  await frames("8 / Remove the Library copy when it is no longer needed", 1.5);
+  await frames("9 / Remove the Library copy when it is no longer needed", 1.5);
   await evaluate(`byId('profile-confirm').click()`);
   await frames("Removed from My profiles / The original remains", 1);
   await evaluate(`document.querySelector('[data-style=custom-night-motion]').click()`);
   await evaluate(`byId('export').click();byId('kdl').click()`);
-  await frames("9 / Export editable JSON and stock Niri config", 1.5);
+  await frames("10 / Export editable JSON and stock Niri config", 1.5);
   assert.deepEqual(JSON.parse(readFileSync(join(root, "nirifx-preset.json"))), expected);
   execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
   const destination = "docs/gifs/workflow-library.gif";
@@ -109,15 +138,23 @@ try {
     fps: 20,
     frames: count,
     sources: Object.fromEntries(
-      ["niri_fx/library.js", "niri_fx/preview.html"].map((path) => [
-        path,
-        createHash("sha256").update(readFileSync(path)).digest("hex"),
-      ]),
+      [
+        "niri_fx/library.js",
+        "niri_fx/effect-core.js",
+        "niri_fx/combo-preview.js",
+        "niri_fx/studio.js",
+        "niri_fx/preview.html",
+        "niri_fx/studio.css",
+        "scripts/record-library-workflow.mjs",
+      ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
     ),
     checks: [
       "recommended selection",
       "independent open/close",
       "resize opt-in",
+      "actual Preview combo button",
+      "complete action-specific open/resize/close cycle",
+      "stable seed and unchanged document/history",
       "shared style",
       "saved profile",
       "explicit save confirmation",
