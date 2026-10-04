@@ -23,6 +23,9 @@ class DiagnosticsTests(unittest.TestCase):
         probe = patch("niri_fx.capabilities.movement_capability", return_value=UNKNOWN_MOVEMENT)
         self.movement = probe.start()
         self.addCleanup(probe.stop)
+        probe = patch("niri_fx.capabilities.pointer_capability", return_value=UNKNOWN_MOVEMENT)
+        self.pointer = probe.start()
+        self.addCleanup(probe.stop)
 
     def test_absent_optional_interfaces_do_not_require_installation(self):
         with patch("niri_fx.picker.shutil.which", return_value=None):
@@ -77,6 +80,7 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertTrue(report["healthy"])
         self.assertTrue(all(not c["available"] for c in report["checks"] if "available" in c))
         self.assertEqual(report["movement_capability"]["status"], "unknown")
+        self.assertEqual(report["pointer_capability"]["status"], "unknown")
         lines = []
         print_diagnostics(report, lines.append)
         self.assertIn(report["movement"], lines)
@@ -99,19 +103,30 @@ class DiagnosticsTests(unittest.TestCase):
         self.assertFalse(report["healthy"])
         self.assertIn("Could not query Niri", report["checks"][0]["detail"])
 
-    def test_explicit_movement_binary_does_not_replace_stock_config_validator(self):
+    def test_explicit_binary_validates_experimental_config_and_reports_its_own_version(self):
         from niri_fx.cli import parser
 
-        args = parser().parse_args(["doctor", "--movement-binary", "/trusted/niri"])
+        args = parser().parse_args(["doctor", "--niri-binary", "/trusted/niri"])
         with (
-            patch("niri_fx.setup.shutil.which", return_value=None),
+            patch(
+                "niri_fx.setup.shutil.which",
+                side_effect=lambda requested: requested if requested == "/trusted/niri" else None,
+            ),
+            patch(
+                "niri_fx.setup.subprocess.check_output", return_value="niri experimental"
+            ) as version,
             patch("niri_fx.setup.validate_config") as validate,
             patch("niri_fx.setup.read_shell_presets", return_value={}),
             patch.dict("os.environ", {"NIRI_SOCKET": "/test/session.sock"}),
         ):
-            doctor(args)
-        validate.assert_called_once_with(args.config)
+            report = doctor(args)
+        validate.assert_called_once_with(args.config, "/trusted/niri")
+        self.assertEqual(version.call_args.args[0], ["/trusted/niri", "--version"])
+        self.assertEqual(report["checks"][0]["detail"], "niri experimental")
         self.movement.assert_called_once_with(
+            Path("/trusted/niri"), socket_path="/test/session.sock"
+        )
+        self.pointer.assert_called_once_with(
             Path("/trusted/niri"), socket_path="/test/session.sock"
         )
 

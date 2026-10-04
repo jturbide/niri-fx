@@ -158,3 +158,225 @@ test("complete combo playback preserves settings and renders selected action loo
     rmSync(scratch, { recursive: true, force: true });
   }
 });
+
+// Pointer metadata uses the same document/history transactions as shader
+// actions, while activation remains an explicit, capability-gated choice.
+test("pointer choices survive Library editing, JSON, sharing and stock-safe exports", async () => {
+  const html = execFileSync(
+    "python3",
+    [
+      "-c",
+      'from niri_fx.preview import preview_document; from niri_fx.presets import PRESETS; print(preview_document(PRESETS["balanced"], hosted=True))',
+    ],
+    { cwd: projectRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+  );
+  const scratch = mkdtempSync(join(tmpdir(), "nirifx-pointer-ui-"));
+  const page = join(scratch, "studio.html");
+  writeFileSync(page, html);
+  const browser = await launchBrowser();
+  try {
+    await browser.navigate(pathToFileURL(page).href + "?breakup=0");
+    const evaluate = browser.evaluate;
+    await evaluate("window.requestAnimationFrame=()=>1;window.cancelAnimationFrame=()=>{}");
+    const choose = (value) =>
+      evaluate(
+        `byId("combo-pointer").value=${JSON.stringify(value)};byId("combo-pointer").dispatchEvent(new Event("change"))`,
+      );
+    assert.equal(await evaluate('byId("combo-pointer").value'), "");
+    assert.equal(await evaluate('Object.hasOwn(effectDocument(),"pointer")'), false);
+    assert.equal(await evaluate('byId("activate-pointer-label").hidden'), true);
+    await choose("gentle");
+    assert.deepEqual(await evaluate("effectDocument().pointer"), {
+      strength: 0.4,
+      damping: 85,
+      frequency: 10,
+    });
+    assert.equal(await evaluate("effectDocument().actions.resize"), null);
+    assert.equal(await evaluate("effectDocument().actions.movement"), null);
+    assert.equal(await evaluate('byId("pointer-kdl").hidden'), false);
+    const beforePreview = await evaluate("effectDocument()");
+    await evaluate(
+      'byId("preview-combo").click();niriFxComboPreview.seek(niriFxComboPreview.currentPlan.totalMs)',
+    );
+    assert.match(
+      await evaluate('byId("combo-preview-status").textContent'),
+      /Pointer drag is not played/,
+    );
+    assert.deepEqual(await evaluate("effectDocument()"), beforePreview);
+    assert.deepEqual(
+      await evaluate(
+        'niriFxComboPreview.currentPlan.stages.filter(s=>s.phase==="animation").map(s=>s.action)',
+      ),
+      ["open", "close"],
+    );
+    await evaluate(
+      'byId("combo-close").value="frost-vanish";byId("combo-close").dispatchEvent(new Event("change"))',
+    );
+    assert.deepEqual(await evaluate("effectDocument().pointer"), beforePreview.pointer);
+    await evaluate(
+      'byId("combo-mode").value="same";byId("combo-mode").dispatchEvent(new Event("change"));byId("combo-same").value="zipper";byId("combo-same").dispatchEvent(new Event("change"))',
+    );
+    assert.deepEqual(await evaluate("effectDocument().pointer"), beforePreview.pointer);
+    await choose("custom");
+    assert.equal(await evaluate('byId("pointer-tuning").open'), true);
+    await evaluate(
+      'byId("pointer-strength").value="1.15";byId("pointer-strength").dispatchEvent(new Event("change"))',
+    );
+    const custom = await evaluate("effectDocument()");
+    assert.equal(custom.pointer.strength, 1.15);
+    assert.equal(await evaluate('byId("combo-pointer").value'), "custom");
+    await evaluate('byId("undo").click()');
+    assert.equal(await evaluate("effectDocument().pointer.strength"), 0.4);
+    await evaluate('byId("redo").click()');
+    assert.deepEqual(await evaluate("effectDocument()"), custom);
+    await evaluate(
+      'byId("pointer-frequency").value="17";byId("pointer-frequency").dispatchEvent(new Event("change"))',
+    );
+    assert.deepEqual(await evaluate("effectDocument()"), custom);
+    assert.equal(await evaluate('byId("pointer-frequency").value'), "10");
+    assert.match(await evaluate('byId("error").textContent'), /frequency/);
+    await evaluate('byId("show-editor").click();byId("independent").click()');
+    assert.deepEqual(await evaluate("effectDocument().pointer"), custom.pointer);
+    await evaluate('byId("edit-pointer").click()');
+    assert.equal(await evaluate("document.documentElement.dataset.workspace"), "library");
+    assert.equal(await evaluate("document.activeElement.id"), "combo-pointer");
+    await evaluate(
+      'window.pointerDownloads=[];download=(...args)=>pointerDownloads.push(args);byId("export").click();byId("kdl").click();byId("pointer-kdl").click()',
+    );
+    const downloads = await evaluate("pointerDownloads");
+    assert.deepEqual(JSON.parse(downloads[0][1]).pointer, custom.pointer);
+    assert.doesNotMatch(downloads[1][1], /pointer-wobble/);
+    assert.match(downloads[2][1], /pointer-wobble/);
+    assert.equal((downloads[2][1].match(/window-movement/g) || []).length, 1);
+    await evaluate(
+      'byId("combo-movement").value="fragment-wake";byId("combo-movement").dispatchEvent(new Event("change"));byId("combo-resize").value="spring-wobble";byId("combo-resize").dispatchEvent(new Event("change"));byId("desktop-motion").value="gentle";byId("desktop-motion").dispatchEvent(new Event("change"));byId("pointer-kdl").click()',
+    );
+    const combinedDocument = await evaluate("effectDocument()");
+    const combinedKdl = (await evaluate("pointerDownloads.at(-1)"))[1];
+    const expectedKdl = execFileSync(
+      "python3",
+      [
+        "-c",
+        "import json,sys;from niri_fx.documents import parse_document;from niri_fx.effects import render_kdl;print(render_kdl(parse_document(json.load(sys.stdin))[2], movement=True, pointer=True), end='')",
+      ],
+      { cwd: projectRoot, input: JSON.stringify(combinedDocument), encoding: "utf8" },
+    );
+    assert.equal(
+      combinedKdl.slice(combinedKdl.indexOf("\n")),
+      expectedKdl.slice(expectedKdl.indexOf("\n")),
+    );
+    assert.equal((combinedKdl.match(/window-movement/g) || []).length, 1);
+    assert.match(combinedKdl, /window-resize/);
+    assert.match(combinedKdl, /workspace-switch/);
+    await evaluate('byId("share").onclick()');
+    const shared = await evaluate(
+      'decodeShareDocument(new URLSearchParams(new URL(byId("share-url").value).hash.slice(1)).get("style"))',
+    );
+    assert.deepEqual(shared.pointer, custom.pointer);
+    await evaluate(
+      'byId("combo-name").value="Pointer Fusion";byId("combo-name").dispatchEvent(new Event("change"));byId("store-profile").click();byId("profile-confirm").click()',
+    );
+    await evaluate(
+      'new Promise((resolve,reject)=>{const start=Date.now();function check(){if(!byId("profile-dialog").open&&!byId("store-profile").disabled)resolve();else if(Date.now()-start>5000)reject(new Error("Profile save did not settle"));else setTimeout(check,20)}check()})',
+    );
+    const saved = await evaluate(
+      'JSON.parse(localStorage.getItem("nirifx-my-profiles"))["custom-pointer-fusion"]',
+    );
+    assert.deepEqual(saved.pointer, custom.pointer);
+    await choose("disabled");
+    assert.equal(await evaluate("effectDocument().pointer.strength"), 0);
+    assert.match(await evaluate("kdlDocument({pointer:true})"), /strength 0\.0/);
+    await choose("");
+    assert.equal(await evaluate('Object.hasOwn(effectDocument(),"pointer")'), false);
+    assert.equal(await evaluate('byId("pointer-kdl").hidden'), true);
+    await evaluate(
+      `(async()=>{const files=new DataTransfer();files.items.add(new File([${JSON.stringify(JSON.stringify(saved))}],"pointer.json",{type:"application/json"}));byId("import-file").files=files.files;await byId("import-file").onchange()})()`,
+    );
+    assert.deepEqual(await evaluate("effectDocument()"), saved);
+    assert.equal(await evaluate('byId("combo-pointer").value'), "custom");
+    assert.equal(await evaluate('byId("error").textContent'), "");
+    assert.equal(await evaluate('byId("activate-pointer-label").hidden'), true);
+  } finally {
+    await browser.close();
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
+test("pointer Apply consent is offered only for a verified standalone session", async () => {
+  const scratch = mkdtempSync(join(tmpdir(), "nirifx-pointer-consent-"));
+  const browser = await launchBrowser();
+  try {
+    // Exercise UI requests without touching a user's compositor or filesystem.
+    await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
+      source: `window.pointerRequests=[];window.fetch=async(path,options)=>{if(options?.body)pointerRequests.push({path,body:JSON.parse(options.body)});return {ok:true,json:async()=>path==="/review"?{plan_sha256:"test-plan",notes:["Reviewed test selection"],changes:[{action:"update",path:"isolated-config.kdl"}]}:{customs:{},managed:{},warnings:[],restore:false,active_name:"Test desktop"}}};`,
+    });
+    for (const [target, ready, supported] of [
+      ["standalone", true, true],
+      ["standalone", false, true],
+      ["inir", true, false],
+    ]) {
+      const connection = {
+        target,
+        token: "test-token",
+        pointer: {
+          activation_ready: ready,
+          target_supported: supported,
+          target_detail: "Test capability status",
+        },
+      };
+      const html = execFileSync(
+        "python3",
+        [
+          "-c",
+          'import json,sys; from niri_fx.preview import preview_document; from niri_fx.presets import PRESETS; print(preview_document(PRESETS["balanced"],connection=json.loads(sys.argv[1])))',
+          JSON.stringify(connection),
+        ],
+        { cwd: projectRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+      );
+      const page = join(scratch, `${target}-${ready}.html`);
+      writeFileSync(page, html);
+      await browser.navigate(pathToFileURL(page).href + "?breakup=0");
+      const evaluate = browser.evaluate;
+      await evaluate(
+        'byId("combo-pointer").value="gentle";byId("combo-pointer").dispatchEvent(new Event("change"))',
+      );
+      assert.equal(await evaluate('byId("activate-pointer-label").hidden'), !(ready && supported));
+      assert.equal(await evaluate('byId("activate-pointer").checked'), false);
+      await evaluate('byId("review-selection").onclick()');
+      assert.equal(
+        await evaluate('pointerRequests.find(item=>item.path==="/review").body.allow_pointer'),
+        false,
+      );
+      await evaluate(
+        'byId("activate-pointer").checked=true;byId("activate-pointer").dispatchEvent(new Event("change"));byId("review-selection").onclick()',
+      );
+      assert.equal(
+        await evaluate(
+          'pointerRequests.filter(item=>item.path==="/review").at(-1).body.allow_pointer',
+        ),
+        ready && supported,
+      );
+      if (ready && supported) {
+        await evaluate('byId("apply-selection").onclick()');
+        assert.equal(
+          await evaluate(
+            'pointerRequests.find(item=>item.path==="/apply").body.selection.allow_pointer',
+          ),
+          true,
+        );
+        assert.equal(
+          await evaluate('pointerRequests.find(item=>item.path==="/apply").body.expected'),
+          "test-plan",
+        );
+      }
+      await evaluate(
+        'byId("combo-pointer").value="disabled";byId("combo-pointer").dispatchEvent(new Event("change"))',
+      );
+      assert.equal(await evaluate('byId("activate-pointer").checked'), false);
+      assert.equal(await evaluate('byId("apply-review").hidden'), true);
+    }
+  } finally {
+    await browser.close();
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});

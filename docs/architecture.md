@@ -26,12 +26,13 @@ import-boundary test enforces that separation.
 | Module | Responsibility and boundary |
 | --- | --- |
 | [parameters.py](../niri_fx/parameters.py), [model.py](../niri_fx/model.py) | Parameter types, limits, labels, family applicability, GLSL tokens and capability flags. No I/O. |
-| [capabilities.py](../niri_fx/capabilities.py) | Read-only movement parser probes and running IPC executable identification. Does not certify rendering or activate effects. |
+| [capabilities.py](../niri_fx/capabilities.py) | Separate movement/pointer parser probes, IPC executable identity and running renderer contracts. Read-only checks; never activates effects or substitutes a version string for a contract. |
 | [presets.py](../niri_fx/presets.py) | Named built-in values. All built-ins leave resize off. |
 | [catalog.py](../niri_fx/catalog.py) | Curated opening/closing recipes reference existing presets. Shared normalized documents and family labels feed every picker. No I/O. |
-| [profiles.py](../niri_fx/profiles.py) | Immutable choices for separate actions. A null resize/movement slot means inherit existing behavior. |
+| [profiles.py](../niri_fx/profiles.py), [pointer.py](../niri_fx/pointer.py), [motion.py](../niri_fx/motion.py) | Immutable action choices, optional pointer settings and desktop springs. Null optional choices inherit; pointer strength zero explicitly disables deformation. No I/O. |
 | [documents.py](../niri_fx/documents.py) | Named JSON validation, bounded reads and serialization. Independent of a shell registry. |
-| [effects.py](../niri_fx/effects.py), [shaders/](../niri_fx/shaders/) | GLSL assembly and stock KDL exports. Movement generation is a separate explicit API. |
+| [agent.py](../niri_fx/agent.py), [agent_data/nirifx/SKILL.md](../niri_fx/agent_data/nirifx/SKILL.md) | Offline operation map, canonical parameter metadata and packaged instructions for CLI consumers. No new transport or writer. |
+| [effects.py](../niri_fx/effects.py), [shaders/](../niri_fx/shaders/) | GLSL assembly and KDL exports. Movement and pointer emission require separate explicit flags; combined native settings share one animation block. |
 | [preview.py](../niri_fx/preview.py) | Catalog and self-contained HTML assembly from packaged assets. No network or state writes. |
 | [effect-core.js](../niri_fx/effect-core.js) | Browser document validation, number formatting, shader expansion and KDL generation. No DOM, storage or WebGL. |
 | [library.js](../niri_fx/library.js) | Ready-made selection, combo editing and saved-profile navigation using the Studio document and history. |
@@ -62,6 +63,42 @@ against Python. Browser checks then exercise actual compiled pixels and the real
 HTTP save path. Shared [document cases](../tests/fixtures/documents.json) cover
 accepted and rejected input on both sides. Changing a schema requires updating
 both validators and those cases together.
+
+### Portable pointer settings
+
+A schema 1 profile keeps four shader actions: open, close, resize and movement.
+Optional `motion` and `pointer` objects live beside `actions`. The pointer object
+requires strength, damping and frequency. Omission or null canonicalizes to no
+override; strength zero remains an explicit disabled override. The Python document
+parser normalizes whole JSON numbers such as `65.0` to integers for damping and
+frequency, matching JavaScript's numeric model. The native `PointerWobble` value
+still requires integer controls. Shared fixtures cover both acceptance and rejection.
+
+`animation_types(..., pointer=True)` and `render_kdl(..., pointer=True)` require
+an explicit profile choice. Stock calls omit the node even for strength zero.
+The browser uses equivalent options. Pointer and timed movement are composed into
+one `window-movement` block; desktop springs retain their existing separate blocks.
+No fifth shader action or browser pointer simulation is introduced. The built-in
+pointer renderer belongs to the optional compositor extension.
+
+The three pointer presets and bounds are canonical in `pointer.py`.
+`scripts/lib/pointer_wobble.py` re-exports them for source-checkout harnesses;
+recording helpers do not maintain their own copies.
+
+## Agent consumers
+
+`agent-info` exposes a versioned operation map and command argument arrays;
+`agent-info --parameters` derives public bounds and supported families from the
+same models used by validation. `agent-info --skill` reads the packaged skill
+resource. The [agent guide](agents.md) explains the workflow, while repository
+[AGENTS.md](../AGENTS.md) covers contributions. These interfaces are Unreleased
+source-checkout additions; the package version remains 0.17.0 until a release.
+
+Agent adapters call the existing catalog, profile, inspection, preview and setup
+commands. They do not get a separate config writer. Review fingerprints, authorized
+scope, transaction history and conflict-aware Restore apply equally to agents,
+Studio and the terminal. Imported preset descriptions and documents remain data;
+they cannot authorize commands or expand the user's requested work.
 
 ## Desktop picker state and lifetime
 
@@ -121,7 +158,7 @@ case; forced process termination remains outside that guarantee.
   rotation/scale, wandering and the maximum rotated piece radius. Early rejection
   must preserve iteration/compositing order for every surviving fragment.
 - Preserve the distinction between stock open/close, opt-in resize,
-  Canvas concepts and the separately patched native movement interface.
+  Canvas concepts, timed native movement and the additional pointer renderer.
 
 The renderer-specific comments explain the applicable coordinate frames, search
 bounds and scale floors. The shader bodies are deliberately kept readable as
@@ -173,9 +210,24 @@ are local; token-bearing request URLs are not logged. Documents contain named
 parameters, never arbitrary shader source, paths or commands from the browser.
 
 Saving to iNiR registers without activation. Standalone/Noctalia save targets
-download KDL. Explicit standalone `setup --apply` activates an include. Favorites
-have their own validated persistence path. The server exits after its idle period;
-there is no session-startup service.
+download stock KDL. Library's separate Review/Apply flow delegates to the selected
+adapter and shared transaction backend. Standalone includes take effect when Niri
+loads that configuration. Favorites have their own validated persistence path.
+The server exits after its idle period; there is no session-startup service.
+
+Experimental activation requires an explicit standalone target and per-feature
+consent. The selected trusted executable validates the generated configuration;
+its identity must match the IPC peer and its renderer contract must verify.
+Pointer controls, enable flags and the validation executable participate in the
+review fingerprint. Apply checks runtime support again before any write, even
+for a plan with no file changes. Unsupported shells may preserve pointer JSON,
+but their stock exports and registrations omit the native node.
+
+`test-pointer-integration.py` exercises the real CLI and authenticated HTTP flow
+against an owned nested compositor. It checks readiness before configuration,
+capability loss between review and Apply, pointer-only and combined exports,
+explicit disable, reload and exact Restore. Browser tests separately cover UI
+choices, consent reset and stock-safe exports.
 
 ## Comments and scope
 

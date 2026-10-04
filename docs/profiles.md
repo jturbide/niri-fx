@@ -1,7 +1,8 @@
 # Independent action profiles
 
 A style describes one effect. A profile assigns separate styles to opening,
-closing and optionally resizing or moving. For example: open with Balanced
+closing and optionally resizing or moving. Desktop springs and pointer drag can
+be stored separately from those four shader actions. For example: open with Balanced
 fragments, close with Implosion, and leave your existing resize behavior unchanged.
 
 ![Textured fragments assemble and collapse inward in one profile](gifs/profile-fragment-flow.gif)
@@ -49,7 +50,7 @@ Browse by look in the [preset collections](collections.md). Pairings build on
 the named source presets; the five recommended combos refine their action settings
 as described above. Their JSON files contain the exact resolved parameters.
 The [motion packs](desktop-motion.md) and [coordinated action sets](action-sets.md) additionally coordinate stock desktop springs. Action sets suggest separately enabled resize and movement companions in Studio or through `profile --action-set`. All leave resize and experimental
-movement unset. Their shader cost is the cost of the chosen action; profiles do
+movement and pointer drag unset. Their shader cost is the cost of the chosen action; profiles do
 not add a second rendering pass. See [performance measurements](performance.md).
 
 ```sh
@@ -76,7 +77,9 @@ Choose a card in Library, then press **Preview combo**. The sequence plays the
 opening effect, holds the intact window and plays the closing effect using each
 action's own style and duration. Selected resize and movement effects are included
 when those profile slots are enabled; leaving them at shell defaults skips them.
-Previewing never enables either optional action or applies desktop settings.
+Previewing never enables an optional action or applies desktop settings. Pointer
+drag settings are saved with the combo but are not simulated by the canvas or
+**Preview combo**; use the isolated native demo to try them.
 
 Resize requires an explicit choice. **Movement (experimental)** shows the shader
 on a synthetic path; live move/swap effects require the verified experimental
@@ -118,7 +121,51 @@ The experimental `movement` slot is validated and preserved on import/export.
 Studio can edit it and preview the actual shader in **Movement (experimental shader)**.
 Tick **Include experimental movement in JSON** to store the choice; viewing it
 alone leaves the slot unset. Stock KDL and iRiS exports omit it by default; explicit standalone activation requires a verified running contract. See [Apply and Restore](setup.md#activate-experimental-movement). Movement requires the separate [compositor experiment](../experimental/README.md).
-Profiles do not add application-specific rules or interactive dragging hooks.
+Profiles do not add application-specific rules. Pointer drag uses a separate
+optional native extension, described below.
+
+## Optional pointer drag
+
+Pointer settings in profiles, Studio and reviewed activation are **Unreleased**
+features available from a current source checkout. The published 0.17.0 package
+does not include this workflow.
+
+In Library, **Pointer drag (optional)** offers **Use desktop settings**, **Disabled**,
+**Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer drag** exposes
+strength, damping and frequency. These choices are independent of the opening,
+closing, resize and timed movement styles. Switching to one shared window style
+preserves the pointer choice; Undo/Redo, JSON import/export and share links preserve it too.
+
+```sh
+python3 -m niri_fx profile --name 'Gentle Fragments' \
+  --open-preset subtle --close-preset subtle --pointer gentle > /tmp/gentle-fragments.json
+python3 -m niri_fx inspect --custom /tmp/gentle-fragments.json
+python3 scripts/nested-demo.py --custom /tmp/gentle-fragments.json
+```
+
+Build the [pointer extension](pointer-wobble.md) before running that demo. The
+profile can contain pointer settings with no timed `movement` action. The nested
+window uses its own compositor and configuration.
+
+A profile's optional top-level `pointer` object contains all three controls:
+`{"strength": 0.4, "damping": 85, "frequency": 10}`. Strength is a finite number
+from 0 to 2, damping is a whole percentage from 10 to 100, and frequency is a whole
+number from 2 to 16 Hz. Omitting `pointer` or setting it to `null` inherits existing
+behavior. Strength zero is an explicit disabled override; use `profile --pointer off`
+to generate one. The four `actions` keys remain unchanged, and existing schema 1
+profiles remain valid.
+
+Saving a pointer choice does not activate it. Stock KDL, iNiR registrations and
+Noctalia preset downloads omit pointer nodes, including a disabled override.
+Portable JSON retains the settings. Studio's **Export experimental config** includes
+pointer settings and any selected timed movement in one `window-movement` block;
+that file requires the matching compositor extensions.
+
+Live activation is available through the standalone adapter after verifying the
+running pointer contract. **Apply experimental pointer drag** is a separate
+choice from **Apply experimental movement**. Changing the pointer settings clears
+its activation choice and invalidates the review. A disabled override also requires
+explicit activation. See [reviewed pointer Apply and Restore](setup.md#activate-experimental-pointer-drag).
 
 ![Independent action editing in Studio](studio-profiles.png)
 
@@ -150,5 +197,8 @@ python3 scripts/nested-demo.py --custom examples/profiles/fragment-wake-motion.j
 ```
 
 The demo uses the movement action's duration and strength. `--duration-ms` and
-`--movement-strength` are explicit demo overrides. An unset movement slot is
-rejected rather than silently replaced. See [native movement](movement.md).
+`--movement-strength` are explicit demo overrides. A profile with pointer settings
+and an unset movement slot demonstrates pointer drag without adding a timed shader.
+A profile with neither choice is rejected. `--pointer-wobble gentle` can override
+its pointer settings for the demo without changing the JSON. See
+[native movement](movement.md) and [pointer drag](pointer-wobble.md).

@@ -152,8 +152,16 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate(
       `document.querySelector('button[aria-label="Favorite Night Motion copy"]').click()`,
     );
+    // A dialog close event can arrive after another dialog has already opened.
+    // Exercise that ordering directly instead of relying on browser frame timing.
+    await evaluate(`new Promise(resolve=>{
+      byId("profile-dialog").addEventListener("close",()=>resolve(),{once:true});
+      byId("rename-profile").click();
+      byId("profile-cancel").click();
+      byId("rename-profile").click();
+    })`);
     await evaluate(
-      'byId("rename-profile").click();byId("profile-save-name").value="Night_Motion";byId("profile-confirm").click()',
+      'byId("profile-save-name").value="Night_Motion";byId("profile-confirm").click()',
     );
     await settle(true);
     assert.match(await evaluate('byId("profile-dialog-error").textContent'), /already belongs/);

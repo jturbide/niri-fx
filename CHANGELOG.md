@@ -17,18 +17,37 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   after release, with bounded spring motion and ordinary input/layout behavior.
 - Gentle, Rubber Sheet and Release Settle drag presets, native KDL examples and
   an isolated demo with draggable synthetic cards. This source-checkout feature
-  is separate from Studio's timed Elastic effects and portable profiles.
+  responds to dragging separately from Studio's timed Elastic effects.
 - An optional compositor patch and separate build directory, with a dedicated
   runtime capability query and real Wayland pointer lifecycle checks.
 - Three looping native pointer showcases with real return drags, exact
   configuration downloads, input acceptance results and separately labelled
   nested submission diagnostics.
+- Portable pointer settings and Library controls for preset choice, strength,
+  damping and frequency. JSON, saved profiles, sharing and Undo retain them;
+  stock exports omit experimental nodes.
+- Explicit experimental config downloads and capability-verified standalone
+  pointer Apply/Restore, including combined movement and zero-strength profiles.
+  `--niri-binary` selects the executable used for diagnostics and validation.
+- Agent command discovery, canonical parameter metadata, compact catalog
+  summaries, a packaged reusable skill and public automation/contributor guides.
+- Isolated native checks for profile activation, runtime capability loss,
+  stock-binary mismatch and exact Restore through the Studio backend.
 
 ### Changed
 
 - Expand the roadmap into native-pointer acceptance, Studio/profile integration
   and physical presentation milestones, each with a concrete checklist.
 - Distinguish native KDL downloads from Studio JSON in the showcase gallery.
+- Refresh Library, Studio, combo and pointer recordings for the current controls.
+- Allow pointer-only portable profiles in the isolated native demo.
+
+### Fixed
+
+- Verify current compositor support before Restore reactivates a previous native
+  pointer or movement selection. Returning to stock settings remains available.
+- Preserve the current profile operation when an earlier dialog's queued close
+  event arrives after a new dialog has opened, including rename conflict recovery.
 
 ## 0.17.0 — 2026-10-04
 

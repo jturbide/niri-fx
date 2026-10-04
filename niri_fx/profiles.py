@@ -4,6 +4,7 @@ from dataclasses import asdict, dataclass
 
 from .model import FAMILIES, Effect
 from .motion import DesktopMotion, parse_motion
+from .pointer import PointerWobble, parse_pointer
 
 PROFILE_SCHEMA = 1
 
@@ -14,7 +15,8 @@ class Profile:
 
     None means inherit the compositor's existing behavior. Nested resize flags
     stay false because the resize slot is the only opt-in for a profile.
-    Movement data can round-trip here without appearing in stock Niri exports.
+    Movement and pointer data can round-trip here without appearing in stock
+    Niri exports. Pointer strength zero is an explicit disable, unlike None.
     """
 
     open: Effect
@@ -22,8 +24,11 @@ class Profile:
     resize: Effect | None = None
     movement: Effect | None = None
     motion: DesktopMotion | None = None
+    pointer: PointerWobble | None = None
 
     def __post_init__(self):
+        if self.pointer is not None and not isinstance(self.pointer, PointerWobble):
+            raise ValueError("Profile pointer must contain pointer wobble settings")
         if self.motion is not None and not isinstance(self.motion, DesktopMotion):
             raise ValueError("Profile motion must contain desktop spring settings")
         for action in ("open", "close", "resize", "movement"):
@@ -51,23 +56,26 @@ class Profile:
         }
         if self.motion is not None:
             document["motion"] = asdict(self.motion)
+        if self.pointer is not None:
+            document["pointer"] = asdict(self.pointer)
         return document
 
 
 def parse_profile(data):
     if type(data.get("schema")) is not int or data["schema"] != PROFILE_SCHEMA:
         raise ValueError(f"Profile requires schema: {PROFILE_SCHEMA}")
-    if set(data) not in (
-        {"kind", "schema", "name", "actions"},
-        {"kind", "schema", "name", "actions", "motion"},
-    ):
-        raise ValueError("Profile requires kind, schema, name, actions and optional motion only")
+    required = {"kind", "schema", "name", "actions"}
+    if not required <= set(data) or set(data) - required - {"motion", "pointer"}:
+        raise ValueError(
+            "Profile requires kind, schema, name, actions and optional motion or pointer only"
+        )
     actions = data.get("actions")
     if not isinstance(actions, dict) or set(actions) != {"open", "close", "resize", "movement"}:
         raise ValueError("Profile actions must contain open, close, resize and movement")
     try:
         return Profile(
             motion=parse_motion(data["motion"]) if "motion" in data else None,
+            pointer=parse_pointer(data.get("pointer")),
             **{
                 key: Effect(**value) if isinstance(value, dict) else value
                 for key, value in actions.items()

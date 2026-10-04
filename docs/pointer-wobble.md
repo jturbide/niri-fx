@@ -7,8 +7,9 @@ and settles after release. Its spring responds to actual drag events.
 This is an **opt-in native experiment**, available from the source checkout.
 It requires the separate pointer extension to the pinned Niri build. Stock Niri,
 Studio's timed Elastic styles and the 0.17.0 package do not provide this drag hook.
-Portable profiles and Studio integration are the next steps on the
-[roadmap](../ROADMAP.md#epic-4-pointer-driven-wobble).
+The current checkout includes portable profiles and Studio controls, with
+reviewed standalone Apply/Restore when the running renderer verifies support.
+Browser previews do not simulate pointer dragging.
 
 ## Try it
 
@@ -44,6 +45,53 @@ movement shader in the same isolated demo:
 ```sh
 python3 scripts/nested-demo.py --pointer-wobble rubber-sheet --preset momentum-glide
 ```
+
+## Choose it in Studio
+
+In **Library**, keep your chosen opening and closing effects, then use **Pointer
+drag** to choose a preset. Expand its controls to adjust strength, damping and
+frequency. **Use desktop settings** leaves the pointer choice unset; **Disabled**
+stores a zero-strength override. Resize and timed movement remain separate choices.
+
+Save the result to **My profiles**, share it or export JSON. These paths work
+online, offline and in every local shell integration. **Export stock Niri config**
+omits pointer and experimental movement. **Export experimental config** includes
+the selected native settings, combining pointer and timed movement in one block
+when both are chosen. It does not activate them.
+
+The CLI can build the same portable profile:
+
+```sh
+python3 -m niri_fx profile --name "Gentle Fragments" \
+  --open-preset balanced --close-preset balanced --pointer gentle > ./gentle-fragments.json
+python3 -m niri_fx inspect --custom ./gentle-fragments.json
+python3 scripts/nested-demo.py --custom ./gentle-fragments.json
+```
+
+The demo recognizes a pointer-only profile and uses the separate pointer build.
+The JSON retains opening/closing choices, optional shader actions and desktop
+springs alongside `pointer`. It can be imported back into Studio.
+
+## Reviewed activation
+
+Live activation requires a session already running the matching experimental
+compositor. Test its support and open standalone Studio with that executable:
+
+```sh
+python3 -m niri_fx doctor --niri-binary /path/to/patched/niri
+python3 -m niri_fx studio --target standalone --niri-binary /path/to/patched/niri
+```
+
+After choosing a pointer profile, **Apply experimental pointer drag** is offered
+only when the running renderer and executable match. **Review & apply** describes
+the changes; Apply verifies support again before writing. **Restore previous**
+restores the saved files unless later edits conflict. See [setup](setup.md) for
+the CLI equivalent and explicit config paths.
+
+Installed iNiR and connected Noctalia adapters retain pointer settings in JSON
+but apply stock actions. An accepted parser probe or a successful isolated demo
+does not establish support in the login compositor. NiriFX does not replace that
+compositor during Apply.
 
 ## Controls
 
@@ -108,7 +156,12 @@ check input after release and cancellation.
 ```sh
 python3 scripts/test-pointer-wobble.py --all
 python3 scripts/test-pointer-wobble.py --all --record
+python3 scripts/test-pointer-integration.py
 ```
+
+The integration check exercises profile review, Apply, runtime capability loss,
+combined movement and exact Restore against its own nested session. It does not
+write the login session's configuration.
 
 In addition to the demo requirements, the harness uses a C compiler,
 `wayland-scanner`, `pkg-config`, Wayland client development files, the wlr virtual

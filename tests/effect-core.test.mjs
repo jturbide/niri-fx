@@ -188,3 +188,90 @@ test("desktop motion survives share round-trips and exports the Python spring gr
     }
   }
 });
+
+test("pointer settings survive share links and normalize inheritance without changing builtins", () => {
+  for (const doc of Object.values(catalog.profiles)) assert.equal(doc.pointer, undefined);
+  const profile = {
+    kind: "profile",
+    schema: 1,
+    name: "Pointer combo",
+    actions: { open: {}, close: {}, resize: null, movement: null },
+  };
+  const inherited = core.normalizePreset({ ...profile, pointer: null });
+  assert.equal(Object.hasOwn(inherited, "pointer"), false);
+  for (const settings of [
+    catalog.pointer_defaults,
+    ...Object.values(catalog.pointer_presets).map((item) => item.settings),
+    { ...catalog.pointer_defaults, strength: 0 },
+  ]) {
+    const document = { ...profile, pointer: settings };
+    assert.deepEqual(
+      plain(core.decodeShareDocument(core.encodeShareDocument(document))),
+      plain(core.normalizePreset(document)),
+    );
+    assert.doesNotMatch(
+      core.renderKdl(core.normalizePreset(document)),
+      /window-movement|pointer-wobble/,
+    );
+  }
+  for (const [key, bad] of [
+    ["strength", NaN],
+    ["strength", Infinity],
+    ["damping", true],
+    ["frequency", 8.5],
+  ]) {
+    assert.throws(
+      () => core.normalizePointer({ ...catalog.pointer_defaults, [key]: bad }),
+      /Pointer/,
+    );
+  }
+});
+
+test("native pointer and timed movement KDL match Python and share one animation node", () => {
+  const document = core.normalizePreset({
+    kind: "profile",
+    schema: 1,
+    name: "Pointer combo",
+    actions: {
+      open: catalog.presets["spring-wobble"],
+      close: catalog.presets["balanced"],
+      resize: null,
+      movement: catalog.presets["pixel-transfer"],
+    },
+    motion: catalog.motion_packs.gentle,
+    pointer: { ...catalog.pointer_defaults, strength: 0.0078125 },
+  });
+  for (const movement of [false, true]) {
+    for (const pointer of [false, true]) {
+      const kdl = core.renderKdl(document, { movement, pointer });
+      const expected = execFileSync(
+        "python3",
+        [
+          "-c",
+          "import json,sys;from niri_fx.documents import parse_document;from niri_fx.effects import render_kdl;data=json.load(sys.stdin);print(render_kdl(parse_document(data['document'])[2], **data['options']), end='')",
+        ],
+        { input: JSON.stringify({ document, options: { movement, pointer } }), encoding: "utf8" },
+      );
+      // Generated-by comments identify the caller; all emitted config is shared.
+      assert.equal(kdl.slice(kdl.indexOf("\n")), expected.slice(expected.indexOf("\n")));
+      assert.equal(
+        (kdl.match(/ {4}window-movement \{/g) || []).length,
+        movement || pointer ? 1 : 0,
+      );
+      assert.equal((kdl.match(/pointer-wobble \{/g) || []).length, pointer ? 1 : 0);
+    }
+  }
+  for (const doc of [
+    { ...document, pointer: null },
+    { schema: 3, name: "Style", effect: catalog.defaults },
+  ])
+    assert.throws(() => core.renderKdl(doc, { pointer: true }), /explicitly choose pointer/);
+  assert.throws(
+    () =>
+      core.renderKdl(
+        { ...document, actions: { ...document.actions, movement: null } },
+        { movement: true, pointer: true },
+      ),
+    /explicitly choose a movement/,
+  );
+});

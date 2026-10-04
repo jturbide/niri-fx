@@ -11,7 +11,7 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
-from niri_fx.capabilities import MAX_REPLY, movement_capability
+from niri_fx.capabilities import MAX_REPLY, movement_capability, pointer_capability
 
 
 @contextmanager
@@ -235,6 +235,111 @@ class MovementCapabilityTests(unittest.TestCase):
             report = movement_capability(sys.executable, socket_path="/socket")
         self.assertFalse(report["session"]["connected"])
         self.assertEqual(report["session"]["status"], "unknown")
+
+
+class PointerCapabilityTests(unittest.TestCase):
+    contract = {
+        "schema": 1,
+        "pointer_wobble": 1,
+        "renderer_verified": True,
+        "configured": False,
+        "enabled": False,
+        "max_deformation": 64,
+        "max_release_ms": 2000,
+    }
+
+    def test_only_exact_pointer_contract_can_activate_even_when_not_configured(self):
+        cases = [(self.contract, True)]
+        for key in ("schema", "pointer_wobble", "max_deformation", "max_release_ms"):
+            cases.extend(
+                (self.contract | {key: value}, False)
+                for value in (True, str(self.contract[key]), self.contract[key] + 1)
+            )
+        for key in ("renderer_verified", "configured", "enabled"):
+            cases.append((self.contract | {key: 1}, False))
+        cases.extend(
+            [
+                (self.contract | {"renderer_verified": False}, False),
+                (self.contract | {"configured": True, "enabled": True}, True),
+                (self.contract | {"enabled": True}, False),
+                (self.contract | {"unknown": 1}, False),
+                (
+                    {key: value for key, value in self.contract.items() if key != "configured"},
+                    False,
+                ),
+                ([], False),
+                (None, False),
+            ]
+        )
+        for value, ready in cases:
+            with (
+                self.subTest(value=value),
+                ipc_reply(
+                    [
+                        b'{"Ok":{"Version":"experimental"}}\n',
+                        json.dumps({"Ok": {"NiriFxPointerCapabilities": value}}).encode() + b"\n",
+                    ]
+                ) as (path, requests),
+                patch(
+                    "niri_fx.capabilities._pointer_probe", return_value=("supported", "Accepted")
+                ),
+            ):
+                report = pointer_capability(sys.executable, socket_path=path)
+            self.assertEqual(report["activation_ready"], ready)
+            self.assertEqual(requests, [b'"Version"\n', b'"NiriFxPointerCapabilities"\n'])
+
+    def test_parser_probe_is_temporary_and_specific_to_pointer(self):
+        configs, paths = [], []
+
+        def validate(command, **kwargs):
+            self.assertEqual(command[:3], [os.path.abspath(sys.executable), "validate", "-c"])
+            self.assertEqual(kwargs["timeout"], 5)
+            paths.append(Path(command[3]))
+            configs.append(paths[-1].read_text())
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with patch("niri_fx.capabilities.subprocess.run", side_effect=validate):
+            report = pointer_capability(sys.executable)
+        self.assertEqual(report["status"], "supported")
+        self.assertNotIn("pointer-wobble", configs[0])
+        self.assertIn("pointer-wobble", configs[1])
+        self.assertNotIn("custom-shader", configs[1])
+        self.assertTrue(all(not path.exists() for path in paths))
+        self.assertFalse(report["activation_ready"])
+        success = subprocess.CompletedProcess([], 0, "", "")
+        for error, status in (
+            ("unexpected node `pointer-wobble`", "unsupported"),
+            ("unexpected node `custom-shader`", "unknown"),
+            ("error loading config", "unknown"),
+        ):
+            with patch(
+                "niri_fx.capabilities.subprocess.run",
+                side_effect=[success, subprocess.CompletedProcess([], 1, "", error)],
+            ):
+                self.assertEqual(pointer_capability(sys.executable)["status"], status)
+
+    def test_matching_version_or_parser_alone_cannot_activate_pointer(self):
+        with (
+            ipc_reply(b'{"Ok":{"Version":"experimental"}}\n') as (path, requests),
+            patch("niri_fx.capabilities._pointer_probe", return_value=("supported", "Accepted")),
+        ):
+            report = pointer_capability("/bin/sh", socket_path=path)
+        self.assertEqual(requests, [b'"Version"\n'])
+        self.assertFalse(report["session"]["same_binary"])
+        self.assertFalse(report["activation_ready"])
+        with (
+            ipc_reply(
+                [
+                    b'{"Ok":{"Version":"experimental"}}\n',
+                    json.dumps({"Ok": {"NiriFxPointerCapabilities": self.contract}}).encode()
+                    + b"\n",
+                ]
+            ) as (path, _),
+            patch("niri_fx.capabilities._pointer_probe", return_value=("unsupported", "Rejected")),
+        ):
+            self.assertFalse(
+                pointer_capability(sys.executable, socket_path=path)["activation_ready"]
+            )
 
 
 if __name__ == "__main__":

@@ -5,7 +5,7 @@ import unittest
 from dataclasses import FrozenInstanceError, replace
 from pathlib import Path
 
-from scripts.lib.pointer_wobble import PRESETS, PointerWobble, render_example, render_node
+from niri_fx.pointer import PRESETS, PointerWobble, parse_pointer, render_example, render_node
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -28,10 +28,34 @@ class PointerWobbleTests(unittest.TestCase):
     def test_inclusive_bounds_and_zero_strength_are_supported(self):
         self.assertEqual(
             render_node(PointerWobble(0, 10, 2), indent=""),
-            "pointer-wobble {\n    strength 0\n    damping 10\n    frequency 2\n}\n",
+            "pointer-wobble {\n    strength 0.000000\n    damping 10\n    frequency 2\n}\n",
         )
-        self.assertIn("strength 2\n", render_node(PointerWobble(2, 100, 16)))
-        self.assertIn("strength 0.123456789\n", render_node(PointerWobble(0.123456789)))
+        self.assertIn("strength 2.000000\n", render_node(PointerWobble(2, 100, 16)))
+        self.assertIn("strength 0.123457\n", render_node(PointerWobble(0.123456789)))
+
+    def test_parser_requires_complete_named_controls_and_preserves_disabled(self):
+        self.assertIsNone(parse_pointer(None))
+        self.assertEqual(
+            parse_pointer({"strength": 0, "damping": 65, "frequency": 8}), PointerWobble(0)
+        )
+        parsed = parse_pointer({"strength": 0.7, "damping": 65.0, "frequency": 8.0})
+        self.assertEqual(parsed, PointerWobble())
+        self.assertIs(type(parsed.damping), int)
+        self.assertIs(type(parsed.frequency), int)
+        for data in (
+            {},
+            {"strength": 1},
+            {"strength": 1, "damping": 65, "frequency": 8, "shader": "x"},
+            [],
+            False,
+        ):
+            with self.subTest(data=data), self.assertRaises(ValueError):
+                parse_pointer(data)
+
+    def test_script_harness_uses_the_same_domain_contract(self):
+        from scripts.lib.pointer_wobble import PointerWobble as HarnessWobble
+
+        self.assertIs(HarnessWobble, PointerWobble)
 
     def test_overrides_cannot_mutate_builtin_presets(self):
         preset = PRESETS["gentle"]

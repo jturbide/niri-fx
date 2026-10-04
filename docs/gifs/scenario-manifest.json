@@ -2190,66 +2190,6 @@
       ]
     },
     {
-      "name": "workflow-library",
-      "file": "docs/gifs/workflow-library.gif",
-      "bytes": 3829719,
-      "backend": "actual offline library UI / synthetic WebGL texture",
-      "fps": 20,
-      "frames": 535,
-      "sources": {
-        "niri_fx/library.js": "f29fff43add535ddfa1047110c855efb9a88847d5076a0fe9ff1029bd9390e1f",
-        "niri_fx/effect-core.js": "d50f74f966eaa75ece06be069ba0a7fa36981f7b0f659edf3b80b32d386932f1",
-        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
-        "niri_fx/studio.js": "892d16f13eb46e5194e756beece1f6f4983fce6a593cc19f881fb8faeda5f272",
-        "niri_fx/preview.html": "5d3d503e56edebcf096b0e8d2ef53f2cb9300f4f08f14f6fdf6897b167e9d942",
-        "niri_fx/studio.css": "9db4f37b68d58b3bc9ae093f215bc773dd70138eca53e3b64c8727472616f982",
-        "scripts/record-library-workflow.mjs": "e9318c17a095d244941c1aa97609b203ae8753b0c9a66027b89b1cdadaf8ed19"
-      },
-      "checks": [
-        "recommended selection",
-        "independent open/close",
-        "resize opt-in",
-        "actual Preview combo button",
-        "complete action-specific open/resize/close cycle",
-        "stable seed and unchanged document/history",
-        "shared style",
-        "saved profile",
-        "explicit save confirmation",
-        "copy and rename",
-        "remove Library copy only",
-        "actual JSON and KDL downloads",
-        "stock Niri validation"
-      ]
-    },
-    {
-      "name": "workflow-studio-profile",
-      "file": "docs/gifs/workflow-studio-profile.gif",
-      "bytes": 754055,
-      "backend": "actual offline Studio UI / synthetic WebGL texture",
-      "sources": {
-        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
-        "niri_fx/effect-core.js": "d50f74f966eaa75ece06be069ba0a7fa36981f7b0f659edf3b80b32d386932f1",
-        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
-        "niri_fx/library.js": "f29fff43add535ddfa1047110c855efb9a88847d5076a0fe9ff1029bd9390e1f",
-        "niri_fx/studio.js": "892d16f13eb46e5194e756beece1f6f4983fce6a593cc19f881fb8faeda5f272",
-        "niri_fx/preview.html": "5d3d503e56edebcf096b0e8d2ef53f2cb9300f4f08f14f6fdf6897b167e9d942",
-        "niri_fx/studio.css": "9db4f37b68d58b3bc9ae093f215bc773dd70138eca53e3b64c8727472616f982",
-        "scripts/record-studio-workflow.mjs": "41ffd3f9e74bc623685d4d9f5acb0d6ae8e033a7aaf120d84b4330e44e7eac13"
-      },
-      "fps": 10,
-      "frames": 140,
-      "checks": [
-        "file import",
-        "independent close edit",
-        "visible advanced wind control",
-        "A/B",
-        "undo/redo",
-        "actual JSON and KDL downloads",
-        "stock Niri validation",
-        "resize absent"
-      ]
-    },
-    {
       "name": "native-pointer-gentle",
       "file": "docs/gifs/native-pointer-gentle.gif",
       "title": "Gentle pointer drag",
@@ -2262,7 +2202,7 @@
         "frequency": 10
       },
       "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
-      "bytes": 938370,
+      "bytes": 1558355,
       "fps": 50,
       "width": 800,
       "colors": 64,
@@ -2274,9 +2214,10 @@
         "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
         "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
         "scripts/lib/pointer.py": "1187fb073d6a2346a63677f373d25523f2af14719870068128397ad891b26fd6",
-        "scripts/lib/pointer_wobble.py": "11b1cf955dfc14bc8b09d18ef29412a82fee440b905103a8ec3ad15fa0c0fe88",
-        "scripts/test-pointer-wobble.py": "7c673493e200d3c2adcc89ef2cb06de22a67cb2bd88541c0f3e89ceb29ba6dda",
-        "examples/experimental/pointer-wobble-gentle.kdl": "ab46c49b3eaa30e3a1a577688392523ec7df2aafb5dadc3c405030b216bad0cb"
+        "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "scripts/test-pointer-wobble.py": "00e326672a4ccdb869c94448378d0129fe1536a42d2bfe4039aa182be22cbbdd",
+        "examples/experimental/pointer-wobble-gentle.kdl": "79621b46f12462e23dbb52afdbc14a7782f0e57bc8e481bd9107727d92951640"
       },
       "checks": [
         "floating-reversals-release",
@@ -2304,7 +2245,7 @@
         "frequency": 6
       },
       "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
-      "bytes": 1264060,
+      "bytes": 1892474,
       "fps": 50,
       "width": 800,
       "colors": 64,
@@ -2316,9 +2257,10 @@
         "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
         "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
         "scripts/lib/pointer.py": "1187fb073d6a2346a63677f373d25523f2af14719870068128397ad891b26fd6",
-        "scripts/lib/pointer_wobble.py": "11b1cf955dfc14bc8b09d18ef29412a82fee440b905103a8ec3ad15fa0c0fe88",
-        "scripts/test-pointer-wobble.py": "7c673493e200d3c2adcc89ef2cb06de22a67cb2bd88541c0f3e89ceb29ba6dda",
-        "examples/experimental/pointer-wobble-rubber-sheet.kdl": "ebea904ceb81622cb6fa615c94f0ec42bb664ae0d9be332be2f0b77b0a0957ed"
+        "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "scripts/test-pointer-wobble.py": "00e326672a4ccdb869c94448378d0129fe1536a42d2bfe4039aa182be22cbbdd",
+        "examples/experimental/pointer-wobble-rubber-sheet.kdl": "44fc62a6149ac053157dd98f5c01a115d4ba52ffadfcd269ccb59a9d745a33b8"
       },
       "checks": [
         "floating-reversals-release",
@@ -2346,7 +2288,7 @@
         "frequency": 8
       },
       "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
-      "bytes": 1112792,
+      "bytes": 1749781,
       "fps": 50,
       "width": 800,
       "colors": 64,
@@ -2358,9 +2300,10 @@
         "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
         "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
         "scripts/lib/pointer.py": "1187fb073d6a2346a63677f373d25523f2af14719870068128397ad891b26fd6",
-        "scripts/lib/pointer_wobble.py": "11b1cf955dfc14bc8b09d18ef29412a82fee440b905103a8ec3ad15fa0c0fe88",
-        "scripts/test-pointer-wobble.py": "7c673493e200d3c2adcc89ef2cb06de22a67cb2bd88541c0f3e89ceb29ba6dda",
-        "examples/experimental/pointer-wobble-release-settle.kdl": "8da036ad79a1a0e29301b109594041e51e69417eaa26de336395363d9c51abc5"
+        "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "scripts/test-pointer-wobble.py": "00e326672a4ccdb869c94448378d0129fe1536a42d2bfe4039aa182be22cbbdd",
+        "examples/experimental/pointer-wobble-release-settle.kdl": "633626dde2a2daa4ef299af5127464633a6963d0d58b4f409d36d542bf755c9e"
       },
       "checks": [
         "floating-reversals-release",
@@ -2373,6 +2316,71 @@
         "disable-during-grab",
         "disable-during-grab",
         "close-cancels-grab-survivor-input"
+      ]
+    },
+    {
+      "name": "workflow-library",
+      "file": "docs/gifs/workflow-library.gif",
+      "bytes": 3917677,
+      "backend": "actual offline library UI / synthetic WebGL texture",
+      "fps": 20,
+      "frames": 625,
+      "sources": {
+        "niri_fx/library.js": "f9a6ea5095b01789d34c31f98ab4f4000e7d1d78c64895fcf065ffbb7d1d609c",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
+        "niri_fx/studio.js": "d101fc0843f752d1b47371896eb6167bd507589436e3450faf2b2d4dc3384c65",
+        "niri_fx/preview.html": "7102d61edd82b8e606b2947907beb270b389d40f79b069b40926c352d1dc9c42",
+        "niri_fx/studio.css": "ce396fb1a87fb350b02bdeb96bbc2c0bb0006299a85fe1090b65d9d1e3f256d1",
+        "scripts/record-library-workflow.mjs": "aaf757fe3db88345483c81d4759e00c5617a327806a69acba5224080cb4cf548"
+      },
+      "checks": [
+        "recommended selection",
+        "independent open/close",
+        "resize opt-in",
+        "actual Preview combo button",
+        "complete action-specific open/resize/close cycle",
+        "stable seed and unchanged document/history",
+        "shared style",
+        "explicit pointer preset and bounded custom controls",
+        "pointer metadata survives shared window styles and JSON export",
+        "stock KDL omits pointer while experimental export includes it",
+        "pointer restored to inherited desktop settings",
+        "saved profile",
+        "explicit save confirmation",
+        "copy and rename",
+        "remove Library copy only",
+        "actual JSON and KDL downloads",
+        "stock Niri validation"
+      ]
+    },
+    {
+      "name": "workflow-studio-profile",
+      "file": "docs/gifs/workflow-studio-profile.gif",
+      "bytes": 760469,
+      "backend": "actual offline Studio UI / synthetic WebGL texture",
+      "sources": {
+        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
+        "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
+        "niri_fx/combo-preview.js": "a52dfb964d26fc81d6d54b7ea659298c9a22c0ec363333cfbf80d3c770aaa469",
+        "niri_fx/library.js": "f9a6ea5095b01789d34c31f98ab4f4000e7d1d78c64895fcf065ffbb7d1d609c",
+        "niri_fx/studio.js": "d101fc0843f752d1b47371896eb6167bd507589436e3450faf2b2d4dc3384c65",
+        "niri_fx/preview.html": "7102d61edd82b8e606b2947907beb270b389d40f79b069b40926c352d1dc9c42",
+        "niri_fx/studio.css": "ce396fb1a87fb350b02bdeb96bbc2c0bb0006299a85fe1090b65d9d1e3f256d1",
+        "scripts/record-studio-workflow.mjs": "41ffd3f9e74bc623685d4d9f5acb0d6ae8e033a7aaf120d84b4330e44e7eac13"
+      },
+      "fps": 10,
+      "frames": 140,
+      "checks": [
+        "file import",
+        "independent close edit",
+        "visible advanced wind control",
+        "A/B",
+        "undo/redo",
+        "actual JSON and KDL downloads",
+        "stock Niri validation",
+        "resize absent"
       ]
     }
   ]

@@ -26,6 +26,11 @@ checkout and build directory. Drag a synthetic card by its title bar. Gentle,
 Rubber Sheet and Release Settle are available; the normal movement build keeps
 its existing behavior. Neither command installs a login compositor.
 
+The current Studio Library can store these choices in portable profiles and
+export the native config. `nested-demo.py --custom PATH.json` accepts a pointer
+profile with or without a timed movement shader. See the
+[profile and activation guide](../docs/pointer-wobble.md#choose-it-in-studio).
+
 Build dependencies are documented in the pinned source's `docs/wiki/Getting-Started.md` (Building section).
 The script fetches the exact upstream commit, applies the patch, builds with
 `--locked --no-default-features`, and records the patch/binary hashes. Source and
@@ -167,12 +172,14 @@ This is not the complete transaction/particle engine described in
   interrupted resize/close and graphics-reset behavior need broader validation
   before replacing a login compositor. The TTY path compiles but was not activated.
 
-Stock configuration exports contain only supported open, close and optional
-resize settings. Studio can store experimental movement separately in portable
-JSON. `doctor --movement-binary PATH` checks a trusted binary's config parser and
-whether the running IPC session uses that executable; see
-[movement diagnostics](../docs/setup.md#movement-support). This does not verify
-the renderer or shader contract. Live movement controls in iRiS remain planned.
+Stock configuration exports contain supported window actions and selected stock
+desktop timing. Studio retains experimental movement and pointer settings in
+portable JSON. `doctor --niri-binary PATH` checks the selected executable's parser,
+the running session's identity and its versioned renderer contracts. Reviewed
+standalone activation requires a matching, verified runtime and separate explicit
+consent for each experiment. Shell adapters apply stock actions. See
+[movement diagnostics](../docs/setup.md#movement-support) and
+[pointer activation](../docs/pointer-wobble.md#reviewed-activation).
 
 Portable profiles with an explicit movement slot are accepted by
 `python3 scripts/nested-demo.py --custom PATH.json`. The demo uses owned synthetic

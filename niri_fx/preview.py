@@ -32,6 +32,7 @@ from .effects import (
     shader_templates,
 )
 from .motion import SPRING_LIMITS, Spring, motion_documents
+from .pointer import POINTER_LIMITS, PointerWobble, pointer_documents
 from .profiles import PROFILE_SCHEMA, Profile
 
 
@@ -114,6 +115,9 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "motion_packs": motion_documents(),
         "motion_defaults": asdict(Spring()),
         "motion_limits": SPRING_LIMITS,
+        "pointer_presets": pointer_documents(),
+        "pointer_defaults": asdict(PointerWobble()),
+        "pointer_limits": POINTER_LIMITS,
         "collections": collection_documents(),
         "profile_descriptions": {name: recipe[2] for name, recipe in PROFILE_RECIPES.items()},
         "templates": shader_templates(),

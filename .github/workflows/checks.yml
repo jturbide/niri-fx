@@ -101,6 +101,11 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx list --text --recommended
           /tmp/niri-fx-package/bin/niri-fx list --profiles --text
           /tmp/niri-fx-package/bin/niri-fx list --documents > catalog.json
+          /tmp/niri-fx-package/bin/niri-fx list --summary --recommended > catalog-summary.json
+          /tmp/niri-fx-package/bin/niri-fx agent-info > agent-info.json
+          /tmp/niri-fx-package/bin/niri-fx agent-info --parameters > agent-parameters.json
+          /tmp/niri-fx-package/bin/niri-fx agent-info --skill > agent-skill.md
+          /tmp/niri-fx-package/bin/python -c "from pathlib import Path; import json; assert json.loads(Path('agent-info.json').read_text())['schema'] == 1; assert json.loads(Path('agent-parameters.json').read_text())['pointer']['integer'] == ['damping', 'frequency']; assert 'name: nirifx' in Path('agent-skill.md').read_text()"
           /tmp/niri-fx-package/bin/niri-fx inspect --profile fragment-flow > builtin-profile.json
           /tmp/niri-fx-package/bin/niri-fx render --profile burst-and-drift > builtin-profile.kdl
           /tmp/niri-fx-package/bin/niri-fx picker --qml-dir
@@ -120,6 +125,9 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx render --custom profile.json > profile.kdl
           /tmp/niri-fx-package/bin/niri-fx inspect --custom profile.json > inspected-profile.json
           /tmp/niri-fx-package/bin/niri-fx preview --custom profile.json --output profile.html
+          /tmp/niri-fx-package/bin/niri-fx profile --open-preset balanced --close-preset balanced --pointer gentle > pointer-profile.json
+          /tmp/niri-fx-package/bin/niri-fx render --custom pointer-profile.json > pointer-stock.kdl
+          /tmp/niri-fx-package/bin/python -c "from pathlib import Path; import json; assert json.loads(Path('pointer-profile.json').read_text())['pointer']['strength'] == 0.4; assert 'pointer-wobble' not in Path('pointer-stock.kdl').read_text()"
           /tmp/niri-fx-package/bin/niri-fx profile --action-set fragments-motion --include-resize --include-movement > action-set.json
           /tmp/niri-fx-package/bin/niri-fx render --custom action-set.json > action-set.kdl
           /tmp/niri-fx-package/bin/python -c "from pathlib import Path; p = Path('action-set.kdl').read_text(); assert 'window-resize' in p and 'window-movement' not in p and 'workspace-switch' in p"

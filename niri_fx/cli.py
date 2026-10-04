@@ -111,6 +111,9 @@ def parser():
     listing.add_argument(
         "--documents", action="store_true", help="Portable documents for all styles and profiles"
     )
+    listing.add_argument(
+        "--summary", action="store_true", help="Compact style and profile metadata as JSON"
+    )
     listing.add_argument("--text", action="store_true", help="Readable preset names and timings")
     listing.add_argument("--recommended", action="store_true", help="Show the starter selection")
     listing.add_argument("--family", choices=FAMILIES)
@@ -121,6 +124,12 @@ def parser():
         "--collection", choices=COLLECTIONS, help="Browse a collection of styles and pairings"
     )
     commands.add_parser("families", help="Print supported effect families and capabilities as JSON")
+    agent = commands.add_parser("agent-info", help="Print automation workflows and contracts")
+    agent_format = agent.add_mutually_exclusive_group()
+    agent_format.add_argument("--skill", action="store_true", help="Print the packaged agent skill")
+    agent_format.add_argument(
+        "--parameters", action="store_true", help="Print effect and pointer controls as JSON"
+    )
     inspect = commands.add_parser(
         "inspect", help="Validate and print normalized style/profile JSON"
     )
@@ -129,6 +138,13 @@ def parser():
     document.add_argument("--profile", choices=PROFILES)
     profile = commands.add_parser("profile", help="Create an independent action profile as JSON")
     from .motion import MOTION_PACKS
+    from .pointer import PRESETS as POINTER_PRESETS
+
+    profile.add_argument(
+        "--pointer",
+        choices=(*POINTER_PRESETS, "off"),
+        help="Save optional pointer wobble settings in JSON; off saves an explicit zero strength",
+    )
 
     profile.add_argument(
         "--desktop-motion",
@@ -213,9 +229,11 @@ def parser():
 
     studio.add_argument("--config", type=Path, default=default_config())
     studio.add_argument(
+        "--niri-binary",
         "--movement-binary",
+        dest="movement_binary",
         type=Path,
-        help="Explicit experimental compositor for movement activation",
+        help="Trusted experimental compositor for movement and pointer activation",
     )
     studio.add_argument("--preset-dir", type=Path, help="Connected Noctalia preset directory")
     studio.add_argument("--picker-file", type=Path, help="Connected Noctalia animation target file")
@@ -260,7 +278,14 @@ def parser():
         help="Explicitly activate experimental movement on a verified running compositor (standalone only)",
     )
     setup.add_argument(
+        "--enable-pointer",
+        action="store_true",
+        help="Apply the profile's pointer settings on a verified running compositor (standalone only)",
+    )
+    setup.add_argument(
+        "--niri-binary",
         "--movement-binary",
+        dest="movement_binary",
         type=Path,
         help="Trusted Niri executable matching the running experimental session",
     )
@@ -276,12 +301,21 @@ def parser():
     )
     diagnose.add_argument("--text", action="store_true", help="Print a readable diagnostic report")
     diagnose.add_argument(
+        "--niri-binary",
         "--movement-binary",
+        dest="movement_binary",
         type=Path,
-        help="Probe movement config support in this trusted Niri binary (default: Niri on PATH)",
+        help="Probe movement and pointer support in this trusted Niri binary (default: Niri on PATH)",
     )
     restore = commands.add_parser("restore", help="Review or restore the latest setup snapshot")
     restore.add_argument("--transaction", help="Restore a specific setup transaction")
+    restore.add_argument(
+        "--niri-binary",
+        "--movement-binary",
+        dest="movement_binary",
+        type=Path,
+        help="Trusted compositor required when Restore reintroduces experimental settings",
+    )
     for command in (setup, restore):
         mode = command.add_mutually_exclusive_group()
         mode.add_argument("--apply", action="store_true", help="Write the reviewed changes")
@@ -319,9 +353,24 @@ def main(argv=None):
     try:
         if arguments.command == "families":
             print(json.dumps(FAMILIES, indent=2))
+        elif arguments.command == "agent-info":
+            from .agent import agent_info, parameter_info, skill_text
+
+            if arguments.skill:
+                print(skill_text())
+            else:
+                print(
+                    json.dumps(parameter_info() if arguments.parameters else agent_info(), indent=2)
+                )
         elif arguments.command == "list":
             from .terminal import catalog, print_catalog, print_collections
 
+            if arguments.summary and (
+                arguments.text or arguments.documents or arguments.collections
+            ):
+                raise ValueError(
+                    "--summary cannot be combined with --text, --documents or --collections"
+                )
             if arguments.collections:
                 if (
                     arguments.profiles
@@ -342,10 +391,14 @@ def main(argv=None):
                 arguments.family,
                 arguments.recommended,
                 profiles=arguments.profiles,
-                all_styles=arguments.documents,
+                all_styles=arguments.documents or arguments.summary,
                 collection=arguments.collection,
             )
-            if arguments.text:
+            if arguments.summary:
+                from .catalog import summaries
+
+                print(json.dumps(summaries(keys), indent=2))
+            elif arguments.text:
                 print_catalog(keys)
             else:
                 presets = (
@@ -371,6 +424,8 @@ def main(argv=None):
                 launch_picker(arguments)
         elif arguments.command == "profile":
             from .motion import MOTION_PACKS
+            from .pointer import PRESETS as POINTER_PRESETS
+            from .pointer import PointerWobble
             from .profiles import Profile
 
             if arguments.action_set:
@@ -407,6 +462,13 @@ def main(argv=None):
                     else None,
                 )
                 name = arguments.name if arguments.name is not None else "My Profile"
+            if arguments.pointer:
+                effect = replace(
+                    effect,
+                    pointer=PointerWobble(strength=0)
+                    if arguments.pointer == "off"
+                    else POINTER_PRESETS[arguments.pointer].wobble,
+                )
             document = effect.document(name)
             parse_document(document)
             print(json.dumps(document, indent=2))
@@ -437,7 +499,13 @@ def main(argv=None):
 
             print(
                 json.dumps(
-                    restore(arguments.state, arguments.transaction, arguments.apply), indent=2
+                    restore(
+                        arguments.state,
+                        arguments.transaction,
+                        arguments.apply,
+                        binary=arguments.movement_binary,
+                    ),
+                    indent=2,
                 )
             )
         elif arguments.command == "setup":
@@ -456,6 +524,7 @@ def main(argv=None):
                     arguments.custom
                     or arguments.name
                     or arguments.enable_movement
+                    or arguments.enable_pointer
                     or any(getattr(arguments, k) is not None for k in EFFECT_FIELDS)
                 ):
                     raise ValueError(

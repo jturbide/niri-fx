@@ -5,7 +5,9 @@ backend, open an issue describing the intended behavior before implementing it.
 Check the [project roadmap](ROADMAP.md), [compatibility](docs/compatibility.md) and
 [movement limits](experimental/README.md) first. Read the [architecture](docs/architecture.md),
 [effect contribution guide](docs/adding-effects.md) and [next phases](docs/next-phases.md)
-for implementation boundaries and acceptance criteria.
+for implementation boundaries and acceptance criteria. Agent-assisted contributions
+also follow [AGENTS.md](AGENTS.md); using NiriFX as an agent is covered separately
+in the [agent guide](docs/agents.md).
 
 ## Development setup
 
@@ -54,7 +56,8 @@ export parity; it is not a compositor GPU benchmark. See
 | `niri_fx/` | Canonical implementation, module entry point and packaged assets |
 | `niri_fx/model.py`, `parameters.py`, `presets.py` | Shared parameter catalog, validation and built-in styles |
 | `niri_fx/catalog.py` | Shared starter selection, curated collections and open/close pairings, normalized picker documents and shared family labels |
-| `niri_fx/documents.py`, `profiles.py` | Shell-independent document validation, serialization and action choices |
+| `niri_fx/documents.py`, `profiles.py`, `pointer.py`, `motion.py` | Shell-independent documents, action choices, pointer controls and desktop springs |
+| `niri_fx/agent.py`, `agent_data/nirifx/SKILL.md` | Canonical agent operation map, parameter metadata and packaged CLI skill |
 | `niri_fx/effects.py`, `shaders/` | Shader assembly and stock/experimental export boundaries |
 | `niri_fx/setup.py`, `pack.py`, `storage.py` | Setup plans, preset folders, shared atomic writes, snapshots and conflict-aware restore |
 | `niri_fx/library.py`, `library.js` | Shared ready-made selection, action combos, saved documents and reviewed activation adapters |
@@ -65,7 +68,7 @@ export parity; it is not a compositor GPU benchmark. See
 | `niri_fx/studio.py`, `preview.html`, `studio.js`, `studio.css`, `motion-preview.js` | HTTP/app lifetime, editor state, actual shader previews and labelled movement concepts |
 | `tests/`, `tests/fixtures/`, `scripts/validate.py`, `scripts/browser-smoke.mjs` | Shared document cases, domain/storage tests, shader parity and real browser checks |
 | `scripts/lib/browser.mjs` | Chromium startup, bounded protocol calls, readiness and cleanup shared by all browser tools |
-| `experimental/`, `scripts/build-niri-movement.py`, `scripts/nested-demo.py` | Pinned compositor patch and isolated native experiment |
+| `experimental/`, `scripts/build-niri-movement.py`, `scripts/nested-demo.py` | Pinned movement patch, optional pointer extension and isolated native demos |
 | `docs/`, `CHANGELOG.md` | User guidance, evidence and release history |
 
 ## Code conventions and checks
@@ -100,7 +103,7 @@ export parity; it is not a compositor GPU benchmark. See
   tests for ownership, restore and migrations. Browser E2E checks render actual
   pixels, compare Python exports and save all families through the real Studio CLI.
   `npm test` also runs the DOM-free browser core with the same document cases as
-  Python and compares all supported stock action shaders. `npm run test:browser`
+  Python and compares supported stock/native shaders and combined pointer KDL. `npm run test:browser`
   tests real Chromium launch/error/timeout/cleanup and gallery filtering/playback before the full editor E2E.
   Avoid duplicating these with a separate framework just to increase test counts.
 - GitHub Actions classifies changes conservatively: an explicit docs/media allowlist skips unit, GLSL, package and browser work. Lint and docs checks still run. Unknown paths, missing history, manual runs and failed selection require full checks or fail the required jobs. Required job names remain unchanged.
@@ -125,7 +128,9 @@ Tool configurations: [Ruff](https://docs.astral.sh/ruff/configuration/),
 Write user guides for someone discovering NiriFX for the first time: explain
 what a feature does, how to use it and which setups it supports. Use the changelog
 for release history and the engineering/testing guides for implementation details.
-Keep limitations explicit, especially stock Niri versus experimental movement.
+Keep limitations explicit, especially stock Niri versus experimental movement and
+pointer drag. Describe source-checkout additions as Unreleased until they ship in
+a versioned package.
 
 Keep personal configurations, local workspace paths, session URLs, raw audit
 reports, planning conversations and outreach drafts out of commits and PR bodies.
@@ -155,20 +160,23 @@ it does not replace it. Examples should use generic paths and names.
 - Explain the problem, resulting behavior, and checks run in the pull request.
 - Add an **Unreleased** changelog entry for user-visible behavior, defaults,
   compatibility, packaging or substantial documentation changes.
-- Keep resize fragments opt-in. Keep movement shaders out of stock Niri exports.
+- Keep resize fragments opt-in. Keep movement shaders and pointer nodes out of
+  stock Niri exports, including explicit zero-strength pointer settings.
 - Preserve unrelated presets and timings, backups, symlinks and explicit custom
   choices. Registration and saving must remain separate from activation.
-- Keep Python and browser parameter validation and shader generation consistent.
+- Keep Python and browser parameter validation, pointer documents and shader
+  generation consistent. Optional pointer settings are profile metadata, not a
+  fifth shader action. All built-in profiles leave pointer settings unset.
 - Test behavior that can regress; avoid tests that only repeat implementation.
 - Use synthetic content in captures. Do not commit user configs, session tokens,
   raw recordings, binaries, toolchains or the `artifacts/` directory.
 
-Changes to the Niri patch need the pinned build/tests and a nested-session check.
+Changes to either Niri patch need the pinned build/tests and a nested-session check.
 Do not replace a contributor's login compositor to run tests. Explain any new
 capture, damage, rendering or interruption behavior and its validation limits.
 
 Original NiriFX contributions use [MIT](LICENSE). Changes derived from Niri
-in the movement patch use [GPL-3.0-or-later](experimental/COPYING-NIRI).
+in the movement and pointer patches use [GPL-3.0-or-later](experimental/COPYING-NIRI).
 Preserve attribution for any imported code; see [third-party notices](THIRD_PARTY.md).
 There is no CLA. Follow the [release guide](docs/releasing.md) for maintainer tasks.
 
@@ -181,3 +189,35 @@ For overlapping compositor actions, run `python3 scripts/test-interruptions.py`
 and, after building the pinned experiment, add `--experimental`. These tests use
 owned nested sessions with transparent fixtures. Sequential output scales are not
 a substitute for physical mixed-monitor acceptance.
+
+## Native pointer and agent acceptance
+
+For changes to pointer profiles, capability verification or reviewed native
+activation, build the optional extension and run the owned-session integration
+check from a working graphical session:
+
+```sh
+python3 scripts/build-niri-movement.py --pointer-wobble --test
+python3 scripts/test-pointer-integration.py
+```
+
+The integration check starts a separate nested compositor and temporary Studio
+server. It verifies the selected executable, live pointer contract, authenticated
+review/Apply, capability-loss refusal, config reload and exact Restore. It covers
+pointer-only settings, pointer plus timed movement and an explicit zero-strength
+override without enabling resize. Evidence remains under ignored `artifacts/`.
+It never replaces the login compositor or writes its configuration.
+
+For renderer or spring changes, also run `python3 scripts/test-pointer-wobble.py --all`.
+Use `--record` only when regenerating the native showcases, then rebuild the gallery
+and check the recording source hashes. The timed browser preview cannot validate
+actual pointer drag or release behavior. Physical mixed-monitor acceptance remains
+separate from these nested checks.
+
+For agent support, exercise the packaged `agent-info`, `--parameters` and `--skill`
+commands as a consumer. Discover a real preset, build and inspect its JSON, and
+produce an offline preview. Run reviewed Apply and Restore only against newly
+created temporary config and state directories. Check the exact reviewed paths,
+`plan_sha256`, transaction ID and restored bytes. Keep the canonical operation map
+in `niri_fx/agent.py` and the packaged skill consistent with the CLI; an agent
+adapter must reuse setup transactions rather than add a configuration writer.

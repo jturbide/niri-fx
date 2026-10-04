@@ -63,22 +63,42 @@ def selection(args):
         else PRESETS[args.preset or default]
     )
     movement = document.movement if isinstance(document, Profile) else document
+    pointer = pointer_selection(args, document)
+    # A named pointer demo selects open/close styling only. A custom profile
+    # declares its timed movement independently of its pointer settings.
+    if pointer is not None and not args.custom and not args.preset:
+        movement = None
     if movement is None:
-        raise ValueError("The profile must explicitly include a movement action")
-    if not FAMILIES[movement.family]["movement"]:
+        if pointer is None:
+            raise ValueError(
+                "The profile must explicitly include a movement action or pointer settings"
+            )
+        if args.movement_strength is not None or getattr(args, "duration_ms", None) is not None:
+            raise ValueError(
+                "Movement overrides require an explicit timed movement action or preset"
+            )
+    elif not FAMILIES[movement.family]["movement"]:
         raise ValueError("This family does not support experimental movement")
     if args.movement_strength is not None:
         movement = replace(movement, movement_strength=args.movement_strength)
     # A profile already names its resize action; no override may silently replace it.
-    if args.resize and not FAMILIES[movement.family]["resize"]:
-        raise ValueError("This family does not support resize")
     if args.resize and isinstance(document, Profile):
         raise ValueError(
             "Set the profile's resize action instead of combining --custom with --resize"
         )
     if not isinstance(document, Profile):
-        document = replace(movement, resize=args.resize)
+        document = movement if movement is not None else document
+        if args.resize and not FAMILIES[document.family]["resize"]:
+            raise ValueError("This family does not support resize")
+        document = replace(document, resize=args.resize)
     return document, movement
+
+
+def pointer_selection(args, document):
+    """A command-line preset overrides the portable profile only for this demo."""
+    if name := getattr(args, "pointer_wobble", None):
+        return POINTER_PRESETS[name].wobble
+    return document.pointer if isinstance(document, Profile) else None
 
 
 def main():
@@ -89,7 +109,9 @@ def main():
         choices=[name for name, effect in PRESETS.items() if FAMILIES[effect.family]["movement"]],
     )
     choices.add_argument(
-        "--custom", type=Path, help="Portable effect or profile with an explicit movement action"
+        "--custom",
+        type=Path,
+        help="Portable effect or profile with explicit movement or pointer settings",
     )
     parser.add_argument(
         "--duration-ms", type=int, help="Override the selected movement time (100 to 3000 ms)"
@@ -110,7 +132,7 @@ def main():
     parser.add_argument(
         "--pointer-wobble",
         choices=list(POINTER_PRESETS),
-        help="Explicitly enable real drag deformation in the separate pointer prototype",
+        help="Select a pointer preset; overrides a custom profile's pointer settings for this demo",
     )
     args = parser.parse_args()
     if args.duration_ms is not None and not 100 <= args.duration_ms <= 3000:
@@ -119,16 +141,12 @@ def main():
         document, movement = selection(args)
     except (ValueError, OSError) as error:
         parser.error(str(error))
-    duration = args.duration_ms or (250 if args.pointer_wobble else movement.movement_ms)
-    pointer = POINTER_PRESETS[args.pointer_wobble].wobble if args.pointer_wobble else None
+    pointer = pointer_selection(args, document)
+    duration = args.duration_ms or (movement.movement_ms if movement is not None else 250)
     binary, _, _ = experiment(pointer_wobble=pointer is not None)
     # The standalone pointer demo isolates actual dragging. An explicit style
     # selection can also exercise the existing timed movement shader.
-    source = (
-        None
-        if pointer is not None and not args.preset and not args.custom
-        else movement_shader(movement)
-    )
+    source = movement_shader(movement) if movement is not None else None
     with NestedSession(
         config(document, duration, source, pointer_wobble=pointer), binary=binary
     ) as session:
@@ -151,8 +169,14 @@ def main():
         )
         print(f"Nested demo: {controls}\nLogs: {session.root}", flush=True)
         if pointer is not None:
+            label = (
+                POINTER_PRESETS[args.pointer_wobble].name
+                if args.pointer_wobble
+                else "Custom profile settings"
+            )
             print(
-                f"Pointer wobble: {POINTER_PRESETS[args.pointer_wobble].name}. "
+                f"Pointer wobble: {label} "
+                f"(strength {pointer.strength:g}, damping {pointer.damping}%, frequency {pointer.frequency} Hz). "
                 "Drag a card by its title bar with the left button. "
                 "Release it to settle.",
                 flush=True,

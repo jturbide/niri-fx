@@ -56,9 +56,10 @@ Goal: make finished combinations easy to compare, choose and install.
       and exact Restore in isolated configurations.
 - [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
 
-The opt-in pointer-wobble prototype is available from the source checkout
-(Epic 4). The next milestone brings its settings into portable profiles and
-Studio, with capability checks and reviewed Apply/Restore.
+The source checkout includes opt-in pointer-wobble profiles, Studio controls and
+capability-verified standalone Apply/Restore (Epic 4). Next are broader native
+acceptance and a faithful pointer preview. Agent discovery and reusable guidance
+are available through the same CLI (Epic 9).
 
 ## Released foundation
 
@@ -138,8 +139,10 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 
 ### Integration and broader acceptance
 
-- [ ] Add a capability-verified pointer action to portable profiles and Studio.
-- [ ] Add reviewed Apply/Restore and optional pointer playback to combo previews.
+- [x] Add pointer settings to portable profiles and Studio, with preset-first controls.
+- [x] Add capability-verified standalone Apply/Restore and explicit experimental exports.
+- [x] Test pointer-only, combined movement and disabled profiles against the running renderer.
+- [ ] Add faithful pointer playback to combo previews, with clear native support limits.
 - [ ] Verify cancellation, output removal, capture restrictions and graphics resets.
 - [x] Report input acknowledgements and nested output submissions separately.
 - [ ] Measure physical input-to-photon latency and presentation across mixed outputs.
@@ -209,6 +212,21 @@ Wayland is not a portable window-effects plugin API. Hyprland's
 [C++ plugin interface](https://wiki.hypr.land/Plugins/Development/Getting-Started/)
 is a possible research path, not a drop-in Niri shader loader. No Hyprland backend
 is being implemented in the current release. See [portability boundaries](docs/architecture.md#compositor-portability).
+
+## Epic 9: agent and automation integration
+
+Goal: let agents choose, customize and apply effects through the same validated
+contracts as the app, with clear ownership and reversible changes.
+
+- [x] Publish machine-readable command discovery, compact catalog summaries and canonical parameter bounds.
+- [x] Bundle a reusable agent skill and document example prompts, review fingerprints and conflict-aware Restore.
+- [x] Add contributor guidelines and test discovery, composition, installed resources and temporary-config Apply/Restore.
+- [ ] Assess a thin MCP adapter when a client needs access without terminal tools.
+- [ ] For any MCP adapter, fix configuration paths at startup and reuse capability checks, reviewed plans and Restore.
+- [ ] Add client interoperability checks before advertising support for a specific agent integration.
+
+Start with the [agent guide](docs/agents.md). There is no separate MCP service to
+install for terminal-capable agents.
 
 ## Contribute a result or an idea
 

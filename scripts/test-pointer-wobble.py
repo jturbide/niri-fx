@@ -347,6 +347,7 @@ def exercise(name, protocol, *, capture=False):
                                 "scripts/fixtures/pointer.c",
                                 "scripts/lib/pointer.py",
                                 "scripts/lib/pointer_wobble.py",
+                                "niri_fx/pointer.py",
                                 "scripts/test-pointer-wobble.py",
                                 f"examples/experimental/pointer-wobble-{name}.kdl",
                             ),

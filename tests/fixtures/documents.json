@@ -547,5 +547,256 @@
         "fragment_transition": 0
       }
     }
+  },
+  {
+    "name": "pointer inherits explicitly",
+    "valid": true,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": null
+    }
+  },
+  {
+    "name": "pointer full settings",
+    "valid": true,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": 8
+      }
+    }
+  },
+  {
+    "name": "pointer disabled",
+    "valid": true,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0,
+        "damping": 10,
+        "frequency": 2
+      }
+    }
+  },
+  {
+    "name": "pointer upper bounds",
+    "valid": true,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 2,
+        "damping": 100,
+        "frequency": 16
+      }
+    }
+  },
+  {
+    "name": "pointer missing controls",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7
+      }
+    }
+  },
+  {
+    "name": "pointer unknown control",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": 8,
+        "shader": "x"
+      }
+    }
+  },
+  {
+    "name": "pointer not object",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": false
+    }
+  },
+  {
+    "name": "pointer boolean strength",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": true,
+        "damping": 65,
+        "frequency": 8
+      }
+    }
+  },
+  {
+    "name": "pointer excessive strength",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 2.1,
+        "damping": 65,
+        "frequency": 8
+      }
+    }
+  },
+  {
+    "name": "pointer fractional damping",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7,
+        "damping": 65.5,
+        "frequency": 8
+      }
+    }
+  },
+  {
+    "name": "pointer low frequency",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": 1
+      }
+    }
+  },
+  {
+    "name": "pointer boolean frequency",
+    "valid": false,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7,
+        "damping": 65,
+        "frequency": true
+      }
+    }
+  },
+  {
+    "name": "pointer whole JSON numbers",
+    "valid": true,
+    "document": {
+      "kind": "profile",
+      "schema": 1,
+      "name": "Pointer profile",
+      "actions": {
+        "open": {},
+        "close": {},
+        "resize": null,
+        "movement": null
+      },
+      "pointer": {
+        "strength": 0.7,
+        "damping": 65.0,
+        "frequency": 8.0
+      }
+    }
   }
 ]
