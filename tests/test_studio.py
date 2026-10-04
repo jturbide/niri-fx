@@ -58,6 +58,12 @@ class ServerTests(unittest.TestCase):
         self.thread = Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
         self.token = parse_qs(urlsplit(self.server.session_url).query)["token"][0]
+        probe = patch(
+            "niri_fx.studio.pointer_capability",
+            return_value={"activation_ready": False, "status": "unknown", "detail": "Offline"},
+        )
+        self.pointer = probe.start()
+        self.addCleanup(probe.stop)
 
     def tearDown(self):
         self.server.shutdown()
@@ -82,6 +88,8 @@ class ServerTests(unittest.TestCase):
             self.assertIn("NiriFX Studio", html)
             self.assertNotIn("@EFFECT_JSON@", html)
             self.assertIn('"save_target": "standalone"', html)
+            self.assertIn('"target_supported": true', html)
+            self.assertIn('"activation_ready": false', html)
         with patch("niri_fx.studio.read_shell_presets", return_value=shell_registry()):
             document = {
                 "schema": 3,
@@ -98,6 +106,19 @@ class ServerTests(unittest.TestCase):
             shell_registry()["presets"][0]["types"]["workspace-switch"],
         )
         self.assertEqual(list(Path(self.directory.name).glob("*.kdl")), [])
+
+    def test_page_refreshes_pointer_status_without_changing_configuration(self):
+        self.pointer.return_value = {"activation_ready": True, "status": "supported"}
+        with urlopen(self.server.session_url, timeout=5) as response:
+            self.assertIn('"activation_ready": true', response.read().decode())
+        self.pointer.return_value = {"activation_ready": False, "status": "unknown"}
+        with urlopen(self.server.session_url, timeout=5) as response:
+            self.assertIn('"activation_ready": false', response.read().decode())
+        self.assertEqual(self.pointer.call_count, 2)
+        self.assertEqual(
+            (Path(self.directory.name) / "niri/config.kdl").read_text(), "animations {}\n"
+        )
+        self.assertFalse(self.registry.exists())
 
     def test_cross_origin_save_and_parameter_injection_do_not_write(self):
         document = {"schema": 3, "name": "Test", "effect": {}}

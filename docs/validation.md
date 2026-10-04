@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04** for 0.17.0 and the Unreleased pointer prototype. These checks
+Evidence updated on **2026-10-04** for 0.17.0, Unreleased pointer integration and agent support. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -102,6 +102,23 @@ during a grab, and close cancellation with input reaching the surviving client.
 The four disable paths are node removal, zero strength, movement off and all
 animations off. Render logs were clean, and the three public recordings retain
 50 fps playback with synthetic content.
+
+`test-pointer-integration.py` also passed against the owned pointer session.
+It served Studio through its actual HTTP backend, reviewed and applied a
+pointer-only profile, combined movement/pointer settings and a zero-strength
+override, then verified runtime state and exact Restore after each. It rejected
+a stock-binary mismatch and loss of runtime capability before writes. The
+selected executable validated configs throughout. No login-session configuration
+was changed.
+
+Stacked-profile checks also cover restoring native settings after a stock
+selection: missing runtime support refuses reactivation, while a verified session
+can restore the native profile and then return exactly to the stock baseline.
+
+Browser checks cover preset/custom pointer controls, preservation through shared
+style changes and Undo, portable JSON and experimental downloads matching Python.
+The native download combines selected movement and pointer settings in one block.
+Pointer dragging is not part of combo playback.
 
 [Reproduce the checks](pointer-wobble.md#reproduce-validation-and-showcases) or
 inspect the [sanitized results](benchmarks/pointer-wobble.json). These checks do
@@ -347,6 +364,21 @@ and three native swap GIFs use the published example settings. The native clips
 retain the full source profile and its hash. [Measured resize shader costs](performance.md#coordinated-resize-companions)
 remain separate from compositor presentation evidence.
 
+## Agent workflow
+
+Agent discovery and parameter metadata are tested without subprocess or socket
+access. Compact catalog IDs match full documents; a chosen preset can become a
+validated portable combo while stock exports omit optional native actions.
+The published skill was also followed as a CLI consumer to create an offline
+preview and review, apply and restore an owned temporary configuration using
+real stock Niri validation. Installed-package checks cover the bundled skill.
+These checks establish the terminal workflow, not MCP or specific agent-client
+interoperability.
+
+```sh
+python3 -m unittest discover -s tests -p 'test_agent.py' -v
+```
+
 ## Shared Library and combo builder
 
 The browser test files run sequentially so concurrent software WebGL contexts
@@ -394,6 +426,10 @@ Authenticated HTTP checks cover Save, read-only Review, Apply, exact Restore and
 rejected origins/path injection.
 Backend checks cover stale plans, external edits, validation rollback and Restore
 isolation across configuration paths and adapters.
+
+A native dialog lifecycle regression closes and reopens the profile dialog in
+one task, then verifies collision handling and a successful rename. Delayed close
+events from an earlier operation cannot clear the current operation's state.
 
 A stock nested Niri session exercises the installed iNiR serializer, active-profile
 recognition, retained slowdown/base movement and exact Restore. The optional

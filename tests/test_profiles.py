@@ -3,6 +3,7 @@ from dataclasses import replace
 
 from helpers import shell_registry
 
+from niri_fx.catalog import PROFILES
 from niri_fx.documents import effect_document, parse_document
 from niri_fx.effects import (
     PARAMETERS,
@@ -13,7 +14,9 @@ from niri_fx.effects import (
     shader,
 )
 from niri_fx.integration import make_custom_preset
+from niri_fx.motion import MOTION_PACKS
 from niri_fx.parameters import glsl_number
+from niri_fx.pointer import PointerWobble
 from niri_fx.profiles import Profile
 
 
@@ -68,3 +71,54 @@ class ProfileTests(unittest.TestCase):
         self.assertEqual(glsl_number(0.0078125), "0.007813")
         self.assertEqual(glsl_number(-0.0078125), "-0.007813")
         self.assertEqual(glsl_number(-0.0000001), "0.000000")
+
+
+class PointerProfileTests(unittest.TestCase):
+    def test_pointer_inherits_when_omitted_or_null_and_builtins_never_opt_in(self):
+        profile = Profile(Effect(), Effect())
+        self.assertNotIn("pointer", profile.document("Plain"))
+        document = {**profile.document("Plain"), "pointer": None}
+        self.assertEqual(parse_document(document)[2], profile)
+        self.assertTrue(all(profile.pointer is None for profile in PROFILES.values()))
+        for invalid in ({}, True, Effect()):
+            with self.subTest(invalid=invalid), self.assertRaisesRegex(ValueError, "pointer"):
+                replace(profile, pointer=invalid)
+
+    def test_explicit_disabled_and_enabled_pointer_round_trip_without_stock_activation(self):
+        for strength in (0, 0.7, 2):
+            profile = Profile(Effect(), Effect(), pointer=PointerWobble(strength))
+            document = profile.document("Pointer combo")
+            self.assertEqual(document["pointer"]["strength"], strength)
+            self.assertEqual(parse_document(document)[2], profile)
+            self.assertNotIn("window-movement", animation_types(profile))
+            self.assertNotIn("pointer-wobble", render_kdl(profile))
+            saved = make_custom_preset(shell_registry(), document)
+            self.assertNotIn("pointer-wobble", str(saved["types"]))
+
+    def test_native_export_composes_a_single_movement_block_and_preserves_other_springs(self):
+        for movement in (False, True):
+            profile = Profile(
+                Effect(),
+                Effect(),
+                movement=Effect(),
+                pointer=PointerWobble(0.0078125),
+                motion=MOTION_PACKS["gentle"],
+            )
+            exported = animation_types(profile, movement=movement, pointer=True)
+            self.assertEqual(exported["window-movement"]["pointer-wobble"]["damping"], 65)
+            self.assertEqual("custom-shader" in exported["window-movement"], movement)
+            for name, spec in profile.motion.animation_types().items():
+                self.assertEqual(exported[name], spec)
+            kdl = render_kdl(profile, movement=movement, pointer=True)
+            self.assertEqual(kdl.count("    window-movement {"), 1)
+            self.assertEqual(kdl.count("pointer-wobble {"), 1)
+            self.assertIn("strength 0.007813", kdl)
+            self.assertNotIn("window-resize", kdl)
+
+    def test_opt_in_requires_an_explicit_profile_override(self):
+        for profile in (Effect(), Profile(Effect(), Effect())):
+            with (
+                self.subTest(profile=profile),
+                self.assertRaisesRegex(ValueError, "explicitly choose pointer"),
+            ):
+                render_kdl(profile, pointer=True)

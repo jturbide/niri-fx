@@ -77,7 +77,8 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       schema: catalog.profile_schema,
       name: doc.name,
       actions: structuredClone(actionEffects(doc)),
-      ...(doc.motion ? { motion: doc.motion } : {}),
+      ...(doc.motion ? { motion: structuredClone(doc.motion) } : {}),
+      ...(doc.pointer ? { pointer: structuredClone(doc.pointer) } : {}),
     };
   }
   function selectOptions(select, action, effect) {
@@ -128,6 +129,97 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     row.append(caption, picker, tune);
     element("combo-actions").append(row);
   }
+  // Pointer drag has its own native spring contract. It is profile metadata,
+  // never an inferred fifth shader action or a timed preview.
+  let pointerConsentValue = null;
+  const pointerReady =
+    catalog.connection?.target === "standalone" &&
+    catalog.connection.pointer?.activation_ready === true &&
+    catalog.connection.pointer?.target_supported === true;
+  for (const [id, preset] of Object.entries(catalog.pointer_presets)) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = preset.name;
+    element("combo-pointer").append(option);
+  }
+  const pointerCustom = document.createElement("option");
+  pointerCustom.value = "custom";
+  pointerCustom.textContent = "Custom settings";
+  element("combo-pointer").append(pointerCustom);
+  const pointerKeys = ["strength", "damping", "frequency"];
+  const pointerMatch = (settings) =>
+    Object.entries(catalog.pointer_presets).find(([, preset]) =>
+      pointerKeys.every((key) => preset.settings[key] === settings[key]),
+    );
+  function syncPointer(doc) {
+    const settings = doc.pointer;
+    const match = settings && pointerMatch(settings);
+    element("combo-pointer").value = !settings
+      ? ""
+      : settings.strength === 0
+        ? "disabled"
+        : match?.[0] || "custom";
+    element("pointer-description").textContent = !settings
+      ? "Keep the desktop's current pointer behavior."
+      : settings.strength === 0
+        ? "Explicitly disable pointer deformation when these settings are applied."
+        : match
+          ? match[1].description
+          : "Your custom spring response.";
+    for (const key of pointerKeys) {
+      const input = element("pointer-" + key);
+      input.min = catalog.pointer_limits[key][0];
+      input.max = catalog.pointer_limits[key][1];
+      input.value = (settings || catalog.pointer_defaults)[key];
+      input.disabled = !settings;
+    }
+    const summary = !settings
+      ? "desktop settings"
+      : settings.strength === 0
+        ? "disabled"
+        : match?.[1].name || "custom";
+    element("editor-pointer-summary").textContent =
+      "Pointer drag: " + summary + ". Dragging is not simulated in the canvas.";
+    element("pointer-export-note").hidden = element("pointer-kdl").hidden = !settings;
+    const consentValue = JSON.stringify(settings || null);
+    if (pointerConsentValue !== consentValue) element("activate-pointer").checked = false;
+    pointerConsentValue = consentValue;
+    element("activate-pointer-label").hidden = !settings || !pointerReady;
+    element("activate-pointer-text").textContent =
+      settings?.strength === 0 ? "Apply pointer drag disabled" : "Apply experimental pointer drag";
+    return summary;
+  }
+  element("combo-pointer").onchange = () => {
+    const doc = profile(),
+      id = element("combo-pointer").value;
+    if (!id) delete doc.pointer;
+    else if (id === "disabled")
+      doc.pointer = { ...(doc.pointer || catalog.pointer_defaults), strength: 0 };
+    else if (id === "custom") doc.pointer = { ...(doc.pointer || catalog.pointer_defaults) };
+    else doc.pointer = { ...catalog.pointer_presets[id].settings };
+    select(core.normalizePreset(doc), "open");
+    element("pointer-tuning").open = id === "custom";
+  };
+  for (const key of pointerKeys)
+    element("pointer-" + key).onchange = () => {
+      const doc = profile();
+      if (!doc.pointer) return;
+      try {
+        const value = element("pointer-" + key).value.trim();
+        if (!value) throw new Error("Enter a value for " + key + ".");
+        doc.pointer = core.normalizePointer({ ...doc.pointer, [key]: Number(value) });
+        select(core.normalizePreset(doc), "open");
+        element("error").textContent = "";
+      } catch (error) {
+        syncPointer(getDocument());
+        element("error").textContent = error.message;
+      }
+    };
+  element("edit-pointer").onclick = () => {
+    view(false);
+    element("pointer-settings").scrollIntoView({ block: "nearest" });
+    element("combo-pointer").focus();
+  };
   for (const [id, collection] of Object.entries(catalog.collections)) {
     const option = document.createElement("option");
     option.value = id;
@@ -276,20 +368,23 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
         .filter(Boolean)
         .every((effect) => equal(actions.open, effect));
     element("selection-name").textContent = doc.name;
-    element("selection-actions").textContent = Object.entries(actionNames)
-      .map(
-        ([action, label]) =>
-          label +
-          ": " +
-          (actions[action]
-            ? title(
-                Object.keys(styles).find((id) =>
-                  equal(normalized(styles[id].effect), actions[action]),
-                ) || actions[action].family,
-              )
-            : "shell default"),
-      )
-      .join(" · ");
+    element("selection-actions").textContent =
+      Object.entries(actionNames)
+        .map(
+          ([action, label]) =>
+            label +
+            ": " +
+            (actions[action]
+              ? title(
+                  Object.keys(styles).find((id) =>
+                    equal(normalized(styles[id].effect), actions[action]),
+                  ) || actions[action].family,
+                )
+              : "shell default"),
+        )
+        .join(" · ") +
+      " · Pointer drag: " +
+      syncPointer(doc);
     element("combo-name").value = doc.name;
     element("combo-mode").value = same ? "same" : "mixed";
     selectOptions(element("combo-same"), "open", actions.open);
@@ -378,6 +473,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
           !!actions.movement &&
           catalog.connection.target === "standalone" &&
           element("activate-movement").checked,
+        allow_pointer: !!doc.pointer && pointerReady && element("activate-pointer").checked,
       };
       const plan = await post("/review", selection);
       if (revision !== reviewedRevision)
@@ -472,7 +568,9 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   };
   element("profile-cancel").onclick = () => element("profile-dialog").close();
   element("profile-dialog").onclose = () => {
-    pendingProfile = null;
+    // Browsers queue close events. A previous dialog may finish closing after
+    // another operation has opened; preserve that new operation's context.
+    if (!element("profile-dialog").open) pendingProfile = null;
   };
   element("profile-form").onsubmit = (event) => {
     event.preventDefault();
@@ -561,6 +659,13 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   element("activation-controls").hidden = !catalog.connection;
   element("activate-movement-label").hidden = catalog.connection?.target !== "standalone";
   element("activate-movement").onchange = invalidate;
+  element("activate-pointer").onchange = invalidate;
+  element("pointer-availability").textContent = !catalog.connection
+    ? "Save pointer settings here, then use the local app with a verified pointer-enabled compositor to apply them."
+    : pointerReady
+      ? "This running compositor supports pointer drag. Select settings, then explicitly enable them in Review & apply."
+      : catalog.connection.pointer?.target_detail ||
+        "Pointer activation requires the standalone target and a verified running pointer extension. These settings can still be saved and exported.";
   view(
     catalog.connection?.view === "editor" ||
       !!location.hash ||

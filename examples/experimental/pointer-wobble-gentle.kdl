@@ -9,7 +9,7 @@
 animations {
     window-movement {
         pointer-wobble {
-            strength 0.4
+            strength 0.400000
             damping 85
             frequency 10
         }

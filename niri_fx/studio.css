@@ -94,7 +94,8 @@ canvas {
 }
 button,
 select,
-input[type="text"] {
+input[type="text"],
+.pointer-fields input {
     font: inherit;
     padding: 9px 12px;
     background: #233647;
@@ -333,4 +334,38 @@ html[data-workspace="library"] label[for="save-target"],
 html[data-workspace="library"] #save,
 html[data-workspace="library"] #save-help {
     display: none;
+}
+
+#pointer-settings {
+    border-top: 1px solid #425464;
+    margin-top: 16px;
+    padding-top: 14px;
+    display: grid;
+    gap: 8px;
+}
+#pointer-settings a {
+    color: #9de5d7;
+    font-size: 13px;
+}
+#pointer-settings small {
+    margin: 0;
+}
+#pointer-tuning summary {
+    cursor: pointer;
+    font-size: 14px;
+}
+.pointer-fields {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(70px, 95px);
+    align-items: center;
+    gap: 8px;
+    padding-top: 10px;
+}
+.pointer-fields label {
+    margin: 0;
+}
+.pointer-fields input {
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 }

@@ -187,6 +187,10 @@ node scripts/record-library-workflow.mjs
 node scripts/record-studio-workflow.mjs
 ```
 
+The Library recording includes pointer preset selection, custom strength and
+portable JSON, stock KDL and experimental KDL downloads. These are editor controls;
+the native clips below demonstrate actual dragging.
+
 The following tools run **inside an existing Niri desktop** and create their own
 nested compositor. They require stock `niri`, `qs`, `grim`, `wf-recorder`, `wtype`,
 `ffmpeg`, `dbus-run-session`, and Python with Pillow. Test mode leaves the gallery
@@ -410,7 +414,8 @@ tiled dragging, held-idle settling, repeated grabs, disabled effects, close clea
 and input.
 
 The scenario manifest records both compositor patch hashes, source hashes and
-exact pointer settings. Gallery cards link to experimental KDL and the
-[pointer guide](../pointer-wobble.md), since these settings are not Studio JSON.
+exact pointer settings. Gallery cards link to the recorded experimental KDL and
+the [pointer guide](../pointer-wobble.md). Studio can also carry these controls in
+portable profiles; the native clips retain their exact compositor snippets.
 Input acknowledgements, nested output submissions and GIF frame cadence are
 separate measurements; none establishes physical input-to-photon latency.

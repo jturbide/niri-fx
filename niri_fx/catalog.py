@@ -11,6 +11,7 @@ from dataclasses import replace
 
 from .action_sets import ACTION_SETS
 from .documents import effect_document
+from .model import FAMILIES
 from .motion import MOTION_PACKS
 from .presets import PRESETS
 from .profiles import Profile
@@ -349,3 +350,35 @@ def families(style):
 def documents(styles=STYLES):
     """Normalized, portable documents for pickers; returned values are fresh copies."""
     return {name: effect_document(title(name), style) for name, style in styles.items()}
+
+
+def summaries(keys):
+    """Discover looks without serializing every control for every action.
+
+    Keys use the same filters and ordering as the full catalog. Consumers can
+    fetch only their chosen document after comparing these short descriptions.
+    """
+    result = {}
+    for key in keys:
+        style = STYLES[key]
+        profile = isinstance(style, Profile)
+        opening, closing = (style.open, style.close) if profile else (style, style)
+        optional = []
+        if style.resize:
+            optional.append("resize")
+        if profile:
+            optional.extend(
+                action for action in ("movement", "motion", "pointer") if getattr(style, action)
+            )
+        result[key] = {
+            "name": title(key),
+            "kind": "profile" if profile else "effect",
+            "families": list(families(style)),
+            "description": PROFILE_RECIPES[key][2]
+            if profile
+            else RECOMMENDED.get(key, FAMILIES[style.family]["label"]),
+            "open_ms": opening.open_ms,
+            "close_ms": closing.close_ms,
+            "optional_actions": optional,
+        }
+    return result

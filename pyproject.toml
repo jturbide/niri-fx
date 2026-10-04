@@ -40,7 +40,7 @@ niri-fx = "niri_fx.cli:main"
 include = ["niri_fx*"]
 
 [tool.setuptools.package-data]
-niri_fx = ["shaders/*.glsl", "preview.html", "*.js", "*.css", "assets/*.svg", "qml/*.qml", "gtk/*.mjs", "gtk/*.css"]
+niri_fx = ["shaders/*.glsl", "preview.html", "*.js", "*.css", "assets/*.svg", "qml/*.qml", "gtk/*.mjs", "gtk/*.css", "agent_data/*/*.md"]
 
 [tool.ruff]
 target-version = "py310"

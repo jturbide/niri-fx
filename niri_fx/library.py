@@ -91,7 +91,12 @@ class Library:
         managed, warnings = self.saved_profiles()
         customs.update({key: entry["document"] for key, entry in managed.items()})
         try:
-            history = restore(self.state, self.transaction())
+            history = restore(
+                self.state,
+                self.transaction(),
+                binary=getattr(self.arguments, "movement_binary", None),
+                verify_native=False,
+            )
         except ValueError:
             history = None
         if history and self.target != "inir":
@@ -228,21 +233,34 @@ class Library:
         return {"name": name, "changed": True}
 
     def plan(self, request):
-        if not isinstance(request, dict) or set(request) != {
-            "document",
-            "allow_resize",
-            "allow_movement",
-        }:
+        required = {"document", "allow_resize", "allow_movement"}
+        if (
+            not isinstance(request, dict)
+            or not required <= set(request)
+            or set(request) - required - {"allow_pointer"}
+        ):
             raise ValueError("Review requires a document and explicit action consent")
-        if any(type(request[key]) is not bool for key in ("allow_resize", "allow_movement")):
+        if any(
+            type(request[key]) is not bool
+            for key in ("allow_resize", "allow_movement", "allow_pointer")
+            if key in request
+        ):
             raise ValueError("Action consent must be boolean")
         name, _, effect = parse_document(request["document"])
         resize = effect.resize
         movement = effect.movement if isinstance(effect, Profile) else None
+        pointer = effect.pointer if isinstance(effect, Profile) else None
+        allow_pointer = request.get("allow_pointer", False)
         if resize and not request["allow_resize"]:
             raise ValueError("Allow this profile to change resize effects before applying")
         if request["allow_movement"] and not movement:
             raise ValueError("This profile has no movement effect")
+        if allow_pointer and pointer is None:
+            raise ValueError("This profile has no pointer settings")
+        if allow_pointer and self.target != "standalone":
+            raise ValueError(
+                "Pointer activation requires the verified standalone path; shell pickers activate stock Niri actions only"
+            )
         args = SimpleNamespace(
             config=self.config,
             target=self.target,
@@ -254,6 +272,7 @@ class Library:
             profile=None,
             name=name,
             enable_movement=request["allow_movement"],
+            enable_pointer=allow_pointer,
             movement_binary=getattr(self.arguments, "movement_binary", None),
         )
         document = effect_document(name, effect)
@@ -319,6 +338,8 @@ class Library:
             "selection": {"name": name, "helper_sha256": digest(helper.read_bytes())},
             "effect": document,
             "desktop_motion": document.get("motion"),
+            "pointer": document.get("pointer"),
+            "pointer_activation": None,
             "movement": None,
             "validation_config": str(self.config),
             "changes": [item for item in observed if item["before"] != item["after"]],
@@ -327,7 +348,12 @@ class Library:
                 "Apply updates the iRiS animation block and its recognized active profile.",
                 "Resize changes only when explicitly included and allowed.",
             ]
-            + (["Movement is kept in the profile but not activated by iRiS."] if movement else []),
+            + (["Movement is kept in the profile but not activated by iRiS."] if movement else [])
+            + (
+                ["Pointer settings are kept in the profile but not activated by iRiS."]
+                if pointer
+                else []
+            ),
         }
 
     def file_picker_plan(self, document, effect):
@@ -386,6 +412,8 @@ class Library:
             "selection": document["name"],
             "effect": document,
             "desktop_motion": document.get("motion"),
+            "pointer": document.get("pointer"),
+            "pointer_activation": None,
             "movement": None,
             "validation_config": str(self.config),
             "observed": observed,
@@ -393,7 +421,12 @@ class Library:
             "notes": [
                 "Apply selects a file in the connected Noctalia preset folder.",
                 "The picker reads the active filename when opened; off and slowdown are preserved.",
-            ],
+            ]
+            + (
+                ["Pointer settings are kept in the profile but not activated by Noctalia."]
+                if document.get("pointer") is not None
+                else []
+            ),
         }
 
     def review(self, request):
@@ -412,4 +445,9 @@ class Library:
         return apply_plan(plan, self.state, expected=request["expected"])
 
     def undo(self):
-        return restore(self.state, self.transaction(), apply=True)
+        return restore(
+            self.state,
+            self.transaction(),
+            apply=True,
+            binary=getattr(self.arguments, "movement_binary", None),
+        )

@@ -13,6 +13,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from .branding import APP_ID
+from .capabilities import pointer_capability
 from .catalog import STYLES
 from .documents import MAX_DOCUMENT_BYTES
 from .integration import make_custom_preset, read_shell_presets, update_registry
@@ -152,6 +153,16 @@ def make_server(arguments, effect):
                         "origin": self.server.origin,
                         "token": token,
                         "target": target,
+                        "pointer": pointer_capability(
+                            getattr(arguments, "movement_binary", None),
+                            socket_path=os.environ.get("NIRI_SOCKET"),
+                        )
+                        | {
+                            "target_supported": target == "standalone",
+                            "target_detail": "Pointer Apply is available after verifying this standalone session."
+                            if target == "standalone"
+                            else "Pointer settings can be saved and exported here. Apply currently requires a verified standalone session.",
+                        },
                         "view": "editor" if getattr(arguments, "edit", False) else "library",
                     },
                     read_preferences(),

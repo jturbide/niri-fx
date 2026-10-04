@@ -13,6 +13,8 @@ from niri_fx import setup
 from niri_fx.catalog import PROFILES, STYLES
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import PRESETS
+from niri_fx.pointer import PointerWobble
+from niri_fx.profiles import Profile
 
 REAL_VALIDATE_CONFIG = setup.validate_config
 
@@ -97,6 +99,234 @@ class SetupTests(unittest.TestCase):
         fingerprint = reviewed["plan_sha256"]
         plan["desktop_motion"]["camera"]["stiffness"] = 800
         self.assertNotEqual(setup.summarize(plan)["plan_sha256"], fingerprint)
+
+    def test_pointer_requires_explicit_selection_target_and_running_contract_before_writes(self):
+        profile = Profile(PRESETS["balanced"], PRESETS["balanced"], pointer=PointerWobble())
+        default = setup.plan_setup(self.args, profile)
+        self.assertNotIn(b"pointer-wobble", default["changes"][0]["after"])
+        self.assertIn("omitted", " ".join(default["notes"]))
+        self.args.enable_pointer = True
+        with self.assertRaisesRegex(ValueError, "no pointer settings"):
+            self.plan()
+        with patch(
+            "niri_fx.capabilities.pointer_capability", return_value={"activation_ready": False}
+        ):
+            with self.assertRaisesRegex(ValueError, "verified running pointer contract"):
+                setup.plan_setup(self.args, profile)
+        self.args.target = "auto"
+        with self.assertRaisesRegex(ValueError, "explicit --target standalone"):
+            setup.plan_setup(self.args, profile)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse(self.state.exists())
+        self.assertFalse((self.config.parent / "nirifx").exists())
+
+    def test_pointer_apply_rechecks_session_validates_selected_binary_and_restores(self):
+        profile = Profile(PRESETS["balanced"], PRESETS["balanced"], pointer=PointerWobble())
+        self.args.enable_pointer = True
+        self.args.movement_binary = Path("/trusted/niri")
+        report = {"activation_ready": True, "binary": "/trusted/niri"}
+        with (
+            patch.dict(os.environ, {"NIRI_SOCKET": "/owned/session"}),
+            patch("niri_fx.capabilities.pointer_capability", return_value=report) as capability,
+        ):
+            plan = setup.plan_setup(self.args, profile)
+            self.assertIn(b"pointer-wobble", plan["changes"][0]["after"])
+            self.assertNotIn(b"move_color", plan["changes"][0]["after"])
+            self.assertEqual(plan["pointer"], profile.document("Selection")["pointer"])
+            self.assertEqual(self.validator.call_args.args[1], "/trusted/niri")
+            reviewed = setup.summarize(plan)["plan_sha256"]
+            capability.return_value = {"activation_ready": False}
+            with self.assertRaisesRegex(ValueError, "pointer support changed"):
+                setup.apply_plan(plan, self.state, reviewed)
+            self.assertFalse(self.state.exists())
+            capability.return_value = report
+            with patch.dict(os.environ, {"NIRI_SOCKET": "/another/session"}):
+                with self.assertRaisesRegex(ValueError, "pointer support changed"):
+                    setup.apply_plan(plan, self.state, reviewed)
+            result = setup.apply_plan(plan, self.state, reviewed)
+            self.validator.assert_called_with(str(self.config), "/trusted/niri")
+        setup.restore(self.state, result["transaction"], apply=True)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse((self.config.parent / "nirifx/animations.kdl").exists())
+
+    def test_pointer_review_hash_binds_settings_and_activation_consent(self):
+        profile = Profile(PRESETS["balanced"], PRESETS["balanced"], pointer=PointerWobble())
+        omitted = setup.plan_setup(self.args, profile)
+        reviewed = setup.summarize(omitted)["plan_sha256"]
+        omitted["pointer"]["strength"] = 0.4
+        self.assertNotEqual(setup.summarize(omitted)["plan_sha256"], reviewed)
+        self.args.enable_pointer = True
+        with patch(
+            "niri_fx.capabilities.pointer_capability",
+            return_value={"activation_ready": True, "binary": "/trusted/niri"},
+        ):
+            activated = setup.plan_setup(self.args, profile)
+        self.assertNotEqual(setup.summarize(activated)["plan_sha256"], reviewed)
+
+    def test_selected_validator_is_kept_for_stock_actions_on_an_experimental_config(self):
+        self.args.movement_binary = Path("/trusted/niri")
+        plan = self.plan()
+        self.assertIsNone(plan["movement"])
+        self.assertIsNone(plan["pointer_activation"])
+        self.assertEqual(plan["validation_binary"], "/trusted/niri")
+        self.assertEqual(self.validator.call_args.args[1], "/trusted/niri")
+        reviewed = setup.summarize(plan)["plan_sha256"]
+        self.args.movement_binary = Path("/another/niri")
+        with self.assertRaisesRegex(ValueError, "plan changed"):
+            setup.apply_plan(self.plan(), self.state, reviewed)
+        setup.apply_plan(plan, self.state, reviewed)
+        self.validator.assert_called_with(str(self.config), "/trusted/niri")
+
+    def native_then_stock(self):
+        self.args.enable_pointer = True
+        self.args.movement_binary = Path("/trusted/niri")
+        report = {"activation_ready": True, "binary": "/trusted/niri"}
+        profile = Profile(PRESETS["balanced"], PRESETS["balanced"], pointer=PointerWobble())
+        with patch("niri_fx.capabilities.pointer_capability", return_value=report):
+            native = setup.apply_plan(setup.plan_setup(self.args, profile), self.state)
+        self.args.enable_pointer = False
+        stock = setup.apply_plan(self.plan(), self.state)
+        return native, stock, report
+
+    def test_restore_rechecks_native_support_and_never_blocks_removing_native_nodes(self):
+        native, stock, report = self.native_then_stock()
+        include = self.config.parent / "nirifx/animations.kdl"
+        current = include.read_bytes()
+        with patch(
+            "niri_fx.capabilities.pointer_capability", return_value={"activation_ready": False}
+        ) as capability:
+            for apply in (False, True):
+                with self.assertRaisesRegex(
+                    ValueError, "Restore would reactivate experimental pointer"
+                ):
+                    setup.restore(self.state, stock["transaction"], apply=apply)
+                self.assertEqual(include.read_bytes(), current)
+            capability.return_value = report
+            reviewed = setup.restore(self.state, stock["transaction"])
+            self.assertEqual(reviewed["experimental"], ["pointer"])
+            setup.restore(self.state, stock["transaction"], apply=True)
+            self.assertIn(b"pointer-wobble", include.read_bytes())
+            self.validator.assert_called_with(str(self.config), "/trusted/niri")
+            capability.side_effect = AssertionError("Removing native settings needs no runtime")
+            self.validator.side_effect = AssertionError("Stock restoration needs no compositor")
+            setup.restore(self.state, native["transaction"], apply=True)
+        self.assertEqual(self.config.read_bytes(), self.original)
+        self.assertFalse(include.exists())
+
+    def test_failed_native_restore_validation_rolls_back_and_keeps_snapshot_applied(self):
+        _, stock, report = self.native_then_stock()
+        include = self.config.parent / "nirifx/animations.kdl"
+        current = include.read_bytes()
+        self.validator.side_effect = ValueError("An included file changed")
+        with patch("niri_fx.capabilities.pointer_capability", return_value=report):
+            with self.assertRaisesRegex(ValueError, "included file changed"):
+                setup.restore(self.state, stock["transaction"], apply=True)
+        self.assertEqual(include.read_bytes(), current)
+        manifest = json.loads((self.state / stock["transaction"] / "manifest.json").read_text())
+        self.assertEqual(manifest["status"], "applied")
+
+    def test_legacy_native_snapshot_uses_explicit_validator_and_preserves_conflict_priority(self):
+        _, stock, report = self.native_then_stock()
+        path = self.state / stock["transaction"] / "manifest.json"
+        manifest = json.loads(path.read_text())
+        manifest.pop("validation_binary")
+        manifest.pop("validation_config")
+        path.write_text(json.dumps(manifest))
+        include = self.config.parent / "nirifx/animations.kdl"
+        current = include.read_bytes()
+        include.write_bytes(current + b"// Later edit\n")
+        with patch("niri_fx.capabilities.pointer_capability") as capability:
+            with self.assertRaisesRegex(ValueError, "File changed"):
+                setup.restore(self.state, stock["transaction"], apply=True)
+            capability.assert_not_called()
+        include.write_bytes(current)
+        with patch("niri_fx.capabilities.pointer_capability", return_value=report) as capability:
+            setup.restore(self.state, stock["transaction"], apply=True, binary="/trusted/niri")
+        self.assertEqual(capability.call_args.args, ("/trusted/niri",))
+        self.validator.assert_called_with(str(include), "/trusted/niri")
+
+    def test_native_restore_detects_preexisting_nodes_in_changed_include_targets(self):
+        source = self.config.parent / "native settings.kdl"
+        source.write_text(
+            'animations { window-movement { pointer-wobble { strength 0.4; damping 85; frequency 10; }; custom-shader r"vec4 move_color(vec3 c, vec3 s) { return vec4(0.0); }"; }; }\n'
+        )
+        prior = b'include "native settings.kdl"\n'
+        self.config.write_bytes(prior)
+        plan = {
+            "target": "standalone",
+            "notes": [],
+            "validation_config": str(self.config),
+            "validation_binary": "/trusted/niri",
+            "changes": [setup.change(self.config, self.original)],
+        }
+        changed = setup.apply_plan(plan, self.state)
+        report = {"activation_ready": True, "binary": "/trusted/niri"}
+        with (
+            patch("niri_fx.capabilities.movement_capability", return_value=report) as movement,
+            patch(
+                "niri_fx.capabilities.pointer_capability", return_value={"activation_ready": False}
+            ),
+        ):
+            with self.assertRaisesRegex(ValueError, "experimental pointer"):
+                setup.restore(self.state, changed["transaction"], apply=True)
+            movement.assert_called_once()
+        self.assertEqual(self.config.read_bytes(), self.original)
+
+    def test_native_restore_scanner_ignores_comments_and_shader_text_but_finds_changed_settings(
+        self,
+    ):
+        stock = b"""// animations { window-movement { pointer-wobble { strength 1; }; }; }
+/* outer /* nested */ animations { window-movement { pointer-wobble {}; }; } */
+animations {
+    /- window-movement { pointer-wobble { strength 0.7; }; }
+    window-movement /- { pointer-wobble { strength 0.7; }; }
+    window-close { custom-shader r#"/* pointer-wobble */ window-movement { custom-shader ignored; }"#; }
+}
+"""
+        self.config.write_bytes(stock)
+        self.assertEqual(setup._native_requirements(self.config, {}), set())
+        before = b'animations { "window-movement" { "pointer-wobble" { strength 0.7; }; }; }\n'
+        after = before.replace(b"0.7", b"0.4")
+        work = [(setup.change(self.config, after), before, after)]
+        self.assertEqual(setup._restore_native_requirements(work, str(self.config)), ["pointer"])
+        self.assertEqual(setup._restore_native_requirements([(work[0][0], stock, after)], None), [])
+        for source in (
+            b'/* quote " in comment */\n' + before + b'/* another " */\n',
+            b"prefer-no-csd\r" + before.replace(b"\n", b"\r"),
+            before.replace(b'"window-movement" {', b'"window-movement" \\ // comment\n{'),
+        ):
+            self.config.write_bytes(source)
+            self.assertEqual(
+                {kind for kind, _ in setup._native_requirements(self.config, {})}, {"pointer"}
+            )
+
+    def test_restore_gates_removing_an_override_that_resumes_a_native_base(self):
+        base = self.config.parent / "base.kdl"
+        base.write_text(
+            "animations { window-movement { pointer-wobble { strength 0.4; damping 85; frequency 10; }; }; }\n"
+        )
+        self.args.movement_binary = Path("/trusted/niri")
+        self.args.enable_pointer = True
+        effect = Profile(PRESETS["balanced"], PRESETS["balanced"], pointer=PointerWobble())
+        report = {"activation_ready": True, "binary": "/trusted/niri"}
+        with patch("niri_fx.capabilities.pointer_capability", return_value=report):
+            applied = setup.apply_plan(setup.plan_setup(self.args, effect), self.state)
+        with patch(
+            "niri_fx.capabilities.pointer_capability", return_value={"activation_ready": False}
+        ):
+            with self.assertRaisesRegex(ValueError, "experimental pointer"):
+                setup.restore(self.state, applied["transaction"], apply=True)
+
+    def test_restore_follows_includes_with_commented_properties(self):
+        included = self.config.parent / "native.kdl"
+        included.write_text(
+            "animations { window-movement { pointer-wobble { strength 0.4; damping 85; frequency 10; }; }; }\n"
+        )
+        for ignored in ('ignored="comment"', '"ignored"="comment"', "ignored=true"):
+            self.config.write_text(f'include /- {ignored} "native.kdl"\n')
+            self.assertEqual(
+                {kind for kind, _ in setup._native_requirements(self.config, {})}, {"pointer"}
+            )
 
     def test_standalone_apply_idempotence_and_exact_restore(self):
         self.config.chmod(0o640)

@@ -27,6 +27,13 @@ verified experimental Niri compositor; Web Studio cannot provide compositor
 hooks. Stock desktop springs are described and recorded separately in the
 [desktop motion guide](desktop-motion.md).
 
+Library also stores experimental **Pointer drag** presets and custom strength,
+damping and frequency. Online Studio can edit, share and download these settings;
+combo playback does not simulate dragging. **Export stock Niri config** omits
+experimental nodes. **Export experimental config** includes selected pointer and
+movement settings for the matching native build. Read the
+[pointer guide](pointer-wobble.md) before using that configuration.
+
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
    nine recommended looks. **Open/close pairings** shows sixteen finished combinations;
    **All examples** opens the full collection. Searching from Start here explores
@@ -37,7 +44,7 @@ hooks. Stock desktop springs are described and recorded separately in the
    concept cards say **Edit open/close style**: Web Studio does not run a compositor.
 3. Adjust the controls. Use **Basic** for the main look or **Advanced** for detailed
    tuning. **Pause** and the timeline let you inspect a single frame.
-4. **Export JSON** keeps editable settings; **Export Niri config** exports shaders.
+4. **Export JSON** keeps editable settings; **Export stock Niri config** exports stock shaders.
    Neither download activates an effect. Resize remains off unless the document
    explicitly enables it, such as one of the labelled resize profiles.
 

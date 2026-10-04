@@ -13,6 +13,7 @@ from helpers import shell_registry
 from niri_fx.documents import effect_document
 from niri_fx.effects import render_kdl
 from niri_fx.library import Library
+from niri_fx.pointer import PointerWobble
 from niri_fx.presets import PRESETS
 from niri_fx.profiles import Profile
 
@@ -142,6 +143,108 @@ class LibraryTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 self.library.review(request)
 
+    def test_pointer_consent_preserves_portable_settings_and_rejects_stock_adapters(self):
+        self.selection["document"] = effect_document(
+            "Pointer Combo",
+            Profile(PRESETS["zipper"], PRESETS["frost-vanish"], pointer=PointerWobble()),
+        )
+        self.library.store({"document": self.selection["document"], "expected": None})
+        self.assertEqual(
+            self.library.listing()["customs"]["custom-pointer-combo"]["pointer"],
+            self.selection["document"]["pointer"],
+        )
+        with patch("niri_fx.setup.validate_config"):
+            omitted = self.library.plan(self.selection)
+        self.assertIsNone(omitted["pointer_activation"])
+        self.assertNotIn(b"pointer-wobble", omitted["changes"][0]["after"])
+        self.assertIn("omitted", " ".join(omitted["notes"]))
+        self.selection["allow_pointer"] = True
+        with patch(
+            "niri_fx.capabilities.pointer_capability", return_value={"activation_ready": False}
+        ):
+            with self.assertRaisesRegex(ValueError, "verified running pointer"):
+                self.library.review(self.selection)
+        for target in ("inir", "noctalia"):
+            with self.subTest(target=target), self.assertRaisesRegex(ValueError, "standalone"):
+                Library(self.args, target).review(self.selection)
+        self.selection["allow_pointer"] = 1
+        with self.assertRaisesRegex(ValueError, "boolean"):
+            self.library.review(self.selection)
+        self.selection.update(allow_pointer=True, document=self.doc)
+        with self.assertRaisesRegex(ValueError, "no pointer settings"):
+            self.library.review(self.selection)
+        self.assertFalse(self.library.state.exists())
+
+    def test_pointer_review_apply_restore_is_bound_to_the_same_consent(self):
+        self.selection.update(
+            document=effect_document(
+                "Pointer Combo",
+                Profile(
+                    PRESETS["zipper"], PRESETS["frost-vanish"], pointer=PointerWobble(strength=0)
+                ),
+            ),
+            allow_pointer=True,
+        )
+        original = self.config.read_bytes()
+        with (
+            patch("niri_fx.setup.validate_config"),
+            patch(
+                "niri_fx.capabilities.pointer_capability",
+                return_value={"activation_ready": True, "binary": "/trusted/niri"},
+            ),
+        ):
+            review = self.library.review(self.selection)
+            with self.assertRaisesRegex(ValueError, "plan changed"):
+                self.library.apply(
+                    {
+                        "selection": dict(self.selection, allow_pointer=False),
+                        "expected": review["plan_sha256"],
+                    }
+                )
+            self.library.apply({"selection": self.selection, "expected": review["plan_sha256"]})
+        included = (self.config.parent / "nirifx/animations.kdl").read_text()
+        self.assertIn("pointer-wobble", included)
+        self.assertIn("strength 0", included)
+        self.assertEqual(self.library.listing()["active"], self.selection["document"])
+        self.library.undo()
+        self.assertEqual(self.config.read_bytes(), original)
+
+    def test_active_stock_profile_stays_recognized_when_native_restore_is_unavailable(self):
+        pointer_selection = dict(
+            self.selection,
+            document=effect_document(
+                "Pointer",
+                Profile(PRESETS["zipper"], PRESETS["frost-vanish"], pointer=PointerWobble()),
+            ),
+            allow_pointer=True,
+        )
+        report = {"activation_ready": True, "binary": "/trusted/niri"}
+        with (
+            patch("niri_fx.setup.validate_config"),
+            patch("niri_fx.capabilities.pointer_capability", return_value=report) as capability,
+        ):
+            reviewed = self.library.review(pointer_selection)
+            self.library.apply(
+                {"selection": pointer_selection, "expected": reviewed["plan_sha256"]}
+            )
+            reviewed = self.library.review(self.selection)
+            self.library.apply({"selection": self.selection, "expected": reviewed["plan_sha256"]})
+            capability.return_value = {"activation_ready": False}
+            listing = self.library.listing()
+            self.assertEqual(listing["active"], self.doc)
+            self.assertTrue(listing["restore"])
+            with self.assertRaisesRegex(ValueError, "experimental pointer"):
+                self.library.undo()
+            from niri_fx.setup import restore
+
+            with self.assertRaisesRegex(ValueError, "experimental pointer"):
+                restore(
+                    self.library.state, self.library.transaction(), apply=True, verify_native=False
+                )
+            self.assertNotIn(
+                "pointer-wobble", (self.config.parent / "nirifx/animations.kdl").read_text()
+            )
+
     def test_profile_management_is_owned_and_rejects_stale_changes_and_name_collisions(self):
         original = self.config.read_bytes()
         self.library.store({"document": self.doc, "expected": None})
@@ -242,6 +345,9 @@ class LibraryTests(unittest.TestCase):
         self.assertEqual(len(list(self.library.folder.glob("*.json"))), 100)
 
     def test_noctalia_uses_connected_picker_and_preserves_speed(self):
+        self.selection["document"] = dict(
+            self.doc, pointer={"strength": 0.7, "damping": 65, "frequency": 8}
+        )
         target = self.config.parent / "picker.kdl"
         original = (
             b'// Plugin-owned target\ninclude "presets/base.kdl"\nanimations { slowdown 1.25; }\n'
@@ -255,12 +361,19 @@ class LibraryTests(unittest.TestCase):
         self.args.picker_file = target
         library = Library(self.args, "noctalia")
         review = library.review(self.selection)
+        self.assertIn("not activated", " ".join(review["notes"]))
         self.assertEqual(target.read_bytes(), original)
         with patch("niri_fx.setup.validate_config"):
             library.apply({"selection": self.selection, "expected": review["plan_sha256"]})
         self.assertEqual(self.config.read_bytes(), root)
         self.assertIn("slowdown 1.25", target.read_text())
         self.assertIn("niri-fx-custom-demo-combo.kdl", target.read_text())
+        self.assertNotIn(
+            "pointer-wobble", (self.args.preset_dir / "niri-fx-custom-demo-combo.kdl").read_text()
+        )
+        self.assertEqual(
+            library.listing()["active"]["pointer"], self.selection["document"]["pointer"]
+        )
         library.undo()
         self.assertEqual(target.read_bytes(), original)
         self.assertFalse((self.args.preset_dir / "niri-fx-custom-demo-combo.kdl").exists())
@@ -269,6 +382,9 @@ class LibraryTests(unittest.TestCase):
             library.review(self.selection)
 
     def test_iris_uses_serializer_without_live_writes_and_rolls_back_validation_failure(self):
+        self.selection["document"] = dict(
+            self.doc, pointer={"strength": 0.7, "damping": 65, "frequency": 8}
+        )
         scripts = self.args.inir_root / "scripts"
         scripts.mkdir(parents=True)
         animation = self.config.parent / "config.d/60-animations.kdl"
@@ -307,6 +423,10 @@ class LibraryTests(unittest.TestCase):
                 library.apply({"selection": self.selection, "expected": review["plan_sha256"]})
             self.assertIn("niri-fx-custom-demo-combo", animation.read_text())
             registry = json.loads(self.args.registry.read_text())
+            self.assertEqual(
+                registry["presets"][0]["profile"]["pointer"], self.selection["document"]["pointer"]
+            )
+            self.assertNotIn("pointer-wobble", json.dumps(registry["presets"][0]["types"]))
             self.assertEqual(
                 registry["presets"][0]["types"]["workspace-switch"],
                 shell_registry()["presets"][0]["types"]["workspace-switch"],

@@ -53,6 +53,7 @@ for (const [id, doc] of Object.entries(catalog.profiles)) {
 }
 let actions = catalog.profile ? structuredClone(catalog.profile.actions) : null;
 let desktopMotion = catalog.profile?.motion ? structuredClone(catalog.profile.motion) : null;
+let pointerSettings = catalog.profile?.pointer ? structuredClone(catalog.profile.pointer) : null;
 let editingAction = "open",
   pinned = null,
   comparing = false;
@@ -113,6 +114,7 @@ function loadDocument(doc, action = "open") {
   editingAction = action;
   actions = doc.actions ? structuredClone(doc.actions) : null;
   desktopMotion = doc.motion ? structuredClone(doc.motion) : null;
+  pointerSettings = doc.pointer ? structuredClone(doc.pointer) : null;
   if (!actions) editingAction = "open";
   parameters = { ...(actions ? actionParameters(editingAction) : doc.effect) };
   byId("independent").checked = !!actions;
@@ -352,14 +354,24 @@ function labels() {
 }
 byId("import").onclick = () => byId("import-file").click();
 function effectDocument() {
-  if (actions) {
+  // Pointer settings are profile metadata. Consolidating window styles must
+  // keep them even while the editor uses its single-style representation.
+  if (actions || pointerSettings) {
     commitAction();
     return {
       kind: "profile",
       schema: catalog.profile_schema,
       name: byId("name").value.trim(),
-      actions: structuredClone(actions),
+      actions: actions
+        ? structuredClone(actions)
+        : {
+            open: { ...parameters, resize: false },
+            close: { ...parameters, resize: false },
+            resize: parameters.resize ? { ...parameters, resize: false } : null,
+            movement: null,
+          },
       ...(desktopMotion ? { motion: structuredClone(desktopMotion) } : {}),
+      ...(pointerSettings ? { pointer: structuredClone(pointerSettings) } : {}),
     };
   }
   return { schema: catalog.schema, name: byId("name").value.trim(), effect: { ...parameters } };
@@ -378,10 +390,28 @@ byId("export").onclick = () =>
     JSON.stringify(effectDocument(), null, 2) + "\n",
     "application/json",
   );
-function kdlDocument() {
-  return renderKdl(effectDocument());
+function kdlDocument(options = {}) {
+  return renderKdl(effectDocument(), options);
 }
-byId("kdl").onclick = () => download("nirifx.kdl", kdlDocument(), "text/plain");
+byId("kdl").onclick = () => {
+  download("nirifx.kdl", kdlDocument(), "text/plain");
+  byId("status").textContent =
+    "Downloaded stock Niri config. Experimental movement and pointer drag are omitted; JSON preserves those settings.";
+};
+byId("pointer-kdl").onclick = () => {
+  try {
+    const doc = effectDocument();
+    download(
+      "nirifx-experimental.kdl",
+      renderKdl(doc, { pointer: true, movement: !!doc.actions?.movement }),
+      "text/plain",
+    );
+    byId("status").textContent =
+      "Downloaded experimental Niri config with all selected actions and pointer settings. It requires the matching compositor extensions.";
+  } catch (error) {
+    byId("error").textContent = error.message;
+  }
+};
 byId("share").onclick = async () => {
   try {
     // Never copy the current local session URL: it may carry an HTTP save token.
@@ -450,7 +480,7 @@ byId("save").onclick = async () => {
       byId("status").textContent =
         target === "noctalia"
           ? "Place the downloaded file in the Noctalia Niri Animations preset folder, then select it in the picker."
-          : "Downloaded a Niri animation include. Include it from your config to activate.";
+          : "Downloaded a stock Niri animation include. Experimental movement and pointer drag are omitted; JSON preserves those settings.";
     } catch (error) {
       byId("error").textContent = error.message;
     }
@@ -718,7 +748,11 @@ try {
         draw(state.progress);
         byId("error").textContent = "";
         byId("combo-preview-status").textContent =
-          state.label + (state.phase === "hold" ? " · Pause" : "") + " · " + state.support;
+          state.label +
+          (state.phase === "hold" ? " · Pause" : "") +
+          " · " +
+          state.support +
+          (pointerSettings ? " · Pointer drag is not played" : "");
         document.documentElement.dataset.comboAction = state.action;
         document.documentElement.dataset.shaderStatus = "ready";
       } catch (error) {

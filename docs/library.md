@@ -29,6 +29,13 @@ keeps those edits. Refined actions show the matching combo name, such as
 match a built-in style or combo action. Undo/Redo also works for combo changes. Move and swap share the
 compositor's movement effect; they are not independent shader slots.
 
+**Pointer drag** is a separate native experiment available from the current
+source checkout. Choose Gentle, Rubber Sheet or Release Settle, then expand its
+controls to tune strength, damping and frequency. **Use desktop settings** leaves
+the existing pointer behavior alone; **Disabled** stores an explicit zero-strength
+override. Changing the shared window style preserves this independent choice.
+See [pointer-driven wobble](pointer-wobble.md) for its compositor requirements.
+
 ## Preview the sequence
 
 Press **Preview combo** to play the selected opening effect, hold the intact
@@ -41,14 +48,18 @@ The movement phase is labelled **experimental** and uses a synthetic path. It
 does not test native compositor movement or desktop springs. See the
 [movement guide](movement.md) for live support and the
 [desktop motion recordings](desktop-motion.md) for workspace, camera and overview
-behavior. Use **Tune** to adjust any action before previewing again.
+behavior. Pointer drag is retained in the profile but is not played by the combo
+preview. Use **Tune** to adjust any shader action before previewing again.
 
 ## Save, export or apply
 
 - **Save to My profiles** asks for a name and keeps an editable document without activation.
   An existing name shows **Replace saved profile** before replacing that Library copy.
 - **Export JSON** produces a portable style/profile for every supported setup.
-- **Export Niri config** produces stock Niri shaders. Experimental movement is omitted.
+- **Export stock Niri config** produces stock Niri shaders. Experimental movement and pointer nodes are omitted.
+- **Export experimental config** appears when pointer settings are selected. It includes
+  those settings and any selected movement shader in one movement block, for the
+  matching experimental compositor only. Neither download activates settings.
 - In the installed app, **Review & apply** lists the configuration changes.
   **Apply these changes** activates exactly that reviewed selection.
 - **Restore previous** restores this app's most recent change for the same setup and config. Later file edits
@@ -87,7 +98,10 @@ the current browser and site; it does not sync to another computer.
 Resize is explicitly chosen per profile. Movement can be previewed and saved on
 every setup. Live activation requires the verified experimental compositor and
 the separate **Apply experimental movement** checkbox on the standalone target.
-An iNiR or Noctalia adapter applies stock actions only.
+Pointer drag has its own **Apply experimental pointer drag** checkbox, available
+only for a verified running pointer renderer on the standalone target. Choosing
+another pointer setting clears that consent. An iNiR or Noctalia adapter applies
+stock actions only; its portable JSON retains the experimental choices.
 
 ## One interface, different configuration owners
 

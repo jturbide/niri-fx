@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+from collections import deque
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -28,6 +29,161 @@ from .storage import atomic_write, digest, read_bytes
 BEGIN = "// BEGIN niri-fx managed include"
 END = "// END niri-fx managed include"
 OWNED = "// Managed by niri-fx setup."
+
+# This scanner identifies native restore requirements, not configuration validity.
+# Keep quoted shader source opaque and respect KDL comments so their contents
+# cannot be mistaken for compositor nodes. The selected Niri still validates KDL.
+_KDL_TOKEN = re.compile(
+    r'//[^\r\n\f\v\x85\u2028\u2029]*|/\*|\*/|r(?P<hashes>\#*)".*?"(?P=hashes)|"(?:\\.|[^"\\])*"|[{};=]|[^\s{};="/\\]+|/[-]?|[^\s]',
+    re.S,
+)
+
+
+def _kdl_nodes(data):
+    """Read node boundaries only; values remain opaque tokens for comparison."""
+    source = data.decode()
+    tokens, comment, offset, continuation = [], 0, 0, False
+    while offset < len(source):
+        if comment:
+            # Quotes inside a block comment are ordinary characters. Tokenizing
+            # them as strings could swallow its terminator and hide real nodes.
+            marker = re.search(r"/\*|\*/", source[offset:])
+            if marker is None:
+                break
+            comment += 1 if marker.group() == "/*" else -1
+            offset += marker.end()
+            continue
+        if source[offset] in "\r\n\f\v\x85\u2028\u2029":
+            if not continuation:
+                tokens.append("\n")
+            continuation = False
+            offset += 2 if source[offset : offset + 2] == "\r\n" else 1
+            continue
+        if source[offset].isspace():
+            offset += 1
+            continue
+        match = _KDL_TOKEN.match(source, offset)
+        if match is None:
+            raise ValueError("Could not inspect a saved configuration for native Restore")
+        token = match.group()
+        offset = match.end()
+        if token == "/*":
+            comment += 1
+        elif token == "\\":
+            continuation = True
+        elif not token.startswith("//"):
+            tokens.append(token)
+    remaining = deque(tokens)
+
+    def nodes():
+        result, header, children, ignored, skip_value = [], [], [], False, False
+
+        def finish():
+            if header and not ignored:
+                result.append((header[0], header[1:], children.copy()))
+
+        while remaining:
+            token = remaining.popleft()
+            if token == "{":
+                nested = nodes()
+                if not skip_value:
+                    children = nested
+                skip_value = False
+            elif token in (";", "\n", "}"):
+                finish()
+                if token == "}":
+                    return result
+                header, children, ignored, skip_value = [], [], False, False
+            elif token == "/-":
+                if header:
+                    skip_value = True
+                else:
+                    ignored = True
+            elif skip_value:
+                skip_value = False
+                # Slash-dash can discard a property, including a separately
+                # quoted key/value. Its value is not an include argument.
+                if remaining and remaining[0] == "=":
+                    remaining.popleft()
+                    if remaining:
+                        remaining.popleft()
+            else:
+                header.append(token)
+        finish()
+        return result
+
+    return nodes()
+
+
+def _kdl_string(token):
+    if token.startswith("r") and '"' in token:
+        hashes = token[1 : token.index('"')]
+        return token[len(hashes) + 2 : -len(hashes) - 1]
+    if token.startswith('"'):
+        # KDL spells Unicode escapes with braces, unlike JSON. Other common
+        # quoted path/node escapes use the same representation.
+        token = re.sub(
+            r"\\u\{([0-9a-fA-F]+)\}",
+            lambda match: json.dumps(chr(int(match[1], 16)))[1:-1],
+            token,
+        )
+        return json.loads(token)
+    return token
+
+
+def _native_requirements(path, overrides, seen=None):
+    """Find native nodes in a prospective config, including restored includes.
+
+    Signatures distinguish a native override being restored from an unchanged
+    one already present in both configurations. Includes are read only; snapshot
+    bytes take precedence over the current files for the prospective tree.
+    """
+    seen = set() if seen is None else seen
+    path = Path(path).resolve()
+    if path in seen:
+        return set()
+    if len(seen) >= 128:
+        raise ValueError("Too many config includes to review experimental Restore safely")
+    seen.add(path)
+    raw = overrides[path] if path in overrides else read_bytes(path)
+    if raw is None:
+        return set()
+    requirements = set()
+
+    def walk(nodes, parents=()):
+        for raw_name, arguments, children in nodes:
+            name = _kdl_string(raw_name)
+            if parents[-2:] == ("animations", "window-movement"):
+                if name in ("pointer-wobble", "custom-shader"):
+                    kind = "pointer" if name == "pointer-wobble" else "movement"
+                    signature = digest(json.dumps((arguments, children)).encode())
+                    requirements.add((kind, signature))
+            if not parents and name == "include" and arguments:
+                included = Path(_kdl_string(arguments[0])).expanduser()
+                requirements.update(_native_requirements(path.parent / included, overrides, seen))
+            walk(children, (*parents, name))
+
+    walk(_kdl_nodes(raw))
+    return requirements
+
+
+def _restore_native_requirements(work, config):
+    """Compare complete before/after trees, or changed KDL for older snapshots."""
+    before = {Path(item["target"]).resolve(): old for item, old, _ in work}
+    after = {Path(item["target"]).resolve(): new for item, _, new in work}
+    roots = ([Path(config)] if config else []) + [
+        Path(item["target"]) for item, _, _ in work if Path(item["target"]).suffix == ".kdl"
+    ]
+    introduced = set()
+    for root in roots:
+        prior = _native_requirements(root, before)
+        current = _native_requirements(root, after)
+        for kind in ("pointer", "movement"):
+            prior_signatures = {value for feature, value in prior if feature == kind}
+            current_signatures = {value for feature, value in current if feature == kind}
+            if prior_signatures and prior_signatures != current_signatures:
+                introduced.add(kind)
+    return sorted(introduced)
 
 
 def default_config():
@@ -101,6 +257,8 @@ def plan_setup(args, effect, custom=None):
         )
     changes, notes = [], []
     movement = None
+    pointer = None
+    validation_binary = None
     if getattr(args, "enable_movement", False):
         if args.target != "standalone":
             raise ValueError("Experimental movement requires an explicit --target standalone")
@@ -116,6 +274,26 @@ def plan_setup(args, effect, custom=None):
         notes.append(
             "Experimental movement is explicitly enabled and the running renderer contract is verified."
         )
+    pointer_settings = getattr(effect, "pointer", None)
+    if getattr(args, "enable_pointer", False):
+        if args.target != "standalone":
+            raise ValueError("Experimental pointer wobble requires an explicit --target standalone")
+        if pointer_settings is None:
+            raise ValueError("This profile has no pointer settings; select a pointer preset first")
+        from .capabilities import pointer_capability
+
+        pointer = pointer_capability(
+            getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
+        )
+        if not pointer["activation_ready"]:
+            raise ValueError(
+                "Pointer activation requires a matching binary and verified running pointer contract. Run doctor --niri-binary PATH first."
+            )
+        notes.append(
+            "Pointer settings are explicitly enabled for Apply and the running renderer contract is verified."
+        )
+    elif pointer_settings is not None:
+        notes.append("Pointer settings are kept in the profile but omitted from this activation.")
     if target == "inir":
         if config.exists() and BEGIN in config.read_text():
             raise ValueError(
@@ -153,7 +331,7 @@ def plan_setup(args, effect, custom=None):
             raise ValueError(f"Niri config is missing: {config}. Create it first or pass --config.")
         if (Path(args.inir_root) / "scripts/niri-config.py").is_file():
             notes.append(
-                "iNiR is also installed. This explicitly selected standalone override will take precedence over its animation picker."
+                "iNiR is also installed. This standalone override takes precedence over its animation picker when Niri loads this configuration."
             )
         original_bytes = config.read_bytes()
         original = original_bytes.decode()
@@ -163,7 +341,11 @@ def plan_setup(args, effect, custom=None):
             raise ValueError(
                 "An unmanaged NiriFX include already exists; remove/review it before setup."
             )
-        generated = render_kdl(effect, movement=movement is not None)
+        generated = render_kdl(effect, movement=movement is not None, pointer=pointer is not None)
+        if native := pointer or movement:
+            validation_binary = native["binary"]
+        elif selected := getattr(args, "movement_binary", None):
+            validation_binary = str(Path(selected).expanduser().absolute())
         # Preserve the actual include boundary: Niri permits animation overrides
         # across files but rejects duplicate animations nodes in a single file.
         # Sibling probes also keep the user's relative includes valid. Neither
@@ -182,8 +364,8 @@ def plan_setup(args, effect, custom=None):
                 base.rstrip() + "\ninclude " + json.dumps(Path(effect_probe.name).name) + "\n"
             )
             probe.flush()
-            if movement:
-                validate_config(probe.name, movement["binary"])
+            if validation_binary:
+                validate_config(probe.name, validation_binary)
             else:
                 validate_config(probe.name)
         include = config.parent / "nirifx/animations.kdl"
@@ -194,7 +376,7 @@ def plan_setup(args, effect, custom=None):
         block = f"{BEGIN}\ninclude {json.dumps(str(include), ensure_ascii=False)}\n{END}\n"
         changes.append(change(config, (base.rstrip() + "\n\n" + block).encode(), original_bytes))
         notes.append(
-            "Applying this standalone include activates the effect through Niri's normal config reload."
+            "The standalone include takes effect when Niri loads this configuration, including through its normal config reload when already active."
         )
         notes.append(
             "The include comes last and overrides earlier open/close animations; keep one animation manager."
@@ -224,10 +406,15 @@ def plan_setup(args, effect, custom=None):
         if target == "standalone" or custom or args.name or getattr(args, "profile", None)
         else None,
         "desktop_motion": document.get("motion"),
+        "pointer": document.get("pointer"),
         "activation": "select in iRiS" if target == "inir" else "Niri config reload",
         "validation_config": str(config) if target == "standalone" else None,
+        "validation_binary": validation_binary,
         "movement": {"binary": movement["binary"], "socket": os.environ.get("NIRI_SOCKET")}
         if movement
+        else None,
+        "pointer_activation": {"binary": pointer["binary"], "socket": os.environ.get("NIRI_SOCKET")}
+        if pointer
         else None,
     }
 
@@ -240,8 +427,11 @@ def summarize(plan):
         "selection": plan.get("selection"),
         "effect": plan.get("effect"),
         "desktop_motion": plan.get("desktop_motion"),
+        "pointer": plan.get("pointer"),
         "activation": plan.get("activation"),
         "movement": plan.get("movement"),
+        "pointer_activation": plan.get("pointer_activation"),
+        "validation_binary": plan.get("validation_binary"),
         "changes": [
             {
                 "path": c["logical"],
@@ -265,7 +455,10 @@ def plan_fingerprint(plan):
         "selection": plan.get("selection"),
         "effect": plan.get("effect"),
         "desktop_motion": plan.get("desktop_motion"),
+        "pointer": plan.get("pointer"),
         "movement": plan.get("movement"),
+        "pointer_activation": plan.get("pointer_activation"),
+        "validation_binary": plan.get("validation_binary"),
         "changes": [
             {k: item[k] for k in ("logical", "target", "mode")}
             | {side: digest(item[side]) for side in ("before", "after")}
@@ -292,19 +485,24 @@ def apply_plan(plan, state, expected=None):
         raise ValueError(
             "The setup plan changed. Review the selection and files again before applying."
         )
-    if plan.get("movement"):
-        from .capabilities import movement_capability
+    from .capabilities import movement_capability, pointer_capability
 
-        selected = plan["movement"]
-        if (
-            os.environ.get("NIRI_SOCKET") != selected["socket"]
-            or not movement_capability(selected["binary"], socket_path=selected["socket"])[
-                "activation_ready"
-            ]
-        ):
-            raise ValueError(
-                "Running movement support changed after review; leaving the configuration untouched"
-            )
+    # Review binds the selected executable and session. Re-query the renderer
+    # immediately before the transaction, even for an otherwise idempotent plan.
+    for key, label, capability in (
+        ("movement", "movement", movement_capability),
+        ("pointer_activation", "pointer", pointer_capability),
+    ):
+        if selected := plan.get(key):
+            if (
+                os.environ.get("NIRI_SOCKET") != selected["socket"]
+                or not capability(selected["binary"], socket_path=selected["socket"])[
+                    "activation_ready"
+                ]
+            ):
+                raise ValueError(
+                    f"Running {label} support changed after review; leaving the configuration untouched"
+                )
     if not plan["changes"]:
         return {**summarize(plan), "changed": False, "transaction": None}
     state = Path(state).expanduser().resolve()
@@ -321,6 +519,8 @@ def apply_plan(plan, state, expected=None):
             "id": identifier,
             "status": "preparing",
             "target": plan["target"],
+            "validation_config": plan.get("validation_config"),
+            "validation_binary": plan.get("validation_binary"),
             "files": [],
         }
         if plan.get("selection_document") is not None:
@@ -347,8 +547,8 @@ def apply_plan(plan, state, expected=None):
                 atomic_write(Path(item["target"]), item["after"], item["mode"])
                 applied.append(item)
             if plan["validation_config"]:
-                if plan.get("movement"):
-                    validate_config(plan["validation_config"], plan["movement"]["binary"])
+                if plan.get("validation_binary"):
+                    validate_config(plan["validation_config"], plan["validation_binary"])
                 else:
                     validate_config(plan["validation_config"])
             manifest["status"] = "applied"
@@ -383,7 +583,7 @@ def apply_plan(plan, state, expected=None):
         }
 
 
-def restore(state, identifier=None, apply=False):
+def restore(state, identifier=None, apply=False, *, binary=None, verify_native=True):
     """Undo a selected/latest applied snapshot after verifying hashes and paths.
 
     Later user edits are conflicts, never an invitation to force an old backup
@@ -422,11 +622,29 @@ def restore(state, identifier=None, apply=False):
                 raise ValueError("Setup snapshot contents failed their hash check")
             check_unchanged(item, after)
             work.append((item, before, after))
+        # Restoring a previous experimental selection is an activation too.
+        # Inspect the actual saved bytes, not just the selection metadata: an
+        # older snapshot or a shell adapter may contain native user settings.
+        # Stock restoration remains available without Niri or a live session.
+        native = _restore_native_requirements(work, data.get("validation_config"))
+        validator = binary if binary is not None else data.get("validation_binary")
+        if native and (apply or verify_native):
+            from .capabilities import movement_capability, pointer_capability
+
+            for feature in native:
+                capability = pointer_capability if feature == "pointer" else movement_capability
+                report = capability(validator, socket_path=os.environ.get("NIRI_SOCKET"))
+                if not report["activation_ready"]:
+                    raise ValueError(
+                        f"Restore would reactivate experimental {feature} settings. A matching binary and verified running renderer are required; use --niri-binary PATH. Configuration and snapshots were left untouched."
+                    )
+                validator = report["binary"]
         result = {
             "transaction": data["id"],
             "target": data["target"],
             "dry_run": not apply,
             "paths": [item["logical"] for item, _, _ in work],
+            "experimental": native,
             "note": (
                 "For iNiR, select your previous non-NiriFX style first; restoring the registry does not rewrite the active shader."
                 if data["target"] == "inir"
@@ -440,6 +658,22 @@ def restore(state, identifier=None, apply=False):
                     check_unchanged(item, after)
                     atomic_write(Path(item["target"]), before, item["mode"])
                     restored.append((item, before, after))
+                if native:
+                    config = data.get("validation_config")
+                    # Old snapshots have no root config metadata. Validate the
+                    # restored KDL files in place so their relative includes
+                    # resolve as they will when the compositor loads them.
+                    paths = (
+                        [config]
+                        if config
+                        else [
+                            item["logical"]
+                            for item, before, _ in work
+                            if before is not None and Path(item["logical"]).suffix == ".kdl"
+                        ]
+                    )
+                    for restored_config in paths:
+                        validate_config(restored_config, validator)
             except BaseException:
                 for item, before, after in reversed(restored):
                     if read_bytes(Path(item["target"])) == before:
@@ -451,10 +685,12 @@ def restore(state, identifier=None, apply=False):
 
 
 def doctor(args):
-    from .capabilities import movement_capability
+    from .capabilities import movement_capability, pointer_capability
 
     checks = []
-    niri = shutil.which("niri")
+    selected = getattr(args, "movement_binary", None)
+    requested = str(Path(selected).expanduser().absolute()) if selected is not None else "niri"
+    niri = shutil.which(requested)
     try:
         version = (
             subprocess.check_output(
@@ -468,7 +704,10 @@ def doctor(args):
         checks.append({"check": "niri", "ok": False, "detail": f"Could not query Niri: {error}"})
     config = Path(args.config).expanduser()
     try:
-        validate_config(config)
+        if selected is not None:
+            validate_config(config, requested)
+        else:
+            validate_config(config)
         checks.append({"check": "config", "ok": True, "detail": str(config)})
     except (ValueError, OSError, subprocess.SubprocessError) as error:
         checks.append({"check": "config", "ok": False, "detail": str(error)})
@@ -513,6 +752,9 @@ def doctor(args):
     movement = movement_capability(
         getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
     )
+    pointer = pointer_capability(
+        getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
+    )
     checks.extend(
         [
             {
@@ -526,6 +768,16 @@ def doctor(args):
                 "ok": None,
                 "detail": movement["session"]["contract"]["detail"],
             },
+            {
+                "check": "pointer-binary",
+                "ok": None,
+                "detail": f"{pointer['binary'] or 'Unavailable'}: {pointer['detail']}",
+            },
+            {
+                "check": "pointer-renderer",
+                "ok": None,
+                "detail": pointer["session"]["contract"]["detail"],
+            },
         ]
     )
     from .picker import picker_checks
@@ -537,5 +789,7 @@ def doctor(args):
         "resize": "Opt-in; all built-in presets default off.",
         "movement": "Movement is experimental and opt-in. Activation requires a matching binary and verified running renderer contract.",
         "movement_capability": movement,
+        "pointer": "Pointer wobble is experimental and opt-in. Apply requires standalone mode, a matching binary and a verified running renderer contract.",
+        "pointer_capability": pointer,
         "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
     }

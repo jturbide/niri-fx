@@ -66,6 +66,11 @@ Already using a shell's animation picker? Follow its guide:
 [Noctalia](docs/noctalia.md) · [Standalone / Waybar](docs/standalone.md).
 The [scenario guide](docs/scenarios.md) helps choose the right setup and restore path.
 
+**Using an AI agent?** Start with `python3 -m niri_fx agent-info` for structured
+command discovery, or read the [agent guide](docs/agents.md). The CLI provides
+compact preset search, parameter bounds, validated exports and reviewed
+Apply/Restore. A reusable skill is included in the current source checkout.
+
 ## See it in motion
 
 The [interactive gallery](https://jturbide.github.io/niri-fx/gallery/) starts with
@@ -181,6 +186,9 @@ Choose a coordinated opening and closing look by name; detailed tuning is option
 Grab a window, change direction and let it settle. The optional pointer extension
 adds actual drag response to the isolated experimental compositor. It is available
 from source; Studio's timed Elastic effects remain separate.
+Choose **Pointer drag** in Library to save a preset or tune its strength, damping
+and frequency. Portable JSON retains the choice on every setup. Live activation
+requires the verified experimental compositor and an explicit standalone Apply.
 
 | Gentle | Rubber Sheet | Release Settle |
 | --- | --- | --- |

@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, statSync, renameSync } from "node:fs";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
@@ -76,13 +76,42 @@ try {
   await comboFrames("4 / Preview your opening, resize and closing styles together");
   await frames("Preview complete / Your combo and active desktop settings stay the same", 1);
   await evaluate(
+    `byId('combo-pointer').value='gentle';byId('combo-pointer').dispatchEvent(new Event('change'));byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'));byId('library-panel').scrollTop+=byId('pointer-settings').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-80`,
+  );
+  await frames("5 / Choose optional pointer drag / Requires the native extension", 1.25);
+  await evaluate(
+    `byId('pointer-tuning').open=true;byId('pointer-strength').value=.75;byId('pointer-strength').dispatchEvent(new Event('change'));byId('library-panel').scrollTop+=byId('pointer-settings').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-80`,
+  );
+  const pointerDocument = await evaluate("effectDocument()");
+  assert.deepEqual(pointerDocument.pointer, { strength: 0.75, damping: 85, frequency: 10 });
+  await frames("Customize the spring / Pointer dragging is not played in this canvas", 1.25);
+  await evaluate(`byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`);
+  await frames("JSON keeps pointer settings / Stock config leaves them out", 1.25);
+  assert.deepEqual(
+    JSON.parse(readFileSync(join(root, "nirifx-preset.json"))).pointer,
+    pointerDocument.pointer,
+  );
+  assert.doesNotMatch(readFileSync(join(root, "nirifx.kdl"), "utf8"), /pointer-wobble/);
+  assert.match(readFileSync(join(root, "nirifx-experimental.kdl"), "utf8"), /pointer-wobble/);
+  execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
+  // Retain the actual first downloads as evidence without affecting the later
+  // save/copy/rename sequence or Chrome's duplicate-filename behavior.
+  renameSync(join(root, "nirifx-preset.json"), join(root, "pointer-profile.json"));
+  renameSync(join(root, "nirifx.kdl"), join(root, "pointer-stock.kdl"));
+  await evaluate(
     `byId('combo-mode').value='same';byId('combo-mode').dispatchEvent(new Event('change'))`,
   );
-  await frames("5 / Use the same style for every enabled action", 2, true);
+  assert.deepEqual(await evaluate("effectDocument().pointer"), pointerDocument.pointer);
+  await frames("6 / Share one window style / Pointer settings stay with the combo", 2, true);
+  await evaluate(
+    `byId('combo-pointer').value='';byId('combo-pointer').dispatchEvent(new Event('change'));byId('pointer-tuning').open=false;byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130`,
+  );
+  assert.equal(await evaluate('Object.hasOwn(effectDocument(), "pointer")'), false);
+  await frames("Use desktop settings / Leave pointer behavior unchanged", 0.75);
   await evaluate(
     `byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'));byId('combo-resize').value='';byId('combo-resize').dispatchEvent(new Event('change'));byId('combo-name').value='Night Motion';byId('combo-name').dispatchEvent(new Event('change'));byId('store-profile').click()`,
   );
-  await frames("6 / Name your combo before saving", 1);
+  await frames("7 / Name your combo before saving", 1);
   await evaluate(`byId('profile-confirm').click()`);
   await evaluate("byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'))");
   await evaluate("byId('store-profile').scrollIntoView({block:'center'})");
@@ -94,22 +123,22 @@ try {
   await evaluate(
     `byId('library-panel').scrollTop=0;byId('library-collection').value='customs';byId('library-collection').dispatchEvent(new Event('change'));byId('copy-profile').click()`,
   );
-  await frames("7 / Save a copy to try another variation", 1.5);
+  await frames("8 / Save a copy to try another variation", 1.5);
   await evaluate(`byId('profile-confirm').click()`);
   await frames("The original stays in My profiles", 1);
   await evaluate(
     `byId('rename-profile').click();byId('profile-save-name').value='Night Motion alternate';byId('profile-save-name').dispatchEvent(new Event('input'))`,
   );
-  await frames("8 / Give the copy a clearer name", 1.5);
+  await frames("9 / Give the copy a clearer name", 1.5);
   await evaluate(`byId('profile-confirm').click()`);
   await frames("Renamed / Active effects keep their original name", 1);
   await evaluate(`byId('remove-profile').click()`);
-  await frames("9 / Remove the Library copy when it is no longer needed", 1.5);
+  await frames("10 / Remove the Library copy when it is no longer needed", 1.5);
   await evaluate(`byId('profile-confirm').click()`);
   await frames("Removed from My profiles / The original remains", 1);
   await evaluate(`document.querySelector('[data-style=custom-night-motion]').click()`);
   await evaluate(`byId('export').click();byId('kdl').click()`);
-  await frames("10 / Export editable JSON and stock Niri config", 1.5);
+  await frames("11 / Export editable JSON and stock Niri config", 1.5);
   assert.deepEqual(JSON.parse(readFileSync(join(root, "nirifx-preset.json"))), expected);
   execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
   const destination = "docs/gifs/workflow-library.gif";
@@ -140,6 +169,7 @@ try {
     sources: Object.fromEntries(
       [
         "niri_fx/library.js",
+        "niri_fx/pointer.py",
         "niri_fx/effect-core.js",
         "niri_fx/combo-preview.js",
         "niri_fx/studio.js",
@@ -156,6 +186,10 @@ try {
       "complete action-specific open/resize/close cycle",
       "stable seed and unchanged document/history",
       "shared style",
+      "explicit pointer preset and bounded custom controls",
+      "pointer metadata survives shared window styles and JSON export",
+      "stock KDL omits pointer while experimental export includes it",
+      "pointer restored to inherited desktop settings",
       "saved profile",
       "explicit save confirmation",
       "copy and rename",

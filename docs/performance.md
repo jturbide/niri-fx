@@ -460,16 +460,18 @@ acknowledgements across all ten lifecycle checks.
 
 The host used an NVIDIA GeForce RTX 4070 Ti with driver 615.71.09. The nested
 output advertised 60 Hz; its submission intervals are not a measurement of the
-host display's refresh rate.
+host display's refresh rate. These refreshed recordings used a different host
+callback cadence from the earlier run; lower intervals do not establish a
+renderer optimization.
 
 | Preset | Native samples | Submission interval p95 | Server round-trip p95 |
 | --- | ---: | ---: | ---: |
-| Gentle | 86 | 18.09 ms | 31.53 ms |
-| Rubber Sheet | 96 | 18.10 ms | 32.18 ms |
-| Release Settle | 87 | 19.52 ms | 28.95 ms |
+| Gentle | 200 | 9.12 ms | 12.84 ms |
+| Rubber Sheet | 221 | 8.78 ms | 10.43 ms |
+| Release Settle | 205 | 8.95 ms | 10.65 ms |
 
 Submission intervals include idle holds while the window settles; maximum gaps
-were about 85–96 ms. They are not per-frame GPU cost. Motion commands flush
+were about 93–97 ms. They are not per-frame GPU cost. Motion commands flush
 asynchronously; their local socket acknowledgements are separate from the server
 round trips for buttons and synchronization barriers. Those round trips include
 protocol and scheduling overhead. None of these measures is physical
