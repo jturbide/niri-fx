@@ -1,7 +1,13 @@
 # Development design notes
 
-These notes explain the technical questions behind the [project roadmap](../ROADMAP.md).
-They are a starting point for contributors, not a list of required steps for using NiriFX.
+These notes are for contributors changing rendering, controls or shell adapters.
+They explain design constraints and the checks needed to preserve existing behavior.
+The [project roadmap](../ROADMAP.md) tracks priorities; the
+[stability and compatibility policy](stability.md) defines the path to 1.0 and
+future public-interface commitments. Current support and observed results are in
+[Compatibility](compatibility.md) and [Validation](validation.md).
+
+For installation and customization, start with the [user guides](README.md#install-and-use).
 
 ## Rendering and interruptions
 
@@ -19,7 +25,7 @@ with zero speed; unchanged moves use Niri's configured curve. Acceleration,
 camera motion and shared particle physics remain separate problems. Phase curves
 must stay bounded without discarding their incoming speed.
 
-Resize geometry now follows the same principle in the experimental movement
+Resize geometry follows the same principle in the experimental movement
 renderer. Width and height retain sampled velocity independently; an unchanged
 axis keeps its original curve and finish time so neighboring tiles stay on the
 same clock. Deterministic tests cover reversals, orthogonal retargets and small
@@ -27,12 +33,11 @@ or client-driven size changes. The [native comparisons](validation.md#resize-geo
 show width and height reversals.
 Stock rendering and disabled resize remain unchanged.
 
-The next resize work must distinguish geometric continuity from the shader's
+Further resize work must distinguish geometric continuity from the shader's
 deformation phase, which still restarts. Closing during resize uses a snapshot.
 Minimum-size clamps and animation-timing reloads can separate neighboring paths
 and need dedicated regressions before broader continuity claims. Preserve these
-limits in public examples rather than treating an aligned edge as proof of a
-continuous effect.
+limits in examples: an aligned edge alone does not establish a continuous effect.
 
 Changes to this path should include deterministic state tests and native recordings
 of reversal, repeated retargets, close-during-open, close-during-move and shader
@@ -55,6 +60,11 @@ presentation separately: capture cadence, IPC acknowledgements and WebGL GPU
 queries answer different questions. Record the driver, window/output dimensions,
 refresh rate, sample count and release/debug build profile with each result.
 
+Publish concise results, limitations, reproducible commands and sanitized measurement
+data. Keep local investigation notes, raw logs, source recordings and personal
+configuration snapshots under ignored `artifacts/`. The
+[recording guide](gifs/README.md) describes how to prepare synthetic public media.
+
 Inverse shader lookups need a coverage bound before reducing their search radius.
 Compare intermediate frames, extreme settings and multiple seeds against a
 reference renderer. Preserve premultiplied alpha, transparent decorations and
@@ -70,7 +80,7 @@ arrays and catalog identifiers instead of interpolating names into shell command
 Test selection, activation and exact restore with temporary configurations.
 Preserve existing resize behavior unless the profile selects resize, keep unrelated
 settings, and describe ownership when another animation manager is present.
-See [integration priorities](roadmap.md).
+See [shell integration design](roadmap.md).
 
 ## Adding effects and controls
 

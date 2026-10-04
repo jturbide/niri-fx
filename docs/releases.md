@@ -3,7 +3,8 @@
 Find tagged versions and release notes on the
 [GitHub releases page](https://github.com/jturbide/niri-fx/releases).
 NiriFX is in early development; prereleases may change commands or preset formats.
-Read the notes for the version you install.
+Read the notes for the version you install. The [path to 1.0](stability.md)
+defines future stability gates; current 0.x interfaces remain under development.
 
 ## Choose a version
 

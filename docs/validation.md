@@ -4,6 +4,8 @@ Evidence updated on **2026-10-04**, including 0.18.0 pointer previews, integrati
 and agent support, plus the subsequent experimental resize geometry fix. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
+For setup instructions, use the [documentation index](README.md); check
+[Compatibility](compatibility.md) for supported features and requirements.
 
 ## Public catalog checks
 
@@ -350,26 +352,26 @@ configs; the isolated shell and compositor were stopped after the test.
 
 ## Maintenance refactor
 
-The refactor preserved all 163 default action shaders across 55 presets after
-stripping comments and whitespace (opening, closing, supported resize and movement).
-New comments explain coordinate spaces, alpha handling and bounded inverse searches.
-The Python/browser validators share 24 accepted/rejected document fixtures; the
-standalone JavaScript core has no DOM or network dependency. Full Studio E2E remains
-a separate check of rendering, UI state and actual temporary-registry saving.
+This historical check covered the then-current catalog of 55 presets. The refactor
+preserved all 163 default action shaders after stripping comments and whitespace
+(opening, closing, supported resize and movement). Comments documented coordinate
+spaces, alpha handling and bounded inverse searches. Python/browser validators
+shared 24 accepted/rejected document fixtures; the standalone JavaScript core had
+no DOM or network dependency. These counts describe that refactor's evidence.
 
-Tests use temporary configuration and registry files. Running these checks does
-not activate effects or replace the installed compositor. See [architecture](architecture.md) and the
-[next-phase gates](next-phases.md).
+Full Studio E2E separately checked rendering, UI state and actual saving with
+temporary configuration and registry files. The tests did not activate effects
+or replace the installed compositor. See [Architecture](architecture.md) and the
+[development design notes](next-phases.md) for implementation guidance.
 
 ## Workflow and compositor scenarios
 
-Recorded on 2026-10-03. The workflow harness owns a nested Niri window, synthetic
-clients, fresh HOME/XDG directories and a private session bus. It sends input and
-captures only the nested output, stops its process groups and retains logs,
-PNGs, source video and JSON evidence under ignored `artifacts/scenario-*`.
-The installed desktop configuration is not edited. A private session bus does
-not hide system D-Bus information; the published Noctalia clip crops out its bar
-and uses a generic temporary preset path.
+Recorded on 2026-10-03 in a separate nested Niri window with synthetic clients,
+temporary configuration and a private session bus. Only the nested output was
+captured; the installed desktop configuration was unchanged. A private session
+bus does not hide system D-Bus information, so the published Noctalia clip crops
+out its bar and uses a generic temporary preset path.
+[Reproduce the workflow recordings](gifs/README.md#workflow-and-compositor-recordings).
 
 | Check | Result and scope |
 | --- | --- |
@@ -506,19 +508,11 @@ python3 -m unittest discover -s tests -p 'test_agent.py' -v
 
 ## Shared Library and combo builder
 
-The browser test files run sequentially so concurrent software WebGL contexts
-do not compete for a shared CI runner. Shader checks remain enabled; readiness
-timeouts report the observed state without exposing session URLs.
-The harness enables its Page and Runtime domains before navigation. A real-process
-regression verifies that startup hooks capture script errors on repeated reloads.
-Another regression covers a briefly empty page-target list after the debugging
-port becomes available, without extending the existing startup deadline.
-Startup also waits for a complete, valid debugging-port line. Real-process
-regressions cover partial writes, permanently invalid ports, bounded cleanup and
-preserved process-exit diagnostics.
-Library transaction checks use an intact preview frame and wait for profile
-operations to finish. This keeps queued software GPU draws out of UI timing;
-the full rendering suite still checks intermediate pixels, endpoints and parity.
+Browser regressions verify script-error reporting across reloads, delayed readiness,
+invalid startup responses, timeouts and bounded process cleanup. Failure reports retain
+diagnostics without exposing session URLs. Library transaction checks verify
+completed profile operations separately from shader rendering; the rendering suite
+checks intermediate pixels, endpoints and export parity.
 
 Complete combo preview checks cover per-action styles and durations, stable seeds,
 omission of unselected actions, grow/shrink texture exchange and movement position

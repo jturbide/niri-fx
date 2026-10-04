@@ -1,5 +1,13 @@
 # Maintaining releases
 
+This guide is for maintainers preparing a release. For installation and package
+selection, use [Releases and downloads](releases.md). Before publishing 1.0 as
+stable, complete
+all [stability acceptance criteria](stability.md#acceptance-criteria-for-10).
+Subsequent 1.x releases must preserve that published contract and pass the
+compatibility fixtures from all earlier stable 1.x interfaces, even when those
+older binaries no longer receive fixes.
+
 ## Changelog policy
 
 Add user-visible changes to [Unreleased](../CHANGELOG.md) in the same pull request

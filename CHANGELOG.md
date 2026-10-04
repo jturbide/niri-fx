@@ -9,6 +9,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
+- Separate user guides from contributor and maintainer references, and focus the
+  roadmap on upcoming work instead of repeating completed release milestones.
 - Select expensive renderer checks by the changed paths while retaining unit,
   package and documentation checks for native and agent changes. Unknown paths,
   release and CI changes still run the full suite; Python dependency downloads
@@ -28,6 +30,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- A path to 1.0 with proposed public-interface boundaries, backward compatibility
+  throughout 1.x, and concrete release acceptance criteria. Current 0.x interfaces
+  remain under development; this does not announce a stability freeze.
 - Native before/after width and height comparisons, decoded edge measurements
   and regressions for reversals, orthogonal changes and unchanged stock behavior.
   Existing native showcases are refreshed for the updated compositor patches.

@@ -5,81 +5,53 @@ apply it, and customize when useful. Niri remains the primary compositor; other
 backends are research candidates, not current compatibility claims.
 
 Checklists describe concrete deliverables. Checked items have shipped or have
-recorded validation; unchecked items are still planned or in development. Epic
-order expresses priority, not a release date. See [available features](README.md),
+recorded validation; unchecked items are still planned or in development. The
+priorities below guide sequencing; epics group related work without release dates.
+See [available features](README.md),
 [release history](CHANGELOG.md) and [validation limits](docs/validation.md).
 
-## Coherent desktop motion milestone
+## Next priorities
 
-- [x] Verify the running movement shader contract before live activation, with Apply and Restore.
-- [x] Test rapid swaps, move/resize/close overlaps and floating/tiled changes; fix demonstrated jumps.
-- [x] Ship Gentle, Balanced and Playful motion packs with coordinated stock desktop timing.
-- [x] Add compositor output feedback and publish nested submission evidence separately from shader/capture timing.
-- [ ] Collect physical DRM presentation and mixed-output evidence on an experimental login session.
-- [x] Add deterministic mixtures of built-in fragment shapes with finished presets.
-- [x] Publish portable settings, faithful showcases, support limits and regression coverage.
+1. **Complete action choices.** Preserve the existing behavior, choose a style or
+   turn an action off consistently in profiles, Studio, the CLI and adapters.
+2. **Make interrupted motion continuous.** Finish resize retargeting and
+   close-during-resize work, with reproducible comparisons and regressions.
+3. **Shorten full rendering checks.** Measure the expensive stages and split
+   independent work across CI jobs while retaining required coverage.
+4. **Broaden desktop acceptance.** Resolve native input/capture failures and
+   collect physical presentation and additional GPU/output results.
+5. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
+   retaining room to improve the 0.x design.
 
-Resize and experimental movement remain explicit choices. The isolated
-pointer-driven wobble prototype builds on this motion foundation (Epic 4).
+New presets should demonstrate a distinct useful look, with importable settings
+and a faithful showcase. More shells, workspace shaders and compositor ports
+follow the core controls and reliability work below.
 
-## Coordinated action sets milestone
+## Available foundation
 
-- [x] Ship Fragments, Ribbons and Elastic sets with stock open/close and desktop timing.
-- [x] Suggest matching resize and movement in the existing Studio and CLI, with independent selection.
-- [x] Publish base, resize-only and experimental examples with faithful shader and native showcases.
-- [x] Verify import, editing, Undo, shell exports and native endpoints; document action limits.
-
-## Library and action combos milestone
-
-- [x] Open on recommended looks, favorites and saved profiles, with Studio in the same app.
-- [x] Choose one shared style or separate opening, closing, resize and movement styles.
-- [x] Keep the same combo builder online, with portable JSON/config exports and browser-local profiles.
-- [x] Share reviewed Apply/Restore across standalone, iNiR and connected Noctalia configurations.
-- [x] Validate optional compact iRiS and Noctalia entries and accurate iRiS active-selection feedback.
-- [x] Record the combo workflow and publish its guides and online interface.
-- [x] Manage saved profiles with copy, rename and removal, explicit replacement
-  choices, edit conflict detection and JSON transfer between local and online Studio.
-
-## Polished combo previews and 0.17 release milestone
-
-Goal: make finished combinations easy to compare, choose and install.
-
-- [x] Preview a whole combo with one button: opening, a pause and closing,
-      using each action's own style and duration.
-- [x] Include selected resize and experimental movement previews, with accurate
-      support labels, a stable variation and cancellation when settings change.
-- [x] Respect reduced motion and keep playback separate from editing, Undo and Apply.
-- [x] Refine five existing recommended combos: Fragment Flow, Soft Landing,
-      Ribbon Current, Playful Motion and Geometric Flow, with fragments first.
-- [x] Publish complete-cycle showcases and portable JSON for all five combos.
-- [x] Test the actual 0.16-to-0.17 upgrade with saved JSON, favorites, shell entries
-      and exact Restore in isolated configurations.
-- [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
-
-Version 0.18 adds pointer settings in profiles, Studio controls and capability-verified
-standalone Apply/Restore (Epic 4). Live pointer deformation still requires a
-separate compositor build. Agent discovery and reusable guidance use the same CLI
-(Epic 9).
+Stock open/close/resize effects, standalone setup, shell adapters, the shared
+Library and online Studio are available. Profiles support independent styles,
+curated combinations, favorites, saved JSON and reviewed Apply/Restore.
+Experimental movement, swaps and pointer deformation require a separate compositor
+build. See [current support](docs/compatibility.md), [the catalog](docs/catalog.md)
+and [release history](CHANGELOG.md) for delivered features and version details.
 
 ## Next release and motion continuity
 
-- [x] Verify the 0.17-to-0.18 upgrade with existing Library profiles, favorites,
-      shell entries and exact CLI/Library Restore.
-- [x] Publish the signed 0.18 prerelease with packages, checksums and explicit
-      native input/capture limitations.
-- [x] Reproduce the two native input/output failures against unmodified pinned
-      Niri before assigning their cause or choosing a fix.
-- [x] Reproduce interrupted-resize edge jumps with neighboring tiles and columns,
-      then retain matching size and position trajectories on the tested paths.
-- [x] Record native before/after width and height resize reversals.
-- [x] Select CI checks by reviewed file groups and cache dependency downloads,
-      keeping the full suite for renderer changes, releases and unknown paths.
+Interrupted resize geometry now retains size velocity independently per axis;
+width and height comparisons are published. Shader deformation phase and the
+remaining edge cases below have separate acceptance criteria.
+
 - [ ] Add native orthogonal-retarget recordings and resolve minimum-size clamp and
       mid-animation timing-reload discontinuities.
-- [ ] Investigate retained resize shader state through retargeting and closing;
-      distinguish geometric continuity from texture/deformation continuity.
+- [ ] Retain resize shader state through retargeting and investigate closing
+      continuity; distinguish geometry from texture/deformation continuity.
+- [ ] Resolve native device-disconnection and stale-output failures, retaining
+      the unmodified pinned-Niri baseline comparison (Epic 4).
 - [ ] Collect physical capture/presentation and another GPU result before adding
-      performance-driven quality choices.
+      performance-driven quality choices (Epic 6).
+- [ ] Publish the next prerelease with verified upgrade/Restore behavior and
+      accurate support limits; follow the [release process](docs/releasing.md).
 
 ## Consistent action selection
 
@@ -96,14 +68,38 @@ currently require a style; the checklist below adds the missing choices.
 - [ ] Verify reviewed Apply and exact Restore for partial profiles and all-off
       profiles, with examples and complete workflow coverage.
 
-## Released foundation
+## Faster feedback for contributors
 
-- [x] Stock Niri opening and closing effects, standalone setup and shell adapters.
-- [x] Independent open/close pairings and explicitly enabled resize profiles.
-- [x] Eight fragment shapes, four shape presets and their showcases in 0.12.0.
-- [x] Experimental tile/column movement, swaps and velocity-preserving retargets.
-- [x] Searchable gallery, Studio, terminal workflow and reversible setup snapshots.
-- [x] Curated collections shared across browsing interfaces and ten finished pairings.
+CI already selects expensive checks using reviewed file groups and caches pip/npm
+downloads. Documentation-only changes skip rendering; renderer, shared-contract,
+release and unknown changes retain the full suite. Full renderer runs still have
+expensive software-WebGL matrices.
+
+- [ ] Record compile, draw and workflow timings for each expensive matrix.
+- [ ] Split independent rendering matrices across isolated CI jobs, with one
+      required aggregate check that rejects missing or failed results.
+- [ ] Compare elapsed time and failure diagnostics on the same workload; retain
+      endpoint, intermediate-frame, export-parity and save-flow coverage.
+
+## Stable 1.0 acceptance
+
+NiriFX remains in 0.x development. The future 1.0 release will define a supported
+public contract with backward compatibility throughout 1.x; incompatible changes
+to that contract require a new major version. Features and internal implementation
+can continue evolving. There is no release date or interface freeze yet.
+
+The [stability policy](docs/stability.md) defines the proposed scope and detailed
+acceptance criteria. The release checklist is:
+
+- [ ] Publish exact stable interfaces, experimental boundaries and support policies.
+- [ ] Establish versioned document and CLI/JSON compatibility fixtures.
+- [ ] Prove upgrades preserve user data, configuration and Restore history.
+- [ ] Verify review, ownership, failure recovery and compositor capability checks.
+- [ ] Pass the declared environment/adapter matrix and publish its tested limits.
+- [ ] Release matching signed sources, packages, documentation and migration guidance.
+
+Research epics need not all be complete for a stable stock-Niri core. Any native
+feature advertised as stable must meet its own input, capture and runtime gates.
 
 ## Epic 1: general window movement
 
@@ -125,8 +121,8 @@ Goal: make movement a distinct, well-tested action with useful finished looks.
 ## Epic 2: shaped and expressive resize
 
 Goal: extend the shape vocabulary to size changes while keeping borders and
-endpoints reliable. Every built-in style keeps resize off unless a separate
-resize profile is explicitly applied.
+endpoints reliable. Built-in styles preserve existing resize behavior; applying
+a profile that selects resize changes it.
 
 - [x] Reuse triangle, hexagon and silhouette geometry in the resize renderer.
 - [x] Add finished Edge Rebuild and Soft Reflow profiles with shapes.
@@ -146,7 +142,8 @@ Goal: retain visual direction and state when actions overlap.
 - [x] Continue an interrupted opening or movement while fading a closing window.
 - [x] Expand coverage to move/resize/close combinations and vertical layout changes.
 - [ ] Fix discontinuities demonstrated by those scenarios and add regressions.
-- [ ] Investigate velocity continuity across interrupted resize transitions.
+- [x] Preserve per-axis size velocity during tested interrupted resize transitions.
+- [ ] Resolve minimum-size clamp, timing-reload and retained shader-phase gaps.
 - [x] Test floating/tiled changes with resize/open/close overlap fixtures.
 - [ ] Test physical mixed outputs and output removal.
 - [ ] Investigate acceleration continuity and shared swap transactions.
