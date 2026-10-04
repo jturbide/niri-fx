@@ -27,6 +27,7 @@ test("library combines supported actions, preserves edits and saves offline with
     const evaluate = browser.evaluate;
     assert.equal(await evaluate("document.documentElement.dataset.workspace"), "library");
     assert.equal(await evaluate('byId("activation-controls").hidden'), true);
+    assert.equal(await evaluate('getComputedStyle(byId("save-target")).display'), "none");
     assert.equal(await evaluate("effectDocument().effect.resize"), false);
     await evaluate('document.querySelector("[data-style=fragments-motion]").click()');
     assert.equal(await evaluate("effectDocument().actions.resize"), null);

@@ -2212,7 +2212,7 @@
     {
       "name": "workflow-library",
       "file": "docs/gifs/workflow-library.gif",
-      "bytes": 4087325,
+      "bytes": 4213346,
       "backend": "actual offline library UI / synthetic WebGL texture",
       "fps": 20,
       "frames": 250,
