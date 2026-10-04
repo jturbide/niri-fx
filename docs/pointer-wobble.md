@@ -175,11 +175,34 @@ check input after release and cancellation.
 python3 scripts/test-pointer-wobble.py --all
 python3 scripts/test-pointer-wobble.py --all --record
 python3 scripts/test-pointer-integration.py
+python3 scripts/test-pointer-hardening.py
 ```
 
 The integration check exercises profile review, Apply, runtime capability loss,
 combined movement and exact Restore against its own nested session. It does not
 write the login session's configuration.
+
+The build command's `--test` also runs native layout regressions for tiled and
+floating drags when the destination output disappears, all outputs disappear,
+or an output returns before release. They check spring continuity, window
+ownership and cleanup after settling. These tests simulate output lifecycle
+changes inside Niri's layout; they do not establish physical monitor hotplug or
+mixed-monitor behavior.
+
+The hardening harness checks direct ScreenCapture privacy with synthetic visible
+controls, rule changes during dragging, redacted closing snapshots, and abrupt
+client exit followed by input to a surviving window. Its `screencast` policy case
+is a negative control for ScreenCapture, not a test of the Screencast render
+target or PipeWire. See the [validation scope and known limits](validation.md#pointer-driven-wobble)
+and [sanitized results](benchmarks/pointer-hardening.json).
+
+Two limitations remain open: disconnecting a virtual pointer with its button held
+retains the grab with pointer deformation both enabled and omitted; a replacement
+press/release recovers input. The comparison uses the same patched executable,
+so an unmodified baseline and device-ownership fix are still needed. The optional
+`python3 scripts/test-pointer-hardening.py --output-targets` probe also fails on
+the tested GPU because the parent compositor retains a stale child image. It
+keeps strict assertions and does not establish Output/Screencast privacy.
 
 In addition to the demo requirements, the harness uses a C compiler,
 `wayland-scanner`, `pkg-config`, Wayland client development files, the wlr virtual
@@ -189,5 +212,6 @@ standard system installation or the pinned build's Cargo cache; an explicit
 
 Keep the owned test window visible and the host unlocked during recording.
 Native recordings and input acknowledgements do not measure physical
-input-to-photon latency. Physical displays, mixed outputs, capture restrictions,
-popups and graphics resets need broader acceptance before a login-session rollout.
+input-to-photon latency. Physical displays, mixed outputs, Output/Screencast and
+PipeWire capture, popups, blurred backgrounds and graphics resets need broader
+acceptance before a login-session rollout.

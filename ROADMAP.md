@@ -145,7 +145,14 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 - [x] Add native-math pointer playback to combo previews, with clear native support limits.
 - [x] Add interactive dragging, keyboard demo playback and reduced-motion behavior in Studio.
 - [x] Publish portable pointer combos and browser showcases with reproducible input traces.
-- [ ] Verify native cancellation, output removal, capture restrictions and graphics resets.
+- [x] Test destination-output loss, last-output loss and restoration during tiled/floating
+      grabs in the native layout suite, including release and spring cleanup.
+- [x] Check direct ScreenCapture privacy during rule changes, dragging and closing, with visible controls.
+- [x] Test abrupt exit of grabbed tiled/floating clients and subsequent survivor input.
+- [ ] Compare held-button virtual-pointer disconnection with unmodified Niri and fix device-owned grab cleanup.
+- [ ] Resolve stale parent output in the strict two-compositor capture probe, including the effects-disabled baseline.
+- [ ] Validate Output/Screencast privacy and actual PipeWire capture, including popups and blurred backgrounds.
+- [ ] Verify physical output hotplug, mixed monitors and graphics-reset recovery.
 - [x] Report input acknowledgements and nested output submissions separately.
 - [ ] Measure physical input-to-photon latency and presentation across mixed outputs.
 

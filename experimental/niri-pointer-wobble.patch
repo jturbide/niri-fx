@@ -597,10 +597,10 @@ index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71
              mon.dnd_scroll_gesture_end();
          }
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
-index b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d..9474c41ed0bcc95783f171872725b6f78d64923e 100644
+index b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d..c70e1e79516bbcf2ba4d0894c9819f3ef1a7dc99 100644
 --- a/src/layout/tests/animations.rs
 +++ b/src/layout/tests/animations.rs
-@@ -1097,3 +1097,107 @@ fn width_resize_and_cancel_of_column_to_the_left() {
+@@ -1097,3 +1097,276 @@ fn width_resize_and_cancel_of_column_to_the_left() {
      200 × 200 at x:100 y:  0
      ");
  }
@@ -706,6 +706,175 @@ index b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d..9474c41ed0bcc95783f171872725b6f7
 +            "animation off immediately drops pointer state"
 +        );
 +        Op::InteractiveMoveEnd { window: 1 }.apply(&mut layout);
++    }
++}
++
++fn set_up_pointer_wobble_cross_output_drag(floating: bool) -> Layout<TestWindow> {
++    let mut options = make_options();
++    options.animations.window_movement.pointer_wobble =
++        Some(niri_config::animations::PointerWobble {
++            damping: 10,
++            frequency: 2,
++            ..Default::default()
++        });
++    let mut layout = check_ops_with_options(
++        options,
++        [
++            Op::AddOutput(1),
++            Op::AddOutput(2),
++            Op::AddWindow {
++                params: TestWindowParams::new(1),
++            },
++            Op::Communicate(1),
++            Op::CompleteAnimations,
++        ],
++    );
++    if floating {
++        check_ops_on_layout(&mut layout, [Op::ToggleWindowFloating { id: Some(1) }]);
++    }
++    check_ops_on_layout(
++        &mut layout,
++        [
++            Op::CompleteAnimations,
++            Op::InteractiveMoveBegin {
++                window: 1,
++                output_idx: 1,
++                px: 300.,
++                py: 200.,
++            },
++            Op::InteractiveMoveUpdate {
++                window: 1,
++                dx: 300.,
++                dy: 20.,
++                output_idx: 2,
++                px: 600.,
++                py: 220.,
++            },
++            Op::AdvanceAnimations { msec_delta: 16 },
++        ],
++    );
++    let pointer = grabbed_pointer_wobble(&layout);
++    assert!(pointer.is_moving());
++    assert!(!pointer.released());
++    assert_ne!(pointer.deformation(), Point::from((0., 0.)));
++    layout
++}
++
++fn grabbed_pointer_wobble(
++    layout: &Layout<TestWindow>,
++) -> &crate::animation::pointer_wobble::PointerWobble {
++    layout
++        .interactive_move
++        .as_ref()
++        .expect("output changes preserve the active grab")
++        .moving()
++        .unwrap()
++        .tile
++        .pointer_wobble
++        .as_ref()
++        .expect("the grabbed tile retains its pointer spring")
++}
++
++fn dropped_pointer_wobble_tile(layout: &Layout<TestWindow>) -> &Tile<TestWindow> {
++    assert!(layout.interactive_move.is_none());
++    let mut tiles = layout.workspaces().flat_map(|(_, _, ws)| ws.tiles());
++    let tile = tiles.next().expect("release returns the window to layout");
++    assert_eq!(*tile.window().id(), 1);
++    assert!(
++        tiles.next().is_none(),
++        "output changes cannot duplicate tiles"
++    );
++    tile
++}
++
++fn assert_pointer_wobble_release_settles(layout: &mut Layout<TestWindow>) {
++    let before = grabbed_pointer_wobble(layout).deformation();
++    check_ops_on_layout(layout, [Op::InteractiveMoveEnd { window: 1 }]);
++    let pointer = dropped_pointer_wobble_tile(layout)
++        .pointer_wobble
++        .as_ref()
++        .expect("release transfers the spring with its tile");
++    assert!(pointer.released());
++    assert_eq!(pointer.deformation(), before, "release must not snap");
++    check_ops_on_layout(layout, [Op::AdvanceAnimations { msec_delta: 2100 }]);
++    assert!(dropped_pointer_wobble_tile(layout).pointer_wobble.is_none());
++}
++
++#[test]
++fn pointer_wobble_destination_output_removed_during_drag() {
++    for floating in [false, true] {
++        let mut layout = set_up_pointer_wobble_cross_output_drag(floating);
++        let before = grabbed_pointer_wobble(&layout).deformation();
++        check_ops_on_layout(&mut layout, [Op::RemoveOutput(2)]);
++        assert_eq!(layout.outputs().count(), 1);
++        let pointer = grabbed_pointer_wobble(&layout);
++        assert!(!pointer.released());
++        assert_eq!(pointer.deformation(), before);
++        // The grab still holds the removed Output handle. Dropping must use the
++        // remaining monitor without resetting or orphaning the tile's spring.
++        assert_pointer_wobble_release_settles(&mut layout);
++        let (monitor, _) = layout.windows().next().unwrap();
++        assert_eq!(monitor.unwrap().output.name(), "output1");
++    }
++}
++
++#[test]
++fn pointer_wobble_last_output_removed_before_release() {
++    for floating in [false, true] {
++        let mut layout = set_up_pointer_wobble_cross_output_drag(floating);
++        let before = grabbed_pointer_wobble(&layout).deformation();
++        check_ops_on_layout(&mut layout, [Op::RemoveOutput(1), Op::RemoveOutput(2)]);
++        assert_eq!(layout.outputs().count(), 0);
++        let pointer = grabbed_pointer_wobble(&layout);
++        assert!(!pointer.released());
++        assert_eq!(pointer.deformation(), before);
++        // Animation advancement must clean up released state even when no
++        // monitor can render a frame, and a later output must recover the tile.
++        assert_pointer_wobble_release_settles(&mut layout);
++        check_ops_on_layout(&mut layout, [Op::AddOutput(2)]);
++        assert!(dropped_pointer_wobble_tile(&layout)
++            .pointer_wobble
++            .is_none());
++        let (monitor, _) = layout.windows().next().unwrap();
++        assert_eq!(monitor.unwrap().output.name(), "output2");
++    }
++}
++
++#[test]
++fn pointer_wobble_output_restored_before_release() {
++    for floating in [false, true] {
++        let mut layout = set_up_pointer_wobble_cross_output_drag(floating);
++        check_ops_on_layout(
++            &mut layout,
++            [
++                Op::RemoveOutput(1),
++                Op::RemoveOutput(2),
++                Op::AdvanceAnimations { msec_delta: 16 },
++            ],
++        );
++        let before = grabbed_pointer_wobble(&layout).deformation();
++        assert_ne!(before, Point::from((0., 0.)));
++        check_ops_on_layout(&mut layout, [Op::AddOutput(2)]);
++        assert_eq!(grabbed_pointer_wobble(&layout).deformation(), before);
++        // Reconnection creates a different Output object with the same name.
++        // A fresh input event adopts it while preserving current displacement.
++        check_ops_on_layout(
++            &mut layout,
++            [Op::InteractiveMoveUpdate {
++                window: 1,
++                dx: -30.,
++                dy: 5.,
++                output_idx: 2,
++                px: 570.,
++                py: 225.,
++            }],
++        );
++        assert_eq!(grabbed_pointer_wobble(&layout).deformation(), before);
++        assert!(!grabbed_pointer_wobble(&layout).released());
++        check_ops_on_layout(&mut layout, [Op::AdvanceAnimations { msec_delta: 16 }]);
++        assert_pointer_wobble_release_settles(&mut layout);
++        let (monitor, _) = layout.windows().next().unwrap();
++        assert_eq!(monitor.unwrap().output.name(), "output2");
 +    }
 +}
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs

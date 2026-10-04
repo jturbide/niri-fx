@@ -39,6 +39,12 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   summaries, a packaged reusable skill and public automation/contributor guides.
 - Isolated native checks for profile activation, runtime capability loss,
   stock-binary mismatch and exact Restore through the Studio backend.
+- Native layout regressions for output removal and restoration during tiled and
+  floating pointer drags, checking spring continuity, window ownership and settle
+  cleanup. Physical monitor hotplug remains separate acceptance work.
+- Isolated pointer hardening checks for direct ScreenCapture privacy during
+  dragging and closing, changing privacy rules, and abrupt grabbed-client exit
+  followed by clicks and dragging in a surviving client.
 
 ### Changed
 
@@ -49,6 +55,9 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 - Verify browser pointer math against traces generated from the native Rust
   spring and retain GPL attribution for the derived browser adapter.
 - Allow pointer-only portable profiles in the isolated native demo.
+- Document retained grabs after held-button virtual-pointer disconnection and a
+  failing optional two-compositor output probe. Keep Output/Screencast and
+  PipeWire privacy separate from the tested direct ScreenCapture path.
 
 ### Fixed
 

@@ -1,0 +1,202 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+  "patches": {
+    "experimental/niri-movement.patch": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+    "experimental/niri-pointer-wobble.patch": "86c4248abc45fadf5bbf810f1ea9a4145beb0fd860fe8c56a28530777c907016"
+  },
+  "sources": {
+    "scripts/test-pointer-hardening.py": "b42c60cfe02025c8deeb22461cffb61ae6183b12a07440154ce11ea2551d242f",
+    "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+    "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+    "scripts/lib/pointer.py": "1187fb073d6a2346a63677f373d25523f2af14719870068128397ad891b26fd6",
+    "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+    "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
+    "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e"
+  },
+  "scope": "Owned nested winit compositors; synthetic clients; real virtual-pointer grabs. ScreenCapture uses grim.",
+  "output_target_probe": false,
+  "limits": [
+    "Not a PipeWire transport or portal test.",
+    "No physical input devices, monitor hotplug, mixed scales or graphics reset acceptance.",
+    "Effect-disabled comparison uses the same pinned patched executable with pointer deformation omitted.",
+    "Opaque card fixtures do not cover popup or blurred-background privacy combinations.",
+    "Without --output-targets, Output and Screencast rendering are not tested."
+  ],
+  "privacy": [
+    {
+      "policy": "screen-capture",
+      "output_target": null,
+      "checks": [
+        {
+          "phase": "unblocked-control",
+          "counts": {
+            "screen_capture": {
+              "protected": 131490,
+              "public": 130628,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "protected-drag",
+          "counts": {
+            "screen_capture": {
+              "protected": 0,
+              "public": 130628,
+              "redaction": 244060
+            }
+          }
+        },
+        {
+          "phase": "protected-drag",
+          "counts": {
+            "screen_capture": {
+              "protected": 0,
+              "public": 130628,
+              "redaction": 247402
+            }
+          }
+        },
+        {
+          "phase": "protected-drag",
+          "counts": {
+            "screen_capture": {
+              "protected": 0,
+              "public": 130628,
+              "redaction": 249998
+            }
+          }
+        },
+        {
+          "phase": "unblocked-during-grab",
+          "counts": {
+            "screen_capture": {
+              "protected": 131470,
+              "public": 130628,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "protected-close-snapshot",
+          "counts": {
+            "screen_capture": {
+              "protected": 0,
+              "public": 130628,
+              "redaction": 248094
+            }
+          },
+          "settled_counts": {
+            "screen_capture": {
+              "protected": 0,
+              "public": 130628,
+              "redaction": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "policy": "screencast",
+      "output_target": null,
+      "checks": [
+        {
+          "phase": "unblocked-control",
+          "counts": {
+            "screen_capture": {
+              "protected": 131490,
+              "public": 130627,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "protected-drag",
+          "counts": {
+            "screen_capture": {
+              "protected": 127792,
+              "public": 130627,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "protected-drag",
+          "counts": {
+            "screen_capture": {
+              "protected": 129901,
+              "public": 130627,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "protected-drag",
+          "counts": {
+            "screen_capture": {
+              "protected": 131366,
+              "public": 130627,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "unblocked-during-grab",
+          "counts": {
+            "screen_capture": {
+              "protected": 131471,
+              "public": 130627,
+              "redaction": 0
+            }
+          }
+        },
+        {
+          "phase": "protected-close-snapshot",
+          "counts": {
+            "screen_capture": {
+              "protected": 129836,
+              "public": 130627,
+              "redaction": 0
+            }
+          },
+          "settled_counts": {
+            "screen_capture": {
+              "protected": 0,
+              "public": 130627,
+              "redaction": 0
+            }
+          }
+        }
+      ]
+    }
+  ],
+  "abrupt_client_exit": [
+    {
+      "layout": "floating",
+      "survivor_clicks": 2,
+      "result": "passed"
+    },
+    {
+      "layout": "tiled",
+      "survivor_clicks": 2,
+      "result": "passed"
+    }
+  ],
+  "pointer_disconnect": [
+    {
+      "pointer_effect_enabled": false,
+      "unpressed_motion_moved_window": true,
+      "replacement_click_recovered": true
+    },
+    {
+      "pointer_effect_enabled": true,
+      "unpressed_motion_moved_window": true,
+      "replacement_click_recovered": true
+    }
+  ],
+  "known_limitations": [
+    "Destroying a virtual pointer with a held button retains the grab in both effect-enabled and effect-disabled runs. A replacement press/release recovers input. Device ownership and disconnect cleanup remain unresolved."
+  ]
+}

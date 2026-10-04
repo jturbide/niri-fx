@@ -440,3 +440,11 @@ the [pointer guide](../pointer-wobble.md). Studio can also carry these controls 
 portable profiles; the native clips retain their exact compositor snippets.
 Input acknowledgements, nested output submissions and GIF frame cadence are
 separate measurements; none establishes physical input-to-photon latency.
+
+Run `python3 scripts/test-pointer-hardening.py` for additional direct ScreenCapture
+privacy and interrupted-client checks. It does not generate a GIF or establish
+Output/Screencast or PipeWire capture behavior. The optional `--output-targets`
+probe currently fails on stale parent output in the tested setup; held-button
+virtual-pointer disconnection also retains a grab with deformation enabled or
+omitted. See [validation and known limits](../validation.md#pointer-driven-wobble)
+before describing these recordings as acceptance evidence.
