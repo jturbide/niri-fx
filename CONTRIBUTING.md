@@ -103,6 +103,10 @@ export parity; it is not a compositor GPU benchmark. See
   tests real Chromium launch/error/timeout/cleanup and gallery filtering/playback before the full editor E2E.
   Avoid duplicating these with a separate framework just to increase test counts.
 - GitHub Actions classifies changes conservatively: an explicit docs/media allowlist skips unit, GLSL, package and browser work. Lint and docs checks still run. Unknown paths, missing history, manual runs and failed selection require full checks or fail the required jobs. Required job names remain unchanged.
+- Software WebGL probes reuse up to eight compiled programs for replay and reversal
+  checks. The full rendering/save suite has a 15-minute deadline within the
+  20-minute browser job to accommodate slower shared runners; individual browser
+  requests keep their own deadlines. These limits are not effect performance budgets.
 - Full GitHub Actions runs lint, Python 3.10/3.14 tests, GLSL compilation, docs/media
   checks, wheel installation and browser E2E. The optional DMS adapter test requires Quickshell; the [GPU harness](docs/performance.md) requires hardware timer queries. Stock Niri parsing and patched native
   smoke checks also run locally where the compositor is available. CI is not GPU
