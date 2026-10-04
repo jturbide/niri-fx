@@ -164,9 +164,11 @@ class ServerTests(unittest.TestCase):
             with urlopen(request, timeout=5) as response:
                 return json.load(response)
 
-        review = post("/review", selection)
-        self.assertEqual(config.read_bytes(), original)
+        # This HTTP contract runs without Niri on CI. The native adapter harness
+        # separately checks Review and Apply against the real compositor parser.
         with patch("niri_fx.setup.validate_config"):
+            review = post("/review", selection)
+            self.assertEqual(config.read_bytes(), original)
             applied = post("/apply", {"selection": selection, "expected": review["plan_sha256"]})
         self.assertTrue(applied["changed"])
         self.assertIn("niri-fx managed", config.read_text())
