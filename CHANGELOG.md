@@ -44,6 +44,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   counts in the three public showcase guides during documentation checks.
 - Preserve other sessions' saved-profile edits and reject rename collisions.
   Skip damaged saved documents individually and report invalid names in the UI.
+- Wait for Chrome's debugging-port file to finish writing within the bounded
+  startup deadline, with regression coverage for incomplete and invalid ports.
 - Enable browser lifecycle domains before startup hooks and navigation, with
   regression coverage for error capture during repeated reloads and page-target
   discovery during startup. Library checks

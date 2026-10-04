@@ -332,6 +332,9 @@ The harness enables its Page and Runtime domains before navigation. A real-proce
 regression verifies that startup hooks capture script errors on repeated reloads.
 Another regression covers a briefly empty page-target list after the debugging
 port becomes available, without extending the existing startup deadline.
+Startup also waits for a complete, valid debugging-port line. Real-process
+regressions cover partial writes, permanently invalid ports, bounded cleanup and
+preserved process-exit diagnostics.
 Library transaction checks use an intact preview frame and wait for profile
 operations to finish. This keeps queued software GPU draws out of UI timing;
 the full rendering suite still checks intermediate pixels, endpoints and parity.
