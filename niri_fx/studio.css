@@ -301,6 +301,31 @@ h2 {
 #apply-review li {
     overflow-wrap: anywhere;
 }
+dialog {
+    box-sizing: border-box;
+    width: min(480px, calc(100vw - 32px));
+    border: 1px solid #8ed8d0;
+    border-radius: 14px;
+    padding: 24px;
+    background: #192330;
+    color: #e0edf5;
+}
+dialog::backdrop {
+    background: #0b1426bb;
+}
+#profile-save-name {
+    box-sizing: border-box;
+    width: 100%;
+    margin-top: 8px;
+}
+#profile-dialog-error,
+#library-warning {
+    color: #f4c7b6;
+}
+#profile-dialog-error:empty,
+#library-warning:empty {
+    display: none;
+}
 /* Library offers one saving workflow. Shell-specific registry/file exports
    remain available with the detailed Studio controls. */
 html[data-workspace="library"] #save-target,

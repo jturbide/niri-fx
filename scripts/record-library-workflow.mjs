@@ -53,15 +53,34 @@ try {
   await evaluate(
     `byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'));byId('combo-resize').value='';byId('combo-resize').dispatchEvent(new Event('change'));byId('combo-name').value='Night Motion';byId('combo-name').dispatchEvent(new Event('change'));byId('store-profile').click()`,
   );
+  await frames("5 / Name your combo before saving", 1);
+  await evaluate(`byId('profile-confirm').click()`);
   await evaluate("byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'))");
   await evaluate("byId('store-profile').scrollIntoView({block:'center'})");
-  await frames("5 / Save your combo to My profiles", 1.5);
+  await frames("Saved to My profiles / Your active effects stay the same", 1.5);
   const expected = await evaluate("effectDocument()");
   assert.equal(expected.actions.open.family, "fragments");
   assert.equal(expected.actions.close.family, "dissolve");
   assert.equal(expected.actions.resize, null);
+  await evaluate(
+    `byId('library-panel').scrollTop=0;byId('library-collection').value='customs';byId('library-collection').dispatchEvent(new Event('change'));byId('copy-profile').click()`,
+  );
+  await frames("6 / Save a copy to try another variation", 1.5);
+  await evaluate(`byId('profile-confirm').click()`);
+  await frames("The original stays in My profiles", 1);
+  await evaluate(
+    `byId('rename-profile').click();byId('profile-save-name').value='Night Motion alternate';byId('profile-save-name').dispatchEvent(new Event('input'))`,
+  );
+  await frames("7 / Give the copy a clearer name", 1.5);
+  await evaluate(`byId('profile-confirm').click()`);
+  await frames("Renamed / Active effects keep their original name", 1);
+  await evaluate(`byId('remove-profile').click()`);
+  await frames("8 / Remove the Library copy when it is no longer needed", 1.5);
+  await evaluate(`byId('profile-confirm').click()`);
+  await frames("Removed from My profiles / The original remains", 1);
+  await evaluate(`document.querySelector('[data-style=custom-night-motion]').click()`);
   await evaluate(`byId('export').click();byId('kdl').click()`);
-  await frames("6 / Export editable JSON and stock Niri config", 1.5);
+  await frames("9 / Export editable JSON and stock Niri config", 1.5);
   assert.deepEqual(JSON.parse(readFileSync(join(root, "nirifx-preset.json"))), expected);
   execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
   const destination = "docs/gifs/workflow-library.gif";
@@ -101,6 +120,9 @@ try {
       "resize opt-in",
       "shared style",
       "saved profile",
+      "explicit save confirmation",
+      "copy and rename",
+      "remove Library copy only",
       "actual JSON and KDL downloads",
       "stock Niri validation",
     ],

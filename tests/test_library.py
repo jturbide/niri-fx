@@ -42,7 +42,7 @@ class LibraryTests(unittest.TestCase):
 
     def test_save_and_review_do_not_activate_then_apply_and_restore_exact_bytes(self):
         original = self.config.read_bytes()
-        self.library.store(self.doc)
+        self.library.store({"document": self.doc, "expected": None})
         self.assertEqual(self.library.listing()["customs"]["custom-demo-combo"], self.doc)
         with patch("niri_fx.setup.validate_config"):
             review = self.library.review(self.selection)
@@ -126,13 +126,13 @@ class LibraryTests(unittest.TestCase):
 
     def test_invalid_documents_and_symlinks_cannot_redirect_save(self):
         with self.assertRaises(ValueError):
-            self.library.store(dict(self.doc, name="../outside"))
+            self.library.store({"document": dict(self.doc, name="../outside"), "expected": None})
         self.library.folder.mkdir(parents=True)
         other = self.root / "other"
         other.write_text("Keep me")
         (self.library.folder / "demo-combo.json").symlink_to(other)
         with self.assertRaisesRegex(ValueError, "symlink"):
-            self.library.store(self.doc)
+            self.library.store({"document": self.doc, "expected": None})
         self.assertEqual(other.read_text(), "Keep me")
         for request in (
             {},
@@ -141,6 +141,105 @@ class LibraryTests(unittest.TestCase):
         ):
             with self.assertRaises(ValueError):
                 self.library.review(request)
+
+    def test_profile_management_is_owned_and_rejects_stale_changes_and_name_collisions(self):
+        original = self.config.read_bytes()
+        self.library.store({"document": self.doc, "expected": None})
+        entry = self.library.listing()["managed"]["custom-demo-combo"]
+        path = self.library.folder / "demo-combo.json"
+        with self.assertRaisesRegex(ValueError, "changed"):
+            self.library.store({"document": self.doc, "expected": None})
+        renamed = {
+            "action": "rename",
+            "id": "custom-demo-combo",
+            "expected": entry["expected"],
+            "name": "My Night",
+        }
+        self.library.manage(renamed)
+        self.assertFalse(path.exists())
+        night = self.library.listing()["managed"]["custom-my-night"]
+        self.assertEqual(night["document"], dict(self.doc, name="My Night"))
+        self.library.store({"document": self.doc, "expected": None})
+        with self.assertRaisesRegex(ValueError, "already belongs"):
+            self.library.manage(
+                dict(renamed, id="custom-my-night", expected=night["expected"], name="Demo_Combo")
+            )
+        changed = self.library.folder / "my-night.json"
+        changed.write_text(
+            json.dumps(
+                dict(
+                    self.doc,
+                    name="My Night",
+                    actions=dict(self.doc["actions"], close=self.doc["actions"]["open"]),
+                )
+            )
+        )
+        external = changed.read_bytes()
+        with self.assertRaisesRegex(ValueError, "changed"):
+            self.library.manage(
+                {"action": "remove", "id": "custom-my-night", "expected": night["expected"]}
+            )
+        self.assertEqual(changed.read_bytes(), external)
+        fresh = self.library.listing()["managed"]["custom-my-night"]
+        self.library.manage(
+            {"action": "remove", "id": "custom-my-night", "expected": fresh["expected"]}
+        )
+        self.assertFalse(changed.exists())
+        self.assertIn("custom-demo-combo", self.library.listing()["customs"])
+        self.assertEqual(self.config.read_bytes(), original)
+        self.assertFalse(self.args.registry.exists())
+
+    def test_profile_management_rejects_paths_unknown_fields_and_foreign_files(self):
+        self.library.store({"document": self.doc, "expected": None})
+        expected = self.library.listing()["managed"]["custom-demo-combo"]["expected"]
+        remove = {"action": "remove", "id": "custom-demo-combo", "expected": expected}
+        for request in (
+            dict(remove, id="../../outside"),
+            dict(remove, path="outside"),
+            dict(remove, action="execute"),
+            dict(remove, expected=None),
+            dict(remove, expected=True),
+            dict(remove, id="custom-unknown"),
+            dict(remove, action="rename", name="../outside"),
+        ):
+            with self.subTest(request=request), self.assertRaises(ValueError):
+                self.library.manage(request)
+        self.assertTrue((self.library.folder / "demo-combo.json").exists())
+        outside = self.root / "outside.json"
+        outside.write_text(json.dumps(self.doc))
+        linked = self.library.folder / "linked.json"
+        linked.symlink_to(outside)
+        with self.assertRaisesRegex(ValueError, "symlink"):
+            self.library.manage(dict(remove, id="custom-linked"))
+        self.assertTrue(outside.exists())
+
+    def test_broken_profiles_are_skipped_individually_without_mutation(self):
+        self.library.store({"document": self.doc, "expected": None})
+        broken = self.library.folder / "broken.json"
+        broken.write_text("{incomplete")
+        mismatch = self.library.folder / "wrong-name.json"
+        mismatch.write_text(json.dumps(self.doc))
+        large = self.library.folder / "large.json"
+        large.write_bytes(b" " * 17000)
+        listing = self.library.listing()
+        self.assertEqual(list(listing["managed"]), ["custom-demo-combo"])
+        self.assertIn("3 saved profile", listing["warnings"][0])
+        self.assertEqual(broken.read_text(), "{incomplete")
+        self.assertEqual(mismatch.read_text(), json.dumps(self.doc))
+        self.assertEqual(large.stat().st_size, 17000)
+
+    def test_profile_limit_allows_replacement_and_rename_at_capacity(self):
+        self.library.store({"document": self.doc, "expected": None})
+        for index in range(99):
+            (self.library.folder / f"broken-{index}.json").write_text("{}")
+        with self.assertRaisesRegex(ValueError, "full"):
+            self.library.store({"document": dict(self.doc, name="New"), "expected": None})
+        expected = self.library.listing()["managed"]["custom-demo-combo"]["expected"]
+        self.library.store({"document": self.doc, "expected": expected})
+        self.library.manage(
+            {"action": "rename", "id": "custom-demo-combo", "expected": expected, "name": "Renamed"}
+        )
+        self.assertEqual(len(list(self.library.folder.glob("*.json"))), 100)
 
     def test_noctalia_uses_connected_picker_and_preserves_speed(self):
         target = self.config.parent / "picker.kdl"

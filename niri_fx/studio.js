@@ -1121,10 +1121,18 @@ try {
       workspace.edit();
     },
     favorites: () => favorites,
-    favorite: (id) => {
-      favorites = favorites.includes(id)
-        ? favorites.filter((name) => name !== id)
-        : [...favorites, id];
+    favorite: (id, replacement) => {
+      favorites =
+        replacement !== undefined
+          ? [
+              ...new Set([
+                ...favorites.filter((name) => name !== id),
+                ...(replacement ? [replacement] : []),
+              ]),
+            ]
+          : favorites.includes(id)
+            ? favorites.filter((name) => name !== id)
+            : [...favorites, id];
       try {
         localStorage.setItem("nirifx-favorites", JSON.stringify(favorites));
       } catch {

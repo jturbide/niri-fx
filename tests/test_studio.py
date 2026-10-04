@@ -187,21 +187,47 @@ class ServerTests(unittest.TestCase):
         self.assertEqual(caught.exception.code, 403)
         caught.exception.close()
         doc = {"schema": 3, "name": "Saved Online Look", "effect": {"family": "slices"}}
-        for route in ("store", "review", "apply", "restore"):
+        for route in ("store", "profiles", "review", "apply", "restore"):
             request = self.request(doc, Origin="https://example.com")
             request.full_url = self.server.origin + "/" + route
             with self.assertRaises(HTTPError) as caught:
                 urlopen(request, timeout=5)
             self.assertEqual(caught.exception.code, 403)
             caught.exception.close()
-        request = self.request(doc)
+        request = self.request({"document": doc, "expected": None})
         request.full_url = self.server.origin + "/store"
         with urlopen(request, timeout=5) as response:
             self.assertEqual(json.load(response)["name"], doc["name"])
         with urlopen(listing, timeout=5) as response:
             self.assertIn("custom-saved-online-look", json.load(response)["customs"])
         self.assertFalse(self.registry.exists())
-        for route in ("review", "apply", "restore"):
+        with urlopen(listing, timeout=5) as response:
+            expected = json.load(response)["managed"]["custom-saved-online-look"]["expected"]
+        request = self.request(
+            {
+                "action": "rename",
+                "id": "custom-saved-online-look",
+                "expected": expected,
+                "name": "Renamed Look",
+            }
+        )
+        request.full_url = self.server.origin + "/profiles"
+        with urlopen(request, timeout=5) as response:
+            self.assertEqual(json.load(response)["name"], "Renamed Look")
+        with urlopen(listing, timeout=5) as response:
+            profiles = json.load(response)["managed"]
+        self.assertNotIn("custom-saved-online-look", profiles)
+        request = self.request(
+            {
+                "action": "remove",
+                "id": "custom-renamed-look",
+                "expected": profiles["custom-renamed-look"]["expected"],
+            }
+        )
+        request.full_url = self.server.origin + "/profiles"
+        with urlopen(request, timeout=5) as response:
+            self.assertTrue(json.load(response)["changed"])
+        for route in ("profiles", "review", "apply", "restore"):
             request = self.request({"path": "arbitrary", "command": "arbitrary"})
             request.full_url = self.server.origin + "/" + route
             with self.assertRaises(HTTPError) as caught:

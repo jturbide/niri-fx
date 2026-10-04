@@ -26,7 +26,8 @@ compositor's movement effect; they are not independent shader slots.
 
 ## Save, export or apply
 
-- **Save to My profiles** keeps a named editable document without activation.
+- **Save to My profiles** asks for a name and keeps an editable document without activation.
+  An existing name shows **Replace saved profile** before replacing that Library copy.
 - **Export JSON** produces a portable style/profile for every supported setup.
 - **Export Niri config** produces stock Niri shaders. Experimental movement is omitted.
 - In the installed app, **Review & apply** lists the configuration changes.
@@ -34,11 +35,35 @@ compositor's movement effect; they are not independent shader slots.
 - **Restore previous** restores this app's most recent change for the same setup and config. Later file edits
   cause a conflict rather than being overwritten.
 
-The profile name identifies saved looks. Saving the same name replaces that
-named library document. Local profiles live in the Studio state directory;
-use `--state` to select a separate library and Apply history. Web/offline profiles
-stay in that browser's local storage, with a limit of 100. Export JSON to keep or
-transfer them; clearing browser data removes browser-saved profiles.
+The profile name identifies saved looks. Names are case insensitive; spaces,
+underscores and hyphens map to the same saved ID. Local profiles live in the
+Studio state directory; use `--state` to select a separate library and Apply
+history. Web/offline profiles stay in that browser's local storage. Both libraries
+hold up to 100 profiles. Export JSON to keep or transfer them; clearing browser
+data removes browser-saved profiles.
+
+## Manage My profiles
+
+Choose a saved card to reveal **Save a copy**, **Rename saved profile** and
+**Remove saved profile**. A copy suggests an unused name and keeps the original.
+Rename keeps the settings and favorites; it cannot replace another profile.
+Remove asks for confirmation and leaves the current preview available to export
+or save again. Cancel or press Escape to leave the saved document untouched.
+
+These actions manage Library copies only. Applied settings, shell registry
+entries and Restore snapshots remain separate. A profile imported from a shell
+is labeled **from shell**: save a Library copy before managing it here.
+
+Another local Studio session's edits are checked before replacing, renaming or
+removing a profile. Browser saves also preserve other entries and reject a
+changed profile from another tab. Refresh or reload before trying again after a
+conflict. Damaged or unsupported documents are skipped with a message, so valid
+profiles remain available; browsing does not repair or remove their data.
+
+Use **Export JSON** to back up a selected profile or transfer it between the
+online Studio and an installed app. **Import preset**, then **Save to My profiles**
+adds the imported document to the current Library. Browser storage is local to
+the current browser and site; it does not sync to another computer.
 
 Resize is explicitly chosen per profile. Movement can be previewed and saved on
 every setup. Live activation requires the verified experimental compositor and

@@ -75,7 +75,7 @@ def exercise(source):
             assert active["types"].get("window-movement") == base_preset["types"].get(
                 "window-movement"
             )
-            library.store(selection["document"])
+            library.store({"document": selection["document"], "expected": None})
             assert library.listing()["active"]["name"] == "Night Motion"
             test_iris_entry(session, source)
             assert animation.read_bytes() == original and not registry.exists()

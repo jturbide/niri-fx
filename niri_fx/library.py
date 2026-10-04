@@ -7,6 +7,7 @@ the replacement without writing, then NiriFX snapshots and validates the change.
 """
 
 import contextlib
+import fcntl
 import importlib.util
 import io
 import json
@@ -15,12 +16,14 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from .branding import APP_ID
-from .documents import effect_document, load_document, parse_document
+from .documents import MAX_DOCUMENT_BYTES, effect_document, load_document, parse_document
 from .effects import render_kdl
 from .integration import default_registry, make_custom_preset, merge_registry, read_shell_presets
 from .profiles import Profile
 from .setup import BEGIN, OWNED, apply_plan, change, default_config, plan_setup, restore, summarize
 from .storage import atomic_write, digest, read_bytes
+
+MAX_PROFILES = 100
 
 
 def registry_document(preset):
@@ -85,12 +88,8 @@ class Library:
                         active, active_name = document, preset["name"]
                 except (ValueError, KeyError):
                     continue  # A foreign or obsolete entry is not an editable document.
-        if self.folder.exists():
-            for path in sorted(self.folder.glob("*.json")):
-                if path.is_symlink():
-                    continue
-                document = load_document(path)
-                customs["custom-" + parse_document(document)[1]] = document
+        managed, warnings = self.saved_profiles()
+        customs.update({key: entry["document"] for key, entry in managed.items()})
         try:
             history = restore(self.state, self.transaction())
         except ValueError:
@@ -109,15 +108,123 @@ class Library:
             "active_name": active_name,
             "restore": history is not None,
             "target": self.target,
+            "managed": managed,
+            "warnings": warnings,
         }
 
-    def store(self, document):
-        name, slug, effect = parse_document(document)
-        path = self.folder / f"{slug}.json"
+    def saved_profiles(self):
+        """Skip damaged files individually; never repair or delete them while browsing."""
+        managed, skipped = {}, 0
+        self.check_folder()
+        for path in sorted(self.folder.glob("*.json")):
+            try:
+                if path.is_symlink():
+                    raise ValueError("Profile symlink")
+                with path.open("rb") as stream:
+                    raw = stream.read(MAX_DOCUMENT_BYTES + 1)
+                if len(raw) > MAX_DOCUMENT_BYTES:
+                    raise ValueError("Profile exceeds 16 KiB")
+                document = json.loads(raw)
+                name, slug, effect = parse_document(document)
+                if path.stem != slug:
+                    raise ValueError("Profile filename does not match its name")
+                managed["custom-" + slug] = {
+                    "document": effect_document(name, effect),
+                    "expected": digest(raw),
+                }
+            except (OSError, ValueError):
+                skipped += 1
+        warnings = (
+            [f"{skipped} saved profile file(s) could not be read. Their files were left untouched."]
+            if skipped
+            else []
+        )
+        return managed, warnings
+
+    def check_folder(self):
+        if self.folder.is_symlink():
+            raise ValueError("The saved profiles folder cannot be a symlink")
+
+    @contextlib.contextmanager
+    def profile_lock(self):
+        """Serialize cooperating Studio sessions; fingerprints also catch outside edits."""
+        self.check_folder()
+        self.folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+        lock_path = self.folder / ".lock"
+        if lock_path.is_symlink():
+            raise ValueError("The saved profiles lock cannot be a symlink")
+        with lock_path.open("a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX)
+            yield
+
+    @staticmethod
+    def check_expected(path, expected):
+        if expected is not None and (
+            not isinstance(expected, str) or not re.fullmatch(r"[0-9a-f]{64}", expected)
+        ):
+            raise ValueError("Expected profile fingerprint must be a SHA-256 value or null")
         if path.is_symlink():
             raise ValueError("A saved profile cannot be a symlink")
-        self.folder.mkdir(parents=True, exist_ok=True, mode=0o700)
-        atomic_write(path, (json.dumps(effect_document(name, effect), indent=2) + "\n").encode())
+        if digest(read_bytes(path)) != expected:
+            raise ValueError("Saved profile changed. Refresh My profiles before trying again.")
+
+    def store(self, request):
+        if not isinstance(request, dict) or set(request) != {"document", "expected"}:
+            raise ValueError("Save requires a document and its expected profile fingerprint")
+        document, expected = request["document"], request["expected"]
+        name, slug, effect = parse_document(document)
+        path = self.folder / f"{slug}.json"
+        with self.profile_lock():
+            self.check_expected(path, expected)
+            if expected is None and len(list(self.folder.glob("*.json"))) >= MAX_PROFILES:
+                raise ValueError("My profiles is full. Remove a profile or export JSON.")
+            atomic_write(
+                path, (json.dumps(effect_document(name, effect), indent=2) + "\n").encode()
+            )
+        return {"name": name, "changed": True}
+
+    def manage(self, request):
+        """Rename/remove Library-owned JSON only. Shell registries and live settings stay separate."""
+        if not isinstance(request, dict) or request.get("action") not in ("rename", "remove"):
+            raise ValueError("Choose rename or remove for a saved Library profile")
+        action = request["action"]
+        keys = {"action", "id", "expected"} | ({"name"} if action == "rename" else set())
+        if (
+            set(request) != keys
+            or not isinstance(request["id"], str)
+            or not re.fullmatch(r"custom-[a-z0-9][a-z0-9-]{0,47}", request["id"])
+        ):
+            raise ValueError("Profile management accepts a saved profile ID, never a path")
+        path = self.folder / f"{request['id'].removeprefix('custom-')}.json"
+        if request["expected"] is None:
+            raise ValueError("Select an existing Library profile first")
+        with self.profile_lock():
+            self.check_expected(path, request["expected"])
+            document = load_document(path)
+            name, slug, effect = parse_document(document)
+            if path.stem != slug:
+                raise ValueError("Profile filename does not match its name")
+            if action == "remove":
+                path.unlink()
+            else:
+                updated = dict(document, name=request["name"])
+                name, slug, effect = parse_document(updated)
+                destination = self.folder / f"{slug}.json"
+                if destination != path and (destination.exists() or destination.is_symlink()):
+                    raise ValueError(
+                        "That name already belongs to a saved profile. Choose another."
+                    )
+                atomic_write(
+                    destination,
+                    (json.dumps(effect_document(name, effect), indent=2) + "\n").encode(),
+                )
+                if destination != path:
+                    try:
+                        self.check_expected(path, request["expected"])
+                        path.unlink()
+                    except (OSError, ValueError):
+                        destination.unlink()
+                        raise
         return {"name": name, "changed": True}
 
     def plan(self, request):

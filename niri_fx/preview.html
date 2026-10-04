@@ -82,7 +82,12 @@
         <button id="review-selection">Review &amp; apply</button>
         <button id="restore-selection" disabled>Restore previous</button>
       </div>
-      <div class="controls"><button id="store-profile">Save to My profiles</button></div>
+      <div class="controls">
+        <button id="store-profile">Save to My profiles</button>
+        <button id="copy-profile" hidden>Save a copy</button>
+        <button id="rename-profile" hidden>Rename saved profile</button>
+        <button id="remove-profile" hidden>Remove saved profile</button>
+      </div>
       <section id="apply-review" hidden aria-label="Review changes">
         <p id="review-summary"></p>
         <ul id="review-files"></ul>
@@ -130,6 +135,7 @@
         <option value="all">All effects</option>
       </select>
       <div id="library-results" role="group" aria-label="Styles and profiles"></div>
+      <small id="library-warning" role="status"></small>
       <p id="library-empty" hidden>No matching looks. Try All effects or a different search.</p>
       <h2>Build your combo</h2>
       <label for="combo-mode">Style choice</label>
@@ -243,6 +249,25 @@
       </div>
     </aside>
   </div>
+  <dialog
+    id="profile-dialog"
+    aria-labelledby="profile-dialog-title"
+    aria-describedby="profile-dialog-help"
+  >
+    <form id="profile-form">
+      <h2 id="profile-dialog-title"></h2>
+      <p id="profile-dialog-help"></p>
+      <div id="profile-dialog-name">
+        <label for="profile-save-name">Profile name</label>
+        <input id="profile-save-name" type="text" maxlength="48" autocomplete="off" required />
+      </div>
+      <p id="profile-dialog-error" role="alert"></p>
+      <div class="controls">
+        <button id="profile-confirm" type="submit">Save profile</button>
+        <button id="profile-cancel" type="button">Cancel</button>
+      </div>
+    </form>
+  </dialog>
   <script id="effect-catalog" type="application/json">
     @EFFECT_JSON@
   </script>

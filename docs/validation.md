@@ -327,8 +327,12 @@ remain separate from compositor presentation evidence.
 
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited
-settings and browser-local profile persistence. Authenticated HTTP checks cover
-Save, read-only Review, Apply, exact Restore and rejected origins/path injection.
+settings and browser-local profile persistence. Profile checks cover
+copying, renaming, removal, replacement confirmation and preserved data after a
+conflict or damaged document. The installed Library browser test uses a real
+temporary Studio server and verifies its JSON files without changing Niri config.
+Authenticated HTTP checks cover Save, read-only Review, Apply, exact Restore and
+rejected origins/path injection.
 Backend checks cover stale plans, external edits, validation rollback and Restore
 isolation across configuration paths and adapters.
 
