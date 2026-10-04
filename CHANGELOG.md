@@ -20,8 +20,9 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   is separate from Studio's timed Elastic effects and portable profiles.
 - An optional compositor patch and separate build directory, with a dedicated
   runtime capability query and real Wayland pointer lifecycle checks.
-- Three native pointer showcases with exact configuration downloads, input
-  acceptance results and separately labelled nested submission diagnostics.
+- Three looping native pointer showcases with real return drags, exact
+  configuration downloads, input acceptance results and separately labelled
+  nested submission diagnostics.
 
 ### Changed
 

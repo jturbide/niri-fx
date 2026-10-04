@@ -95,8 +95,9 @@ actual tiled/floating pointer-state lifecycle regression. The unchanged base
 movement patch and binary remain separately usable.
 
 All three pointer presets passed real Wayland input checks in an owned nested
-compositor: floating reversals and visible release settling, convergence while
-held still, regrab/input, a genuinely detached tiled drag, four disable paths
+compositor: floating reversals and visible release settling, a real return drag
+with matching settled geometry and pixels, convergence while held still,
+regrab/input, a genuinely detached tiled drag, four disable paths
 during a grab, and close cancellation with input reaching the surviving client.
 The four disable paths are node removal, zero strength, movement off and all
 animations off. Render logs were clean, and the three public recordings retain

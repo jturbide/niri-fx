@@ -404,8 +404,10 @@ python3 scripts/build-gallery.py
 [Gentle](native-pointer-gentle.gif), [Rubber Sheet](native-pointer-rubber-sheet.gif)
 and [Release Settle](native-pointer-release-settle.gif) show real pointer input in
 an owned nested compositor, with synthetic mint app cards. Clips retain the
-actual clock and are encoded at 50 fps. The harness also checks tiled dragging,
-held-idle settling, repeated grabs, disabled effects, close cleanup and input.
+actual clock and are encoded at 50 fps. A real return drag restores the starting
+geometry and settled image so the loop does not jump. The harness also checks
+tiled dragging, held-idle settling, repeated grabs, disabled effects, close cleanup
+and input.
 
 The scenario manifest records both compositor patch hashes, source hashes and
 exact pointer settings. Gallery cards link to experimental KDL and the

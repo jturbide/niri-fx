@@ -19,8 +19,8 @@ order expresses priority, not a release date. See [available features](README.md
 - [x] Add deterministic mixtures of built-in fragment shapes with finished presets.
 - [x] Publish portable settings, faithful showcases, support limits and regression coverage.
 
-Resize and experimental movement remain explicit choices. Later, build
-pointer-driven wobble on the validated motion foundation (Epic 4).
+Resize and experimental movement remain explicit choices. The isolated
+pointer-driven wobble prototype builds on this motion foundation (Epic 4).
 
 ## Coordinated action sets milestone
 
@@ -56,8 +56,9 @@ Goal: make finished combinations easy to compare, choose and install.
       and exact Restore in isolated configurations.
 - [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
 
-The next milestone is an isolated, opt-in pointer-wobble prototype (Epic 4).
-Studio integration follows native drag and release validation.
+The opt-in pointer-wobble prototype is available from the source checkout
+(Epic 4). The next milestone brings its settings into portable profiles and
+Studio, with capability checks and reviewed Apply/Restore.
 
 ## Released foundation
 
@@ -140,7 +141,7 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 - [ ] Add a capability-verified pointer action to portable profiles and Studio.
 - [ ] Add reviewed Apply/Restore and optional pointer playback to combo previews.
 - [ ] Verify cancellation, output removal, capture restrictions and graphics resets.
-- [x] Report pointer dispatch round trips and nested output submissions separately.
+- [x] Report input acknowledgements and nested output submissions separately.
 - [ ] Measure physical input-to-photon latency and presentation across mixed outputs.
 
 Timed Elastic effects remain available on stock Niri. Pointer-driven deformation

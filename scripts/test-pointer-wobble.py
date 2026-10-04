@@ -159,14 +159,20 @@ def exercise(name, protocol, *, capture=False):
         with VirtualPointer(session, helper) as pointer:
             click_check(session, pointer, primary, 1)
             initial = geometry(session, primary)
+            initial_pointer = (round(initial[0] + initial[2] / 2), round(initial[1] + 52))
+            pointer.move(*initial_pointer)
+            time.sleep(0.05)
+            cycle_before = session.capture("cycle-before")
             recorder, video = record(session, "pointer-" + name, fps=50)
             time.sleep(0.35)
             capture_started = time.monotonic()
             start = grab(session, pointer, primary)
             right = (start[0] + 330, start[1] + 130)
             left = (start[0] + 80, start[1] + 35)
-            end = (start[0] + 170, start[1] + 60)
-            pointer.path((start, right, left, end), 1.2)
+            end = (start[0] + 310, start[1] + 60)
+            # A clear final flick leaves an observable release even on a 60 Hz
+            # nested host. The settings and playback speed remain unchanged.
+            pointer.path((start, right, left, end), 1.05, synchronize=False)
             pointer.release()
             released = session.capture("released")
             time.sleep(0.75)
@@ -182,8 +188,19 @@ def exercise(name, protocol, *, capture=False):
             ]
             assert len(frame_timings) > 20
             assert all(sample["source"] == "winit-submit" for sample in frame_timings)
-            stop(recorder, signal.SIGINT)
             result = geometry(session, primary)
+
+            # Return with real input so the public loop begins and ends on the
+            # same settled frame. The first release remains captured separately
+            # above; no reversed footage, retiming, or synthetic endpoint reset.
+            returning = grab(session, pointer, primary)
+            pointer.path((returning, initial_pointer), 0.55, synchronize=False)
+            pointer.release()
+            time.sleep(0.75)
+            cycle_after = session.capture("cycle-after")
+            time.sleep(0.15)
+            stop(recorder, signal.SIGINT)
+
             assert max(abs(result[i] - initial[i] - (end[i] - start[i])) for i in (0, 1)) < 3
             assert result[2:] == initial[2:]
             # The endpoint is static while the spring settles. This checks that
@@ -197,12 +214,18 @@ def exercise(name, protocol, *, capture=False):
                     "geometry": result,
                 }
             )
+            assert geometry(session, primary) == initial
+            cycle_pixels = changed_pixels(cycle_before, cycle_after)
+            assert cycle_pixels < 30, ("Loop did not reconstruct its initial surface", cycle_pixels)
+            checks.append(
+                {"case": "floating-round-trip", "changed_pixels": cycle_pixels, "geometry": initial}
+            )
             click_check(session, pointer, primary, 2)
 
             # An idle held grab must settle without receiving fresh pointer deltas.
             start = grab(session, pointer, primary)
-            end = (start[0] - 90, start[1] + 30)
-            pointer.path((start, end), 0.3)
+            end = (start[0] - 120, start[1] + 30)
+            pointer.path((start, end), 0.2)
             active = session.capture("held-active")
             time.sleep(1.0)
             idle = session.capture("held-idle")
@@ -287,12 +310,14 @@ def exercise(name, protocol, *, capture=False):
                 "wobble": asdict(wobble),
                 "capabilities": capabilities,
                 "checks": checks,
-                "pointer_dispatch": pointer.timings,
+                "pointer_acknowledgements": pointer.timings,
                 "native_frame_timings": frame_timings,
-                "timing_scope": "Wayland protocol dispatch and path scheduling in nested winit; not input-to-photon latency",
+                "native_frame_timing_scope": "First outward drag, reversals and release settle; excludes return drag. Nested winit submission timestamps include idle holds and recording load, not physical scanout.",
+                "timing_scope": "Motion measures local Wayland socket flush acknowledgement; button and sync commands measure server-roundtrip acknowledgement. Native paths include an ordered dispatch barrier before assertions. Neither measures input-to-photon latency.",
                 "revision": build["revision"],
                 "patch_sha256": build["patch_sha256"],
                 "pointer_patch_sha256": build["pointer_patch_sha256"],
+                "recorded_workload": "Floating drag with two direction reversals and a final flick, first release settle, genuine return drag and settled endpoint; input counter unchanged.",
             }
             (session.root / "checks.json").write_text(json.dumps(evidence, indent=2) + "\n")
             if capture:
@@ -308,6 +333,7 @@ def exercise(name, protocol, *, capture=False):
                             "pointer_preset": name,
                             "config_source": f"examples/experimental/pointer-wobble-{name}.kdl",
                             "pointer_wobble": asdict(wobble),
+                            "workload": "Floating drag, reversals, final flick, release settle, return drag and settled loop endpoint",
                             "bytes": dest.stat().st_size,
                             "fps": 50,
                             "width": 800,

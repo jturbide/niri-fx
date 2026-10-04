@@ -1,7 +1,7 @@
 """Virtual pointer input restricted to a live, owned NestedSession.
 
-The helper acknowledges Wayland dispatch. These timings measure submission to
-the nested compositor and must never be presented as input-to-photon latency.
+Motion acknowledgements cover writing to the Wayland socket; buttons and sync
+barriers confirm server dispatch. Neither measures input-to-photon latency.
 """
 
 import math
@@ -174,11 +174,22 @@ class VirtualPointer:
         started = time.monotonic()
         self.process.stdin.write(command + "\n")
         self.process.stdin.flush()
-        if self._read() != "ok":
+        acknowledgement = self._read()
+        if acknowledgement not in ("submitted", "dispatched"):
             raise RuntimeError("Virtual pointer rejected a command")
         elapsed = time.monotonic() - started
-        self.timings.append({"command": command, "dispatch_ms": elapsed * 1000})
+        self.timings.append(
+            {
+                "command": command,
+                "acknowledgement_ms": elapsed * 1000,
+                "scope": "socket-flush" if acknowledgement == "submitted" else "server-roundtrip",
+            }
+        )
         return elapsed
+
+    def sync(self):
+        """Confirm all previously submitted input was dispatched in order."""
+        self.command("sync")
 
     def move(self, x, y):
         if not math.isfinite(x) or not math.isfinite(y):
@@ -203,7 +214,7 @@ class VirtualPointer:
         time.sleep(0.05)
         self.release()
 
-    def path(self, points, duration, fps=60):
+    def path(self, points, duration, fps=60, *, synchronize=True):
         """Send real motion, rejecting a stalled session instead of speeding it up."""
         started = time.monotonic()
         for offset, point in path_samples(points, duration, fps):
@@ -214,6 +225,10 @@ class VirtualPointer:
             self.move(*point)
             self.timings[-1]["scheduled_ms"] = offset * 1000
             self.timings[-1]["late_ms"] = late * 1000
+        # An immediate release already synchronizes all preceding motion. Avoid
+        # spending another compositor roundtrip before a short release tail.
+        if synchronize:
+            self.sync()
 
     def close(self):
         try:

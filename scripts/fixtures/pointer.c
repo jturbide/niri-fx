@@ -2,6 +2,8 @@
 // Persistent pointer input for an explicitly named, owned nested Wayland socket.
 // The Python harness checks socket ownership before starting this process.
 #define _POSIX_C_SOURCE 200809L
+#include <errno.h>
+#include <poll.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,6 +38,15 @@ static int number(const char *text) {
     return end != text && !*end && value > 0 && value <= 65535 ? (int)value : 0;
 }
 
+static int flush(struct wl_display *display) {
+    int result = wl_display_flush(display);
+    if (result < 0 && errno == EAGAIN) {
+        struct pollfd socket = { .fd = wl_display_get_fd(display), .events = POLLOUT };
+        if (poll(&socket, 1, 3000) > 0) result = wl_display_flush(display);
+    }
+    return result;
+}
+
 int main(int argc, char **argv) {
     if (argc != 4 || argv[1][0] != '/') return 2;
     const int width = number(argv[2]), height = number(argv[3]);
@@ -56,16 +67,19 @@ int main(int argc, char **argv) {
     char line[128], extra;
     int pressed = 0, result = 0;
     while (fgets(line, sizeof(line), stdin)) {
-        int x, y;
+        int x, y, motion = 0;
         if (sscanf(line, "motion %d %d %c", &x, &y, &extra) == 2 &&
             x >= 0 && x < width && y >= 0 && y < height) {
             zwlr_virtual_pointer_v1_motion_absolute(pointer, timestamp(), x, y, width, height);
+            motion = 1;
         } else if (!strcmp(line, "press\n") && !pressed) {
             zwlr_virtual_pointer_v1_button(pointer, timestamp(), 272, WL_POINTER_BUTTON_STATE_PRESSED);
             pressed = 1;
         } else if (!strcmp(line, "release\n") && pressed) {
             zwlr_virtual_pointer_v1_button(pointer, timestamp(), 272, WL_POINTER_BUTTON_STATE_RELEASED);
             pressed = 0;
+        } else if (!strcmp(line, "sync\n")) {
+            // A barrier lets the harness assert layout after a held motion path.
         } else if (!strcmp(line, "quit\n")) {
             break;
         } else {
@@ -74,9 +88,12 @@ int main(int argc, char **argv) {
             break;
         }
         zwlr_virtual_pointer_v1_frame(pointer);
-        if (wl_display_roundtrip(display) < 0) { result = 6; break; }
-        // This acknowledges protocol dispatch, not presentation on the monitor.
-        puts("ok"); fflush(stdout);
+        // Real pointer input is asynchronous. A roundtrip for every motion can
+        // serialize two compositor frames per sample on a 60 Hz host. Flush
+        // motion at its requested cadence; buttons and explicit sync barriers
+        // still confirm ordered server dispatch before assertions/captures.
+        if ((motion ? flush(display) : wl_display_roundtrip(display)) < 0) { result = 6; break; }
+        puts(motion ? "submitted" : "dispatched"); fflush(stdout);
     }
     if (pressed) {
         zwlr_virtual_pointer_v1_button(pointer, timestamp(), 272, WL_POINTER_BUTTON_STATE_RELEASED);

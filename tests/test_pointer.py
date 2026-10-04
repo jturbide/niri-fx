@@ -127,6 +127,38 @@ class PointerScopeTests(unittest.TestCase):
 
 
 class PointerPathTests(unittest.TestCase):
+    def test_acknowledgements_distinguish_submission_from_dispatch(self):
+        pointer = object.__new__(VirtualPointer)
+        pointer.process = SimpleNamespace(stdin=Mock())
+        pointer.timings = []
+        pointer._read = Mock(side_effect=["submitted", "dispatched"])
+        pointer.command("motion 100 100")
+        pointer.sync()
+        self.assertEqual(
+            [sample["scope"] for sample in pointer.timings], ["socket-flush", "server-roundtrip"]
+        )
+        pointer.process.stdin.write.assert_any_call("sync\n")
+
+    def test_path_finishes_with_dispatch_barrier(self):
+        pointer = object.__new__(VirtualPointer)
+        pointer.timings = []
+        pointer.move = Mock(side_effect=lambda *_: pointer.timings.append({}))
+        pointer.sync = Mock()
+        pointer.path(((0, 0), (2, 3)), 0.001)
+        pointer.move.assert_called_once_with(2, 3)
+        pointer.sync.assert_called_once_with()
+
+    def test_immediate_release_can_provide_the_path_barrier(self):
+        pointer = object.__new__(VirtualPointer)
+        pointer.timings = []
+        pointer.move = Mock(side_effect=lambda *_: pointer.timings.append({}))
+        pointer.sync = Mock()
+        pointer.command = Mock()
+        pointer.path(((0, 0), (2, 3)), 0.001, synchronize=False)
+        pointer.release()
+        pointer.sync.assert_not_called()
+        pointer.command.assert_called_once_with("release")
+
     def test_reversal_visits_turn_and_finishes_at_exact_endpoint(self):
         samples = list(path_samples(((100, 100), (300, 200), (100, 100)), 1, fps=4))
         self.assertEqual(
