@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the pinned experiment locally; never install a compositor or service."""
+"""Build pinned Niri experiments or an unmodified baseline without installing them."""
 
 import argparse
 import hashlib
@@ -15,6 +15,7 @@ PATCH = ROOT / "experimental/niri-movement.patch"
 SOURCE = ROOT / "artifacts/niri-src"
 POINTER_PATCH = ROOT / "experimental/niri-pointer-wobble.patch"
 POINTER_SOURCE = ROOT / "artifacts/niri-pointer-src"
+BASELINE_SOURCE = ROOT / "artifacts/niri-unmodified-src"
 
 
 def run(*args, **kwargs):
@@ -59,14 +60,23 @@ def main():
     parser.add_argument(
         "--test", action="store_true", help="Run config and animation regression tests"
     )
-    parser.add_argument(
+    variants = parser.add_mutually_exclusive_group()
+    variants.add_argument(
         "--pointer-wobble",
         action="store_true",
         help="Build the optional pointer extension in its own checkout and target directory",
     )
+    variants.add_argument(
+        "--unmodified",
+        action="store_true",
+        help="Build the identical pinned revision without patches in a separate checkout",
+    )
     args = parser.parse_args()
-    source = POINTER_SOURCE if args.pointer_wobble else SOURCE
-    patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
+    if args.unmodified:
+        source, patches = BASELINE_SOURCE, []
+    else:
+        source = POINTER_SOURCE if args.pointer_wobble else SOURCE
+        patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
     # Resolve every input before creating a checkout or invoking Git.
     patch_hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in patches}
     source.parent.mkdir(parents=True, exist_ok=True)
@@ -82,14 +92,15 @@ def main():
             "https://github.com/niri-wm/niri.git",
         )
         run("git", "-C", str(source), "fetch", "--depth=1", "origin", REVISION)
-        run("git", "-C", str(source), "checkout", "-b", "fragments-movement", "FETCH_HEAD")
+        run("git", "-C", str(source), "checkout", "--detach", "FETCH_HEAD")
     apply_patches(source, REVISION, patches)
     env = os.environ.copy()
     toolchain = ROOT / "artifacts/toolchain"
     if (toolchain / "cargo/bin/rustc").exists():
         env.update(RUSTUP_HOME=str(toolchain / "rustup"), CARGO_HOME=str(toolchain / "cargo"))
         env["PATH"] = str(toolchain / "cargo/bin") + os.pathsep + env["PATH"]
-    run("rustc", "--version", env=env)
+    rustc = subprocess.check_output(["rustc", "--version"], env=env, text=True).strip()
+    print(rustc, flush=True)
     env.setdefault("CARGO_BUILD_JOBS", "8")
     env.setdefault("CARGO_PROFILE_DEV_DEBUG", "0")
     env["CARGO_TARGET_DIR"] = str(source / "target")
@@ -97,10 +108,17 @@ def main():
     if args.test:
         run("cargo", "test", "--locked", "-p", "niri-config", cwd=source, env=env)
         run("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=source, env=env)
-        run("cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=source, env=env)
-        run(
-            "cargo", "test", *flags, "--lib", "render_helpers::movement::tests", cwd=source, env=env
-        )
+        if not args.unmodified:
+            run("cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=source, env=env)
+            run(
+                "cargo",
+                "test",
+                *flags,
+                "--lib",
+                "render_helpers::movement::tests",
+                cwd=source,
+                env=env,
+            )
         if args.pointer_wobble:
             run("cargo", "test", *flags, "--lib", "pointer_wobble", cwd=source, env=env)
     run("cargo", "build", *flags, *(["--release"] if args.release else []), cwd=source, env=env)
@@ -108,17 +126,27 @@ def main():
     binary = source / "target" / profile / "niri"
     manifest = {
         "revision": REVISION,
-        "patch_sha256": patch_hashes[PATCH.name],
         "binary": str(binary),
         "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
+        "build_profile": profile,
+        "build_flags": flags,
+        "rustc": rustc,
     }
     name = "niri-movement-build.json"
+    if args.unmodified:
+        manifest["unmodified"] = True
+        name = "niri-unmodified-build.json"
+    else:
+        manifest["patch_sha256"] = patch_hashes[PATCH.name]
     if args.pointer_wobble:
         manifest["pointer_patch_sha256"] = patch_hashes[POINTER_PATCH.name]
         name = "niri-pointer-wobble-build.json"
     (ROOT / "artifacts" / name).write_text(json.dumps(manifest, indent=2) + "\n")
-    option = " --pointer-wobble gentle" if args.pointer_wobble else ""
-    print(f"Built {binary}\nRun: python3 scripts/nested-demo.py{option}")
+    if args.unmodified:
+        print(f"Built unmodified baseline {binary}")
+    else:
+        option = " --pointer-wobble gentle" if args.pointer_wobble else ""
+        print(f"Built {binary}\nRun: python3 scripts/nested-demo.py{option}")
 
 
 if __name__ == "__main__":

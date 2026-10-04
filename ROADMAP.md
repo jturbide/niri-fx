@@ -56,10 +56,26 @@ Goal: make finished combinations easy to compare, choose and install.
       and exact Restore in isolated configurations.
 - [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
 
-The source checkout includes opt-in pointer-wobble profiles, Studio controls and
-capability-verified standalone Apply/Restore (Epic 4). Next are broader native
-acceptance and physical presentation checks. Agent discovery and reusable guidance
-are available through the same CLI (Epic 9).
+Version 0.18 adds opt-in pointer profiles, Studio controls and capability-verified
+standalone Apply/Restore (Epic 4). Live pointer deformation still requires a
+separate compositor build. Agent discovery and reusable guidance use the same CLI
+(Epic 9).
+
+## Next release and motion continuity
+
+- [x] Verify the 0.17-to-0.18 upgrade with existing Library profiles, favorites,
+      shell entries and exact CLI/Library Restore.
+- [ ] Publish the signed 0.18 prerelease with packages, checksums and explicit
+      native input/capture limitations.
+- [x] Reproduce the two native input/output failures against unmodified pinned
+      Niri before assigning their cause or choosing a fix.
+- [ ] Reproduce interrupted-resize edge jumps with neighboring tiles and columns,
+      then retain matching size and position trajectories where supported.
+- [ ] Record native before/after resize reversals and orthogonal retargets.
+- [ ] Investigate retained resize shader state through retargeting and closing;
+      distinguish geometric continuity from texture/deformation continuity.
+- [ ] Collect physical capture/presentation and another GPU result before adding
+      performance-driven quality choices.
 
 ## Released foundation
 
@@ -149,7 +165,8 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
       grabs in the native layout suite, including release and spring cleanup.
 - [x] Check direct ScreenCapture privacy during rule changes, dragging and closing, with visible controls.
 - [x] Test abrupt exit of grabbed tiled/floating clients and subsequent survivor input.
-- [ ] Compare held-button virtual-pointer disconnection with unmodified Niri and fix device-owned grab cleanup.
+- [x] Compare held-button virtual-pointer disconnection and stale output with unmodified pinned Niri.
+- [ ] Investigate device-owned disconnect cleanup and verify overlapping input devices.
 - [ ] Resolve stale parent output in the strict two-compositor capture probe, including the effects-disabled baseline.
 - [ ] Validate Output/Screencast privacy and actual PipeWire capture, including popups and blurred backgrounds.
 - [ ] Verify physical output hotplug, mixed monitors and graphics-reset recovery.

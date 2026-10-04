@@ -77,8 +77,8 @@ Choose a card in Library, then press **Preview combo**. The sequence plays the
 opening effect, holds the intact window and plays the closing effect using each
 action's own style and duration. Selected resize and movement effects are included
 when those profile slots are enabled; leaving them at shell defaults skips them.
-Previewing never enables an optional action or applies desktop settings. In the
-current, unreleased checkout, an explicit pointer choice with strength above
+Previewing never enables an optional action or applies desktop settings. In
+version 0.18 and newer, an explicit pointer choice with strength above
 zero adds a scripted drag and release before closing. Unset and disabled pointer
 choices add no animation. **Reduced motion** skips this pointer phase.
 
@@ -135,9 +135,9 @@ optional native extension, described below.
 
 ## Optional pointer drag
 
-Pointer settings in profiles, Studio and reviewed activation are **Unreleased**
-features available from a current source checkout. The published 0.17.0 package
-does not include this workflow.
+Pointer settings in profiles, Studio and reviewed activation are available in
+**0.18 and newer**. Live pointer deformation requires the separately built
+[experimental compositor](pointer-wobble.md).
 
 In Library, **Pointer drag (optional)** offers **Use desktop settings**, **Disabled**,
 **Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer drag** exposes

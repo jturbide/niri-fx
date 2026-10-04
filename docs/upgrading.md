@@ -4,6 +4,53 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.17 to 0.18
+
+Install the verified 0.18 wheel in the same virtual environment, then reopen
+Studio:
+
+```sh
+.venv/bin/python -m pip install --no-index --no-deps --upgrade ./niri_fx-0.18.0-py3-none-any.whl
+.venv/bin/niri-fx studio --active
+```
+
+Existing schema 3 styles and schema 1 profiles need no conversion. Updating the
+package preserves exported JSON, **My profiles**, favorites, shell registrations,
+active configuration and both CLI and Library Restore histories. Keep
+`$XDG_STATE_HOME/niri-fx` (normally `~/.local/state/niri-fx`): reinstalling the
+package is separate from restoring or deleting its saved state. Existing
+launchers remain valid when the installation stays at the same path.
+
+Profiles can now include optional `pointer` settings. Studio previews dragging
+and includes it in combo previews when selected; saving or previewing a profile
+does not activate those settings. Old profiles inherit their existing pointer
+behavior, and built-in profiles leave pointer settings unset. Resize remains
+opt-in. Stock exports omit movement shaders and pointer nodes, even when pointer
+strength is explicitly zero. See the [pointer guide](pointer-wobble.md).
+
+Native pointer activation requires the separate pointer extension for the pinned
+experimental Niri build, standalone mode, and a verified running renderer.
+Rebuild from the 0.18 source with
+`python3 scripts/build-niri-movement.py --pointer-wobble --release --test`, using
+a fresh 0.18 source directory if the helper detects an earlier patch. Keep your previous
+build for rollback. The helper never replaces the login compositor. Existing
+movement-only builds can continue to use timed movement; they cannot activate
+pointer settings. Review the [native limitations](pointer-wobble.md) before
+choosing an experimental session.
+
+Restore now checks compositor support before reintroducing a previous native
+pointer or movement selection. Use the matching executable through
+`--niri-binary PATH` and the supported running session. Restoring stock settings
+remains available; a rejected native Restore leaves configuration and snapshots
+untouched.
+
+Before downgrading to 0.17, use 0.18 to restore any active pointer configuration
+you want to undo and export profiles you want to keep. Version 0.17 cannot read
+profiles containing the new `pointer` field. Keep their JSON separately, or make
+a copy without that field for 0.17; do not overwrite your only copy. Reinstall
+the verified 0.17 wheel with `--force-reinstall` and keep the state directory.
+Updating the Python package does not change the compositor executable.
+
 ## From 0.16 to 0.17
 
 The shared [Library](library.md) becomes Studio's starting view. Choose a finished

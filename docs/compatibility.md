@@ -17,7 +17,7 @@ do not need iNiR installed.
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
 | Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
-| Pointer-driven wobble | Optional pointer extension to the pinned build | [Native prototype](pointer-wobble.md); portable profiles and Studio controls in the current source checkout. Live Apply requires a verified standalone session. |
+| Pointer-driven wobble | Optional pointer extension to the pinned build | [Native prototype](pointer-wobble.md); portable profiles and Studio controls in version 0.18 and newer. Live Apply requires a verified standalone session. |
 
 See [tested versions and reproduction details](validation.md#workflow-and-compositor-scenarios)
 for the scope of each integration check.

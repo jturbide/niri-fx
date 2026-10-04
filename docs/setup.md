@@ -26,8 +26,8 @@ and its config are healthy, 1 for missing prerequisites, or 2 for a command erro
 `doctor` compares temporary baseline configurations with movement-shader and
 pointer-wobble nodes separately. This distinguishes stock Niri, the movement
 experiment and the additional pointer extension even when they share a version
-number. The pointer profile and activation workflow is **Unreleased**; use a
-current source checkout rather than the published 0.17.0 package.
+number. The pointer profile and activation workflow requires version 0.18 or
+newer and the separate native extension for live deformation.
 
 ```sh
 python3 -m niri_fx doctor --text
@@ -238,6 +238,6 @@ until you are satisfied with the installation.
 The [agent guide](agents.md) covers catalog discovery, portable documents and
 reviewed Apply/Restore through the same CLI. `python3 -m niri_fx agent-info` prints
 the operation map; `--parameters` prints canonical bounds and `--skill` prints the
-packaged reusable instructions. These are Unreleased source-checkout features.
+packaged reusable instructions. These commands are included in version 0.18 and newer.
 Agents do not need a separate server or configuration writer. A request to design
 or preview an effect does not by itself authorize activation.

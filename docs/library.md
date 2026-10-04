@@ -29,8 +29,8 @@ keeps those edits. Refined actions show the matching combo name, such as
 match a built-in style or combo action. Undo/Redo also works for combo changes. Move and swap share the
 compositor's movement effect; they are not independent shader slots.
 
-**Pointer drag** is a separate native experiment with a browser preview in the
-current, unreleased source checkout. Choose Gentle, Rubber Sheet or Release Settle, then expand its
+**Pointer drag** is a separate native experiment with a browser preview in
+version 0.18 and newer. Choose Gentle, Rubber Sheet or Release Settle, then expand its
 controls to tune strength, damping and frequency. **Use desktop settings** leaves
 the existing pointer behavior alone; **Disabled** stores an explicit zero-strength
 override. Changing the shared window style preserves this independent choice.

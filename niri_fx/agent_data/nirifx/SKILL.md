@@ -26,7 +26,7 @@ These commands work offline and do not inspect or change the desktop.
 - `preview --custom ./my-combo.json --output ./preview.html` creates an offline
   editor. `render --custom ./my-combo.json` prints stock Niri configuration.
   Neither activates effects. Stock exports omit experimental movement and pointer
-  settings; the JSON retains them. In the current unreleased checkout, Library's
+  settings; the JSON retains them. In version 0.18 and newer, Library's
   **Try pointer drag** previews the selected pointer settings interactively, and
   **Preview combo** includes a scripted drag for explicit positive strength.
   Unset and disabled pointer choices add no pointer animation. Reduced motion

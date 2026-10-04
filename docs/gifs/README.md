@@ -446,5 +446,6 @@ privacy and interrupted-client checks. It does not generate a GIF or establish
 Output/Screencast or PipeWire capture behavior. The optional `--output-targets`
 probe currently fails on stale parent output in the tested setup; held-button
 virtual-pointer disconnection also retains a grab with deformation enabled or
-omitted. See [validation and known limits](../validation.md#pointer-driven-wobble)
+omitted, including unmodified pinned Niri. See
+[validation and known limits](../validation.md#pointer-driven-wobble)
 before describing these recordings as acceptance evidence.
