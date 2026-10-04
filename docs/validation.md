@@ -128,9 +128,9 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**187 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
-recipes, labelled Canvas concepts, eighteen native swaps and twenty-one workflow/compositor
-scenarios. Fragments appear first. Static posters load initially, and only one
+**196 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
+Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
 
 Shader previews use 20 fps, the Studio workflow 10 fps, and current native swaps
