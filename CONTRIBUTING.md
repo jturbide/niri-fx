@@ -215,6 +215,15 @@ and check the recording source hashes. The timed browser preview cannot validate
 actual pointer drag or release behavior. Physical mixed-monitor acceptance remains
 separate from these nested checks.
 
+Run `python3 scripts/test-pointer-hardening.py` for direct ScreenCapture privacy,
+dynamic rules, closing snapshots, abrupt client exit and held-button device
+disconnection. The latter currently reports retained grabs with deformation both
+enabled and omitted in the same patched executable. The optional `--output-targets`
+probe remains strict and currently fails on stale parent output in the tested
+GPU setup, including its effects-disabled baseline. Do not report Output,
+Screencast or PipeWire privacy as validated from the default run. See the
+[recorded scope and remaining work](docs/validation.md#pointer-driven-wobble).
+
 For agent support, exercise the packaged `agent-info`, `--parameters` and `--skill`
 commands as a consumer. Discover a real preset, build and inspect its JSON, and
 produce an offline preview. Run reviewed Apply and Restore only against newly

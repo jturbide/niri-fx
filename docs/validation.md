@@ -89,10 +89,17 @@ and closure of moving windows. The current recordings are described in
 ## Pointer-driven wobble
 
 The separate pointer build passed 20 configuration tests, the wiki parse check,
-13 layout-animation tests, seven position-continuity tests, seven movement-shader
-state tests and seven new analytical spring tests. The layout suite includes an
-actual tiled/floating pointer-state lifecycle regression. The unchanged base
-movement patch and binary remain separately usable.
+16 layout-animation tests, seven position-continuity tests, seven movement-shader
+state tests and seven analytical spring tests. The unchanged base movement patch
+and binary remain separately usable.
+
+The native layout suite covers pointer-state grab/release and animation-disable
+behavior, plus three output-lifecycle regressions for both tiled and floating
+windows: destination-output removal during drag, last-output removal before
+release, and output restoration with new input before release. They verify
+continuous deformation, retained grab ownership, recovery without lost or
+duplicated windows, and spring cleanup after settling. These are deterministic
+layout tests, not physical monitor hotplug or mixed-monitor acceptance.
 
 All three pointer presets passed real Wayland input checks in an owned nested
 compositor: floating reversals and visible release settling, a real return drag
@@ -102,6 +109,31 @@ during a grab, and close cancellation with input reaching the surviving client.
 The four disable paths are node removal, zero strength, movement off and all
 animations off. Render logs were clean, and the three public recordings retain
 50 fps playback with synthetic content.
+
+The additional [hardening checks](benchmarks/pointer-hardening.json) use direct
+`grim` ScreenCapture and two synthetic opaque cards. With `block-out-from
+"screen-capture"`, protected content stays hidden during real dragging, rule
+changes and the closing snapshot; a public card remains visible as a control.
+The harness requires a nonempty redacted closing snapshot followed by an empty
+endpoint for that window. With `block-out-from "screencast"`, protected content
+remains visible in ScreenCapture as the negative control. This does not test the
+Screencast render target, a portal or PipeWire transport.
+
+Abrupt termination with SIGKILL is covered for grabbed floating and detached
+tiled clients. A surviving client accepts actual clicks and a subsequent drag.
+Disconnecting a virtual pointer while its button is held exposes a known limit:
+unpressed motion from a replacement pointer still moves the grabbed window.
+A replacement press/release recovers input. This occurs with deformation enabled
+and omitted in the same patched executable; comparison with unmodified Niri and
+device-owned grab cleanup remain open.
+
+The optional `--output-targets` probe uses a second owned compositor and retains
+strict assertions. It currently fails on the tested GPU: the child's direct
+capture clears after closing while the parent's image stays stale, even with
+pointer deformation and privacy rules omitted. Both compositors continue
+submitting frames. This baseline does not establish the cause or attribute it to
+NiriFX, and Output/Screencast privacy remains unverified. Actual PipeWire capture,
+popup and blurred-background combinations also remain untested.
 
 `test-pointer-integration.py` also passed against the owned pointer session.
 It served Studio through its actual HTTP backend, reviewed and applied a
@@ -128,9 +160,10 @@ reduced motion, view changes and unchanged profile/Undo state. These checks do
 not validate compositor input, capture, damage or presentation latency.
 
 [Reproduce the checks](pointer-wobble.md#reproduce-validation-and-showcases) or
-inspect the [sanitized results](benchmarks/pointer-wobble.json). These checks do
-not certify physical input latency, capture restrictions, mixed outputs, popups
-or graphics-reset behavior. GPU-program failure uses the ordinary-renderer path
+inspect the [pointer lifecycle results](benchmarks/pointer-wobble.json) and
+[hardening results](benchmarks/pointer-hardening.json). These checks do not certify
+physical input latency, Output/Screencast or PipeWire privacy, mixed outputs,
+popups, blurred backgrounds or graphics-reset behavior. GPU-program failure uses the ordinary-renderer path
 in the implementation; injected GPU failure was not part of this run. Closing
 retains a snapshot of pointer deformation, not its ongoing spring simulation.
 
