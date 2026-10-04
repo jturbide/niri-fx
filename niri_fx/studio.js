@@ -59,6 +59,10 @@ let editingAction = "open",
 let editHistory = [],
   historyIndex = -1;
 let workspace = null;
+// Playback renders a frozen document through a separate view. Editor settings,
+// history and the selected action never become temporary animation state.
+let comboPreviewFrame = null;
+let cancelComboPreview = () => {};
 let favorites = [];
 try {
   favorites = JSON.parse(localStorage.getItem("nirifx-favorites") || "[]").filter(
@@ -105,6 +109,7 @@ function chooseAction(action) {
   byId("action").value = action;
 }
 function loadDocument(doc, action = "open") {
+  cancelComboPreview();
   editingAction = action;
   actions = doc.actions ? structuredClone(doc.actions) : null;
   desktopMotion = doc.motion ? structuredClone(doc.motion) : null;
@@ -560,17 +565,20 @@ try {
   uploadTexture(sample, 0);
   uploadTexture(nextSample, 1);
   function rebuild() {
-    const resizing = mode === "resize",
-      moving = mode === "movement",
-      source = shaderFor(comparing ? pinned.parameters : parameters, false, resizing, moving);
-    if (source === lastSource) return;
+    const renderMode = comboPreviewFrame?.mode || mode,
+      resizing = renderMode === "resize",
+      moving = renderMode === "movement",
+      renderEffect = comboPreviewFrame?.effect || (comparing ? pinned.parameters : parameters),
+      source = shaderFor(renderEffect, false, resizing, moving);
+    const renderKey = source + (comboPreviewFrame ? "\n// centered combo geometry" : "");
+    if (renderKey === lastSource) return;
     const uniforms = resizing
       ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;uniform mat3 niri_curr_geo_to_prev_geo;uniform vec2 fx_resize_from;uniform vec2 fx_resize_to;"
       : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;uniform vec2 fx_move_origin;";
     const geometry = resizing
       ? "mix(fx_resize_from,fx_resize_to,niri_clamped_progress)"
       : "fx_window";
-    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : moving ? "fx_move_origin" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : moving ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
+    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : moving ? "fx_move_origin" : comboPreviewFrame ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${resizing ? "resize_color" : moving ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0));}`;
     const vs = compile(gl.VERTEX_SHADER, vertex),
       fs = compile(gl.FRAGMENT_SHADER, fragment),
       next = gl.createProgram();
@@ -586,7 +594,7 @@ try {
     }
     if (program) gl.deleteProgram(program);
     program = next;
-    lastSource = source;
+    lastSource = renderKey;
     gl.useProgram(program);
     const attribute = gl.getAttribLocation(program, "position");
     gl.enableVertexAttribArray(attribute);
@@ -603,21 +611,25 @@ try {
   }
   let benchmarkWindow = null;
   function draw(value) {
-    progress = value;
-    if (["move", "swap"].includes(mode)) motionPreview.draw(value, mode, parameters, seed);
+    if (!comboPreviewFrame) progress = value;
+    const renderMode = comboPreviewFrame?.mode || mode;
+    if (["move", "swap"].includes(renderMode)) motionPreview.draw(value, mode, parameters, seed);
     else {
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_surface"), canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_window"), ...(benchmarkWindow || [600, 380]));
       const direction = { right: [1, 0], left: [-1, 0], down: [0, 1], up: [0, -1] }[
-        byId("movement-direction").value
+        (comboPreviewFrame?.mode === "movement" ? comboPreviewFrame.direction : null) ||
+          byId("movement-direction").value
       ];
       const windowSize = benchmarkWindow || [600, 380];
       const travel = 160 * (value * value * (3 - 2 * value) - 0.5);
       gl.uniform2f(
         gl.getUniformLocation(program, "fx_move_origin"),
-        (canvas.width - windowSize[0]) * 0.5 + direction[0] * travel,
-        (canvas.height - windowSize[1]) * 0.5 + direction[1] * travel,
+        (canvas.width - windowSize[0]) * 0.5 +
+          (comboPreviewFrame?.offset[0] ?? direction[0] * travel),
+        (canvas.height - windowSize[1]) * 0.5 +
+          (comboPreviewFrame?.offset[1] ?? direction[1] * travel),
       );
       gl.uniform2f(gl.getUniformLocation(program, "niri_move_impulse"), ...direction);
       gl.uniform2f(
@@ -627,7 +639,9 @@ try {
       );
       // A shrink is a new forward transition, with both geometry and textures
       // exchanged. Reversing growth frames gives the wrong direction to shaders.
-      const shrinking = mode === "resize" && byId("resize-direction").value === "shrink";
+      const shrinking =
+        renderMode === "resize" &&
+        (comboPreviewFrame?.direction || byId("resize-direction").value) === "shrink";
       const small = benchmarkWindow || [600, 380];
       const large = benchmarkWindow
         ? [Math.round(canvas.width * 0.8), Math.round(canvas.height * 0.7)]
@@ -660,7 +674,7 @@ try {
       gl.uniform1f(gl.getUniformLocation(program, "niri_clamped_progress"), value);
       gl.uniform1f(
         gl.getUniformLocation(program, "niri_random_seed"),
-        comparing ? pinned.seed : seed,
+        comboPreviewFrame?.seed ?? (comparing ? pinned.seed : seed),
       );
       gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
@@ -689,6 +703,111 @@ try {
       document.documentElement.dataset.shaderStatus = "error";
     }
   }
+  let comboView = null;
+  function comboButton(active) {
+    byId("preview-combo").textContent = active ? "Stop preview" : "Preview combo";
+    byId("preview-combo").setAttribute("aria-pressed", String(active));
+  }
+  const comboPreview = createComboPreview({
+    normalizeDocument: normalizePreset,
+    families: catalog.families,
+    render(state) {
+      comboPreviewFrame = state;
+      try {
+        rebuild();
+        draw(state.progress);
+        byId("error").textContent = "";
+        byId("combo-preview-status").textContent =
+          state.label + (state.phase === "hold" ? " · Pause" : "") + " · " + state.support;
+        document.documentElement.dataset.comboAction = state.action;
+        document.documentElement.dataset.shaderStatus = "ready";
+      } catch (error) {
+        comboPreview.stop();
+        comboButton(false);
+        byId("error").textContent = error.message;
+        document.documentElement.dataset.shaderStatus = "error";
+      }
+    },
+    onFinish() {
+      // Leave the completed close visible. Returning to editing restores its
+      // original view, rather than flashing a partially deconstructed window.
+      comboButton(false);
+      document.documentElement.dataset.comboState = "complete";
+      byId("combo-preview-status").textContent += " · Complete";
+    },
+  });
+  window.niriFxComboPreview = comboPreview;
+  cancelComboPreview = () => {
+    comboPreview.stop();
+    if (!comboView) return;
+    comboPreviewFrame = null;
+    for (const [id, hidden] of Object.entries(comboView.visibility)) byId(id).hidden = hidden;
+    byId("timeline-label").textContent = comboView.timeline;
+    for (const [id, disabled] of Object.entries(comboView.disabled)) byId(id).disabled = disabled;
+    for (const [tab, pressed] of comboView.tabs) tab.setAttribute("aria-pressed", pressed);
+    comboView = null;
+    comboButton(false);
+    byId("combo-preview-status").hidden = true;
+    delete document.documentElement.dataset.comboAction;
+    delete document.documentElement.dataset.comboState;
+    refresh();
+  };
+  byId("preview-combo").onclick = () => {
+    if (comboPreview.active) {
+      cancelComboPreview();
+      return;
+    }
+    cancelComboPreview();
+    cancelAnimationFrame(frame);
+    try {
+      // Validate before changing the view. Only selected actions are planned;
+      // a movement preview does not activate an experimental compositor.
+      const doc = normalizePreset(effectDocument());
+      comboPreview.plan(doc, { seed });
+      comboView = {
+        visibility: Object.fromEntries(
+          ["stage", "motion-stage", "concept-note"].map((id) => [id, byId(id).hidden]),
+        ),
+        disabled: Object.fromEntries(["progress", "pause"].map((id) => [id, byId(id).disabled])),
+        timeline: byId("timeline-label").textContent,
+        tabs: [...document.querySelectorAll("[data-mode]")].map((tab) => [
+          tab,
+          tab.getAttribute("aria-pressed"),
+        ]),
+      };
+      byId("stage").hidden = false;
+      byId("motion-stage").hidden = byId("concept-note").hidden = true;
+      byId("timeline-label").textContent = "Action progress";
+      byId("progress").disabled = byId("pause").disabled = true;
+      for (const [tab] of comboView.tabs) tab.setAttribute("aria-pressed", "false");
+      byId("combo-preview-status").hidden = false;
+      document.documentElement.dataset.comboState = "playing";
+      comboButton(true);
+      comboPreview.play(doc, { seed, reducedMotion: byId("reduced-motion").checked });
+    } catch (error) {
+      cancelComboPreview();
+      byId("error").textContent = "Cannot preview combo: " + error.message;
+    }
+  };
+  // Stop before event handlers edit or export the document. Keep an incoming
+  // slider value: restoring the original view also redraws its progress control.
+  for (const eventName of ["click", "input", "change"])
+    document.addEventListener(
+      eventName,
+      (event) => {
+        if (
+          !comboView ||
+          !(event.target instanceof Element) ||
+          event.target.closest("#preview-combo") ||
+          !event.target.closest("button,input,select")
+        )
+          return;
+        const timelineValue = byId("progress").value;
+        cancelComboPreview();
+        if (event.target === byId("progress")) byId("progress").value = timelineValue;
+      },
+      true,
+    );
   // Shader-only GPU microbenchmark. No screen capture or compositor timing claims.
   window.niriFxBenchmark = async ({
     width = 1920,
@@ -844,7 +963,8 @@ try {
     if (mode === "resize") byId("resize-direction").value = opening ? "shrink" : "grow";
     if (mode === "movement" && opening)
       byId("movement-direction").value = { right: "left", left: "right", up: "down", down: "up" }[
-        byId("movement-direction").value
+        (comboPreviewFrame?.mode === "movement" ? comboPreviewFrame.direction : null) ||
+          byId("movement-direction").value
       ];
     if (byId("reduced-motion").checked) {
       draw(["resize", "movement"].includes(mode) ? 1 : opening ? 0 : 1);
@@ -874,6 +994,7 @@ try {
   const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
   byId("reduced-motion").checked = motionPreference.matches;
   motionPreference.addEventListener("change", (event) => {
+    cancelComboPreview();
     byId("reduced-motion").checked = event.matches;
     cancelAnimationFrame(frame);
   });

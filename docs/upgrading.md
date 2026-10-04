@@ -4,6 +4,53 @@ Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
 tagged release, follow the documentation shipped with that version.
 
+## From 0.16 to 0.17
+
+The shared [Library](library.md) becomes Studio's starting view. Choose a finished
+look, combine different styles for each action, preview the combination, or open
+**Customize** for the full controls. Existing commands and portable document
+formats remain supported: schema 3 styles and schema 1 profiles.
+
+Replace the package in the same virtual environment, then reopen Studio. After
+verifying the release's `SHA256SUMS`, install its wheel:
+
+```sh
+.venv/bin/python -m pip install --no-index --no-deps --upgrade ./niri_fx-0.17.0-py3-none-any.whl
+.venv/bin/niri-fx studio --active
+```
+
+Use the Python executable from your installation if its virtual environment is
+elsewhere. Existing launchers keep working when that environment stays at the
+same path. Updating the package leaves active shaders, shell registry entries,
+saved JSON, favorites and restore snapshots untouched. There is no need to
+re-register a pack merely to use the Library.
+
+In iNiR/iRiS, recognized registered custom styles appear with **from shell**.
+Import an exported JSON document and choose **Save to My profiles** to create a
+Library-owned copy. Copy, rename and removal operate on those copies; registered
+shell entries remain managed by the shell. Standalone and connected Noctalia
+setups use the same Library with their own reviewed Apply/Restore path. Existing
+DMS and other picker workflows remain available. See the [connection guide](library.md#one-interface-different-configuration-owners).
+
+Keep the NiriFX state directory when updating:
+`$XDG_STATE_HOME/niri-fx`, normally `~/.local/state/niri-fx`. It contains Studio
+favorites, **My profiles**, CLI setup snapshots and separate Library Apply
+snapshots. CLI snapshots still restore through `niri-fx restore`; Library Apply
+snapshots restore through **Restore previous** or `niri-fx studio --restore` using
+the same target and configuration. Existing custom JSON files remain usable
+without conversion.
+
+Resize is still opt-in. Stock Niri provides opening, closing and explicitly
+enabled resize; custom movement/swap shaders require the verified experimental
+compositor. Combo previews demonstrate selected actions and do not activate
+them. The experimental patch is unchanged from 0.16.
+
+To return to 0.16, use the current app to restore any Library Apply you want to
+undo, then reinstall the verified 0.16 wheel in the same environment with
+`--force-reinstall`. Keep exported JSON and the state directory. The older Studio
+does not provide My profiles or the new combo workflow, but the documents remain
+available for export/import when you update again.
+
 ## From 0.15 to 0.16
 
 Update the CLI and refresh registered or exported shell packs to add Fragments
@@ -183,20 +230,3 @@ installed in the same virtual environment, remove it before installing NiriFX.
 
 For custom file locations, see [setup options](setup.md) and the
 [iNiR integration reference](integration.md).
-
-## From 0.12 to 0.13
-
-Update the CLI or checkout before importing the new movement parameters. The
-preset collection now has 88 styles and profiles. Re-register iNiR/iRiS or re-export your
-Noctalia pack to add Fragment Wake, Ribbon Transfer and Momentum Glide. Existing
-selection and restore snapshots remain under your control.
-
-Studio's **Movement (experimental shader)** preview uses the same GLSL as the
-pinned compositor. **Include experimental movement in JSON** stores a separate
-action; stock exports omit it. Use `scripts/nested-demo.py --custom PATH.json`
-to try an exported movement profile in isolation. The pinned patch is unchanged.
-
-Resize remains off in every built-in style. Explicit fragment resize effects now
-honor shapes, orientation, rounding, shrink and size variation. The new shaped
-profiles enable resize deliberately; previewing one does not activate it. Export
-your current custom profile before editing if you want to preserve its settings.

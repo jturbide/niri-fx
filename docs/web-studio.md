@@ -9,9 +9,23 @@ window content. It cannot change desktop settings or capture your windows.
 
 Opening [Web Studio](https://jturbide.github.io/niri-fx/studio/) directly starts in
 Library. Choose a recommended look, mix styles per action, or use a shared style.
+The first five recommendations are complete combos: Fragment Flow, Soft Landing,
+Ribbon Current, Playful Motion and Geometric Flow. Fragments appear first;
+single styles and coordinated action sets remain available below them.
 **Customize in Studio** opens detailed controls. **Save to My profiles** uses
 this browser's local storage; **Export JSON** keeps a portable copy. Local Apply
 and Restore controls are absent from the hosted page. See [Library](library.md).
+
+Press **Preview combo** to try the selected opening and closing effects as one
+sequence, with an intact hold between them. Each action uses its own style and
+timing. Explicitly selected resize or experimental movement effects are included;
+an unset optional action is skipped. This works online and in the installed app
+without applying settings or enabling an optional action.
+
+Movement previews use a synthetic shader path. Actual move/swap effects need the
+verified experimental Niri compositor; Web Studio cannot provide compositor
+hooks. Stock desktop springs are described and recorded separately in the
+[desktop motion guide](desktop-motion.md).
 
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
    nine recommended looks. **Open/close pairings** shows sixteen finished combinations;

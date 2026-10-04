@@ -30,7 +30,7 @@ def anchors(text):
 
 
 def recording_sources(clip, errors):
-    """Invalidate native clips when their fixture or compositor changes."""
+    """Invalidate captured clips when their source or compositor changes."""
     name = clip["file"]
     for source, digest in clip.get("sources", {}).items():
         path = ROOT / source
@@ -205,6 +205,7 @@ def main():
     for source in sorted(profile_sources - showcased_sources):
         errors.append(f"Profile example needs a showcase: {source}")
     for clip in manifest["clips"]:
+        recording_sources(clip, errors)
         if (
             "preset" in clip
             and "effect" in clip

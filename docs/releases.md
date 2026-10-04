@@ -16,6 +16,36 @@ Read the notes for the version you install.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
+## 0.17.0 prerelease
+
+[Download v0.17.0](https://github.com/jturbide/niri-fx/releases/tag/v0.17.0) for the
+shared [NiriFX Library](library.md), independent action combinations and a
+complete combo preview. Choose a finished look, use one style for every selected
+action, or mix opening, closing and optional resize/movement choices. **My
+profiles** adds named saves, explicit replacement, copies, rename and removal.
+Portable JSON transfers a combination between the online Studio and installed
+app. [Upgrade from 0.16](upgrading.md#from-016-to-017).
+
+The Library runs standalone and connects to supported shell workflows. Local
+Apply shows a plan and keeps a restore snapshot; the online Studio previews and
+exports JSON/KDL without accessing your desktop. Detailed controls remain in
+**Customize**. Installing the package or choosing a preview leaves active effects
+unchanged. Resize remains opt-in, and custom movement requires the separate
+experimental compositor.
+
+Download the wheel and `SHA256SUMS` from the same release, verify the checksum,
+then install and browse:
+
+```sh
+sha256sum --ignore-missing -c SHA256SUMS
+python3 -m venv .venv
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.17.0-py3-none-any.whl
+.venv/bin/niri-fx studio
+```
+
+Use [Updating NiriFX](upgrading.md) for an existing installation and
+[Getting started](getting-started.md) for setup-specific connections.
+
 ## 0.16.0 prerelease
 
 [Download v0.16.0](https://github.com/jturbide/niri-fx/releases/tag/v0.16.0) for
@@ -112,3 +142,27 @@ snapshots. Keep exported custom presets and restore snapshots when updating.
 
 For maintainers, [Maintaining releases](releasing.md) covers building, testing,
 signing and publishing a version.
+
+## Verify an upgrade
+
+Maintainers can exercise the real 0.16 release wheel and a candidate wheel with
+`scripts/test-upgrade.py`. Download the old wheel and its `SHA256SUMS` from
+[v0.16.0](https://github.com/jturbide/niri-fx/releases/tag/v0.16.0), build the new
+wheel, then run from the checkout:
+
+```sh
+python3 scripts/test-upgrade.py \
+  --from-wheel artifacts/upgrade-v016/niri_fx-0.16.0-py3-none-any.whl \
+  --checksums artifacts/upgrade-v016/SHA256SUMS \
+  --to-wheel dist/niri_fx-0.17.0-py3-none-any.whl \
+  --browser
+```
+
+This requires stock Niri, Python's venv/pip support, Node 22 or newer and
+Chromium/Chrome. Omit `--browser` for the CLI/HTTP checks. The script creates its
+own virtual environment, configuration, shell registry and state; it verifies
+old JSON, favorites and active files survive installation, restores an old CLI
+snapshot exactly, then saves/applies/restores the original document through the
+new Library. Its synthetic shell base tests registry preservation; the
+[adapter checks](validation.md) cover real shell serializers separately. No login
+session or personal browser profile is used, and temporary files are removed.

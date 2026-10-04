@@ -19,6 +19,7 @@ export default [
         MotionPreview: "readonly",
         createEffectCore: "readonly",
         createFxLibrary: "readonly",
+        createComboPreview: "readonly",
       },
     },
   },
@@ -30,6 +31,10 @@ export default [
   {
     files: ["niri_fx/effect-core.js"],
     rules: { "no-unused-vars": ["error", { varsIgnorePattern: "^createEffectCore$" }] },
+  },
+  {
+    files: ["niri_fx/combo-preview.js"],
+    rules: { "no-unused-vars": ["error", { varsIgnorePattern: "^createComboPreview$" }] },
   },
   {
     files: ["niri_fx/motion-preview.js"],

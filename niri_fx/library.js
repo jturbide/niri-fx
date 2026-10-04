@@ -98,9 +98,13 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     }
     select.querySelector('[value="custom"]')?.remove();
     const match = Object.keys(styles).find((id) => equal(normalized(styles[id].effect), effect));
-    if (effect && !match && ["resize", "movement"].includes(action))
-      option("custom", "Custom settings");
-    select.value = match || (effect && ["resize", "movement"].includes(action) ? "custom" : "");
+    if (effect && !match) {
+      const combo = Object.values(catalog.profiles).find((doc) =>
+        equal(doc.actions[action], effect),
+      );
+      option("custom", combo ? combo.name + " · " + actionNames[action] : "Custom settings");
+    }
+    select.value = match || (effect ? "custom" : "");
   }
   for (const [action, label] of Object.entries(actionNames)) {
     const row = document.createElement("div");
@@ -146,13 +150,23 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       if (search && group === "recommended") return true;
       if (group === "recommended")
         return (
-          Object.hasOwn(catalog.recommended, id) || Object.hasOwn(catalog.action_companions, id)
+          Object.hasOwn(catalog.recommended_profiles, id) ||
+          Object.hasOwn(catalog.recommended, id) ||
+          Object.hasOwn(catalog.action_companions, id)
         );
       if (group === "favorites") return favorites().includes(id);
       return (
         !Object.hasOwn(catalog.collections, group) || catalog.collections[group].styles.includes(id)
       );
     });
+    if (group === "recommended") {
+      const order = Object.keys(catalog.recommended_profiles);
+      list.sort(
+        ([a], [b]) =>
+          (order.includes(a) ? order.indexOf(a) : order.length) -
+          (order.includes(b) ? order.indexOf(b) : order.length),
+      );
+    }
     // Keep fragments first across the full catalog; retain the curated ordering
     // inside other collections. Filtering never changes a user's current look.
     if (group === "all")
@@ -179,6 +193,8 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       detail.textContent = doc.actions
         ? `${title(a.open.family)} → ${title(a.close.family)} combo`
         : title(doc.effect.family);
+      if (Object.hasOwn(catalog.recommended_profiles, id))
+        detail.textContent += " · " + catalog.recommended_profiles[id];
       if (id.startsWith("custom-") && !Object.hasOwn(managed, id))
         detail.textContent += " · from shell";
       button.append(name, detail);
@@ -218,7 +234,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   function sameStyle() {
     const doc = profile(),
       chosen = element("combo-same").value,
-      effect = chosen ? normalized(styles[chosen].effect) : doc.actions.open;
+      effect = Object.hasOwn(styles, chosen) ? normalized(styles[chosen].effect) : doc.actions.open;
     const unsupported = [];
     for (const action of Object.keys(actionNames)) {
       if (["open", "close"].includes(action)) doc.actions[action] = { ...effect };

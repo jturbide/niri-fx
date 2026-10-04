@@ -5,18 +5,25 @@ resize and experimental movement unset, preserving the user's existing behavior.
 Choose one by name with `--profile`, import its JSON in Studio, or preview it using the commands below. Previewing
 and exporting do not activate animations.
 
+The first five entries are Library's recommended complete combos. They refine
+the named source styles for coordinated timing, travel and settling. Their JSON
+contains the built-in profiles' resolved parameters; the individual presets keep their own
+settings. Use **Preview combo** in Library to try the opening and closing sequence
+before exporting or applying.
+
 | Profile | Opening | Closing | Showcase |
 | --- | --- | --- | --- |
 | [Fragment Flow](fragment-flow.json) | Balanced | Implosion | [GIF](../../docs/gifs/profile-fragment-flow.gif) |
+| [Soft Landing](soft-landing.json) | Momentum Glide | Frost Vanish | [GIF](../../docs/gifs/profile-soft-landing.gif) |
+| [Ribbon Current](ribbon-current.json) | Ribbon Wave | Ribbon Transfer | [GIF](../../docs/gifs/profile-ribbon-current.gif) |
+| [Playful Motion](playful-motion.json) | Spring Wobble | Bubble Burst | [GIF](../../docs/gifs/profile-playful-motion.gif) |
+| [Geometric Flow](geometric-flow.json) | Triangle Shatter | Hex Swarm | [GIF](../../docs/gifs/profile-geometric-flow.gif) |
 | [Burst and Drift](burst-and-drift.json) | Explosion | Dust Drift | [GIF](../../docs/gifs/profile-burst-and-drift.gif) |
 | [Frost and Fragments](frost-and-fragments.json) | Frost Vanish | Pixel Dust | [GIF](../../docs/gifs/profile-frost-and-fragments.gif) |
 | [Spring and Ember](spring-and-ember.json) | Spring Wobble | Ember Erosion | [GIF](../../docs/gifs/profile-spring-and-ember.gif) |
 | [Ghost and Shockwave](ghost-and-shockwave.json) | Ghost Wisps | Shockwave | [GIF](../../docs/gifs/profile-ghost-and-shockwave.gif) |
 | [Pixel Shuffle](pixel-shuffle.json) | Pixel Wipe | Pixelate | [GIF](../../docs/gifs/profile-pixel-shuffle.gif) |
 | [Ribbon Exit](ribbon-exit.json) | Alternating Blinds | Ribbon Fold | [GIF](../../docs/gifs/profile-ribbon-exit.gif) |
-| [Geometric Flow](geometric-flow.json) | Triangle Shatter | Hex Swarm | [Loop](../../docs/gifs/profile-geometric-flow.gif) |
-| [Ribbon Current](ribbon-current.json) | Ribbon Wave | Ribbon Transfer | [Loop](../../docs/gifs/profile-ribbon-current.gif) |
-| [Soft Landing](soft-landing.json) | Momentum Glide | Frost Vanish | [Loop](../../docs/gifs/profile-soft-landing.gif) |
 
 Run from the checkout:
 
@@ -37,7 +44,7 @@ python3 -m niri_fx render --custom examples/profiles/burst-and-drift.json > /tmp
 niri validate -c /tmp/burst-and-drift.kdl
 ```
 
-To make a new combination, use Studio's **Independent action effects** or
+To make a new combination, use Library's combo builder, Studio's **Independent action effects** or
 `python3 -m niri_fx profile --help`. See the [profile guide](../../docs/profiles.md)
 for editing, saving and explicit resize opt-in; follow [setup and restore](../../docs/setup.md)
 when ready to apply a profile.

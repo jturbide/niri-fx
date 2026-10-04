@@ -8,8 +8,12 @@ in Studio** opens the detailed controls in the same app.
 
 ## Pick a look
 
-Start with **Recommended**, or browse collections, **Favorites**, **My profiles**
-and **All effects**. Searching Recommended searches the full built-in catalog.
+Start with **Recommended** for five complete combos, beginning with Fragment
+Flow. Soft Landing offers a quiet frosted exit; Ribbon Current has flowing strips;
+Playful Motion combines a spring with bubbles; Geometric Flow uses triangles and
+hexagons. Single-style recommendations and coordinated action sets remain
+available, along with collections, **Favorites**, **My profiles** and **All effects**.
+Searching Recommended searches the full built-in catalog.
 Choosing a card updates the actual shader preview without changing your desktop.
 
 The combo builder shows **Open**, **Close**, **Resize** and **Move / swap** together.
@@ -23,6 +27,20 @@ Use **Tune** beside an action for its detailed settings. Returning to Library
 keeps those edits; **Custom settings** identifies an action that no longer matches
 a built-in style. Undo/Redo also works for combo changes. Move and swap share the
 compositor's movement effect; they are not independent shader slots.
+
+## Preview the sequence
+
+Press **Preview combo** to play the selected opening effect, hold the intact
+window and finish with its closing effect. Each action uses its own settings and
+duration. Resize and movement join the sequence only when explicitly selected in
+the combo; shell-default actions are skipped. Previewing leaves the saved document
+and your desktop configuration unchanged.
+
+The movement phase is labelled **experimental** and uses a synthetic path. It
+does not test native compositor movement or desktop springs. See the
+[movement guide](movement.md) for live support and the
+[desktop motion recordings](desktop-motion.md) for workspace, camera and overview
+behavior. Use **Tune** to adjust any action before previewing again.
 
 ## Save, export or apply
 

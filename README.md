@@ -23,17 +23,20 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.16.0](https://github.com/jturbide/niri-fx/releases/tag/v0.16.0)
+release. [Download v0.17.0](https://github.com/jturbide/niri-fx/releases/tag/v0.17.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
 
 **Try without installing:** choose from [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter), open [Web Studio](https://jturbide.github.io/niri-fx/studio/),
 or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-fx/gallery/).
-Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
+Choose a ready-made combo in **Library**, use one style for every action or mix
+opening and closing styles. Click **Preview combo** to watch the whole sequence.
+Resize and movement run only when you select them. Save a named profile, share its
+settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0160-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0170-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
@@ -201,21 +204,25 @@ origin in Studio. Available since v0.11.0.
 ## Pick an opening and closing pair
 
 Choose a finished combination with no JSON editing. In the terminal guide, type
-`profiles`; in Studio, use **Ready-made profile**. The desktop pickers
+`profiles`; in Studio, start with **Library** and **Preview combo**. The desktop pickers
 include the same collection. Resize stays off.
 
-| Fragment Flow | Burst and Drift | Frost and Fragments |
+The five recommended combos balance arrival and departure timing. Resize and
+movement stay off until selected. These clips show the complete shader cycle with
+synthetic window content.
+
+| Fragment Flow | Geometric Flow | Soft Landing |
 | --- | --- | --- |
-| ![Balanced fragments arrive and implode on close](docs/gifs/profile-fragment-flow.gif) | ![Explosion opening with drifting pixel dust on close](docs/gifs/profile-burst-and-drift.gif) | ![Frost reveals the window before a pixel breakup](docs/gifs/profile-frost-and-fragments.gif) |
-| **Pixel Shuffle** | **Ribbon Exit** | **Spring and Ember** |
-| ![Pixels reveal and coarsen away](docs/gifs/profile-pixel-shuffle.gif) | ![Alternating strips arrive and fold away](docs/gifs/profile-ribbon-exit.gif) | ![A springy opening and monochrome erosion on close](docs/gifs/profile-spring-and-ember.gif) |
+| ![Fragments assemble and collapse inward](docs/gifs/profile-fragment-flow.gif) | ![Triangles assemble and hexagons drift away](docs/gifs/profile-geometric-flow.gif) | ![A gentle arrival with a frosted departure](docs/gifs/profile-soft-landing.gif) |
+| **Ribbon Current** | **Playful Motion** | **Burst and Drift** |
+| ![Waving ribbons arrive and alternating strips leave](docs/gifs/profile-ribbon-current.gif) | ![Springy arrival and a light fragment departure](docs/gifs/profile-playful-motion.gif) | ![Explosion opening with drifting pixel dust on close](docs/gifs/profile-burst-and-drift.gif) |
 
 ```sh
 python3 -m niri_fx list --profiles --text
 python3 -m niri_fx studio --profile fragment-flow
 ```
 
-[All thirteen profiles, commands and downloads](docs/profiles.md) ·
+[All 16 profiles, commands and downloads](docs/profiles.md) ·
 [Ghost and Shockwave](docs/gifs/profile-ghost-and-shockwave.gif)
 
 ## Resize (opt-in)
@@ -312,7 +319,9 @@ Saving over a name asks you to replace that Library copy; active effects change
 only through Review & apply.
 
 Studio offers a **Basic / Advanced** control view, search and favorites, independent
-action profiles, Undo/Redo and pinned A/B comparisons. Pause or scrub any preview;
+action profiles, Undo/Redo and pinned A/B comparisons. **Preview combo** plays
+opening, a pause, selected resize/movement loops and closing using each action's
+style and timing. Pause or scrub individual action previews;
 Reduced Motion shows endpoints without playback and respects the system preference.
 Preview preferences do not change exported effects.
 

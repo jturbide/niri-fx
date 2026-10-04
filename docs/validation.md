@@ -336,6 +336,27 @@ Library transaction checks use an intact preview frame and wait for profile
 operations to finish. This keeps queued software GPU draws out of UI timing;
 the full rendering suite still checks intermediate pixels, endpoints and parity.
 
+Complete combo preview checks cover per-action styles and durations, stable seeds,
+opt-in action omission, grow/shrink texture exchange and movement position
+continuity. The controller freezes a validated document and invalidates old frame
+callbacks when stopped. An actual offline Studio browser test verifies selected
+shader uniforms, the transparent closing endpoint, reduced motion, cancellation,
+shared prefab styles and Undo without changing the edited document. Preview does
+not validate a live compositor or activate an effect.
+
+```sh
+node --test tests/combo-preview.test.mjs
+node --test tests/combo-preview-browser.test.mjs
+node scripts/record-combo-showcases.mjs
+```
+
+The [release acceptance check](releases.md#verify-an-upgrade) installs the
+checksum-verified official 0.16 wheel, preserves old exported JSON, favorites,
+iNiR registry entries and an existing CLI Restore snapshot over an upgrade, then
+exercises installed Library Save/Review/Apply/Restore in disposable configurations.
+It also checks installed combo playback against an unchanged imported document.
+This synthetic registry test does not cover every downstream shell customization.
+
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited
 settings and browser-local profile persistence. Profile checks cover

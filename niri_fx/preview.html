@@ -50,6 +50,7 @@
         aria-label="Interactive preview of NiriFX window effects"
       ></canvas>
       <div class="controls">
+        <button id="preview-combo" type="button" aria-pressed="false">Preview combo</button>
         <button id="open">Reconstruct</button><button id="close">Deconstruct</button
         ><button id="pause">Pause</button><button id="seed">New variation</button
         ><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button
@@ -75,6 +76,7 @@
       >
       <small>Preview preference only. Use the timeline to inspect individual frames.</small>
       <p id="caption"></p>
+      <p id="combo-preview-status" role="status" hidden></p>
       <div class="controls" id="activation-controls" hidden>
         <label id="activate-movement-label" hidden
           ><input id="activate-movement" type="checkbox" /> Apply experimental movement</label
@@ -274,5 +276,6 @@
   <!--@EFFECT_CORE_JS@-->
   <!--@MOTION_JS@-->
   <!--@LIBRARY_JS@-->
+  <!--@COMBO_PREVIEW_JS@-->
   <!--@STUDIO_JS@-->
 </html>

@@ -5,8 +5,8 @@
     "lint": "eslint \"niri_fx/*.js\" \"niri_fx/gtk/*.mjs\" \"integrations/ags/*.js\" \"scripts/**/*.mjs\" \"tests/*.mjs\" \"docs/gallery/*.js\"",
     "format:check": "prettier --check \"niri_fx/*.{js,css}\" \"niri_fx/gtk/*.{mjs,css}\" \"integrations/ags/*.js\" niri_fx/preview.html \"scripts/**/*.mjs\" \"tests/*.mjs\" eslint.config.mjs package.json .github/workflows/*.yml \"docs/gallery/*.{js,css}\"",
     "format": "prettier --write \"niri_fx/*.{js,css}\" \"niri_fx/gtk/*.{mjs,css}\" \"integrations/ags/*.js\" niri_fx/preview.html \"scripts/**/*.mjs\" \"tests/*.mjs\" eslint.config.mjs package.json .github/workflows/*.yml \"docs/gallery/*.{js,css}\"",
-    "test": "node --test tests/effect-core.test.mjs tests/picker-controller.test.mjs",
-    "test:browser": "node --test --test-concurrency=1 tests/browser-session.test.mjs tests/gallery.test.mjs tests/hosted-studio.test.mjs tests/collections.test.mjs tests/library.test.mjs"
+    "test": "node --test tests/effect-core.test.mjs tests/picker-controller.test.mjs tests/combo-preview.test.mjs",
+    "test:browser": "node --test --test-concurrency=1 tests/browser-session.test.mjs tests/gallery.test.mjs tests/hosted-studio.test.mjs tests/collections.test.mjs tests/library.test.mjs tests/combo-preview-browser.test.mjs"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
