@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-03** for 0.16.0. These checks
+Evidence updated on **2026-10-04** for 0.16.0 and the Unreleased Library changes. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -18,11 +18,11 @@ These checks complement the rendering and native evidence below.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 153 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
+| Python | 166 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
 | Portable JavaScript | 69 Node checks; all 75 presets' supported stock shaders match Python, with picker transaction and profile checks |
 | Real Chromium | 75 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
-| Browser lifecycle and gallery | Six tests cover failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback hosted Studio share/download flows and explicit companion opt-in through import and Undo |
+| Browser lifecycle and gallery | Ten tests cover failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback hosted Studio share/download flows and explicit companion opt-in through import and Undo |
 | GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 75 default exports, supported resize exports and 91 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Curated pairings | Geometric Flow, Ribbon Current and Soft Landing render partial opening/closing frames, settle intact and close to an empty scene in stock Niri. Sampling uses an 8× slower isolated animation clock to avoid missing short phases during screencopy; this does not measure real-time presentation smoothness. |
@@ -328,6 +328,13 @@ remain separate from compositor presentation evidence.
 The browser test files run sequentially so concurrent software WebGL contexts
 do not compete for a shared CI runner. Shader checks remain enabled; readiness
 timeouts report the observed state without exposing session URLs.
+The harness enables its Page and Runtime domains before navigation. A real-process
+regression verifies that startup hooks capture script errors on repeated reloads.
+Another regression covers a briefly empty page-target list after the debugging
+port becomes available, without extending the existing startup deadline.
+Library transaction checks use an intact preview frame and wait for profile
+operations to finish. This keeps queued software GPU draws out of UI timing;
+the full rendering suite still checks intermediate pixels, endpoints and parity.
 
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited

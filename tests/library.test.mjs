@@ -23,7 +23,10 @@ test("library combines supported actions, preserves edits and saves offline with
     response.end(html);
   });
   await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
-  const url = `http://127.0.0.1:${server.address().port}/studio/`;
+  // These assertions exercise Library transactions, not intermediate pixels.
+  // Keep the real shader at its intact endpoint; the rendering suite separately
+  // checks intermediate frames without accumulating software GPU work here.
+  const url = `http://127.0.0.1:${server.address().port}/studio/?breakup=0`;
   const browser = await launchBrowser();
   try {
     await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
@@ -40,7 +43,19 @@ test("library combines supported actions, preserves edits and saves offline with
           title: document.title,
           scripts: Array.from(document.scripts, script=>({type:script.type,length:script.textContent.length})),
           errors: window.libraryBootErrors,
-          bodyLength: document.body?.textContent.length
+          bodyLength: document.body?.textContent.length,
+          globals: (()=>{
+            const result={};
+            for(const expression of ["createEffectCore","createFxLibrary","byId","catalog","parameters","workspace"]){
+              try{result[expression]=typeof eval(expression)}
+              catch(error){result[expression]=String(error.message)}
+            }
+            return result;
+          })(),
+          attributes: {...document.documentElement.dataset},
+          storageKeys: Object.keys(localStorage),
+          performance: performance.getEntriesByType("navigation").map(entry=>({type:entry.type,load:entry.loadEventEnd,dom:entry.domContentLoadedEventEnd})),
+          visibility: document.visibilityState
         })`),
         );
         throw error;
@@ -48,6 +63,17 @@ test("library combines supported actions, preserves edits and saves offline with
     }
     await reload();
     const evaluate = browser.evaluate;
+    const settle = (dialogOpen = false) =>
+      evaluate(`new Promise((resolve,reject)=>{
+        const started=Date.now();
+        function check(){
+          if(!byId("store-profile").disabled&&!byId("profile-confirm").disabled&&byId("profile-dialog").open===${dialogOpen})resolve();
+          else if(Date.now()-started>5000)reject(new Error("Profile operation did not settle"));
+          else setTimeout(check,30);
+        }
+        // Dialog close events are queued; let them run before another operation.
+        setTimeout(check,0);
+      })`);
     assert.equal(await evaluate("document.documentElement.dataset.workspace"), "library");
     assert.equal(await evaluate('byId("activation-controls").hidden'), true);
     assert.equal(await evaluate('getComputedStyle(byId("save-target")).display'), "none");
@@ -90,7 +116,7 @@ test("library combines supported actions, preserves edits and saves offline with
     );
     assert.equal(await evaluate('byId("profile-dialog").open'), true);
     await evaluate('byId("profile-confirm").click()');
-    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    await settle();
     await reload();
     await evaluate(
       'byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"))',
@@ -121,7 +147,7 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate('byId("copy-profile").click()');
     assert.equal(await evaluate('byId("profile-save-name").value'), "Night Motion copy");
     await evaluate('byId("profile-confirm").click()');
-    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    await settle();
     assert.equal(await evaluate("effectDocument().name"), "Night Motion copy");
     await evaluate(
       `document.querySelector('button[aria-label="Favorite Night Motion copy"]').click()`,
@@ -129,13 +155,13 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate(
       'byId("rename-profile").click();byId("profile-save-name").value="Night_Motion";byId("profile-confirm").click()',
     );
-    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    await settle(true);
     assert.match(await evaluate('byId("profile-dialog-error").textContent'), /already belongs/);
     assert.equal(await evaluate('byId("profile-dialog").open'), true);
     await evaluate(
       'byId("profile-save-name").value="Evening Motion";byId("profile-confirm").click()',
     );
-    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    await settle();
     assert.equal(await evaluate("effectDocument().name"), "Evening Motion");
     assert(
       (await evaluate('JSON.parse(localStorage.getItem("nirifx-favorites"))')).includes(
@@ -152,12 +178,13 @@ test("library combines supported actions, preserves edits and saves offline with
     assert(shelf["custom-evening-motion"]);
     assert(!shelf["custom-night-motion-copy"]);
     await evaluate('byId("remove-profile").click();byId("profile-cancel").click()');
+    await settle();
     assert.deepEqual(
       await evaluate('JSON.parse(localStorage.getItem("nirifx-my-profiles"))'),
       shelf,
     );
     await evaluate('byId("remove-profile").click();byId("profile-confirm").click()');
-    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    await settle();
     assert.equal(await evaluate('byId("remove-profile").hidden'), true);
     assert(
       !(await evaluate('JSON.parse(localStorage.getItem("nirifx-favorites"))')).includes(
@@ -183,14 +210,14 @@ test("library combines supported actions, preserves edits and saves offline with
       'let shelf=JSON.parse(localStorage.getItem("nirifx-my-profiles"));shelf["custom-night-motion"].actions.close=shelf["custom-night-motion"].actions.open;localStorage.setItem("nirifx-my-profiles",JSON.stringify(shelf));shelf',
     );
     await evaluate('byId("profile-confirm").click()');
-    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    await settle(true);
     assert.match(await evaluate('byId("profile-dialog-error").textContent'), /another tab/);
     assert.deepEqual(
       await evaluate('JSON.parse(localStorage.getItem("nirifx-my-profiles"))'),
       changed,
     );
     await evaluate('byId("profile-cancel").click()');
-    assert(requests.every((path) => path === "/studio/" || path === "/favicon.ico"));
+    assert(requests.every((path) => path === "/studio/?breakup=0" || path === "/favicon.ico"));
     assert.equal(await evaluate('byId("error").textContent'), "");
   } finally {
     await browser.close();

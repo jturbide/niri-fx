@@ -51,3 +51,47 @@ test("browser protocol failures are bounded and cleanup rejects in-flight reques
     await browser.close();
   }
 });
+
+test("startup hooks capture script errors before page code on every reload", async () => {
+  const browser = await launchBrowser();
+  try {
+    await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
+      source:
+        'window.bootErrors=[];addEventListener("error",event=>window.bootErrors.push(event.message));',
+    });
+    const url =
+      "data:text/html," +
+      encodeURIComponent(
+        '<html><script>throw new Error("fixture startup error")</script><p data-boot-end>Ready</p></html>',
+      );
+    for (let reload = 0; reload < 2; reload++) {
+      await browser.navigate(url, { readySelector: "[data-boot-end]" });
+      assert.deepEqual(await browser.evaluate("window.bootErrors"), [
+        "Uncaught Error: fixture startup error",
+      ]);
+    }
+  } finally {
+    await browser.close();
+  }
+});
+
+test("browser startup waits for the initial page target after the debugging port", async (t) => {
+  const originalFetch = globalThis.fetch;
+  let emptyResponses = 0,
+    targetRequests = 0;
+  t.mock.method(globalThis, "fetch", (url, options) => {
+    if (String(url).endsWith("/json/list")) {
+      targetRequests++;
+      if (emptyResponses++ < 2) return Promise.resolve(new Response("[]"));
+    }
+    return originalFetch(url, options);
+  });
+  const browser = await launchBrowser();
+  try {
+    assert(targetRequests >= 3, "an empty target list is a startup transition");
+    await browser.navigate(page("ready"));
+    assert.equal(await browser.evaluate("1 + 2"), 3);
+  } finally {
+    await browser.close();
+  }
+});

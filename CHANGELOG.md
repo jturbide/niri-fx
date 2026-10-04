@@ -35,6 +35,11 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   counts in the three public showcase guides during documentation checks.
 - Preserve other sessions' saved-profile edits and reject rename collisions.
   Skip damaged saved documents individually and report invalid names in the UI.
+- Enable browser lifecycle domains before startup hooks and navigation, with
+  regression coverage for error capture during repeated reloads and page-target
+  discovery during startup. Library checks
+  wait for completed operations and use an intact preview frame while separate
+  rendering checks retain intermediate-frame coverage.
 
 ## 0.16.0 — 2026-10-03
 
