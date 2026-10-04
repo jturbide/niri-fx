@@ -49,11 +49,36 @@ JSON integrations can read `movement_capability.status` and
 | `unsupported` | Ordinary movement configuration passes, but `custom-shader` is rejected |
 | `unknown` | The probe could not establish support, or the running executable differs or cannot be identified |
 
-The scope is **configuration parsing**. It does not verify GPU compilation, the
-experimental shader contract or an active effect. Missing sockets, timeouts and
-unsupported experimental movement remain informational; stock effects still work.
-Use the [isolated native demo](../experimental/README.md) for rendering checks.
-Setup does not install a compositor or enable movement shaders.
+Parser results remain separate from `session.contract.status`. A matching running
+experimental binary must advertise movement contract 1 and compile an isolated
+probe in its own renderer. `activation_ready` is true only when both checks pass.
+`movement_configured` reports whether a shader is configured; it does not claim an
+arbitrary custom shader compiled. The probe does not replace the active shader.
+Missing sockets, mismatched binaries, incompatible contracts and timeouts never
+count as verified support. Stock effects still work.
+
+### Activate experimental movement
+
+Only use this after deliberately starting the experimental compositor as your
+session. NiriFX does not install or replace a compositor. The default setup and
+all stock exports continue to omit movement shaders.
+
+```sh
+# Preview a plan against the executable running your experimental session:
+niri-fx setup --target standalone --preset fragment-wake --enable-movement \
+  --movement-binary /path/to/patched/niri --no-launcher
+# Repeat with --apply after reviewing it. Restore the exact previous files:
+niri-fx restore --apply
+```
+
+For a profile, its `movement` slot must explicitly select a supported style.
+Create one with `profile --movement-preset fragment-wake`, or use
+[an example profile](../examples/profiles/fragment-wake-motion.json).
+Activation requires explicit `--target standalone`; iNiR registration, Studio,
+terminal-guided setup and exported shell packs retain their stock-only behavior.
+The Apply step rechecks the socket and running contract before writing, including
+when a prior plan has no file changes. File-state and plan-hash checks still apply.
+[Runtime support and limits](../experimental/README.md#runtime-verification-and-output-feedback).
 
 ## Review a setup
 
@@ -64,7 +89,9 @@ files or create a restore snapshot until `--apply`.
 
 For a UI or script that separates review from activation, retain the JSON
 `plan_sha256` and pass it back as `--expect-plan HASH` with `--apply`, keeping
-the other setup arguments identical. NiriFX rebuilds the plan and rejects changed
+the other setup arguments identical. The plan exposes action settings in `effect`
+and optional stock springs in `desktop_motion`; pickers verify both against the
+loaded selection. NiriFX rebuilds the plan and rejects changed
 selections or observed file state before writing. The [Quickshell picker](quickshell.md)
 uses this contract. It supplements validation and per-write conflict checks;
 it does not lock your files while you review them.

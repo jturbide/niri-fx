@@ -1783,6 +1783,67 @@
           "source": "examples/profiles/soft-landing.json"
         }
       ]
+    },
+    {
+      "name": "profile-gentle-motion",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "GENTLE MOTION / WINDOW EFFECTS",
+          "source": "examples/profiles/gentle-motion.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-balanced-motion",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "BALANCED MOTION / WINDOW EFFECTS",
+          "source": "examples/profiles/balanced-motion.json"
+        }
+      ]
+    },
+    {
+      "name": "profile-playful-motion",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "PLAYFUL MOTION / WINDOW EFFECTS",
+          "source": "examples/profiles/playful-motion.json"
+        }
+      ]
+    },
+    {
+      "name": "compare-fragment-mixture",
+      "mode": "effect",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "SQUARE",
+          "preset": "mixed-confetti",
+          "overrides": {
+            "fragment_mix": 0
+          }
+        },
+        {
+          "label": "SQUARE + TRIANGLE",
+          "preset": "mixed-confetti",
+          "overrides": {
+            "fragment_mix": 0.5
+          }
+        },
+        {
+          "label": "TRIANGLE",
+          "preset": "mixed-confetti",
+          "overrides": {
+            "fragment_mix": 1
+          }
+        }
+      ]
     }
   ]
 }

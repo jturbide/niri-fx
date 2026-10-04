@@ -9,6 +9,19 @@ recorded validation; unchecked items are still planned or in development. Epic
 order expresses priority, not a release date. See [available features](README.md),
 [release history](CHANGELOG.md) and [validation limits](docs/validation.md).
 
+## Coherent desktop motion milestone
+
+- [x] Verify the running movement shader contract before live activation, with Apply and Restore.
+- [x] Test rapid swaps, move/resize/close overlaps and floating/tiled changes; fix demonstrated jumps.
+- [x] Ship Gentle, Balanced and Playful motion packs with coordinated stock desktop timing.
+- [x] Add compositor output feedback and publish nested submission evidence separately from shader/capture timing.
+- [ ] Collect physical DRM presentation and mixed-output evidence on an experimental login session.
+- [x] Add deterministic mixtures of built-in fragment shapes with finished presets.
+- [x] Publish portable settings, faithful showcases, support limits and regression coverage.
+
+Resize and experimental movement remain explicit choices. Later, build
+pointer-driven wobble on the validated motion foundation (Epic 4).
+
 ## Released foundation
 
 - [x] Stock Niri opening and closing effects, standalone setup and shell adapters.
@@ -32,7 +45,7 @@ Goal: make movement a distinct, well-tested action with useful finished looks.
 - [x] Publish measured costs and explicit compositor/renderer requirements.
 - [x] Detect movement configuration support and distinguish the tested executable
       from the running compositor in `doctor`.
-- [ ] Verify the running movement shader contract before offering live activation;
+- [x] Verify the running movement shader contract before offering live activation;
       parser acceptance alone is insufficient.
 
 ## Epic 2: shaped and expressive resize
@@ -60,7 +73,8 @@ Goal: retain visual direction and state when actions overlap.
 - [x] Expand coverage to move/resize/close combinations and vertical layout changes.
 - [ ] Fix discontinuities demonstrated by those scenarios and add regressions.
 - [ ] Investigate velocity continuity across interrupted resize transitions.
-- [ ] Test floating/tiled changes, physical mixed outputs and output removal.
+- [x] Test floating/tiled changes with resize/open/close overlap fixtures.
+- [ ] Test physical mixed outputs and output removal.
 - [ ] Investigate acceleration continuity and shared swap transactions.
 - [ ] Evaluate particle-level ordering across windows and conservative damage bounds.
 
@@ -85,14 +99,15 @@ simulate dragging.
 
 Goal: a coherent sense of motion across the desktop.
 
-- [ ] Curate opt-in stock timing/spring profiles for workspace switching,
+- [x] Curate opt-in stock timing/spring profiles for workspace switching,
       horizontal camera scrolling and overview zoom.
-- [ ] Keep camera motion separate from individual window movement effects.
+- [x] Keep camera motion separate from individual window movement effects.
 - [ ] Design an experimental workspace rendering hook with gesture reversal.
 - [ ] Prototype a restrained depth slide, wave sweep and slice transition.
 - [ ] Preserve clipping, capture restrictions, multiple outputs and input behavior.
 - [ ] Evaluate fullscreen and overview entry/exit as separate transition paths.
-- [ ] Record native demonstrations and establish compositor frame-time budgets.
+- [x] Record native stock workspace, camera and overview demonstrations.
+- [ ] Establish physical compositor presentation budgets for these transitions.
 
 Stock Niri exposes timing for these actions, not the same custom shader interface
 as opening, closing and resizing. See [Niri's animation documentation](https://niri-wm.github.io/niri/Configuration:-Animations.html).
@@ -100,7 +115,8 @@ as opening, closing and resizing. See [Niri's animation documentation](https://n
 ## Epic 6: performance and broader desktop validation
 
 - [ ] Collect integrated-GPU results and several output sizes/refresh rates.
-- [ ] Measure compositor presentation separately from WebGL shader cost.
+- [x] Collect native submission/presentation feedback separately from WebGL shader cost.
+- [ ] Validate physical DRM feedback and report the workload and presentation flags.
 - [ ] Test simultaneous effects, fractional scaling and physical mixed monitors.
 - [ ] Add quality choices only where measurements demonstrate a useful tradeoff.
 - [ ] Expand capture, popup, decoration and graphics-reset acceptance.
@@ -110,7 +126,7 @@ Published results and reproducible commands remain in the
 
 ## Epic 7: custom silhouettes and curated profiles
 
-- [ ] Add deterministic mixtures of selected built-in shapes.
+- [x] Add deterministic mixtures of selected built-in shapes.
 - [ ] Prototype one closed SVG outline, simplified at import time with bounded
       shader complexity. Filters, strokes and compound artwork remain out of scope.
 - [ ] Curate coordinated Fragments, Ribbons and Elastic motion profiles as actions

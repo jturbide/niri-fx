@@ -88,5 +88,45 @@ multiple release groups increase the bounded search work. A lower particle count
 alone does not guarantee a cheaper shader. See [measurements](performance.md#fragment-shapes)
 for tested GPU costs and their limits.
 
-Custom SVG paths and mixed-shape particles are future work. No SVG import is
+Custom SVG paths are future work. No SVG import is
 available in this version; see the [roadmap](../ROADMAP.md).
+
+## Mix two shapes
+
+Choose a **Secondary shape** and increase **Shape mixture** in Studio. Zero
+keeps the primary shape; one uses only the secondary; intermediate values choose
+a deterministic mixture per cell. **Shape layout seed** changes that selection
+without adding frame-to-frame randomness. These controls also apply to explicit
+resize and experimental movement actions.
+
+| Flag | Range |
+| --- | --- |
+| `--fragment-secondary` | Any built-in fragment shape |
+| `--fragment-mix` | 0–1; default 0 |
+| `--fragment-shape-seed` | Integer 0–65535; default 17 |
+
+```sh
+python3 -m niri_fx studio --preset mixed-confetti
+python3 -m niri_fx preview --preset orbiting-shapes --fragment-mix 0.35 --output /tmp/mixture.html
+python3 -m niri_fx render --preset mixed-confetti --fragment-shape-seed 42 > /tmp/mixture.kdl
+```
+
+Mixtures use a joined rectangular cell grid. A selected triangle cell yields
+two triangle pieces; other cells yield one. The mixture describes cell selection,
+not an exact percentage of pieces. Hexagons in a mixture emerge from those joined
+cells; pure hexagon settings retain their honeycomb layout. Count remains an
+approximate target. Choosing the same two shapes leaves the single-shape behavior
+intact, and a zero mixture preserves existing shader paths.
+
+![Square-only, mixed and triangle-only layouts with matched physics](gifs/compare-fragment-mixture.gif)
+
+| Mixed Confetti swap | Orbiting Shapes swap |
+| --- | --- |
+| ![Native mixed square and triangle swap](gifs/native-swap-mixed-confetti.gif) | ![Native circle and hexagon swap](gifs/native-swap-orbiting-shapes.gif) |
+
+[Mixed Confetti settings](../examples/mixed-confetti.json) ·
+[Orbiting Shapes settings](../examples/orbiting-shapes.json)
+
+Mixtures can cost more than a compact square effect. They use bounded inverse
+lookup and deterministic selection shared by Python and Studio. Benchmarks measure
+shader cost separately from compositor timing; see [performance](performance.md).

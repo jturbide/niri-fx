@@ -50,6 +50,7 @@ waves, variation, wobble, colors and distortion, with examples and performance n
 
 Live fragment controls include:
 
+- **Shape mixture:** a secondary built-in shape, a 0–1 cell mixture and a stable layout seed; see [fragment shapes](fragment-shapes.md#mix-two-shapes).
 - **Gravity direction:** none, down, up, left, right, center, or outward.
 - **Gravity strength:** 0–3×. Downward gravity accelerates; outward space motion
   drifts at a constant radial rate. Strength is artistic, not an SI unit.
@@ -151,7 +152,7 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
-The current checkout has 73 built-ins across nine families. The original styles are listed below;
+The current checkout has 75 built-ins across nine families. The original styles are listed below;
 [new styles and controls](effect-controls.md) cover five varied Fragments, four
 additional Fragments, Slices and Elastic presets, including piece shapes, hinges and spring transforms.
 
@@ -214,3 +215,5 @@ the system preference and changes only the preview, not exported settings.
 Native movement strength appears in Advanced view for supported families.
 It controls the experimental compositor export; the stock open/close and resize
 shaders ignore it. Use the nested demo to evaluate native movement.
+
+[Desktop motion packs](desktop-motion.md) add optional workspace, camera and overview springs to independent profiles. Ordinary presets preserve those timings.

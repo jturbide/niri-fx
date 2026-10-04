@@ -94,6 +94,7 @@ class NestedSession:
                 "XDG_RUNTIME_DIR": self.runtime.name,
                 "XDG_CURRENT_DESKTOP": "niri",
                 "QT_QPA_PLATFORM": "wayland",
+                "GDK_BACKEND": "wayland",
             }
             for key in ("DISPLAY", "DBUS_SESSION_BUS_ADDRESS", "HYPRLAND_INSTANCE_SIGNATURE"):
                 self.env.pop(key, None)
@@ -147,6 +148,12 @@ class NestedSession:
             self.outputs = json.loads(self.msg("-j", "outputs"))
             if list(self.outputs) != ["winit"]:
                 raise RuntimeError("Expected only the isolated winit output")
+            mode = self.outputs["winit"]["modes"][0]
+            if (mode["width"], mode["height"]) != (self.width, self.height):
+                raise RuntimeError(
+                    "Owned output size differs from the requested capture size. "
+                    "Unlock the host and keep the owned test window visible."
+                )
             self.version = subprocess.check_output(
                 [self.binary, "--version"], text=True, timeout=10
             ).strip()

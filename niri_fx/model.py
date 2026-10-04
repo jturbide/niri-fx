@@ -193,6 +193,32 @@ class Effect:
         limits=(0.25, 4),
         token="FRAGMENT_ASPECT",
     )
+    fragment_secondary: str = parameter(
+        "circle",
+        label="Secondary shape",
+        families=("fragments",),
+        group="fragments",
+        choices=FRAGMENT_SHAPES,
+        token="FRAGMENT_SECONDARY",
+    )
+    fragment_mix: float = parameter(
+        0,
+        label="Shape mixture",
+        families=("fragments",),
+        group="fragments",
+        limits=(0, 1),
+        token="FRAGMENT_MIX",
+    )
+    fragment_shape_seed: int = parameter(
+        17,
+        label="Shape layout seed",
+        families=("fragments",),
+        group="fragments",
+        limits=(0, 65535),
+        integer=True,
+        token="FRAGMENT_SHAPE_SEED",
+        glsl_type="int",
+    )
     fragment_orientation: float = parameter(
         0,
         label="Shape orientation",
@@ -1055,10 +1081,19 @@ class Effect:
             raise ValueError("particles must be 0 (tile size mode) or between 16 and 4096")
 
     @property
+    def effective_shape(self):
+        return self.fragment_secondary if self.fragment_mix == 1 else self.fragment_shape
+
+    @property
+    def mixed_shapes(self):
+        return 0 < self.fragment_mix < 1 and self.fragment_shape != self.fragment_secondary
+
+    @property
     def shaped(self):
         """Keep existing square effects on their smaller, unchanged lookup paths."""
         return (
-            self.fragment_shape != "square"
+            self.effective_shape != "square"
+            or self.mixed_shapes
             or self.fragment_orientation != 0
             or (self.fragment_roundness > 0 and self.fragment_transition != 0.28)
         )

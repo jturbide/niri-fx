@@ -18,6 +18,29 @@ from niri_fx.model import FRAGMENT_SHAPES, Effect
 
 
 class FragmentShapeTests(unittest.TestCase):
+    def test_shape_mixtures_round_trip_and_keep_single_shape_endpoints(self):
+        for first in FRAGMENT_SHAPES:
+            for second in FRAGMENT_SHAPES:
+                with self.subTest(first=first, second=second):
+                    effect = replace(
+                        Effect(),
+                        fragment_shape=first,
+                        fragment_secondary=second,
+                        fragment_mix=0.45,
+                        fragment_shape_seed=4021,
+                    )
+                    self.assertEqual(parse_document(effect_document("Mixed", effect))[2], effect)
+                    self.assertEqual(effect.mixed_shapes, first != second)
+                    self.assertEqual(
+                        shape_search_radius(replace(effect, fragment_mix=1)),
+                        shape_search_radius(replace(effect, fragment_shape=second, fragment_mix=0)),
+                    )
+                    self.assertEqual(
+                        renderer_name(replace(effect, fragment_mix=0)),
+                        renderer_name(replace(effect, fragment_secondary="circle", fragment_mix=0)),
+                    )
+        self.assertTrue(all(not style.resize for style in PRESETS.values()))
+
     def test_shapes_round_trip_through_cli_and_documents_without_resize(self):
         for shape in FRAGMENT_SHAPES:
             with self.subTest(shape=shape):

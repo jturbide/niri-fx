@@ -82,6 +82,29 @@ into the movement texture. Removing the shader restores ordinary movement.
 Compilation errors keep the last working shader, following Niri's existing
 custom-shader behavior; without a previous shader, ordinary rendering remains.
 
+## Runtime verification and output feedback
+
+The patch adds two versioned NiriFX IPC requests, separate from upstream APIs:
+
+```sh
+niri msg -j niri-fx-capabilities
+niri msg -j niri-fx-frame-timings
+```
+
+Capabilities report schema 1, movement shader contract 1, whether a probe compiled
+in the running renderer, whether movement is configured and whether frame feedback
+is available. The isolated probe is destroyed after compilation; it does not
+replace the active movement shader. NiriFX's [setup workflow](../docs/setup.md#activate-experimental-movement)
+also compares executable identity before allowing explicit standalone activation.
+Older experimental builds lack this handshake and must be rebuilt.
+
+Frame feedback is a bounded history of at most 512 submitted/presented frames,
+including output name, monotonic nanoseconds, sequence and protocol flags. Winit
+records estimated submission time. DRM records presentation feedback; hardware
+claims require VSYNC, HW_CLOCK and HW_COMPLETION flags. This history does not
+contain application content, window titles or monitor serial numbers. Public
+reports omit output names. [Measurement commands and limits](../docs/performance.md#native-output-feedback).
+
 ## Interruption behavior
 
 Closing while a window is opening carries its original opening shader, seed and
@@ -103,7 +126,7 @@ python3 scripts/record-native-gif.py --all
 python3 scripts/record-movement-scenarios.py
 ```
 
-Recorders require Quickshell, Pillow, grim, wf-recorder and FFmpeg. They capture
+Keep the host unlocked and the owned test window visible. The harness rejects unexpected output sizes and stalled interruption commands. Recorders require Quickshell, Pillow, grim, wf-recorder and FFmpeg. They capture
 only their own nested compositor with synthetic mint/violet app cards.
 
 ## Scope and remaining work

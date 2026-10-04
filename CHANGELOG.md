@@ -10,19 +10,40 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.15.0 — 2026-10-03
+
 ### Added
 
+- Gentle, Balanced and Playful desktop motion profiles with stock workspace,
+  camera and overview springs; select them in existing browsing and setup flows.
+- Deterministic built-in fragment shape mixtures, a secondary shape, mixture
+  amount and layout seed, with Mixed Confetti and Orbiting Shapes presets.
+- A versioned runtime movement handshake and explicit standalone activation,
+  verified again before Apply; Restore retains exact previous configuration.
+- Bounded compositor frame-feedback history and native timing reports that
+  distinguish Winit submission, DRM presentation and encoder delivery.
+- Native floating/tiled and resize/open/close overlap coverage, new showcases,
+  complete settings examples and documented support limits.
 - A generated preset reference with all built-in IDs, action timings, family
   capabilities, shader previews and portable settings downloads. Gallery checks
   reject missing or duplicate recordings and mismatched catalog settings.
 
 ### Fixed
 
+- Keep picker review actions separate from desktop timing and verify both before Apply.
+- Reject incorrect native capture dimensions, including ignored host actions while locked.
 - Complete the visual catalog with three missing preset previews and six missing
   pairing previews. Use stable family headings instead of outdated counts.
 - Describe actual movement shader preview and explicit resize choices consistently
   across the documentation and standalone setup guides.
 
+### Upgrade
+
+Update NiriFX before importing mixed-shape or desktop-motion settings. Re-register
+or re-export shell packs to add the new styles. Existing preset defaults are
+unchanged. Rebuild the experimental compositor for runtime verification and frame
+feedback; older patched builds cannot pass live activation checks. Resize and
+movement remain opt-in.
 
 ## 0.14.0 — 2026-10-03
 

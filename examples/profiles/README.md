@@ -92,3 +92,14 @@ python3 -m niri_fx preview --custom examples/profiles/hexagon-edge-rebuild.json 
 python3 -m niri_fx preview --custom examples/profiles/circle-soft-reflow.json --output /tmp/circle-soft-reflow.html
 python3 -m niri_fx preview --custom examples/profiles/fragment-wake-motion.json --output /tmp/fragment-wake-motion.html
 ```
+
+The [desktop motion packs](../../docs/desktop-motion.md) add optional stock springs:
+[Gentle](gentle-motion.json), [Balanced](balanced-motion.json) and [Playful](playful-motion.json).
+[Movement Overlaps](movement-overlaps.json) deliberately enables resize and experimental movement for the native regression fixture.
+
+```sh
+python3 -m niri_fx preview --custom examples/profiles/gentle-motion.json --output /tmp/gentle-motion.html
+python3 -m niri_fx preview --custom examples/profiles/balanced-motion.json --output /tmp/balanced-motion.html
+python3 -m niri_fx preview --custom examples/profiles/playful-motion.json --output /tmp/playful-motion.html
+python3 -m niri_fx preview --custom examples/profiles/movement-overlaps.json --output /tmp/movement-overlaps.html
+```

@@ -23,6 +23,7 @@ from .effects import (
     describe_presets,
     shader_templates,
 )
+from .motion import SPRING_LIMITS, Spring, motion_documents
 from .profiles import PROFILE_SCHEMA, Profile
 
 
@@ -99,6 +100,9 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "name": name,
         "presets": describe_presets(),
         "profiles": documents(PROFILES),
+        "motion_packs": motion_documents(),
+        "motion_defaults": asdict(Spring()),
+        "motion_limits": SPRING_LIMITS,
         "collections": collection_documents(),
         "profile_descriptions": {name: recipe[2] for name, recipe in PROFILE_RECIPES.items()},
         "templates": shader_templates(),

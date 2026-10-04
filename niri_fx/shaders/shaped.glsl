@@ -86,15 +86,11 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
     // regular hexagon has area 3sqrt(3)/2 * radius². Preserve target density.
     float tile = FRAGMENTS_PARTICLES > 0.0
         ? max(4.0, sqrt(size.x * size.y / FRAGMENTS_PARTICLES)) : FRAGMENTS_TILE;
-    if (FX_SHAPE == 2) tile *= 1.41421356237;
-    if (FX_SHAPE == 5) tile *= 0.620403239401;
+    tile *= shaped_density();
     vec2 stretch = shaped_stretch();
     float orientation = radians(FX_ORIENTATION);
     mat2 layout = fragments_turn(orientation), inverse_layout = fragments_turn(-orientation);
-    float radius = 0.5 * length(stretch);
-    if (FX_SHAPE == 2)
-        radius = max(length(stretch * vec2(2.0, 1.0)), length(stretch * vec2(1.0, 2.0))) / 3.0;
-    if (FX_SHAPE == 5) radius = max(stretch.x, stretch.y);
+    float radius = shaped_radius(stretch);
     radius *= tile;
     float metric = tile * min(stretch.x, stretch.y);
     float travel = breakup * breakup * (3.0 - 2.0 * breakup);
@@ -133,7 +129,7 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
         vec2 source_guess = center + inverse_field * (pixel - field_center) / scale;
         source_guess.x -= fragments_wave(source_guess.y, size.y, breakup);
         vec2 grid_guess = (inverse_layout * (source_guess - size * 0.5)) / (tile * stretch);
-        vec2 candidate = floor(FX_SHAPE == 5 ? shaped_axial(grid_guess) : grid_guess);
+        vec2 candidate = floor(FX_SHAPE == 5 && FX_MIX == 0.0 ? shaped_axial(grid_guess) : grid_guess);
         // In inverse-field space a rotated piece plus wander is within this
         // circle. Undoing the wave expands distances by at most 1 + .45*FX_WAVE.
         // Reject impossible cells before seeded hashes, phase and flight math.
@@ -145,6 +141,7 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
           for (int x = -@SHAPED_RADIUS@; x <= @SHAPED_RADIUS@; x++) {
             vec2 cell = candidate + vec2(float(x), float(y));
             for (int part = 0; part < @SHAPED_PARTS@; part++) {
+                if (part > 0 && shaped_kind(cell) != 2) continue;
                 vec2 lattice_center = shaped_center(cell, part);
                 vec2 source_center = size * 0.5 + layout * (lattice_center * tile * stretch);
                 if (any(lessThan(source_center + radius, vec2(0.0)))
@@ -186,7 +183,7 @@ vec4 fragments_phase(vec3 coords_geo, vec3 size_geo, float breakup, int phase) {
                 if (!shaped_owns(lattice_center + local, cell, part)) continue;
                 vec2 source = source_center + layout * (local * tile * stretch);
                 if (any(lessThan(source, vec2(0.0))) || any(greaterThanEqual(source, size))) continue;
-                float edge = shaped_edge(local, part, local_time) * metric;
+                float edge = shaped_edge(local, cell, part, local_time) * metric;
                 if (edge < -0.0001) continue;
                 edge = min(edge, min(min(source.x, source.y), min(size.x - source.x, size.y - source.y)));
                 float coverage = mix(1.0, smoothstep(0.0, 0.85, edge * shrink), smoothstep(0.0, 0.12, breakup));

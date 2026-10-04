@@ -120,6 +120,72 @@ index 329b76696d817c54c77e4f29a1ea5e4779508996..554bed226d12ae6c880ea2902c70ed2d
                  window_resize: WindowResizeAnim {
                      anim: Animation {
                          off: false,
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index 0aa3cb4f48963524b2eb0498e1c8ae41b28b63e5..c3360f83bf08282b94c3edc27bbb1e2e4f39847d 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -67,6 +67,10 @@ pub mod state;
+ pub enum Request {
+     /// Request the version string for the running niri instance.
+     Version,
++    /// Verify the experimental NiriFX movement shader interface in the running renderer.
++    NiriFxCapabilities,
++    /// Read the bounded native presentation/submission timing history.
++    NiriFxFrameTimings,
+     /// Request information about connected outputs.
+     Outputs,
+     /// Request information about workspaces.
+@@ -139,6 +143,10 @@ pub enum Response {
+     Handled,
+     /// The version string for the running niri instance.
+     Version(String),
++    /// Versioned experimental shader support; this query never activates an effect.
++    NiriFxCapabilities(NiriFxCapabilities),
++    /// The latest native output timing samples (at most 512).
++    NiriFxFrameTimings(Vec<NiriFxFrameTiming>),
+     /// Information about connected outputs.
+     ///
+     /// Map from output name to output info.
+@@ -167,6 +175,39 @@ pub enum Response {
+     Casts(Vec<Cast>),
+ }
+ 
++/// The running experiment's movement interface, separate from upstream version strings.
++#[derive(Serialize, Deserialize, Debug, Clone)]
++#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
++pub struct NiriFxCapabilities {
++    /// Response format version.
++    pub schema: u32,
++    /// Movement texture/progress/seed/direction interface version.
++    pub movement_shader: u32,
++    /// An isolated shader using that interface compiled in the current renderer.
++    pub renderer_verified: bool,
++    /// A custom movement shader is configured; capability does not imply activation.
++    pub movement_configured: bool,
++    /// Native frame timing history is available.
++    pub frame_timings: bool,
++}
++
++/// One native output frame. DRM samples use presentation feedback; winit samples
++/// use estimated submission time and must never be described as physical scanout.
++#[derive(Serialize, Deserialize, Debug, Clone)]
++#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
++pub struct NiriFxFrameTiming {
++    /// Output name, without monitor serial or client information.
++    pub output: String,
++    /// "drm-presentation" or "winit-submit".
++    pub source: String,
++    /// Monotonic timestamp in nanoseconds.
++    pub timestamp_ns: u64,
++    /// Output presentation sequence (zero when unavailable).
++    pub sequence: u64,
++    /// Standard wp_presentation_feedback kind bits.
++    pub flags: u32,
++}
++
+ /// Overview information.
+ #[derive(Serialize, Deserialize, Debug, Clone)]
+ #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 diff --git a/src/animation/mod.rs b/src/animation/mod.rs
 index 73a79c5e435f7f29d96f5ea7aea1bfd41d88df39..21e65f1071ff009870840cb22b5a259a4ea3efb9 100644
 --- a/src/animation/mod.rs
@@ -396,7 +462,7 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +    }
 +}
 diff --git a/src/backend/tty.rs b/src/backend/tty.rs
-index 5368c7eca0ebd0c2876d350a7cb8f630e27519da..e61d1f553379abe2f50f6b0a89115c90be1aaf6c 100644
+index 5368c7eca0ebd0c2876d350a7cb8f630e27519da..665122de83eeeb743e94842464d1d99e3586eef0 100644
 --- a/src/backend/tty.rs
 +++ b/src/backend/tty.rs
 @@ -843,6 +843,9 @@ impl Tty {
@@ -409,8 +475,26 @@ index 5368c7eca0ebd0c2876d350a7cb8f630e27519da..e61d1f553379abe2f50f6b0a89115c90
              drop(config);
  
              niri.update_shaders();
+@@ -1753,6 +1756,17 @@ impl Tty {
+                     flags.insert(wp_presentation_feedback::Kind::HwClock);
+                 }
+ 
++                if niri.fx_frame_timings.len() == 512 {
++                    niri.fx_frame_timings.pop_front();
++                }
++                niri.fx_frame_timings
++                    .push_back(niri_ipc::NiriFxFrameTiming {
++                        output: output.name(),
++                        source: "drm-presentation".into(),
++                        timestamp_ns: time.as_nanos() as u64,
++                        sequence: seq,
++                        flags: flags.bits(),
++                    });
+                 feedback.presented::<_, smithay::utils::Monotonic>(time, refresh, seq, flags);
+ 
+                 if !presentation_time.is_zero() {
 diff --git a/src/backend/winit.rs b/src/backend/winit.rs
-index a9bcc5155145b622c0494c2c6274e2f93b2983dc..74e5212c321035d161942a270165e418da2b557d 100644
+index a9bcc5155145b622c0494c2c6274e2f93b2983dc..339f88d5bb544dae2469aebe9d30fc90fe41b3be 100644
 --- a/src/backend/winit.rs
 +++ b/src/backend/winit.rs
 @@ -168,6 +168,9 @@ impl Winit {
@@ -423,6 +507,115 @@ index a9bcc5155145b622c0494c2c6274e2f93b2983dc..74e5212c321035d161942a270165e418
          drop(config);
  
          niri.update_shaders();
+@@ -268,6 +271,18 @@ impl Winit {
+ 
+             self.backend.submit(Some(damage)).unwrap();
+ 
++            // winit reports submission time, without hardware presentation flags.
++            if niri.fx_frame_timings.len() == 512 {
++                niri.fx_frame_timings.pop_front();
++            }
++            niri.fx_frame_timings
++                .push_back(niri_ipc::NiriFxFrameTiming {
++                    output: output.name(),
++                    source: "winit-submit".into(),
++                    timestamp_ns: get_monotonic_time().as_nanos() as u64,
++                    sequence: 0,
++                    flags: 0,
++                });
+             let mut presentation_feedbacks = niri.take_presentation_feedbacks(output, &res.states);
+             presentation_feedbacks.presented::<_, smithay::utils::Monotonic>(
+                 get_monotonic_time(),
+diff --git a/src/cli.rs b/src/cli.rs
+index 308b3127b797263c27cc9d74b775bb17e9e7a8d4..0dbb22c02c40a01e05679de3415075f7270d2de2 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -61,6 +61,10 @@ pub enum Sub {
+ 
+ #[derive(Subcommand)]
+ pub enum Msg {
++    /// Verify the running experimental NiriFX shader interface without activation.
++    NiriFxCapabilities,
++    /// Print bounded native frame timing samples with their measurement source.
++    NiriFxFrameTimings,
+     /// List connected outputs.
+     Outputs,
+     /// List workspaces.
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 40a58efa19974cd65b9c8d55ae0281daf363d871..02929c75d4f6ddfa0db8f39a11050063345f0f12 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -30,6 +30,8 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+     }
+ 
+     let request = match &msg {
++        Msg::NiriFxCapabilities => Request::NiriFxCapabilities,
++        Msg::NiriFxFrameTimings => Request::NiriFxFrameTimings,
+         Msg::Version => Request::Version,
+         Msg::Outputs => Request::Outputs,
+         Msg::FocusedWindow => Request::FocusedWindow,
+@@ -111,6 +113,10 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+     let response = reply.map_err(|err_msg| anyhow!(err_msg).context("niri returned an error"))?;
+ 
+     match msg {
++        Msg::NiriFxCapabilities | Msg::NiriFxFrameTimings => {
++            // Experimental diagnostics have one unambiguous JSON representation.
++            println!("{}", serde_json::to_string(&response)?);
++        }
+         Msg::RequestError => {
+             bail!("unexpected response: expected an error, got {response:?}");
+         }
+diff --git a/src/ipc/server.rs b/src/ipc/server.rs
+index db71da6dbdc27ba1fc474a57090a76ffff8ca8c7..71590d785d624434681a30a2fd10cbb5f51c7a8a 100644
+--- a/src/ipc/server.rs
++++ b/src/ipc/server.rs
+@@ -272,6 +272,46 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
+     let response = match request {
+         Request::ReturnError => return Err(String::from("example compositor error")),
+         Request::Version => Response::Version(version()),
++        Request::NiriFxCapabilities => {
++            let (tx, rx) = async_channel::bounded(1);
++            ctx.event_loop.insert_idle(move |state| {
++                let renderer_verified = state
++                    .backend
++                    .with_primary_renderer(crate::render_helpers::shaders::verify_move_contract)
++                    .unwrap_or(false);
++                let movement_configured = state
++                    .niri
++                    .config
++                    .borrow()
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .is_some();
++                let _ = tx.send_blocking(niri_ipc::NiriFxCapabilities {
++                    schema: 1,
++                    movement_shader: 1,
++                    renderer_verified,
++                    movement_configured,
++                    frame_timings: true,
++                });
++            });
++            Response::NiriFxCapabilities(
++                rx.recv()
++                    .await
++                    .map_err(|_| String::from("error verifying movement renderer"))?,
++            )
++        }
++        Request::NiriFxFrameTimings => {
++            let (tx, rx) = async_channel::bounded(1);
++            ctx.event_loop.insert_idle(move |state| {
++                let _ = tx.send_blocking(state.niri.fx_frame_timings.iter().cloned().collect());
++            });
++            Response::NiriFxFrameTimings(
++                rx.recv()
++                    .await
++                    .map_err(|_| String::from("error reading native frame timings"))?,
++            )
++        }
+         Request::Outputs => {
+             let ipc_outputs = ctx.ipc_outputs.lock().unwrap().clone();
+             let outputs = ipc_outputs.values().cloned().map(|o| (o.name.clone(), o));
 diff --git a/src/layout/closing_window.rs b/src/layout/closing_window.rs
 index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742004027e7 100644
 --- a/src/layout/closing_window.rs
@@ -1319,10 +1512,27 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..8ba40549e0793bd7e92de34ba4891bd4
      }
  
 diff --git a/src/niri.rs b/src/niri.rs
-index ec40e01c140b02847fb3337df29d98b7dcc68014..604a4b9b04fcdbfb516f2c4170b3a95331f97fd0 100644
+index ec40e01c140b02847fb3337df29d98b7dcc68014..042c9690904a5400535e487b28b16aa42530e2ec 100644
 --- a/src/niri.rs
 +++ b/src/niri.rs
-@@ -1574,6 +1574,15 @@ impl State {
+@@ -1,5 +1,5 @@
+ use std::cell::{Cell, RefCell};
+-use std::collections::{HashMap, HashSet};
++use std::collections::{HashMap, HashSet, VecDeque};
+ use std::ffi::OsString;
+ use std::os::unix::net::UnixStream;
+ use std::path::PathBuf;
+@@ -260,6 +260,9 @@ pub struct Niri {
+     // When false, we're idling with monitors powered off.
+     pub monitors_active: bool,
+ 
++    /// Bounded diagnostics only; no clients, textures or monitor identifiers.
++    pub fx_frame_timings: VecDeque<niri_ipc::NiriFxFrameTiming>,
++
+     /// Whether the laptop lid is closed.
+     ///
+     /// Libinput guarantees that the lid switch starts in open state, and if it was closed during
+@@ -1574,6 +1577,15 @@ impl State {
              });
              shaders_changed = true;
          }
@@ -1338,6 +1548,14 @@ index ec40e01c140b02847fb3337df29d98b7dcc68014..604a4b9b04fcdbfb516f2c4170b3a953
  
          if config.cursor.hide_after_inactive_ms != old_config.cursor.hide_after_inactive_ms {
              cursor_inactivity_timeout_changed = true;
+@@ -2509,6 +2521,7 @@ impl Niri {
+             blocker_cleared_tx,
+             blocker_cleared_rx,
+             monitors_active: true,
++            fx_frame_timings: VecDeque::with_capacity(512),
+             is_lid_closed: false,
+ 
+             devices: HashSet::new(),
 diff --git a/src/render_helpers/mod.rs b/src/render_helpers/mod.rs
 index 474437af4511b5d34de9aec66c2a0451949ef8b7..fe6157cd893d9d8e9414b8c3a08134fc3fc3bc3e 100644
 --- a/src/render_helpers/mod.rs
@@ -1876,7 +2094,7 @@ index 0000000000000000000000000000000000000000..1712d7e9bcc763358027ed917a822ab5
 +    }
 +}
 diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
-index 7be9b159fde97328eb11d5872ba254a36c119055..e606d0d934df5e775e9e306261c20285de6e1a7f 100644
+index 7be9b159fde97328eb11d5872ba254a36c119055..8a711357f7275c8f76f4eff0057bfdbf4ee04008 100644
 --- a/src/render_helpers/shaders/mod.rs
 +++ b/src/render_helpers/shaders/mod.rs
 @@ -20,6 +20,7 @@ pub struct Shaders {
@@ -1925,7 +2143,7 @@ index 7be9b159fde97328eb11d5872ba254a36c119055..e606d0d934df5e775e9e306261c20285
          }
      }
  }
-@@ -353,6 +364,51 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
+@@ -353,6 +364,68 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
      }
  }
  
@@ -1952,6 +2170,23 @@ index 7be9b159fde97328eb11d5872ba254a36c119055..e606d0d934df5e775e9e306261c20285
 +        ],
 +        &["niri_tex"],
 +    )
++}
++
++/// Compile and destroy a bounded probe without replacing the configured shader.
++/// A parser accepting custom-shader cannot establish that this renderer has the ABI.
++pub fn verify_move_contract(renderer: &mut GlesRenderer) -> bool {
++    let source = r#"
++        vec4 move_color(vec3 coords_geo, vec3 size_geo) {
++            vec2 uv = (niri_geo_to_tex * coords_geo).xy;
++            float probe = niri_clamped_progress + niri_progress + niri_random_seed
++                + dot(niri_move_delta + niri_move_impulse, size_geo.xy);
++            return texture2D(niri_tex, uv) * (0.5 + probe * 0.000001);
++        }
++    "#;
++    match compile_move_program(renderer, source) {
++        Ok(program) => program.destroy(renderer).is_ok(),
++        Err(_) => false,
++    }
 +}
 +
 +pub fn set_custom_move_program(renderer: &mut GlesRenderer, src: Option<&str>) {

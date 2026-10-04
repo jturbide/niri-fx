@@ -54,18 +54,14 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
     // need an expanded offscreen rectangle, which stock resize cannot promise.
     if (any(lessThan(pixel, vec2(0.0))) || any(greaterThanEqual(pixel, size))) return intact;
     float tile = FR_COUNT > 0.0 ? max(4.0, sqrt(size.x * size.y / FR_COUNT)) : FR_TILE;
-    if (FX_SHAPE == 2) tile *= 1.41421356237;
-    if (FX_SHAPE == 5) tile *= 0.620403239401;
+    tile *= shaped_density();
     vec2 stretch = shaped_stretch();
     mat2 layout = fr_turn(radians(FX_ORIENTATION));
     mat2 inverse_layout = fr_turn(-radians(FX_ORIENTATION));
-    float radius = 0.5 * length(stretch);
-    if (FX_SHAPE == 2)
-        radius = max(length(stretch * vec2(2.0, 1.0)), length(stretch * vec2(1.0, 2.0))) / 3.0;
-    if (FX_SHAPE == 5) radius = max(stretch.x, stretch.y);
+    float radius = shaped_radius(stretch);
     radius *= tile;
     vec2 grid = inverse_layout * (pixel - size * 0.5) / (tile * stretch);
-    vec2 candidate = floor(FX_SHAPE == 5 ? shaped_axial(grid) : grid);
+    vec2 candidate = floor(FX_SHAPE == 5 && FX_MIX == 0.0 ? shaped_axial(grid) : grid);
     vec2 changing = step(vec2(0.0001), abs(next_scale - vec2(1.0)));
     // Metric for a conservative antialias width under anisotropic stretching.
     float metric = tile * min(stretch.x, stretch.y) * min(next_scale.x, next_scale.y);
@@ -74,6 +70,7 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
       for (int x = -@SHAPED_RESIZE_RADIUS@; x <= @SHAPED_RESIZE_RADIUS@; x++) {
         vec2 cell = candidate + vec2(float(x), float(y));
         for (int part = 0; part < @SHAPED_PARTS@; part++) {
+                if (part > 0 && shaped_kind(cell) != 2) continue;
             vec2 center_grid = shaped_center(cell, part);
             vec2 center = size * 0.5 + layout * (center_grid * tile * stretch);
             vec2 offset = pixel - center;
@@ -116,7 +113,7 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
             if (!shaped_owns(center_grid + local, cell, part)) continue;
             vec2 source = center + layout * (local * tile * stretch);
             if (any(lessThan(source, vec2(0.0))) || any(greaterThanEqual(source, size))) continue;
-            float edge = shaped_edge(local, part, local_pulse) * metric * shrink;
+            float edge = shaped_edge(local, cell, part, local_pulse) * metric * shrink;
             if (edge < -0.0001) continue;
             float coverage = mix(1.0, smoothstep(0.0, 0.8, edge), local_pulse);
             vec4 color = fr_sample(source / size, blend) * coverage;

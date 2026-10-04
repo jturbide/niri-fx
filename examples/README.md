@@ -332,3 +332,10 @@ python3 -m niri_fx preview --custom examples/profiles/geometric-flow.json --outp
 python3 -m niri_fx preview --custom examples/profiles/ribbon-current.json --output /tmp/ribbon-current.html
 python3 -m niri_fx preview --custom examples/profiles/soft-landing.json --output /tmp/soft-landing.html
 ```
+
+[Mixed Confetti](mixed-confetti.json) and [Orbiting Shapes](orbiting-shapes.json) combine two built-in fragment shapes; see the [mixture guide](../docs/fragment-shapes.md#mix-two-shapes).
+
+```sh
+python3 -m niri_fx preview --custom examples/mixed-confetti.json --output /tmp/mixed-confetti.html
+python3 -m niri_fx preview --custom examples/orbiting-shapes.json --output /tmp/orbiting-shapes.html
+```

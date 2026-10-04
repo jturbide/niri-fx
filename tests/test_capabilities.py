@@ -28,11 +28,15 @@ def ipc_reply(payload):
             def serve():
                 with listener.accept()[0] as client:
                     client.settimeout(2)
-                    requests.append(client.recv(128))
-                    try:
-                        client.sendall(payload)
-                    except BrokenPipeError:
-                        pass
+                    for reply in payload if isinstance(payload, list) else [payload]:
+                        request = client.recv(128)
+                        if not request:
+                            break
+                        requests.append(request)
+                        try:
+                            client.sendall(reply)
+                        except BrokenPipeError:
+                            break
 
             worker = threading.Thread(target=serve, daemon=True)
             worker.start()
@@ -43,6 +47,38 @@ def ipc_reply(payload):
 
 
 class MovementCapabilityTests(unittest.TestCase):
+    def test_activation_requires_the_versioned_running_renderer_contract(self):
+        contract = {
+            "schema": 1,
+            "movement_shader": 1,
+            "renderer_verified": True,
+            "movement_configured": False,
+            "frame_timings": True,
+        }
+        cases = [
+            (contract, True),
+            (contract | {"schema": 2}, False),
+            (contract | {"movement_shader": 2}, False),
+            (contract | {"renderer_verified": False}, False),
+            (contract | {"renderer_verified": 1}, False),
+            (contract | {"schema": True}, False),
+            ([], False),
+        ]
+        for value, ready in cases:
+            with (
+                self.subTest(value=value),
+                ipc_reply(
+                    [
+                        b'{"Ok":{"Version":"experimental"}}\n',
+                        json.dumps({"Ok": {"NiriFxCapabilities": value}}).encode() + b"\n",
+                    ]
+                ) as (path, requests),
+                patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            ):
+                report = movement_capability(sys.executable, socket_path=path)
+            self.assertEqual(report["activation_ready"], ready)
+            self.assertEqual(requests, [b'"Version"\n', b'"NiriFxCapabilities"\n'])
+
     def probe(self, results):
         with patch("niri_fx.capabilities.subprocess.run", side_effect=results):
             return movement_capability(sys.executable)

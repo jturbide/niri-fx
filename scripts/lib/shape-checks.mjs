@@ -215,6 +215,47 @@ export async function checkShapes(evaluate) {
     6,
     "unit-aspect rectangles/squares and ellipses/circles coincide; other silhouettes differ",
   );
+  for (const [first, second] of [
+    ["square", "triangle"],
+    ["circle", "hexagon"],
+    ["triangle", "star"],
+    ["hexagon", "triangle"],
+  ]) {
+    for (const aspect of [0.25, 1, 4]) {
+      const effect = {
+        fragment_shape: first,
+        fragment_secondary: second,
+        fragment_mix: 0.45,
+        fragment_aspect: aspect,
+        fragment_orientation: 31,
+        particles: 120,
+        gravity: "none",
+        rotation: "random",
+        spin: 180,
+        dispersion: 0.6,
+        stagger: 0,
+        wave_strength: 0.3,
+      };
+      const expression = `{...catalog.defaults,...${JSON.stringify(effect)}}`;
+      const probe = (progress, extra = {}, opening = false) =>
+        evaluate(
+          `window.niriFxShapeProbe(shaderFor(${expression},${opening}),${JSON.stringify({ progress, entry: opening ? "open_color" : "close_color", ...extra })})`,
+        );
+      const intact = await probe(0, { entry: "fragments_phase" });
+      assert.equal(intact.occupied, 144 * 96, first + "/" + second + " joined coverage");
+      assert.equal(intact.overlap, 0, first + "/" + second + " disjoint ownership");
+      const flight = await probe(0.375);
+      assert(flight.occupied > 0 && flight.alpha < intact.alpha);
+      assert.deepEqual(await probe(0.375), flight);
+      assert.deepEqual(await probe(0.625, {}, true), flight);
+      // A wider independent inverse search must not find any missed pieces.
+      const wide = await evaluate(
+        `window.niriFxShapeProbe(shaderFor(${expression},false).replace(/int y = -[0-9]+; y <= [0-9]+; y\\+\\+/g,'int y = -10; y <= 10; y++').replace(/int x = -[0-9]+; x <= [0-9]+; x\\+\\+/g,'int x = -10; x <= 10; x++'),{progress:0.375})`,
+      );
+      assert.deepEqual(wide, flight, first + "/" + second + " bounded lookup");
+      assert.equal((await probe(1)).occupied, 0);
+    }
+  }
   const before = await evaluate("({document:effectDocument(),preset:byId('preset').value})");
   await evaluate(
     "byId('preset').value='triangle-shatter';byId('preset').dispatchEvent(new Event('change'))",

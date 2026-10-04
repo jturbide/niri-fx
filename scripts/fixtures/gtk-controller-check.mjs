@@ -57,6 +57,17 @@ check(
   "Both built-in actions applied",
 );
 check((await c.undo()) && read(options.configPath) === original, "Built-in profile Undo");
+c.select("gentle-motion");
+check(
+  (await c.review()) && c.canApply && c.reviewPlan.desktop_motion.camera.stiffness === 450,
+  "Desktop motion review",
+);
+check(await c.apply(), c.error);
+check(
+  read(include).includes("workspace-switch") && !read(include).includes("window-resize"),
+  "Desktop motion activation",
+);
+check((await c.undo()) && read(options.configPath) === original, "Desktop motion Undo");
 check(await c.loadFile(profilePath), c.error);
 check(!!c.actions.resize && !c.allowResize, "Profile consent defaults");
 await c.review();

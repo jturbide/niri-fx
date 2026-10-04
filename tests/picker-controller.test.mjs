@@ -257,3 +257,21 @@ test("missing executables and malformed responses recover without a stuck busy s
     assert.equal(c.canApply, false);
   }
 });
+
+test("profile review checks desktop timing independently of its window actions", async () => {
+  const doc = {
+    ...profile,
+    actions: { ...profile.actions, resize: null },
+    motion: { camera: { stiffness: 450 } },
+  };
+  let timing = doc.motion;
+  const { controller: c } = harness(() => ({ ...plan(doc.actions), desktop_motion: timing }));
+  c.presets.motion = doc;
+  c.select("motion");
+  assert(await c.review());
+  assert(c.canApply);
+  timing = { camera: { stiffness: 800 } };
+  assert.equal(await c.review(), false);
+  assert.match(c.error, /changed since loading/);
+  assert.equal(c.canApply, false);
+});

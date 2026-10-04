@@ -5,7 +5,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **73 presets**, **9 effect families** and **10 ready-made open/close pairings**. For further
+Pick a finished style from **75 presets**, **9 effect families** and **13 ready-made profiles**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -23,7 +23,7 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.14.0](https://github.com/jturbide/niri-fx/releases/tag/v0.14.0)
+release. [Download v0.15.0](https://github.com/jturbide/niri-fx/releases/tag/v0.15.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
@@ -33,7 +33,7 @@ or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-f
 Tune an effect, share its settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0140-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0150-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
@@ -48,7 +48,7 @@ existing iRiS picker. No extra UI toolkit is required. [Terminal guide](docs/ter
 
 Browse by look with `python3 -m niri_fx list --collections --text`, then try
 `python3 -m niri_fx list --collection shapes --text`. The same
-[seven collections](docs/collections.md) appear in Studio and the gallery.
+[eight collections](docs/collections.md) appear in Studio and the gallery.
 
 For a visual editor, run `python3 -m niri_fx studio --target standalone`.
 Previewing changes no active animations. For scriptable setup on plain Niri:
@@ -113,6 +113,29 @@ native movement and swaps:
 | --- | --- |
 | ![Two windows exchange positions with triangular pieces](docs/gifs/native-swap-triangle-shatter.gif) | ![Two windows exchange positions with hexagonal pieces](docs/gifs/native-swap-hex-swarm.gif) |
 
+### Mixed fragment shapes
+
+Choose **Mixed Confetti** for tumbling squares and triangles, or **Orbiting Shapes**
+for circles and hexagons. Tune the second shape, mixture and stable layout seed.
+
+| Mixed Confetti | Orbiting Shapes |
+| --- | --- |
+| ![Squares and triangles tumble together](docs/gifs/preset-mixed-confetti.gif) | ![Circles and hexagons orbit together](docs/gifs/preset-orbiting-shapes.gif) |
+
+[Shape mixtures and settings](docs/fragment-shapes.md#mix-two-shapes) ·
+[Controlled comparison](docs/gifs/compare-fragment-mixture.gif)
+
+### Coordinated desktop motion
+
+**Gentle**, **Balanced** and **Playful** pair window effects with stock workspace,
+camera and overview springs. Resize and custom movement remain opt-in.
+
+| Gentle | Balanced | Playful |
+| --- | --- | --- |
+| ![Gentle desktop motion](docs/gifs/stock-gentle-motion.gif) | ![Balanced desktop motion](docs/gifs/stock-balanced-motion.gif) | ![Playful desktop motion](docs/gifs/stock-playful-motion.gif) |
+
+[Try a motion pack](docs/desktop-motion.md) · [Browse desktop profiles](https://jturbide.github.io/niri-fx/gallery/?collection=desktop)
+
 ### Finished pairings
 
 Choose a coordinated opening and closing look by name; detailed tuning is optional.
@@ -121,7 +144,7 @@ Choose a coordinated opening and closing look by name; detailed tuning is option
 | --- | --- | --- |
 | ![Triangles assemble and hexagons drift away](docs/gifs/profile-geometric-flow.gif) | ![Waving ribbons arrive and alternating strips leave](docs/gifs/profile-ribbon-current.gif) | ![A gentle elastic arrival and a frosted exit](docs/gifs/profile-soft-landing.gif) |
 
-[Browse all ten pairings](docs/profiles.md) · [Choose by collection](docs/collections.md)
+[Browse all thirteen profiles](docs/profiles.md) · [Choose by collection](docs/collections.md)
 
 ### Slices, springs and hexagons
 
@@ -173,7 +196,7 @@ python3 -m niri_fx list --profiles --text
 python3 -m niri_fx studio --profile fragment-flow
 ```
 
-[All ten pairings, commands and downloads](docs/profiles.md) ·
+[All thirteen profiles, commands and downloads](docs/profiles.md) ·
 [Ghost and Shockwave](docs/gifs/profile-ghost-and-shockwave.gif)
 
 ## Resize (opt-in)

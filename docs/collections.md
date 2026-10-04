@@ -6,6 +6,7 @@ belong to more than one collection. The full catalog remains available.
 
 | Collection ID | Look | Start with |
 | --- | --- | --- |
+| `desktop` | Window effects with workspace, camera and overview timing | Balanced Motion |
 | `everyday` | Compact movement and readable arrivals | Balanced or Soft Landing |
 | `bursts` | Explosions, inward collapse and gravity | Explosion or Burst and Drift |
 | `shapes` | Geometric pieces and joined layouts | Triangle Shatter or Geometric Flow |
@@ -57,3 +58,5 @@ schemas, so sharing or customizing a look does not change its effect parameters.
 Every built-in style keeps resize off, and every built-in pairing leaves resize
 and experimental movement unset. See [action profiles](profiles.md),
 [setup and restore](setup.md), and the [complete visual catalog](catalog.md).
+
+The three [desktop motion packs](desktop-motion.md) intentionally replace the stock workspace, camera and overview springs. Other profiles preserve them.

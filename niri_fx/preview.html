@@ -134,6 +134,17 @@
         >
         <label><input id="independent" type="checkbox" /> Independent action effects</label>
         <div id="action-controls" hidden>
+          <label for="desktop-motion">Desktop timing</label>
+          <select id="desktop-motion">
+            <option value="">Keep current workspace, camera and overview timing</option>
+            <option value="gentle">Gentle</option>
+            <option value="balanced">Balanced</option>
+            <option value="playful">Playful</option>
+            <option value="custom" disabled hidden>Imported timing</option>
+          </select>
+          <small
+            >Timing is applied with this profile. The canvas previews its window effects.</small
+          >
           <label for="action">Editing action</label
           ><select id="action">
             <option value="open">Open</option>

@@ -6,6 +6,7 @@ a profile into its opening effect when reviewing or applying a selection.
 """
 
 from .documents import effect_document
+from .motion import MOTION_PACKS
 from .presets import PRESETS
 from .profiles import Profile
 
@@ -52,9 +53,25 @@ PROFILE_RECIPES = {
         "frost-vanish",
         "A gentle elastic arrival and a frosted exit",
     ),
+    "gentle-motion": (
+        "momentum-glide",
+        "frost-vanish",
+        "Gentle arrivals and smooth desktop settling",
+    ),
+    "balanced-motion": (
+        "balanced",
+        "implosion",
+        "Everyday fragments with restrained desktop motion",
+    ),
+    "playful-motion": (
+        "spring-wobble",
+        "bubble-burst",
+        "Springy arrivals and lightly bouncing desktop motion",
+    ),
 }
+PROFILE_MOTIONS = {f"{key}-motion": value for key, value in MOTION_PACKS.items()}
 PROFILES = {
-    name: Profile(PRESETS[opening], PRESETS[closing])
+    name: Profile(PRESETS[opening], PRESETS[closing], motion=PROFILE_MOTIONS.get(name))
     for name, (opening, closing, _) in PROFILE_RECIPES.items()
 }
 STYLES = PRESETS | PROFILES
@@ -63,6 +80,11 @@ STYLES = PRESETS | PROFILES
 # not inferred from parameters: a changed shader must not silently move a style.
 # Keep document schemas free of this browsing metadata.
 COLLECTIONS = {
+    "desktop": {
+        "label": "Desktop motion",
+        "description": "Coordinated window effects and workspace, camera and overview springs",
+        "styles": ("gentle-motion", "balanced-motion", "playful-motion"),
+    },
     "everyday": {
         "label": "Everyday",
         "description": "Compact movement and readable arrivals",
@@ -107,6 +129,8 @@ COLLECTIONS = {
             "hexagon-burst",
             "hive-collapse",
             "geometric-flow",
+            "mixed-confetti",
+            "orbiting-shapes",
         ),
     },
     "ribbons": {

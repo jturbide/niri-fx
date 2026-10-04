@@ -38,11 +38,11 @@ def default_state():
     return Path(os.environ.get("XDG_STATE_HOME", Path.home() / ".local/state")) / APP_ID / "setup"
 
 
-def validate_config(path):
-    if not shutil.which("niri"):
+def validate_config(path, binary="niri"):
+    if not shutil.which(binary):
         raise ValueError("Niri is missing; install it before setup. Offline preview still works.")
     result = subprocess.run(
-        ["niri", "validate", "-c", str(path)], text=True, capture_output=True, timeout=30
+        [binary, "validate", "-c", str(path)], text=True, capture_output=True, timeout=30
     )
     if result.returncode:
         raise ValueError("Niri configuration validation failed:\n" + result.stderr.strip())
@@ -100,6 +100,22 @@ def plan_setup(args, effect, custom=None):
             "inir" if (Path(args.inir_root) / "scripts/niri-config.py").is_file() else "standalone"
         )
     changes, notes = [], []
+    movement = None
+    if getattr(args, "enable_movement", False):
+        if args.target != "standalone":
+            raise ValueError("Experimental movement requires an explicit --target standalone")
+        from .capabilities import movement_capability
+
+        movement = movement_capability(
+            getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
+        )
+        if not movement["activation_ready"]:
+            raise ValueError(
+                "Movement activation requires a matching binary and verified running shader contract. Run doctor --movement-binary PATH first."
+            )
+        notes.append(
+            "Experimental movement is explicitly enabled and the running renderer contract is verified."
+        )
     if target == "inir":
         if config.exists() and BEGIN in config.read_text():
             raise ValueError(
@@ -147,7 +163,7 @@ def plan_setup(args, effect, custom=None):
             raise ValueError(
                 "An unmanaged NiriFX include already exists; remove/review it before setup."
             )
-        generated = render_kdl(effect)
+        generated = render_kdl(effect, movement=movement is not None)
         # Preserve the actual include boundary: Niri permits animation overrides
         # across files but rejects duplicate animations nodes in a single file.
         # Sibling probes also keep the user's relative includes valid. Neither
@@ -166,7 +182,10 @@ def plan_setup(args, effect, custom=None):
                 base.rstrip() + "\ninclude " + json.dumps(Path(effect_probe.name).name) + "\n"
             )
             probe.flush()
-            validate_config(probe.name)
+            if movement:
+                validate_config(probe.name, movement["binary"])
+            else:
+                validate_config(probe.name)
         include = config.parent / "nirifx/animations.kdl"
         existing = read_bytes(include)
         if existing is not None and not existing.startswith((OWNED + "\n").encode()):
@@ -188,7 +207,10 @@ def plan_setup(args, effect, custom=None):
             notes.append("The existing Studio launcher is preserved.")
     observed = changes
     changes = [c for c in changes if c["before"] != c["after"]]
-    from dataclasses import asdict
+    # Plans expose actions and desktop timing separately, just like portable
+    # profiles. Serializing every dataclass field as an action would silently
+    # change the picker review contract when profile metadata grows.
+    document = effect_document("Selection", effect)
 
     return {
         "target": target,
@@ -198,11 +220,15 @@ def plan_setup(args, effect, custom=None):
         "selection": [p["name"] for p in generated]
         if target == "inir"
         else (custom["name"] if custom else getattr(args, "profile", None) or args.preset),
-        "effect": asdict(effect)
+        "effect": document.get("actions", document.get("effect"))
         if target == "standalone" or custom or args.name or getattr(args, "profile", None)
         else None,
+        "desktop_motion": document.get("motion"),
         "activation": "select in iRiS" if target == "inir" else "Niri config reload",
         "validation_config": str(config) if target == "standalone" else None,
+        "movement": {"binary": movement["binary"], "socket": os.environ.get("NIRI_SOCKET")}
+        if movement
+        else None,
     }
 
 
@@ -213,7 +239,9 @@ def summarize(plan):
         "notes": plan["notes"],
         "selection": plan.get("selection"),
         "effect": plan.get("effect"),
+        "desktop_motion": plan.get("desktop_motion"),
         "activation": plan.get("activation"),
+        "movement": plan.get("movement"),
         "changes": [
             {
                 "path": c["logical"],
@@ -236,6 +264,8 @@ def plan_fingerprint(plan):
         "target": plan["target"],
         "selection": plan.get("selection"),
         "effect": plan.get("effect"),
+        "desktop_motion": plan.get("desktop_motion"),
+        "movement": plan.get("movement"),
         "changes": [
             {k: item[k] for k in ("logical", "target", "mode")}
             | {side: digest(item[side]) for side in ("before", "after")}
@@ -262,6 +292,19 @@ def apply_plan(plan, state, expected=None):
         raise ValueError(
             "The setup plan changed. Review the selection and files again before applying."
         )
+    if plan.get("movement"):
+        from .capabilities import movement_capability
+
+        selected = plan["movement"]
+        if (
+            os.environ.get("NIRI_SOCKET") != selected["socket"]
+            or not movement_capability(selected["binary"], socket_path=selected["socket"])[
+                "activation_ready"
+            ]
+        ):
+            raise ValueError(
+                "Running movement support changed after review; leaving the configuration untouched"
+            )
     if not plan["changes"]:
         return {**summarize(plan), "changed": False, "transaction": None}
     state = Path(state).expanduser().resolve()
@@ -300,7 +343,10 @@ def apply_plan(plan, state, expected=None):
                 atomic_write(Path(item["target"]), item["after"], item["mode"])
                 applied.append(item)
             if plan["validation_config"]:
-                validate_config(plan["validation_config"])
+                if plan.get("movement"):
+                    validate_config(plan["validation_config"], plan["movement"]["binary"])
+                else:
+                    validate_config(plan["validation_config"])
             manifest["status"] = "applied"
             save()
         except BaseException:
@@ -467,6 +513,11 @@ def doctor(args):
                 "detail": f"{movement['binary'] or 'Unavailable'}: {movement['detail']}",
             },
             {"check": "session", "ok": None, "detail": movement["session"]["detail"]},
+            {
+                "check": "movement-renderer",
+                "ok": None,
+                "detail": movement["session"]["contract"]["detail"],
+            },
         ]
     )
     from .picker import picker_checks
@@ -476,7 +527,7 @@ def doctor(args):
         "checks": checks,
         "healthy": all(c["ok"] is not False for c in checks),
         "resize": "Opt-in; all built-in presets default off.",
-        "movement": "Movement is experimental. Parser support does not verify rendering or activate an effect.",
+        "movement": "Movement is experimental and opt-in. Activation requires a matching binary and verified running renderer contract.",
         "movement_capability": movement,
         "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
     }

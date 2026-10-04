@@ -100,7 +100,7 @@ def main():
     for summary in (
         f"**{len(PRESETS)} presets**",
         f"**{len(FAMILIES)} effect families**",
-        f"**{len(PROFILES)} ready-made open/close pairings**",
+        f"**{len(PROFILES)} ready-made profiles**",
     ):
         if summary not in readme:
             errors.append(f"README catalog summary is stale; expected {summary}")
@@ -196,6 +196,12 @@ def main():
             ]
         if actual != expected:
             errors.append(f"Showcase settings changed; regenerate {spec['name']}.gif")
+    # Native overlap recordings carry a complete profile and its source hash.
+    # Their combined compositor behavior cannot be faithfully shown by a single
+    # canvas action; count these checked native clips as profile showcases.
+    for clip in json.loads((ROOT / "docs/gifs/scenario-manifest.json").read_text())["clips"]:
+        if clip.get("source") in profile_sources and clip["source"] in clip.get("sources", {}):
+            showcased_sources.add(clip["source"])
     for source in sorted(profile_sources - showcased_sources):
         errors.append(f"Profile example needs a showcase: {source}")
     for clip in manifest["clips"]:
