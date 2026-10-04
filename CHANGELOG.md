@@ -10,6 +10,11 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Fixed
+
+- Correct the validation guide's gallery total and reject stale GIF/preset
+  counts in the three public showcase guides during documentation checks.
+
 ## 0.16.0 — 2026-10-03
 
 ### Added

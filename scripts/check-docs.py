@@ -244,6 +244,17 @@ def main():
     listed |= {clip["file"] for clip in scenarios}
     if {str(gif.relative_to(ROOT)) for gif in gifs} != listed:
         errors.append("GIF files and manifest differ (native swap is recorded separately)")
+    # Current catalog summaries must track the actual media, while historical
+    # release entries retain their original counts.
+    for relative in ("docs/showcases.md", "docs/gifs/README.md", "docs/validation.md"):
+        summary = (ROOT / relative).read_text()
+        for label, pattern, expected in (
+            ("GIF", r"\*\*(\d+) GIFs\*\*", len(gifs)),
+            ("preset", r"\*\*(\d+) (?:built-in )?presets\*\*", len(PRESETS)),
+        ):
+            count = re.search(pattern, summary)
+            if not count or int(count[1]) != expected:
+                errors.append(f"{relative}: current {label} count must be {expected}")
     for path in sorted(listed - referenced_gifs):
         errors.append(f"GIF needs a documentation link: {path}")
     for gif in gifs:
