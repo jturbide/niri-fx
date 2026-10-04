@@ -134,15 +134,37 @@ test("gallery starts paused, filters examples and plays only one animation", asy
       (await browser.evaluate("document.querySelectorAll('article:not([hidden])').length")) > 0,
     );
     await browser.navigate(url + "?action=pointer", { readySelector: "[data-gallery-ready]" });
-    assert.equal(
-      await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
-      3,
+    assert.deepEqual(
+      await browser.evaluate(
+        "[...document.querySelectorAll('article:not([hidden]) img')].map(image=>image.id).sort()",
+      ),
+      [
+        "native-pointer-gentle",
+        "native-pointer-release-settle",
+        "native-pointer-rubber-sheet",
+        "pointer-preview-gentle",
+        "pointer-preview-release-settle",
+        "pointer-preview-rubber-sheet",
+      ],
+    );
+    for (const kind of ["experimental", "shader"])
+      assert.equal(
+        await browser.evaluate(
+          `document.querySelectorAll('article:not([hidden])[data-kind=${kind}]').length`,
+        ),
+        3,
+      );
+    assert(
+      await browser.evaluate(
+        "[...document.querySelectorAll('article:not([hidden])[data-kind=experimental]')].every(card=>!card.querySelector('[data-studio]') && card.querySelector('a[download$=\".kdl\"]') && card.querySelector('[data-command]').dataset.command.includes('--pointer-wobble'))",
+      ),
+      "native pointer captures offer their exact experimental configuration",
     );
     assert(
       await browser.evaluate(
-        "[...document.querySelectorAll('article:not([hidden])')].every(card=>card.dataset.kind==='experimental' && !card.querySelector('[data-studio]') && card.querySelector('a[download$=\".kdl\"]') && card.querySelector('[data-command]').dataset.command.includes('--pointer-wobble'))",
+        "[...document.querySelectorAll('article:not([hidden])[data-kind=shader]')].every(card=>card.querySelector('[data-studio]') && card.querySelector('a[download$=\".json\"]') && !card.querySelector('a[download$=\".kdl\"]'))",
       ),
-      "pointer examples offer experimental configuration without a Studio import claim",
+      "Studio pointer previews offer portable JSON separately from native captures",
     );
     await browser.navigate(url + "#preset-vortex-fold", { readySelector: "[data-gallery-ready]" });
     assert.equal(
