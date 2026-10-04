@@ -1,0 +1,1172 @@
+diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
+index c9d7a8b3442876d065d8065c3751187cd9dd398f..f6766cac99681200f20ace79103e5b43c0ae7f50 100644
+--- a/niri-config/src/animations.rs
++++ b/niri-config/src/animations.rs
+@@ -213,6 +213,7 @@ impl Default for HorizontalViewMovementAnim {
+ pub struct WindowMovementAnim {
+     pub anim: Animation,
+     pub custom_shader: Option<String>,
++    pub pointer_wobble: Option<PointerWobble>,
+ }
+ 
+ impl Default for WindowMovementAnim {
+@@ -227,6 +228,29 @@ impl Default for WindowMovementAnim {
+                 }),
+             },
+             custom_shader: None,
++            pointer_wobble: None,
++        }
++    }
++}
++
++/// Pointer deformation is opt-in and independent of a timed movement shader.
++/// Damping is a percentage of critical damping, frequency is measured in Hz.
++#[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
++pub struct PointerWobble {
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(0.7))]
++    pub strength: FloatOrInt<0, 2>,
++    #[knuffel(child, unwrap(argument), default = 65)]
++    pub damping: u32,
++    #[knuffel(child, unwrap(argument), default = 8)]
++    pub frequency: u32,
++}
++
++impl Default for PointerWobble {
++    fn default() -> Self {
++        Self {
++            strength: FloatOrInt(0.7),
++            damping: 65,
++            frequency: 8,
+         }
+     }
+ }
+@@ -235,6 +259,36 @@ impl Default for WindowMovementAnim {
+ mod movement_shader_tests {
+     use super::*;
+ 
++    #[test]
++    fn pointer_wobble_is_opt_in_and_bounded() {
++        assert!(WindowMovementAnim::default().pointer_wobble.is_none());
++        let config =
++            crate::Config::parse_mem("animations { window-movement { pointer-wobble {}; }; }")
++                .unwrap();
++        assert_eq!(
++            config.animations.window_movement.pointer_wobble,
++            Some(PointerWobble::default())
++        );
++        for invalid in [
++            "strength 2.1",
++            "strength -1",
++            "damping 9",
++            "damping 101",
++            "frequency 1",
++            "frequency 17",
++            "frequency 8.5",
++            "damping 65.5",
++        ] {
++            let config =
++                format!("animations {{ window-movement {{ pointer-wobble {{ {invalid}; }}; }}; }}");
++            assert!(crate::Config::parse_mem(&config).is_err(), "{invalid}");
++        }
++        assert!(crate::Config::parse_mem(
++            "animations { window-movement { pointer-wobble {}; pointer-wobble {}; }; }"
++        )
++        .is_err());
++    }
++
+     #[test]
+     fn legacy_movement_config_keeps_default_and_accepts_shader() {
+         let legacy = crate::Config::parse_mem("animations { window-movement {}; }").unwrap();
+@@ -403,10 +457,28 @@ where
+     ) -> Result<Self, DecodeError<S>> {
+         let default = Self::default().anim;
+         let mut custom_shader = None;
++        let mut pointer_wobble = None;
+         let anim = Animation::decode_node(node, ctx, default, |child, ctx| {
+             if &**child.node_name == "custom-shader" {
+                 custom_shader = parse_arg_node("custom-shader", child, ctx)?;
+                 Ok(true)
++            } else if &**child.node_name == "pointer-wobble" {
++                if pointer_wobble.is_some() {
++                    ctx.emit_error(DecodeError::unexpected(
++                        child,
++                        "node",
++                        "duplicate pointer-wobble",
++                    ));
++                }
++                let value = PointerWobble::decode_node(child, ctx)?;
++                if !(10..=100).contains(&value.damping) || !(2..=16).contains(&value.frequency) {
++                    ctx.emit_error(DecodeError::conversion(
++                        child,
++                        "damping must be 10..100 percent and frequency 2..16 Hz",
++                    ));
++                }
++                pointer_wobble = Some(value);
++                Ok(true)
+             } else {
+                 Ok(false)
+             }
+@@ -415,6 +487,7 @@ where
+         Ok(Self {
+             anim,
+             custom_shader,
++            pointer_wobble,
+         })
+     }
+ }
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index 554bed226d12ae6c880ea2902c70ed2dcc22a737..775dbd980da9617c15b620137f4dde1bb7eb0bca 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -1563,6 +1563,7 @@ mod tests {
+                         ),
+                     },
+                     custom_shader: None,
++                    pointer_wobble: None,
+                 },
+                 window_resize: WindowResizeAnim {
+                     anim: Animation {
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef0668d741f6 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -69,6 +69,8 @@ pub enum Request {
+     Version,
+     /// Verify the experimental NiriFX movement shader interface in the running renderer.
+     NiriFxCapabilities,
++    /// Query the independent opt-in pointer deformation experiment.
++    NiriFxPointerCapabilities,
+     /// Read the bounded native presentation/submission timing history.
+     NiriFxFrameTimings,
+     /// Request information about connected outputs.
+@@ -145,6 +147,8 @@ pub enum Response {
+     Version(String),
+     /// Versioned experimental shader support; this query never activates an effect.
+     NiriFxCapabilities(NiriFxCapabilities),
++    /// Pointer support is independent of the existing movement contract.
++    NiriFxPointerCapabilities(NiriFxPointerCapabilities),
+     /// The latest native output timing samples (at most 512).
+     NiriFxFrameTimings(Vec<NiriFxFrameTiming>),
+     /// Information about connected outputs.
+@@ -191,6 +195,26 @@ pub struct NiriFxCapabilities {
+     pub frame_timings: bool,
+ }
+ 
++/// Separate versioned capability response for direct pointer deformation.
++#[derive(Serialize, Deserialize, Debug, Clone)]
++#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
++pub struct NiriFxPointerCapabilities {
++    /// Response schema version.
++    pub schema: u32,
++    /// Native anchor and spring deformation contract version.
++    pub pointer_wobble: u32,
++    /// The built-in shader compiled in the active renderer.
++    pub renderer_verified: bool,
++    /// An explicit pointer-wobble block is present.
++    pub configured: bool,
++    /// Configuration permits animation; capability does not activate a grab.
++    pub enabled: bool,
++    /// Maximum logical-pixel deformation radius.
++    pub max_deformation: u32,
++    /// Maximum settling ownership time after release in milliseconds.
++    pub max_release_ms: u32,
++}
++
+ /// One native output frame. DRM samples use presentation feedback; winit samples
+ /// use estimated submission time and must never be described as physical scanout.
+ #[derive(Serialize, Deserialize, Debug, Clone)]
+diff --git a/src/animation/mod.rs b/src/animation/mod.rs
+index 21e65f1071ff009870840cb22b5a259a4ea3efb9..f8551be42c1aad7a173a49524db4a9a247c39c63 100644
+--- a/src/animation/mod.rs
++++ b/src/animation/mod.rs
+@@ -3,6 +3,7 @@ use std::time::Duration;
+ use keyframe::functions::{EaseOutCubic, EaseOutQuad};
+ use keyframe::EasingFunction;
+ 
++pub(crate) mod pointer_wobble;
+ mod movement;
+ pub(crate) use movement::MoveAnimation;
+ 
+diff --git a/src/animation/pointer_wobble.rs b/src/animation/pointer_wobble.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..8228adf6e9592948004f56109b30e350c0a5ae89
+--- /dev/null
++++ b/src/animation/pointer_wobble.rs
+@@ -0,0 +1,291 @@
++//! Bounded pointer-driven deformation, independent of layout and hit testing.
++//!
++//! Pointer deltas add spring velocity instead of teleporting the deformation.
++//! The analytical solution is invariant to render frequency, repeated capture
++//! passes and long frames. The tile itself always follows Niri's normal grab.
++use std::f64::consts::TAU;
++use std::time::Duration;
++
++use niri_config::animations::PointerWobble as Config;
++use smithay::utils::{Logical, Point};
++
++pub const MAX_DEFORMATION: f64 = 64.;
++const MAX_RELEASE: Duration = Duration::from_secs(2);
++
++#[derive(Debug, Clone)]
++pub struct PointerWobble {
++    config: Config,
++    position: Point<f64, Logical>,
++    velocity: Point<f64, Logical>,
++    sampled_at: Duration,
++    released_at: Option<Duration>,
++    anchor_from: Point<f64, Logical>,
++    anchor_to: Point<f64, Logical>,
++    anchor_at: Duration,
++}
++
++impl PointerWobble {
++    pub fn new(config: Config, anchor: Point<f64, Logical>, now: Duration) -> Self {
++        Self {
++            config,
++            position: Point::from((0., 0.)),
++            velocity: Point::from((0., 0.)),
++            sampled_at: now,
++            released_at: None,
++            anchor_from: anchor,
++            anchor_to: anchor,
++            anchor_at: now,
++        }
++    }
++
++    pub fn grab(&mut self, anchor: Point<f64, Logical>, now: Duration) {
++        self.advance(now);
++        let (envelope, derivative) = self.envelope();
++        self.velocity = self.velocity.upscale(envelope) + self.position.upscale(derivative);
++        self.position = self.position.upscale(envelope);
++        self.anchor_from = self.anchor(now);
++        self.anchor_to = anchor;
++        self.anchor_at = now;
++        self.released_at = None;
++    }
++
++    pub fn push(&mut self, delta: Point<f64, Logical>, now: Duration) {
++        if !delta.x.is_finite() || !delta.y.is_finite() {
++            return;
++        }
++        self.advance(now);
++        if self.released() {
++            // Defensive callers may resume with a motion event first.
++            self.grab(self.anchor(now), now);
++        }
++        let omega = TAU * f64::from(self.config.frequency);
++        let delta = Point::from((delta.x.clamp(-1e6, 1e6), delta.y.clamp(-1e6, 1e6)));
++        self.velocity -= delta.upscale(omega * self.config.strength.0);
++        // Restrict the new velocity to remaining spring energy. Never rescale
++        // existing displacement: doing so would visibly jump on rapid input.
++        let radius = self.position.x.hypot(self.position.y).min(MAX_DEFORMATION);
++        let max_velocity = omega * (MAX_DEFORMATION.powi(2) - radius.powi(2)).sqrt();
++        let speed = self.velocity.x.hypot(self.velocity.y);
++        if speed > max_velocity {
++            self.velocity = self.velocity.upscale(max_velocity / speed);
++        }
++    }
++
++    pub fn release(&mut self, now: Duration) {
++        self.advance(now);
++        self.released_at = Some(now);
++    }
++
++    pub fn released(&self) -> bool {
++        self.released_at.is_some()
++    }
++
++    pub fn anchor(&self, now: Duration) -> Point<f64, Logical> {
++        let t = (now.saturating_sub(self.anchor_at).as_secs_f64() / 0.08).min(1.);
++        if t >= 1. {
++            return self.anchor_to;
++        }
++        let mix = t * t * (3. - 2. * t);
++        self.anchor_from + (self.anchor_to - self.anchor_from).upscale(mix)
++    }
++
++    // The slowest allowed spring can still carry energy at the two-second
++    // ownership deadline. A time-based quintic taper reaches rest smoothly;
++    // sampling it does not alter the spring or depend on frame frequency.
++    fn envelope(&self) -> (f64, f64) {
++        let Some(released_at) = self.released_at else {
++            return (1., 0.);
++        };
++        let elapsed = self.sampled_at.saturating_sub(released_at).as_secs_f64();
++        let t = ((elapsed - 1.5) / 0.5).clamp(0., 1.);
++        let smooth = t.powi(3) * (10. - 15. * t + 6. * t.powi(2));
++        let derivative = -30. * t.powi(2) * (1. - t).powi(2) / 0.5;
++        (1. - smooth, derivative)
++    }
++
++    pub fn deformation(&self) -> Point<f64, Logical> {
++        self.position.upscale(self.envelope().0)
++    }
++
++    pub fn is_moving(&self) -> bool {
++        self.position.x.abs() + self.position.y.abs() > 0.01
++            || self.velocity.x.abs() + self.velocity.y.abs() > 0.1
++    }
++
++    pub fn advance(&mut self, now: Duration) {
++        let dt = now.saturating_sub(self.sampled_at).as_secs_f64();
++        self.sampled_at = self.sampled_at.max(now);
++        if self
++            .released_at
++            .is_some_and(|at| now.saturating_sub(at) >= MAX_RELEASE)
++        {
++            self.position = Point::from((0., 0.));
++            self.velocity = Point::from((0., 0.));
++            return;
++        }
++        let omega = TAU * f64::from(self.config.frequency);
++        let damping = f64::from(self.config.damping) / 100.;
++        let decay = (-damping * omega * dt).exp();
++        let sample = |x: f64, v: f64| {
++            if damping >= 1. {
++                let b = v + omega * x;
++                ((x + b * dt) * decay, (v - omega * b * dt) * decay)
++            } else {
++                let rate = damping * omega;
++                let wd = omega * (1. - damping * damping).sqrt();
++                let (sin, cos) = (wd * dt).sin_cos();
++                let b = (v + rate * x) / wd;
++                let position = decay * (x * cos + b * sin);
++                let velocity = decay * (v * cos - (rate * b + wd * x) * sin);
++                (position, velocity)
++            }
++        };
++        let (x, vx) = sample(self.position.x, self.velocity.x);
++        let (y, vy) = sample(self.position.y, self.velocity.y);
++        self.position = Point::from((x, y));
++        self.velocity = Point::from((vx, vy));
++        if !self.is_moving() {
++            self.position = Point::from((0., 0.));
++            self.velocity = Point::from((0., 0.));
++        }
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    fn make() -> PointerWobble {
++        PointerWobble::new(Config::default(), Point::from((0.2, 0.3)), Duration::ZERO)
++    }
++    fn at(ms: u64) -> Duration {
++        Duration::from_millis(ms)
++    }
++    fn near(a: f64, b: f64) {
++        assert!((a - b).abs() < 1e-8, "{a} != {b}");
++    }
++
++    #[test]
++    fn impulses_preserve_position_and_release_preserves_velocity() {
++        let mut state = make();
++        state.push(Point::from((40., -15.)), Duration::ZERO);
++        assert_eq!(state.position, Point::from((0., 0.)));
++        state.advance(at(16));
++        assert!(state.position.x < 0. && state.position.y > 0.);
++        let before = state.clone();
++        state.release(at(16));
++        assert_eq!(state.position, before.position);
++        assert_eq!(state.velocity, before.velocity);
++        assert!(state.released());
++        state.advance(at(100));
++        assert!(state.is_moving());
++        state.advance(at(2016));
++        assert!(!state.is_moving());
++    }
++
++    #[test]
++    fn solution_is_independent_of_frame_rate_and_duplicate_renders() {
++        let mut one = make();
++        one.push(Point::from((60., 40.)), Duration::ZERO);
++        let mut many = one.clone();
++        one.advance(at(120));
++        for i in 1..=120 {
++            many.advance(at(i));
++            many.advance(at(i));
++        }
++        near(one.position.x, many.position.x);
++        near(one.velocity.x, many.velocity.x);
++        near(one.position.y, many.position.y);
++    }
++
++    #[test]
++    fn adversarial_pointer_bursts_remain_bounded() {
++        let mut state = make();
++        for i in 0..1000 {
++            state.push(
++                Point::from((1e6 * if i % 2 == 0 { 1. } else { -1. }, -1e6)),
++                at(i),
++            );
++            state.advance(at(i + 1));
++            assert!(state.position.x.hypot(state.position.y) <= MAX_DEFORMATION + 1e-6);
++        }
++        state.push(Point::from((1e308, -1e308)), at(1000));
++        assert!(state.position.x.is_finite());
++        assert!(state.velocity.x.is_finite());
++        state.release(at(1000));
++        state.advance(at(5000));
++        assert!(!state.is_moving());
++    }
++
++    #[test]
++    fn repeat_grab_keeps_motion_and_blends_anchor() {
++        let mut state = make();
++        state.push(Point::from((50., 0.)), Duration::ZERO);
++        state.release(at(16));
++        let before = state.clone();
++        state.grab(Point::from((0.8, 0.9)), at(16));
++        assert_eq!(state.position, before.position);
++        assert_eq!(state.velocity, before.velocity);
++        assert_eq!(state.anchor(at(16)), before.anchor(at(16)));
++        assert_eq!(state.anchor(at(96)), Point::from((0.8, 0.9)));
++        assert!(!state.released());
++    }
++
++    #[test]
++    fn saturation_and_release_taper_do_not_jump() {
++        let mut state = make();
++        state.config.damping = 10;
++        state.config.frequency = 2;
++        state.push(Point::from((300., 0.)), Duration::ZERO);
++        state.advance(at(50));
++        let position = state.position;
++        state.push(Point::from((1e308, 0.)), at(50));
++        assert_eq!(state.position, position);
++        state.release(at(50));
++        state.advance(at(1800));
++        let shown = state.deformation();
++        let (e, de) = state.envelope();
++        let velocity = state.velocity.upscale(e) + state.position.upscale(de);
++        state.grab(Point::from((0.5, 0.5)), at(1800));
++        assert_eq!(state.deformation(), shown);
++        assert_eq!(state.velocity, velocity);
++    }
++
++    #[test]
++    fn slow_release_envelope_is_frame_independent_and_ends_at_rest() {
++        let mut one = make();
++        one.config.damping = 10;
++        one.config.frequency = 2;
++        one.push(Point::from((300., 0.)), Duration::ZERO);
++        one.release(Duration::ZERO);
++        let mut many = one.clone();
++        one.advance(at(1999));
++        for ms in 1..=1999 {
++            many.advance(at(ms));
++        }
++        near(one.deformation().x, many.deformation().x);
++        assert!(one.deformation().x.abs() < 0.00001);
++        let (e, de) = one.envelope();
++        assert!((one.velocity.x * e + one.position.x * de).abs() < 0.001);
++        one.advance(at(2000));
++        assert_eq!(one.deformation(), Point::from((0., 0.)));
++        assert!(!one.is_moving());
++    }
++
++    #[test]
++    fn critical_damping_and_minimum_damping_finish_without_nan() {
++        for damping in [10, 65, 100] {
++            let mut state = make();
++            state.config.damping = damping;
++            state.config.frequency = 2;
++            state.push(Point::from((120., 30.)), Duration::ZERO);
++            state.release(at(16));
++            for ms in 17..2016 {
++                state.advance(at(ms));
++                assert!(state.position.x.is_finite());
++            }
++            state.advance(at(2016));
++            assert!(!state.is_moving());
++        }
++    }
++}
+diff --git a/src/cli.rs b/src/cli.rs
+index 0dbb22c02c40a01e05679de3415075f7270d2de2..2b1cbd6bac7300d52a7b9c8550c47af85f9931bc 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -63,6 +63,8 @@ pub enum Sub {
+ pub enum Msg {
+     /// Verify the running experimental NiriFX shader interface without activation.
+     NiriFxCapabilities,
++    /// Query the independent opt-in pointer deformation experiment.
++    NiriFxPointerCapabilities,
+     /// Print bounded native frame timing samples with their measurement source.
+     NiriFxFrameTimings,
+     /// List connected outputs.
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 02929c75d4f6ddfa0db8f39a11050063345f0f12..8a8beb2c12d1edc288d0324591738cbdc586bbf5 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -31,6 +31,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+ 
+     let request = match &msg {
+         Msg::NiriFxCapabilities => Request::NiriFxCapabilities,
++        Msg::NiriFxPointerCapabilities => Request::NiriFxPointerCapabilities,
+         Msg::NiriFxFrameTimings => Request::NiriFxFrameTimings,
+         Msg::Version => Request::Version,
+         Msg::Outputs => Request::Outputs,
+@@ -113,7 +114,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+     let response = reply.map_err(|err_msg| anyhow!(err_msg).context("niri returned an error"))?;
+ 
+     match msg {
+-        Msg::NiriFxCapabilities | Msg::NiriFxFrameTimings => {
++        Msg::NiriFxCapabilities | Msg::NiriFxPointerCapabilities | Msg::NiriFxFrameTimings => {
+             // Experimental diagnostics have one unambiguous JSON representation.
+             println!("{}", serde_json::to_string(&response)?);
+         }
+diff --git a/src/ipc/server.rs b/src/ipc/server.rs
+index 71590d785d624434681a30a2fd10cbb5f51c7a8a..b6759ba161f8fac729645444f2da301288260983 100644
+--- a/src/ipc/server.rs
++++ b/src/ipc/server.rs
+@@ -301,6 +301,41 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
+                     .map_err(|_| String::from("error verifying movement renderer"))?,
+             )
+         }
++        Request::NiriFxPointerCapabilities => {
++            let (tx, rx) = async_channel::bounded(1);
++            ctx.event_loop.insert_idle(move |state| {
++                let renderer_verified = state
++                    .backend
++                    .with_primary_renderer(|renderer| {
++                        crate::render_helpers::shaders::Shaders::get(renderer)
++                            .program(crate::render_helpers::shaders::ProgramType::PointerWobble)
++                            .is_some()
++                    })
++                    .unwrap_or(false);
++                let config = state.niri.config.borrow();
++                let animation = &config.animations.window_movement;
++                let configured = animation.pointer_wobble.is_some();
++                let enabled = !config.animations.off
++                    && !animation.anim.off
++                    && animation
++                        .pointer_wobble
++                        .is_some_and(|pointer| pointer.strength.0 > 0.);
++                let _ = tx.send_blocking(niri_ipc::NiriFxPointerCapabilities {
++                    schema: 1,
++                    pointer_wobble: 1,
++                    renderer_verified,
++                    configured,
++                    enabled,
++                    max_deformation: 64,
++                    max_release_ms: 2000,
++                });
++            });
++            Response::NiriFxPointerCapabilities(
++                rx.recv()
++                    .await
++                    .map_err(|_| String::from("error verifying pointer renderer"))?,
++            )
++        }
+         Request::NiriFxFrameTimings => {
+             let (tx, rx) = async_channel::bounded(1);
+             ctx.event_loop.insert_idle(move |state| {
+diff --git a/src/layout/mod.rs b/src/layout/mod.rs
+index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71340c5448 100644
+--- a/src/layout/mod.rs
++++ b/src/layout/mod.rs
+@@ -3982,6 +3982,8 @@ impl<W: LayoutElement> Layout<W> {
+                     .with_merged_layout(workspace_config.as_ref().map(|(_, c)| c))
+                     .adjusted_for_scale(scale);
+                 tile.update_config(view_size, scale, Rc::new(options));
++                tile.begin_pointer_wobble(pointer_ratio_within_window);
++                tile.push_pointer_wobble(delta);
+ 
+                 if is_floating {
+                     // Unlock the view in case we locked it moving a fullscreen window that is
+@@ -4069,6 +4071,9 @@ impl<W: LayoutElement> Layout<W> {
+                     move_.tile.update_config(view_size, scale, Rc::new(options));
+                 }
+ 
++                move_
++                    .tile
++                    .push_pointer_wobble(delta.downscale(self.overview_zoom()));
+                 move_.pointer_pos_within_output = pointer_pos_within_output;
+ 
+                 self.interactive_move = Some(InteractiveMoveState::Moving(move_));
+@@ -4132,6 +4137,8 @@ impl<W: LayoutElement> Layout<W> {
+             unreachable!()
+         };
+ 
++        move_.tile.release_pointer_wobble();
++
+         for mon in self.monitors_mut() {
+             mon.dnd_scroll_gesture_end();
+         }
+diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
+index b12d5d9a6d3cdd57c4b3b18fa5b9df299053b80d..9474c41ed0bcc95783f171872725b6f78d64923e 100644
+--- a/src/layout/tests/animations.rs
++++ b/src/layout/tests/animations.rs
+@@ -1097,3 +1097,107 @@ fn width_resize_and_cancel_of_column_to_the_left() {
+     200 × 200 at x:100 y:  0
+     ");
+ }
++
++#[test]
++fn pointer_wobble_follows_grab_release_and_animation_off() {
++    for floating in [false, true] {
++        let mut options = make_options();
++        options.animations.window_movement.pointer_wobble =
++            Some(niri_config::animations::PointerWobble {
++                damping: 10,
++                frequency: 2,
++                ..Default::default()
++            });
++        let mut layout = check_ops_with_options(
++            options,
++            [
++                Op::AddOutput(1),
++                Op::AddWindow {
++                    params: TestWindowParams::new(1),
++                },
++                Op::Communicate(1),
++                Op::CompleteAnimations,
++            ],
++        );
++        if floating {
++            Op::ToggleWindowFloating { id: Some(1) }.apply(&mut layout);
++        }
++        Op::CompleteAnimations.apply(&mut layout);
++        Op::InteractiveMoveBegin {
++            window: 1,
++            output_idx: 1,
++            px: 300.,
++            py: 200.,
++        }
++        .apply(&mut layout);
++        Op::InteractiveMoveUpdate {
++            window: 1,
++            dx: 300.,
++            dy: 20.,
++            output_idx: 1,
++            px: 600.,
++            py: 220.,
++        }
++        .apply(&mut layout);
++        Op::AdvanceAnimations { msec_delta: 16 }.apply(&mut layout);
++        let move_ = layout.interactive_move.as_ref().unwrap().moving().unwrap();
++        let pointer = move_
++            .tile
++            .pointer_wobble
++            .as_ref()
++            .expect("actual native grab starts pointer state");
++        assert!(pointer.is_moving());
++        assert!(!pointer.released());
++        let before = pointer.deformation();
++        Op::InteractiveMoveEnd { window: 1 }.apply(&mut layout);
++        let tile = layout
++            .workspaces()
++            .flat_map(|(_, _, ws)| ws.tiles())
++            .find(|tile| *tile.window().id() == 1)
++            .unwrap();
++        let pointer = tile
++            .pointer_wobble
++            .as_ref()
++            .expect("drop keeps spring owned by tile");
++        assert!(pointer.released());
++        assert_eq!(pointer.deformation(), before);
++        Op::AdvanceAnimations { msec_delta: 2100 }.apply(&mut layout);
++        let tile = layout
++            .workspaces()
++            .flat_map(|(_, _, ws)| ws.tiles())
++            .find(|tile| *tile.window().id() == 1)
++            .unwrap();
++        assert!(
++            tile.pointer_wobble.is_none(),
++            "settle removes state without another pointer event"
++        );
++
++        Op::InteractiveMoveBegin {
++            window: 1,
++            output_idx: 1,
++            px: 300.,
++            py: 200.,
++        }
++        .apply(&mut layout);
++        Op::InteractiveMoveUpdate {
++            window: 1,
++            dx: 300.,
++            dy: 20.,
++            output_idx: 1,
++            px: 600.,
++            py: 220.,
++        }
++        .apply(&mut layout);
++        let config = niri_config::Config::parse_mem(
++            "animations { off; window-movement { pointer-wobble {}; }; }",
++        )
++        .unwrap();
++        layout.update_config(&config);
++        let move_ = layout.interactive_move.as_ref().unwrap().moving().unwrap();
++        assert!(
++            move_.tile.pointer_wobble.is_none(),
++            "animation off immediately drops pointer state"
++        );
++        Op::InteractiveMoveEnd { window: 1 }.apply(&mut layout);
++    }
++}
+diff --git a/src/layout/tile.rs b/src/layout/tile.rs
+index 8ba40549e0793bd7e92de34ba4891bd4d46cd3e2..c65ef5bc3a32fa06c7b051f2b0faa0074c31225f 100644
+--- a/src/layout/tile.rs
++++ b/src/layout/tile.rs
+@@ -1,5 +1,5 @@
+ use core::f64;
+-use std::cell::RefCell;
++use std::cell::{Cell, RefCell};
+ use std::rc::Rc;
+ 
+ use niri_config::utils::MergeWith as _;
+@@ -16,6 +16,7 @@ use super::{
+     HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
+     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
+ };
++use crate::animation::pointer_wobble::PointerWobble;
+ use crate::animation::{Animation, Clock, MoveAnimation};
+ use crate::layout::SizingMode;
+ use crate::niri_render_elements;
+@@ -25,6 +26,7 @@ use crate::render_helpers::clipped_surface::{ClippedSurfaceRenderElement, Rounde
+ use crate::render_helpers::damage::ExtraDamage;
+ use crate::render_helpers::movement::{MovementEffect, MovementState};
+ use crate::render_helpers::offscreen::{OffscreenBuffer, OffscreenRenderElement};
++use crate::render_helpers::pointer_wobble::PointerWobbleEffect;
+ use crate::render_helpers::renderer::NiriRenderer;
+ use crate::render_helpers::resize::ResizeRenderElement;
+ use crate::render_helpers::shader_element::ShaderRenderElement;
+@@ -100,6 +102,11 @@ pub struct Tile<W: LayoutElement> {
+     /// Lazily allocated only while a movement shader is active.
+     movement_effect: RefCell<Option<MovementEffect>>,
+ 
++    /// Input owns the grab; this only deforms its texture and settles after release.
++    pub(super) pointer_wobble: Option<PointerWobble>,
++    pointer_wobble_effect: RefCell<Option<PointerWobbleEffect>>,
++    pointer_parent_end: Cell<Option<std::time::Duration>>,
++
+     /// The animation of the tile's opacity.
+     pub(super) alpha_animation: Option<AlphaAnimation>,
+ 
+@@ -210,6 +217,9 @@ impl<W: LayoutElement> Tile<W> {
+             move_x_animation: None,
+             move_y_animation: None,
+             movement_effect: RefCell::new(None),
++            pointer_wobble: None,
++            pointer_wobble_effect: RefCell::new(None),
++            pointer_parent_end: Cell::new(None),
+             alpha_animation: None,
+             interactive_move_offset: Point::from((0., 0.)),
+             unmap_snapshot: None,
+@@ -237,6 +247,17 @@ impl<W: LayoutElement> Tile<W> {
+ 
+         self.view_size = view_size;
+         self.scale = scale;
++        // Configuration changes cannot leave an old spring running with stale
++        // response parameters. Disabling animations returns to normal rendering.
++        if self.options.animations.window_movement.pointer_wobble
++            != options.animations.window_movement.pointer_wobble
++            || options.animations.off
++            || options.animations.window_movement.anim.off
++        {
++            self.pointer_wobble = None;
++            self.pointer_wobble_effect.borrow_mut().take();
++            self.pointer_parent_end.set(None);
++        }
+         self.options = options;
+ 
+         let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
+@@ -416,6 +437,56 @@ impl<W: LayoutElement> Tile<W> {
+         self.rounded_corner_damage.set_corner_radius(radius);
+     }
+ 
++    fn pointer_wobble_enabled(&self) -> bool {
++        !self.options.animations.off
++            && !self.options.animations.window_movement.anim.off
++            && !self.clock.should_complete_instantly()
++            && self
++                .options
++                .animations
++                .window_movement
++                .pointer_wobble
++                .is_some_and(|config| config.strength.0 > 0.)
++    }
++
++    pub(super) fn begin_pointer_wobble(&mut self, ratio: (f64, f64)) {
++        if !self.pointer_wobble_enabled() {
++            return;
++        }
++        // A close can arrive before this grab's first render. Do not leave the
++        // old timed movement snapshot eligible to continue a different effect.
++        self.movement_effect.borrow_mut().take();
++        let config = self
++            .options
++            .animations
++            .window_movement
++            .pointer_wobble
++            .unwrap();
++        let size = self.window_size();
++        let tile_size = self.animated_tile_size();
++        let loc = self.window_loc();
++        let anchor = Point::from((
++            (loc.x + size.w * ratio.0) / tile_size.w.max(1.),
++            (loc.y + size.h * ratio.1) / tile_size.h.max(1.),
++        ));
++        let now = self.clock.now();
++        self.pointer_wobble
++            .get_or_insert_with(|| PointerWobble::new(config, anchor, now))
++            .grab(anchor, now);
++    }
++
++    pub(super) fn push_pointer_wobble(&mut self, delta: Point<f64, Logical>) {
++        if let Some(state) = &mut self.pointer_wobble {
++            state.push(delta, self.clock.now());
++        }
++    }
++
++    pub(super) fn release_pointer_wobble(&mut self) {
++        if let Some(state) = &mut self.pointer_wobble {
++            state.release(self.clock.now());
++        }
++    }
++
+     pub fn advance_animations(&mut self) {
+         if let Some(open) = &mut self.open_animation {
+             if open.is_done() {
+@@ -440,6 +511,29 @@ impl<W: LayoutElement> Tile<W> {
+             }
+         }
+ 
++        if !self.pointer_wobble_enabled() {
++            self.pointer_wobble = None;
++        } else if let Some(state) = &mut self.pointer_wobble {
++            state.advance(self.clock.now());
++            // Retain the normal-looking texture until the drop placement ends,
++            // so a timed fragment shader cannot restart halfway through a drop.
++            if state.released()
++                && !state.is_moving()
++                && self.move_x_animation.is_none()
++                && self.move_y_animation.is_none()
++                && self
++                    .pointer_parent_end
++                    .get()
++                    .is_none_or(|end| self.clock.now() >= end)
++            {
++                self.pointer_wobble = None;
++            }
++        }
++        if self.pointer_wobble.is_none() {
++            self.pointer_wobble_effect.borrow_mut().take();
++            self.pointer_parent_end.set(None);
++        }
++
+         if let Some(alpha) = &mut self.alpha_animation {
+             if !alpha.hold_after_done && alpha.anim.is_done() {
+                 self.alpha_animation = None;
+@@ -453,6 +547,10 @@ impl<W: LayoutElement> Tile<W> {
+ 
+     pub fn are_transitions_ongoing(&self) -> bool {
+         self.open_animation.is_some()
++            || self
++                .pointer_wobble
++                .as_ref()
++                .is_some_and(PointerWobble::is_moving)
+             || self.resize_animation.is_some()
+             || self.move_x_animation.is_some()
+             || self.move_y_animation.is_some()
+@@ -1367,6 +1465,13 @@ impl<W: LayoutElement> Tile<W> {
+         let mut pushed = false;
+         self.window().set_offscreen_data(None);
+ 
++        // A dropped tiled window can still follow its column after its own
++        // offset finishes. Keep pointer arbitration until that clock finishes.
++        if self.pointer_wobble.is_some() {
++            if let Some(parent) = parent_motion {
++                self.pointer_parent_end.set(Some(parent.end_time()));
++            }
++        }
+         let mut motion = parent_motion;
+         for (movement, horizontal) in [
+             (&self.move_x_animation, true),
+@@ -1401,8 +1506,14 @@ impl<W: LayoutElement> Tile<W> {
+                     .program(ProgramType::Move)
+                     .is_some()
+         });
++        let pointer = self.pointer_wobble.as_ref().filter(|_| {
++            self.pointer_wobble_enabled()
++                && Shaders::get(ctx.renderer)
++                    .program(ProgramType::PointerWobble)
++                    .is_some()
++        });
+         // Opening has priority; live resize can be drawn into the movement texture.
+-        if motion.is_none() || self.open_animation.is_some() {
++        if motion.is_none() || self.open_animation.is_some() || pointer.is_some() {
+             self.movement_effect.borrow_mut().take();
+         }
+ 
+@@ -1433,6 +1544,35 @@ impl<W: LayoutElement> Tile<W> {
+                     warn!("error rendering window opening animation: {err:?}");
+                 }
+             }
++        } else if let Some(pointer) = pointer {
++            let mut ctx = ctx.as_gles();
++            let mut elements = Vec::new();
++            self.render_inner(
++                ctx.r(),
++                Point::new(0., 0.),
++                xray_pos,
++                focus_ring,
++                &mut |elem| elements.push(elem),
++            );
++            let mut effect = self.pointer_wobble_effect.borrow_mut();
++            let effect = effect.get_or_insert_with(PointerWobbleEffect::default);
++            match effect.render(
++                ctx.renderer,
++                &elements,
++                self.animated_tile_size(),
++                location,
++                scale,
++                tile_alpha,
++                pointer.anchor(self.clock.now()),
++                pointer.deformation(),
++            ) {
++                Ok((elem, data)) => {
++                    self.window().set_offscreen_data(Some(data));
++                    push(elem.into());
++                    pushed = true;
++                }
++                Err(err) => warn!("error rendering pointer wobble: {err:?}"),
++            }
+         } else if let Some(motion) = motion {
+             let mut ctx = ctx.as_gles();
+             let mut elements = Vec::new();
+diff --git a/src/render_helpers/mod.rs b/src/render_helpers/mod.rs
+index fe6157cd893d9d8e9414b8c3a08134fc3fc3bc3e..6154fec3a552a70b5e41036a96b7ae95605d87c8 100644
+--- a/src/render_helpers/mod.rs
++++ b/src/render_helpers/mod.rs
+@@ -37,6 +37,7 @@ pub mod framebuffer_effect;
+ pub mod gradient_fade_texture;
+ pub mod memory;
+ pub mod movement;
++pub mod pointer_wobble;
+ pub mod offscreen;
+ pub mod primary_gpu_texture;
+ pub mod render_elements;
+diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
+index 1712d7e9bcc763358027ed917a822ab53d89deb8..fddf12b49ee8c844a75b48c14f7157507e5ef246 100644
+--- a/src/render_helpers/movement.rs
++++ b/src/render_helpers/movement.rs
+@@ -29,6 +29,10 @@ pub struct MovementState {
+ }
+ 
+ impl MovementState {
++    pub fn end_time(&self) -> Duration {
++        self.end
++    }
++
+     pub fn from_animation(animation: &Animation, delta: Point<f64, Logical>, at: Duration) -> Self {
+         let progress = 1. - animation.clamped_value().clamp(0., 1.);
+         // Sampling the existing curve avoids duplicating Niri's easing and
+diff --git a/src/render_helpers/pointer_wobble.rs b/src/render_helpers/pointer_wobble.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..0ec97736f11b3ed2eeeafc60573041c8c1bd454d
+--- /dev/null
++++ b/src/render_helpers/pointer_wobble.rs
+@@ -0,0 +1,93 @@
++//! A built-in bounded shader for pointer deformation; capture uses the same
++//! filtered render context as normal tiles. This owns no pointer or layout state.
++use super::offscreen::{OffscreenBuffer, OffscreenData};
++use super::shader_element::ShaderRenderElement;
++use super::shaders::{mat3_uniform, ProgramType};
++use anyhow::Context as _;
++use glam::{Mat3, Vec2};
++use smithay::backend::renderer::element::{Element, Kind, RenderElement};
++use smithay::backend::renderer::gles::{GlesRenderer, Uniform};
++use smithay::backend::renderer::Texture;
++use smithay::utils::{Logical, Point, Rectangle, Scale, Size};
++use std::collections::HashMap;
++use std::rc::Rc;
++
++#[derive(Debug, Default)]
++pub struct PointerWobbleEffect {
++    buffer: OffscreenBuffer,
++}
++
++impl PointerWobbleEffect {
++    #[allow(clippy::too_many_arguments)]
++    pub fn render(
++        &self,
++        renderer: &mut GlesRenderer,
++        elements: &[impl RenderElement<GlesRenderer>],
++        geo_size: Size<f64, Logical>,
++        location: Point<f64, Logical>,
++        scale: Scale<f64>,
++        alpha: f32,
++        anchor: Point<f64, Logical>,
++        deformation: Point<f64, Logical>,
++    ) -> anyhow::Result<(ShaderRenderElement, OffscreenData)> {
++        let (elem, _sync_point, mut data) = self
++            .buffer
++            .render(renderer, scale, elements)
++            .context("error rendering pointer wobble to offscreen buffer")?;
++        // OffscreenBuffer renders with Transform::Normal and the scale that we passed, so we
++        // can assume that below.
++        let offset = elem.offset();
++        let texture = elem.texture();
++        let texture_size = elem.logical_size();
++
++        let mut area = Rectangle::new(location + offset, texture_size);
++
++        // The spring is bounded to 64 logical pixels; avoid the much larger
++        // general fragment-shader expansion for this small deformation.
++        let padding = Point::from((66., 66.));
++        area.loc -= padding;
++        area.size += padding.upscale(2.).to_size();
++
++        let area_loc = Vec2::new(area.loc.x as f32, area.loc.y as f32);
++        let area_size = Vec2::new(area.size.w as f32, area.size.h as f32);
++
++        let geo_loc = Vec2::new(location.x as f32, location.y as f32);
++        let geo_size = Vec2::new(geo_size.w as f32, geo_size.h as f32);
++
++        let input_to_geo = Mat3::from_scale(area_size / geo_size)
++            * Mat3::from_translation((area_loc - geo_loc) / area_size);
++
++        let tex_scale = Vec2::new(scale.x as f32, scale.y as f32);
++        let tex_loc = Vec2::new(offset.x as f32, offset.y as f32);
++        let tex_size = Vec2::new(texture.width() as f32, texture.height() as f32) / tex_scale;
++
++        let geo_to_tex =
++            Mat3::from_translation(-tex_loc / tex_size) * Mat3::from_scale(geo_size / tex_size);
++
++        let elem = ShaderRenderElement::new(
++            ProgramType::PointerWobble,
++            area.size,
++            None,
++            scale.x as f32,
++            alpha,
++            Rc::new([
++                mat3_uniform("niri_input_to_geo", input_to_geo),
++                Uniform::new("niri_geo_size", geo_size.to_array()),
++                mat3_uniform("niri_geo_to_tex", geo_to_tex),
++                Uniform::new("niri_pointer_anchor", [anchor.x as f32, anchor.y as f32]),
++                Uniform::new(
++                    "niri_pointer_deformation",
++                    [deformation.x as f32, deformation.y as f32],
++                ),
++            ]),
++            HashMap::from([(String::from("niri_tex"), texture.clone())]),
++            Kind::Unspecified,
++        )
++        .with_location(area.loc);
++
++        // We're drawing the shader, not the offscreen itself.
++        data.id = elem.id().clone();
++
++        Ok((elem, data))
++    }
++}
+diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
+index 8a711357f7275c8f76f4eff0057bfdbf4ee04008..459d90a33ff4c11f550b218520a7d7ccd27f6a51 100644
+--- a/src/render_helpers/shaders/mod.rs
++++ b/src/render_helpers/shaders/mod.rs
+@@ -21,6 +21,7 @@ pub struct Shaders {
+     pub custom_resize: RefCell<Option<ShaderProgram>>,
+     pub custom_close: RefCell<Option<ShaderProgram>>,
+     pub custom_move: RefCell<Option<ShaderProgram>>,
++    pub pointer_wobble: Option<ShaderProgram>,
+     pub custom_open: RefCell<Option<ShaderProgram>>,
+ }
+ 
+@@ -32,6 +33,7 @@ pub enum ProgramType {
+     Close,
+     Open,
+     Move,
++    PointerWobble,
+ }
+ 
+ impl Shaders {
+@@ -150,6 +152,21 @@ impl Shaders {
+             })
+             .ok();
+ 
++        let pointer_wobble = ShaderProgram::compile(
++            renderer,
++            include_str!("pointer_wobble.frag"),
++            &[
++                UniformName::new("niri_input_to_geo", UniformType::Matrix3x3),
++                UniformName::new("niri_geo_to_tex", UniformType::Matrix3x3),
++                UniformName::new("niri_geo_size", UniformType::_2f),
++                UniformName::new("niri_pointer_anchor", UniformType::_2f),
++                UniformName::new("niri_pointer_deformation", UniformType::_2f),
++            ],
++            &["niri_tex"],
++        )
++        .map_err(|err| warn!("error compiling pointer wobble shader: {err:?}"))
++        .ok();
++
+         Self {
+             border,
+             shadow,
+@@ -162,6 +179,7 @@ impl Shaders {
+             custom_close: RefCell::new(None),
+             custom_open: RefCell::new(None),
+             custom_move: RefCell::new(None),
++            pointer_wobble,
+         }
+     }
+ 
+@@ -218,6 +236,7 @@ impl Shaders {
+             ProgramType::Close => self.custom_close.borrow().clone(),
+             ProgramType::Open => self.custom_open.borrow().clone(),
+             ProgramType::Move => self.custom_move.borrow().clone(),
++            ProgramType::PointerWobble => self.pointer_wobble.clone(),
+         }
+     }
+ }
+diff --git a/src/render_helpers/shaders/pointer_wobble.frag b/src/render_helpers/shaders/pointer_wobble.frag
+new file mode 100644
+index 0000000000000000000000000000000000000000..28194b553a0d5f5a89190c191d8daaa3cb987d5a
+--- /dev/null
++++ b/src/render_helpers/shaders/pointer_wobble.frag
+@@ -0,0 +1,41 @@
++precision highp float;
++varying vec2 niri_v_coords;
++uniform mat3 niri_input_to_geo;
++uniform mat3 niri_geo_to_tex;
++uniform vec2 niri_geo_size;
++uniform sampler2D niri_tex;
++uniform float niri_alpha;
++uniform vec2 niri_pointer_anchor;
++uniform vec2 niri_pointer_deformation;
++#if defined(DEBUG_FLAGS)
++uniform float niri_tint;
++#endif
++
++// The grabbed point remains fixed, while distant material lags behind it.
++// Restricting deformation to 12% of the short side keeps the map invertible
++// even for tiny windows. All math is in logical pixels, independent of scale.
++vec2 displacement(vec2 uv, vec2 shift) {
++    vec2 relative = uv - niri_pointer_anchor;
++    float weight = min(dot(relative, relative), 1.0);
++    return shift * weight;
++}
++void main() {
++    vec2 dest = (niri_input_to_geo * vec3(niri_v_coords, 1.0)).xy;
++    float limit = min(64.0, min(niri_geo_size.x, niri_geo_size.y) * 0.12);
++    float magnitude = length(niri_pointer_deformation);
++    vec2 shift = niri_pointer_deformation * min(1.0, limit / max(magnitude, 0.0001));
++    shift /= max(niri_geo_size, vec2(1.0));
++    // Fixed-point inverse sampling prevents holes and retains antialiased CSD.
++    vec2 source = dest;
++    for (int i = 0; i < 5; i++) {
++        source = dest - displacement(source, shift);
++    }
++    vec2 uv = (niri_geo_to_tex * vec3(source, 1.0)).xy;
++    vec4 color = texture2D(niri_tex, uv);
++    if (uv.x < 0.0 || uv.x > 1.0 || uv.y < 0.0 || uv.y > 1.0) color = vec4(0.0);
++    color *= niri_alpha;
++#if defined(DEBUG_FLAGS)
++    if (niri_tint == 1.0) color = vec4(0.0, 0.2, 0.0, 0.2) + color * 0.8;
++#endif
++    gl_FragColor = color;
++}

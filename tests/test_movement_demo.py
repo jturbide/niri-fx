@@ -54,6 +54,22 @@ class MovementDemoTests(unittest.TestCase):
         self.assertEqual(document, movement)
         self.assertNotIn("window-resize", render_kdl(document))
 
+    def test_pointer_demo_is_explicit_and_needs_no_timed_shader(self):
+        from scripts.lib.pointer_wobble import PRESETS as POINTER_PRESETS
+
+        args = self.args()
+        args.pointer_wobble = "gentle"
+        document, _ = demo.selection(args)
+        self.assertEqual(document, PRESETS["momentum-glide"])
+        ordinary = demo.config(document, 250, None)
+        selected = demo.config(document, 250, None, pointer_wobble=POINTER_PRESETS["gentle"].wobble)
+        self.assertNotIn("pointer-wobble", ordinary)
+        self.assertIn("pointer-wobble", selected)
+        self.assertNotIn("window-resize", selected)
+        # Open/close shaders remain; the pointer hook requires no movement one.
+        movement = selected.split("window-movement {", 1)[1]
+        self.assertNotIn("custom-shader", movement)
+
     def test_movement_override_preserves_other_profile_actions(self):
         profile = Profile(
             PRESETS["frost-vanish"], PRESETS["pixelate"], movement=PRESETS["fragment-wake"]

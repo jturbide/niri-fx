@@ -133,6 +133,17 @@ test("gallery starts paused, filters examples and plays only one animation", asy
     assert(
       (await browser.evaluate("document.querySelectorAll('article:not([hidden])').length")) > 0,
     );
+    await browser.navigate(url + "?action=pointer", { readySelector: "[data-gallery-ready]" });
+    assert.equal(
+      await browser.evaluate("document.querySelectorAll('article:not([hidden])').length"),
+      3,
+    );
+    assert(
+      await browser.evaluate(
+        "[...document.querySelectorAll('article:not([hidden])')].every(card=>card.dataset.kind==='experimental' && !card.querySelector('[data-studio]') && card.querySelector('a[download$=\".kdl\"]') && card.querySelector('[data-command]').dataset.command.includes('--pointer-wobble'))",
+      ),
+      "pointer examples offer experimental configuration without a Studio import claim",
+    );
     await browser.navigate(url + "#preset-vortex-fold", { readySelector: "[data-gallery-ready]" });
     assert.equal(
       await browser.evaluate(

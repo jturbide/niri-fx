@@ -14,6 +14,18 @@ python3 scripts/build-niri-movement.py --release --test
 python3 scripts/nested-demo.py
 ```
 
+For the separate opt-in [pointer-wobble prototype](../docs/pointer-wobble.md):
+
+```sh
+python3 scripts/build-niri-movement.py --pointer-wobble --release --test
+python3 scripts/nested-demo.py --pointer-wobble gentle
+```
+
+This adds `niri-pointer-wobble.patch` on top of the movement patch in its own
+checkout and build directory. Drag a synthetic card by its title bar. Gentle,
+Rubber Sheet and Release Settle are available; the normal movement build keeps
+its existing behavior. Neither command installs a login compositor.
+
 Build dependencies are documented in the pinned source's `docs/wiki/Getting-Started.md` (Building section).
 The script fetches the exact upstream commit, applies the patch, builds with
 `--locked --no-default-features`, and records the patch/binary hashes. Source and
@@ -139,8 +151,9 @@ and existing resize/cancellation layout regression tests.
 This is not the complete transaction/particle engine described in
 [the movement design](../docs/movement.md):
 
-- It follows existing tile/column animation clocks. Direct pointer dragging and
-  workspace/camera panning do not get a new particle timeline.
+- It follows existing tile/column animation clocks. The separate
+  [pointer extension](../docs/pointer-wobble.md) adds bounded drag deformation;
+  neither path gives workspace/camera panning a particle timeline.
 - Repeated actions preserve shader phase, seed and the sampled phase/direction
   derivatives. Interrupted tile/column position paths retain velocity too;
   acceleration, camera transitions and one shared swap transaction remain

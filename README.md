@@ -176,6 +176,19 @@ Choose a coordinated opening and closing look by name; detailed tuning is option
 | **Ribbon Fold** | **Twist Snap** | **Hive Collapse** |
 | ![Ribbons rotate and fold](docs/gifs/preset-ribbon-fold.gif) | ![A window twists and settles](docs/gifs/preset-twist-snap.gif) | ![Hexagonal tiles collapse inward](docs/gifs/preset-hive-collapse.gif) |
 
+### Pointer-driven wobble prototype
+
+Grab a window, change direction and let it settle. The optional pointer extension
+adds actual drag response to the isolated experimental compositor. It is available
+from source; Studio's timed Elastic effects remain separate.
+
+| Gentle | Rubber Sheet | Release Settle |
+| --- | --- | --- |
+| ![A firm, subtle pointer-driven bend](docs/gifs/native-pointer-gentle.gif) | ![A softer window bends with the pointer and rebounds](docs/gifs/native-pointer-rubber-sheet.gif) | ![A dragged window settles after release](docs/gifs/native-pointer-release-settle.gif) |
+
+These recordings use real pointer events and synthetic windows in nested Niri.
+[Try the prototype and its three presets](docs/pointer-wobble.md).
+
 ### Pixels, ink and distortion
 
 | Pixel Wipe | Ink Spread | Signal Glitch |

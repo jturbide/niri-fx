@@ -10,13 +10,14 @@ do not need iNiR installed.
 | Niri + iNiR/iRiS | Native preset registration and Studio save | iNiR/iRiS c08bb92 gallery selection, apply and restore tested with Quickshell 0.3.1. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
 | Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher selection, apply and undo tested in a component host. |
-| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 88 current style/profile includes validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
+| Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 91 current style/profile includes validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
 | Niri + custom Quickshell | [Reusable picker](quickshell.md), or standalone config | Quickshell 0.3.1 controller/view and real keyboard workflow tested in isolated hosts; shell-specific embedding remains the integrator's responsibility. |
 | Niri + GTK 4 / AGS 3 | [GTK picker and reusable widget](gtk.md) | GJS 1.88.1 / GTK 4.22.5 and AGS source v3.1.2 keyboard Apply/Undo tested in isolated hosts. Full Astal shell embedding and GTK 3 are not covered. |
 | Niri + Waybar | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
 | Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
+| Pointer-driven wobble | Optional pointer extension to the pinned build | [Isolated native prototype](pointer-wobble.md); not available through stock Niri or Studio profiles. |
 
 See [tested versions and reproduction details](validation.md#workflow-and-compositor-scenarios)
 for the scope of each integration check.

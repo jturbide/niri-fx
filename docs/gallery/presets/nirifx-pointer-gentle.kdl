@@ -1,0 +1,17 @@
+// NiriFX experimental pointer wobble: Gentle
+// A small, firm flex that settles quickly after a drag.
+// Requires the pinned patched Niri build; stock Niri does not support this node.
+// Try it in the isolated nested demo described in experimental/README.md.
+// Merge the node into an existing animations/window-movement block if needed.
+// The built-in drag shader needs no custom-shader and leaves resize unchanged.
+// Omit pointer-wobble to disable it. Strength 0 also disables deformation.
+// Controls: strength 0..2; damping 10..100 percent; frequency 2..16 Hz.
+animations {
+    window-movement {
+        pointer-wobble {
+            strength 0.4
+            damping 85
+            frequency 10
+        }
+    }
+}

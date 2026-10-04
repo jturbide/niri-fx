@@ -24,6 +24,15 @@ of reversal, repeated retargets, close-during-open, close-during-move and shader
 removal. Verify the final layout and disappearance of closed surfaces. Retain
 Niri's blocked-out capture paths and ordinary-renderer fallback.
 
+## Pointer-driven deformation
+
+The [pointer prototype](pointer-wobble.md) keeps an analytically integrated spring
+on each dragged tile. Input adds velocity; the spring's energy is bounded without
+rescaling existing displacement. Release retains the state, and regrabs blend the
+anchor while preserving the current deformation. Test these transitions against
+different frame cadences and extreme input, then check the real Wayland drag path.
+The visual shader must not move input regions or change layout ownership.
+
 ## Performance evidence
 
 Use [the GPU harness](performance.md) for shader draw cost. Measure compositor

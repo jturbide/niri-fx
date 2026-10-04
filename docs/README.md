@@ -39,6 +39,7 @@ iNiR/iRiS, DMS and Noctalia integrations are optional.
 | Import a ready-made custom style | [Examples](../examples/README.md) |
 | Browse presets by look | [Preset collections](collections.md) |
 | Try experimental movement and swaps | [Experimental build](../experimental/README.md) |
+| Try a window that bends while dragging | [Pointer-wobble prototype](pointer-wobble.md) |
 | Understand performance and known limits | [GPU measurements](performance.md), [testing](validation.md) |
 | See planned improvements | [Roadmap](../ROADMAP.md), [integration plans](roadmap.md) |
 

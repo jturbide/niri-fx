@@ -36,12 +36,14 @@ def recording_sources(clip, errors):
         path = ROOT / source
         if not path.is_file() or hashlib.sha256(path.read_bytes()).hexdigest() != digest:
             errors.append(f"Recording source changed; regenerate {name}: {source}")
-    if "patch_sha256" in clip:
-        digest = hashlib.sha256(
-            (ROOT / "experimental/niri-movement.patch").read_bytes()
-        ).hexdigest()
-        if digest != clip["patch_sha256"]:
-            errors.append(f"Native patch changed; regenerate {name}")
+    for key, patch in (
+        ("patch_sha256", "niri-movement.patch"),
+        ("pointer_patch_sha256", "niri-pointer-wobble.patch"),
+    ):
+        if key in clip:
+            digest = hashlib.sha256((ROOT / "experimental" / patch).read_bytes()).hexdigest()
+            if digest != clip[key]:
+                errors.append(f"Native patch changed; regenerate {name}: {patch}")
 
 
 def main():

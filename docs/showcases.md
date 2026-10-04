@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **197 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **200 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -72,6 +72,7 @@ Undo/Redo and pinned A/B comparisons.
 | Resize with the center readable | [Edge Rebuild](gifs/resize-edge.gif), [Soft Reflow](gifs/resize-soft.gif) | Stock Niri; explicitly enable fragment resize |
 | Real fragment swaps | [Original swap](gifs/native-swap.gif), [Crosswind](gifs/native-swap-crosswind.gif), [Orbital Ribbons](gifs/native-swap-orbital-ribbons.gif), [Bubble Burst](gifs/native-swap-bubble-burst.gif), [Core Detonation](gifs/native-swap-core-detonation.gif) | Separately built experimental Niri patch |
 | Real elastic swaps | [Spring Wobble](gifs/native-swap-spring-wobble.gif), [Twist Snap](gifs/native-swap-twist-snap.gif) | Separately built experimental Niri patch |
+| Pointer-driven drag and release | [Gentle](gifs/native-pointer-gentle.gif), [Rubber Sheet](gifs/native-pointer-rubber-sheet.gif), [Release Settle](gifs/native-pointer-release-settle.gif) | [Optional pointer extension](pointer-wobble.md); source checkout |
 | Move/swap design exploration | [Move concept](gifs/move-concept.gif), [Swap concept](gifs/swap-concept.gif), [Three swap concepts](gifs/compare-swap-styles.gif) | Labelled Canvas simulations in Studio; these are not compositor recordings |
 
 See [resize controls](usage.md), [movement limits](movement.md) and the

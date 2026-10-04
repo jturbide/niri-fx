@@ -1,0 +1,291 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "backend": "Pinned Niri pointer extension, nested winit, optimized release build",
+  "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+  "patches": {
+    "experimental/niri-movement.patch": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+    "experimental/niri-pointer-wobble.patch": "c9c6e0b3df5432c0e96c10abf4c1b064d2256a432371f4f26539e56baa6c6c48"
+  },
+  "output": {
+    "width": 1280,
+    "height": 800,
+    "scale": 1,
+    "advertised_refresh_millihz": 60000
+  },
+  "window": {
+    "width": 500,
+    "height": 500
+  },
+  "workload": "Synthetic floating window with a 1.05-second pointer path, two reversals and a final flick, release settling, then a real 0.55-second return drag and settled loop endpoint. Real virtual-pointer events; screencopy and 50 fps recording active.",
+  "limits": [
+    "Winit submission timestamps are not physical presentation or scanout.",
+    "Socket-flush and server-roundtrip acknowledgements measure different protocol stages; neither is input-to-photon latency.",
+    "Submission intervals include idle holds during release settling; maximum intervals are not a per-frame GPU rendering cost.",
+    "One nested output and one machine; no physical, mixed-output or integrated-GPU acceptance.",
+    "The nested output advertises 60 Hz; Winit submission intervals and host callbacks must not be treated as measured physical refresh rate."
+  ],
+  "results": [
+    {
+      "preset": "gentle",
+      "settings": {
+        "strength": 0.4,
+        "damping": 85,
+        "frequency": 10
+      },
+      "checks": [
+        {
+          "case": "floating-reversals-release",
+          "changed_pixels": 836,
+          "geometry": [
+            490.0,
+            200.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "floating-round-trip",
+          "changed_pixels": 0,
+          "geometry": [
+            180.0,
+            140.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "idle-held-grab-settles"
+        },
+        {
+          "case": "release-regrab-input"
+        },
+        {
+          "case": "tiled-drag-layout-input"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "omitted"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "strength-zero"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "movement-off"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "animations-off"
+        },
+        {
+          "case": "close-cancels-grab-survivor-input"
+        }
+      ],
+      "timing": {
+        "native_frames": 86,
+        "winit_interval_p95_ms": 18.094921,
+        "winit_interval_max_ms": 85.481915,
+        "pointer_motion_socket_flush": {
+          "samples": 269,
+          "p95_ms": 0.059308993513695896,
+          "max_ms": 0.5581190052907914
+        },
+        "pointer_server_roundtrip": {
+          "samples": 42,
+          "p95_ms": 31.52578099980019,
+          "max_ms": 33.2173380011227
+        }
+      },
+      "recording": {
+        "gif_bytes": 938370,
+        "gif_sha256": "f9e0bcf5f44e679c18f0aa1413706039f6878b727d63651c57a60011c2af13c6",
+        "gif_frames": 219,
+        "gif_duration_ms": 4380,
+        "frame_durations_ms": [
+          20
+        ],
+        "round_trip_changed_pixels": 0,
+        "encoded_endpoint_changed_pixels": 362
+      }
+    },
+    {
+      "preset": "rubber-sheet",
+      "settings": {
+        "strength": 0.9,
+        "damping": 50,
+        "frequency": 6
+      },
+      "checks": [
+        {
+          "case": "floating-reversals-release",
+          "changed_pixels": 1487,
+          "geometry": [
+            490.0,
+            200.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "floating-round-trip",
+          "changed_pixels": 0,
+          "geometry": [
+            180.0,
+            140.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "idle-held-grab-settles"
+        },
+        {
+          "case": "release-regrab-input"
+        },
+        {
+          "case": "tiled-drag-layout-input"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "omitted"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "strength-zero"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "movement-off"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "animations-off"
+        },
+        {
+          "case": "close-cancels-grab-survivor-input"
+        }
+      ],
+      "timing": {
+        "native_frames": 96,
+        "winit_interval_p95_ms": 18.101342,
+        "winit_interval_max_ms": 95.687072,
+        "pointer_motion_socket_flush": {
+          "samples": 269,
+          "p95_ms": 0.0648400018690154,
+          "max_ms": 0.2627689973451197
+        },
+        "pointer_server_roundtrip": {
+          "samples": 42,
+          "p95_ms": 32.183290997636504,
+          "max_ms": 33.28189899912104
+        }
+      },
+      "recording": {
+        "gif_bytes": 1264060,
+        "gif_sha256": "52e1e1bc905a5bef54f78dd787672efdde67327c03e8f04bffe2f92e92e08689",
+        "gif_frames": 220,
+        "gif_duration_ms": 4400,
+        "frame_durations_ms": [
+          20
+        ],
+        "round_trip_changed_pixels": 0,
+        "encoded_endpoint_changed_pixels": 197
+      }
+    },
+    {
+      "preset": "release-settle",
+      "settings": {
+        "strength": 0.7,
+        "damping": 42,
+        "frequency": 8
+      },
+      "checks": [
+        {
+          "case": "floating-reversals-release",
+          "changed_pixels": 6635,
+          "geometry": [
+            490.0,
+            200.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "floating-round-trip",
+          "changed_pixels": 0,
+          "geometry": [
+            180.0,
+            140.0,
+            500,
+            500
+          ]
+        },
+        {
+          "case": "idle-held-grab-settles"
+        },
+        {
+          "case": "release-regrab-input"
+        },
+        {
+          "case": "tiled-drag-layout-input"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "omitted"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "strength-zero"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "movement-off"
+        },
+        {
+          "case": "disable-during-grab",
+          "mode": "animations-off"
+        },
+        {
+          "case": "close-cancels-grab-survivor-input"
+        }
+      ],
+      "timing": {
+        "native_frames": 87,
+        "winit_interval_p95_ms": 19.522601,
+        "winit_interval_max_ms": 85.549511,
+        "pointer_motion_socket_flush": {
+          "samples": 269,
+          "p95_ms": 0.05641000461764634,
+          "max_ms": 0.29437900229822844
+        },
+        "pointer_server_roundtrip": {
+          "samples": 42,
+          "p95_ms": 28.945867001311854,
+          "max_ms": 33.33083000325132
+        }
+      },
+      "recording": {
+        "gif_bytes": 1112792,
+        "gif_sha256": "f441b9fb94f867de0ea91abf203dec8ead01bf71db3a59a2766a84d4a7f4b197",
+        "gif_frames": 219,
+        "gif_duration_ms": 4380,
+        "frame_durations_ms": [
+          20
+        ],
+        "round_trip_changed_pixels": 0,
+        "encoded_endpoint_changed_pixels": 353
+      }
+    }
+  ],
+  "host_gpu": {
+    "model": "NVIDIA GeForce RTX 4070 Ti",
+    "driver": "615.71.09"
+  },
+  "timing_scope": {
+    "native_frames": "First outward drag, reversals and release settling; excludes return drag. Intervals include idle holds and recording load.",
+    "pointer_motion_socket_flush": "All motion commands across the ten lifecycle checks. Measures helper acknowledgement after flushing the Wayland socket, not compositor dispatch.",
+    "pointer_server_roundtrip": "All button and explicit synchronization commands across the ten lifecycle checks. Measures ordered server-roundtrip acknowledgement, not presentation."
+  }
+}
