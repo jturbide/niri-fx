@@ -15,8 +15,8 @@ point; installing a different shell cannot add compositor shader hooks.
 animation configuration. An optional Studio launcher button is a small convenience,
 not a prerequisite or a new effects backend. The same applies to simple bars/widgets.
 
-For every future adapter: reuse the parameter catalog and CLI, keep resize opt-in,
-separate preview/registration from activation, preserve unrelated settings, and
+For every future adapter: reuse the parameter catalog and CLI, preserve existing resize behavior
+unless the profile selects resize, separate preview/registration from activation, preserve unrelated settings, and
 prove exact restore against temporary configs. Include a scenario guide and record
 the actual validation scope. Do not add a second shader renderer inside a shell UI.
 

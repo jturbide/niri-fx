@@ -52,9 +52,10 @@ picker. A shell adapter should provide search, editable profiles, deliberate
 activation, a dedicated restore state and visible error messages. Use argument
 arrays and catalog identifiers instead of interpolating names into shell commands.
 
-Test selection, activation and exact restore with temporary configurations. Keep
-resize opt-in, preserve unrelated settings, and describe ownership when another
-animation manager is present. See [integration priorities](roadmap.md).
+Test selection, activation and exact restore with temporary configurations.
+Preserve existing resize behavior unless the profile selects resize, keep unrelated
+settings, and describe ownership when another animation manager is present.
+See [integration priorities](roadmap.md).
 
 ## Adding effects and controls
 

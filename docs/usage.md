@@ -27,7 +27,7 @@ for local import, sharing limits and the distinction between previews and activa
 ## Slices
 
 Slices preserve broad strips of the actual window texture. They support opening
-and closing on stock Niri, with opt-in Accordion resize. Native slice movement
+and closing on stock Niri, with Accordion resize. Native slice movement
 requires the experimental build. Opening reverses the closing path with its own duration.
 
 | Control | Range / meaning |
@@ -182,7 +182,7 @@ Particle targets are approximate and depend on window geometry. Opening reverses
 the closing trajectory with its own duration; the effect is artistic rather than
 a physical simulation. There are no particle collisions.
 
-## Resize is opt-in
+## Choose a resize style
 
 Resize effects are available for **Fragments, Elastic, Slices and Distortion**.
 See the [resize guide](resize.md) for profiles, controls and supported Niri actions.

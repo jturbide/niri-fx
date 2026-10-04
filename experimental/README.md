@@ -14,7 +14,7 @@ python3 scripts/build-niri-movement.py --release --test
 python3 scripts/nested-demo.py
 ```
 
-For the separate opt-in [pointer-wobble prototype](../docs/pointer-wobble.md):
+For the separate [pointer-wobble prototype](../docs/pointer-wobble.md):
 
 ```sh
 python3 scripts/build-niri-movement.py --pointer-wobble --release --test
@@ -65,7 +65,7 @@ Logs and captures stay in a new `artifacts/nested-demo-*` directory each run.
 python3 scripts/nested-demo.py --preset vortex --duration-ms 1200
 # Reduce native deformation without changing the preset:
 python3 scripts/nested-demo.py --preset slice-exchange --movement-strength 0.35
-# Opt into resize fragments as well:
+# Include resize fragments as well:
 python3 scripts/nested-demo.py --resize
 # Optional automated native rendering check (also requires grim and Pillow):
 python3 scripts/nested-demo.py --smoke

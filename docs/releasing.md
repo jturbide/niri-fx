@@ -15,8 +15,9 @@ releases just to fill the list.
 
 ## Prepare a release
 
-1. Review the complete diff and changelog. Keep resize opt-in and distinguish
-   stock support, browser concepts and patched compositor capabilities.
+1. Review the complete diff and changelog. Check that unselected resize leaves
+   existing settings unchanged and distinguish stock support, browser concepts
+   and patched compositor capabilities.
 2. Run the [contributor checks](../CONTRIBUTING.md), including lint/format, docs, unit/integration/browser E2E tests,
    GLSL compilation and installed Niri validation. Require the GitHub Checks
    workflow to pass on the exact proposed commit.

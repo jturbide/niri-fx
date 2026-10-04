@@ -22,9 +22,8 @@ do not need iNiR installed.
 See [tested versions and reproduction details](validation.md#workflow-and-compositor-scenarios)
 for the scope of each integration check.
 
-Resize fragments are **opt-in everywhere**. The standard preset pack and KDL
-exports change only opening and closing. Enable resize deliberately with
-`--resize` or Studio's checkbox.
+The standard preset pack leaves existing resize behavior unchanged. Add a resize
+style with `--resize` or Studio's checkbox.
 
 ## Niri + DankMaterialShell
 

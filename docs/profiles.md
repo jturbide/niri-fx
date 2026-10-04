@@ -7,6 +7,27 @@ fragments, close with Implosion, and leave your existing resize behavior unchang
 
 ![Textured fragments assemble and collapse inward in one profile](gifs/profile-fragment-flow.gif)
 
+## Choose which actions to customize
+
+Library keeps each action's choice in the profile:
+
+| Action | Available choices |
+| --- | --- |
+| Open and Close | Choose a style for each; both currently require an effect. |
+| Resize | **Use shell defaults**, or choose a supported resize style. |
+| Move / swap | **Use shell defaults**, or choose a supported movement style. Moving and swapping share this one action. |
+| Pointer drag | **Use desktop settings**, **Disabled**, a preset or custom spring settings. |
+
+**Use shell defaults** and **Use desktop settings** preserve the desktop's
+existing behavior. They do not turn its animations off. Pointer **Disabled**
+stores zero strength; applying it requires the same native support as other
+pointer settings. Live movement and pointer deformation require the verified
+[experimental compositor](../experimental/README.md).
+
+Independent Preserve and Off choices for opening and closing are planned in the
+[action-selection roadmap](../ROADMAP.md#consistent-action-selection). Current
+profiles do not provide those switches.
+
 ## Choose a finished pairing
 
 Start with **Recommended** in Library for five complete combos: Fragment Flow,
@@ -115,14 +136,14 @@ python3 -m niri_fx render --custom /tmp/my-profile.json > /tmp/my-profile.kdl
 niri validate -c /tmp/my-profile.kdl
 ```
 
-Use `--resize-preset balanced` when creating a profile to opt in. To register it
+Add `--resize-preset balanced` when creating a profile to include resize. To register it
 without activation, use `register --custom /tmp/my-profile.json`; standalone
 `setup --custom /tmp/my-profile.json --target standalone` first prints a plan.
 `--apply` activates the backed-up standalone include. See [setup](setup.md).
 
 Profiles are **kind `profile`, schema 1** documents with `name` and `actions`.
 `open` and `close` contain effect objects; `resize` and `movement` are nullable.
-Each nested effect keeps `resize: false`: the separate resize slot is the opt-in.
+Each nested effect keeps `resize: false`: the separate resize slot selects that action.
 Single-style documents continue to use effect schema 3; these are different
 document types, not compatibility aliases. [Complete example](../examples/profiles/spring-and-ember.json).
 
@@ -133,7 +154,7 @@ alone leaves the slot unset. Stock KDL and iRiS exports omit it by default; expl
 Profiles do not add application-specific rules. Pointer drag uses a separate
 optional native extension, described below.
 
-## Optional pointer drag
+## Pointer drag
 
 Pointer settings in profiles, Studio and reviewed activation are available in
 **0.18 and newer**. Live pointer deformation requires the separately built

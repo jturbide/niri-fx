@@ -32,7 +32,7 @@ resize examples explicitly enable it.
 | [Diagonal Shear](diagonal-shear.json) | 10 strips at −35°, alternating travel | Open / close |
 
 All single-style examples use schema 3. Slices supports stock open/close,
-opt-in Accordion Resize and experimental movement. Import into Studio to preview,
+Accordion Resize and experimental movement. Import into Studio to preview,
 then save/apply when ready.
 
 ```sh
@@ -274,7 +274,7 @@ python3 -m niri_fx preview --custom examples/pixel-transfer.json --output /tmp/p
 python3 -m niri_fx preview --custom examples/soft-phase.json --output /tmp/soft-phase.html
 ```
 
-## Resize profiles (explicit opt-in)
+## Resize profiles
 
 These profiles use Balanced for open/close and a separate resize effect. Importing previews them; applying their generated config enables resize.
 

@@ -24,8 +24,9 @@ launchers remain valid when the installation stays at the same path.
 Profiles can now include optional `pointer` settings. Studio previews dragging
 and includes it in combo previews when selected; saving or previewing a profile
 does not activate those settings. Old profiles inherit their existing pointer
-behavior, and built-in profiles leave pointer settings unset. Resize remains
-opt-in. Stock exports omit movement shaders and pointer nodes, even when pointer
+behavior, and built-in profiles leave pointer settings unset. Existing resize
+behavior remains unchanged unless the profile selects resize. Stock exports omit
+movement shaders and pointer nodes, even when pointer
 strength is explicitly zero. See the [pointer guide](pointer-wobble.md).
 
 Native pointer activation requires the separate pointer extension for the pinned
@@ -87,9 +88,9 @@ snapshots restore through **Restore previous** or `niri-fx studio --restore` usi
 the same target and configuration. Existing custom JSON files remain usable
 without conversion.
 
-Resize is still opt-in. Stock Niri provides opening, closing and explicitly
-enabled resize; custom movement/swap shaders require the verified experimental
-compositor. Combo previews demonstrate selected actions and do not activate
+Existing resize settings remain unchanged unless a profile includes resize.
+Stock Niri provides opening, closing and resize; custom movement/swap shaders
+require the verified experimental compositor. Combo previews demonstrate selected actions and do not activate
 them. The experimental patch is unchanged from 0.16.
 
 To return to 0.16, use the current app to restore any Library Apply you want to
@@ -166,7 +167,7 @@ values and appearance are unchanged. Re-register or re-export a shell pack to
 expose the new styles. Installing the package alone does not update active shaders.
 
 Resize stays off in all built-ins. Distortion still defaults to Ripple Resize;
-Edge Ripple and Torsion are separate choices with explicit opt-in profiles. A
+Edge Ripple and Torsion have dedicated resize profiles. A
 missing `distortion_resize_mode` or `resize_twist` uses its default.
 
 The gallery now starts with nine recommended looks. Search, All examples and
@@ -211,14 +212,15 @@ portable JSON, and `setup --expect-plan` binds activation to a reviewed plan.
 
 Preset values, shader sources and the experimental compositor patch are unchanged
 from 0.8. Schema 3 styles and schema 1 profiles remain supported. Upgrading does
-not change active effects; resize stays opt-in. Keep your custom JSON and snapshots.
+not change active effects or existing resize behavior. Keep your custom JSON
+and snapshots.
 
 ## From 0.7 to 0.8
 
 Schema 3 styles and schema 1 action profiles remain supported. Back up custom
 JSON and restore snapshots before updating. New defaults, including the monochrome
 Ember palette, take effect only when you regenerate or select those presets.
-Your active files are not rewritten by a package upgrade. Resize stays opt-in.
+Your active files, including resize settings, are not rewritten by a package upgrade.
 
 The experimental movement patch changed. Rebuild it from the 0.8 source using
 `python3 scripts/build-niri-movement.py --release --test`; an older patched source
@@ -260,7 +262,7 @@ change the effect currently running on your desktop.
   [updating the pack](noctalia.md#update-or-undo) if you edited an exported file.
 
 Keep exported custom styles and restore snapshots. Existing custom shaders change
-only when you explicitly regenerate or save them. Fragment resize remains opt-in.
+only when you explicitly regenerate or save them.
 Use [setup and restore](setup.md) to inspect or undo managed changes.
 
 ## Preset formats and commands

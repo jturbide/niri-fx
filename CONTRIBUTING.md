@@ -30,8 +30,8 @@ python3 scripts/validate.py --require-glsl --require-niri
 ```
 
 Install `glslangValidator` and Niri through your distribution for the shader and
-configuration checks. CI requires GLSL validation; local `--require-niri` also
-checks stock Niri config parsing. Tests use temporary files and a loopback server,
+configuration checks. CI requires GLSL validation for rendering changes; local
+`--require-niri` also checks stock Niri config parsing. Tests use temporary files and a loopback server,
 so local socket access must be available. Do not point tests at your real registry.
 
 For editor/rendering changes, use Node 22+ and Chromium/Chrome (or `CHROME_BIN`):
@@ -106,7 +106,25 @@ export parity; it is not a compositor GPU benchmark. See
   Python and compares supported stock/native shaders and combined pointer KDL. `npm run test:browser`
   tests real Chromium launch/error/timeout/cleanup and gallery filtering/playback before the full editor E2E.
   Avoid duplicating these with a separate framework just to increase test counts.
-- GitHub Actions classifies changes conservatively: an explicit docs/media allowlist skips unit, GLSL, package and browser work. Lint and docs checks still run. Unknown paths, missing history, manual runs and failed selection require full checks or fail the required jobs. Required job names remain unchanged.
+- GitHub Actions classifies changes conservatively. Documentation/media changes
+  keep lint, Node tests, docs checks and site construction. An exact allowlist of
+  native compositor tools/patches and agent discovery files also keeps both Python
+  test matrices and installed-package checks, while skipping unchanged portable
+  GLSL and browser/Studio rendering suites. Native changes still need the local
+  compositor checks below. Renderer, editor, shared contracts, examples and unknown
+  paths require the complete suite; so do manual runs, release branches/tags,
+  version changes and unavailable history. Mixed changes take the broader scope.
+  Required job names stay unchanged, and failed or malformed selection fails them.
+- Native pointer spring and shader math share a contract with the browser preview.
+  The always-on Node tests verify native source hashes, recorded Rust traces and
+  GLSL adaptation. After reviewing native math changes, regenerate the traces with
+  `python3 scripts/pointer-preview-reference.py`, verify them with the same command
+  plus `--check`, and update the browser adapter when needed. Changes to the trace
+  fixture, generator or adapter require the full rendering suite. Native harness
+  changes alone do not alter the browser's runtime inputs.
+- CI caches pip and npm downloads using the dependency-file hashes. Each run still
+  installs its dependencies and tests fresh outputs; virtual environments, shader
+  results, browser profiles and generated packages are not reused as test evidence.
 - Software WebGL probes reuse up to eight compiled programs for replay and reversal
   checks. The full rendering/save suite has a 15-minute deadline within the
   20-minute browser job to accommodate slower shared runners; individual browser
@@ -160,8 +178,9 @@ it does not replace it. Examples should use generic paths and names.
 - Explain the problem, resulting behavior, and checks run in the pull request.
 - Add an **Unreleased** changelog entry for user-visible behavior, defaults,
   compatibility, packaging or substantial documentation changes.
-- Keep resize fragments opt-in. Keep movement shaders and pointer nodes out of
-  stock Niri exports, including explicit zero-strength pointer settings.
+- Preserve existing resize settings unless a resize style is selected. Keep
+  movement shaders and pointer nodes out of stock Niri exports, including explicit
+  zero-strength pointer settings.
 - Preserve unrelated presets and timings, backups, symlinks and explicit custom
   choices. Registration and saving must remain separate from activation.
 - Keep Python and browser parameter validation, pointer documents and shader

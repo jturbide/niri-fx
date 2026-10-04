@@ -27,7 +27,7 @@ combo. Profiles retain independent opening, closing and optional actions.
 The wheel includes the editor, CLI and reusable agent guidance. Actual
 pointer-driven window deformation requires the separately built
 [native extension](pointer-wobble.md) and explicit activation in a verified
-session. Its input/capture limitations remain documented, and resize stays opt-in.
+session. Its input/capture limitations remain documented.
 [Upgrade from 0.17](upgrading.md#from-017-to-018).
 
 Download the wheel and `SHA256SUMS` from the same release, verify the checksum,
@@ -57,8 +57,8 @@ The Library runs standalone and connects to supported shell workflows. Local
 Apply shows a plan and keeps a restore snapshot; the online Studio previews and
 exports JSON/KDL without accessing your desktop. Detailed controls remain in
 **Customize**. Installing the package or choosing a preview leaves active effects
-unchanged. Resize remains opt-in, and custom movement requires the separate
-experimental compositor.
+unchanged. Built-in profiles leave resize unchanged; custom movement requires
+the separate experimental compositor.
 
 Download the wheel and `SHA256SUMS` from the same release, verify the checksum,
 then install and browse:
@@ -100,7 +100,7 @@ presets, 13 profiles and eight collections. [Desktop motion packs](desktop-motio
 coordinate stock workspace, camera and overview springs. [Mixed shapes](fragment-shapes.md#mix-two-shapes)
 add deterministic two-shape layouts and two finished looks. The experimental
 compositor adds verified activation and native output feedback. Resize and custom
-movement remain opt-in. Read [upgrade notes](upgrading.md#from-014-to-015).
+movement are selected separately. Read [upgrade notes](upgrading.md#from-014-to-015).
 
 Install the wheel without the source gallery:
 

@@ -35,7 +35,7 @@ if you want to run it from elsewhere.
 
 Use one animation manager at a time. A late standalone include overrides earlier
 iRiS/Noctalia choices. Registration, previewing and pack export do not select a
-style; standalone `setup --apply` does. Resize remains opt-in on every path.
+style; standalone `setup --apply` does.
 
 For nonstandard locations, use `--config`, `--state`, `--registry` or `--inir-root`
 as appropriate; see [setup and restore](setup.md). Future native UI integrations

@@ -18,10 +18,13 @@ Choosing a card updates the actual shader preview without changing your desktop.
 
 The combo builder shows **Open**, **Close**, **Resize** and **Move / swap** together.
 Choose **Different styles per action** to mix effects, or **Same style for each
-enabled action** to copy a shared style. Optional actions remain off until chosen.
-Only supported styles appear in resize and movement selectors. A shared style
-that cannot support an enabled optional action returns that action to shell
-defaults and explains the change.
+enabled action** to copy a shared style. Resize and movement use shell defaults
+until you choose an effect; this preserves their existing desktop behavior.
+Only supported styles appear in those selectors. A shared style that cannot
+support a selected resize or movement effect returns that action to shell defaults
+and explains the change. Opening and closing each require a style; their
+independent Preserve and Off choices are planned. See the
+[current action choices](profiles.md#choose-which-actions-to-customize).
 
 Use **Tune** beside an action for its detailed settings. Returning to Library
 keeps those edits. Refined actions show the matching combo name, such as

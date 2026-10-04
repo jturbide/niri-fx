@@ -4,7 +4,7 @@ The pointer prototype bends a window around the point where you grab it. The
 rest of the surface lags behind your hand, responds when you change direction,
 and settles after release. Its spring responds to actual drag events.
 
-This is an **opt-in native experiment** requiring the separate pointer extension
+This is a **native experiment** requiring the separate pointer extension
 for the pinned Niri build. Build it from the 0.18 source archive or a current
 checkout. The 0.18 wheel includes portable profiles, interactive browser previews
 and Studio controls, with reviewed standalone Apply/Restore when the running

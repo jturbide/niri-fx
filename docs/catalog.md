@@ -8,7 +8,7 @@ JSON downloads for every built-in style and pairing.
 ## See it in motion
 
 [Fragments](#fragment-styles) · [Slices](#slice-styles) · [Wobble](#elastic-styles) · [Reveals](#dissolve-and-iris-reveals) · [Pixels](#pixel-wipes-and-dust) · [Wisps](#wisps-and-currents) · [Distortions](#shockwaves-and-distortions) · [Profiles](#combine-different-actions) · [Compare the controls](#one-control-at-a-time) ·
-[Custom examples](#three-custom-examples) · [Resize](#resize--opt-in) ·
+[Custom examples](#three-custom-examples) · [Resize](#resize) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
 All **75 presets** have a recording. The [visual scenario index](showcases.md)
@@ -256,8 +256,8 @@ directional movement controls apply only in the experimental compositor.
 
 A Compiz-inspired spring feel: bend the whole window, let it oscillate, then
 settle. Tune strength, frequency, damping and axis. These are timed open/close
-shaders; native swaps use the experimental compositor. Interactive drag physics
-is not implemented. Animated size changes support opt-in Elastic Stretch.
+shaders; native swaps use the experimental compositor. For drag response, use the
+[pointer extension](pointer-wobble.md). Use Elastic Stretch for animated size changes.
 
 | Spring Wobble | Rubber Band | Jelly |
 | --- | --- | --- |
@@ -469,25 +469,25 @@ See the [complete pairing table](profiles.md#choose-a-finished-pairing).
 
 [Preview or export these profiles](../examples/profiles/README.md).
 
-### Resize — opt-in
+### Resize
 
-**Disabled by default.** When explicitly enabled, the actual resize shader breaks
-up the old window texture and rebuilds the contents at the new size.
+The fragment resize shader breaks up the old window texture and rebuilds the
+contents at the new size.
 
-<img src="gifs/resize.gif" alt="Opt-in resize breaks the window into fragments and reconstructs it at its new size" width="560">
+<img src="gifs/resize.gif" alt="Fragments break apart and reconstruct the window at its new size" width="560">
 
-Enable **Resize effect** in Studio or pass `--resize` when
-saving/rendering a style. Ordinary resizing stays in place unless you opt in.
+Choose **Resize effect** in Studio or pass `--resize` when saving/rendering a
+style. Leaving resize unset preserves the current Niri resize behavior.
 
-Three styles let you choose how much of the window breaks apart. **The example
-JSON below explicitly enables resize**; importing it loads that choice into the
-editor, and applying the resulting preset enables it on the desktop.
+Three styles let you choose how much of the window breaks apart. These example
+profiles include resize; importing previews the choice, and applying the profile
+activates it on the desktop.
 
 | Full Breakup | Edge Rebuild | Soft Reflow |
 | --- | --- | --- |
 | ![Full Breakup fragments the whole window during resize](gifs/resize-full.gif) | ![Edge Rebuild concentrates fragments around changing edges](gifs/resize-edge.gif) | ![Soft Reflow keeps a readable window beneath lighter fragments](gifs/resize-soft.gif) |
 | Whole-window effect | Preserves the center | Gentler blend |
-| [Opt-in JSON](../examples/resize-full.json) | [Opt-in JSON](../examples/resize-edge.json) | [Opt-in JSON](../examples/resize-soft.json) |
+| [Import JSON](../examples/resize-full.json) | [Import JSON](../examples/resize-edge.json) | [Import JSON](../examples/resize-soft.json) |
 
 ### Experimental movement and swaps
 
@@ -581,9 +581,8 @@ choices. See the [roadmap](../ROADMAP.md) for planned improvements.
 
 ## New ways to resize and swap
 
-Resize remains **off in every built-in preset**. These separate profiles opt into
-Elastic Stretch, Accordion Resize or Ripple Resize on stock Niri's animated size
-changes. They do not add pointer-driven wobble while dragging an edge.
+These profiles include Elastic Stretch, Accordion Resize or Ripple Resize on
+stock Niri's animated size changes. They do not add pointer-driven wobble while dragging an edge.
 
 ![Elastic, accordion and ripple resize compared](gifs/compare-resize-families.gif)
 
@@ -624,8 +623,8 @@ monochrome by default; Chromatic Glitch adds adjustable color separation.
 
 ### Edge Ripple and Torsion Resize
 
-Both modes have separate Subtle and Expressive profiles. They keep Balanced
-opening/closing and opt into resize on stock Niri. [Controls and JSON downloads](resize.md#edge-ripple-and-torsion-resize).
+Both modes have separate Subtle and Expressive profiles. They combine Balanced
+opening/closing with resize on stock Niri. [Controls and JSON downloads](resize.md#edge-ripple-and-torsion-resize).
 
 ![Edge Ripple strength comparison](gifs/compare-edge-ripple-resize.gif)
 ![Torsion strength comparison](gifs/compare-torsion-resize.gif)
@@ -642,7 +641,7 @@ camera and overview springs. [Commands, native recordings and support](desktop-m
 ## Coordinated action sets
 
 [Fragments, Ribbons and Elastic Motion](action-sets.md) pair window effects with
-stock desktop timing. Matching resize and native movement are separate opt-ins.
+stock desktop timing. Choose matching resize and native movement styles separately.
 
 | Fragments Motion | Ribbons Motion | Elastic Motion |
 | --- | --- | --- |

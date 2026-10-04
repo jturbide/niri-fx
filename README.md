@@ -18,9 +18,9 @@ Quickshell is optional. Studio opens as an app-style window or a browser tab.
 [Documentation](docs/README.md) ·
 [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
-Opening, closing and optional resize work on **stock Niri**, tested with 26.04.
-Resize is **off in every built-in preset**. Native movement, swaps and the
-interruption improvements require the [experimental compositor](experimental/README.md).
+Opening, closing and resize effects work on **stock Niri**, tested with 26.04.
+Built-in presets leave resize unchanged. Native movement and swaps, pointer
+deformation and the interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
 release. [Download v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0)
@@ -32,7 +32,8 @@ for the versioned package, or read [choosing a version](docs/releases.md).
 or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-fx/gallery/).
 Choose a ready-made combo in **Library**, use one style for every action or mix
 opening and closing styles. Click **Preview combo** to watch the whole sequence.
-Resize and movement run only when you select them. Save a named profile, share its
+Choose resize and Move / swap styles separately, or keep the desktop's current
+behavior. Save a named profile, share its
 settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
@@ -137,25 +138,25 @@ for circles and hexagons. Tune the second shape, mixture and stable layout seed.
 
 Choose **Fragments Motion**, **Ribbons Motion** or **Elastic Motion** for matching
 opening, closing and desktop timing. Studio suggests a companion when you view
-Resize or Movement; each remains off until explicitly included.
+Resize or Movement; choose the companion to include it in your profile.
 
 | Fragments Motion | Ribbons Motion | Elastic Motion |
 | --- | --- | --- |
 | ![Mixed pieces arrive and orbit away](docs/gifs/profile-fragments-motion.gif) | ![Ribbons wave in and zipper shut](docs/gifs/profile-ribbons-motion.gif) | ![A springy arrival and rubber-sheet exit](docs/gifs/profile-elastic-motion.gif) |
-| **Optional edge rebuild** | **Optional ribbon resize** | **Optional spring resize** |
+| **Edge rebuild** | **Ribbon resize** | **Spring resize** |
 | ![Mixed fragments rebuild a resized edge](docs/gifs/fragments-motion-resize.gif) | ![Ribbons wave during resize](docs/gifs/ribbons-motion-resize.gif) | ![Elastic resize settles gently](docs/gifs/elastic-motion-resize.gif) |
 | **Experimental fragment swap** | **Experimental ribbon swap** | **Experimental elastic swap** |
 | ![Two windows swap with mixed fragments](docs/gifs/native-swap-fragments-motion.gif) | ![Two windows swap with flowing ribbons](docs/gifs/native-swap-ribbons-motion.gif) | ![Two windows glide into exchanged positions](docs/gifs/native-swap-elastic-motion.gif) |
 
 The first two rows use real shaders with synthetic content. Swaps are native
 nested-compositor recordings and require the experimental build.
-[Try a set and choose its optional actions](docs/action-sets.md) ·
+[Build a combo from an action set](docs/action-sets.md) ·
 [Browse coordinated sets](https://jturbide.github.io/niri-fx/gallery/?collection=action-sets)
 
 ### Coordinated desktop motion
 
 **Gentle**, **Balanced** and **Playful** pair window effects with stock workspace,
-camera and overview springs. Resize and custom movement remain opt-in.
+camera and overview springs.
 
 | Gentle | Balanced | Playful |
 | --- | --- | --- |
@@ -183,7 +184,7 @@ Choose a coordinated opening and closing look by name; detailed tuning is option
 
 ### Pointer-driven wobble prototype
 
-Grab a window, change direction and let it settle. The optional pointer extension
+Grab a window, change direction and let it settle. The pointer extension
 adds actual drag response to the isolated experimental compositor. It is available
 from source; Studio's timed Elastic effects remain separate.
 Choose **Pointer drag** in Library to save a preset or tune its strength, damping
@@ -258,7 +259,7 @@ python3 -m niri_fx studio --profile fragment-flow
 [All 16 profiles, commands and downloads](docs/profiles.md) ·
 [Ghost and Shockwave](docs/gifs/profile-ghost-and-shockwave.gif)
 
-## Resize (opt-in)
+## Resize
 
 Choose fragment breakup, **Elastic Stretch**, **Accordion Resize**, **Ripple
 Resize**, **Edge Ripple** or **Torsion Resize**. These work on stock Niri's animated size changes, such as cycling column
@@ -314,7 +315,8 @@ synthetic directional path; its older Move/Swap sketches remain labelled concept
 
 Fragment Wake, Ribbon Transfer and Momentum Glide provide three movement looks.
 The patched compositor also handles vertical reorder and consume/expel animation
-paths. Pointer dragging and workspace effects remain on the [roadmap](ROADMAP.md).
+paths. The [pointer extension](docs/pointer-wobble.md) adds drag response; custom
+workspace effects remain on the [roadmap](ROADMAP.md).
 
 | Fragment Wake | Ribbon Transfer | Momentum Glide |
 | --- | --- | --- |
@@ -324,10 +326,10 @@ paths. Pointer dragging and workspace effects remain on the [roadmap](ROADMAP.md
 
 [Controls, profile export and isolated demos](docs/movement.md#movement-presets-and-general-rearrangement)
 
-### Shaped resize, explicitly enabled
+### Shaped resize
 
-Triangles, hexagons and other fragment shapes now work during resize. These
-separate profiles enable it deliberately; every built-in style still leaves it off.
+Use triangles, hexagons and other fragment shapes during resize with these
+ready-made profiles.
 
 | Triangle Edge Rebuild | Hexagon Edge Rebuild | Circle Soft Reflow |
 | --- | --- | --- |
@@ -337,9 +339,9 @@ separate profiles enable it deliberately; every built-in style still leaves it o
 
 ## Make it yours
 
-Open `niri-fx studio` to choose a finished look in **Library**. Mix opening,
-closing and optional resize/movement styles, or use one style across enabled
-actions. **Customize in Studio** opens detailed tuning in the same app.
+Open `niri-fx studio` to choose a finished look in **Library**. Choose opening
+and closing styles, then add resize, Move / swap or pointer settings to your
+combo. **Customize in Studio** opens detailed tuning in the same app.
 
 ![Choose effects and build a combo](docs/gifs/workflow-library.gif)
 
