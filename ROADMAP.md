@@ -54,7 +54,7 @@ Goal: make finished combinations easy to compare, choose and install.
 - [x] Publish complete-cycle showcases and portable JSON for all five combos.
 - [x] Test the actual 0.16-to-0.17 upgrade with saved JSON, favorites, shell entries
       and exact Restore in isolated configurations.
-- [ ] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
+- [x] Publish the signed 0.17 prerelease, its packages, checksums and upgrade guide.
 
 Pointer-driven wobble is the next major FX milestone after this release (Epic 4).
 
