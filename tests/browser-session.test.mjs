@@ -74,3 +74,24 @@ test("startup hooks capture script errors before page code on every reload", asy
     await browser.close();
   }
 });
+
+test("browser startup waits for the initial page target after the debugging port", async (t) => {
+  const originalFetch = globalThis.fetch;
+  let emptyResponses = 0,
+    targetRequests = 0;
+  t.mock.method(globalThis, "fetch", (url, options) => {
+    if (String(url).endsWith("/json/list")) {
+      targetRequests++;
+      if (emptyResponses++ < 2) return Promise.resolve(new Response("[]"));
+    }
+    return originalFetch(url, options);
+  });
+  const browser = await launchBrowser();
+  try {
+    assert(targetRequests >= 3, "an empty target list is a startup transition");
+    await browser.navigate(page("ready"));
+    assert.equal(await browser.evaluate("1 + 2"), 3);
+  } finally {
+    await browser.close();
+  }
+});

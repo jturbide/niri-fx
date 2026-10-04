@@ -181,12 +181,19 @@ export async function launchBrowser({
     }
     const port = readFileSync(portFile, "utf8").split("\n")[0];
     if (!/^\d+$/.test(port)) throw new Error("Chrome returned an invalid debugging port");
-    const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
-      signal: AbortSignal.timeout(launchTimeout),
-    });
-    if (!response.ok) throw new Error("Chrome debugging endpoint failed: " + response.status);
-    const page = (await response.json()).find((tab) => tab.type === "page");
-    if (!page) throw new Error("Chrome did not create a page target");
+    // The debugging port can be published before the initial page target.
+    // Retry only an empty target list, within the same bounded startup window.
+    let page;
+    while (!page) {
+      if (launchError || closed || Date.now() >= deadline)
+        throw new Error("Chrome did not create a page target before startup ended");
+      const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
+      });
+      if (!response.ok) throw new Error("Chrome debugging endpoint failed: " + response.status);
+      page = (await response.json()).find((tab) => tab.type === "page");
+      if (!page) await delay(50);
+    }
     socket = new WebSocket(page.webSocketDebuggerUrl);
     socket.onmessage = (event) => {
       const message = JSON.parse(event.data),
