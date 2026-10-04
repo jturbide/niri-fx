@@ -14,6 +14,8 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     with tempfile.TemporaryDirectory(prefix="nirifx-e2e-") as directory:
         root = Path(directory)
+        config = root / "config.kdl"
+        config.write_text("animations {}\n")
         registry = root / "presets.json"
         helper = root / "scripts/niri-config.py"
         helper.parent.mkdir()
@@ -31,6 +33,9 @@ def main():
                 "-m",
                 "niri_fx",
                 "studio",
+                "--edit",
+                "--config",
+                str(config),
                 "--port",
                 "0",
                 "--no-browser",

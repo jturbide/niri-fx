@@ -1,0 +1,6 @@
+{
+  "presets_dir": "Preset folder",
+  "presets_dir_help": "Use the same folder as the Niri Animations picker.",
+  "target_file": "Animation target file",
+  "target_file_help": "Use the dedicated file already connected to Niri Animations."
+}

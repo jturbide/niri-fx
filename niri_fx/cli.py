@@ -177,16 +177,31 @@ def parser():
         "unregister", help="Remove NiriFX-owned entries from the user preset registry"
     )
     studio = commands.add_parser(
-        "studio", help="Open the local editor for standalone or shell presets"
+        "studio", help="Open the NiriFX Library and Studio for standalone or shell presets"
     )
     effect_options(studio)
     studio.add_argument("--custom", type=Path)
     studio.add_argument("--no-browser", action="store_true")
+    studio.add_argument("--edit", action="store_true", help="Open detailed Studio controls")
+    studio_actions = studio.add_mutually_exclusive_group()
+    studio_actions.add_argument(
+        "--restore",
+        action="store_true",
+        help="Restore the last Library Apply for this setup and exit",
+    )
+    studio_actions.add_argument(
+        "--status",
+        action="store_true",
+        help="Print Library active selection and restore availability as JSON",
+    )
+    studio.add_argument(
+        "--active", action="store_true", help="Start from the recognized active profile"
+    )
     studio.add_argument(
         "--target",
         choices=("auto", "inir", "noctalia", "standalone"),
         default="auto",
-        help="Initial save target; auto uses iNiR when its helper is installed, otherwise standalone",
+        help="Activation target; auto uses iNiR when its helper is installed, otherwise standalone",
     )
     studio.add_argument(
         "--browser", action="store_true", help="Open a browser tab instead of an app-style window"
@@ -195,6 +210,15 @@ def parser():
         "--port", type=int, default=0, help="Loopback port; default chooses an available port"
     )
     from .setup import default_config, default_state
+
+    studio.add_argument("--config", type=Path, default=default_config())
+    studio.add_argument(
+        "--movement-binary",
+        type=Path,
+        help="Explicit experimental compositor for movement activation",
+    )
+    studio.add_argument("--preset-dir", type=Path, help="Connected Noctalia preset directory")
+    studio.add_argument("--picker-file", type=Path, help="Connected Noctalia animation target file")
 
     picker = commands.add_parser("picker", help="Open an optional desktop style/profile picker")
     picker.add_argument("--toolkit", choices=("quickshell", "gtk"), default="quickshell")
@@ -209,7 +233,10 @@ def parser():
         "--gtk-dir", action="store_true", help="Print the reusable GTK module directory"
     )
     studio.add_argument(
-        "--state", type=Path, default=default_state().parent, help="Studio preferences directory"
+        "--state",
+        type=Path,
+        default=default_state().parent,
+        help="Library, preferences and Apply history directory",
     )
 
     pack = commands.add_parser(
@@ -486,8 +513,18 @@ def main(argv=None):
             else:
                 from .studio import serve
 
-                arguments.custom_name = name
-                serve(arguments, effect)
+                if arguments.restore or arguments.status:
+                    from .library import Library, studio_target
+
+                    library = Library(arguments, studio_target(arguments))
+                    print(
+                        json.dumps(
+                            library.undo() if arguments.restore else library.listing(), indent=2
+                        )
+                    )
+                else:
+                    arguments.custom_name = name
+                    serve(arguments, effect)
         else:
             generated = []
             if arguments.command == "register":

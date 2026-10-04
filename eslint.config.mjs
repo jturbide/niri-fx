@@ -14,7 +14,18 @@ export default [
   },
   {
     files: ["niri_fx/studio.js"],
-    languageOptions: { globals: { MotionPreview: "readonly", createEffectCore: "readonly" } },
+    languageOptions: {
+      globals: {
+        MotionPreview: "readonly",
+        createEffectCore: "readonly",
+        createFxLibrary: "readonly",
+      },
+    },
+  },
+  {
+    files: ["niri_fx/library.js"],
+    languageOptions: { globals: { createEffectCore: "readonly" } },
+    rules: { "no-unused-vars": ["error", { varsIgnorePattern: "^createFxLibrary$" }] },
   },
   {
     files: ["niri_fx/effect-core.js"],

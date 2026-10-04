@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 import secrets
 import shutil
 import subprocess
@@ -12,9 +13,10 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from .branding import APP_ID
+from .catalog import STYLES
 from .documents import MAX_DOCUMENT_BYTES
 from .integration import make_custom_preset, read_shell_presets, update_registry
-from .presets import PRESETS
+from .library import Library, studio_target
 from .preview import preview_document
 from .storage import atomic_write
 
@@ -70,29 +72,28 @@ def make_server(arguments, effect):
 
     GET serves self-contained previews. POST accepts bounded parameter documents
     or favorites, never paths, commands or raw shader source supplied by clients.
-    The save target only selects UI behavior; iNiR registration remains explicit.
+    Launch arguments fix the configuration owner. Reviewed activation delegates
+    to the shared Library backend.
     """
     token = secrets.token_urlsafe(32)
-    target = getattr(arguments, "target", "auto")
-    if target == "auto":
-        target = (
-            "inir"
-            if (Path(arguments.inir_root) / "scripts/niri-config.py").is_file()
-            else "standalone"
-        )
+    target = studio_target(arguments)
     preferences_path = (
-        Path(getattr(arguments, "state", Path(arguments.registry).parent))
+        Path(getattr(arguments, "state", Path(arguments.registry).parent)).expanduser()
         / "studio-preferences.json"
     )
+    if not hasattr(arguments, "state"):
+        arguments.state = preferences_path.parent
+    library = Library(arguments, target)
+
+    def valid_favorite(name):
+        return isinstance(name, str) and (
+            name in STYLES or re.fullmatch(r"custom-[a-z0-9][a-z0-9-]{0,47}", name)
+        )
 
     def read_preferences():
         try:
             value = json.loads(preferences_path.read_text())
-            return {
-                "favorites": [
-                    name for name in value["favorites"] if isinstance(name, str) and name in PRESETS
-                ]
-            }
+            return {"favorites": [name for name in value["favorites"] if valid_favorite(name)]}
         except (OSError, ValueError, KeyError, TypeError):
             return {"favorites": []}
 
@@ -117,7 +118,7 @@ def make_server(arguments, effect):
             supplied = parse_qs(request.query).get("token", [""])[0]
             if (
                 self.headers.get("Host") != urlsplit(self.server.origin).netloc
-                or request.path not in ("/", "/ping")
+                or request.path not in ("/", "/ping", "/library")
                 or not secrets.compare_digest(supplied.encode(), token.encode())
             ):
                 self.respond(403, {"error": "Open the editor using its local session URL."})
@@ -126,21 +127,47 @@ def make_server(arguments, effect):
             if request.path == "/ping":
                 self.respond(200, {"ok": True})
                 return
+            if request.path == "/library":
+                try:
+                    self.respond(200, library.listing())
+                except (OSError, ValueError, subprocess.SubprocessError) as error:
+                    self.respond(400, {"error": str(error)})
+                return
+            selected, name = effect, getattr(arguments, "custom_name", arguments.preset)
+            if getattr(arguments, "active", False):
+                try:
+                    document = library.listing()["active"]
+                    if document:
+                        from .documents import parse_document
+
+                        name, _, selected = parse_document(document)
+                except (OSError, ValueError, subprocess.SubprocessError):
+                    pass  # The library reports the failure; preview remains usable.
             self.respond(
                 200,
                 preview_document(
-                    effect,
-                    getattr(arguments, "custom_name", arguments.preset),
-                    {"origin": self.server.origin, "token": token, "target": target},
+                    selected,
+                    name,
+                    {
+                        "origin": self.server.origin,
+                        "token": token,
+                        "target": target,
+                        "view": "editor" if getattr(arguments, "edit", False) else "library",
+                    },
                     read_preferences(),
                 ),
                 "text/html",
             )
 
         def do_POST(self):
-            if self.path not in ("/save", "/preferences") or not valid_save_request(
-                self.headers, self.server.origin, token
-            ):
+            if self.path not in (
+                "/save",
+                "/preferences",
+                "/store",
+                "/review",
+                "/apply",
+                "/restore",
+            ) or not valid_save_request(self.headers, self.server.origin, token):
                 self.respond(403, {"error": "Save request must come from this editor session."})
                 return
             try:
@@ -151,16 +178,24 @@ def make_server(arguments, effect):
                         f"Preset request must be between 1 and {MAX_DOCUMENT_BYTES} bytes"
                     )
                 data = json.loads(self.rfile.read(length))
+                if self.path in ("/store", "/review", "/apply", "/restore"):
+                    if self.path == "/restore" and data != {}:
+                        raise ValueError("Restore accepts no client-selected paths or transaction")
+                    action = {
+                        "/store": library.store,
+                        "/review": library.review,
+                        "/apply": library.apply,
+                        "/restore": lambda _: library.undo(),
+                    }[self.path]
+                    self.respond(200, action(data))
+                    return
                 if self.path == "/preferences":
                     if (
                         not isinstance(data, dict)
                         or set(data) != {"favorites"}
                         or not isinstance(data["favorites"], list)
-                        or len(data["favorites"]) > len(PRESETS)
-                        or any(
-                            not isinstance(name, str) or name not in PRESETS
-                            for name in data["favorites"]
-                        )
+                        or len(data["favorites"]) > len(STYLES) + 100
+                        or any(not valid_favorite(name) for name in data["favorites"])
                     ):
                         raise ValueError("Preferences must contain a list of built-in favorites")
                     if preferences_path.is_symlink():
@@ -204,7 +239,7 @@ def serve(arguments, effect):
     with make_server(arguments, effect) as server:
         print(f"NiriFX Studio: {server.session_url}", flush=True)
         print(
-            "Choose a save target in Studio. Previewing does not activate effects. Ctrl+C stops the editor.",
+            "Choose a look in Library or customize it in Studio. Review & apply activates effects. Ctrl+C stops the app.",
             flush=True,
         )
         if not arguments.no_browser:

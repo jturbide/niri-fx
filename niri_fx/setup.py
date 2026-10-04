@@ -323,6 +323,10 @@ def apply_plan(plan, state, expected=None):
             "target": plan["target"],
             "files": [],
         }
+        if plan.get("selection_document") is not None:
+            manifest["selection_document"] = plan["selection_document"]
+        if plan.get("library_scope") is not None:
+            manifest["library_scope"] = plan["library_scope"]
         for i, item in enumerate(plan["changes"]):
             for side in ("before", "after"):
                 if item[side] is not None:
@@ -423,7 +427,11 @@ def restore(state, identifier=None, apply=False):
             "target": data["target"],
             "dry_run": not apply,
             "paths": [item["logical"] for item, _, _ in work],
-            "note": "For iNiR, select your previous non-NiriFX style first; restoring the registry does not rewrite the active shader.",
+            "note": (
+                "For iNiR, select your previous non-NiriFX style first; restoring the registry does not rewrite the active shader."
+                if data["target"] == "inir"
+                else "Restores the exact files from this snapshot."
+            ),
         }
         if apply:
             restored = []

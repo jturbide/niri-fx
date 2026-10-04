@@ -34,7 +34,7 @@ Item {
     function executeItem(item) {
         if (!item || typeof item.action !== "string" || busy) return;
         if (item.action === "studio") {
-            Quickshell.execDetached([executable, "studio"]);
+            Quickshell.execDetached([executable, "studio", "--target", "standalone", "--config", configPath]);
         } else if (item.action === "refresh") {
             reload();
         } else if (item.action === "restore") {

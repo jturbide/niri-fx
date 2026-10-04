@@ -57,6 +57,7 @@ export parity; it is not a compositor GPU benchmark. See
 | `niri_fx/documents.py`, `profiles.py` | Shell-independent document validation, serialization and action choices |
 | `niri_fx/effects.py`, `shaders/` | Shader assembly and stock/experimental export boundaries |
 | `niri_fx/setup.py`, `pack.py`, `storage.py` | Setup plans, preset folders, shared atomic writes, snapshots and conflict-aware restore |
+| `niri_fx/library.py`, `library.js` | Shared ready-made selection, action combos, saved documents and reviewed activation adapters |
 | `niri_fx/integration.py` | iNiR helper contract and safe registry updates |
 | `niri_fx/picker.py`, `qml/`, `gtk/`, `integrations/ags/` | Optional desktop pickers, reusable views/controllers and AGS example; writes stay in the CLI |
 | `niri_fx/terminal.py` | Recommended preset presentation and a line-oriented guide using the shared setup/restore backend |

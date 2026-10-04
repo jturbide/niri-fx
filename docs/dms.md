@@ -16,6 +16,12 @@ In DMS Settings → Plugins, scan and enable **NiriFX**. Open the launcher and u
 the `fx` trigger, then search for a style. Selecting a style applies it; opening
 Studio alone does not. DMS documents the [launcher plugin interface](https://danklinux.com/docs/dankmaterialshell/plugins-overview/).
 
+Studio now opens [Library](library.md), with recommended looks, favorites, saved
+profiles and a per-action combo builder. The DMS entry explicitly selects the
+standalone target, even if iNiR is also installed. Direct Apply from the app uses
+its own Studio Restore history; the launcher's built-in selections keep the
+existing DMS history described below.
+
 Application uses `setup --target standalone --no-launcher --apply`. It appends
 the managed include to the main Niri config and keeps shaders outside DMS-owned
 files. The adapter resolves XDG config/state directories. Snapshots live under

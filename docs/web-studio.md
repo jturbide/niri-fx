@@ -7,8 +7,14 @@ window content. It cannot change desktop settings or capture your windows.
 
 ## Start from a showcase
 
+Opening [Web Studio](https://jturbide.github.io/niri-fx/studio/) directly starts in
+Library. Choose a recommended look, mix styles per action, or use a shared style.
+**Customize in Studio** opens detailed controls. **Save to My profiles** uses
+this browser's local storage; **Export JSON** keeps a portable copy. Local Apply
+and Restore controls are absent from the hosted page. See [Library](library.md).
+
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
-   nine recommended looks. **Open/close pairings** shows seven finished combinations;
+   nine recommended looks. **Open/close pairings** shows sixteen finished combinations;
    **All examples** opens the full collection. Searching from Start here explores
    the full catalog. Filter by family, scenario or renderer, then press **Play**.
    Only one animation plays at a time.
@@ -68,10 +74,10 @@ Previews start paused when someone opens the link.
 
 ## Hosted, local and offline
 
-| Mode | Preview and JSON/config export | Save to the local iRiS registry |
+| Mode | Preview and JSON/config export | Reviewed desktop Apply |
 | --- | --- | --- |
 | Web Studio | Yes | No |
-| Local `studio` command | Yes | With the iNiR target and installed helper |
+| Local `studio` command | Yes | Standalone, installed iNiR or connected Noctalia target |
 | Exported `preview` HTML | Yes, without a server | No |
 
 The hosted page is a static GitHub Pages site. It has no analytics or preset

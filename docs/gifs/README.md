@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **196 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **197 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -183,6 +183,7 @@ For the Studio UI, install the browser tooling from [Contributing](../../CONTRIB
 plus `ffmpeg` and stock Niri for exported KDL validation:
 
 ```sh
+node scripts/record-library-workflow.mjs
 node scripts/record-studio-workflow.mjs
 ```
 

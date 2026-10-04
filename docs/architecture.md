@@ -34,6 +34,8 @@ import-boundary test enforces that separation.
 | [effects.py](../niri_fx/effects.py), [shaders/](../niri_fx/shaders/) | GLSL assembly and stock KDL exports. Movement generation is a separate explicit API. |
 | [preview.py](../niri_fx/preview.py) | Catalog and self-contained HTML assembly from packaged assets. No network or state writes. |
 | [effect-core.js](../niri_fx/effect-core.js) | Browser document validation, number formatting, shader expansion and KDL generation. No DOM, storage or WebGL. |
+| [library.js](../niri_fx/library.js) | Ready-made selection, combo editing and saved-profile navigation using the Studio document and history. |
+| [library.py](../niri_fx/library.py) | Document storage and reviewed activation adapters. Launch arguments fix all paths; Apply and Restore use existing transactions scoped to the same config and adapter. |
 | [studio.js](../niri_fx/studio.js) | UI state, history, action editing, synthetic WebGL preview and user-triggered save/download. |
 | [motion-preview.js](../niri_fx/motion-preview.js) | Labelled Canvas move/swap concepts. Not a compositor renderer. |
 | [studio.py](../niri_fx/studio.py) | On-demand app launch and authenticated loopback HTTP transport. Delegates validation and writes. |

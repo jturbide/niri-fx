@@ -17,6 +17,7 @@ const browser = await launchBrowser();
 try {
   const { rpc, evaluate } = browser;
   await browser.navigate(pathToFileURL(page).href, { width: 1280, height: 940 });
+  await evaluate("byId('show-editor').click()");
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(`
     seed=0.43;
@@ -75,7 +76,7 @@ try {
   assert.equal(await evaluate("effectDocument().actions.close.pixel_wind"), "up");
   await frames("5 / Undo restores the earlier wind; Redo recovers your edit", 1);
   await evaluate(
-    "byId('redo').click();document.querySelector('aside').scrollTop=0;byId('name').value='Sideways Drift';byId('name').dispatchEvent(new Event('change'))",
+    "byId('redo').click();byId('editor-panel').scrollTop=0;byId('name').value='Sideways Drift';byId('name').dispatchEvent(new Event('change'))",
   );
   await frames("6 / Export the profile and Niri config — resize remains off");
   const expected = await evaluate("effectDocument()");

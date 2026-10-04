@@ -128,7 +128,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**196 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**197 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
@@ -322,3 +322,25 @@ with its desktop springs and both optional shader actions absent. Six shader GIF
 and three native swap GIFs use the published example settings. The native clips
 retain the full source profile and its hash. [Measured resize shader costs](performance.md#coordinated-resize-companions)
 remain separate from compositor presentation evidence.
+
+## Shared Library and combo builder
+
+The Library uses the existing Studio document and history. Browser checks cover
+independent actions, supported optional selectors, shared styles, Undo, edited
+settings and browser-local profile persistence. Authenticated HTTP checks cover
+Save, read-only Review, Apply, exact Restore and rejected origins/path injection.
+Backend checks cover stale plans, external edits, validation rollback and Restore
+isolation across configuration paths and adapters.
+
+A stock nested Niri session exercises the installed iNiR serializer, active-profile
+recognition, retained slowdown/base movement and exact Restore. The optional
+compact iRiS component loads in its real module tree, shows the applied profile,
+dispatches Library/Customize arguments and updates after Restore. Separate real
+Niri parsing checks cover standalone and connected Noctalia Apply/Restore.
+
+Noctalia 5.2.1 loads the API 24 shortcut in a private shell. A virtual-pointer click
+on its Control Center button dispatches the expected argument array, including
+paths containing spaces, quotes and shell metacharacters. DMS 1.6.2 opens the shared
+app with its explicit standalone config. These checks validate the supplied
+entries; other shell families use the standalone launcher and are not claimed as
+native settings integrations.

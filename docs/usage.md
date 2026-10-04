@@ -9,7 +9,10 @@ python3 -m niri_fx studio
 This opens a dedicated Chromium app window, with no tabs or address bar and a
 separate profile. The optional application launcher opens the same window.
 If Chromium is unavailable, Studio opens in your default browser; use
-`studio --browser` to request a browser tab. Choose an **Effect family** first. The starting styles and
+`studio --browser` to request a browser tab. The app starts in [Library](library.md)
+for finished looks and action combos. Use **Customize in Studio**, an action's
+**Tune** button, or `studio --edit` for the controls described below.
+Choose an **Effect family** first. The starting styles and
 controls follow the selected family. Switching families starts with that family's
 first preset; export a custom style before switching if you want to keep it.
 

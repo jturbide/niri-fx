@@ -1,0 +1,28 @@
+id = "jturbide/niri-fx"
+name = "NiriFX"
+version = "0.1.0"
+plugin_api = 24
+author = "Julien Turbide"
+license = "MIT"
+dependencies = ["niri", "niri-fx"]
+tags = ["niri", "animation", "shortcut"]
+icon = "movie"
+description = "Open the NiriFX library to choose, combine and customize window effects."
+
+[[setting]]
+key = "presets_dir"
+type = "string"
+label_key = "presets_dir"
+description_key = "presets_dir_help"
+default = "~/.config/niri/nirifx-presets"
+
+[[setting]]
+key = "target_file"
+type = "string"
+label_key = "target_file"
+description_key = "target_file_help"
+default = "~/.config/niri/animations.kdl"
+
+[[shortcut]]
+id = "library"
+entry = "shortcut.luau"

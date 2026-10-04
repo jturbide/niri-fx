@@ -10,6 +10,23 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+### Added
+
+- A Library view in the existing NiriFX app, with recommended looks, collections,
+  profile favorites, My profiles and a simple shared-style/per-action combo builder.
+- Reviewed Apply and Restore in the local app through standalone, iNiR and
+  connected Noctalia configurations. Paths remain fixed at launch, stale reviews
+  are rejected and external edits are preserved.
+- The same combo builder in Web Studio, with browser-local profiles and portable
+  JSON/config exports. Detailed Studio controls remain in the same app.
+- An optional compact iRiS entry with the NiriFX logo, active look, Choose effects,
+  Customize and Restore, plus a Noctalia 5 launcher shortcut.
+
+### Changed
+
+- DMS explicitly opens the standalone target. Quickshell/GTK preview dispatch
+  opens detailed Studio controls and carries the selected Niri config path.
+
 ### Fixed
 
 - Correct the validation guide's gallery total and reject stale GIF/preset

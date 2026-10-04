@@ -756,28 +756,32 @@
     "poster": "9c850763383ffc426bc030660e3c381c655cc1f29d0531de58a0d250add2d776"
   },
   "workflow-dms": {
-    "source": "4d81beb2c6fa5cff705f2d100f34c019b9a05bb43435e5da0ee47c00d56820db",
-    "poster": "86aac275385f4c67230632abf10d7f89374c87af4431b71258b3143d6aefd9b0"
+    "source": "c1c96cacb890e169b12f53805a4752fab8e13127db4d1fbe4881a13340eca603",
+    "poster": "4768b6aaab2bb2cc4a0174b192c992c93eacd263f859f17a632d3d10d11b0c7a"
   },
   "workflow-gtk-picker": {
-    "source": "4926485046a6fae37962427edcc6357f7696c5afe8b374245e99df2235af5665",
-    "poster": "222417c55e9af22dbbab7de2c519e3f058287bbe906ac7e7576b196aa28ccb39"
+    "source": "c62f6497e2425095f97ea24ed0c5b2dd6aaf13f345560e235f7dc7985ec949cd",
+    "poster": "187fc4bdc43dabe61092f21944b449856d1f844c9322ab021a823aca3f7356e8"
   },
   "workflow-iris": {
     "source": "14eb16f7594edf86b4bb9bf2efad19b706efb19c800734460d47c142e5a5a244",
     "poster": "1765aaac814a80d1b257fdb2c8c3aa0f43dd7b8f51e49e9dbc47cb26873228e2"
+  },
+  "workflow-library": {
+    "source": "1d8d9df14b440ed68119c95c1c7a19c0b274c8b63cc2c5e3108b88af4a17aa04",
+    "poster": "68d1a5846bf0e4e40d88c369bea2a5a68ce43c84bfec7108ae21dc6a6b1629cf"
   },
   "workflow-noctalia": {
     "source": "f82c439dfe7fe3db255adcff764251f4388b98cf961219918a89f404fc50ffbb",
     "poster": "e83588917eafb65f8979f59a565e9c18a4b7a891235dc8ec638ce9dabc1851d0"
   },
   "workflow-quickshell-picker": {
-    "source": "13fb62930650b949dc6b7a333b4b677c2083091221823a59857004254eb34005",
-    "poster": "03094f7da825cd957accf9227948bc3f83c0af9bb7a7c0738150860fdd42de96"
+    "source": "ba1cb8bae74cbba1cdfb0b10a8e4face93e0db0ec3564db4d43ad5ffb9293b7d",
+    "poster": "c02b28e8c5523e6c14fa2ce4fa21f02b6c4726facc559ff5db1182e2c262d9bc"
   },
   "workflow-studio-profile": {
-    "source": "bac6476117fa4e3636c85a6759a11502970c25988056e2a8d5a0983d243800ce",
-    "poster": "9a5e8c1ef9838e2d5773198bb3bab60cb7b3a797c97f0dc3893a45e09732da1d"
+    "source": "53b4e0d9c11a78d2735ad513c9e3028d993eaf813f5bbbb3d9da9719ff105e06",
+    "poster": "311fb4c24ed6867665977f4cf23dfc75392f347eeafdc9d0cafac98964d6782f"
   },
   "workflow-terminal": {
     "source": "1ad6b521690d88dc444c18261d31dce122f95fffadfa30251238339fb66fc64d",

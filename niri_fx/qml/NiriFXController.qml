@@ -173,7 +173,7 @@ Item {
     function openStudio() {
         if (busy || !selectedDocument)
             return;
-        const args = command.concat(["studio", "--target", "standalone"], selectionArguments());
+        const args = command.concat(["studio", "--target", "standalone", "--config", configPath, "--edit"], selectionArguments());
         Quickshell.execDetached(args);
         studioRequested(args);
         status = "Opening Studio for this selection. Previewing does not activate it.";

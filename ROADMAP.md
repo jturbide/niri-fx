@@ -29,6 +29,15 @@ pointer-driven wobble on the validated motion foundation (Epic 4).
 - [x] Publish base, resize-only and experimental examples with faithful shader and native showcases.
 - [x] Verify import, editing, Undo, shell exports and native endpoints; document action limits.
 
+## Library and action combos milestone
+
+- [x] Open on recommended looks, favorites and saved profiles, with Studio in the same app.
+- [x] Choose one shared style or separate opening, closing and optional resize/movement styles.
+- [x] Keep the same combo builder online, with portable JSON/config exports and browser-local profiles.
+- [x] Share reviewed Apply/Restore across standalone, iNiR and connected Noctalia configurations.
+- [x] Validate optional compact iRiS and Noctalia entries and accurate iRiS active-selection feedback.
+- [x] Record the combo workflow and publish its guides and online interface.
+
 ## Released foundation
 
 - [x] Stock Niri opening and closing effects, standalone setup and shell adapters.

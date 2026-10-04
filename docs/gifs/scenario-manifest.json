@@ -606,26 +606,6 @@
       "bytes": 1212610
     },
     {
-      "name": "workflow-studio-profile",
-      "file": "docs/gifs/workflow-studio-profile.gif",
-      "bytes": 857216,
-      "backend": "actual offline Studio UI / synthetic WebGL texture",
-      "sources": {
-        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9"
-      },
-      "fps": 10,
-      "frames": 140,
-      "checks": [
-        "file import",
-        "independent close edit",
-        "A/B",
-        "undo/redo",
-        "actual JSON and KDL downloads",
-        "stock Niri validation",
-        "resize absent"
-      ]
-    },
-    {
       "name": "workflow-iris",
       "backend": "actual iris picker UI in stock nested Niri",
       "version": "iNiR/iRiS c08bb92 / Quickshell 0.3.1",
@@ -670,26 +650,6 @@
       },
       "file": "docs/gifs/workflow-noctalia.gif",
       "bytes": 936887
-    },
-    {
-      "name": "workflow-dms",
-      "backend": "actual dms picker UI in stock nested Niri",
-      "version": "DMS 1.6.2 / Quickshell 0.3.1",
-      "checks": [
-        "real DMS launcher search",
-        "keyboard selection",
-        "apply",
-        "exact undo",
-        "Studio app launch",
-        "undo refuses external edits",
-        "resize preserved"
-      ],
-      "tested_sources": {
-        "PluginService.qml": "516935e0ae66ce76db1a61575809a7fc1b609386a92b457c3ed943d98291430d",
-        "DankLauncherV2Modal.qml": "56ed0cf48a3d64129af50a3ec531f7da298fa4a40755910b246ea1bd313f63b5"
-      },
-      "file": "docs/gifs/workflow-dms.gif",
-      "bytes": 521822
     },
     {
       "name": "workflow-terminal",
@@ -1725,47 +1685,6 @@
       ]
     },
     {
-      "name": "workflow-quickshell-picker",
-      "backend": "packaged Quickshell picker UI in stock nested Niri",
-      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
-      "checks": [
-        "keyboard search and selection",
-        "read-only review",
-        "reviewed apply",
-        "exact undo",
-        "resize preserved"
-      ],
-      "sources": {
-        "niri_fx/qml/NiriFXController.qml": "d341b8e9b665c818495e34cf910ed5a348dd63f8d0bc29411f6dc38fe759969b",
-        "niri_fx/qml/NiriFXPicker.qml": "b1a3e02ea2134037fb098c16fbee2a48b9e02e7c67b1d241cd315ffd4f48f8cb",
-        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
-      },
-      "file": "docs/gifs/workflow-quickshell-picker.gif",
-      "bytes": 453214
-    },
-    {
-      "name": "workflow-gtk-picker",
-      "backend": "packaged GTK 4 picker UI in stock nested Niri",
-      "version": "gjs 1.88.1",
-      "checks": [
-        "keyboard search and selection",
-        "read-only review",
-        "reviewed apply",
-        "exact undo",
-        "resize preserved",
-        "close during apply"
-      ],
-      "sources": {
-        "niri_fx/gtk/controller.mjs": "2b6e02d962daf51949ad05942e2e2eafaec5fa226d4fbb0903cbf1f403b3bb11",
-        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
-        "niri_fx/gtk/picker.mjs": "23030e2ad67631daf86537d5bdfbb3202cd866cae5ef6aacc02582868fff884e",
-        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
-        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
-      },
-      "file": "docs/gifs/workflow-gtk-picker.gif",
-      "bytes": 518380
-    },
-    {
       "file": "docs/gifs/native-swap-fragments-motion.gif",
       "effect": {
         "family": "fragments",
@@ -2208,6 +2127,108 @@
       "name": "native-swap-elastic-motion",
       "source": "examples/profiles/elastic-motion-native.json",
       "mode": "movement"
+    },
+    {
+      "name": "workflow-quickshell-picker",
+      "backend": "packaged Quickshell picker UI in stock nested Niri",
+      "version": "Quickshell 0.3.1 (revision , distributed by Arch Linux)",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved"
+      ],
+      "sources": {
+        "niri_fx/qml/NiriFXController.qml": "f813c55358fc375f6391755be4b489b2134aeec2e4f7189811c82898db686c64",
+        "niri_fx/qml/NiriFXPicker.qml": "b1a3e02ea2134037fb098c16fbee2a48b9e02e7c67b1d241cd315ffd4f48f8cb",
+        "scripts/fixtures/picker-host.qml": "827684467986d345eb076daa3de91fde9def29563f1349586d73600135abef6f"
+      },
+      "file": "docs/gifs/workflow-quickshell-picker.gif",
+      "bytes": 437196
+    },
+    {
+      "name": "workflow-gtk-picker",
+      "backend": "packaged GTK 4 picker UI in stock nested Niri",
+      "version": "gjs 1.88.1",
+      "checks": [
+        "keyboard search and selection",
+        "read-only review",
+        "reviewed apply",
+        "exact undo",
+        "resize preserved",
+        "close during apply"
+      ],
+      "sources": {
+        "niri_fx/gtk/controller.mjs": "7052b5ebea8fb445b0893f8bc76971712db23bd6a207f30a11c256e171527c88",
+        "niri_fx/gtk/transport.mjs": "9fadf6c2b774101ff215cb0980795adb32f72cbe421716ab0e8684ecf3974ef3",
+        "niri_fx/gtk/picker.mjs": "23030e2ad67631daf86537d5bdfbb3202cd866cae5ef6aacc02582868fff884e",
+        "niri_fx/gtk/picker.css": "b41d82d26dba90bf888b5b383d63c18b6a1480da0702fa4b627ff951a0fcdf27",
+        "scripts/fixtures/gtk-host.mjs": "7c83fd36304782501afcf1fc4bf2c496a4ed8da968db7046b786e9290cc644a8"
+      },
+      "file": "docs/gifs/workflow-gtk-picker.gif",
+      "bytes": 514395
+    },
+    {
+      "name": "workflow-studio-profile",
+      "file": "docs/gifs/workflow-studio-profile.gif",
+      "bytes": 752729,
+      "backend": "actual offline Studio UI / synthetic WebGL texture",
+      "sources": {
+        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9"
+      },
+      "fps": 10,
+      "frames": 140,
+      "checks": [
+        "file import",
+        "independent close edit",
+        "A/B",
+        "undo/redo",
+        "actual JSON and KDL downloads",
+        "stock Niri validation",
+        "resize absent"
+      ]
+    },
+    {
+      "name": "workflow-dms",
+      "backend": "actual dms picker UI in stock nested Niri",
+      "version": "DMS 1.6.2 / Quickshell 0.3.1",
+      "checks": [
+        "real DMS launcher search",
+        "keyboard selection",
+        "apply",
+        "exact undo",
+        "Studio app launch",
+        "undo refuses external edits",
+        "resize preserved"
+      ],
+      "tested_sources": {
+        "PluginService.qml": "516935e0ae66ce76db1a61575809a7fc1b609386a92b457c3ed943d98291430d",
+        "DankLauncherV2Modal.qml": "56ed0cf48a3d64129af50a3ec531f7da298fa4a40755910b246ea1bd313f63b5"
+      },
+      "file": "docs/gifs/workflow-dms.gif",
+      "bytes": 570333
+    },
+    {
+      "name": "workflow-library",
+      "file": "docs/gifs/workflow-library.gif",
+      "bytes": 4087325,
+      "backend": "actual offline library UI / synthetic WebGL texture",
+      "fps": 20,
+      "frames": 250,
+      "sources": {
+        "niri_fx/library.js": "64c4aba588c0fe8ec1c514457e46036d7bbfa2b562f090333bb4a7d1da03e974",
+        "niri_fx/preview.html": "2b5277f92c07db62096dee27e4827d010e59ae588e7a754c7f3f53477cf616f9"
+      },
+      "checks": [
+        "recommended selection",
+        "independent open/close",
+        "resize opt-in",
+        "shared style",
+        "saved profile",
+        "actual JSON and KDL downloads",
+        "stock Niri validation"
+      ]
     }
   ]
 }

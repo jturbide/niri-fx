@@ -60,7 +60,7 @@ def dms(session, args):
     executable.write_text(
         f"#!{sys.executable}\nimport os,sys,json\n"
         f"os.chdir({str(ROOT)!r})\n"
-        "if sys.argv[1:] == ['studio']:\n"
+        "if sys.argv[1] == 'studio':\n"
         " if os.getpgrp()!=os.getpid(): os.setsid()\n"
         f" with open({str(pid_file)!r},'w') as f: json.dump(os.getpgrp(),f)\n"
         f"os.execv({sys.executable!r},[{sys.executable!r},'-m','niri_fx',*sys.argv[1:]])\n"

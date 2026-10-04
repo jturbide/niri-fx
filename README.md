@@ -297,6 +297,17 @@ separate profiles enable it deliberately; every built-in style still leaves it o
 
 ## Make it yours
 
+Open `niri-fx studio` to choose a finished look in **Library**. Mix opening,
+closing and optional resize/movement styles, or use one style across enabled
+actions. **Customize in Studio** opens detailed tuning in the same app.
+
+![Choose effects and build a combo](docs/gifs/workflow-library.gif)
+
+The installed app provides reviewed **Apply** and **Restore previous** through
+standalone, iNiR/iRiS or connected Noctalia configuration. The same library works
+in [Web Studio](https://jturbide.github.io/niri-fx/studio/) for previews and JSON/config
+downloads. [Library and shell setup](docs/library.md).
+
 Studio offers a **Basic / Advanced** control view, search and favorites, independent
 action profiles, Undo/Redo and pinned A/B comparisons. Pause or scrub any preview;
 Reduced Motion shows endpoints without playback and respects the system preference.

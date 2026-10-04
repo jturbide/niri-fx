@@ -70,7 +70,7 @@ p {
 }
 .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 310px;
+    grid-template-columns: minmax(0, 1fr) 360px;
     gap: 24px;
     align-items: start;
 }
@@ -257,4 +257,47 @@ aside[data-view="basic"] .advanced {
 }
 #hosted-note a {
     color: inherit;
+}
+
+.selection-summary {
+    display: grid;
+    gap: 6px;
+    margin-bottom: 18px;
+}
+h2 {
+    font-size: 18px;
+    margin: 8px 0;
+}
+#library-results {
+    display: grid;
+    gap: 6px;
+    max-height: 240px;
+    overflow: auto;
+    margin: 14px 0 22px;
+}
+.library-look {
+    text-align: left;
+    display: grid;
+    gap: 4px;
+}
+.library-look small {
+    margin: 0;
+}
+.combo-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 6px;
+    align-items: end;
+}
+.combo-row label {
+    grid-column: 1 / -1;
+}
+#apply-review {
+    border: 1px solid #8ed8d0;
+    border-radius: 12px;
+    padding: 16px;
+    margin: 16px 0;
+}
+#apply-review li {
+    overflow-wrap: anywhere;
 }

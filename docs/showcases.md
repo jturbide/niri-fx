@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **196 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **197 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -84,6 +84,7 @@ recordings use sample content in Studio, shell interfaces and Niri.
 
 | Try this | Watch | What the demo shows |
 | --- | --- | --- |
+| Pick a look, mix action styles, save and export | [Library workflow](gifs/workflow-library.gif) | Same style or separate actions; optional resize starts off |
 | Import, edit one action, A/B, Undo/Redo, export | [Studio workflow](gifs/workflow-studio-profile.gif) | Import, edit, compare and export a profile; resize off |
 | Select mixed profiles and restore Snappy | [iRiS gallery](gifs/workflow-iris.gif) | Two mixed-action profiles and return to the previous style in the iRiS gallery |
 | Search, select, Undo, launch Studio | [DMS launcher](gifs/workflow-dms.gif) | Preset search, selection, Undo and Studio launch in the DMS launcher |
