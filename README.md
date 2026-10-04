@@ -25,6 +25,8 @@ deformation and the interruption improvements require the [experimental composit
 This README describes `main`, which can include features newer than the latest
 release. [Download v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
+NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
+stability guarantees and acceptance criteria.
 
 ## Quick start
 

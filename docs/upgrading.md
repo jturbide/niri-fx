@@ -2,7 +2,9 @@
 
 Read the [changelog](../CHANGELOG.md) before updating. NiriFX is in early
 development, so a new version can change commands and preset formats. For a
-tagged release, follow the documentation shipped with that version.
+tagged release, follow the documentation shipped with that version. The
+[stability policy](stability.md) describes the planned 1.x compatibility contract;
+that freeze has not happened yet.
 
 ## From 0.17 to 0.18
 

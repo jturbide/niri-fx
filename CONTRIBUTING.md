@@ -73,9 +73,12 @@ export parity; it is not a compositor GPU benchmark. See
 
 ## Code conventions and checks
 
-- Use `niri_fx` and `niri-fx` exclusively. The project is in active development;
-  obsolete APIs and formats are removed instead of maintained as compatibility
-  layers. Document breaking changes under Unreleased. Single-effect documents use schema 3; independent profiles use kind `profile`, schema 1.
+- Use `niri_fx` and `niri-fx` exclusively. During 0.x, obsolete APIs and formats
+  may be replaced as the design improves. Document breaking changes under
+  Unreleased and provide practical migration guidance. The future 1.0 release
+  will define a public contract that remains backward compatible throughout 1.x;
+  see the [stability policy](docs/stability.md) before changing public interfaces.
+  Single-effect documents use schema 3; independent profiles use kind `profile`, schema 1.
 - Python targets 3.10+, uses four spaces and Ruff lint/format (100 columns).
   Run `.venv/bin/ruff check --fix .` and `.venv/bin/ruff format .` before review.
 - JavaScript, CSS, HTML and workflow YAML use Prettier; JavaScript also uses ESLint.
@@ -152,6 +155,11 @@ a versioned package.
 
 Keep personal configurations, local workspace paths, session URLs, raw audit
 reports, planning conversations and outreach drafts out of commits and PR bodies.
+A tracked directory named `internal` is still public; use an ignored location or
+separate private workspace for that material. Keep the roadmap focused on future
+outcomes, the changelog on delivered changes, and public design/testing guides on
+constraints, reproducible evidence and known limits.
+
 Use sample content in media. Inspect representative frames of each recording,
 including menus and status messages; text inside images is not covered by a
 source secret scan. Keep local investigations under ignored `artifacts/`.
