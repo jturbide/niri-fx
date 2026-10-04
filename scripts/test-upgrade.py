@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Verify an installed 0.16 wheel upgrade using disposable files and real Niri validation.
+"""Verify an installed 0.17 wheel upgrade using disposable files and real Niri validation.
 
 The test never imports the checkout's Python package. Its old installation creates
-portable JSON, a registered shell profile, favorites and a setup snapshot; the
-replacement wheel must preserve those files and restore the old snapshot exactly.
-The new Library then saves, reviews, applies and restores that original document.
+portable JSON, registered shell entries, saved Library profiles, favorites and
+both CLI and Library Apply snapshots. The replacement wheel must preserve every
+file and restore both histories exactly before exercising optional native metadata.
 No desktop session, personal browser profile or live configuration is connected.
 """
 
@@ -23,6 +23,7 @@ import zipfile
 from contextlib import contextmanager
 from email.parser import BytesParser
 from pathlib import Path
+from urllib.error import HTTPError
 from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
@@ -68,6 +69,12 @@ def run(command, *, root, env, json_output=False):
         timeout=120,
     )
     return json.loads(result.stdout) if json_output else result.stdout.strip()
+
+
+def snapshot_files(*paths):
+    """Include added/deleted files in preservation checks, not just known file contents."""
+    files = (entry for path in paths for entry in (path.rglob("*") if path.is_dir() else [path]))
+    return {path: path.read_bytes() for path in files if path.is_file()}
 
 
 def isolated_environment(root):
@@ -159,6 +166,17 @@ class Session:
             raise AssertionError("Installed Studio omitted its catalog")
         return json.loads(match[1])
 
+    def rejected(self, path, value, message):
+        """A missing renderer must reject a reviewed activation, not silently downgrade it."""
+        try:
+            self.post(path, value)
+        except HTTPError as error:
+            with error:
+                body = json.load(error)
+                assert error.code == 400 and message in body.get("error", ""), body
+        else:
+            raise AssertionError("An unverified native activation was accepted")
+
     def post(self, path, value):
         request = Request(
             self.origin + path,
@@ -202,6 +220,8 @@ try {
   assert.equal(await browser.evaluate('effectDocument().actions.resize'),null);
   assert.equal(await browser.evaluate('effectDocument().actions.movement'),null);
   assert.equal(await browser.evaluate('favorites.includes("zipper")'),true);
+  assert.equal(await browser.evaluate('favorites.includes("custom-saved-night")'),true);
+  assert.equal(await browser.evaluate('effectDocument().pointer ?? null'),null);
   assert.equal(await browser.evaluate('byId("rename-profile").hidden'),false);
   assert.deepEqual(await browser.evaluate(`(()=>{
     const before=JSON.stringify(effectDocument());
@@ -300,9 +320,32 @@ def exercise(old_wheel, new_wheel, *, browser):
         assert saved[1]["profile"] == document
         assert saved[1]["types"]["window-resize"] == shell["presets"][0]["types"]["window-resize"]
 
+        # The previous release already supported Library-owned files and history.
+        # Create them using its actual CLI/HTTP APIs, not a current-format fixture.
+        staged = cli(
+            "profile",
+            "--open-preset",
+            "zipper",
+            "--close-preset",
+            "frost-vanish",
+            "--movement-preset",
+            "momentum-glide",
+            "--desktop-motion",
+            "gentle",
+            "--name",
+            "Saved Native Choice",
+            json_output=True,
+        )
+        staged_file = root / "saved-native-choice.json"
+        staged_file.write_text(json.dumps(staged, indent=2) + "\n")
+        favorites = ["custom-saved-night", "frost-vanish", "zipper"]
         with studio(executable, root=root, env=env) as session:
-            assert session.post("/preferences", {"favorites": ["zipper", "frost-vanish"]})["ok"]
-            assert session.catalog()["preferences"]["favorites"] == ["frost-vanish", "zipper"]
+            for saved_document in (document, staged):
+                assert session.post("/store", {"document": saved_document, "expected": None})[
+                    "changed"
+                ]
+            assert session.post("/preferences", {"favorites": favorites})["ok"]
+            assert session.catalog()["preferences"]["favorites"] == favorites
         old_setup = cli(
             "setup",
             "--target",
@@ -317,20 +360,47 @@ def exercise(old_wheel, new_wheel, *, browser):
         include = config.parent / "nirifx/animations.kdl"
         assert "window-resize" not in include.read_text()
         state = root / "state/niri-fx"
-        # Preserve every snapshot byte as well as documents, preferences and
-        # active files; installation must not perform a silent migration/Apply.
-        protected = [custom, registry, config, include, *state.rglob("*")]
-        before = {path: path.read_bytes() for path in protected if path.is_file()}
+        setup_files = snapshot_files(config, include)
+        # Layer Library Apply over CLI setup, so each distinct restore must return
+        # the exact preceding bytes. Neither history can stand in for the other.
+        library_document = dict(document, name="Saved Library Active")
+        library_document["actions"] = dict(document["actions"], open=document["actions"]["close"])
+        with studio(executable, root=root, env=env) as session:
+            selection = {
+                "document": library_document,
+                "allow_resize": False,
+                "allow_movement": False,
+            }
+            review = session.post("/review", selection)
+            assert session.post(
+                "/apply", {"selection": selection, "expected": review["plan_sha256"]}
+            )["changed"]
+            listing = json.loads(session.get("/library"))
+            assert listing["restore"] and listing["active"] == library_document
+        assert include.read_bytes() != setup_files[include]
+        # Installation must not migrate or activate settings. Compare the complete
+        # disposable config/state trees to catch additions as well as lost files.
+        protected = (custom, staged_file, root / "config", state)
+        before = snapshot_files(*protected)
         install(new_wheel)
-        assert all(path.read_bytes() == content for path, content in before.items())
+        assert snapshot_files(*protected) == before
         assert cli("inspect", "--custom", custom, json_output=True) == document
+        assert cli("inspect", "--custom", staged_file, json_output=True) == staged
+        assert "window-movement" not in cli("render", "--custom", staged_file)
+        with studio(executable, root=root, env=env, current=True) as session:
+            listing = json.loads(session.get("/library"))
+            assert listing["active"] == library_document and listing["restore"]
+            assert listing["managed"]["custom-saved-night"]["document"] == document
+            assert listing["managed"]["custom-saved-native-choice"]["document"] == staged
+            assert not session.post("/restore", {})["dry_run"]
+            assert snapshot_files(config, include) == setup_files
+            assert not json.loads(session.get("/library"))["restore"]
         cli("restore", "--transaction", old_setup["transaction"], "--apply", json_output=True)
         assert config.read_text() == BASE and not include.exists()
         assert registry.read_bytes() == before[registry]
 
         with studio(executable, root=root, env=env, current=True) as session:
-            assert session.catalog()["preferences"]["favorites"] == ["frost-vanish", "zipper"]
-            assert session.post("/store", {"document": document, "expected": None})["changed"]
+            assert session.catalog()["preferences"]["favorites"] == favorites
             listing = json.loads(session.get("/library"))
             assert listing["managed"]["custom-saved-night"]["document"] == document
             assert not listing["restore"] and config.read_text() == BASE
@@ -351,25 +421,72 @@ def exercise(old_wheel, new_wheel, *, browser):
                 json.loads(session.get("/library"))["managed"]["custom-saved-night"]["document"]
                 == document
             )
+            # New optional metadata must survive saving while stock activation
+            # omits it. Strength zero still requires an explicit native contract.
+            for label, strength in (("Pointer Extension", 0.9), ("Pointer Disabled", 0)):
+                native = dict(
+                    staged,
+                    name=label,
+                    pointer={"strength": strength, "damping": 50, "frequency": 6},
+                )
+                native_file = root / (label.lower().replace(" ", "-") + ".json")
+                native_file.write_text(json.dumps(native) + "\n")
+                assert cli("inspect", "--custom", native_file, json_output=True) == native
+                stock = cli("render", "--custom", native_file)
+                assert "window-movement" not in stock and "pointer-wobble" not in stock
+                assert session.post("/store", {"document": native, "expected": None})["changed"]
+                native_id = "custom-" + label.lower().replace(" ", "-")
+                assert (
+                    json.loads(session.get("/library"))["managed"][native_id]["document"] == native
+                )
+                selection = {
+                    "document": native,
+                    "allow_resize": False,
+                    "allow_movement": False,
+                    "allow_pointer": False,
+                }
+                before_rejection = snapshot_files(config, include, state)
+                for flag, message in (
+                    ("allow_pointer", "verified running pointer contract"),
+                    ("allow_movement", "verified running shader contract"),
+                ):
+                    session.rejected("/review", dict(selection, **{flag: True}), message)
+                assert snapshot_files(config, include, state) == before_rejection
+                review = session.post("/review", selection)
+                assert session.post(
+                    "/apply", {"selection": selection, "expected": review["plan_sha256"]}
+                )["changed"]
+                assert "pointer-wobble" not in include.read_text()
+                assert "window-movement" not in include.read_text()
+                assert json.loads(session.get("/library"))["active"] == native
+                assert not session.post("/restore", {})["dry_run"]
+                assert config.read_text() == BASE and not include.exists()
         assert registry.read_bytes() == before[registry]
         assert custom.read_bytes() == before[custom]
+        assert staged_file.read_bytes() == before[staged_file]
+        for path in (
+            state / "profiles/saved-night.json",
+            state / "profiles/saved-native-choice.json",
+        ):
+            assert path.read_bytes() == before[path]
         assert (state / "studio-preferences.json").read_bytes() == before[
             state / "studio-preferences.json"
         ]
         print(
             f"PASS {wheel_version(old_wheel)} -> {wheel_version(new_wheel)}: installed CLI/Studio, "
-            "old JSON and shell registry, favorites, exact old snapshot restore, "
-            "Library Save/Review/Apply/Restore, user resize preserved"
+            "old JSON and shell registry, saved Library profiles and favorites, "
+            "exact CLI and Library snapshot Restore, native metadata and activation guards, "
+            "user resize preserved"
         )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--from-wheel", type=Path, required=True, help="Official v0.16.0 release wheel"
+        "--from-wheel", type=Path, required=True, help="Official v0.17.0 release wheel"
     )
     parser.add_argument("--to-wheel", type=Path, required=True, help="Newly built candidate wheel")
-    parser.add_argument("--checksums", type=Path, required=True, help="v0.16.0 release SHA256SUMS")
+    parser.add_argument("--checksums", type=Path, required=True, help="v0.17.0 release SHA256SUMS")
     parser.add_argument(
         "--browser",
         action="store_true",
@@ -381,8 +498,8 @@ def main():
     if args.browser and not shutil.which("node"):
         parser.error("--browser requires Node 22 or newer and Chromium/Chrome")
     old_wheel, new_wheel = args.from_wheel.resolve(), args.to_wheel.resolve()
-    if wheel_version(old_wheel) != "0.16.0":
-        parser.error("--from-wheel must be the official 0.16.0 release wheel")
+    if wheel_version(old_wheel) != "0.17.0":
+        parser.error("--from-wheel must be the official 0.17.0 release wheel")
     verify_checksum(old_wheel, args.checksums.resolve())
     exercise(old_wheel, new_wheel, browser=args.browser)
 

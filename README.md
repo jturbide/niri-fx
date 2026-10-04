@@ -23,7 +23,7 @@ Resize is **off in every built-in preset**. Native movement, swaps and the
 interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.17.0](https://github.com/jturbide/niri-fx/releases/tag/v0.17.0)
+release. [Download v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 
 ## Quick start
@@ -36,7 +36,7 @@ Resize and movement run only when you select them. Save a named profile, share i
 settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0170-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0180-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
@@ -69,7 +69,7 @@ The [scenario guide](docs/scenarios.md) helps choose the right setup and restore
 **Using an AI agent?** Start with `python3 -m niri_fx agent-info` for structured
 command discovery, or read the [agent guide](docs/agents.md). The CLI provides
 compact preset search, parameter bounds, validated exports and reviewed
-Apply/Restore. A reusable skill is included in the current source checkout.
+Apply/Restore. A reusable skill is included in version 0.18 and newer.
 
 ## See it in motion
 
@@ -203,7 +203,7 @@ These recordings use real pointer events and synthetic windows in nested Niri.
 
 These complete Studio combos pair Fragment Flow with each drag preset. Import
 the [portable examples](examples/profiles/README.md#pointer-preview-combos) to try
-them online; they are available from the source checkout until the next release.
+them online or in version 0.18 and newer. The source archive includes the examples.
 
 | Gentle Fragments | Rubber Sheet Fragments | Release Settle Fragments |
 | --- | --- | --- |

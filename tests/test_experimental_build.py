@@ -55,10 +55,16 @@ class PatchStackTests(unittest.TestCase):
                 return output([base if arg == "HEAD" else arg for arg in args], **kwargs)
 
             with patch.object(build.subprocess, "check_output", side_effect=from_tree):
+                # An unmodified baseline must accept a clean tree and reject
+                # even the exact, otherwise supported experiment patch stack.
+                build.apply_patches(source, base, [])
+                self.assertEqual(original.read_text(), "ordinary renderer\n")
                 build.apply_patches(source, base, [first, second])
                 self.assertEqual(extension.read_text(), "pointer spring\n")
                 self.assertIn("pointer hook", original.read_text())
                 build.apply_patches(source, base, [first, second])
+                with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
+                    build.apply_patches(source, base, [])
 
                 # A base-only request cannot overwrite the optional extension.
                 with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):

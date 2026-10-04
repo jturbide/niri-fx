@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04** for 0.17.0, Unreleased pointer previews, integration and agent support. These checks
+Evidence updated on **2026-10-04** for the 0.18.0 prerelease, including pointer previews, integration and agent support. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 
@@ -124,16 +124,37 @@ tiled clients. A surviving client accepts actual clicks and a subsequent drag.
 Disconnecting a virtual pointer while its button is held exposes a known limit:
 unpressed motion from a replacement pointer still moves the grabbed window.
 A replacement press/release recovers input. This occurs with deformation enabled
-and omitted in the same patched executable; comparison with unmodified Niri and
-device-owned grab cleanup remain open.
+and omitted in the patched executable, and in an unmodified build at the same
+pinned revision. Device-owned grab cleanup remains open.
 
 The optional `--output-targets` probe uses a second owned compositor and retains
 strict assertions. It currently fails on the tested GPU: the child's direct
 capture clears after closing while the parent's image stays stale, even with
 pointer deformation and privacy rules omitted. Both compositors continue
-submitting frames. This baseline does not establish the cause or attribute it to
-NiriFX, and Output/Screencast privacy remains unverified. Actual PipeWire capture,
+submitting frames. Output/Screencast privacy remains unverified. Actual PipeWire capture,
 popup and blurred-background combinations also remain untested.
+
+The [unmodified comparison](benchmarks/native-baseline.json) reproduces both
+failures at the identical pinned revision, release flags and Rust compiler on
+the same RTX 4070 Ti/NVIDIA renderer. In all three variants (unmodified, patched
+with pointer omitted, patched with pointer enabled), Output and debug Screencast
+retain pixel-identical closing frames in six independent samples about 2.7–5.3
+seconds after a 1.6-second close. Direct captures are clear, with the public
+control visible in every sample. Clicking the surviving client clears the stale
+parent image. The FX patches are therefore not necessary to reproduce either
+failure; compositor, driver and nested-harness causation remains unisolated.
+
+Reproduce without replacing the login compositor:
+
+```sh
+python3 scripts/build-niri-movement.py --unmodified --release --test
+python3 scripts/build-niri-movement.py --pointer-wobble --release --test
+python3 scripts/test-native-baseline.py
+```
+
+The diagnostic writes sanitized evidence under `artifacts/` and exits **1** when
+either failure reproduces. A completed baseline comparison is not a passing
+acceptance test. `--probe disconnect` or `--probe output` selects one investigation.
 
 `test-pointer-integration.py` also passed against the owned pointer session.
 It served Studio through its actual HTTP backend, reviewed and applied a

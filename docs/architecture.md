@@ -112,8 +112,7 @@ and settling from interactive input and omits scripted pointer playback.
 `agent-info --parameters` derives public bounds and supported families from the
 same models used by validation. `agent-info --skill` reads the packaged skill
 resource. The [agent guide](agents.md) explains the workflow, while repository
-[AGENTS.md](../AGENTS.md) covers contributions. These interfaces are Unreleased
-source-checkout additions; the package version remains 0.17.0 until a release.
+[AGENTS.md](../AGENTS.md) covers contributions. These interfaces are included in version 0.18 and newer.
 
 Agent adapters call the existing catalog, profile, inspection, preview and setup
 commands. They do not get a separate config writer. Review fingerprints, authorized

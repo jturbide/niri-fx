@@ -5,9 +5,9 @@ setup used by the app. An agent can choose a finished look, build a combo, expla
 its settings and apply an authorized change without editing shader code or
 guessing which configuration file to replace.
 
-The agent commands and bundled skill described here are **Unreleased**. Use a
-current source checkout until they appear in a versioned package. From the
-checkout, replace `niri-fx` below with `python3 -m niri_fx`.
+The agent commands and bundled skill are included in **version 0.18 and newer**.
+Use the installed `niri-fx` command, or replace it below with `python3 -m niri_fx`
+when working from a source checkout.
 
 ## Start here
 

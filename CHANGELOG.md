@@ -10,6 +10,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 ## Unreleased
 
+## 0.18.0 — 2026-10-04
+
 ### Added
 
 - Interactive pointer dragging in Studio and a deterministic drag/reverse/release
@@ -22,7 +24,7 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   Windows bend around the grab point, respond to direction changes and settle
   after release, with bounded spring motion and ordinary input/layout behavior.
 - Gentle, Rubber Sheet and Release Settle drag presets, native KDL examples and
-  an isolated demo with draggable synthetic cards. This source-checkout feature
+  an isolated demo with draggable synthetic cards. This optional native feature
   responds to dragging separately from Studio's timed Elastic effects.
 - An optional compositor patch and separate build directory, with a dedicated
   runtime capability query and real Wayland pointer lifecycle checks.
@@ -45,6 +47,11 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 - Isolated pointer hardening checks for direct ScreenCapture privacy during
   dragging and closing, changing privacy rules, and abrupt grabbed-client exit
   followed by clicks and dragging in a surviving client.
+- An isolated unmodified Niri build and reproducible comparison of held-pointer
+  disconnection and stale nested output. Both failures reproduce without FX
+  patches; diagnostic results keep the remaining input/capture limits explicit.
+- An installed 0.17-to-0.18 upgrade check preserving existing Library profiles,
+  favorites, shell registrations and exact CLI/Library Restore histories.
 
 ### Changed
 
@@ -65,6 +72,16 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   pointer or movement selection. Returning to stock settings remains available.
 - Preserve the current profile operation when an earlier dialog's queued close
   event arrives after a new dialog has opened, including rename conflict recovery.
+
+### Upgrade
+
+Existing saved profiles, favorites, shell registrations and Restore history remain
+supported. Pointer settings are optional profile metadata; existing profiles keep
+pointer drag unset. The browser preview and agent commands are included in the
+package. Live pointer deformation requires a separately built, verified native
+extension and explicit activation. The compositor is not installed by the wheel.
+See the [upgrade guide](docs/upgrading.md#from-017-to-018) and
+[pointer validation limits](docs/pointer-wobble.md#reproduce-validation-and-showcases).
 
 ## 0.17.0 — 2026-10-04
 

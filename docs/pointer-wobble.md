@@ -4,13 +4,12 @@ The pointer prototype bends a window around the point where you grab it. The
 rest of the surface lags behind your hand, responds when you change direction,
 and settles after release. Its spring responds to actual drag events.
 
-This is an **opt-in native experiment**, available from the source checkout.
-It requires the separate pointer extension to the pinned Niri build. Stock Niri,
-Studio's timed Elastic styles and the 0.17.0 package do not provide this drag hook.
-The current, unreleased checkout includes portable profiles, interactive browser
-previews and Studio controls, with reviewed standalone Apply/Restore when the
-running renderer verifies support. Browser previews work without this extension;
-they use synthetic window content and do not establish native support.
+This is an **opt-in native experiment** requiring the separate pointer extension
+for the pinned Niri build. Build it from the 0.18 source archive or a current
+checkout. The 0.18 wheel includes portable profiles, interactive browser previews
+and Studio controls, with reviewed standalone Apply/Restore when the running
+renderer verifies support. Browser previews use synthetic window content and
+work without the extension; they do not establish native support.
 
 ## Try it
 
@@ -198,11 +197,15 @@ and [sanitized results](benchmarks/pointer-hardening.json).
 
 Two limitations remain open: disconnecting a virtual pointer with its button held
 retains the grab with pointer deformation both enabled and omitted; a replacement
-press/release recovers input. The comparison uses the same patched executable,
-so an unmodified baseline and device-ownership fix are still needed. The optional
+press/release recovers input. Both failures also reproduce in
+[unmodified pinned Niri](benchmarks/native-baseline.json), using the same build
+settings and GPU. The optional
 `python3 scripts/test-pointer-hardening.py --output-targets` probe also fails on
 the tested GPU because the parent compositor retains a stale child image. It
 keeps strict assertions and does not establish Output/Screencast privacy.
+The baseline rules out the FX patches being necessary to reproduce the failures;
+it does not isolate their compositor, driver or nested-test cause. Device ownership
+and presentation recovery remain open work.
 
 In addition to the demo requirements, the harness uses a C compiler,
 `wayland-scanner`, `pkg-config`, Wayland client development files, the wlr virtual

@@ -220,7 +220,9 @@ dynamic rules, closing snapshots, abrupt client exit and held-button device
 disconnection. The latter currently reports retained grabs with deformation both
 enabled and omitted in the same patched executable. The optional `--output-targets`
 probe remains strict and currently fails on stale parent output in the tested
-GPU setup, including its effects-disabled baseline. Do not report Output,
+GPU setup. `scripts/test-native-baseline.py` also reproduces both failures on
+unmodified pinned Niri with identical build settings; its exit status remains
+nonzero while defects reproduce. Do not report Output,
 Screencast or PipeWire privacy as validated from the default run. See the
 [recorded scope and remaining work](docs/validation.md#pointer-driven-wobble).
 
