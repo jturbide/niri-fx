@@ -117,11 +117,11 @@ try {
     file: destination,
     bytes: statSync(destination).size,
     backend: "actual offline Studio UI / synthetic WebGL texture",
-    sources: {
-      "examples/profiles/burst-and-drift.json": createHash("sha256")
-        .update(readFileSync("examples/profiles/burst-and-drift.json"))
-        .digest("hex"),
-    },
+    sources: Object.fromEntries(
+      ["examples/profiles/burst-and-drift.json", "niri_fx/studio.js", "niri_fx/preview.html"].map(
+        (path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")],
+      ),
+    ),
     fps: 10,
     frames: count,
     checks: [

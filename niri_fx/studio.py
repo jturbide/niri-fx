@@ -164,6 +164,7 @@ def make_server(arguments, effect):
                 "/save",
                 "/preferences",
                 "/store",
+                "/profiles",
                 "/review",
                 "/apply",
                 "/restore",
@@ -178,11 +179,12 @@ def make_server(arguments, effect):
                         f"Preset request must be between 1 and {MAX_DOCUMENT_BYTES} bytes"
                     )
                 data = json.loads(self.rfile.read(length))
-                if self.path in ("/store", "/review", "/apply", "/restore"):
+                if self.path in ("/store", "/profiles", "/review", "/apply", "/restore"):
                     if self.path == "/restore" and data != {}:
                         raise ValueError("Restore accepts no client-selected paths or transaction")
                     action = {
                         "/store": library.store,
+                        "/profiles": library.manage,
                         "/review": library.review,
                         "/apply": library.apply,
                         "/restore": lambda _: library.undo(),

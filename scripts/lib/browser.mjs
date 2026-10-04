@@ -147,8 +147,8 @@ export async function launchBrowser({
     const navigation = await rpc("Page.navigate", { url });
     if (navigation.errorText) throw new Error("Browser navigation failed: " + navigation.errorText);
     const deadline = Date.now() + timeout;
+    let state;
     while (Date.now() < deadline) {
-      let state;
       try {
         state = await evaluate(
           `({url:location.href,status:${readySelector ? `(document.querySelector(${JSON.stringify(readySelector)}) ? "ready" : "loading")` : "document.documentElement?.dataset.shaderStatus"},error:document.getElementById('error')?.textContent})`,
@@ -163,7 +163,10 @@ export async function launchBrowser({
       }
       await delay(100);
     }
-    throw new Error("Studio did not become ready before the browser timeout");
+    // Report readiness without logging session URLs or capability tokens.
+    throw new Error(
+      `Studio did not become ready before the browser timeout (status: ${state?.status ?? "loading"}; expected location: ${state?.url === url}; error: ${state?.error || "none"})`,
+    );
   }
 
   try {

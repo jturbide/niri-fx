@@ -1,7 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawn } from "node:child_process";
+import { mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { createServer } from "node:http";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
 test("library combines supported actions, preserves edits and saves offline without activation", async () => {
@@ -23,7 +26,27 @@ test("library combines supported actions, preserves edits and saves offline with
   const url = `http://127.0.0.1:${server.address().port}/studio/`;
   const browser = await launchBrowser();
   try {
-    await browser.navigate(url);
+    await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
+      source: `window.libraryBootErrors=[];addEventListener('error',event=>window.libraryBootErrors.push(String(event.message).replace(/https?:\\/\\/\\S+/g,'[url]')));`,
+    });
+    async function reload() {
+      try {
+        await browser.navigate(url);
+      } catch (error) {
+        console.error(
+          "Library reload diagnostics",
+          await browser.evaluate(`({
+          readyState: document.readyState,
+          title: document.title,
+          scripts: Array.from(document.scripts, script=>({type:script.type,length:script.textContent.length})),
+          errors: window.libraryBootErrors,
+          bodyLength: document.body?.textContent.length
+        })`),
+        );
+        throw error;
+      }
+    }
+    await reload();
     const evaluate = browser.evaluate;
     assert.equal(await evaluate("document.documentElement.dataset.workspace"), "library");
     assert.equal(await evaluate('byId("activation-controls").hidden'), true);
@@ -65,8 +88,10 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate(
       'byId("combo-name").value="Night Motion";byId("combo-name").dispatchEvent(new Event("change"));byId("store-profile").click()',
     );
+    assert.equal(await evaluate('byId("profile-dialog").open'), true);
+    await evaluate('byId("profile-confirm").click()');
     await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
-    await browser.navigate(url);
+    await reload();
     await evaluate(
       'byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"))',
     );
@@ -85,10 +110,178 @@ test("library combines supported actions, preserves edits and saves offline with
     assert.equal(unsupported.actions.resize, null);
     assert.equal(unsupported.actions.movement, null);
     assert.deepEqual(unsupported.actions.open, unsupported.actions.close);
+    await evaluate(
+      'byId("combo-name").value="";byId("combo-name").dispatchEvent(new Event("change"))',
+    );
+    assert.equal(await evaluate("effectDocument().name"), "Night Motion");
+    assert.match(await evaluate('byId("error").textContent'), /Name must/);
+    // Manage the saved document rather than the unsaved edits above.
+    await evaluate('document.querySelector("[data-style=custom-night-motion]").click()');
+    assert.equal(await evaluate('byId("rename-profile").hidden'), false);
+    await evaluate('byId("copy-profile").click()');
+    assert.equal(await evaluate('byId("profile-save-name").value'), "Night Motion copy");
+    await evaluate('byId("profile-confirm").click()');
+    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    assert.equal(await evaluate("effectDocument().name"), "Night Motion copy");
+    await evaluate(
+      `document.querySelector('button[aria-label="Favorite Night Motion copy"]').click()`,
+    );
+    await evaluate(
+      'byId("rename-profile").click();byId("profile-save-name").value="Night_Motion";byId("profile-confirm").click()',
+    );
+    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    assert.match(await evaluate('byId("profile-dialog-error").textContent'), /already belongs/);
+    assert.equal(await evaluate('byId("profile-dialog").open'), true);
+    await evaluate(
+      'byId("profile-save-name").value="Evening Motion";byId("profile-confirm").click()',
+    );
+    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    assert.equal(await evaluate("effectDocument().name"), "Evening Motion");
+    assert(
+      (await evaluate('JSON.parse(localStorage.getItem("nirifx-favorites"))')).includes(
+        "custom-evening-motion",
+      ),
+    );
+    assert(
+      !(await evaluate('JSON.parse(localStorage.getItem("nirifx-favorites"))')).includes(
+        "custom-night-motion-copy",
+      ),
+    );
+    const shelf = await evaluate('JSON.parse(localStorage.getItem("nirifx-my-profiles"))');
+    assert(shelf["custom-night-motion"]);
+    assert(shelf["custom-evening-motion"]);
+    assert(!shelf["custom-night-motion-copy"]);
+    await evaluate('byId("remove-profile").click();byId("profile-cancel").click()');
+    assert.deepEqual(
+      await evaluate('JSON.parse(localStorage.getItem("nirifx-my-profiles"))'),
+      shelf,
+    );
+    await evaluate('byId("remove-profile").click();byId("profile-confirm").click()');
+    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    assert.equal(await evaluate('byId("remove-profile").hidden'), true);
+    assert(
+      !(await evaluate('JSON.parse(localStorage.getItem("nirifx-favorites"))')).includes(
+        "custom-evening-motion",
+      ),
+    );
+    assert.equal(await evaluate("effectDocument().name"), "Evening Motion");
+    assert.equal(
+      await evaluate('Object.keys(JSON.parse(localStorage.getItem("nirifx-my-profiles"))).length'),
+      1,
+    );
+    // A damaged entry does not hide other profiles or get discarded on save.
+    await evaluate(
+      'localStorage.setItem("nirifx-my-profiles",JSON.stringify({...JSON.parse(localStorage.getItem("nirifx-my-profiles")),"custom-damaged":{schema:99}}))',
+    );
+    await reload();
+    await evaluate(
+      'byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"));document.querySelector("[data-style=custom-night-motion]").click();byId("store-profile").click()',
+    );
+    assert.equal(await evaluate('byId("profile-confirm").textContent'), "Replace saved profile");
+    assert.match(await evaluate('byId("library-warning").textContent'), /could not be read/);
+    const changed = await evaluate(
+      'let shelf=JSON.parse(localStorage.getItem("nirifx-my-profiles"));shelf["custom-night-motion"].actions.close=shelf["custom-night-motion"].actions.open;localStorage.setItem("nirifx-my-profiles",JSON.stringify(shelf));shelf',
+    );
+    await evaluate('byId("profile-confirm").click()');
+    await evaluate("new Promise(resolve=>setTimeout(resolve,100))");
+    assert.match(await evaluate('byId("profile-dialog-error").textContent'), /another tab/);
+    assert.deepEqual(
+      await evaluate('JSON.parse(localStorage.getItem("nirifx-my-profiles"))'),
+      changed,
+    );
+    await evaluate('byId("profile-cancel").click()');
     assert(requests.every((path) => path === "/studio/" || path === "/favicon.ico"));
     assert.equal(await evaluate('byId("error").textContent'), "");
   } finally {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));
+  }
+});
+
+test("installed Library UI manages its JSON shelf through the authenticated server", async () => {
+  const root = mkdtempSync(join(tmpdir(), "nirifx-library-"));
+  const config = join(root, "config.kdl");
+  writeFileSync(config, "animations {}\n");
+  const process = spawn(
+    "python3",
+    [
+      "-m",
+      "niri_fx",
+      "studio",
+      "--target",
+      "standalone",
+      "--config",
+      config,
+      "--state",
+      join(root, "state"),
+      "--no-browser",
+    ],
+    { cwd: projectRoot, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  let browser;
+  try {
+    const url = await new Promise((resolve, reject) => {
+      const timeout = setTimeout(() => reject(new Error("Studio did not start")), 20000);
+      let output = "";
+      process.stdout.on("data", (chunk) => {
+        output += chunk;
+        const match = output.match(/NiriFX Studio: (http:\/\/127\.0\.0\.1:[^\s]+)/);
+        if (match) {
+          clearTimeout(timeout);
+          resolve(match[1]);
+        }
+      });
+      process.once("error", (error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+      process.once("exit", () => {
+        clearTimeout(timeout);
+        reject(new Error("Studio exited before its session was ready"));
+      });
+    });
+    browser = await launchBrowser();
+    await browser.navigate(url);
+    const { evaluate } = browser;
+    const settle = () =>
+      evaluate(
+        "new Promise((resolve,reject)=>{const started=Date.now();function check(){if(!byId('profile-dialog').open&&!byId('store-profile').disabled)resolve();else if(byId('profile-dialog-error').textContent)reject(new Error(byId('profile-dialog-error').textContent));else if(Date.now()-started>5000)reject(new Error('Profile operation timed out'));else setTimeout(check,30)}check()})",
+      );
+    await evaluate(
+      'byId("store-profile").click();byId("profile-save-name").value="Local Night";byId("profile-confirm").click()',
+    );
+    await settle();
+    const folder = join(root, "state/profiles");
+    const saved = JSON.parse(readFileSync(join(folder, "local-night.json")));
+    assert.equal(saved.name, "Local Night");
+    // Reload reads server fingerprints and exposes only owned shelf entries.
+    await browser.navigate(url);
+    await evaluate(
+      'new Promise(resolve=>{function check(){if(!byId("copy-profile").hidden)resolve();else setTimeout(check,30)}byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"));function select(){const card=document.querySelector("[data-style=custom-local-night]");if(card){card.click();check()}else setTimeout(select,30)}select()})',
+    );
+    await evaluate('byId("copy-profile").click();byId("profile-confirm").click()');
+    await settle();
+    await evaluate(
+      'byId("rename-profile").click();byId("profile-save-name").value="Local Dawn";byId("profile-confirm").click()',
+    );
+    await settle();
+    assert(readdirSync(folder).includes("local-dawn.json"));
+    assert(!readdirSync(folder).includes("local-night-copy.json"));
+    await evaluate('byId("remove-profile").click();byId("profile-confirm").click()');
+    await settle();
+    assert.deepEqual(
+      readdirSync(folder).filter((name) => name.endsWith(".json")),
+      ["local-night.json"],
+    );
+    assert.equal(readFileSync(config, "utf8"), "animations {}\n");
+    assert.equal(await evaluate('byId("error").textContent'), "");
+  } finally {
+    if (browser) await browser.close();
+    const stopped = new Promise((resolve) => process.once("exit", resolve));
+    if (process.exitCode === null) {
+      process.kill("SIGTERM");
+      await stopped;
+    }
+    rmSync(root, { recursive: true, force: true });
   }
 });

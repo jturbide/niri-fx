@@ -21,6 +21,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   JSON/config exports. Detailed Studio controls remain in the same app.
 - An optional compact iRiS entry with the NiriFX logo, active look, Choose effects,
   Customize and Restore, plus a Noctalia 5 launcher shortcut.
+- Saved-profile copying, renaming and removal in the local and online Library,
+  with explicit replacement confirmation and preserved favorites on rename.
 
 ### Changed
 
@@ -31,6 +33,8 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
 
 - Correct the validation guide's gallery total and reject stale GIF/preset
   counts in the three public showcase guides during documentation checks.
+- Preserve other sessions' saved-profile edits and reject rename collisions.
+  Skip damaged saved documents individually and report invalid names in the UI.
 
 ## 0.16.0 — 2026-10-03
 

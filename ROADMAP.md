@@ -37,6 +37,8 @@ pointer-driven wobble on the validated motion foundation (Epic 4).
 - [x] Share reviewed Apply/Restore across standalone, iNiR and connected Noctalia configurations.
 - [x] Validate optional compact iRiS and Noctalia entries and accurate iRiS active-selection feedback.
 - [x] Record the combo workflow and publish its guides and online interface.
+- [x] Manage saved profiles with copy, rename and removal, explicit replacement
+  choices, edit conflict detection and JSON transfer between local and online Studio.
 
 ## Released foundation
 

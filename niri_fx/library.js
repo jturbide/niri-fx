@@ -18,17 +18,47 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   const builtins = { ...styles, ...catalog.profiles };
   const actionNames = { open: "Open", close: "Close", resize: "Resize", movement: "Move / swap" };
   let customs = {},
+    managed = {},
+    warnings = [],
+    pendingProfile = null,
     review = null,
     busy = false,
     revision = 0;
-  if (!catalog.connection) {
+  function readBrowserProfiles() {
+    customs = {};
+    warnings = [];
     try {
       const saved = JSON.parse(localStorage.getItem("nirifx-my-profiles") || "{}");
-      for (const [id, doc] of Object.entries(saved).slice(0, 100))
-        if (/^custom-[a-z0-9-]+$/.test(id)) customs[id] = core.normalizePreset(doc);
+      if (!saved || typeof saved !== "object" || Array.isArray(saved))
+        throw new Error("Invalid browser library");
+      for (const [id, doc] of Object.entries(saved)) {
+        try {
+          const normalized = core.normalizePreset(doc);
+          if (id !== profileId(normalized.name)) throw new Error("Profile name mismatch");
+          customs[id] = normalized;
+        } catch {
+          warnings.push(
+            "A saved browser profile could not be read. Export your valid profiles before clearing browser storage.",
+          );
+        }
+      }
     } catch {
-      /* Imports and JSON exports remain available without browser storage. */
+      warnings.push("Browser profiles could not be read. JSON import and export remain available.");
     }
+  }
+  if (!catalog.connection) readBrowserProfiles();
+  function profileId(name) {
+    return (
+      "custom-" +
+      name
+        .toLowerCase()
+        .replace(/[ _-]+/g, "-")
+        .replace(/-$/, "")
+    );
+  }
+  const sameDocument = (a, b) => JSON.stringify(a) === JSON.stringify(b);
+  function selectedSaved() {
+    return Object.entries(managed).find(([, entry]) => sameDocument(entry.document, getDocument()));
   }
   const normalized = (effect) => ({ ...effect, resize: false });
   const equal = (a, b) =>
@@ -133,6 +163,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       );
     element("library-results").replaceChildren();
     element("library-empty").hidden = list.length > 0;
+    element("library-warning").textContent = [...new Set(warnings)].join(" ");
     for (const [id, doc] of list) {
       const button = document.createElement("button");
       button.className = "library-look";
@@ -148,6 +179,8 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       detail.textContent = doc.actions
         ? `${title(a.open.family)} → ${title(a.close.family)} combo`
         : title(doc.effect.family);
+      if (id.startsWith("custom-") && !Object.hasOwn(managed, id))
+        detail.textContent += " · from shell";
       button.append(name, detail);
       button.onclick = () => select(core.normalizePreset(doc), "open");
       const star = document.createElement("button");
@@ -165,6 +198,9 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       row.append(button, star);
       element("library-results").append(row);
     }
+    const saved = selectedSaved();
+    for (const id of ["copy-profile", "rename-profile", "remove-profile"])
+      element(id).hidden = !saved;
   }
   function view(editor) {
     element("library-panel").hidden = editor;
@@ -203,8 +239,13 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   };
   element("combo-name").onchange = () => {
     const doc = getDocument();
-    doc.name = element("combo-name").value.trim();
-    select(doc, "open");
+    try {
+      select(core.normalizePreset({ ...doc, name: element("combo-name").value.trim() }), "open");
+      element("error").textContent = "";
+    } catch (error) {
+      element("combo-name").value = doc.name;
+      element("error").textContent = error.message;
+    }
   };
   function invalidate() {
     revision++;
@@ -255,11 +296,22 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     return data;
   }
   async function listing() {
-    if (!catalog.connection) return;
+    if (!catalog.connection) {
+      managed = Object.fromEntries(
+        Object.entries(customs).map(([id, document]) => [
+          id,
+          { document, expected: JSON.stringify(document) },
+        ]),
+      );
+      cards();
+      return;
+    }
     const response = await fetch("/library?token=" + encodeURIComponent(catalog.connection.token));
     const data = await response.json();
     if (!response.ok) throw new Error(data.error);
     customs = data.customs;
+    managed = data.managed;
+    warnings = data.warnings;
     element("restore-selection").disabled = !data.restore;
     element("active-look").textContent = "Active: " + data.active_name;
     cards();
@@ -269,22 +321,33 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     busy = true;
     element("library-panel").inert = element("editor-panel").inert = true;
     element("error").textContent = "";
-    for (const id of ["review-selection", "store-profile", "restore-selection", "apply-selection"])
+    for (const id of [
+      "review-selection",
+      "store-profile",
+      "copy-profile",
+      "rename-profile",
+      "remove-profile",
+      "restore-selection",
+      "apply-selection",
+    ])
       element(id).disabled = true;
     try {
       await work();
     } catch (error) {
       element("error").textContent = error.message;
     } finally {
+      await listing().catch((error) => {
+        element("error").textContent = error.message;
+      });
       busy = false;
       element("library-panel").inert = element("editor-panel").inert = false;
       element("review-selection").disabled =
         element("store-profile").disabled =
+        element("copy-profile").disabled =
+        element("rename-profile").disabled =
+        element("remove-profile").disabled =
         element("apply-selection").disabled =
           false;
-      await listing().catch((error) => {
-        element("error").textContent = error.message;
-      });
     }
   }
   element("review-selection").onclick = () =>
@@ -324,29 +387,149 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
         "Applied. Use Restore previous to return to your earlier settings.";
     });
   element("cancel-review").onclick = invalidate;
-  element("store-profile").onclick = () =>
+  function suggestedCopy(name) {
+    for (let index = 1; ; index++) {
+      const suffix = " copy" + (index > 1 ? " " + index : "");
+      const candidate = name.slice(0, 48 - suffix.length).trimEnd() + suffix;
+      if (!Object.hasOwn(customs, profileId(candidate))) return candidate;
+    }
+  }
+  function profileDialog(action) {
+    if (busy) return;
+    const saved = selectedSaved();
+    if (["rename", "remove"].includes(action) && !saved) return;
+    let document;
+    try {
+      document = core.normalizePreset(getDocument());
+    } catch (error) {
+      element("error").textContent = error.message;
+      return;
+    }
+    pendingProfile = { action, document, saved, entries: structuredClone(managed) };
+    const input = element("profile-save-name");
+    input.value = action === "copy" ? suggestedCopy(document.name) : document.name;
+    input.required = action !== "remove";
+    element("profile-dialog-name").hidden = action === "remove";
+    element("profile-dialog-error").textContent = "";
+    updateProfileDialog();
+    element("profile-dialog").showModal();
+    if (action !== "remove") input.select();
+  }
+  function updateProfileDialog() {
+    const { action, document, entries } = pendingProfile;
+    const exists = Object.hasOwn(entries, profileId(element("profile-save-name").value.trim()));
+    element("profile-dialog-title").textContent =
+      action === "remove"
+        ? "Remove " + document.name + "?"
+        : action === "rename"
+          ? "Rename saved profile"
+          : action === "copy"
+            ? "Save a copy"
+            : "Save to My profiles";
+    element("profile-confirm").textContent =
+      action === "remove"
+        ? "Remove from My profiles"
+        : action === "rename"
+          ? "Rename profile"
+          : exists && action === "save"
+            ? "Replace saved profile"
+            : "Save profile";
+    element("profile-dialog-help").textContent =
+      action === "remove"
+        ? "This removes the Library copy only. Your active effects and shell presets stay available. Export JSON first if you want to keep a copy."
+        : action === "rename"
+          ? "Rename this Library copy. Your active effects and shell presets keep their current names."
+          : exists && action === "save"
+            ? "A saved profile already uses this name. Replacing it updates the Library copy only; your active effects stay the same."
+            : "Keep an editable Library copy. Your active effects stay the same.";
+  }
+  for (const [id, action] of Object.entries({
+    "store-profile": "save",
+    "copy-profile": "copy",
+    "rename-profile": "rename",
+    "remove-profile": "remove",
+  }))
+    element(id).onclick = () => profileDialog(action);
+  element("profile-save-name").oninput = () => {
+    element("profile-dialog-error").textContent = "";
+    updateProfileDialog();
+  };
+  element("profile-cancel").onclick = () => element("profile-dialog").close();
+  element("profile-dialog").onclose = () => {
+    pendingProfile = null;
+  };
+  element("profile-form").onsubmit = (event) => {
+    event.preventDefault();
+    const input = element("profile-save-name");
     operation(async () => {
-      const document = core.normalizePreset(getDocument());
-      let saved;
-      if (catalog.connection) saved = await post("/store", document);
-      else {
-        const id =
-          "custom-" +
-          document.name
-            .toLowerCase()
-            .replace(/[ _-]+/g, "-")
-            .replace(/-$/, "");
-        if (!Object.hasOwn(customs, id) && Object.keys(customs).length >= 100)
-          throw new Error("My profiles is full. Export JSON to keep another profile.");
-        const next = { ...customs, [id]: document };
-        localStorage.setItem("nirifx-my-profiles", JSON.stringify(next));
-        customs = next;
-        saved = document;
-        cards();
+      element("profile-confirm").disabled = true;
+      try {
+        const { action, document: original, saved, entries } = pendingProfile;
+        const document =
+          action === "remove"
+            ? original
+            : core.normalizePreset({ ...original, name: input.value.trim() });
+        const id = profileId(document.name),
+          previous = entries[id];
+        if ((action === "copy" || (action === "rename" && id !== saved[0])) && previous)
+          throw new Error("That name already belongs to a saved profile. Choose another.");
+        if (catalog.connection) {
+          if (["rename", "remove"].includes(action))
+            await post("/profiles", {
+              action,
+              id: saved[0],
+              expected: saved[1].expected,
+              ...(action === "rename" ? { name: document.name } : {}),
+            });
+          else await post("/store", { document, expected: previous?.expected ?? null });
+        } else {
+          // Read again before writing so another tab's newer profiles survive.
+          // Only the selected name is replaced, renamed or removed.
+          const next = JSON.parse(localStorage.getItem("nirifx-my-profiles") || "{}");
+          if (!next || typeof next !== "object" || Array.isArray(next))
+            throw new Error(
+              "Browser profiles could not be read. Export JSON before clearing browser storage.",
+            );
+          const sourceId = saved && ["rename", "remove"].includes(action) ? saved[0] : id;
+          const expected =
+            saved && ["rename", "remove"].includes(action)
+              ? saved[1].expected
+              : (previous?.expected ?? null);
+          const observed = Object.hasOwn(next, sourceId)
+            ? JSON.stringify(core.normalizePreset(next[sourceId]))
+            : null;
+          if (
+            observed !== expected ||
+            (action === "rename" && id !== sourceId && Object.hasOwn(next, id))
+          )
+            throw new Error("Saved profile changed in another tab. Reload before trying again.");
+          if (
+            !Object.hasOwn(next, id) &&
+            action !== "remove" &&
+            action !== "rename" &&
+            Object.keys(next).length >= 100
+          )
+            throw new Error("My profiles is full. Remove a profile or export JSON.");
+          if (["remove", "rename"].includes(action)) delete next[sourceId];
+          if (action !== "remove") next[id] = document;
+          localStorage.setItem("nirifx-my-profiles", JSON.stringify(next));
+          readBrowserProfiles();
+        }
+        if (saved && ["rename", "remove"].includes(action) && favorites().includes(saved[0]))
+          favorite(saved[0], action === "rename" ? id : null);
+        element("profile-dialog").close();
+        if (action !== "remove") select(document, "open");
+        element("status").textContent =
+          (action === "remove" ? "Removed " : action === "rename" ? "Renamed to " : "Saved ") +
+          document.name +
+          ". Your active look stays the same.";
+      } catch (error) {
+        element("profile-dialog-error").textContent = error.message;
+      } finally {
+        element("profile-confirm").disabled = false;
       }
-      element("status").textContent =
-        "Saved " + saved.name + " to My profiles. Your active look stays the same.";
     });
+  };
   element("restore-selection").onclick = () =>
     operation(async () => {
       await post("/restore", {});

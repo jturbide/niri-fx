@@ -307,6 +307,9 @@ The installed app provides reviewed **Apply** and **Restore previous** through
 standalone, iNiR/iRiS or connected Noctalia configuration. The same library works
 in [Web Studio](https://jturbide.github.io/niri-fx/studio/) for previews and JSON/config
 downloads. [Library and shell setup](docs/library.md).
+My profiles keeps saved combos together, with copy, rename and remove controls.
+Saving over a name asks you to replace that Library copy; active effects change
+only through Review & apply.
 
 Studio offers a **Basic / Advanced** control view, search and favorites, independent
 action profiles, Undo/Redo and pinned A/B comparisons. Pause or scrub any preview;
