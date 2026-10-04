@@ -34,6 +34,13 @@
         "slice_rotation_variation": 0,
         "slice_pivot": 0,
         "slice_collapse": 0,
+        "fragment_shape": "square",
+        "fragment_aspect": 1,
+        "fragment_secondary": "circle",
+        "fragment_mix": 0,
+        "fragment_shape_seed": 17,
+        "fragment_orientation": 0,
+        "fragment_transition": 0.28,
         "fragment_shrink": 0,
         "fragment_roundness": 0,
         "size_variation": 0,
@@ -128,12 +135,14 @@
         "dissolve_y": 0.5,
         "glitch_bands": 24,
         "glitch_chroma": 0,
-        "movement_strength": 0.64
+        "movement_strength": 0.64,
+        "movement_focus": 0,
+        "movement_ms": 900
       },
       "mode": "resize",
       "frames": 45,
       "fps": 20,
-      "bytes": 1015352
+      "bytes": 1010581
     },
     {
       "file": "docs/gifs/move-concept.gif",
@@ -696,7 +705,7 @@
       "mode": "resize",
       "frames": 55,
       "fps": 20,
-      "bytes": 957005,
+      "bytes": 970876,
       "panels": [
         {
           "effect": {
@@ -712,6 +721,13 @@
             "slice_rotation_variation": 0,
             "slice_pivot": 0,
             "slice_collapse": 0,
+            "fragment_shape": "square",
+            "fragment_aspect": 1,
+            "fragment_secondary": "circle",
+            "fragment_mix": 0,
+            "fragment_shape_seed": 17,
+            "fragment_orientation": 0,
+            "fragment_transition": 0.28,
             "fragment_shrink": 0,
             "fragment_roundness": 0,
             "size_variation": 0,
@@ -806,10 +822,12 @@
             "dissolve_y": 0.5,
             "glitch_bands": 24,
             "glitch_chroma": 0,
-            "movement_strength": 0.64
+            "movement_strength": 0.64,
+            "movement_focus": 0,
+            "movement_ms": 900
           },
           "source": "examples/resize-full.json",
-          "label": "Full Breakup · Opt-in"
+          "label": "Full Breakup"
         }
       ]
     },
@@ -818,7 +836,7 @@
       "mode": "resize",
       "frames": 55,
       "fps": 20,
-      "bytes": 732498,
+      "bytes": 728265,
       "panels": [
         {
           "effect": {
@@ -834,6 +852,13 @@
             "slice_rotation_variation": 0,
             "slice_pivot": 0,
             "slice_collapse": 0,
+            "fragment_shape": "square",
+            "fragment_aspect": 1,
+            "fragment_secondary": "circle",
+            "fragment_mix": 0,
+            "fragment_shape_seed": 17,
+            "fragment_orientation": 0,
+            "fragment_transition": 0.28,
             "fragment_shrink": 0,
             "fragment_roundness": 0,
             "size_variation": 0,
@@ -928,10 +953,12 @@
             "dissolve_y": 0.5,
             "glitch_bands": 24,
             "glitch_chroma": 0,
-            "movement_strength": 0.64
+            "movement_strength": 0.64,
+            "movement_focus": 0,
+            "movement_ms": 900
           },
           "source": "examples/resize-edge.json",
-          "label": "Edge Rebuild · Opt-in"
+          "label": "Edge Rebuild"
         }
       ]
     },
@@ -940,7 +967,7 @@
       "mode": "resize",
       "frames": 55,
       "fps": 20,
-      "bytes": 728854,
+      "bytes": 729035,
       "panels": [
         {
           "effect": {
@@ -956,6 +983,13 @@
             "slice_rotation_variation": 0,
             "slice_pivot": 0,
             "slice_collapse": 0,
+            "fragment_shape": "square",
+            "fragment_aspect": 1,
+            "fragment_secondary": "circle",
+            "fragment_mix": 0,
+            "fragment_shape_seed": 17,
+            "fragment_orientation": 0,
+            "fragment_transition": 0.28,
             "fragment_shrink": 0,
             "fragment_roundness": 0,
             "size_variation": 0,
@@ -1050,10 +1084,12 @@
             "dissolve_y": 0.5,
             "glitch_bands": 24,
             "glitch_chroma": 0,
-            "movement_strength": 0.64
+            "movement_strength": 0.64,
+            "movement_focus": 0,
+            "movement_ms": 900
           },
           "source": "examples/resize-soft.json",
-          "label": "Soft Reflow · Opt-in"
+          "label": "Soft Reflow"
         }
       ]
     },
@@ -12380,7 +12416,7 @@
       "mode": "resize",
       "frames": 61,
       "fps": 20,
-      "bytes": 408800,
+      "bytes": 409326,
       "panels": [
         {
           "effect": {
@@ -12396,6 +12432,13 @@
             "slice_rotation_variation": 0,
             "slice_pivot": 0,
             "slice_collapse": 0,
+            "fragment_shape": "square",
+            "fragment_aspect": 1,
+            "fragment_secondary": "circle",
+            "fragment_mix": 0,
+            "fragment_shape_seed": 17,
+            "fragment_orientation": 0,
+            "fragment_transition": 0.28,
             "fragment_shrink": 0,
             "fragment_roundness": 0,
             "size_variation": 0,
@@ -12490,10 +12533,12 @@
             "dissolve_y": 0.5,
             "glitch_bands": 24,
             "glitch_chroma": 0,
-            "movement_strength": 0.64
+            "movement_strength": 0.64,
+            "movement_focus": 0,
+            "movement_ms": 900
           },
           "source": "examples/profiles/elastic-resize.json",
-          "label": "Elastic Resize · opt-in"
+          "label": "Elastic Resize"
         }
       ]
     },
@@ -12502,7 +12547,7 @@
       "mode": "resize",
       "frames": 65,
       "fps": 20,
-      "bytes": 516773,
+      "bytes": 515567,
       "panels": [
         {
           "effect": {
@@ -12518,6 +12563,13 @@
             "slice_rotation_variation": 0,
             "slice_pivot": 0,
             "slice_collapse": 0,
+            "fragment_shape": "square",
+            "fragment_aspect": 1,
+            "fragment_secondary": "circle",
+            "fragment_mix": 0,
+            "fragment_shape_seed": 17,
+            "fragment_orientation": 0,
+            "fragment_transition": 0.28,
             "fragment_shrink": 0,
             "fragment_roundness": 0,
             "size_variation": 0,
@@ -12612,10 +12664,12 @@
             "dissolve_y": 0.5,
             "glitch_bands": 24,
             "glitch_chroma": 0,
-            "movement_strength": 0.64
+            "movement_strength": 0.64,
+            "movement_focus": 0,
+            "movement_ms": 900
           },
           "source": "examples/profiles/ripple-resize.json",
-          "label": "Ripple Resize · opt-in"
+          "label": "Ripple Resize"
         }
       ]
     },
@@ -12850,7 +12904,7 @@
       "mode": "resize",
       "frames": 65,
       "fps": 20,
-      "bytes": 458934,
+      "bytes": 458721,
       "panels": [
         {
           "effect": {
@@ -12866,6 +12920,13 @@
             "slice_rotation_variation": 0,
             "slice_pivot": 0,
             "slice_collapse": 0,
+            "fragment_shape": "square",
+            "fragment_aspect": 1,
+            "fragment_secondary": "circle",
+            "fragment_mix": 0,
+            "fragment_shape_seed": 17,
+            "fragment_orientation": 0,
+            "fragment_transition": 0.28,
             "fragment_shrink": 0,
             "fragment_roundness": 0,
             "size_variation": 0,
@@ -12960,10 +13021,12 @@
             "dissolve_y": 0.5,
             "glitch_bands": 24,
             "glitch_chroma": 0,
-            "movement_strength": 0.48
+            "movement_strength": 0.48,
+            "movement_focus": 0,
+            "movement_ms": 900
           },
           "source": "examples/profiles/accordion-resize.json",
-          "label": "Accordion Resize · opt-in"
+          "label": "Accordion Resize"
         }
       ]
     },
@@ -13570,9 +13633,9 @@
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
         "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
         "scripts/record-combo-showcases.mjs": "c3ee308d92f21c57751630f8f37a4a5f4154840cdd4f8a1c8ab6b7c6bf6e9ed8",
         "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
@@ -18896,9 +18959,9 @@
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
         "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
         "scripts/record-combo-showcases.mjs": "c3ee308d92f21c57751630f8f37a4a5f4154840cdd4f8a1c8ab6b7c6bf6e9ed8",
         "niri_fx/shaders/fragment-shapes.glsl": "a0365ba693dd4611ce1a466dff025298e3a57da9c2390524338e027571231e40",
@@ -19442,9 +19505,9 @@
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
         "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
         "scripts/record-combo-showcases.mjs": "c3ee308d92f21c57751630f8f37a4a5f4154840cdd4f8a1c8ab6b7c6bf6e9ed8",
         "niri_fx/shaders/slices-entry.glsl": "b53cc7e606bc5c8051bbc62bf392f4f3cd79ca7be2db062437c47677e7090200",
@@ -19987,9 +20050,9 @@
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
         "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
         "scripts/record-combo-showcases.mjs": "c3ee308d92f21c57751630f8f37a4a5f4154840cdd4f8a1c8ab6b7c6bf6e9ed8",
         "niri_fx/shaders/dissolve.glsl": "d2e377d21b9240c98ae86a9b955ece1675760ad2310eda4f71482f3d68749966",
@@ -21285,9 +21348,9 @@
         "niri_fx/effect-core.js": "5481ca2dbe798c8ec2b22e0bb5ec8358712330a17477a7b6d5e30df042b35d51",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "99babb89ba631fde1f580b497a339b3b92f0a7e53f147760bd9f9927332669b3",
-        "niri_fx/combo-preview.js": "fe746a47ee09cc0945d13102f2cb86a6f4897a4a906dabaa565e8e5417da20c5",
-        "niri_fx/studio.js": "224c5a7c18d01ea7c2c7bd5fcc01288b49d40cceda8659ab019c4d58f5620034",
-        "niri_fx/preview.html": "f2619d12b9ad84c97f3a23418f45e92e30d299b6045cef744dfc99770a4485af",
+        "niri_fx/combo-preview.js": "931b4cedb5361611ad6e15c40bc4b1186afd950eef534ecc726bfc862d8ed1b9",
+        "niri_fx/studio.js": "8ed2db3d57bd65e9d72e74ab28f88e21945c33bcac1d2cb4cc0ec06220fb2102",
+        "niri_fx/preview.html": "8c40665c924d7c07ebafb2e028b51e08546d702ab61d7d1fa236c06c53892371",
         "niri_fx/studio.css": "51a1fec27e39278af29cc3c7a35b7001a4066d848935bb309300d8fb2ab7e3b2",
         "scripts/record-combo-showcases.mjs": "c3ee308d92f21c57751630f8f37a4a5f4154840cdd4f8a1c8ab6b7c6bf6e9ed8",
         "niri_fx/shaders/elastic-entry.glsl": "74de1e74ff530108cf8bf514ae174fe575f7076669603886d20d026e183411b0",

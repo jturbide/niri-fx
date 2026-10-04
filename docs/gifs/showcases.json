@@ -308,7 +308,7 @@
       "direction": "round",
       "panels": [
         {
-          "label": "Full Breakup \u00b7 Opt-in",
+          "label": "Full Breakup",
           "source": "examples/resize-full.json"
         }
       ]
@@ -320,7 +320,7 @@
       "direction": "round",
       "panels": [
         {
-          "label": "Edge Rebuild \u00b7 Opt-in",
+          "label": "Edge Rebuild",
           "source": "examples/resize-edge.json"
         }
       ]
@@ -332,7 +332,7 @@
       "direction": "round",
       "panels": [
         {
-          "label": "Soft Reflow \u00b7 Opt-in",
+          "label": "Soft Reflow",
           "source": "examples/resize-soft.json"
         }
       ]
@@ -1243,7 +1243,7 @@
       "direction": "round",
       "panels": [
         {
-          "label": "Elastic Resize \u00b7 opt-in",
+          "label": "Elastic Resize",
           "source": "examples/profiles/elastic-resize.json"
         }
       ]
@@ -1255,7 +1255,7 @@
       "direction": "round",
       "panels": [
         {
-          "label": "Accordion Resize \u00b7 opt-in",
+          "label": "Accordion Resize",
           "source": "examples/profiles/accordion-resize.json"
         }
       ]
@@ -1267,7 +1267,7 @@
       "direction": "round",
       "panels": [
         {
-          "label": "Ripple Resize \u00b7 opt-in",
+          "label": "Ripple Resize",
           "source": "examples/profiles/ripple-resize.json"
         }
       ]

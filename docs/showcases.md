@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **203 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **205 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -44,7 +44,7 @@ for every panel's exact settings. Preset loops retain their own default timing.
 
 ## Different effects for each action
 
-The built-in open/close [profiles](../examples/profiles/README.md) leave resize off.
+The built-in open/close [profiles](../examples/profiles/README.md) preserve existing resize settings.
 Opening and closing are independent; these are not application-specific rules.
 
 | Profile | Opens with | Closes with | Recording |
@@ -70,6 +70,8 @@ Undo/Redo and pinned A/B comparisons.
 | --- | --- | --- |
 | Whole-window resize breakup | [Full Breakup](gifs/resize-full.gif) | Stock Niri; explicitly enable fragment resize |
 | Resize with the center readable | [Edge Rebuild](gifs/resize-edge.gif), [Soft Reflow](gifs/resize-soft.gif) | Stock Niri; explicitly enable fragment resize |
+| Reverse width while keeping neighboring edges together | [Baseline and updated width](gifs/native-resize-width-comparison.gif) | Experimental movement renderer with resize enabled; [geometry evidence and limits](validation.md#resize-geometry-continuity) |
+| Reverse height in a stacked column | [Baseline and updated height](gifs/native-resize-height-comparison.gif) | Experimental movement renderer with resize enabled; identical passthrough shaders expose geometry |
 | Real fragment swaps | [Original swap](gifs/native-swap.gif), [Crosswind](gifs/native-swap-crosswind.gif), [Orbital Ribbons](gifs/native-swap-orbital-ribbons.gif), [Bubble Burst](gifs/native-swap-bubble-burst.gif), [Core Detonation](gifs/native-swap-core-detonation.gif) | Separately built experimental Niri patch |
 | Real elastic swaps | [Spring Wobble](gifs/native-swap-spring-wobble.gif), [Twist Snap](gifs/native-swap-twist-snap.gif) | Separately built experimental Niri patch |
 | Studio pointer combos | [Gentle Fragments](gifs/pointer-preview-gentle.gif), [Rubber Sheet Fragments](gifs/pointer-preview-rubber-sheet.gif), [Release Settle Fragments](gifs/pointer-preview-release-settle.gif) | Browser native-math preview with synthetic input; [portable JSON](../examples/profiles/README.md#pointer-preview-combos) |
@@ -78,6 +80,11 @@ Undo/Redo and pinned A/B comparisons.
 
 See [resize controls](usage.md), [movement limits](movement.md) and the
 [nested compositor experiment](../experimental/README.md). Wisps, Dissolve, Iris and Hexagons currently support opening/closing only. Pixels also supports experimental movement; Slices and Distortion now support movement and resize.
+
+The resize comparisons show v0.18.0 on the left and the updated experiment on the
+right. They measure geometric handoff during a reversal; they do not demonstrate
+continuous resize shader phase or resize-to-close motion.
+[Reproduce the comparisons](gifs/README.md#native-resize-geometry-comparisons).
 
 ## Workflows and real compositor scenarios
 

@@ -17,8 +17,23 @@ versioned commits on 2026-10-02. They were not published GitHub releases or tags
   release and CI changes still run the full suite; Python dependency downloads
   are cached alongside the existing npm cache.
 - Explain action choices, inherited desktop settings and compositor requirements
-  directly throughout the public guides. Track independent action disabling as
+  directly throughout the public guides, Studio, pickers and showcase captions.
+  Track independent action disabling as
   planned work rather than implying it is already available.
+
+### Fixed
+
+- Preserve the size trajectory of reversed resizes alongside adjacent tiles and
+  columns in the experimental movement compositor. Each axis keeps its incoming
+  velocity, and an unchanged axis retains its existing deadline. Resize texture
+  phase, minimum-size clamping and timing changes during a resize remain separate
+  limitations.
+
+### Added
+
+- Native before/after width and height comparisons, decoded edge measurements
+  and regressions for reversals, orthogonal changes and unchanged stock behavior.
+  Existing native showcases are refreshed for the updated compositor patches.
 
 ## 0.18.0 — 2026-10-04
 

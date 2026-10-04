@@ -635,7 +635,7 @@ try {
   const resizeProfile = await evaluate("effectDocument()");
   const resizeImport = await importFile(JSON.stringify(resizeProfile));
   assert.equal(resizeImport.error, "");
-  assert.match(resizeImport.status, /Resize is enabled in this document/);
+  assert.match(resizeImport.status, /Resize override: included/);
   assert.deepEqual(resizeImport.effect, resizeProfile);
   await evaluate("byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))");
   await evaluate(

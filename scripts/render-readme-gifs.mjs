@@ -30,7 +30,7 @@ try {
   // Capture-only layout: keep the actual canvas and synthetic window textures.
   await evaluate(`(()=>{
   const style=document.createElement('style');style.textContent=
-   'html,body{width:720px;height:616px;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,#concept-note,#movement-preview-controls,#caption,#status,main>small,.motion-preference,#error{display:none!important}.layout{display:block;margin:0 14px}canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
+   'html,body{width:720px;height:616px;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,.selection-summary,#concept-note,#movement-preview-controls,#caption,#status,main>small,.motion-preference,#error{display:none!important}.layout{display:block;margin:0 14px}canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
   document.head.append(style);
   const heading=document.createElement('div');heading.id='gif-heading';document.body.prepend(heading);
   const note=document.createElement('div');note.id='gif-note';document.body.append(note);
@@ -66,7 +66,7 @@ try {
       name: "resize",
       preset: "balanced",
       mode: "resize",
-      title: "RESIZE · Opt-in fragments",
+      title: "RESIZE · Fragments",
       direction: "round",
     },
     {
@@ -210,7 +210,7 @@ try {
       const note = concept
         ? "Synthetic windows · design preview, not installed movement"
         : spec.mode === "resize"
-          ? "Real resize shader · disabled by default"
+          ? "Resize shader preview · synthetic window"
           : spec.mode === "movement"
             ? "Experimental movement shader · synthetic directional path"
             : comparison

@@ -1,7 +1,7 @@
 # Resize effects
 
-Resize is off in every built-in preset. You can enable it explicitly for
-Fragments, Elastic, Slices or Distortion, or assign a separate resize effect in
+Built-in presets preserve your existing resize settings. Choose a resize effect
+for Fragments, Elastic, Slices or Distortion, or assign one separately in
 a [profile](profiles.md).
 
 Niri animates selected size changes, including cycling preset column widths and
@@ -98,3 +98,26 @@ python3 scripts/test-interruptions.py --resize-profile examples/profiles/triangl
 The shader keeps deterministic piece identities within one resize, but has no
 persistent particle state across successive resizes. See the
 [roadmap](../ROADMAP.md#epic-3-continuous-transitions) for interruption work.
+
+## Resize reversals in the experimental compositor
+
+When a resize reverses, its edge and the neighboring window should continue
+along matching paths. The development build after 0.18 retains the incoming
+width and height velocities separately, and leaves an unchanged axis on its
+original timeline. This addresses gaps between adjacent columns and stacked
+windows when the custom movement renderer is configured.
+
+| Width reversal | Height reversal |
+| --- | --- |
+| ![Native width reversal before and after the geometry fix](gifs/native-resize-width-comparison.gif) | ![Native height reversal before and after the geometry fix](gifs/native-resize-height-comparison.gif) |
+
+Each comparison shows sequential captures from the 0.18 baseline and updated
+pinned compositor, with identical synthetic windows and passthrough shaders.
+The shaders leave the geometry visible. These are native compositor recordings;
+see the [measurements and reproduction](validation.md#resize-geometry-continuity).
+
+Build the [development compositor](../experimental/README.md) to use this change.
+It does not alter stock Niri or select a resize effect in your profile. The resize
+shader still restarts its texture-blend phase; closing during resize does not
+retain that shader state. Extreme shrinking near the minimum-size clamp and
+changing animation timing during a resize can still separate neighboring paths.

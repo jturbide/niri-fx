@@ -152,7 +152,7 @@ scrolling remain distinct roadmap epics.
 The overlap fixture now checks floating/tiled changes and closing a newly opened
 client while an explicit resize is active. [Portable fixture settings](../examples/profiles/movement-overlaps.json)
 include open, close, resize and movement actions. These are deliberately enabled
-for testing; applying an ordinary preset still leaves resize and movement off.
+for testing; ordinary presets preserve existing resize and movement settings.
 
 Rapid swaps and the existing close continuations retain their established state
 handoffs. New endpoint tests verify client identity, final layout and cleanup;

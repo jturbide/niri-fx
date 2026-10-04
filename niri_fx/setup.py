@@ -323,9 +323,7 @@ def plan_setup(args, effect, custom=None):
         notes.append(
             "Select the saved style in iRiS Settings → Windows → Movement → Style to activate it."
         )
-        notes.append(
-            "Built-in resize stays off; custom resize is included only when explicitly enabled in its document/options."
-        )
+        notes.append("Existing resize settings are preserved unless you choose a resize style.")
     else:
         if not config.is_file():
             raise ValueError(f"Niri config is missing: {config}. Create it first or pass --config.")
@@ -786,10 +784,10 @@ def doctor(args):
     return {
         "checks": checks,
         "healthy": all(c["ok"] is not False for c in checks),
-        "resize": "Opt-in; all built-in presets default off.",
-        "movement": "Movement is experimental and opt-in. Activation requires a matching binary and verified running renderer contract.",
+        "resize": "Choose resize separately; built-in presets preserve existing resize behavior.",
+        "movement": "Experimental movement requires a matching binary and verified running renderer contract.",
         "movement_capability": movement,
-        "pointer": "Pointer wobble is experimental and opt-in. Apply requires standalone mode, a matching binary and a verified running renderer contract.",
+        "pointer": "Experimental pointer deformation requires standalone mode, a matching binary and a verified running renderer contract.",
         "pointer_capability": pointer,
         "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
     }

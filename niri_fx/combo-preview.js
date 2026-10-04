@@ -58,7 +58,7 @@ function createComboPreview({
         action === "movement"
           ? "Experimental shader preview; stock Niri exports omit movement"
           : action === "resize"
-            ? "Opt-in stock Niri resize"
+            ? "Stock Niri resize"
             : "Stock Niri open/close";
       const stage = {
         action,

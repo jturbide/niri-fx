@@ -146,7 +146,7 @@ The 0.13 series adds Fragment Wake, Ribbon Transfer and Momentum Glide, shaped
 fragment resize, independent movement editing and read-only movement diagnostics.
 Update the CLI before importing documents with those movement controls. Re-register
 or re-export to expose the three presets in shell pickers. Stock exports continue
-to omit experimental movement, and every built-in keeps resize off. Explicit
+to omit experimental movement, and built-ins preserve existing resize settings. Explicit
 fragment resize now honors shape, rounding, shrink and size variation.
 
 ## From 0.11 to 0.12
@@ -155,7 +155,7 @@ Fragment shapes and their four new presets require 0.12 or newer. Update the CLI
 before importing those documents. Schema 3 is unchanged; missing shape settings
 use square, aspect 1, orientation 0 and emergence 0.28. Existing built-in shaders
 are unchanged. Re-register or re-export to expose the new presets in shell pickers.
-Installing or updating alone does not change active effects. Resize stays off.
+Installing or updating alone does not change active effects or resize settings.
 The experimental compositor patch is unchanged from 0.11.
 
 ## From 0.10 to 0.11
@@ -166,7 +166,7 @@ remains 3; older files receive defaults for the added controls. Existing built-i
 values and appearance are unchanged. Re-register or re-export a shell pack to
 expose the new styles. Installing the package alone does not update active shaders.
 
-Resize stays off in all built-ins. Distortion still defaults to Ripple Resize;
+Built-ins preserve existing resize settings. Distortion still defaults to Ripple Resize;
 Edge Ripple and Torsion have dedicated resize profiles. A
 missing `distortion_resize_mode` or `resize_twist` uses its default.
 

@@ -110,6 +110,7 @@ def main():
         run("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=source, env=env)
         if not args.unmodified:
             run("cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=source, env=env)
+            run("cargo", "test", *flags, "--lib", "animation::size::tests", cwd=source, env=env)
             run(
                 "cargo",
                 "test",

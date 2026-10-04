@@ -1,7 +1,7 @@
 # Effect controls
 
 This guide follows **main**. For a tagged release, use the guide shipped with that
-version and consult the [changelog](../CHANGELOG.md). All built-ins leave resize disabled.
+version and consult the [changelog](../CHANGELOG.md). Built-ins preserve existing resize settings.
 
 ## Fragments
 
@@ -120,8 +120,8 @@ an actual nested compositor recording. Elastic does not use a random seed.
 ## Saved presets and rendering cost
 
 All families use **schema 3**. Older formats and command aliases have been removed.
-Omitted parameters use current defaults, and resize stays off unless explicitly
-requested. See the [update policy](upgrading.md).
+Omitted parameters use current defaults. Exports preserve existing resize settings
+unless a resize effect is requested. See the [update policy](upgrading.md).
 
 The varied fragment renderer checks up to **147 candidate cells per output pixel**,
 or **441** with staged release. The compact renderer uses 27/81. These are

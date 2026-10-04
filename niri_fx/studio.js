@@ -244,7 +244,7 @@ function labels() {
   byId("resize-controls").hidden = !capabilities.resize;
   byId("family-note").textContent =
     "Stock Niri open/close" +
-    (capabilities.resize ? " and opt-in resize." : ".") +
+    (capabilities.resize ? " and resize." : ".") +
     (capabilities.movement ? " Native movement requires the experimental patched compositor." : "");
   byId("movement-controls").hidden = mode !== "movement" || !capabilities.movement;
   byId("movement-preview-controls").hidden = mode !== "movement";
@@ -1400,8 +1400,8 @@ try {
       byId("status").textContent =
         "Imported " +
         imported.name +
-        ". Resize is " +
-        ((actions ? actions.resize : parameters.resize) ? "enabled in this document" : "off") +
+        ". Resize override: " +
+        ((actions ? actions.resize : parameters.resize) ? "included" : "none") +
         ". Preview or edit, then save/export when ready.";
     } catch (error) {
       if (epoch === importEpoch) byId("error").textContent = "Import failed: " + error.message;
@@ -1421,7 +1421,7 @@ try {
     recordHistory();
     byId("status").textContent =
       catalog.profile_descriptions[id] +
-      ". Resize stays off. Previewing does not activate effects.";
+      ". Existing resize settings are preserved. Previewing does not activate effects.";
   };
   byId("independent").onchange = () => {
     if (byId("independent").checked) {
@@ -1540,8 +1540,8 @@ try {
       refresh();
       recordHistory();
       byId("status").textContent =
-        "Shared settings loaded. Resize is " +
-        ((actions ? actions.resize : parameters.resize) ? "enabled in this document" : "off") +
+        "Shared settings loaded. Resize override: " +
+        ((actions ? actions.resize : parameters.resize) ? "included" : "none") +
         ". Previewing does not activate effects.";
     } catch (error) {
       byId("error").textContent = "Cannot open shared settings: " + error.message;

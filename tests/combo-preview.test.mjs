@@ -92,7 +92,7 @@ test("a mixed combo plays each action's own style, duration and direction", () =
   }
   assert.match(c.sample(plan, 980).label, /Experimental movement shader preview/);
   assert.match(c.sample(plan, 980).support, /stock Niri exports omit movement/);
-  assert.match(c.sample(plan, 480).support, /Opt-in stock Niri resize/);
+  assert.match(c.sample(plan, 480).support, /Stock Niri resize/);
   assert(c.sample(plan, 2340).complete);
 });
 

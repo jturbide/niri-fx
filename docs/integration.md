@@ -31,9 +31,9 @@ and preserve symlinks. Unregister removes all Fragments entries, including custo
 
 Each generated entry snapshots the recognized base preset's other animation
 settings. An unknown active style requires an explicit `--base`; timings are not
-approximated. Base changes are not inherited automatically. Since 0.4.1, resize
-fragments default off, preserving base resize settings unless explicitly enabled.
-Custom JSON without a resize field also opts out; existing custom choices survive.
+approximated. Base changes are not inherited automatically. Since 0.4.1, base
+resize settings are preserved unless a resize effect is selected. Custom JSON
+without a resize field also preserves them; existing custom choices survive.
 
 Registration and Studio saving do not activate effects. A shell preset selection
 performs activation. Re-registering does not replace the shader already embedded

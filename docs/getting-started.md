@@ -25,7 +25,7 @@ or [finished open/close pairings](https://jturbide.github.io/niri-fx/gallery/?co
 in your browser. All previews start paused. Choose the same name locally after
 installation; customizing settings is optional. Start with **Balanced** for
 textured fragments, **Spring Wobble** for a playful bend, or **Pixel Wipe** for a
-pixel reveal. Built-ins leave resize effects off.
+pixel reveal. Built-ins preserve existing resize settings.
 
 ## Get the source and preview
 

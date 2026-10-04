@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **203 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **205 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -292,6 +292,59 @@ capture timing checks, not a GPU benchmark. The script does not replace the logi
 compositor or prove seamless retargeting. [Acceptance scope](../validation.md#workflow-and-compositor-scenarios).
 
 
+## Native resize geometry comparisons
+
+| Recording | Scenario |
+| --- | --- |
+| [Width reversal](native-resize-width-comparison.gif) | Resize a column, then reverse before it settles; watch the gap to the next column |
+| [Height reversal](native-resize-height-comparison.gif) | Resize the upper window of a stack, then reverse; watch the gap to the lower window |
+
+The left side uses the v0.18.0 movement experiment; the right side uses the
+updated experiment. These are sequential native captures with the same synthetic
+mint/lavender cards and passthrough shaders. Each animation lasts 1200 ms and
+reverses after approximately 600 ms. The comparison measures geometry independently
+of deformation effects. Resize remains an explicit choice in profiles.
+
+Prepare the [pinned movement build](../../experimental/README.md) and install the
+recorder dependencies: Quickshell, Pillow, grim, wf-recorder and FFmpeg. Keep the
+host unlocked and the owned nested compositor visible. Build v0.18.0 in a separate
+checkout first, preserving its executable and `artifacts/niri-movement-build.json`.
+The baseline manifest's `binary` path must still point to that preserved executable.
+Use the same Rust toolchain and `--release --test` build options for both checkouts.
+The current checkout must contain the local `v0.18.0` Git tag.
+
+```sh
+python3 scripts/build-niri-movement.py --release --test
+python3 scripts/record-resize-comparison.py \
+  --baseline-manifest /path/to/niri-fx-0.18/artifacts/niri-movement-build.json \
+  --baseline-tag v0.18.0
+```
+
+This writes videos, individual captures, both comparison GIFs and `checks.json`
+under `artifacts/resize-comparison/`. The recorder verifies the historical patch
+against the selected tag, executable hashes and matching pinned Niri revisions.
+Available build metadata must agree; fields absent from an older manifest remain
+explicitly unverified. Stock and pointer-extension baselines are rejected.
+
+Both axes must reproduce the original gap and keep updated edges within the
+four-pixel capture tolerance before publication. Nine unit tests cover these
+acceptance gates, baseline identity and decoded-frame failures:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_resize_comparison.py' -v
+```
+
+Add `--publish` to the recording command to update the two public GIFs,
+`scenario-manifest.json` and
+[the public geometry report](../benchmarks/resize-continuity.json). Then regenerate
+the gallery with `python3 scripts/build-gallery.py`. The GIFs use 50 fps and 128
+colors; the width pair is 1200 pixels wide and the height pair is 750 pixels wide.
+The report measures original decoded frames before scaling and GIF conversion.
+
+The fix preserves size and velocity through retargets. Shader-phase restarts,
+resize-to-close snapshots, extreme minimum-size clamps and animation-timing
+reloads remain limitations. See [validation scope](../validation.md#resize-geometry-continuity).
+
 ## Expanded styles, resize and native continuity
 
 ```sh
@@ -336,7 +389,7 @@ mixed-monitor behavior.
 
 Edge Ripple and Torsion Resize each have `subtle` and `expressive` profile clips,
 plus `compare-edge-ripple-resize.gif` and `compare-torsion-resize.gif`. See the
-[resize guide](../resize.md). The gallery contains 175 clips.
+[resize guide](../resize.md).
 
 ```sh
 node scripts/render-readme-gifs.mjs --only=edge-ripple-subtle,edge-ripple-expressive,torsion-subtle,torsion-expressive,compare-edge-ripple-resize,compare-torsion-resize

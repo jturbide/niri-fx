@@ -19,6 +19,21 @@ with zero speed; unchanged moves use Niri's configured curve. Acceleration,
 camera motion and shared particle physics remain separate problems. Phase curves
 must stay bounded without discarding their incoming speed.
 
+Resize geometry now follows the same principle in the experimental movement
+renderer. Width and height retain sampled velocity independently; an unchanged
+axis keeps its original curve and finish time so neighboring tiles stay on the
+same clock. Deterministic tests cover reversals, orthogonal retargets and small
+or client-driven size changes. The [native comparisons](validation.md#resize-geometry-continuity)
+show width and height reversals.
+Stock rendering and disabled resize remain unchanged.
+
+The next resize work must distinguish geometric continuity from the shader's
+deformation phase, which still restarts. Closing during resize uses a snapshot.
+Minimum-size clamps and animation-timing reloads can separate neighboring paths
+and need dedicated regressions before broader continuity claims. Preserve these
+limits in public examples rather than treating an aligned edge as proof of a
+continuous effect.
+
 Changes to this path should include deterministic state tests and native recordings
 of reversal, repeated retargets, close-during-open, close-during-move and shader
 removal. Verify the final layout and disappearance of closed surfaces. Retain
