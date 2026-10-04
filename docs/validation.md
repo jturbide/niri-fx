@@ -18,7 +18,7 @@ These checks complement the rendering and native evidence below.
 
 | Check | Observed result |
 | --- | --- |
-| Python | 133 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
+| Python | 147 regression tests: validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement parser/session diagnostics and conservative CI scope selection |
 | Portable JavaScript | 69 Node checks; all 75 presets' supported stock shaders match Python, with picker transaction and profile checks |
 | Real Chromium | 75 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |

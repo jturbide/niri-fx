@@ -90,8 +90,8 @@ python3 scripts/record-native-gif.py --preset spring-wobble --name native-swap-s
 ```
 
 `--new-only` also regenerates Slide Apart and its count comparison after the
-default direction change. The original native swap remains a historical recording;
-new native demos display NiriFX and the preset name.
+default direction change. The original native swap demonstrates the baseline Explosion style;
+curated native demos use synthetic app cards and current checked parameters.
 
 ## Piece shapes, hinges and spring transforms
 
