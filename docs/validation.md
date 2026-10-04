@@ -325,6 +325,10 @@ remain separate from compositor presentation evidence.
 
 ## Shared Library and combo builder
 
+The browser test files run sequentially so concurrent software WebGL contexts
+do not compete for a shared CI runner. Shader checks remain enabled; readiness
+timeouts report the observed state without exposing session URLs.
+
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited
 settings and browser-local profile persistence. Profile checks cover
