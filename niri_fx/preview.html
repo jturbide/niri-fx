@@ -12,6 +12,21 @@
     <span id="studio-kind" class="badge">LOCAL STUDIO</span>
   </header>
   <p class="intro">Choose a style for each action and see how your combo feels.</p>
+  <section id="installation-notice" class="installation-notice" hidden>
+    <div id="installation-announcement" role="status" aria-live="polite" aria-atomic="true">
+      <strong id="installation-notice-title"></strong>
+      <p id="installation-notice-message"></p>
+    </div>
+    <button id="retry-installation" class="button-quiet" type="button" hidden>Check again</button>
+    <a
+      id="installation-notice-guide"
+      href="https://github.com/jturbide/niri-fx/blob/main/docs/tool-updates.md"
+      target="_blank"
+      rel="noopener noreferrer"
+      hidden
+      >Review tool setup</a
+    >
+  </section>
   <nav class="tabs" aria-label="Workspace">
     <button id="show-library" aria-pressed="true">Choose effects</button>
     <button id="show-editor" aria-pressed="false">Advanced editor</button>
@@ -406,6 +421,13 @@
       <details id="studio-about">
         <summary>About this Studio</summary>
         <p id="studio-mode-help">@STUDIO_MODE_HELP@</p>
+        <div id="studio-installation" hidden>
+          <p id="installation-detail"></p>
+          <button id="check-installation" class="button-secondary" type="button">
+            Check installation
+          </button>
+          <small id="installation-check-result" role="status" aria-live="polite"></small>
+        </div>
         <p>
           The UI build identifies these controls and built-in styles. Include it with the version
           when reporting a Studio issue.

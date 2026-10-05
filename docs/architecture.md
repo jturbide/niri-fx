@@ -43,6 +43,7 @@ import-boundary test enforces that separation.
 | [motion-preview.js](../niri_fx/motion-preview.js) | Labelled Canvas move/swap concepts. Not a compositor renderer. |
 | [pointer-preview.js](../niri_fx/pointer-preview.js) | Browser adaptation of the native analytical drag spring and inverse texture mapping, plus a deterministic synthetic input trace. No compositor input, layout or configuration writes. |
 | [studio.py](../niri_fx/studio.py) | On-demand app launch and authenticated loopback HTTP transport. Delegates validation and writes. |
+| [studio_installation.py](../niri_fx/studio_installation.py) | Read-only comparison between the running Studio's retained tool identity and the shared selection. Uses verified receipts; never runs another installation or changes desktop settings. |
 | [integration.py](../niri_fx/integration.py) | iNiR base inheritance, ownership-aware registration and backups. Never selects a style. |
 | [picker.py](../niri_fx/picker.py), [qml/](../niri_fx/qml/), [gtk/](../niri_fx/gtk/) | Optional desktop launchers and reusable pickers. Toolkit views call the CLI through argument arrays; no shader renderer or configuration writer is duplicated in the UI. |
 | [setup.py](../niri_fx/setup.py), [pack.py](../niri_fx/pack.py) | Inspectable plans, apply/restore snapshots, standalone includes and picker folders. |

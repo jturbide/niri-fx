@@ -91,6 +91,30 @@ full command path until your existing CLI has been adopted.
 Reopen Studio to use the updated tools. Your current compositor and its login
 lease keep running; a tool update does not log you out or replace that process.
 
+## Check an open Studio
+
+Local Studio checks its installation when it opens and during its regular
+connection checks. Open **About this Studio** and choose **Check installation**
+to refresh the result yourself.
+
+If the shared launcher selects a different retained installation, Studio shows
+a notice to save or export your changes and reopen through the NiriFX launcher.
+This also detects updates and rollbacks between builds with the same version
+number. Reloading the page still uses the same running server; close the window
+normally and launch Studio again to use the selected tools.
+
+An unfinished migration points to the registration and activation steps above.
+An unavailable status means the installation could not be verified; it does not
+mean an update succeeded. Choose **Check again** in the notice to retry.
+Source checkouts and other installations outside the
+shared launcher are identified separately. Use their original launch command
+after updating them.
+
+The check reads local installation metadata. It does not check GitHub for new
+releases, switch installations or reload the editor. Your unsaved effect choices
+remain in the open window. Web Studio and exported HTML do not inspect local
+installations.
+
 ## Roll back the tools
 
 ```sh

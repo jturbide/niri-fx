@@ -9,6 +9,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Local Studio installation status identifies changed tool selections, unfinished
+  migration and unavailable installations. A notice explains when to save and
+  reopen, including same-version updates and rollbacks. About offers a manual
+  check; unsaved settings remain in the editor.
 - Studio's footer shows its version and UI build in local, web and offline modes,
   making different editor builds recognizable even when they share a version.
   About explains how to load updates and separates Studio from compositor identity.

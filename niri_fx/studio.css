@@ -443,6 +443,33 @@ aside[data-view="basic"] .advanced {
     border-top: 0;
     padding-top: 4px;
 }
+.installation-notice {
+    margin: 0 0 20px;
+    padding: 14px 16px;
+    border: 1px solid #62694f;
+    border-radius: 12px;
+    background: #242d2b;
+    overflow-wrap: anywhere;
+}
+.installation-notice strong {
+    color: #e5e5c8;
+}
+.installation-notice p {
+    margin: 5px 0 0;
+}
+#retry-installation {
+    margin-top: 8px;
+}
+.installation-notice a {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--accent);
+}
+#studio-installation {
+    border-top: 1px solid var(--border);
+    margin: 14px 0;
+    padding-top: 4px;
+}
 .studio-info {
     display: flex;
     flex-wrap: wrap;

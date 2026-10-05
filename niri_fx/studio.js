@@ -525,11 +525,122 @@ if (catalog.connection?.target === "native") {
   byId("save-help").textContent =
     "Save to My profiles keeps portable settings. Select for next login stores the managed recipe, including its continuous fragment choice. Your current desktop stays unchanged.";
 }
-if (catalog.connection)
-  setInterval(
-    () => fetch("/ping?token=" + encodeURIComponent(catalog.connection.token)).catch(() => {}),
-    45000,
-  );
+if (catalog.connection && !catalog.hosted) {
+  const states = new Set(["current", "changed", "prepared", "unmanaged", "unavailable"]);
+  const parseInstallation = (value) =>
+    value &&
+    states.has(value.state) &&
+    (value.selected_version === null ||
+      (typeof value.selected_version === "string" &&
+        value.selected_version.length > 0 &&
+        value.selected_version.length <= 100))
+      ? { state: value.state, selected_version: value.selected_version }
+      : null;
+  let installation = parseInstallation(catalog.connection.installation) || {
+    state: "unavailable",
+    selected_version: null,
+  };
+  let checking = false,
+    stale = false,
+    rendered = "";
+  const checkButton = byId("check-installation"),
+    retryButton = byId("retry-installation");
+  byId("studio-installation").hidden = false;
+
+  function renderInstallation() {
+    const key = JSON.stringify({ installation, stale });
+    // An unchanged heartbeat must not repeat live-region announcements.
+    if (key === rendered) return;
+    rendered = key;
+    const version = installation.selected_version ? ` (${installation.selected_version})` : "";
+    const messages = {
+      current: ["", `This Studio is using the selected NiriFX tools${version}.`],
+      changed: [
+        "A different Studio installation is selected",
+        `The selected NiriFX tools${version} differ from this running Studio. Save or export your changes, then close Studio and reopen it from the NiriFX launcher. Reloading this page keeps this Studio running.`,
+      ],
+      prepared: [
+        "Finish shared tool setup",
+        "Shared tool setup is prepared but is not active yet. Follow the tool update guide to finish registration and activation.",
+      ],
+      unmanaged: [
+        "",
+        "This Studio is running outside the shared tool installation. Its version and UI build are shown above.",
+      ],
+      unavailable: [
+        "Installation check unavailable",
+        "The selected installation could not be verified. Your edits are still here.",
+      ],
+    };
+    const [title, message] = messages[installation.state];
+    const detail = stale
+      ? message + " The latest check was unavailable; this is the last known result."
+      : message;
+    byId("installation-notice").hidden = !title;
+    byId("installation-notice-title").textContent = title;
+    byId("installation-notice-message").textContent = detail;
+    byId("installation-notice-guide").hidden = installation.state !== "prepared";
+    byId("installation-detail").textContent = detail;
+    retryButton.hidden = !stale && installation.state !== "unavailable";
+  }
+
+  async function checkInstallation(manual = false) {
+    if (checking) return;
+    checking = true;
+    const focusedControl = [checkButton, retryButton].includes(document.activeElement)
+      ? document.activeElement
+      : null;
+    checkButton.disabled = retryButton.disabled = true;
+    checkButton.textContent = retryButton.textContent = "Checking…";
+    byId("installation-check-result").textContent = "";
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    try {
+      const response = await fetch("/ping?token=" + encodeURIComponent(catalog.connection.token), {
+        cache: "no-store",
+        signal: controller.signal,
+      });
+      if (!response.ok) throw new Error("Installation status unavailable");
+      const data = await response.json();
+      const next = data.ok === true && parseInstallation(data.installation);
+      if (!next || next.state === "unavailable") throw new Error("Installation status unavailable");
+      installation = next;
+      stale = false;
+    } catch {
+      // Keep actionable last-known guidance when a later check cannot verify it.
+      stale = ["changed", "prepared"].includes(installation.state);
+      if (!stale) installation = { state: "unavailable", selected_version: null };
+    } finally {
+      clearTimeout(timeout);
+      renderInstallation();
+      checking = false;
+      checkButton.disabled = retryButton.disabled = false;
+      checkButton.textContent = "Check installation";
+      retryButton.textContent = "Check again";
+      // Disabled controls lose focus. Restore it unless the user moved elsewhere;
+      // a successful retry may have removed the notice and its button entirely.
+      if (focusedControl && document.activeElement === document.body) {
+        const target =
+          focusedControl === retryButton && retryButton.hidden
+            ? byId(
+                document.documentElement.dataset.workspace === "editor"
+                  ? "show-editor"
+                  : "show-library",
+              )
+            : focusedControl;
+        target.focus({ preventScroll: true });
+      }
+      if (manual)
+        byId("installation-check-result").textContent =
+          stale || installation.state === "unavailable"
+            ? "Installation could not be verified. You can check again."
+            : "Installation checked.";
+    }
+  }
+  checkButton.onclick = retryButton.onclick = () => checkInstallation(true);
+  renderInstallation();
+  setInterval(() => checkInstallation(), 45000);
+}
 if (!catalog.connection)
   byId("status").textContent =
     "Preview only: download a Niri preset or export editable JSON. Previewing does not activate effects.";

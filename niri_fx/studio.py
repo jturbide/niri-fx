@@ -20,6 +20,7 @@ from .integration import make_custom_preset, read_shell_presets, update_registry
 from .library import Library, studio_target
 from .preview import preview_document
 from .storage import atomic_write
+from .studio_installation import StudioInstallation
 
 
 def open_studio(url, browser=False):
@@ -85,6 +86,9 @@ def make_server(arguments, effect):
     if not hasattr(arguments, "state"):
         arguments.state = preferences_path.parent
     library = Library(arguments, target)
+    from .native_session import default_root
+
+    installation = StudioInstallation(getattr(arguments, "native_root", None) or default_root())
     native_document = getattr(arguments, "native_document", False) or bool(
         getattr(arguments, "custom", None) or getattr(arguments, "profile", None)
     )
@@ -95,6 +99,7 @@ def make_server(arguments, effect):
             "token": token,
             "target": target,
             "view": "editor" if getattr(arguments, "edit", False) else "library",
+            "installation": installation.snapshot(),
         }
         if target == "native":
             from .capabilities import swap_capability
@@ -160,7 +165,7 @@ def make_server(arguments, effect):
                 return
             self.server.last_seen = time.monotonic()
             if request.path == "/ping":
-                self.respond(200, {"ok": True})
+                self.respond(200, {"ok": True, "installation": installation.snapshot()})
                 return
             if request.path == "/library":
                 try:
