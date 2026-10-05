@@ -248,6 +248,82 @@ def change(path, data, expected_before=...):
     }
 
 
+def _link_bytes(path):
+    """Read the link itself, refusing redirected ancestors and file collisions."""
+    for parent in path.parents:
+        try:
+            info = parent.lstat()
+        except FileNotFoundError:
+            continue
+        if not stat.S_ISDIR(info.st_mode):
+            raise ValueError(f"Symlink change requires directory ancestors: {parent}")
+    try:
+        info = path.lstat()
+    except FileNotFoundError:
+        return None
+    if not stat.S_ISLNK(info.st_mode):
+        raise ValueError(f"Refusing to replace a non-symlink path: {path}")
+    return os.readlink(os.fsencode(path))
+
+
+def link_change(path, target):
+    """Capture a link replacement without reading or rewriting its destination.
+
+    Relative and dangling targets retain their exact spelling. Unlike ordinary
+    dotfile changes, launcher links own their final path, never the linked file.
+    """
+    logical = Path(path).expanduser().absolute()
+    before = _link_bytes(logical)
+    after = os.fsencode(target) if target is not None else None
+    if after is not None and (not after or b"\0" in after):
+        raise ValueError("A symlink target must be nonempty and contain no null bytes")
+    return {
+        "kind": "symlink",
+        "logical": str(logical),
+        "target": str(logical),
+        "before": before,
+        "after": after,
+        "mode": None,
+    }
+
+
+def _write_change(item, data, expected):
+    if item.get("kind") != "symlink":
+        atomic_write(Path(item["target"]), data, item["mode"])
+        return
+    path = Path(item["target"])
+    check_unchanged(item, expected)
+    if data is None:
+        path.unlink(missing_ok=True)
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(".nirifx-link-" + uuid.uuid4().hex)
+    created = False
+    try:
+        os.symlink(data, os.fsencode(temporary))
+        created = True
+        # Staging must not turn a concurrent retarget into permission to replace
+        # a different launcher. Rename replaces this link, never its target.
+        check_unchanged(item, expected)
+        os.replace(temporary, path)
+    finally:
+        if created:
+            temporary.unlink(missing_ok=True)
+
+
+def _still_owned(item, expected):
+    if item.get("kind") == "symlink":
+        try:
+            check_unchanged(item, expected)
+        except (OSError, ValueError):
+            return False
+        return True
+    return (
+        Path(item["logical"]).resolve() == Path(item["target"])
+        and read_bytes(Path(item["target"])) == expected
+    )
+
+
 def launcher_change():
     data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
     target = data / "applications" / f"{APP_ID}-studio.desktop"
@@ -450,6 +526,7 @@ def summarize(plan):
                 "before_sha256": digest(c["before"]),
                 "after_sha256": digest(c["after"]),
             }
+            | ({"kind": c["kind"]} if "kind" in c else {})
             for c in plan["changes"]
         ],
     }
@@ -477,6 +554,7 @@ def plan_fingerprint(plan):
             | {side: digest(item[side]) for side in ("before", "after")}
             | ({"expected_mode": item["expected_mode"]} if "expected_mode" in item else {})
             | ({"regular_only": True} if item.get("regular_only") else {})
+            | ({"kind": item["kind"]} if "kind" in item else {})
             for item in plan.get("observed", plan["changes"])
         ],
     }
@@ -485,6 +563,14 @@ def plan_fingerprint(plan):
 
 def check_unchanged(item, expected):
     logical, target = Path(item["logical"]), Path(item["target"])
+    if item.get("kind") == "symlink":
+        if logical != target or _link_bytes(logical) != expected:
+            raise ValueError(
+                f"Link changed since the plan/snapshot; leaving it untouched: {logical}"
+            )
+        return
+    if "kind" in item:
+        raise ValueError(f"Unsupported setup change kind: {item['kind']}")
     if item.get("regular_only"):
         if any(path.is_symlink() for path in (logical, *logical.parents)):
             raise ValueError(f"Native session path changed to a symlink: {logical}")
@@ -564,6 +650,7 @@ def apply_plan(plan, state, expected=None):
             manifest["files"].append(
                 {k: item[k] for k in ("logical", "target", "mode")}
                 | {"before_sha256": digest(item["before"]), "after_sha256": digest(item["after"])}
+                | ({"kind": item["kind"]} if "kind" in item else {})
             )
 
         def save():
@@ -574,7 +661,7 @@ def apply_plan(plan, state, expected=None):
         try:
             for item in plan["changes"]:
                 check_unchanged(item, item["before"])
-                atomic_write(Path(item["target"]), item["after"], item["mode"])
+                _write_change(item, item["after"], item["before"])
                 applied.append(item)
             if plan["validation_config"]:
                 if plan.get("validation_binary"):
@@ -586,11 +673,8 @@ def apply_plan(plan, state, expected=None):
         except BaseException:
             manifest["status"] = "failed"
             for item in reversed(applied):
-                if (
-                    Path(item["logical"]).resolve() == Path(item["target"])
-                    and read_bytes(Path(item["target"])) == item["after"]
-                ):
-                    atomic_write(Path(item["target"]), item["before"], item["mode"])
+                if _still_owned(item, item["after"]):
+                    _write_change(item, item["before"], item["after"])
             save()
             raise
         return {
@@ -649,6 +733,11 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
                 "Native bundles are retained for running sessions and recovery. "
                 "Use native rollback to change the next-login selection; automatic bundle removal is unavailable."
             )
+        if data["target"].startswith("native-tools-"):
+            raise ValueError(
+                "Native tools require a compatibility-checked runtime rollback. "
+                "Use native tools rollback; generic Restore cannot change tool runtimes."
+            )
         work = []
         for i, item in enumerate(data["files"]):
             before = read_bytes(path.parent / f"{i}.before")
@@ -661,7 +750,10 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
         # Inspect the actual saved bytes, not just the selection metadata: an
         # older snapshot or a shell adapter may contain native user settings.
         # Stock restoration remains available without Niri or a live session.
-        native = _restore_native_requirements(work, data.get("validation_config"))
+        native = _restore_native_requirements(
+            [entry for entry in work if entry[0].get("kind") != "symlink"],
+            data.get("validation_config"),
+        )
         validator = binary if binary is not None else data.get("validation_binary")
         if native and (apply or verify_native):
             from .capabilities import movement_capability, pointer_capability
@@ -691,7 +783,7 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
             try:
                 for item, before, after in reversed(work):
                     check_unchanged(item, after)
-                    atomic_write(Path(item["target"]), before, item["mode"])
+                    _write_change(item, before, after)
                     restored.append((item, before, after))
                 if native:
                     config = data.get("validation_config")
@@ -711,8 +803,8 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
                         validate_config(restored_config, validator)
             except BaseException:
                 for item, before, after in reversed(restored):
-                    if read_bytes(Path(item["target"])) == before:
-                        atomic_write(Path(item["target"]), after, item["mode"])
+                    if _still_owned(item, before):
+                        _write_change(item, after, before)
                 raise
             data["status"] = "restored"
             atomic_write(path, (json.dumps(data, indent=2) + "\n").encode())
