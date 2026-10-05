@@ -817,10 +817,19 @@ one task, then verifies collision handling and a successful rename. Delayed clos
 events from an earlier operation cannot clear the current operation's state.
 
 A stock nested Niri session exercises the installed iNiR serializer, active-profile
-recognition, retained slowdown/base movement and exact Restore. The optional
-compact iRiS component loads in its real module tree, shows the applied profile,
-dispatches Library/Customize arguments and updates after Restore. Separate real
+recognition, retained slowdown/base movement and exact Restore. Earlier acceptance
+also loaded the compact iRiS component in its module tree and checked its app
+arguments and Restore updates. That source-level prototype is now retired;
+[migration guidance](desktop-updates.md#removing-the-earlier-compact-iris-entry)
+keeps shell updates independent of that component. Separate real
 Niri parsing checks cover standalone and connected Noctalia Apply/Restore.
+
+The current adapter check also passes with iNiR db2233c and an unpatched copied
+gallery: the selected NiriFX profile is visible, and its watcher recognizes the
+restored native preset. Installed shell files remain unchanged. Temporary-tree
+regressions verify that Library review neither creates helper bytecode nor uses
+a stale cache. Legacy-entry cleanup tests cover exact removal, upstream additions,
+customized/partial/linked files, idempotence and conflict-aware recovery.
 
 Noctalia 5.2.1 loads the API 24 shortcut in a private shell. A virtual-pointer click
 on its Control Center button dispatches the expected argument array, including

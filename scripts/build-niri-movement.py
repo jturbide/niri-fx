@@ -2,15 +2,18 @@
 """Build pinned Niri experiments or an unmodified baseline without installing them."""
 
 import argparse
-import hashlib
 import json
 import os
+import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from lib.native_build import REVISION, cargo_artifact, digest, metadata, native_host
+
 ROOT = Path(__file__).resolve().parents[1]
-REVISION = "8ed0da44d974c32c6877d2f4630c314da0717ecb"
 PATCH = ROOT / "experimental/niri-movement.patch"
 SOURCE = ROOT / "artifacts/niri-src"
 POINTER_PATCH = ROOT / "experimental/niri-pointer-wobble.patch"
@@ -24,7 +27,7 @@ def run(*args, **kwargs):
     return subprocess.run(args, check=True, **kwargs)
 
 
-def apply_patches(source, revision, patches):
+def apply_patches(source, revision, patches, *, verify_only=False):
     """Accept only the pinned tree or the exact selected patch stack.
 
     A temporary index composes the expected result without changing the checkout.
@@ -47,11 +50,11 @@ def apply_patches(source, revision, patches):
         for patch in patches:
             run("git", "apply", "--cached", str(patch), cwd=source, env=env)
         expected = subprocess.check_output([*diff_args, "--cached"], cwd=source, env=env)
-    if unknown or (diff and diff != expected):
+    if unknown or (diff != expected if verify_only else diff and diff != expected):
         raise SystemExit(
             "Source has changes outside the selected patches; refusing to overwrite them."
         )
-    if not diff:
+    if not diff and not verify_only:
         for patch in patches:
             run("git", "apply", "--index", str(patch), cwd=source)
 
@@ -86,13 +89,16 @@ def main():
     args = parser.parse_args()
     if args.unmodified:
         source, patches = BASELINE_SOURCE, []
+        variant = "unmodified"
     elif args.fragment_drag:
         source, patches = FRAGMENT_SOURCE, [PATCH, POINTER_PATCH, FRAGMENT_PATCH]
+        variant = "fragment"
     else:
         source = POINTER_SOURCE if args.pointer_wobble else SOURCE
         patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
+        variant = "pointer" if args.pointer_wobble else "movement"
     # Resolve every input before creating a checkout or invoking Git.
-    patch_hashes = {path.name: hashlib.sha256(path.read_bytes()).hexdigest() for path in patches}
+    patch_hashes = {path.name: digest(path) for path in patches}
     source.parent.mkdir(parents=True, exist_ok=True)
     if not source.exists():
         run("git", "init", str(source))
@@ -108,12 +114,31 @@ def main():
         run("git", "-C", str(source), "fetch", "--depth=1", "origin", REVISION)
         run("git", "-C", str(source), "checkout", "--detach", "FETCH_HEAD")
     apply_patches(source, REVISION, patches)
+    lock_sha256 = digest(source / "Cargo.lock")
     env = os.environ.copy()
     toolchain = ROOT / "artifacts/toolchain"
     if (toolchain / "cargo/bin/rustc").exists():
         env.update(RUSTUP_HOME=str(toolchain / "rustup"), CARGO_HOME=str(toolchain / "cargo"))
         env["PATH"] = str(toolchain / "cargo/bin") + os.pathsep + env["PATH"]
-    rustc = subprocess.check_output(["rustc", "--version"], env=env, text=True).strip()
+    # Resolve once, with relative paths interpreted as Cargo sees them from the
+    # source tree. Passing RUSTC explicitly prevents build.rustc from silently
+    # selecting a different compiler than the one whose version we record.
+    search_path = os.pathsep.join(
+        str(Path(part) if Path(part).is_absolute() else source / part)
+        for part in env.get("PATH", os.defpath).split(os.pathsep)
+    )
+    compiler = env.get("RUSTC", "rustc")
+    if os.sep in compiler and not Path(compiler).is_absolute():
+        compiler = str(source / compiler)
+    compiler = shutil.which(compiler, path=search_path)
+    if not compiler:
+        raise SystemExit("Selected Rust compiler was not found on the build PATH")
+    env["RUSTC"] = compiler
+    rustc = subprocess.check_output([compiler, "--version"], cwd=source, env=env, text=True).strip()
+    rustc_verbose = subprocess.check_output(
+        [compiler, "-vV"], cwd=source, env=env, text=True
+    ).strip()
+    host = native_host(rustc, rustc_verbose)
     print(rustc, flush=True)
     env.setdefault("CARGO_BUILD_JOBS", "8")
     env.setdefault("CARGO_PROFILE_DEV_DEBUG", "0")
@@ -159,13 +184,45 @@ def main():
         if args.fragment_drag:
             run("cargo", "test", *flags, "--lib", "fragment_motion", cwd=source, env=env)
             run("cargo", "test", *flags, "--lib", "fragment_mesh", cwd=source, env=env)
-    run("cargo", "build", *flags, *(["--release"] if args.release else []), cwd=source, env=env)
+    result = subprocess.run(
+        [
+            "cargo",
+            "build",
+            *flags,
+            *(["--release"] if args.release else []),
+            "--message-format=json-render-diagnostics",
+        ],
+        cwd=source,
+        env=env,
+        stdout=subprocess.PIPE,
+        text=True,
+        check=False,
+    )
+    # Cargo JSON carries rendered compiler diagnostics on stdout. Keep those
+    # useful errors visible even when the build fails before artifact metadata.
+    for line in result.stdout.splitlines():
+        try:
+            item = json.loads(line)
+        except json.JSONDecodeError:
+            print(line, file=sys.stderr)
+            continue
+        if isinstance(item, dict) and item.get("reason") == "compiler-message":
+            rendered = item.get("message", {}).get("rendered")
+            if rendered:
+                print(rendered, end="", file=sys.stderr)
+    result.check_returncode()
     profile = "release" if args.release else "debug"
-    binary = source / "target" / profile / "niri"
+    binary, features, target = cargo_artifact(result.stdout, source / "target", profile, host)
+    # Do not publish evidence for inputs that changed while Cargo was running.
+    apply_patches(source, REVISION, patches, verify_only=True)
+    if digest(source / "Cargo.lock") != lock_sha256 or any(
+        digest(path) != patch_hashes[path.name] for path in patches
+    ):
+        raise SystemExit("Build inputs changed during compilation; manifest was not updated")
     manifest = {
         "revision": REVISION,
         "binary": str(binary),
-        "binary_sha256": hashlib.sha256(binary.read_bytes()).hexdigest(),
+        "binary_sha256": digest(binary),
         "build_profile": profile,
         "build_flags": flags,
         "rustc": rustc,
@@ -182,7 +239,28 @@ def main():
     if args.fragment_drag:
         manifest["fragment_patch_sha256"] = patch_hashes[FRAGMENT_PATCH.name]
         name = "niri-fragment-drag-build.json"
-    (ROOT / "artifacts" / name).write_text(json.dumps(manifest, indent=2) + "\n")
+    manifest["native_build"] = metadata(
+        manifest,
+        variant=variant,
+        lock_sha256=lock_sha256,
+        target=target,
+        features=features,
+        rustc_verbose=rustc_verbose,
+    )
+    destination = ROOT / "artifacts" / name
+    with tempfile.NamedTemporaryFile(mode="w", dir=destination.parent, delete=False) as stream:
+        temporary = Path(stream.name)
+        try:
+            stream.write(json.dumps(manifest, indent=2) + "\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+        except BaseException:
+            temporary.unlink(missing_ok=True)
+            raise
+    try:
+        os.replace(temporary, destination)
+    finally:
+        temporary.unlink(missing_ok=True)
     if args.unmodified:
         print(f"Built unmodified baseline {binary}")
     elif args.fragment_drag:

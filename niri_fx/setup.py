@@ -440,7 +440,11 @@ def summarize(plan):
         "changes": [
             {
                 "path": c["logical"],
-                "action": "update" if c["before"] is not None else "create",
+                "action": "delete"
+                if c["after"] is None
+                else "update"
+                if c["before"] is not None
+                else "create",
                 "before_sha256": digest(c["before"]),
                 "after_sha256": digest(c["after"]),
             }

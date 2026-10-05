@@ -174,27 +174,14 @@ shells coexist, choose `--target` explicitly, or launch through the appropriate
 shell adapter. With iNiR, use its normal config/registry paths; an unrecognized
 custom animation block requires an explicit `--base` instead of guessed timings.
 
-## Compact iRiS entry
+## iRiS access without source changes
 
-The optional source-level iRiS integration replaces the large NiriFX preset grid
-with a branded entry showing the active look and **Choose effects**, **Customize**
-and **Restore previous**. Native iRiS styles remain available. The entry falls
-back to the original preset list when the NiriFX executable is unavailable.
+Use `niri-fx studio --target inir` or the NiriFX app launcher for Library,
+customization and Restore. Preset registration uses iNiR's external registry;
+it does not require changes to the shell's QML source.
 
-From the source checkout, review the supported gallery patch, then install it:
-
-```sh
-python3 scripts/install-iris-integration.py
-python3 scripts/install-iris-integration.py --apply
-```
-
-Reopen settings afterward. This prototype patches the known gallery and its module declaration,
-and adds its component/icon. It makes snapshots and rejects unfamiliar insertion
-points; it is not an upstream iNiR feature. To restore its UI files:
-
-```sh
-python3 scripts/install-iris-integration.py --restore --apply
-```
-
-Restore refuses subsequent source edits. Recheck this optional integration after
-an iNiR update. Other shell families can launch the same app without this patch.
+The earlier compact Window Motion entry patched the iNiR checkout and could
+block shell updates. New installation of that prototype is retired. Existing
+users can [review and remove just that integration](desktop-updates.md#removing-the-earlier-compact-iris-entry)
+while keeping their profiles and active effects. A future embedded entry needs
+a supported upstream extension point.

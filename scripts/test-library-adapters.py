@@ -94,7 +94,7 @@ def exercise(source, installed=False):
             assert library.listing()["active"]["name"] == "Night Motion"
             assert active["types"]["window-open"] == {"duration-ms": 0, "curve": "linear"}
             assert active["types"]["window-resize"] == {"duration-ms": 0, "curve": "linear"}
-            test_iris_entry(session, source, installed=installed)
+            test_iris_gallery(session, source, library)
             assert animation.read_bytes() == original and registry.read_bytes() == registry_before
             assert shell("get-animation-presets")["active"] == "existing-off"
             assert session.config.read_bytes() == root_before
@@ -172,12 +172,12 @@ def test_inir_modes(args, shell, animation):
     animation.write_bytes(original)
 
 
-def test_iris_entry(session, source, *, installed=False):
+def test_iris_gallery(session, source, library):
     import importlib.util
     import subprocess
 
-    # Only the settings directory is copied for the prototype; all other shell
-    # modules are read through symlinks. The installed iNiR tree is never edited.
+    # Test the unpatched gallery even if this account still has the legacy entry.
+    # Cleanup applies only to a private copy; installed source is never edited.
     (session.root / "data/inir").symlink_to(source, target_is_directory=True)
     qml = session.root / "qml"
     qml.mkdir()
@@ -196,29 +196,16 @@ def test_iris_entry(session, source, *, installed=False):
             (iris / item.name).symlink_to(item, target_is_directory=item.is_dir())
     shutil.copytree(source / "modules/iris/settings", iris / "settings")
     spec = importlib.util.spec_from_file_location(
-        "iris_installer", ROOT / "scripts/install-iris-integration.py"
+        "iris_removal", ROOT / "scripts/install-iris-integration.py"
     )
-    installer = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(installer)
+    remover = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(remover)
     from niri_fx.setup import apply_plan
 
-    apply_plan(installer.plan(qml), session.root / "ui-state")
+    apply_plan(remover.removal_plan(qml), session.root / "ui-state")
     host = qml / "shell.qml"
     shutil.copyfile(ROOT / "scripts/fixtures/iris-host.qml", host)
-    bin_dir = session.root / "bin"
-    bin_dir.mkdir()
-    dispatch = session.root / "studio-dispatch.json"
-    executable = bin_dir / "niri-fx"
-    executable.write_text(
-        f"#!{sys.executable}\nimport os,sys,json\nos.chdir({str(session.root if installed else ROOT)!r})\n"
-        "if sys.argv[1] == 'studio' and '--restore' not in sys.argv and '--status' not in sys.argv:\n"
-        f" with open({str(dispatch)!r},'w') as f: json.dump(sys.argv[1:],f)\n"
-        "else:\n"
-        f" os.execv({sys.executable!r},[{sys.executable!r},'-m','niri_fx',*sys.argv[1:]])\n"
-    )
-    executable.chmod(0o700)
-    session.env["PATH"] = str(bin_dir) + ":" + session.env["PATH"]
-    session.launch(["qs", "-p", str(host)], "iris-entry", private_bus=True)
+    session.launch(["qs", "-p", str(host)], "iris-gallery", private_bus=True)
 
     def ipc(*args):
         return subprocess.check_output(
@@ -231,25 +218,22 @@ def test_iris_entry(session, source, *, installed=False):
 
     def state():
         try:
-            return json.loads(ipc("fxInfo"))
+            return json.loads(ipc("info"))
         except (subprocess.CalledProcessError, json.JSONDecodeError):
             return {}
 
-    wait_for(lambda: state().get("available") and state().get("selected"), "compact iRiS entry", 40)
-    assert state()["restore"]
-    assert state()["active"] == "NiriFX · Night Motion"
-    session.capture("iris-compact-entry")
-    assert "true" in ipc("clickFX", "Choose effects")
-    wait_for(dispatch.exists, "library dispatch")
-    assert json.loads(dispatch.read_text()) == ["studio", "--target", "inir", "--active"]
-    dispatch.unlink()
-    assert "true" in ipc("clickFX", "Customize")
-    wait_for(dispatch.exists, "editor dispatch")
-    assert json.loads(dispatch.read_text())[-1] == "--edit"
-    assert "true" in ipc("clickFX", "Restore previous")
     wait_for(
-        lambda: not state().get("selected") and not state().get("restore"),
-        "iRiS restore and watcher refresh",
+        lambda: state().get("ready") and state().get("active") == "niri-fx-custom-night-motion",
+        "native iRiS preset gallery",
+        40,
+    )
+    assert not state().get("error")
+    assert json.loads(ipc("locate", "niri-fx-custom-night-motion")) is not None
+    session.capture("iris-preset-gallery")
+    library.undo()
+    wait_for(
+        lambda: state().get("active") == "existing-off",
+        "iRiS watcher refresh after Library Restore",
     )
 
 
