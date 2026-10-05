@@ -1,8 +1,10 @@
 # Architecture and maintenance contracts
 
-NiriFX generates compositor configuration from validated parameter data. It does
-not run a particle daemon, replace Niri, or render a shell's UI surfaces. Studio
-previews the same GLSL source using a synthetic window texture.
+NiriFX generates compositor configuration from validated parameter data. Its
+full session combines the native effects in a patched Niri build; stock Niri
+remains available for supported shader actions. Studio previews the same GLSL
+source using a synthetic window texture, without a separate particle daemon or
+shell-owned effect renderer.
 
 ## Dependencies flow toward the effect model
 
@@ -48,9 +50,10 @@ import-boundary test enforces that separation.
 | [native_build.py](../niri_fx/native_build.py), [native_session.py](../niri_fx/native_session.py) | Read-only native build evidence, retained desktop bundles and selector-only next-login rollback. Reuses setup plans and transactions; never writes stock config. |
 | [native_config.py](../niri_fx/native_config.py) | Bounded include-graph snapshots. Rewrites literal include paths while retaining file boundaries and positional merges; verifies the entire owned graph before selection. |
 | [native_customization.py](../niri_fx/native_customization.py) | Validated profile recipes over an immutable baseline, creating a new retained bundle and reviewed next-login selection through setup transactions. Repeated edits replace one overlay rather than growing the include graph. |
+| [native_live.py](../niri_fx/native_live.py) | Same-build managed-session reload over verified IPC, process-bound reload receipts and bounded configuration-load confirmation. Keeps immutable bundles and next-login transactions separate from active runtime evidence. |
 | [native_install.py](../niri_fx/native_install.py) | Composes full-candidate staging, include snapshots, login-entry files and selector changes into the same reviewed setup transaction. No implicit builds, privileged registration or live restarts. |
 | [native_runtime.py](../niri_fx/native_runtime.py), [native_storage.py](../niri_fx/native_storage.py) | Read-only advertised-session identity and bounded bundle storage inspection. No candidate execution, configuration writes or deletion decisions. |
-| [native_cli.py](../niri_fx/native_cli.py), [native_entry.py](../niri_fx/native_entry.py), [native_login.py](../niri_fx/native_login.py) | Experimental CLI and staged per-user login entry. A process-bound runtime lease preserves upstream `niri.service` lifecycle; selection cannot restart a desktop. |
+| [native_cli.py](../niri_fx/native_cli.py), [native_entry.py](../niri_fx/native_entry.py), [native_login.py](../niri_fx/native_login.py) | CLI and staged per-user login entry. A process-bound runtime lease preserves upstream `niri.service` lifecycle; selection cannot restart a desktop. |
 | [scripts/lib/browser.mjs](../scripts/lib/browser.mjs) | Isolated Chromium lifecycle and bounded CDP requests for tests, recording and measurement. Not a runtime dependency. |
 
 ## One catalog, two execution environments

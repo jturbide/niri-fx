@@ -17,7 +17,7 @@ const browser = await launchBrowser();
 try {
   const { rpc, evaluate } = browser;
   await browser.navigate(pathToFileURL(page).href, { width: 1280, height: 1080 });
-  await evaluate("byId('show-editor').click()");
+  await evaluate("byId('show-editor').click();byId('transfer-options').open=true");
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(`
     seed=0.43;

@@ -61,6 +61,7 @@ void main(){vec2 uv=niri_mesh_source_uv;
   const textureRect = payload.fixture?.texture_rect || [0, 0, 160, 120];
   const width = textureRect[2],
     height = textureRect[3];
+  const [allocationWidth, allocationHeight] = payload.fixture?.allocation_size || [width, height];
   const texture = gl.createTexture();
   gl.bindTexture(gl.TEXTURE_2D, texture);
   const filter = payload.filter === "linear" ? gl.LINEAR : gl.NEAREST;
@@ -71,7 +72,7 @@ void main(){vec2 uv=niri_mesh_source_uv;
     [gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE],
   ])
     gl.texParameteri(gl.TEXTURE_2D, key, value);
-  const data = new Uint8Array(width * height * 4);
+  const data = new Uint8Array(allocationWidth * allocationHeight * 4);
   for (let y = 0; y < height; y++)
     for (let x = 0; x < width; x++) {
       const a = x < 8 || y < 8 || x >= width - 8 || y >= height - 8 ? 96 : 255;
@@ -83,10 +84,20 @@ void main(){vec2 uv=niri_mesh_source_uv;
           Math.round((checker ? 0.7 : 0.25) * a),
           a,
         ],
-        (y * width + x) * 4,
+        (y * allocationWidth + x) * 4,
       );
     }
-  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, data);
+  gl.texImage2D(
+    gl.TEXTURE_2D,
+    0,
+    gl.RGBA,
+    allocationWidth,
+    allocationHeight,
+    0,
+    gl.RGBA,
+    gl.UNSIGNED_BYTE,
+    data,
+  );
   gl.enable(gl.BLEND);
   gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
   const buffer = gl.createBuffer();
@@ -142,8 +153,8 @@ void main(){vec2 uv=niri_mesh_source_uv;
   const quad = corners.map(([x, y]) => [
     x,
     y,
-    x,
-    y,
+    (x * width) / allocationWidth,
+    (y * height) / allocationHeight,
     (x - 0.5) * width,
     (y - 0.5) * height,
     width / 2,

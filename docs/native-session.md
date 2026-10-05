@@ -150,8 +150,9 @@ to see those changes in the managed session.
 
 ## Choose effects in Studio
 
-After staging a desktop bundle, open the installed Studio with an explicit native
-target. This target works independently of iNiR, DMS, Noctalia or another shell:
+Inside a managed NiriFX session, `niri-fx studio` detects it automatically.
+You can also prepare choices from another session with an explicit native
+target. Both work independently of iNiR, DMS, Noctalia or another shell:
 
 ```sh
 niri-fx studio --target native
@@ -163,7 +164,10 @@ Studio captures the selected bundle when it opens. To start from another retaine
 bundle, add `--native-base BUNDLE_ID`. The storage root and base are fixed for that
 Studio session; imported JSON cannot select filesystem paths or executables.
 
-Choose a combo and set **Preserve / NiriFX Style / Off** for each action. Preserve
+Choose **Open**, **Close**, **Resize** or **Move / swap**, then click a style
+to preview and assign it. **Combos** selects a complete look; **More options**
+contains shared styles and detailed action controls. Each action can use
+**Preserve / NiriFX Style / Off**. Preserve
 inherits the chosen baseline, including its existing user settings and effects.
 When reopening a previously customized bundle, Preserve returns to its original
 baseline for that action. It does not retain an override you are removing.
@@ -176,18 +180,26 @@ portable profile JSON alone does not contain those extra native controls.
 The browser preview is still a timed movement preview, not a simulation of the
 continuous fragment renderer.
 
-Review the proposed files and next-login selection, then choose **Select for next
-login**. Apply copies the retained executable, generates a separate configuration
-and writes the selector last, then validates the copied configuration with that
-executable. A handled failure restores files still owned by the transaction.
-The launcher also validates the selected pair before starting it. The previous bundle remains
-available for rollback. This does not reload settings into the running desktop.
+Review your choices, then choose **Apply to desktop** when Studio verifies a
+running managed session using the same build and baseline. Studio prepares and
+validates a new retained configuration, then asks Niri to load it without
+restarting your desktop. It waits for a successful configuration-load event before
+reporting success. The same choices are selected for the next login.
+
+From stock Niri, an offline session or a different compositor build, Studio offers
+**Select for next login** instead. Existing bundles remain unchanged. A handled
+staging or validation failure restores files still owned by the transaction; if a
+subsequent live reload fails or cannot be confirmed, Studio reports that separately
+from the saved next-login selection. Niri's reload event has no request identifier,
+so avoid simultaneously loading configurations through another tool.
+The launcher validates the selected pair again before starting it.
 
 Reopen the selected recipe to continue editing. Repeated edits replace the effect
 overlay relative to the same original baseline; they do not stack includes or
 require older bundles to supply configuration files. The status distinguishes
-the advertised running session, next login and rollback. Rollback has its own
-review and confirmation, and also takes effect at the next login.
+the startup session, last confirmed Studio reload, next login and rollback.
+Rollback has its own review and confirmation. It also reloads immediately when the previous selection
+uses the same verified running build and baseline; otherwise it changes the next login.
 
 Only the installed local Studio can manage bundles. The online Studio remains
 a place to preview effects and export portable JSON. You can import that JSON

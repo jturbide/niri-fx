@@ -31,6 +31,7 @@ test("complete combo playback preserves settings and renders selected action loo
     await evaluate(
       `window.comboFrames=new Map();window.comboFrameId=0;window.requestAnimationFrame=callback=>{comboFrames.set(++comboFrameId,callback);return comboFrameId};window.cancelAnimationFrame=id=>comboFrames.delete(id);`,
     );
+    await evaluate('document.querySelector("[data-library-action=combo]").click()');
     assert.deepEqual(
       await evaluate(
         '[...document.querySelectorAll("#library-results [data-style]")].slice(0,5).map(node=>node.dataset.style)',

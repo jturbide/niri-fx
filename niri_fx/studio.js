@@ -1657,6 +1657,17 @@ try {
       refresh();
       recordHistory();
     },
+    preview: (action) => {
+      cancelPointerPreview();
+      cancelComboPreview();
+      if (actions) chooseAction(action);
+      populate();
+      document
+        .querySelector(`[data-mode=${["resize", "movement"].includes(action) ? action : "effect"}]`)
+        .click();
+      refresh();
+      animate(action === "open");
+    },
     edit: (action) => {
       if (!actions) byId("independent").click();
       byId("action").value = action;

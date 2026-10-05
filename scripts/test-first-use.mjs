@@ -230,7 +230,9 @@ animations {
       ? `Active: ${shellBaseline.presets.find((preset) => preset.id === "snappy").name}`
       : "Active: Current Niri settings",
   );
-  await browser.evaluate("document.querySelector('[data-style=fragment-flow]').click()");
+  await browser.evaluate(
+    "document.querySelector('[data-library-action=combo]').click();document.querySelector('[data-style=fragment-flow]').click()",
+  );
   const combo = await browser.evaluate("effectDocument()");
   assert.equal(combo.name, "Fragment Flow");
   assert.equal(combo.schema, 2);

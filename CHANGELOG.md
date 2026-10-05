@@ -9,8 +9,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
-- Studio's NiriFX session target prepares reviewed effect changes for the next
-  login. It retains the previous binary/configuration pair, reopens saved recipes
+- Studio's NiriFX session target applies reviewed effects directly to a verified
+  matching compositor and saves them for the next login. Stock, offline and
+  different-build sessions keep next-login selection. It retains the previous
+  binary/configuration pair, reopens saved recipes
   and reviews rollback separately. Independent action choices and Gentle, Tear
   and Cascade continuous-fragment presets use the retained build. Session and
   file details are collapsed behind the main preset controls.
@@ -98,6 +100,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
+- Studio starts with Open, Close, Resize and Move / swap choices. Selecting a
+  style previews it immediately and updates only that action; complete looks
+  live under Combos, with shared settings and detailed controls in More options.
+  Managed NiriFX sessions are detected before shell adapters, so their effects
+  can be applied directly without opening shell settings.
+
 - New installs use Library/Studio and external shell configuration. The optional
   iRiS source-patching installer is retired to avoid blocking shell updates;
   historical exact Restore remains available. The desktop update guide describes
@@ -110,6 +118,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - Update the pinned checkout, Python/Node setup and Pages publishing actions.
 
 ### Fixed
+
+- Continuous fragments retain the correct window proportions when content shrinks
+  after moving to another display. Both the fragment mesh and resting image now
+  sample the content region within a reused larger texture allocation.
 
 - NiriFX login entries no longer fail before starting the compositor when SDDM
   treats quoted executable paths literally. Session-entry preparation rejects

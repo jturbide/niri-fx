@@ -81,8 +81,10 @@ are developer regression controls, not separate consumer editions.
       until packages provide it.
 - [ ] Install the NiriFX app, full compositor and login entry through one supported
       package workflow, keeping stock Niri available.
-- [ ] Start Library from the selected session with its configuration owner detected
-      and a simple first-use flow.
+- [x] Detect a verified managed session before shell adapters and present direct
+      per-action preset choices with immediate previews.
+- [x] Apply reviewed effects and same-build rollback directly to the running
+      managed session, with configuration-load confirmation and next-login storage.
 - [ ] Load normal user/shell settings beneath a NiriFX-owned effect overlay and
       follow their updates, retaining a validated full snapshot for recovery.
       The current frozen baseline requires a new import for other desktop changes.
