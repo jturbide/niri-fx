@@ -453,7 +453,8 @@ class NativeToolsTests(unittest.TestCase):
         # directory. Retained pure-Python code remains usable through its receipt.
         prefix = self.home / "real-venv"
         venv.EnvBuilder(with_pip=False).create(prefix)
-        package = prefix / "lib/python3.10/site-packages/niri_fx"
+        # Never match the active interpreter's default, including Python 3.10 CI.
+        package = prefix / "lib/python-retained/site-packages/niri_fx"
         package.mkdir(parents=True)
         (package / "__init__.py").write_text('__version__ = "synthetic"\n')
         (package / "branding.py").write_text('def desktop_entry(): return b"synthetic desktop"\n')
