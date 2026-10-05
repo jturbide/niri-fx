@@ -540,6 +540,10 @@ This recording uses the actual controls and download buttons with the
 
 ![Studio imports a profile, edits its closing wind, compares the original, undoes and exports](gifs/workflow-studio-profile.gif)
 
+Choose Preserve, NiriFX Style or Off independently for each action:
+
+![Independent action choices and portable exports](gifs/workflow-action-choices.gif)
+
 **Choose a style from your shell.** Select mixed-action profiles in iRiS, search
 presets and Undo changes in DMS, or use Noctalia's Niri Animations picker.
 The iRiS and DMS clips use the shells' real UI components in isolated demo windows;

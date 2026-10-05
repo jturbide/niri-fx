@@ -108,7 +108,7 @@ niri msg -j niri-fx-capabilities
 niri msg -j niri-fx-frame-timings
 ```
 
-Capabilities report schema 1, movement shader contract 1, whether a probe compiled
+Capabilities report schema 1, movement shader contract 2, whether a probe compiled
 in the running renderer, whether movement is configured and whether frame feedback
 is available. The isolated probe is destroyed after compilation; it does not
 replace the active movement shader. NiriFX's [setup workflow](../docs/setup.md#activate-experimental-movement)

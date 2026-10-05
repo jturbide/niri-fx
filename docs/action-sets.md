@@ -36,7 +36,7 @@ their preset pack. See [setup and restore](setup.md) and [collections](collectio
 
 In Studio, choose **Ready-made profile**, then view Resize or Movement under
 **Editing action**. The matching suggestion appears in the controls without
-enabling the action. Tick its enable checkbox to include it in saved JSON.
+changing the action. Choose **NiriFX Style** to include it in saved JSON.
 Undo restores the prior choice. Imported or renamed sets retain suggestions when
 both opening and closing still match the original set; editing either action
 removes the match. A saved resize or movement choice always takes precedence.

@@ -62,7 +62,11 @@ def settings(clip, stem):
         parse_document(doc)
 
         def compact(values):
-            return None if values is None else {k: v for k, v in values.items() if v != defaults[k]}
+            return (
+                values
+                if values is None or values == "off"
+                else {k: v for k, v in values.items() if v != defaults[k]}
+            )
 
         payload = dict(doc)
         if isinstance(effect, Profile):

@@ -1,6 +1,6 @@
 {
   "kind": "profile",
-  "schema": 1,
+  "schema": 2,
   "name": "Gentle Fragments",
   "actions": {
     "open": {

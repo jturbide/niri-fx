@@ -104,8 +104,9 @@ persistent particle state across successive resizes. See the
 When a resize reverses, its edge and the neighboring window should continue
 along matching paths. The development build after 0.18 retains the incoming
 width and height velocities separately, and leaves an unchanged axis on its
-original timeline. This addresses gaps between adjacent columns and stacked
-windows when the custom movement renderer is configured.
+original timeline. Active paths keep their timing through a configuration reload;
+a newly moving axis uses the reloaded timing. This addresses tested gaps between
+adjacent columns and stacked windows when the custom movement renderer is configured.
 
 | Width reversal | Height reversal |
 | --- | --- |
@@ -116,8 +117,16 @@ pinned compositor, with identical synthetic windows and passthrough shaders.
 The shaders leave the geometry visible. These are native compositor recordings;
 see the [measurements and reproduction](validation.md#resize-geometry-continuity).
 
-Build the [development compositor](../experimental/README.md) to use this change.
-It does not alter stock Niri or select a resize effect in your profile. The resize
-shader still restarts its texture-blend phase; closing during resize does not
-retain that shader state. Extreme shrinking near the minimum-size clamp and
-changing animation timing during a resize can still separate neighboring paths.
+The additional [width](gifs/native-resize-orthogonal-width-comparison.gif) and
+[height](gifs/native-resize-orthogonal-height-comparison.gif) comparisons show
+retargeting the other axis while a resize is active. The
+[timing-reload comparison](gifs/native-resize-timing-reload-height-comparison.gif)
+shows the previous development build beside the fix after changing resize timing
+from 1200 ms to 350 ms and reversing.
+
+Build the [development compositor](../experimental/README.md) to use these changes.
+Resize remains an explicit profile choice. The resize shader still restarts its
+texture-blend phase, and closing during resize does not retain that shader state.
+Extreme shrinking can still separate neighboring paths at the minimum-size floor.
+The floor now prevents invalid geometry in debug builds; shared constrained motion
+remains [planned work](next-phases.md#rendering-and-interruptions).

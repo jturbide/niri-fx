@@ -28,16 +28,36 @@ must stay bounded without discarding their incoming speed.
 Resize geometry follows the same principle in the experimental movement
 renderer. Width and height retain sampled velocity independently; an unchanged
 axis keeps its original curve and finish time so neighboring tiles stay on the
-same clock. Deterministic tests cover reversals, orthogonal retargets and small
-or client-driven size changes. The [native comparisons](validation.md#resize-geometry-continuity)
-show width and height reversals.
-Stock rendering and disabled resize remain unchanged.
+same clock. Active size and neighbor paths also retain their existing timing
+configuration across a reload; newly moving axes use the new configuration.
+Deterministic tests cover reversals, orthogonal retargets, small changes and
+client commits that start a stationary axis. The
+[native comparisons](validation.md#resize-geometry-continuity) show reversals,
+orthogonal retargets and the timing-reload fix. Stock rendering and disabled
+resize keep their existing behavior.
 
-Further resize work must distinguish geometric continuity from the shader's
-deformation phase, which still restarts. Closing during resize uses a snapshot.
-Minimum-size clamps and animation-timing reloads can separate neighboring paths
-and need dedicated regressions before broader continuity claims. Preserve these
-limits in examples: an aligned edge alone does not establish a continuous effect.
+Further resize work must distinguish geometry from texture and deformation state.
+The shader couples two endpoint textures, geometry transforms and progress;
+retaining progress alone cannot prevent a jump when those other inputs change.
+A retained resize session needs stable deformation coordinates and a separate
+content-crossfade clock for newly committed buffers. Arbitrary custom shaders may
+require an explicit new contract rather than changed stock uniform semantics.
+
+Closing still uses a snapshot. Continuing resize through the close fade needs
+both retained endpoint textures and the resize state, with independent protected
+snapshots for Output, Screencast and ScreenCapture. Reusing the unredacted Output
+pair for another target would break capture restrictions. Cover transparent
+margins, popups, dynamic block-out rules and blocked-out backgrounds before
+claiming continuity.
+
+The size floor is applied before constructing a Smithay Size, preventing invalid
+negative dimensions in debug builds. It does not constrain neighboring movement:
+extreme retargets can still produce overlap. The next step is a shared constrained
+resize displacement per source and axis. Bounding a neighbor's total offset would
+also alter unrelated swaps or simultaneous resizes. Test two adjacent resizing
+sources, source removal and handoffs at the floor, sampling position and velocity
+on both sides. Add native before/after comparisons only once those regressions
+pass. An aligned edge alone does not establish a continuous effect.
 
 Changes to this path should include deterministic state tests and native recordings
 of reversal, repeated retargets, close-during-open, close-during-move and shader

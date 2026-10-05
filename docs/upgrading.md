@@ -6,6 +6,39 @@ tagged release, follow the documentation shipped with that version. The
 [stability policy](stability.md) describes the planned 1.x compatibility contract;
 that freeze has not happened yet.
 
+## From 0.18 to 0.19
+
+Install the verified wheel in the same environment and reopen Studio:
+
+```sh
+.venv/bin/python -m pip install --no-index --no-deps --upgrade ./niri_fx-0.19.0-py3-none-any.whl
+.venv/bin/niri-fx studio --active
+```
+
+Installation preserves existing files, Library profiles, favorites, registrations
+and Restore history. Keep the NiriFX state directory when updating.
+
+Version 0.19 exports schema 2 profiles with independent
+**Preserve / NiriFX Style / Off** choices. Existing schema 1 profiles still load
+with the same behavior and normalize to schema 2 when inspected or saved.
+Single-style documents remain schema 3. Version 0.18 cannot read schema 2;
+keep an original JSON copy if you need to return to it.
+
+Preserve means the underlying Niri or shell configuration. When replacing an
+active NiriFX profile, Preserve removes that profile's action override. It does
+not copy Niri's factory settings or keep the previous NiriFX action.
+
+The experimental compositor contracts move to version 2. Rebuild the matching
+movement/pointer variant before native Apply. The old executable is left intact;
+do not replace a login compositor while testing. Per-action movement `off` now
+affects timed movement only; use explicit pointer strength 0 to disable dragging
+and global animation `off` to suppress both. Explicit preservation flags keep
+one native action from resetting its sibling's existing settings.
+
+Before downgrading, use the current version's Restore for active native changes
+and export profiles you want to retain. A lower native contract is rejected for
+new activation. A package update remains separate from changing your compositor.
+
 ## From 0.17 to 0.18
 
 Install the verified 0.18 wheel in the same virtual environment, then reopen

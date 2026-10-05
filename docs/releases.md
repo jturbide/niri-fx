@@ -17,6 +17,31 @@ defines future stability gates; current 0.x interfaces remain under development.
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
 
+## 0.19.0 prerelease
+
+[Download v0.19.0](https://github.com/jturbide/niri-fx/releases/tag/v0.19.0) for
+independent **Preserve / NiriFX Style / Off** choices in Library, Studio and the
+CLI. Preserve uses your underlying Niri or shell configuration. Choose a style
+for selected actions, disable others, and save the combination as portable JSON.
+[See the action-selection workflow](profiles.md).
+
+Existing profiles import with their behavior intact; newly saved profiles use
+schema 2. Native movement and pointer choices require the updated experimental
+compositor with contract 2. Resize geometry also retains active timing through
+configuration reloads. Retained resize shader state and minimum-size neighbor
+alignment remain under development. [Upgrade from 0.18](upgrading.md#from-018-to-019).
+
+```sh
+sha256sum --ignore-missing -c SHA256SUMS
+python3 -m venv .venv
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.19.0-py3-none-any.whl
+.venv/bin/niri-fx studio
+```
+
+Download the wheel and `SHA256SUMS` from the same release. The source archive
+includes documentation, recordings and experimental compositor patches.
+Installing the package leaves active desktop settings unchanged.
+
 ## 0.18.0 prerelease
 
 [Download v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0) for
@@ -158,7 +183,7 @@ not activate effects. For iNiR/iRiS, DMS and Noctalia, follow the
 
 Installing the Python package does not install a patched compositor. Opening and
 closing use stock Niri; native movement requires the separate
-[experimental build](../experimental/README.md). Fragment resize is off by default.
+[experimental build](../experimental/README.md). Built-in profiles preserve existing resize settings.
 See [license notices](../THIRD_PARTY.md) for the MIT application and GPL-licensed patch.
 
 ## Update or roll back
@@ -173,16 +198,16 @@ signing and publishing a version.
 
 ## Verify an upgrade
 
-Maintainers can exercise the real 0.17 release wheel and a candidate wheel with
+Maintainers can exercise the real 0.18 release wheel and a candidate wheel with
 `scripts/test-upgrade.py`. Download the old wheel and its `SHA256SUMS` from
-[v0.17.0](https://github.com/jturbide/niri-fx/releases/tag/v0.17.0), build the new
+[v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0), build the new
 wheel, then run from the checkout:
 
 ```sh
 python3 scripts/test-upgrade.py \
-  --from-wheel artifacts/upgrade-v017/niri_fx-0.17.0-py3-none-any.whl \
-  --checksums artifacts/upgrade-v017/SHA256SUMS \
-  --to-wheel dist/niri_fx-0.18.0-py3-none-any.whl \
+  --from-wheel artifacts/upgrade-v018/niri_fx-0.18.0-py3-none-any.whl \
+  --checksums artifacts/upgrade-v018/SHA256SUMS \
+  --to-wheel dist/niri_fx-0.19.0-py3-none-any.whl \
   --browser
 ```
 

@@ -16,15 +16,16 @@ available, along with collections, **Favorites**, **My profiles** and **All effe
 Searching Recommended searches the full built-in catalog.
 Choosing a card updates the actual shader preview without changing your desktop.
 
-The combo builder shows **Open**, **Close**, **Resize** and **Move / swap** together.
+The combo builder shows Open, Close, Resize and Move / swap together, with
+Pointer drag below. Each has **Preserve / NiriFX Style / Off**. Preserve keeps
+the underlying desktop or shell configuration; Off disables the selected action.
+Choose a preset after selecting NiriFX Style.
+
 Choose **Different styles per action** to mix effects, or **Same style for each
-enabled action** to copy a shared style. Resize and movement use shell defaults
-until you choose an effect; this preserves their existing desktop behavior.
-Only supported styles appear in those selectors. A shared style that cannot
-support a selected resize or movement effect returns that action to shell defaults
-and explains the change. Opening and closing each require a style; their
-independent Preserve and Off choices are planned. See the
-[current action choices](profiles.md#choose-which-actions-to-customize).
+enabled action** to share a style across actions already set to NiriFX Style.
+Preserve and Off choices stay unchanged. If a shared style cannot support a
+selected resize or movement action, its existing style stays selected and the
+interface explains why. See [action choices](profiles.md#choose-which-actions-to-customize).
 
 Use **Tune** beside an action for its detailed settings. Returning to Library
 keeps those edits. Refined actions show the matching combo name, such as
@@ -34,8 +35,8 @@ compositor's movement effect; they are not independent shader slots.
 
 **Pointer drag** is a separate native experiment with a browser preview in
 version 0.18 and newer. Choose Gentle, Rubber Sheet or Release Settle, then expand its
-controls to tune strength, damping and frequency. **Use desktop settings** leaves
-the existing pointer behavior alone; **Disabled** stores an explicit zero-strength
+controls to tune strength, damping and frequency. **Preserve** leaves
+the underlying pointer behavior alone; **Off** stores an explicit zero-strength
 override. Changing the shared window style preserves this independent choice.
 See [pointer-driven wobble](pointer-wobble.md) for its compositor requirements.
 
@@ -52,8 +53,7 @@ does not test native compositor movement or desktop springs. See the
 [movement guide](movement.md) for live support and the
 [desktop motion recordings](desktop-motion.md) for workspace, camera and overview
 behavior. If the profile explicitly selects pointer drag with strength above
-zero, the combo also plays a scripted drag and release before closing. **Use
-desktop settings** and **Disabled** add no pointer phase. Use **Tune** to adjust
+zero, the combo also plays a scripted drag and release before closing. **Preserve** and **Off** add no pointer phase. Use **Tune** to adjust
 any shader action before previewing again.
 
 For an interactive pointer preview, choose **Try pointer drag**, then drag the

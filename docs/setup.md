@@ -56,14 +56,14 @@ renderer `session.contract.status` and the resulting `activation_ready`:
 | `unknown` | The probe could not establish support, or the running executable differs or cannot be identified |
 
 Parser results remain separate from `session.contract.status`. A matching running
-experimental binary must advertise movement contract 1 and compile an isolated
+experimental binary must advertise movement contract 2 and compile an isolated
 probe in its own renderer. `activation_ready` is true only when both checks pass.
 `movement_configured` reports whether a shader is configured; it does not claim an
 arbitrary custom shader compiled. The probe does not replace the active shader.
 Missing sockets, mismatched binaries, incompatible contracts and timeouts never
 count as verified support. Stock effects still work.
 
-Pointer readiness requires pointer contract 1 and a verified built-in drag renderer
+Pointer readiness requires pointer contract 2 and a verified built-in drag renderer
 from the additional extension. Its `configured` and `enabled` values describe the
 current settings, not whether the extension can be activated. A supported but
 unconfigured pointer renderer can be ready. Strength zero keeps it configured

@@ -64,19 +64,19 @@ try {
   }
   await frames("1 / Start with a recommended look");
   await evaluate(`document.querySelector('[data-style=fragments-motion]').click()`);
-  await frames("Fragments Motion / Resize and movement start off", 2, true);
+  await frames("Fragments Motion / Resize and movement preserve desktop settings", 2, true);
   await evaluate(
     `byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130;byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'))`,
   );
   await frames("2 / Keep fragments for opening, choose Frost Vanish for closing", 2, true);
   await evaluate(
-    `byId('combo-resize').value='spring-wobble';byId('combo-resize').dispatchEvent(new Event('change'))`,
+    `byId('combo-resize-mode').value='style';byId('combo-resize-mode').dispatchEvent(new Event('change'));byId('combo-resize').value='spring-wobble';byId('combo-resize').dispatchEvent(new Event('change'))`,
   );
   await frames("3 / Add resize only when you want it", 2, true);
   await comboFrames("4 / Preview your opening, resize and closing styles together");
   await frames("Preview complete / Your combo and active desktop settings stay the same", 1);
   await evaluate(
-    `byId('combo-pointer').value='gentle';byId('combo-pointer').dispatchEvent(new Event('change'));byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'));byId('library-panel').scrollTop+=byId('pointer-settings').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-80`,
+    `byId('combo-pointer-mode').value='style';byId('combo-pointer-mode').dispatchEvent(new Event('change'));byId('combo-pointer').value='gentle';byId('combo-pointer').dispatchEvent(new Event('change'));byId('progress').value=0;byId('progress').dispatchEvent(new Event('input'));byId('library-panel').scrollTop+=byId('pointer-settings').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-80`,
   );
   await frames("5 / Choose pointer drag / Live use requires the native extension", 1.25);
   await evaluate(
@@ -105,12 +105,12 @@ try {
   assert.deepEqual(await evaluate("effectDocument().pointer"), pointerDocument.pointer);
   await frames("6 / Share one window style / Pointer settings stay with the combo", 2, true);
   await evaluate(
-    `byId('combo-pointer').value='';byId('combo-pointer').dispatchEvent(new Event('change'));byId('pointer-tuning').open=false;byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130`,
+    `byId('combo-pointer-mode').value='preserve';byId('combo-pointer-mode').dispatchEvent(new Event('change'));byId('pointer-tuning').open=false;byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130`,
   );
   assert.equal(await evaluate('Object.hasOwn(effectDocument(), "pointer")'), false);
-  await frames("Use desktop settings / Leave pointer behavior unchanged", 0.75);
+  await frames("Preserve / Use the underlying pointer settings", 0.75);
   await evaluate(
-    `byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'));byId('combo-resize').value='';byId('combo-resize').dispatchEvent(new Event('change'));byId('combo-name').value='Night Motion';byId('combo-name').dispatchEvent(new Event('change'));byId('store-profile').click()`,
+    `byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'));byId('combo-resize-mode').value='preserve';byId('combo-resize-mode').dispatchEvent(new Event('change'));byId('combo-name').value='Night Motion';byId('combo-name').dispatchEvent(new Event('change'));byId('store-profile').click()`,
   );
   await frames("7 / Name your combo before saving", 1);
   await evaluate(`byId('profile-confirm').click()`);

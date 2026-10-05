@@ -78,7 +78,7 @@ export parity; it is not a compositor GPU benchmark. See
   Unreleased and provide practical migration guidance. The future 1.0 release
   will define a public contract that remains backward compatible throughout 1.x;
   see the [stability policy](docs/stability.md) before changing public interfaces.
-  Single-effect documents use schema 3; independent profiles use kind `profile`, schema 1.
+  Single-effect documents use schema 3; independent profiles use kind `profile`, schema 2 (schema 1 imports retain their behavior).
 - Python targets 3.10+, uses four spaces and Ruff lint/format (100 columns).
   Run `.venv/bin/ruff check --fix .` and `.venv/bin/ruff format .` before review.
 - JavaScript, CSS, HTML and workflow YAML use Prettier; JavaScript also uses ESLint.
@@ -129,9 +129,14 @@ export parity; it is not a compositor GPU benchmark. See
   installs its dependencies and tests fresh outputs; virtual environments, shader
   results, browser profiles and generated packages are not reused as test evidence.
 - Software WebGL probes reuse up to eight compiled programs for replay and reversal
-  checks. The full rendering/save suite has a 15-minute deadline within the
-  20-minute browser job to accommodate slower shared runners; individual browser
-  requests keep their own deadlines. These limits are not effect performance budgets.
+  checks. CI runs browser workflows, three shape-aspect matrices, motion and Studio
+  rendering as six independent jobs. The required `browser` aggregate checks every
+  result; failures do not cancel other shards. Stage timings appear in job summaries.
+  `python3 scripts/studio-e2e.py` still runs the complete rendering/save suite locally.
+  Use `--suite studio|shapes|motion` for a focused run; shape shards accept
+  `--shape-aspect 0.25|1|4`. These controls select tests, not effect quality.
+  The full local suite has a 15-minute deadline; each CI rendering job has a
+  20-minute limit. Individual browser requests keep bounded deadlines.
 - Full GitHub Actions runs lint, Python 3.10/3.14 tests, GLSL compilation, docs/media
   checks, wheel installation and browser E2E. The optional DMS adapter test requires Quickshell; the [GPU harness](docs/performance.md) requires hardware timer queries. Stock Niri parsing and patched native
   smoke checks also run locally where the compositor is available. CI is not GPU

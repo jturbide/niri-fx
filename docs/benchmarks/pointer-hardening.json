@@ -3,8 +3,8 @@
   "date": "2026-10-04",
   "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
   "patches": {
-    "experimental/niri-movement.patch": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
-    "experimental/niri-pointer-wobble.patch": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a"
+    "experimental/niri-movement.patch": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+    "experimental/niri-pointer-wobble.patch": "9df7910d6410837eb22cb8146173e29e072eea2dc2f3e6394cd82dd0bba45b77"
   },
   "sources": {
     "scripts/test-pointer-hardening.py": "b42c60cfe02025c8deeb22461cffb61ae6183b12a07440154ce11ea2551d242f",
@@ -45,7 +45,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 243625
+              "redaction": 241550
             }
           }
         },
@@ -55,7 +55,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 247675
+              "redaction": 253637
             }
           }
         },
@@ -65,7 +65,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 249998
+              "redaction": 246462
             }
           }
         },
@@ -73,7 +73,7 @@
           "phase": "unblocked-during-grab",
           "counts": {
             "screen_capture": {
-              "protected": 131472,
+              "protected": 131477,
               "public": 130628,
               "redaction": 0
             }
@@ -85,7 +85,7 @@
             "screen_capture": {
               "protected": 0,
               "public": 130628,
-              "redaction": 248385
+              "redaction": 243957
             }
           },
           "settled_counts": {
@@ -107,7 +107,7 @@
           "counts": {
             "screen_capture": {
               "protected": 131490,
-              "public": 130627,
+              "public": 130626,
               "redaction": 0
             }
           }
@@ -116,8 +116,8 @@
           "phase": "protected-drag",
           "counts": {
             "screen_capture": {
-              "protected": 128138,
-              "public": 130627,
+              "protected": 126792,
+              "public": 130626,
               "redaction": 0
             }
           }
@@ -126,8 +126,8 @@
           "phase": "protected-drag",
           "counts": {
             "screen_capture": {
-              "protected": 130030,
-              "public": 130627,
+              "protected": 133505,
+              "public": 130626,
               "redaction": 0
             }
           }
@@ -136,8 +136,8 @@
           "phase": "protected-drag",
           "counts": {
             "screen_capture": {
-              "protected": 131376,
-              "public": 130627,
+              "protected": 129283,
+              "public": 130626,
               "redaction": 0
             }
           }
@@ -146,8 +146,8 @@
           "phase": "unblocked-during-grab",
           "counts": {
             "screen_capture": {
-              "protected": 131470,
-              "public": 130627,
+              "protected": 131479,
+              "public": 130626,
               "redaction": 0
             }
           }
@@ -156,15 +156,15 @@
           "phase": "protected-close-snapshot",
           "counts": {
             "screen_capture": {
-              "protected": 130326,
-              "public": 130627,
+              "protected": 126946,
+              "public": 130626,
               "redaction": 0
             }
           },
           "settled_counts": {
             "screen_capture": {
               "protected": 0,
-              "public": 130627,
+              "public": 130626,
               "redaction": 0
             }
           }

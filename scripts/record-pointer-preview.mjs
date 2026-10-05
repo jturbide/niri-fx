@@ -41,7 +41,10 @@ try {
       window.niriFxComboPreview.seek(0);
       return window.niriFxComboPreview.currentPlan;
     })()`);
-    assert.deepEqual(plan.document, document);
+    assert.deepEqual(
+      plan.document,
+      await browser.callFunction("function(doc) { return normalizePreset(doc); }", [document]),
+    );
     assert.equal(plan.stages.filter((stage) => stage.action === "pointer").length, 1);
     const count = Math.ceil((plan.totalMs * fps) / 1000) + 1;
     let final;

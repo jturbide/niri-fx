@@ -72,12 +72,12 @@ Live fragment controls include:
 - **Burst origin X/Y:** 0–1 within the window, from left/top to right/bottom.
   The same point controls scatter, central attraction and orbit.
 - **Timing:** independent opening, closing and resizing durations, 100–1500 ms.
-- **Resize (off by default):** enable switch and breakup strength (0–1); bounded fragments
+- **Resize:** Preserve keeps existing settings; choose NiriFX Style or Off in a profile. Breakup strength (0–1) controls how bounded fragments
   reconstruct the window at its new size. Resize shares particle count, gravity
   direction and rotation; its strength is separate from open/close gravity.
   Choose **Full Breakup**, **Edge Rebuild** (keeps the center intact) or **Soft
   Reflow** (lighter breakup over the ordinary resize image). Selecting a style
-  alone does not enable resize.
+  alone does not change the action choice.
 
 The editor uses the same shader templates as the CLI. Click **Reconstruct** or
 **Deconstruct**, or scrub the timeline. With the iNiR save target, set a name and
