@@ -63,9 +63,9 @@ def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def capture(binary, version, vertical):
+def capture(binary, version, vertical, *, scenario="reversal"):
     axis = "height" if vertical else "width"
-    name = f"{version}-{axis}"
+    name = f"{version}-{axis}" if scenario == "reversal" else f"{version}-{scenario}-{axis}"
     with NestedSession(CONFIG, binary=binary, width=1280, height=900) as session:
         for label, color in PALETTE.items():
             session.launch(
@@ -75,7 +75,7 @@ def capture(binary, version, vertical):
                 | {
                     "NIRIFX_LABEL": label,
                     "NIRIFX_COLOR": color,
-                    "NIRIFX_CAPTION": f"{BASELINE_LABEL if version == 'before' else 'Updated'}\n{axis.title()} reversal",
+                    "NIRIFX_CAPTION": f"{BASELINE_LABEL if version == 'before' else 'Updated'}\n{axis.title()} {scenario}",
                 },
                 private_bus=True,
             )
@@ -100,19 +100,48 @@ def capture(binary, version, vertical):
         origin = time.monotonic()
         actions = []
 
-        def resize(extent):
+        def resize(extent, direction=axis):
             before = time.monotonic()
-            session.msg("action", f"set-window-{axis}", "--id", str(resizing["id"]), str(extent))
+            session.msg(
+                "action", f"set-window-{direction}", "--id", str(resizing["id"]), str(extent)
+            )
             after = time.monotonic()
             assert after - before < 0.15, "IPC missed reversal window"
             actions.append(
-                {"extent": extent, "request_s": before - origin, "ack_s": after - origin}
+                {
+                    "axis": direction,
+                    "extent": extent,
+                    "request_s": before - origin,
+                    "ack_s": after - origin,
+                }
             )
 
         time.sleep(0.7)
         resize(500 if vertical else 700)
-        time.sleep(0.6)
-        resize(300 if vertical else 360)
+        if scenario == "orthogonal":
+            time.sleep(0.3)
+            resize(800 if vertical else 600, "width" if vertical else "height")
+            time.sleep(0.3)
+            resize(300 if vertical else 360)
+            time.sleep(0.3)
+            resize(initial_size[0 if vertical else 1], "width" if vertical else "height")
+        elif scenario == "timing-reload":
+            time.sleep(0.3)
+            before_reload = time.monotonic()
+            session.reload(CONFIG.replace("duration-ms 1200", "duration-ms 350"))
+            actions.append(
+                {
+                    "reload_duration_ms": 350,
+                    "request_s": before_reload - origin,
+                    "reload_complete_s": time.monotonic() - origin,
+                    "includes_settle_ms": 200,
+                }
+            )
+            time.sleep(0.1)
+            resize(300 if vertical else 360)
+        else:
+            time.sleep(0.6)
+            resize(300 if vertical else 360)
         time.sleep(1.5)
         stop(recorder, signal.SIGINT)
         end = session.capture("settled")
@@ -121,6 +150,8 @@ def capture(binary, version, vertical):
         dimension = 1 if vertical else 0
         final_size = next(w for w in settled if w["id"] == resizing["id"])["layout"]["window_size"]
         assert final_size[dimension] == (300 if vertical else 360), final_size
+        if scenario == "orthogonal":
+            assert final_size == initial_size, (initial_size, final_size)
         session.check_render_log()
         output = DEST / f"{name}.mkv"
         shutil.copyfile(video, output)
@@ -230,7 +261,7 @@ def measure_video(source, vertical):
     }
 
 
-def baseline(manifest_path, tag, updated_build):
+def baseline(manifest_path, tag, updated_build, *, revision=None):
     """Keep historical identities explicit instead of assigning current hashes."""
     build = json.loads(manifest_path.read_text())
     if "pointer_patch_sha256" in build or build.get("unmodified"):
@@ -246,8 +277,13 @@ def baseline(manifest_path, tag, updated_build):
             raise ValueError(f"Baseline and updated build differ in {field}")
     # Resolve the tag first; interpolation into the later revision/path argument
     # uses the resulting object ID, never user-supplied Git revision syntax.
+    revision_args = (
+        ["--end-of-options", f"{revision}^{{commit}}"]
+        if revision is not None
+        else [f"refs/tags/{tag}^{{commit}}"]
+    )
     commit = subprocess.check_output(
-        ["git", "rev-parse", "--verify", f"refs/tags/{tag}^{{commit}}"],
+        ["git", "rev-parse", "--verify", *revision_args],
         cwd=ROOT,
         text=True,
         timeout=15,
@@ -256,9 +292,9 @@ def baseline(manifest_path, tag, updated_build):
         ["git", "show", f"{commit}:experimental/niri-movement.patch"], cwd=ROOT, timeout=15
     )
     if hashlib.sha256(tagged_patch).hexdigest() != build["patch_sha256"]:
-        raise ValueError("Baseline movement patch does not match the selected release tag")
+        raise ValueError("Baseline movement patch does not match the selected source revision")
     return binary, {
-        "tag": tag,
+        **({"source_revision": revision} if revision is not None else {"tag": tag}),
         "commit": commit,
         "revision": build["revision"],
         "patch_sha256": build["patch_sha256"],
@@ -270,11 +306,16 @@ def baseline(manifest_path, tag, updated_build):
     }
 
 
-def compose(axis):
-    stem = DEST / f"native-resize-{axis}-comparison"
-    scaling = (
-        "crop=682:900:0:0,scale=375:-2" if axis == "height" else "crop=1024:900:0:0,scale=600:-2"
-    )
+def compose(axis, *, scenario="reversal"):
+    suffix = axis if scenario == "reversal" else f"{scenario}-{axis}"
+    stem = DEST / f"native-resize-{suffix}-comparison"
+    clip_suffix = axis if scenario == "reversal" else f"{scenario}-{axis}"
+    if axis == "height" and scenario == "orthogonal":
+        scaling, width = "crop=864:900:0:0,scale=500:-2", 1000
+    elif axis == "height":
+        scaling, width = "crop=682:900:0:0,scale=375:-2", 750
+    else:
+        scaling, width = "crop=1024:900:0:0,scale=600:-2", 1200
     subprocess.run(
         [
             "ffmpeg",
@@ -282,9 +323,9 @@ def compose(axis):
             "error",
             "-y",
             "-i",
-            str(DEST / f"before-{axis}.mkv"),
+            str(DEST / f"before-{clip_suffix}.mkv"),
             "-i",
-            str(DEST / f"after-{axis}.mkv"),
+            str(DEST / f"after-{clip_suffix}.mkv"),
             "-filter_complex",
             f"[0:v]fps=50,{scaling}:flags=lanczos[a];[1:v]fps=50,{scaling}:flags=lanczos[b];[a][b]hstack=shortest=1[v]",
             "-map",
@@ -298,7 +339,6 @@ def compose(axis):
         check=True,
         timeout=120,
     )
-    width = 750 if axis == "height" else 1200
     encode_gif(stem.with_suffix(".mkv"), stem.with_suffix(".gif"), width=width, fps=50, colors=128)
     return stem.with_suffix(".gif"), width
 

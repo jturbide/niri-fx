@@ -256,7 +256,7 @@ Pane {
                         }
 
                         Label {
-                            text: root.controller.actions.open ? root.controller.title(root.controller.actions.open.family) + " · " + root.controller.actions.open.open_ms + " ms" : "—"
+                            text: root.controller.actionDescription(root.controller.actions.open, "open")
                         }
 
                         Label {
@@ -265,7 +265,7 @@ Pane {
                         }
 
                         Label {
-                            text: root.controller.actions.close ? root.controller.title(root.controller.actions.close.family) + " · " + root.controller.actions.close.close_ms + " ms" : "—"
+                            text: root.controller.actionDescription(root.controller.actions.close, "close")
                         }
 
                         Label {
@@ -274,8 +274,25 @@ Pane {
                         }
 
                         Label {
-                            text: root.controller.changesResize ? root.controller.title(root.controller.actions.resize.family) + " · explicit override" : "Keep existing behavior"
+                            text: root.controller.actionDescription(root.controller.actions.resize, "resize")
                             color: root.controller.changesResize ? "#d6c5ef" : "#b7e8db"
+                        }
+                        Label {
+                            text: "Move / swap"
+                            color: "#a2b3bb"
+                        }
+
+                        Label {
+                            text: root.controller.actionDescription(root.controller.actions.movement, "movement")
+                        }
+
+                        Label {
+                            text: "Pointer drag"
+                            color: "#a2b3bb"
+                        }
+
+                        Label {
+                            text: !root.controller.selectedDocument?.pointer ? "Preserve · desktop / shell" : root.controller.selectedDocument.pointer.strength === 0 ? "Off" : "NiriFX Style"
                         }
                     }
 
@@ -288,8 +305,8 @@ Pane {
                     }
 
                     Label {
-                        visible: !!root.controller.actions.movement
-                        text: "This file also contains experimental movement settings. This picker applies its stock Niri actions only."
+                        visible: !!root.controller.actions.movement || !!root.controller.selectedDocument?.pointer
+                        text: "This file also contains experimental movement or pointer settings. This picker applies its stock Niri actions only."
                         wrapMode: Text.Wrap
                         Layout.fillWidth: true
                         color: "#a2b3bb"

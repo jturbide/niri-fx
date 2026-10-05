@@ -162,7 +162,7 @@ export function renderShape(
   }
 }
 
-export async function checkShapes(evaluate) {
+export async function checkShapes(evaluate, aspects = [0.25, 1, 4]) {
   const started = performance.now();
   await evaluate(`window.niriFxShapeProbe=${renderShape.toString()}`);
   const shapes = [
@@ -177,7 +177,7 @@ export async function checkShapes(evaluate) {
   ];
   const seen = new Set();
   for (const shape of shapes) {
-    for (const aspect of [0.25, 1, 4]) {
+    for (const aspect of aspects) {
       const effect = {
         fragment_shape: shape,
         fragment_aspect: aspect,
@@ -220,18 +220,19 @@ export async function checkShapes(evaluate) {
       if (aspect === 1) seen.add(middle.hash);
     }
   }
-  assert.equal(
-    seen.size,
-    6,
-    "unit-aspect rectangles/squares and ellipses/circles coincide; other silhouettes differ",
-  );
+  if (aspects.includes(1))
+    assert.equal(
+      seen.size,
+      6,
+      "unit-aspect rectangles/squares and ellipses/circles coincide; other silhouettes differ",
+    );
   for (const [first, second] of [
     ["square", "triangle"],
     ["circle", "hexagon"],
     ["triangle", "star"],
     ["hexagon", "triangle"],
   ]) {
-    for (const aspect of [0.25, 1, 4]) {
+    for (const aspect of aspects) {
       const effect = {
         fragment_shape: first,
         fragment_secondary: second,
@@ -294,6 +295,6 @@ export async function checkShapes(evaluate) {
     "window.niriFxShapeProbe.context.getExtension('WEBGL_lose_context')?.loseContext();delete window.niriFxShapeProbe",
   );
   console.log(
-    `PASS: eight fragment shapes, joined translucent layouts, extreme aspects, reversibility and deterministic replay (${Math.round(performance.now() - started)} ms)`,
+    `PASS: eight fragment shapes, joined translucent layouts, aspects ${aspects.join(", ")}, reversibility and deterministic replay (${Math.round(performance.now() - started)} ms)`,
   );
 }

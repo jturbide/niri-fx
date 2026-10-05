@@ -54,6 +54,10 @@ for (const [id, doc] of Object.entries(catalog.profiles)) {
 let actions = catalog.profile ? structuredClone(catalog.profile.actions) : null;
 let desktopMotion = catalog.profile?.motion ? structuredClone(catalog.profile.motion) : null;
 let pointerSettings = catalog.profile?.pointer ? structuredClone(catalog.profile.pointer) : null;
+const isActionStyle = (value) => value !== null && typeof value === "object";
+const actionMode = (value) =>
+  isActionStyle(value) ? "style" : value === "off" ? "off" : "preserve";
+const rememberedActions = {};
 let editingAction = "open",
   pinned = null,
   comparing = false;
@@ -79,27 +83,31 @@ try {
 }
 if (catalog.preferences) favorites = catalog.preferences.favorites;
 function commitAction() {
-  if (actions)
-    actions[editingAction] =
-      ["resize", "movement"].includes(editingAction) && !byId("action-enabled").checked
-        ? null
-        : { ...parameters, resize: false };
+  if (!actions) return;
+  const mode = byId("action-mode").value;
+  if (mode === "style") {
+    actions[editingAction] = { ...parameters, resize: false };
+    rememberedActions[editingAction] = { ...actions[editingAction] };
+  } else actions[editingAction] = mode === "off" ? "off" : null;
 }
 function matchingActionSet() {
   if (!actions) return null;
   // Names and chooser selection can change on import or Undo. Match normalized
   // window settings instead; recommendations never alter a saved document.
   return Object.keys(catalog.action_companions).find((id) =>
-    ["open", "close"].every((action) =>
-      Object.keys(catalog.defaults).every(
-        (key) => actions[action][key] === catalog.profiles[id].actions[action][key],
-      ),
+    ["open", "close"].every(
+      (action) =>
+        isActionStyle(actions[action]) &&
+        Object.keys(catalog.defaults).every(
+          (key) => actions[action][key] === catalog.profiles[id].actions[action][key],
+        ),
     ),
   );
 }
 function actionParameters(action) {
   return (
-    actions[action] ||
+    (isActionStyle(actions[action]) ? actions[action] : null) ||
+    rememberedActions[action] ||
     catalog.action_companions[matchingActionSet()]?.[action] ||
     catalog.presets.balanced
   );
@@ -108,21 +116,29 @@ function chooseAction(action) {
   commitAction();
   editingAction = action;
   parameters = { ...actionParameters(action), resize: false };
-  byId("action-enabled").checked = !!actions[action];
+  byId("action-mode").value = actionMode(actions[action]);
   byId("action").value = action;
 }
 function loadDocument(doc, action = "open") {
   cancelPointerPreview();
   cancelComboPreview();
   editingAction = action;
+  const renamed = byId("name").value.trim() !== doc.name;
+  if (renamed) for (const key of Object.keys(rememberedActions)) delete rememberedActions[key];
+  if (actions && !renamed)
+    for (const [slot, value] of Object.entries(actions))
+      if (isActionStyle(value)) rememberedActions[slot] = { ...value };
   actions = doc.actions ? structuredClone(doc.actions) : null;
+  if (actions)
+    for (const [slot, value] of Object.entries(actions))
+      if (isActionStyle(value)) rememberedActions[slot] = { ...value };
   desktopMotion = doc.motion ? structuredClone(doc.motion) : null;
   pointerSettings = doc.pointer ? structuredClone(doc.pointer) : null;
   if (!actions) editingAction = "open";
   parameters = { ...(actions ? actionParameters(editingAction) : doc.effect) };
   byId("independent").checked = !!actions;
   byId("action").value = editingAction;
-  byId("action-enabled").checked = !!actions?.[editingAction];
+  byId("action-mode").value = actions ? actionMode(actions[editingAction]) : "style";
   byId("name").value = doc.name;
 }
 function recordHistory() {
@@ -228,6 +244,8 @@ function supportsConcept() {
   );
 }
 function labels() {
+  for (const id of [...numeric, ...choices, "density", "resize", "family", "preset"])
+    byId(id).disabled = false;
   const fragment = parameters.family === "fragments",
     capabilities = catalog.families[parameters.family];
   byId("fragment-controls").hidden = !fragment;
@@ -250,15 +268,24 @@ function labels() {
   byId("movement-preview-controls").hidden = mode !== "movement";
   filterPresets();
   byId("action-controls").hidden = !actions;
-  byId("action-enable-label").hidden = !["resize", "movement"].includes(editingAction);
-  byId("action-enable-text").textContent =
-    editingAction === "movement" ? "Include experimental movement in JSON" : "Enable resize effect";
+  const selectedMode = actions ? byId("action-mode").value : "style";
+  byId("action-mode-note").textContent =
+    selectedMode === "preserve"
+      ? "Preserve keeps the underlying desktop or shell configuration. Its animation cannot be previewed without that context."
+      : selectedMode === "off"
+        ? "Off disables this action animation. The preview shows its endpoint."
+        : "Customize the NiriFX style for this action.";
+  byId("independent").disabled =
+    !!actions &&
+    (["open", "close"].some((action) => !isActionStyle(actions[action])) ||
+      actions.resize === "off" ||
+      actions.movement !== null);
   const companion = ["resize", "movement"].includes(editingAction) && matchingActionSet();
-  byId("action-companion-note").hidden = !companion || !!actions[editingAction];
+  byId("action-companion-note").hidden = !companion || selectedMode !== "preserve";
   if (companion)
     byId("action-companion-note").textContent =
       `Suggested ${editingAction} settings for ${catalog.profiles[companion].name}. ` +
-      "Enable this action to include them in your profile.";
+      "Choose NiriFX Style to include them in your profile.";
   if (actions) {
     byId("resize").closest(".parameter").hidden = true;
     byId("open_ms").closest(".parameter").hidden = editingAction !== "open";
@@ -354,6 +381,11 @@ function labels() {
   byId("fragment_secondary").disabled = parameters.fragment_mix === 0;
   byId("fragment_shape_seed").disabled =
     parameters.fragment_mix === 0 || parameters.fragment_mix === 1;
+  // A stored fallback is only for switching back to Style, never an active effect.
+  for (const id of [...numeric, ...choices, "density", "resize", "family", "preset"])
+    if (selectedMode !== "style") byId(id).disabled = true;
+  for (const button of document.querySelectorAll("[data-reset]"))
+    button.disabled = selectedMode !== "style";
 }
 byId("import").onclick = () => byId("import-file").click();
 function effectDocument() {
@@ -603,22 +635,30 @@ try {
       resizing = renderMode === "resize",
       moving = renderMode === "movement",
       pointer = renderMode === "pointer",
+      idle =
+        renderMode === "idle" ||
+        (!previewFrame && actions && byId("action-mode").value !== "style"),
       renderEffect = previewFrame?.effect || (comparing ? pinned.parameters : parameters),
-      source = pointer ? POINTER_PREVIEW_SHADER : shaderFor(renderEffect, false, resizing, moving);
-    const renderKey = source + (previewFrame ? "\n// centered preview geometry" : "");
+      source = pointer
+        ? POINTER_PREVIEW_SHADER
+        : idle
+          ? "vec4 close_color(vec3 coords,vec3 size){vec2 p=coords.xy;if(p.x<0.0||p.y<0.0||p.x>1.0||p.y>1.0)return vec4(0.0);return texture2D(niri_tex,p);}"
+          : shaderFor(renderEffect, false, resizing, moving);
+    const renderKey =
+      source + "\n// " + renderMode + (previewFrame ? " centered preview geometry" : "");
     if (renderKey === lastSource) return;
-    const uniforms = resizing
-      ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;uniform mat3 niri_curr_geo_to_prev_geo;uniform vec2 fx_resize_from;uniform vec2 fx_resize_to;"
-      : pointer
-        ? "uniform vec2 fx_move_origin;"
-        : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;uniform vec2 fx_move_origin;";
-    const geometry = resizing
-      ? "mix(fx_resize_from,fx_resize_to,niri_clamped_progress)"
-      : "fx_window";
+    const uniforms =
+      resizing && !idle
+        ? "uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;uniform mat3 niri_curr_geo_to_next_geo;uniform mat3 niri_curr_geo_to_prev_geo;uniform vec2 fx_resize_from;uniform vec2 fx_resize_to;"
+        : pointer
+          ? "uniform vec2 fx_move_origin;"
+          : "uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;uniform float niri_random_seed;uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;uniform vec2 fx_move_origin;";
+    const geometry =
+      resizing && !idle ? "mix(fx_resize_from,fx_resize_to,niri_clamped_progress)" : "fx_window";
     const color = pointer
       ? "pointer_color((pixel-origin)/size,size)"
-      : `${resizing ? "resize_color" : moving ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0))`;
-    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : moving || pointer ? "fx_move_origin" : previewFrame ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${color};}`;
+      : `${resizing && !idle ? "resize_color" : moving && !idle ? "move_color" : "close_color"}(vec3((pixel-origin)/size,1.0),vec3(size,1.0))`;
+    const fragment = `precision highp float;varying vec2 uv;uniform float niri_clamped_progress;uniform vec2 fx_surface;uniform vec2 fx_window;${uniforms}${source}\nvoid main(){vec2 pixel=vec2(uv.x,1.0-uv.y)*fx_surface;vec2 size=${geometry};vec2 origin=${resizing ? "(fx_surface-size)*0.5" : (moving && !idle) || pointer || (idle && previewFrame) ? "fx_move_origin" : previewFrame ? "(fx_surface-size)*0.5" : "(fx_surface-size)*vec2(0.5,0.473684210526)"};gl_FragColor=${color};}`;
     const vs = compile(gl.VERTEX_SHADER, vertex),
       fs = compile(gl.FRAGMENT_SHADER, fragment),
       next = gl.createProgram();
@@ -658,12 +698,15 @@ try {
     else {
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_surface"), canvas.width, canvas.height);
-      gl.uniform2f(gl.getUniformLocation(program, "fx_window"), ...(benchmarkWindow || [600, 380]));
+      gl.uniform2f(
+        gl.getUniformLocation(program, "fx_window"),
+        ...(previewFrame?.size || benchmarkWindow || [600, 380]),
+      );
       const direction = { right: [1, 0], left: [-1, 0], down: [0, 1], up: [0, -1] }[
         (comboPreviewFrame?.mode === "movement" ? comboPreviewFrame.direction : null) ||
           byId("movement-direction").value
       ];
-      const windowSize = benchmarkWindow || [600, 380];
+      const windowSize = previewFrame?.size || benchmarkWindow || [600, 380];
       const travel = 160 * (value * value * (3 - 2 * value) - 0.5);
       gl.uniform2f(
         gl.getUniformLocation(program, "fx_move_origin"),
@@ -723,7 +766,15 @@ try {
         gl.getUniformLocation(program, "niri_random_seed"),
         comboPreviewFrame?.seed ?? (comparing ? pinned.seed : seed),
       );
-      gl.drawArrays(gl.TRIANGLES, 0, 6);
+      gl.clearColor(0, 0, 0, 0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+      const hiddenEndpoint =
+        previewFrame?.visible === false ||
+        (!previewFrame &&
+          actions &&
+          byId("action-mode").value === "off" &&
+          editingAction === "close");
+      if (!hiddenEndpoint) gl.drawArrays(gl.TRIANGLES, 0, 6);
     }
     if (!pointerPreviewFrame) {
       byId("progress").value = Math.round(value * 1000);
@@ -745,7 +796,10 @@ try {
           : mode === "resize"
             ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
             : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
-      byId("caption").textContent = (comparing ? "Pinned A · " : pinned ? "B · " : "") + caption;
+      byId("caption").textContent =
+        actions && byId("action-mode").value !== "style"
+          ? title(editingAction) + " · " + byId("action-mode-note").textContent
+          : (comparing ? "Pinned A · " : pinned ? "B · " : "") + caption;
       document.documentElement.dataset.shaderStatus = "ready";
     } catch (error) {
       byId("error").textContent = error.message;
@@ -1285,6 +1339,10 @@ try {
       populate();
       refresh();
     }
+    if (actions && byId("action-mode").value !== "style") {
+      draw(editingAction === "close" ? 1 : 0);
+      return;
+    }
     if (mode === "resize") byId("resize-direction").value = opening ? "shrink" : "grow";
     if (mode === "movement" && opening)
       byId("movement-direction").value = { right: "left", left: "right", up: "down", down: "up" }[
@@ -1434,7 +1492,7 @@ try {
       };
       editingAction = "open";
       byId("action").value = "open";
-      byId("action-enabled").checked = !!actions.resize;
+      byId("action-mode").value = "style";
       parameters.resize = false;
     } else {
       commitAction();
@@ -1465,8 +1523,13 @@ try {
       .click();
     refresh();
   };
-  byId("action-enabled").onchange = () => {
+  byId("action-mode").onchange = () => {
+    if (isActionStyle(actions[editingAction]))
+      rememberedActions[editingAction] = { ...parameters, resize: false };
+    if (byId("action-mode").value === "style")
+      parameters = { ...actionParameters(editingAction), resize: false };
     commitAction();
+    populate();
     labels();
     refresh();
     recordHistory();
@@ -1482,6 +1545,7 @@ try {
       populate();
       refresh();
       historyButtons();
+      workspace?.sync();
     };
   for (const button of document.querySelectorAll("[data-reset]"))
     button.onclick = () => {

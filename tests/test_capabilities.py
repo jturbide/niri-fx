@@ -50,7 +50,7 @@ class MovementCapabilityTests(unittest.TestCase):
     def test_activation_requires_the_versioned_running_renderer_contract(self):
         contract = {
             "schema": 1,
-            "movement_shader": 1,
+            "movement_shader": 2,
             "renderer_verified": True,
             "movement_configured": False,
             "frame_timings": True,
@@ -58,7 +58,8 @@ class MovementCapabilityTests(unittest.TestCase):
         cases = [
             (contract, True),
             (contract | {"schema": 2}, False),
-            (contract | {"movement_shader": 2}, False),
+            (contract | {"movement_shader": 1}, False),
+            (contract | {"movement_shader": 3}, False),
             (contract | {"renderer_verified": False}, False),
             (contract | {"renderer_verified": 1}, False),
             (contract | {"schema": True}, False),
@@ -240,7 +241,7 @@ class MovementCapabilityTests(unittest.TestCase):
 class PointerCapabilityTests(unittest.TestCase):
     contract = {
         "schema": 1,
-        "pointer_wobble": 1,
+        "pointer_wobble": 2,
         "renderer_verified": True,
         "configured": False,
         "enabled": False,
@@ -249,7 +250,7 @@ class PointerCapabilityTests(unittest.TestCase):
     }
 
     def test_only_exact_pointer_contract_can_activate_even_when_not_configured(self):
-        cases = [(self.contract, True)]
+        cases = [(self.contract, True), (self.contract | {"pointer_wobble": 1}, False)]
         for key in ("schema", "pointer_wobble", "max_deformation", "max_release_ms"):
             cases.extend(
                 (self.contract | {key: value}, False)

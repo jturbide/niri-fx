@@ -1,7 +1,7 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04**, including 0.18.0 pointer previews, integration
-and agent support, plus the subsequent experimental resize geometry fix. These checks
+Evidence updated on **2026-10-04**, including 0.19.0 action choices,
+installed upgrade/Restore checks and experimental resize timing fixes. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 For setup instructions, use the [documentation index](README.md); check
@@ -48,6 +48,29 @@ useful regression evidence. Adapter UI recordings describe the versions and
 catalog size actually exercised; new family support is checked through the current
 file contract and Studio save flow, not assumed from those older recordings.
 
+## Independent action choices and upgrades
+
+Python/browser shared fixtures cover schema 1 import migration and schema 2
+Preserve / NiriFX Style / Off choices. Reviewed partial, all-Preserve and all-Off
+profiles preserve nondefault stock settings underneath their selected overrides;
+Restore returns the exact previous files. Shared styles retain Preserve/Off
+choices, and controls, Undo, JSON downloads and sharing agree across the editor.
+Quickshell and GTK/AGS checks exercise the same Library transactions.
+
+The installed upgrade harness verifies the checksum of the official 0.18 wheel,
+creates saved profiles, favorites, registrations and existing Restore history,
+then installs the candidate 0.19 wheel. Original user files remain byte-identical.
+Installed CLI, HTTP and browser paths accept schema 2 choices, enforce resize
+consent and restore exactly. Native activation is verified separately in owned
+contract-2 compositor sessions. [Reproduce an upgrade](releases.md#verify-an-upgrade).
+
+The complete local Studio suite still runs every rendering matrix and save flow.
+CI splits browser workflows, three shape aspects, motion and Studio into six
+independent jobs; the required aggregate rejects missing, failed or canceled
+results. A frozen local workload took 127.8 seconds sequentially and 74.1 seconds
+in parallel. Those timings include software WebGL and are not a hosted-runner or
+GPU-performance claim.
+
 ## Movement diagnostics
 
 The parser probe was checked against stock Niri 26.04 and the pinned experimental
@@ -64,9 +87,9 @@ they do not certify the movement shader contract or rendering.
 ## Native movement and continuity
 
 The experimental patch applies to Niri revision
-`8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 19 config tests,
-one config integration test, 19 layout-animation tests, seven shader-continuity tests,
-seven position-continuity tests and five size-animation tests. These check repeated
+`8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 21 config tests,
+one config integration test, 21 layout-animation tests, seven shader-continuity tests,
+seven position-continuity tests and seven size-animation tests. These check repeated
 reversals, first derivatives, monotone phase handoffs, zero-distance momentum,
 spring input, slow/frozen clocks,
 disabled animation semantics and closing along the actual layout path.
@@ -79,7 +102,7 @@ commands must arrive within the bounded interruption window.
 All 30 existing native clips were refreshed for the updated patches: 21 swaps,
 four interruption scenarios, two overlap/floating scenarios and three pointer
 styles. The original settings and durations were retained; each GIF uses 20 ms
-frame delays. Two additional resize comparisons document the geometry change below.
+frame delays. Five resize comparisons document geometry and timing reload below.
 
 Retargets retain deformation phase, seed and sampled phase/direction speed. Cubic
 phase curves shorten when needed to stay monotone. Close movement retains those
@@ -97,65 +120,76 @@ and closure of moving windows. The current recordings are described in
 
 ## Resize geometry continuity
 
-When an animated resize reverses, the experimental renderer now retains the
-displayed width and height and their sampled velocities. Adjacent columns and
-stacked windows follow matching paths. Retargeting one axis leaves the other
-axis's curve and finish time intact. This applies when a custom movement shader
-is configured and resize animation is enabled; stock rendering and explicitly
-disabled resize keep their existing behavior. No preset enables resize by default.
+For the tested animated resize retargets, the experimental renderer retains
+width and height and their sampled velocities independently. An unchanged axis
+keeps its original curve and finish time. Active size and neighboring movement
+paths now also keep the same timing after a configuration reload; an axis that
+starts from rest uses the new timing. This applies when a custom movement shader
+is configured and resize animation is enabled. Stock rendering and explicitly
+disabled resize retain their existing behavior.
 
-The original regression reproduced a 12-pixel edge separation 100 ms after a
-resize reversal: the resized window restarted its size curve while its neighbor
-retained movement velocity. The current movement build passes 19 layout-animation
-tests and five size-animation tests; the pointer build passes 23 and five,
-respectively. Coverage includes repeated reversals, orthogonal retargets, small
-size changes, client-driven size changes, disabled resize, original easing and
-slow or frozen clocks.
+The movement build passes 21 layout-animation tests and seven size-animation
+tests; the pointer build passes 25 and seven. Regressions cover repeated and
+orthogonal retargets, small changes, client-driven size changes, shorter/longer
+timing reloads, a client commit that starts a stationary axis during another
+active axis, disabled resize, original easing, and slow or frozen clocks. An
+extreme-shrink regression also verifies valid dimensions when a Hermite path
+crosses zero and is retargeted again.
 
-The [native comparison report](benchmarks/resize-continuity.json) records two
-sequential captures of each case: the verified v0.18.0 movement build and the
-updated build at the same pinned Niri revision. Identical passthrough shaders
-expose the geometry. Both use synthetic cards, a 1200 ms linear resize, a reversal
-after approximately 600 ms, and a nominal 16-pixel gap.
+The [reversal report](benchmarks/resize-continuity.json) compares the verified
+v0.18.0 movement build with the updated build at the same pinned Niri revision.
+The [retarget report](benchmarks/resize-retargets.json) uses development source
+`3f68522`, which already had the first geometry fix, as its baseline. All captures
+use synthetic cards, identical passthrough shaders and a nominal 16-pixel gap.
+Initial resize timing is 1200 ms linear; the reload case changes the configured
+duration to 350 ms before reversing.
 
-| Case | Baseline gap range | Updated gap range | Recording |
-| --- | --- | --- | --- |
-| Width reversal beside another column | 7 to 83 px | 17 to 18 px | [Side-by-side width comparison](gifs/native-resize-width-comparison.gif) |
-| Height reversal above another window | 10 to 56 px | 16 to 18 px | [Side-by-side height comparison](gifs/native-resize-height-comparison.gif) |
+| Case | Baseline gap | Updated gap | Decoded frames, before / after | Recording |
+| --- | --- | --- | --- | --- |
+| Width reversal | 7–83 px | 17–18 px | 142 / 142 | [Comparison](gifs/native-resize-width-comparison.gif) |
+| Height reversal | 10–56 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-height-comparison.gif) |
+| Orthogonal width retarget | 17–18 px | 17–18 px | 157 / 157 | [Comparison](gifs/native-resize-orthogonal-width-comparison.gif) |
+| Orthogonal height retarget | 16–20 px | 16–20 px | 157 / 158 | [Comparison](gifs/native-resize-orthogonal-height-comparison.gif) |
+| Timing reload during height resize | 16–128 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-timing-reload-height-comparison.gif) |
 
-Each range covers 142 decoded native video frames. Edge detection allows four
-pixels for video conversion; measurements precede GIF scaling and palette
-reduction. The report verifies executable, patch, fixture and recorder hashes,
-unchanged window IDs, settled dimensions and bounded IPC timing. Historical
-build metadata absent from the v0.18.0 manifest is listed as unavailable rather
-than inferred. These are geometry checks, not frame-time or physical-display
-measurements.
+Measurements precede GIF scaling and palette reduction, with four pixels of
+video-conversion tolerance. Reports retain executable, patch, fixture and recorder
+hashes, unchanged window IDs, settled dimensions and bounded resize IPC timing.
+Missing historical build metadata is explicitly unavailable. These are sequential
+native recordings at their actual configured timing; they do not measure GPU
+frame time or physical presentation.
 
-To reproduce, keep a v0.18.0 movement build in a separate checkout, with its
-executable and build manifest intact. Build the updated experiment, then run:
+Preserve each baseline executable and its build manifest in a separate checkout.
+Build the updated experiment, then use:
 
 ```sh
 python3 scripts/build-niri-movement.py --release --test
 python3 scripts/record-resize-comparison.py \
   --baseline-manifest /path/to/niri-fx-0.18/artifacts/niri-movement-build.json \
   --baseline-tag v0.18.0
+python3 scripts/record-resize-retargets.py \
+  --baseline-manifest /path/to/preserved-build.json \
+  --baseline-revision 3f68522
 ```
 
-The recorder writes under `artifacts/resize-comparison/`. See the
-[recording guide](gifs/README.md#native-resize-geometry-comparisons) for dependencies,
-baseline verification and deliberate publication with `--publish`.
+See the [recording guide](gifs/README.md#native-resize-geometry-comparisons) for
+baseline verification, dependencies and deliberate publication with `--publish`.
 
-The resize shader's deformation phase can still restart, and closing during
-resize still uses a snapshot. Extreme retargets can reach the one-pixel size
-clamp while a neighbor's movement curve continues past it. Changing animation
-timing during an active resize can also desynchronize neighboring paths. Those
-cases, acceleration continuity, camera movement and physical mixed-output
-behavior remain outside this fix.
+The resize shader's texture/deformation phase still restarts, and closing during
+resize still uses a snapshot. The one-pixel floor now runs before constructing
+Smithay geometry, preventing negative-size debug panics; it does not constrain
+the neighbor's independent curve. An extreme 1000→10 shrink retargeted to 11 at
+950 ms still produces a source edge at 1 and a neighbor at -97 after another
+300 ms in the deterministic layout diagnostic. Shared clamp constraints, retained
+resize textures/phase, close continuation, acceleration, camera movement and
+physical mixed outputs remain outside the verified fix. The
+[design notes](next-phases.md#rendering-and-interruptions) describe the required
+state and acceptance tests.
 
 ## Pointer-driven wobble
 
-The separate pointer build passed 20 configuration tests, the wiki parse check,
-23 layout-animation tests, seven position-continuity tests, five size-animation
+The separate pointer build passed 24 configuration tests, the wiki parse check,
+25 layout-animation tests, seven position-continuity tests, seven size-animation
 tests, seven movement-shader state tests and seven analytical spring tests. The
 base movement patch and binary remain separately usable.
 
@@ -170,10 +204,11 @@ layout tests, not physical monitor hotplug or mixed-monitor acceptance.
 All three pointer presets passed real Wayland input checks in an owned nested
 compositor: floating reversals and visible release settling, a real return drag
 with matching settled geometry and pixels, convergence while held still,
-regrab/input, a genuinely detached tiled drag, four disable paths
+regrab/input, a detached tiled drag, three disable paths
 during a grab, and close cancellation with input reaching the surviving client.
-The four disable paths are node removal, zero strength, movement off and all
-animations off. Render logs were clean, and the three public recordings retain
+The disable paths are node removal, zero strength and all animations off.
+Contract 2 keeps pointer deformation active when only timed movement is Off;
+its native check reloads Off during a grab and verifies visible release settling. Render logs were clean, and the three public recordings retain
 50 fps playback with synthetic content.
 
 The additional [hardening checks](benchmarks/pointer-hardening.json) use direct
@@ -224,8 +259,9 @@ acceptance test. `--probe disconnect` or `--probe output` selects one investigat
 
 `test-pointer-integration.py` also passed against the owned pointer session.
 It served Studio through its actual HTTP backend, reviewed and applied a
-pointer-only profile, combined movement/pointer settings and a zero-strength
-override, then verified runtime state and exact Restore after each. It rejected
+pointer-only profile, combined movement/pointer settings, a zero-strength
+override, movement Off with pointer Style, movement Style with pointer Off, and
+all actions Off. Each case verified runtime state and exact Restore. It rejected
 a stock-binary mismatch and loss of runtime capability before writes. The
 selected executable validated configs throughout. No login-session configuration
 was changed.
@@ -296,7 +332,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**205 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**209 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

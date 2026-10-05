@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **205 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **209 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -93,8 +93,9 @@ recordings use sample content in Studio, shell interfaces and Niri.
 
 | Try this | Watch | What the demo shows |
 | --- | --- | --- |
-| Pick a look, mix action styles, save and export | [Library workflow](gifs/workflow-library.gif) | Same style or separate actions; optional resize starts off |
-| Import, edit one action, A/B, Undo/Redo, export | [Studio workflow](gifs/workflow-studio-profile.gif) | Import, edit, compare and export a profile; resize off |
+| Pick a look, mix action styles, save and export | [Library workflow](gifs/workflow-library.gif) | Shared style or separate actions; resize starts with Preserve |
+| Preserve, style or disable each action | [Action choices](gifs/workflow-action-choices.gif) | Partial profiles, shared styles and JSON/config export |
+| Import, edit one action, A/B, Undo/Redo, export | [Studio workflow](gifs/workflow-studio-profile.gif) | Import, edit, compare and export a profile; resize preserved |
 | Select mixed profiles and restore Snappy | [iRiS gallery](gifs/workflow-iris.gif) | Two mixed-action profiles and return to the previous style in the iRiS gallery |
 | Search, select, Undo, launch Studio | [DMS launcher](gifs/workflow-dms.gif) | Preset search, selection, Undo and Studio launch in the DMS launcher |
 | Select a profile and return to base | [Noctalia picker](gifs/workflow-noctalia.gif) | Noctalia 5.2.1 / Niri Animations 0.2.0; 55 presets plus a custom profile |

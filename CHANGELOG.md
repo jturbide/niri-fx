@@ -7,35 +7,57 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
-### Changed
-
-- Separate user guides from contributor and maintainer references, and focus the
-  roadmap on upcoming work instead of repeating completed release milestones.
-- Select expensive renderer checks by the changed paths while retaining unit,
-  package and documentation checks for native and agent changes. Unknown paths,
-  release and CI changes still run the full suite; Python dependency downloads
-  are cached alongside the existing npm cache.
-- Explain action choices, inherited desktop settings and compositor requirements
-  directly throughout the public guides, Studio, pickers and showcase captions.
-  Track independent action disabling as
-  planned work rather than implying it is already available.
-
-### Fixed
-
-- Preserve the size trajectory of reversed resizes alongside adjacent tiles and
-  columns in the experimental movement compositor. Each axis keeps its incoming
-  velocity, and an unchanged axis retains its existing deadline. Resize texture
-  phase, minimum-size clamping and timing changes during a resize remain separate
-  limitations.
+## 0.19.0 — 2026-10-04
 
 ### Added
 
+- Independent Preserve / NiriFX Style / Off controls for opening, closing,
+  resizing, movement and pointer drag in Library and Studio, with matching CLI
+  choices, portable JSON, previews, shared styles and Undo.
+- A recorded action-selection workflow and native comparisons for resize
+  reversals, orthogonal retargets and timing reloads, with reproducible checks.
 - A path to 1.0 with proposed public-interface boundaries, backward compatibility
-  throughout 1.x, and concrete release acceptance criteria. Current 0.x interfaces
-  remain under development; this does not announce a stability freeze.
-- Native before/after width and height comparisons, decoded edge measurements
-  and regressions for reversals, orthogonal changes and unchanged stock behavior.
-  Existing native showcases are refreshed for the updated compositor patches.
+  throughout 1.x and concrete acceptance criteria. Current 0.x interfaces remain
+  under development; this does not announce a stability freeze.
+- Public Discussions, GitHub Sponsors links, README badges and star history.
+  CodeQL scanning and grouped weekly dependency updates complement existing
+  secret scanning and push protection.
+
+### Changed
+
+- Profiles export schema 2. Schema 1 imports retain their behavior. Preserve uses
+  the desktop configuration underneath NiriFX; Off disables the selected action.
+- Experimental movement and pointer contracts advance to version 2. Explicit
+  merge flags preserve sibling settings; timed movement Off no longer disables
+  pointer deformation. Rebuild the matching experimental compositor before native
+  activation. Stock exports continue to omit native overrides.
+- CI selects expensive checks by changed paths, caches dependency downloads and
+  runs independent browser/rendering matrices in parallel. A required aggregate
+  rejects missing or failed checks. The same local workload measured 127.8 seconds
+  sequentially and 74.1 seconds in parallel; this is not a GitHub runner benchmark.
+- User guides distinguish available features and support limits from future work;
+  contributor and maintainer references are grouped separately.
+- Refresh affected Studio, Library, picker and native showcases for the current
+  controls and compositor patches.
+
+### Fixed
+
+- Interrupted resizes retain per-axis size velocity and timing alongside adjacent
+  tiles and columns. Unchanged axes keep their existing deadlines; reloaded timing
+  applies to new transitions. Extreme negative size samples are floored before
+  constructing renderer geometry, preventing a debug-build panic. Neighbor alignment
+  at that floor and retained resize shader state remain separate limitations.
+- Browser tests pass imported documents and geometry through protocol arguments
+  rather than interpolating fixture data into executable JavaScript.
+
+### Upgrade
+
+Install the new wheel in the same environment and reopen Studio. Installation
+preserves configuration, saved profiles, favorites, registrations and Restore
+history. Saving a profile writes schema 2, which older versions cannot read.
+Keep original exports for downgrades. Native activation requires a rebuilt
+contract-2 compositor; installing NiriFX does not replace it.
+See [upgrading from 0.18](docs/upgrading.md#from-018-to-019).
 
 ## 0.18.0 — 2026-10-04
 

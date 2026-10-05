@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **205 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **209 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -175,7 +175,7 @@ their older, smaller metadata records; native swaps use their own checked manife
 
 ## Workflow and compositor recordings
 
-These twelve clips use real controls/clients, with metadata separate from the
+These clips use real controls/clients, with metadata separate from the
 shader-comparison manifest in [scenario-manifest.json](scenario-manifest.json).
 Run them sequentially; each preserves other entries in that shared file.
 
@@ -184,6 +184,7 @@ plus `ffmpeg` and stock Niri for exported KDL validation:
 
 ```sh
 node scripts/record-library-workflow.mjs
+node scripts/record-action-choices.mjs
 node scripts/record-studio-workflow.mjs
 ```
 
@@ -298,9 +299,12 @@ compositor or prove seamless retargeting. [Acceptance scope](../validation.md#wo
 | --- | --- |
 | [Width reversal](native-resize-width-comparison.gif) | Resize a column, then reverse before it settles; watch the gap to the next column |
 | [Height reversal](native-resize-height-comparison.gif) | Resize the upper window of a stack, then reverse; watch the gap to the lower window |
+| [Orthogonal width](native-resize-orthogonal-width-comparison.gif) | Change height during width motion, then retarget both axes |
+| [Orthogonal height](native-resize-orthogonal-height-comparison.gif) | Change width during height motion, then retarget both axes |
+| [Timing reload](native-resize-timing-reload-height-comparison.gif) | Reload a 350 ms resize duration during a 1200 ms height resize, then reverse |
 
-The left side uses the v0.18.0 movement experiment; the right side uses the
-updated experiment. These are sequential native captures with the same synthetic
+The first two comparisons use the v0.18.0 movement experiment on the left and the
+updated experiment on the right. These are sequential native captures with the same synthetic
 mint/lavender cards and passthrough shaders. Each animation lasts 1200 ms and
 reverses after approximately 600 ms. The comparison measures geometry independently
 of deformation effects. Resize remains an explicit choice in profiles.
@@ -327,8 +331,8 @@ Available build metadata must agree; fields absent from an older manifest remain
 explicitly unverified. Stock and pointer-extension baselines are rejected.
 
 Both axes must reproduce the original gap and keep updated edges within the
-four-pixel capture tolerance before publication. Nine unit tests cover these
-acceptance gates, baseline identity and decoded-frame failures:
+four-pixel capture tolerance before publication. Ten unit tests cover these
+acceptance gates, tag/source identity and decoded-frame failures:
 
 ```sh
 python3 -m unittest discover -s tests -p 'test_resize_comparison.py' -v
@@ -341,9 +345,31 @@ the gallery with `python3 scripts/build-gallery.py`. The GIFs use 50 fps and 128
 colors; the width pair is 1200 pixels wide and the height pair is 750 pixels wide.
 The report measures original decoded frames before scaling and GIF conversion.
 
-The fix preserves size and velocity through retargets. Shader-phase restarts,
-resize-to-close snapshots, extreme minimum-size clamps and animation-timing
-reloads remain limitations. See [validation scope](../validation.md#resize-geometry-continuity).
+The three later comparisons use the development source at `3f68522`, after the
+initial geometry fix, as the baseline. Both versions must retain aligned edges
+through orthogonal retargets. The timing-reload baseline must reproduce a visible
+gap before the updated path is accepted. Preserve that source revision's release
+binary and build manifest, then run:
+
+```sh
+python3 scripts/record-resize-retargets.py \
+  --baseline-manifest /path/to/preserved-build.json \
+  --baseline-revision 3f68522
+```
+
+This writes under `artifacts/resize-retargets/`. `--publish` installs the three GIFs,
+updates `scenario-manifest.json` and writes the sanitized
+[retarget comparison report](../benchmarks/resize-retargets.json). The orthogonal
+height pair is 1000 pixels wide so that horizontal growth stays visible. Reload
+completion timestamps include the harness's documented 200 ms settling wait;
+ordinary resize acknowledgements retain the 150 ms limit.
+
+Active geometry paths retain their original timing through a reload; newly moving
+axes use the new timing. Shader-phase restarts, resize-to-close snapshots and
+shared minimum-size constraints remain limitations. The existing size floor is
+applied before constructing geometry, preventing negative-size debug panics, but
+an independently moving neighbor can still pass that floor. See
+[validation scope](../validation.md#resize-geometry-continuity).
 
 ## Expanded styles, resize and native continuity
 

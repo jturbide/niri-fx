@@ -275,3 +275,46 @@ test("native pointer and timed movement KDL match Python and share one animation
     /explicitly choose a movement/,
   );
 });
+
+test("schema 2 action modes round-trip and legacy input migrates without changing choices", () => {
+  const document = {
+    kind: "profile",
+    schema: 2,
+    name: "Action modes",
+    actions: { open: null, close: "off", resize: "off", movement: "off" },
+    pointer: { ...catalog.pointer_defaults, strength: 0 },
+  };
+  assert.deepEqual(plain(core.decodeShareDocument(core.encodeShareDocument(document))), document);
+  const stock = core.renderKdl(document);
+  assert.doesNotMatch(stock, /window-open|window-movement|pointer-wobble|custom-shader/);
+  assert.match(stock, /window-close \{\n {8}off/);
+  assert.match(stock, /window-resize \{\n {8}off/);
+  assert.match(
+    core.renderKdl(document, { movement: true }),
+    /window-movement \{\n {8}off\n {8}preserve-pointer/,
+  );
+  assert.match(
+    core.renderKdl(document, { pointer: true }),
+    /window-movement \{\n {8}preserve-movement\n {8}pointer-wobble/,
+  );
+  const combined = core.renderKdl(document, { movement: true, pointer: true });
+  assert.doesNotMatch(combined, /preserve-pointer|preserve-movement/);
+  assert.equal((combined.match(/window-movement/g) || []).length, 1);
+  const old = {
+    ...document,
+    schema: 1,
+    actions: { open: {}, close: {}, resize: null, movement: null },
+  };
+  const upgraded = core.normalizePreset(old);
+  assert.equal(upgraded.schema, 2);
+  assert.equal(upgraded.actions.resize, null);
+  assert.equal(upgraded.actions.movement, null);
+  for (const actions of [
+    document.actions,
+    { ...old.actions, open: null },
+    { ...old.actions, close: "off" },
+  ])
+    assert.throws(() => core.normalizePreset({ ...old, actions }));
+  for (const name of ["", "bad\n", null])
+    assert.throws(() => core.normalizePreset({ ...document, name }), /Name must/);
+});

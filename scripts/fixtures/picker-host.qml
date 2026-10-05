@@ -51,6 +51,12 @@ ShellRoot {
                 items: controller.items,
                 selected: controller.selectedPreset,
                 document: controller.selectedDocument,
+                descriptions: {
+                    open: controller.actionDescription(controller.actions.open, "open"),
+                    close: controller.actionDescription(controller.actions.close, "close"),
+                    resize: controller.actionDescription(controller.actions.resize, "resize"),
+                    movement: controller.actionDescription(controller.actions.movement, "movement")
+                },
                 busy: controller.busy,
                 status: controller.status,
                 error: controller.error,

@@ -96,7 +96,16 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         raise ValueError("Hosted Studio must not contain a local session connection")
     profile = effect.document(name) if isinstance(effect, Profile) else None
     if profile:
-        effect = effect.open
+        # Profiles can preserve/disable every shader action. The editor still
+        # needs a valid draft to show when the user later chooses a style.
+        effect = next(
+            (
+                getattr(effect, action)
+                for action in ("open", "close", "resize", "movement")
+                if isinstance(getattr(effect, action), Effect)
+            ),
+            Effect(),
+        )
 
     return {
         "schema": PRESET_SCHEMA,

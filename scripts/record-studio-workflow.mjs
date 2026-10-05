@@ -75,14 +75,14 @@ try {
   );
   await frames("4 / Show A / Compare original wind at the same progress");
   await evaluate("byId('compare').click()");
-  await frames("Show B — return to the edited closing effect");
+  await frames("Show B / return to the edited closing effect");
   await evaluate("byId('undo').click()");
   assert.equal(await evaluate("effectDocument().actions.close.pixel_wind"), "up");
   await frames("5 / Undo restores Up / Redo recovers Right", 1);
   await evaluate(
     "byId('redo').click();byId('editor-panel').scrollTop=0;byId('name').value='Sideways Drift';byId('name').dispatchEvent(new Event('change'))",
   );
-  await frames("6 / Export JSON and Niri config / Resize remains off");
+  await frames("6 / Export JSON and Niri config / Resize preserves desktop settings");
   const expected = await evaluate("effectDocument()");
   assert.equal(expected.actions.close.pixel_wind, "right");
   assert.equal(expected.actions.open.family, "fragments");

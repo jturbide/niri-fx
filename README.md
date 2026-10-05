@@ -2,6 +2,12 @@
 
 ![NiriFX — window effects for niri](docs/assets/nirifx-banner.svg)
 
+[![Checks](https://github.com/jturbide/niri-fx/actions/workflows/checks.yml/badge.svg?branch=main)](https://github.com/jturbide/niri-fx/actions/workflows/checks.yml)
+[![Latest release](https://img.shields.io/github/v/release/jturbide/niri-fx?include_prereleases&label=release)](https://github.com/jturbide/niri-fx/releases)
+[![License: MIT and GPL-3.0-or-later](https://img.shields.io/badge/license-MIT%20%2B%20GPL--3.0--or--later-blue)](THIRD_PARTY.md)
+[![Discussions](https://img.shields.io/github/discussions/jturbide/niri-fx)](https://github.com/jturbide/niri-fx/discussions)
+[![Sponsor](https://img.shields.io/badge/Sponsor-jturbide-ea4aaa?logo=githubsponsors)](https://github.com/sponsors/jturbide)
+
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
@@ -23,7 +29,7 @@ Built-in presets leave resize unchanged. Native movement and swaps, pointer
 deformation and the interruption improvements require the [experimental compositor](experimental/README.md).
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0)
+release. [Download v0.19.0](https://github.com/jturbide/niri-fx/releases/tag/v0.19.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.
@@ -34,12 +40,12 @@ stability guarantees and acceptance criteria.
 or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-fx/gallery/).
 Choose a ready-made combo in **Library**, use one style for every action or mix
 opening and closing styles. Click **Preview combo** to watch the whole sequence.
-Choose resize and Move / swap styles separately, or keep the desktop's current
-behavior. Save a named profile, share its
+Choose **Preserve / NiriFX Style / Off** independently for each action.
+Preserve uses your underlying Niri or shell configuration, including customizations. Save a named profile, share its
 settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0180-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0190-prerelease).
 On Niri with Python 3.10+, you can also start the guided workflow from source:
 
 ```sh
@@ -330,7 +336,7 @@ workspace effects remain on the [roadmap](ROADMAP.md).
 
 ### Smoother resize reversals
 
-The development compositor after 0.18 keeps neighboring edges aligned in the
+The 0.19 experimental compositor keeps neighboring edges aligned in the
 resize reversals below. These native comparisons show the 0.18 baseline beside the
 updated geometry, using plain synthetic cards.
 
@@ -354,10 +360,17 @@ ready-made profiles.
 ## Make it yours
 
 Open `niri-fx studio` to choose a finished look in **Library**. Choose opening
-and closing styles, then add resize, Move / swap or pointer settings to your
-combo. **Customize in Studio** opens detailed tuning in the same app.
+and closing styles, then choose Preserve, NiriFX Style or Off for resize,
+Move / swap and pointer drag. **Customize in Studio** opens detailed tuning in the same app.
 
 ![Choose effects and build a combo](docs/gifs/workflow-library.gif)
+
+Keep your existing opening, choose a closing style and turn resize off:
+
+![Choose Preserve, a NiriFX style or Off independently](docs/gifs/workflow-action-choices.gif)
+
+Preserve restores the underlying configuration for that action. It can include
+custom Niri or shell settings. [Action choices and examples](docs/profiles.md).
 
 The installed app provides reviewed **Apply** and **Restore previous** through
 standalone, iNiR/iRiS or connected Noctalia configuration. The same library works
@@ -416,7 +429,7 @@ compare shader costs while keeping the same particles and motion.
 | Feature | Requirement |
 | --- | --- |
 | Open/close, nine families | Stock Niri with animations enabled |
-| Resize, four families | Stock Niri; explicit checkbox, profile slot or `--resize` |
+| Resize, four families | Stock Niri; choose a profile action or a style with `--resize` |
 | Native movement and interruption continuity | Pinned experimental Niri build |
 | iNiR/iRiS, DMS, Noctalia pickers | Optional [shell integrations](docs/compatibility.md) |
 | Waybar or another bar on Niri | Standalone path; no effects plugin needed |
@@ -434,6 +447,8 @@ and [brand assets](docs/branding.md).
 effect settings and steps to reproduce a problem. Remove personal information
 from logs and recordings. See [security reporting](SECURITY.md) for vulnerabilities.
 
+Ask questions, share setups and discuss ideas in
+[Discussions](https://github.com/jturbide/niri-fx/discussions).
 Contributions are welcome: presets, documentation, hardware results and code.
 [Contributing](CONTRIBUTING.md) explains the checks and review process;
 [ROADMAP.md](ROADMAP.md) describes the next priorities.
@@ -445,3 +460,13 @@ The optional Niri patches and derived browser pointer preview use
 **GPL-3.0-or-later**, with [their license](experimental/COPYING-NIRI).
 See [third-party notices](THIRD_PARTY.md). NiriFX is independent and is not affiliated
 with Niri, iNiR, DMS or Noctalia.
+
+## Support NiriFX
+
+If NiriFX makes your desktop more enjoyable, you can support its development
+through [GitHub Sponsors](https://github.com/sponsors/jturbide).
+Bug reports, shared presets, documentation and hardware testing also help.
+
+## Star history
+
+[![NiriFX GitHub star history](https://api.star-history.com/svg?repos=jturbide/niri-fx&type=Date)](https://star-history.com/#jturbide/niri-fx&Date)

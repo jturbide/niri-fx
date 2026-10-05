@@ -117,7 +117,7 @@ function createEffectCore(catalog) {
   function normalizePreset(doc) {
     if (doc?.kind === "profile") {
       if (
-        doc.schema !== catalog.profile_schema ||
+        ![1, catalog.profile_schema].includes(doc.schema) ||
         !["kind", "schema", "name", "actions"].every((key) => Object.hasOwn(doc, key)) ||
         Object.keys(doc).some(
           (key) => !["kind", "schema", "name", "actions", "motion", "pointer"].includes(key),
@@ -128,11 +128,15 @@ function createEffectCore(catalog) {
         throw new Error(
           `Expected profile schema ${catalog.profile_schema} with open, close, resize and movement actions.`,
         );
+      validateName(doc.name);
       const normalized = {};
       for (const action of ["open", "close", "resize", "movement"]) {
         const value = doc.actions[action];
-        if (value === null && ["resize", "movement"].includes(action)) {
-          normalized[action] = null;
+        if (
+          (value === null && (doc.schema >= 2 || ["resize", "movement"].includes(action))) ||
+          (value === "off" && doc.schema >= 2)
+        ) {
+          normalized[action] = value;
           continue;
         }
         const effect = normalizePreset({
@@ -165,13 +169,7 @@ function createEffectCore(catalog) {
       throw new Error(`Expected schema: ${catalog.schema}, name and an effect object.`);
     if (Object.keys(doc).sort().join() !== "effect,name,schema")
       throw new Error("Preset requires schema, name and effect only.");
-    // JavaScript's $ can match before a final newline; compare the full match to
-    // mirror Python fullmatch rather than accepting a name the save API rejects.
-    if (
-      typeof doc.name !== "string" ||
-      /^[A-Za-z0-9][A-Za-z0-9 _-]{0,47}$/.exec(doc.name)?.[0] !== doc.name
-    )
-      throw new Error("Name must be 1–48 letters, numbers, spaces, hyphens or underscores.");
+    validateName(doc.name);
     for (const key of Object.keys(doc.effect))
       if (!Object.hasOwn(catalog.defaults, key))
         throw new Error("Unsupported effect parameter: " + key);
@@ -192,6 +190,11 @@ function createEffectCore(catalog) {
     if (effect.resize && !catalog.families[effect.family].resize)
       throw new Error("This effect family does not support resize.");
     return { schema: doc.schema, name: doc.name, effect };
+  }
+  function validateName(name) {
+    // Match the complete value, including a possible final newline, as Python does.
+    if (typeof name !== "string" || /^[A-Za-z0-9][A-Za-z0-9 _-]{0,47}$/.exec(name)?.[0] !== name)
+      throw new Error("Name must be 1–48 letters, numbers, spaces, hyphens or underscores.");
   }
   function normalizeMotion(data) {
     if (
@@ -260,12 +263,22 @@ function createEffectCore(catalog) {
           throw new Error("The profile must explicitly choose a movement action.");
         continue;
       }
-      result += `    window-${action} {\n        duration-ms ${effect[action + "_ms"]}\n        curve "linear"\n        custom-shader r"\n${shaderFor(effect, action === "open", action === "resize", action === "movement").trimEnd()}\n        "\n`;
+      if (effect === "off") {
+        result += `    window-${action} {\n        off\n`;
+        if (action === "movement")
+          result += pointer ? pointerNode(document) : "        preserve-pointer\n";
+        result += "    }\n";
+        continue;
+      }
+      result += `    window-${action} {\n`;
+      if (action === "movement" && !pointer) result += "        preserve-pointer\n";
+      result += `        duration-ms ${effect[action + "_ms"]}\n        curve "linear"\n        custom-shader r"\n${shaderFor(effect, action === "open", action === "resize", action === "movement").trimEnd()}\n        "\n`;
       if (action === "movement" && pointer) result += pointerNode(document);
       result += "    }\n";
     }
     if (pointer && !movement)
-      result += "    window-movement {\n" + pointerNode(document) + "    }\n";
+      result +=
+        "    window-movement {\n        preserve-movement\n" + pointerNode(document) + "    }\n";
     if (document.motion) {
       for (const [key, name] of [
         ["workspace", "workspace-switch"],
@@ -289,8 +302,8 @@ function createEffectCore(catalog) {
   function encodeShareDocument(document) {
     const doc = normalizePreset(document);
     const compact = (effect) =>
-      effect === null
-        ? null
+      effect === null || effect === "off"
+        ? effect
         : Object.fromEntries(
             Object.entries(effect).filter(([key, value]) => value !== catalog.defaults[key]),
           );

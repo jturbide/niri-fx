@@ -57,6 +57,24 @@ class ResizeBaselineTests(unittest.TestCase):
         )
         self.assertTrue(all(call.kwargs["timeout"] == 15 for call in git.call_args_list))
 
+    def test_source_revision_baseline_is_resolved_and_patch_verified(self):
+        self.manifest.write_text(json.dumps(self.build))
+        with patch.object(
+            recorder.subprocess, "check_output", side_effect=["b" * 40 + "\n", self.patch_bytes]
+        ) as git:
+            _, evidence = recorder.baseline(
+                self.manifest, None, self.build, revision="reviewed-ref"
+            )
+        self.assertNotIn("tag", evidence)
+        self.assertEqual(evidence["source_revision"], "reviewed-ref")
+        self.assertEqual(evidence["commit"], "b" * 40)
+        self.assertEqual(
+            git.call_args_list[0].args[0][-2:], ["--end-of-options", "reviewed-ref^{commit}"]
+        )
+        self.assertEqual(
+            git.call_args_list[1].args[0][-1], "b" * 40 + ":experimental/niri-movement.patch"
+        )
+
     def test_changed_executable_or_tagged_patch_rejects_comparison(self):
         for field in ("binary_sha256", "patch_sha256"):
             with self.subTest(field=field), self.assertRaises(ValueError):

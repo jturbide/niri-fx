@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Exercise the actual Studio CLI, browser and helper against temporary state."""
 
+import argparse
 import json
 import selectors
 import subprocess
@@ -11,7 +12,19 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 
 
+def parse_args(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--suite", choices=("all", "studio", "shapes", "motion"), default="all")
+    parser.add_argument("--shape-aspect", choices=("0.25", "1", "4"))
+    args = parser.parse_args(argv)
+    if args.shape_aspect is not None and args.suite != "shapes":
+        parser.error("--shape-aspect requires --suite shapes")
+    return args
+
+
 def main():
+    args = parse_args()
+    saves = args.suite in {"all", "studio"}
     with tempfile.TemporaryDirectory(prefix="nirifx-e2e-") as directory:
         root = Path(directory)
         config = root / "config.kdl"
@@ -59,13 +72,19 @@ def main():
                 line = process.stdout.readline().strip()
             if not line.startswith("NiriFX Studio: http://127.0.0.1:"):
                 raise RuntimeError("Studio failed to return its local session URL")
+            command = [
+                "node",
+                "scripts/browser-smoke.mjs",
+                line.removeprefix("NiriFX Studio: "),
+                "--suite",
+                args.suite,
+            ]
+            if args.shape_aspect is not None:
+                command.extend(["--shape-aspect", args.shape_aspect])
+            if saves:
+                command.append("--save-test")
             subprocess.run(
-                [
-                    "node",
-                    "scripts/browser-smoke.mjs",
-                    line.removeprefix("NiriFX Studio: "),
-                    "--save-test",
-                ],
+                command,
                 cwd=ROOT,
                 check=True,
                 # Software WebGL also renders enlarged reference searches for
@@ -75,6 +94,10 @@ def main():
             )
             presets = json.loads(registry.read_text())["presets"]
             assert unrelated in presets, "Saving replaced an unrelated preset"
+            if not saves:
+                assert presets == [unrelated], "Rendering checks unexpectedly changed the registry"
+                print(f"PASS: isolated {args.suite} rendering; registry unchanged")
+                return
             for family in (
                 "fragments",
                 "slices",

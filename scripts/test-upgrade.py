@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify an installed 0.17 wheel upgrade using disposable files and real Niri validation.
+"""Verify an installed release wheel upgrade using disposable files and real Niri validation.
 
 The test never imports the checkout's Python package. Its old installation creates
 portable JSON, registered shell entries, saved Library profiles, favorites and
@@ -199,6 +199,19 @@ def browser_check(session, *, root, env):
         NIRIFX_UPGRADE_URL=session.url,
         NIRIFX_BROWSER_HELPER=(ROOT / "scripts/lib/browser.mjs").as_uri(),
     )
+    # Chromium may create crash-report/cache files outside --user-data-dir.
+    # Keep those separate from the application trees checked for preservation.
+    for key, name in (
+        ("HOME", "home"),
+        ("XDG_CONFIG_HOME", "config"),
+        ("XDG_STATE_HOME", "state"),
+        ("XDG_DATA_HOME", "data"),
+        ("XDG_CACHE_HOME", "cache"),
+        ("XDG_RUNTIME_DIR", "runtime"),
+    ):
+        path = root / "browser" / name
+        path.mkdir(mode=0o700, parents=True)
+        browser_env[key] = str(path)
     source = """
 import assert from 'node:assert/strict';
 const {launchBrowser}=await import(process.env.NIRIFX_BROWSER_HELPER);
@@ -234,7 +247,28 @@ try {
       unchanged:before===JSON.stringify(effectDocument())
     };
   })()`),{actions:['open','close'],state:'complete',unchanged:true});
-  console.log('PASS installed Library UI, saved old JSON, retained favorite and combo preview');
+  assert.equal(await browser.evaluate('effectDocument().schema'),2);
+  assert.deepEqual(await browser.evaluate(`
+    ['open','close','resize','movement','pointer'].map(action=>byId('combo-'+action+'-mode').value)
+  `),['style','style','preserve','preserve','preserve']);
+  const modes=await browser.evaluate(`(()=>{
+    for(const [action,value] of Object.entries({open:'preserve',close:'off',resize:'off',movement:'off',pointer:'off'})){
+      const select=byId('combo-'+action+'-mode');
+      select.value=value;select.dispatchEvent(new Event('change'));
+    }
+    return effectDocument();
+  })()`);
+  assert.deepEqual(modes.actions,{open:null,close:'off',resize:'off',movement:'off'});
+  assert.equal(modes.pointer.strength,0);
+  assert.deepEqual(await browser.evaluate('decodeShareDocument(encodeShareDocument(effectDocument()))'),modes);
+  const stock=await browser.evaluate('kdlDocument()');
+  assert(!stock.includes('window-open')&&!stock.includes('window-movement')&&!stock.includes('pointer-wobble'));
+  assert.equal((stock.match(/        off/g)||[]).length,2);
+  await browser.evaluate(`byId('undo').click()`);
+  assert.equal(await browser.evaluate('effectDocument().pointer ?? null'),null);
+  await browser.evaluate(`byId('redo').click()`);
+  assert.deepEqual(await browser.evaluate('effectDocument()'),modes);
+  console.log('PASS installed Library UI, saved schema1 JSON, retained favorites, combo preview and schema2 modes');
 } finally { await browser.close(); }
 """
     print(run(["node", "--input-type=module", "-e", source], root=root, env=browser_env))
@@ -289,6 +323,7 @@ def exercise(old_wheel, new_wheel, *, browser):
             "Saved Night",
             json_output=True,
         )
+        assert document["schema"] == 1, "Upgrade source must exercise a real legacy profile"
         custom = root / "saved-night.json"
         custom.write_text(json.dumps(document, indent=2) + "\n")
 
@@ -384,6 +419,11 @@ def exercise(old_wheel, new_wheel, *, browser):
         before = snapshot_files(*protected)
         install(new_wheel)
         assert snapshot_files(*protected) == before
+        # Loading migrates the portable envelope without rewriting saved files
+        # or changing action data. Installation itself remains passive.
+        document = dict(document, schema=2)
+        staged = dict(staged, schema=2)
+        library_document = dict(library_document, schema=2)
         assert cli("inspect", "--custom", custom, json_output=True) == document
         assert cli("inspect", "--custom", staged_file, json_output=True) == staged
         assert "window-movement" not in cli("render", "--custom", staged_file)
@@ -405,7 +445,14 @@ def exercise(old_wheel, new_wheel, *, browser):
             assert listing["managed"]["custom-saved-night"]["document"] == document
             assert not listing["restore"] and config.read_text() == BASE
             if browser:
+                before_browser = snapshot_files(*protected)
                 browser_check(session, root=root, env=env)
+                after_browser = snapshot_files(*protected)
+                assert after_browser == before_browser, [
+                    str(path.relative_to(root))
+                    for path in before_browser.keys() | after_browser.keys()
+                    if before_browser.get(path) != after_browser.get(path)
+                ]
             selection = {"document": document, "allow_resize": False, "allow_movement": False}
             review = session.post("/review", selection)
             assert config.read_text() == BASE and not include.exists()
@@ -421,6 +468,64 @@ def exercise(old_wheel, new_wheel, *, browser):
                 json.loads(session.get("/library"))["managed"]["custom-saved-night"]["document"]
                 == document
             )
+            # Build schema-2 choices through the installed CLI, then save and
+            # activate them via its real Library API. Preserve has no shader;
+            # Off is still a resize override and native Off stays stock-safe.
+            for label, choices in (
+                ("All Preserve", ("preserve",) * 4),
+                ("All Off", ("off",) * 4),
+                ("Mixed Modes", ("preserve", "zipper", "off", "off")),
+            ):
+                arguments = ["profile", "--name", label, "--pointer", "off"]
+                for action, choice in zip(
+                    ("open", "close", "resize", "movement"), choices, strict=True
+                ):
+                    arguments.extend(("--" + action, choice))
+                modes = cli(*arguments, json_output=True)
+                assert modes["schema"] == 2 and modes["pointer"]["strength"] == 0
+                for action, choice in zip(
+                    ("open", "close", "resize", "movement"), choices, strict=True
+                ):
+                    if choice == "preserve":
+                        assert modes["actions"][action] is None
+                    elif choice == "off":
+                        assert modes["actions"][action] == "off"
+                    else:
+                        assert isinstance(modes["actions"][action], dict)
+                modes_file = root / (label.lower().replace(" ", "-") + ".json")
+                modes_file.write_text(json.dumps(modes) + "\n")
+                modes_bytes = modes_file.read_bytes()
+                assert cli("inspect", "--custom", modes_file, json_output=True) == modes
+                stock = cli("render", "--custom", modes_file)
+                assert "window-movement" not in stock and "pointer-wobble" not in stock
+                assert stock.count("        off") == choices[:3].count("off")
+                for action, choice in zip(("open", "close", "resize"), choices[:3], strict=True):
+                    assert ("window-" + action in stock) == (choice != "preserve")
+                assert session.post("/store", {"document": modes, "expected": None})["changed"]
+                mode_id = "custom-" + label.lower().replace(" ", "-")
+                assert json.loads(session.get("/library"))["managed"][mode_id]["document"] == modes
+                selection = {
+                    "document": modes,
+                    "allow_resize": choices[2] != "preserve",
+                    "allow_movement": False,
+                    "allow_pointer": False,
+                }
+                if choices[2] == "off":
+                    before_rejection = snapshot_files(config, include, state)
+                    session.rejected(
+                        "/review", dict(selection, allow_resize=False), "change resize effects"
+                    )
+                    assert snapshot_files(config, include, state) == before_rejection
+                review = session.post("/review", selection)
+                assert session.post(
+                    "/apply", {"selection": selection, "expected": review["plan_sha256"]}
+                )["changed"]
+                run(["niri", "validate", "-c", config], root=root, env=env)
+                assert json.loads(session.get("/library"))["active"] == modes
+                assert include.read_text().endswith(stock + "\n")
+                assert not session.post("/restore", {})["dry_run"]
+                assert config.read_text() == BASE and not include.exists()
+                assert modes_file.read_bytes() == modes_bytes
             # New optional metadata must survive saving while stock activation
             # omits it. Strength zero still requires an explicit native contract.
             for label, strength in (("Pointer Extension", 0.9), ("Pointer Disabled", 0)):
@@ -476,17 +581,19 @@ def exercise(old_wheel, new_wheel, *, browser):
             f"PASS {wheel_version(old_wheel)} -> {wheel_version(new_wheel)}: installed CLI/Studio, "
             "old JSON and shell registry, saved Library profiles and favorites, "
             "exact CLI and Library snapshot Restore, native metadata and activation guards, "
-            "user resize preserved"
+            "schema2 Preserve/Style/Off choices, user resize and schema1 files preserved"
         )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--from-wheel", type=Path, required=True, help="Official v0.17.0 release wheel"
+        "--from-wheel", type=Path, required=True, help="Official v0.17.0 or v0.18.0 release wheel"
     )
     parser.add_argument("--to-wheel", type=Path, required=True, help="Newly built candidate wheel")
-    parser.add_argument("--checksums", type=Path, required=True, help="v0.17.0 release SHA256SUMS")
+    parser.add_argument(
+        "--checksums", type=Path, required=True, help="The source release SHA256SUMS"
+    )
     parser.add_argument(
         "--browser",
         action="store_true",
@@ -498,8 +605,8 @@ def main():
     if args.browser and not shutil.which("node"):
         parser.error("--browser requires Node 22 or newer and Chromium/Chrome")
     old_wheel, new_wheel = args.from_wheel.resolve(), args.to_wheel.resolve()
-    if wheel_version(old_wheel) != "0.17.0":
-        parser.error("--from-wheel must be the official 0.17.0 release wheel")
+    if wheel_version(old_wheel) not in ("0.17.0", "0.18.0"):
+        parser.error("--from-wheel must be an official 0.17.0 or 0.18.0 release wheel")
     verify_checksum(old_wheel, args.checksums.resolve())
     exercise(old_wheel, new_wheel, browser=args.browser)
 

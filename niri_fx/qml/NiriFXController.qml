@@ -49,7 +49,7 @@ Item {
                     comment: presets[id].kind === "profile" ? "Open / close profile" : title(presets[id].effect.family)
                 }));
         if (customDocument) {
-            const effects = customDocument.kind === "profile" ? Object.values(customDocument.actions).filter(Boolean) : [customDocument.effect];
+            const effects = customDocument.kind === "profile" ? Object.values(customDocument.actions).filter(value => value && typeof value === "object") : [customDocument.effect];
             rows.unshift({
                 id: "custom",
                 name: customDocument.name,
@@ -63,8 +63,15 @@ Item {
     signal completed(string action, bool success)
     signal studioRequested(var arguments)
 
+    function actionDescription(value, action) {
+        if (value == null)
+            return "Preserve · desktop / shell";
+        if (value === "off")
+            return "Off";
+        return "NiriFX Style · " + title(value.family) + " · " + value[action + "_ms"] + " ms";
+    }
     function documentFamilies(doc) {
-        const effects = doc.kind === "profile" ? Object.values(doc.actions).filter(Boolean) : [doc.effect];
+        const effects = doc.kind === "profile" ? Object.values(doc.actions).filter(value => value && typeof value === "object") : [doc.effect];
         return [...new Set(effects.map(effect => effect.family))];
     }
     function title(value) {
@@ -210,8 +217,7 @@ Item {
                 // A file may have changed since import, before this review.
                 // Never approve an unseen resize override or stale description.
                 const shown = selectedDocument.kind === "profile" ? selectedDocument.actions : selectedDocument.effect;
-                if (JSON.stringify(data.effect) !== JSON.stringify(shown)
-                    || JSON.stringify(data.desktop_motion || null) !== JSON.stringify(selectedDocument.motion || null))
+                if (JSON.stringify(data.effect) !== JSON.stringify(shown) || JSON.stringify(data.desktop_motion || null) !== JSON.stringify(selectedDocument.motion || null))
                     throw new Error("The selection changed since loading. Reload its JSON or refresh the catalog, then review again.");
                 reviewPlan = data;
                 status = data.changes.length ? "Review ready. Apply activates this selection." : "This selection is already applied; no files need changing.";

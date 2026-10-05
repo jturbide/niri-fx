@@ -136,6 +136,27 @@ export async function launchBrowser({
     return result.result.value;
   }
 
+  async function callFunction(functionDeclaration, args = []) {
+    // Send fixture/import data through CDP values, separate from executable
+    // source. A fresh global handle also survives navigation between calls.
+    const global = await rpc("Runtime.evaluate", { expression: "globalThis" });
+    const objectId = global.result.objectId;
+    if (!objectId) throw new Error("Browser global object is unavailable");
+    try {
+      const result = await rpc("Runtime.callFunctionOn", {
+        objectId,
+        functionDeclaration,
+        arguments: args.map((value) => ({ value })),
+        returnByValue: true,
+        awaitPromise: true,
+      });
+      if (result.exceptionDetails) throw new Error(JSON.stringify(result.exceptionDetails));
+      return result.result.value;
+    } finally {
+      await rpc("Runtime.releaseObject", { objectId });
+    }
+  }
+
   async function navigate(url, { width, height, timeout = 30000, readySelector = null } = {}) {
     if (width && height)
       await rpc("Emulation.setDeviceMetricsOverride", {
@@ -245,7 +266,7 @@ export async function launchBrowser({
     // Enable the lifecycle domains before callers register or navigate pages.
     await rpc("Page.enable");
     await rpc("Runtime.enable");
-    return { rpc, evaluate, navigate, close, profile };
+    return { rpc, evaluate, callFunction, navigate, close, profile };
   } catch (error) {
     await close();
     throw error;

@@ -4,7 +4,7 @@ import Gdk from "gi://Gdk?version=4.0";
 import Gio from "gi://Gio";
 import GLib from "gi://GLib";
 import Pango from "gi://Pango";
-import { PickerController, title } from "./controller.mjs";
+import { PickerController, title, actionDescription } from "./controller.mjs";
 import { displayPath, environmentOptions, launch, run } from "./transport.mjs";
 
 const label = (text, css = "") =>
@@ -98,7 +98,7 @@ export function createPicker(options = {}) {
   const actions = label("");
   const resize = new Gtk.CheckButton({ label: "Allow this selection to change resize effects" });
   const movement = label(
-    "Experimental movement settings are retained in the file. This picker applies stock Niri actions only.",
+    "Experimental movement and pointer settings are retained in the file. This picker applies stock Niri actions only.",
     "nirifx-muted",
   );
   const preview = button("Preview in Studio", () => controller.openStudio());
@@ -220,12 +220,22 @@ export function createPicker(options = {}) {
         : "Tune the look in Studio, or apply its current settings here.",
     );
     const effect = state.actions;
+    const pointer = state.document?.pointer;
     actions.set_label(
-      `Opening   ${effect.open ? `${title(effect.open.family)} · ${effect.open.open_ms} ms` : "—"}\n\nClosing    ${effect.close ? `${title(effect.close.family)} · ${effect.close.close_ms} ms` : "—"}\n\nResize     ${effect.resize ? `${title(effect.resize.family)} · explicit override` : "Use base Niri settings"}`,
+      [
+        ["Opening", "open"],
+        ["Closing", "close"],
+        ["Resize", "resize"],
+        ["Move / swap", "movement"],
+      ]
+        .map(([label, action]) => label + "   " + actionDescription(effect[action], action))
+        .join("\n\n") +
+        "\n\nPointer drag   " +
+        (!pointer ? "Preserve · desktop / shell" : pointer.strength === 0 ? "Off" : "NiriFX Style"),
     );
     resize.set_visible(!!effect.resize);
     resize.set_active(state.allowResize);
-    movement.set_visible(!!effect.movement);
+    movement.set_visible(!!effect.movement || !!pointer);
     plan.set_visible(!!state.reviewPlan);
     plan.set_label(
       state.reviewPlan

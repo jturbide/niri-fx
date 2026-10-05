@@ -57,9 +57,12 @@ export async function checkMotion(evaluate, setProgress, sample) {
           // Different loop bounds can change hardware compiler rounding. Check
           // every channel, allowing only one 8-bit quantization step, not gaps.
           const options = { progress: 0.5, includePixels: true };
-          const worst = await evaluate(
-            `(()=>{const a=${scene(effect, options)},b=${scene(effect, options, false, true)};let worst=0;for(let i=0;i<a.pixels.length;i++)worst=Math.max(worst,Math.abs(a.pixels[i]-b.pixels[i]));return worst;})()`,
-          );
+          const actualPixels = (await probe(effect, options)).pixels;
+          const referencePixels = (await probe(effect, options, false, true)).pixels;
+          assert.equal(actualPixels.length, referencePixels.length);
+          let worst = 0;
+          for (let i = 0; i < actualPixels.length; i++)
+            worst = Math.max(worst, Math.abs(actualPixels[i] - referencePixels[i]));
           assert(
             worst <= 1,
             `${shape} ${aspect} ${mode}: conservative search bound, max difference ${worst}`,
@@ -189,7 +192,7 @@ export async function checkMotion(evaluate, setProgress, sample) {
     "viewing movement never enables it",
   );
   await evaluate(
-    "byId('preset').value='fragment-wake';byId('preset').dispatchEvent(new Event('change'));byId('action-enabled').checked=true;byId('action-enabled').dispatchEvent(new Event('change'))",
+    "byId('action-mode').value='style';byId('action-mode').dispatchEvent(new Event('change'));byId('preset').value='fragment-wake';byId('preset').dispatchEvent(new Event('change'))",
   );
   const document = await evaluate("effectDocument()");
   assert.equal(document.actions.movement.movement_focus, 1);
@@ -207,7 +210,7 @@ export async function checkMotion(evaluate, setProgress, sample) {
   await evaluate("byId('redo').click()");
   assert.equal(await evaluate("effectDocument().actions.movement.movement_ms"), 1200);
   await evaluate(
-    "byId('action-enabled').checked=false;byId('action-enabled').dispatchEvent(new Event('change'))",
+    "byId('action-mode').value='preserve';byId('action-mode').dispatchEvent(new Event('change'))",
   );
   assert.equal(await evaluate("effectDocument().actions.movement"), null);
   await evaluate(

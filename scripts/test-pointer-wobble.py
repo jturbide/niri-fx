@@ -39,7 +39,7 @@ def exercise(name, protocol, *, capture=False):
         capabilities = json.loads(session.msg("-j", "niri-fx-pointer-capabilities"))[
             "NiriFxPointerCapabilities"
         ]
-        assert capabilities["pointer_wobble"] == 1
+        assert capabilities["pointer_wobble"] == 2
         assert capabilities["renderer_verified"]
         assert capabilities["configured"]
         assert capabilities["enabled"]
@@ -161,12 +161,30 @@ def exercise(name, protocol, *, capture=False):
             click_check(session, pointer, primary, 4)
             checks.append({"case": "tiled-drag-layout-input"})
 
-            # Reload each supported disable path while a live grab owns the tile.
+            # Contract 2 separates timed movement Off from direct pointer input.
             place_floating(session, primary)
+            start = grab(session, pointer, primary)
+            end = (start[0] + 30, start[1] + 15)
+            pointer.path((start, end), 0.2)
+            session.reload(config(wobble, movement_off=True))
+            independent = json.loads(session.msg("-j", "niri-fx-pointer-capabilities"))[
+                "NiriFxPointerCapabilities"
+            ]
+            assert independent["enabled"]
+            pointer.path((end, (end[0] + 90, end[1] - 20)), 0.15)
+            pointer.release()
+            active = session.capture("timed-off-pointer-active")
+            time.sleep(1.2)
+            settled = session.capture("timed-off-pointer-settled")
+            assert changed_pixels(active, settled) > 30
+            assert {w["id"] for w in session.windows()} == ids
+            checks.append({"case": "timed-movement-off-preserves-pointer-during-grab"})
+            session.reload(config(wobble))
+
+            # Reload each supported disable path while a live grab owns the tile.
             for label, disabled in (
                 ("omitted", config(None)),
                 ("strength-zero", config(replace(wobble, strength=0))),
-                ("movement-off", config(wobble, movement_off=True)),
                 ("animations-off", config(wobble, global_off=True)),
             ):
                 start = grab(session, pointer, primary)

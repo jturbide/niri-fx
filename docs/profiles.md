@@ -9,24 +9,56 @@ fragments, close with Implosion, and leave your existing resize behavior unchang
 
 ## Choose which actions to customize
 
-Library keeps each action's choice in the profile:
+Each action has the same three choices:
 
-| Action | Available choices |
+| Choice | Result |
 | --- | --- |
-| Open and Close | Choose a style for each; both currently require an effect. |
-| Resize | **Use shell defaults**, or choose a supported resize style. |
-| Move / swap | **Use shell defaults**, or choose a supported movement style. Moving and swapping share this one action. |
-| Pointer drag | **Use desktop settings**, **Disabled**, a preset or custom spring settings. |
+| **Preserve** | Keep the configuration underneath NiriFX, including shell customizations. This is not a reset to Niri defaults. |
+| **NiriFX Style** | Apply the selected effect or pointer preset. |
+| **Off** | Disable that action's animation. |
 
-**Use shell defaults** and **Use desktop settings** preserve the desktop's
-existing behavior. They do not turn its animations off. Pointer **Disabled**
-stores zero strength; applying it requires the same native support as other
-pointer settings. Live movement and pointer deformation require the verified
-[experimental compositor](../experimental/README.md).
+Choose independently for Open, Close, Resize, Move / swap and Pointer drag.
+Move and swap share one compositor action. Shared styles change only actions
+already set to **NiriFX Style**; Preserve and Off remain unchanged. If a shared
+style does not support an action, its existing selection stays in place.
 
-Independent Preserve and Off choices for opening and closing are planned in the
-[action-selection roadmap](../ROADMAP.md#consistent-action-selection). Current
-profiles do not provide those switches.
+When replacing a previously applied NiriFX profile, Preserve removes that
+profile's override for the action and reveals the underlying configuration.
+It does not keep the previous NiriFX effect. Restore returns the exact saved
+configuration from before Apply.
+
+Studio can preview a selected NiriFX style or an instant Off transition. It
+cannot know how an inherited desktop animation will look offline; Preserve is
+labelled in the preview instead of simulating an assumed Niri default.
+
+Live movement and pointer choices require the verified
+[experimental compositor](../experimental/README.md). Stock exports keep their
+choices in JSON but omit them from KDL, including Off. The experimental native
+contract 2 keeps movement and pointer overrides independent even though they
+share one Niri configuration block. Applying Off for timed movement does not
+turn off pointer drag, and vice versa. Global Niri animations Off still wins.
+
+## Compose a partial profile
+
+For a frosted closing effect with unchanged opening and no resize animation:
+
+```sh
+niri-fx profile --name 'Quiet Exit' --open preserve --close frost-vanish \
+  --resize off > quiet-exit.json
+niri-fx studio --custom quiet-exit.json
+```
+
+For stock opening, closing and resizing all disabled:
+
+```sh
+niri-fx profile --name 'Still Windows' --open off --close off --resize off \
+  > still-windows.json
+```
+
+Use `--movement preserve|off|PRESET` and `--pointer preserve|off|PRESET` for the
+native choices. The older `--open-preset`, `--close-preset`, `--resize-preset` and
+`--movement-preset` names remain aliases. Previewing or creating JSON changes no
+active settings. Use Library Review and Apply when the selection is ready.
 
 ## Choose a finished pairing
 
@@ -121,10 +153,11 @@ window shader preview.
 ## Create your own combination
 
 In Studio, enable **Independent action effects**, choose **Editing action**, and
-pick/tune its style. Reconstruct previews the opening action; Deconstruct previews
-the closing action. Viewing Resize never enables it: tick **Enable resize effect**
-deliberately. Fragments, Slices, Elastic and Distortion support resize. Turning independent
-effects off uses the opening style for both actions; Undo recovers the profile.
+choose **Preserve**, **NiriFX Style** or **Off**, then tune a selected style.
+Reconstruct previews opening; Deconstruct previews closing. Viewing Resize leaves
+its choice unchanged. Fragments, Slices, Elastic and Distortion support resize.
+Turning independent effects off creates a single-style document; Undo recovers
+the profile.
 
 Create the same profile from the CLI:
 
@@ -141,16 +174,18 @@ without activation, use `register --custom /tmp/my-profile.json`; standalone
 `setup --custom /tmp/my-profile.json --target standalone` first prints a plan.
 `--apply` activates the backed-up standalone include. See [setup](setup.md).
 
-Profiles are **kind `profile`, schema 1** documents with `name` and `actions`.
-`open` and `close` contain effect objects; `resize` and `movement` are nullable.
+Profiles are **kind `profile`, schema 2** documents with `name` and `actions`.
+Each of `open`, `close`, `resize` and `movement` contains an effect object for
+NiriFX Style, `null` for Preserve or the string `"off"` for Off. Schema 1 profiles
+remain readable and are normalized to schema 2 without changing their behavior.
 Each nested effect keeps `resize: false`: the separate resize slot selects that action.
 Single-style documents continue to use effect schema 3; these are different
 document types, not compatibility aliases. [Complete example](../examples/profiles/spring-and-ember.json).
 
 The experimental `movement` slot is validated and preserved on import/export.
 Studio can edit it and preview the actual shader in **Movement (experimental shader)**.
-Tick **Include experimental movement in JSON** to store the choice; viewing it
-alone leaves the slot unset. Stock KDL and iRiS exports omit it by default; explicit standalone activation requires a verified running contract. See [Apply and Restore](setup.md#activate-experimental-movement). Movement requires the separate [compositor experiment](../experimental/README.md).
+Choose **NiriFX Style** or **Off** for Move / swap to store an override;
+viewing an action alone does not select it. Stock KDL and iRiS exports omit it by default; explicit standalone activation requires a verified running contract. See [Apply and Restore](setup.md#activate-experimental-movement). Movement requires the separate [compositor experiment](../experimental/README.md).
 Profiles do not add application-specific rules. Pointer drag uses a separate
 optional native extension, described below.
 
@@ -160,8 +195,8 @@ Pointer settings in profiles, Studio and reviewed activation are available in
 **0.18 and newer**. Live pointer deformation requires the separately built
 [experimental compositor](pointer-wobble.md).
 
-In Library, **Pointer drag (optional)** offers **Use desktop settings**, **Disabled**,
-**Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer drag** exposes
+In Library, **Pointer drag** uses Preserve / NiriFX Style / Off. NiriFX Style
+offers **Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer drag** exposes
 strength, damping and frequency. These choices are independent of the opening,
 closing, resize and timed movement styles. Switching to one shared window style
 preserves the pointer choice; Undo/Redo, JSON import/export and share links preserve it too.

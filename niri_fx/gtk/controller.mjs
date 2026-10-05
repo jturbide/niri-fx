@@ -7,9 +7,17 @@ export const title = (value) =>
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
 
+export function actionDescription(value, action) {
+  if (value == null) return "Preserve · desktop / shell";
+  if (value === "off") return "Off";
+  return "NiriFX Style · " + title(value.family) + " · " + value[action + "_ms"] + " ms";
+}
+
 function documentFamilies(doc) {
   const effects =
-    doc.kind === "profile" ? Object.values(doc.actions).filter(Boolean) : [doc.effect];
+    doc.kind === "profile"
+      ? Object.values(doc.actions).filter((value) => value && typeof value === "object")
+      : [doc.effect];
   return [...new Set(effects.map((effect) => effect.family))];
 }
 
@@ -109,12 +117,10 @@ export class PickerController {
     }));
     if (this.customDocument) {
       const doc = this.customDocument;
-      const effects =
-        doc.kind === "profile" ? Object.values(doc.actions).filter(Boolean) : [doc.effect];
       rows.unshift({
         id: "custom",
         name: doc.name,
-        families: [...new Set(effects.map((effect) => effect.family))],
+        families: documentFamilies(doc),
       });
     }
     const query = this.query.toLowerCase().trim();

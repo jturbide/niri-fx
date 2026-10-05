@@ -1,24 +1,36 @@
 diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
-index c9d7a8b3442876d065d8065c3751187cd9dd398f..f6766cac99681200f20ace79103e5b43c0ae7f50 100644
+index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328f08abe58 100644
 --- a/niri-config/src/animations.rs
 +++ b/niri-config/src/animations.rs
-@@ -213,6 +213,7 @@ impl Default for HorizontalViewMovementAnim {
+@@ -90,6 +90,9 @@ impl MergeWith<AnimationsPart> for Animations {
+                 value.anim = self.window_movement.anim;
+                 value.custom_shader = self.window_movement.custom_shader.clone();
+             }
++            if value.preserve_pointer {
++                value.pointer_wobble = self.window_movement.pointer_wobble;
++            }
+             // Merge directives belong to this part, never to the effective config.
+             value.preserve_movement = false;
+             value.preserve_pointer = false;
+@@ -223,6 +226,7 @@ impl Default for HorizontalViewMovementAnim {
  pub struct WindowMovementAnim {
      pub anim: Animation,
      pub custom_shader: Option<String>,
 +    pub pointer_wobble: Option<PointerWobble>,
+     pub preserve_movement: bool,
+     pub preserve_pointer: bool,
  }
- 
- impl Default for WindowMovementAnim {
-@@ -227,6 +228,29 @@ impl Default for WindowMovementAnim {
+@@ -239,12 +243,35 @@ impl Default for WindowMovementAnim {
                  }),
              },
              custom_shader: None,
 +            pointer_wobble: None,
-+        }
-+    }
-+}
-+
+             preserve_movement: false,
+             preserve_pointer: false,
+         }
+     }
+ }
+ 
 +/// Pointer deformation is opt-in and independent of a timed movement shader.
 +/// Damping is a percentage of critical damping, frequency is measured in Hz.
 +#[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
@@ -37,19 +49,94 @@ index c9d7a8b3442876d065d8065c3751187cd9dd398f..f6766cac99681200f20ace79103e5b43
 +            strength: FloatOrInt(0.7),
 +            damping: 65,
 +            frequency: 8,
-         }
-     }
- }
-@@ -235,6 +259,36 @@ impl Default for WindowMovementAnim {
++        }
++    }
++}
++
+ #[cfg(test)]
  mod movement_shader_tests {
      use super::*;
+@@ -259,6 +286,107 @@ mod movement_shader_tests {
+         Ok(config)
+     }
  
++    #[test]
++    fn movement_pointer_merge_directives_preserve_only_the_selected_action() {
++        let base = r#"animations { window-movement {
++            duration-ms 937; curve "linear"; custom-shader "base shader";
++            pointer-wobble { strength 0.9; damping 70; frequency 7; };
++        }; }"#;
++        let initial = parse_layers(base).unwrap().animations.window_movement;
++        let pointer = parse_layers(&format!(r#"{base}
++            animations {{ window-movement {{ preserve-movement; pointer-wobble {{ strength 0; }}; }}; }}"#))
++            .unwrap().animations.window_movement;
++        assert_eq!(pointer.anim, initial.anim);
++        assert_eq!(pointer.custom_shader, initial.custom_shader);
++        assert_eq!(pointer.pointer_wobble.unwrap().strength.0, 0.);
++        assert!(!pointer.preserve_movement && !pointer.preserve_pointer);
++        let movement = parse_layers(&format!(
++            r#"{base}
++            animations {{ window-movement {{ preserve-pointer; off; }}; }}"#
++        ))
++        .unwrap()
++        .animations
++        .window_movement;
++        assert!(movement.anim.off);
++        assert!(movement.custom_shader.is_none());
++        assert_eq!(movement.pointer_wobble, initial.pointer_wobble);
++        assert!(!movement.preserve_movement && !movement.preserve_pointer);
++        let both = parse_layers(&format!(
++            r#"{base}
++            animations {{ window-movement {{ preserve-pointer; preserve-movement; }}; }}"#
++        ))
++        .unwrap()
++        .animations
++        .window_movement;
++        assert_eq!(both, initial);
++        let reset = parse_layers(&format!(
++            r#"{base}
++            animations {{ window-movement {{ preserve-pointer; preserve-movement; }}; }}
++            animations {{ window-movement {{}}; }}"#
++        ))
++        .unwrap();
++        assert_eq!(
++            reset.animations.window_movement,
++            WindowMovementAnim::default()
++        );
++        let defaults = parse_layers(
++            "animations { window-movement { preserve-movement; preserve-pointer; }; }",
++        )
++        .unwrap();
++        assert_eq!(
++            defaults.animations.window_movement,
++            WindowMovementAnim::default()
++        );
++    }
++
++    #[test]
++    fn movement_pointer_merge_directives_reject_ambiguous_settings() {
++        for value in [
++            "preserve-movement; off",
++            "preserve-movement; duration-ms 0",
++            "preserve-movement; curve \"linear\"",
++            "preserve-movement; custom-shader \"shader\"",
++            "preserve-movement; spring { damping-ratio 1; stiffness 800; epsilon 0.0001; }",
++            "preserve-pointer; pointer-wobble {}",
++            "preserve-movement; preserve-movement",
++            "preserve-pointer; preserve-pointer",
++            "preserve-pointer true",
++            "preserve-movement { unexpected; }",
++        ] {
++            let config = format!("animations {{ window-movement {{ {value}; }}; }}");
++            assert!(parse_layers(&config).is_err(), "{value}");
++        }
++    }
++
 +    #[test]
 +    fn pointer_wobble_is_opt_in_and_bounded() {
 +        assert!(WindowMovementAnim::default().pointer_wobble.is_none());
 +        let config =
-+            crate::Config::parse_mem("animations { window-movement { pointer-wobble {}; }; }")
-+                .unwrap();
++            parse_layers("animations { window-movement { pointer-wobble {}; }; }").unwrap();
 +        assert_eq!(
 +            config.animations.window_movement.pointer_wobble,
 +            Some(PointerWobble::default())
@@ -66,25 +153,28 @@ index c9d7a8b3442876d065d8065c3751187cd9dd398f..f6766cac99681200f20ace79103e5b43
 +        ] {
 +            let config =
 +                format!("animations {{ window-movement {{ pointer-wobble {{ {invalid}; }}; }}; }}");
-+            assert!(crate::Config::parse_mem(&config).is_err(), "{invalid}");
++            assert!(parse_layers(&config).is_err(), "{invalid}");
 +        }
-+        assert!(crate::Config::parse_mem(
++        assert!(parse_layers(
 +            "animations { window-movement { pointer-wobble {}; pointer-wobble {}; }; }"
 +        )
 +        .is_err());
 +    }
 +
      #[test]
-     fn legacy_movement_config_keeps_default_and_accepts_shader() {
-         let legacy = crate::Config::parse_mem("animations { window-movement {}; }").unwrap();
-@@ -403,10 +457,28 @@ where
+     fn merge_directives_preserve_movement_and_are_consumed() {
+         let base = r#"animations { window-movement {
+@@ -478,6 +606,7 @@ where
      ) -> Result<Self, DecodeError<S>> {
          let default = Self::default().anim;
          let mut custom_shader = None;
 +        let mut pointer_wobble = None;
+         let mut preserve_movement = false;
+         let mut preserve_pointer = false;
          let anim = Animation::decode_node(node, ctx, default, |child, ctx| {
-             if &**child.node_name == "custom-shader" {
-                 custom_shader = parse_arg_node("custom-shader", child, ctx)?;
+@@ -500,6 +629,23 @@ where
+                 }
+                 *flag = true;
                  Ok(true)
 +            } else if &**child.node_name == "pointer-wobble" {
 +                if pointer_wobble.is_some() {
@@ -106,16 +196,25 @@ index c9d7a8b3442876d065d8065c3751187cd9dd398f..f6766cac99681200f20ace79103e5b43
              } else {
                  Ok(false)
              }
-@@ -415,6 +487,7 @@ where
+@@ -518,9 +664,16 @@ where
+                 "preserve-movement conflicts with movement settings",
+             ));
+         }
++        if preserve_pointer && pointer_wobble.is_some() {
++            ctx.emit_error(DecodeError::conversion(
++                node,
++                "preserve-pointer conflicts with pointer-wobble",
++            ));
++        }
          Ok(Self {
              anim,
              custom_shader,
 +            pointer_wobble,
+             preserve_movement,
+             preserve_pointer,
          })
-     }
- }
 diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
-index 554bed226d12ae6c880ea2902c70ed2dcc22a737..775dbd980da9617c15b620137f4dde1bb7eb0bca 100644
+index 2b0291d9f8bcc1186bbce54869218b0b35daed21..2120b4879a149f3b05ed843cde94bf7c7acc05d1 100644
 --- a/niri-config/src/lib.rs
 +++ b/niri-config/src/lib.rs
 @@ -1563,6 +1563,7 @@ mod tests {
@@ -123,9 +222,9 @@ index 554bed226d12ae6c880ea2902c70ed2dcc22a737..775dbd980da9617c15b620137f4dde1b
                      },
                      custom_shader: None,
 +                    pointer_wobble: None,
+                     preserve_movement: false,
+                     preserve_pointer: false,
                  },
-                 window_resize: WindowResizeAnim {
-                     anim: Animation {
 diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
 index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef0668d741f6 100644
 --- a/niri-ipc/src/lib.rs
@@ -519,10 +618,10 @@ index 02929c75d4f6ddfa0db8f39a11050063345f0f12..8a8beb2c12d1edc288d0324591738cbd
              println!("{}", serde_json::to_string(&response)?);
          }
 diff --git a/src/ipc/server.rs b/src/ipc/server.rs
-index 71590d785d624434681a30a2fd10cbb5f51c7a8a..b6759ba161f8fac729645444f2da301288260983 100644
+index 1762b7c50a2ce9a4905ea865b3cc9f35f6a76aa4..c265d53381ce010258aff3cd794dedcc848133b4 100644
 --- a/src/ipc/server.rs
 +++ b/src/ipc/server.rs
-@@ -301,6 +301,41 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
+@@ -301,6 +301,40 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
                      .map_err(|_| String::from("error verifying movement renderer"))?,
              )
          }
@@ -541,13 +640,12 @@ index 71590d785d624434681a30a2fd10cbb5f51c7a8a..b6759ba161f8fac729645444f2da3012
 +                let animation = &config.animations.window_movement;
 +                let configured = animation.pointer_wobble.is_some();
 +                let enabled = !config.animations.off
-+                    && !animation.anim.off
 +                    && animation
 +                        .pointer_wobble
 +                        .is_some_and(|pointer| pointer.strength.0 > 0.);
 +                let _ = tx.send_blocking(niri_ipc::NiriFxPointerCapabilities {
 +                    schema: 1,
-+                    pointer_wobble: 1,
++                    pointer_wobble: 2,
 +                    renderer_verified,
 +                    configured,
 +                    enabled,
@@ -597,18 +695,19 @@ index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71
              mon.dnd_scroll_gesture_end();
          }
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
-index d0f18f85ab6da9fa25270f901c745862a1f3856f..2ee8d76a835fe68a15241e89262ea13d6c858a84 100644
+index c8af8ab1ac2fd4999113b7d0890d356fd0d7e389..448c81d1e19d04c27b5dbe24c917dedb10ee3a49 100644
 --- a/src/layout/tests/animations.rs
 +++ b/src/layout/tests/animations.rs
-@@ -1330,3 +1330,276 @@ fn width_resize_and_cancel_of_column_to_the_left() {
+@@ -1384,3 +1384,279 @@ fn width_resize_and_cancel_of_column_to_the_left() {
      200 × 200 at x:100 y:  0
      ");
  }
 +
 +#[test]
 +fn pointer_wobble_follows_grab_release_and_animation_off() {
-+    for floating in [false, true] {
++    for (floating, timed_off) in [(false, false), (true, false), (false, true), (true, true)] {
 +        let mut options = make_options();
++        options.animations.window_movement.anim.off = timed_off;
 +        options.animations.window_movement.pointer_wobble =
 +            Some(niri_config::animations::PointerWobble {
 +                damping: 10,
@@ -832,9 +931,11 @@ index d0f18f85ab6da9fa25270f901c745862a1f3856f..2ee8d76a835fe68a15241e89262ea13d
 +        // monitor can render a frame, and a later output must recover the tile.
 +        assert_pointer_wobble_release_settles(&mut layout);
 +        check_ops_on_layout(&mut layout, [Op::AddOutput(2)]);
-+        assert!(dropped_pointer_wobble_tile(&layout)
-+            .pointer_wobble
-+            .is_none());
++        assert!(
++            dropped_pointer_wobble_tile(&layout)
++                .pointer_wobble
++                .is_none()
++        );
 +        let (monitor, _) = layout.windows().next().unwrap();
 +        assert_eq!(monitor.unwrap().output.name(), "output2");
 +    }
@@ -878,7 +979,7 @@ index d0f18f85ab6da9fa25270f901c745862a1f3856f..2ee8d76a835fe68a15241e89262ea13d
 +    }
 +}
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826e7bb4de0 100644
+index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b71d19be09 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,5 +1,5 @@
@@ -890,7 +991,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
  use niri_config::utils::MergeWith as _;
 @@ -16,6 +16,7 @@ use super::{
      HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
-     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
+     RESIZE_ANIMATION_THRESHOLD, SizeFrac,
  };
 +use crate::animation::pointer_wobble::PointerWobble;
  use crate::animation::{Animation, Clock, MoveAnimation, SizeAnimation};
@@ -926,7 +1027,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -246,6 +256,17 @@ impl<W: LayoutElement> Tile<W> {
+@@ -246,6 +256,16 @@ impl<W: LayoutElement> Tile<W> {
  
          self.view_size = view_size;
          self.scale = scale;
@@ -935,7 +1036,6 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
 +        if self.options.animations.window_movement.pointer_wobble
 +            != options.animations.window_movement.pointer_wobble
 +            || options.animations.off
-+            || options.animations.window_movement.anim.off
 +        {
 +            self.pointer_wobble = None;
 +            self.pointer_wobble_effect.borrow_mut().take();
@@ -944,13 +1044,12 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
          self.options = options;
  
          let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
-@@ -475,6 +496,56 @@ impl<W: LayoutElement> Tile<W> {
+@@ -482,6 +502,55 @@ impl<W: LayoutElement> Tile<W> {
          self.rounded_corner_damage.set_corner_radius(radius);
      }
  
 +    fn pointer_wobble_enabled(&self) -> bool {
 +        !self.options.animations.off
-+            && !self.options.animations.window_movement.anim.off
 +            && !self.clock.should_complete_instantly()
 +            && self
 +                .options
@@ -1001,7 +1100,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
      pub fn advance_animations(&mut self) {
          if let Some(open) = &mut self.open_animation {
              if open.is_done() {
-@@ -504,6 +575,29 @@ impl<W: LayoutElement> Tile<W> {
+@@ -511,6 +580,29 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
@@ -1031,7 +1130,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
          if let Some(alpha) = &mut self.alpha_animation {
              if !alpha.hold_after_done && alpha.anim.is_done() {
                  self.alpha_animation = None;
-@@ -517,6 +611,10 @@ impl<W: LayoutElement> Tile<W> {
+@@ -524,6 +616,10 @@ impl<W: LayoutElement> Tile<W> {
  
      pub fn are_transitions_ongoing(&self) -> bool {
          self.open_animation.is_some()
@@ -1042,7 +1141,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
              || self.resize_animation.is_some()
              || self.move_x_animation.is_some()
              || self.move_y_animation.is_some()
-@@ -1441,6 +1539,13 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1444,6 +1540,13 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -1056,7 +1155,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
          let mut motion = parent_motion;
          for (movement, horizontal) in [
              (&self.move_x_animation, true),
-@@ -1475,8 +1580,14 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1478,8 +1581,14 @@ impl<W: LayoutElement> Tile<W> {
                      .program(ProgramType::Move)
                      .is_some()
          });
@@ -1072,7 +1171,7 @@ index 31384d5ed108a78a042e0ce0df75f36e1e39970e..1e1b4838a0c1a5bf33397fac22c4f826
              self.movement_effect.borrow_mut().take();
          }
  
-@@ -1507,6 +1618,35 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1510,6 +1619,35 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }

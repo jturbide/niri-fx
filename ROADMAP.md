@@ -12,15 +12,13 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Complete action choices.** Preserve the existing behavior, choose a style or
-   turn an action off consistently in profiles, Studio, the CLI and adapters.
-2. **Make interrupted motion continuous.** Finish resize retargeting and
-   close-during-resize work, with reproducible comparisons and regressions.
-3. **Shorten full rendering checks.** Measure the expensive stages and split
-   independent work across CI jobs while retaining required coverage.
-4. **Broaden desktop acceptance.** Resolve native input/capture failures and
+1. **Make interrupted motion continuous.** Retain resize textures and deformation
+   through retargets and closing, and coordinate minimum-size limits with neighbors.
+2. **Broaden desktop acceptance.** Resolve native input/capture failures and
    collect physical presentation and additional GPU/output results.
-5. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
+3. **Verify CI improvements on hosted runners.** Compare parallel rendering
+   duration and failure diagnostics while retaining complete coverage.
+4. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
    retaining room to improve the 0.x design.
 
 New presets should demonstrate a distinct useful look, with importable settings
@@ -30,7 +28,7 @@ follow the core controls and reliability work below.
 ## Available foundation
 
 Stock open/close/resize effects, standalone setup, shell adapters, the shared
-Library and online Studio are available. Profiles support independent styles,
+Library and online Studio are available. Profiles support independent Preserve / NiriFX Style / Off choices,
 curated combinations, favorites, saved JSON and reviewed Apply/Restore.
 Experimental movement, swaps and pointer deformation require a separate compositor
 build. See [current support](docs/compatibility.md), [the catalog](docs/catalog.md)
@@ -42,30 +40,32 @@ Interrupted resize geometry now retains size velocity independently per axis;
 width and height comparisons are published. Shader deformation phase and the
 remaining edge cases below have separate acceptance criteria.
 
-- [ ] Add native orthogonal-retarget recordings and resolve minimum-size clamp and
-      mid-animation timing-reload discontinuities.
+- [x] Retain active resize timing across reloads; apply new timing to new axes.
+- [x] Publish native orthogonal-retarget and timing-reload comparisons.
+- [ ] Share constrained resize displacement with affected neighbors at the minimum
+      size, including simultaneous resizes and source removal.
 - [ ] Retain resize shader state through retargeting and investigate closing
       continuity; distinguish geometry from texture/deformation continuity.
 - [ ] Resolve native device-disconnection and stale-output failures, retaining
       the unmodified pinned-Niri baseline comparison (Epic 4).
 - [ ] Collect physical capture/presentation and another GPU result before adding
       performance-driven quality choices (Epic 6).
-- [ ] Publish the next prerelease with verified upgrade/Restore behavior and
-      accurate support limits; follow the [release process](docs/releasing.md).
+- [x] Verify the 0.18-to-0.19 installed upgrade, preserved user data and exact
+      Restore, including partial and all-Off profiles.
 
 ## Consistent action selection
 
 Goal: choose Preserve, a style or Off independently for each supported action.
-Move and swap share the compositor's movement action. Opening and closing
-currently require a style; the checklist below adds the missing choices.
+Move and swap share the compositor's movement action. Preserve inherits the
+configuration underneath NiriFX, including existing user or shell customizations.
 
-- [ ] Define Preserve / Style / Off for opening, closing, resize, movement and
+- [x] Define Preserve / Style / Off for opening, closing, resize, movement and
       pointer drag, including migration of existing profiles without changing behavior.
-- [ ] Represent the same choices in portable JSON, the CLI and Studio, including
+- [x] Represent the same choices in portable JSON, the CLI and Studio, including
       previews, shared styles, per-action controls and Undo.
-- [ ] Carry the choices through stock/native exports and supported shell adapters,
+- [x] Carry the choices through stock/native exports and supported shell adapters,
       preserving unrelated settings and reporting unavailable compositor features.
-- [ ] Verify reviewed Apply and exact Restore for partial profiles and all-off
+- [x] Verify reviewed Apply and exact Restore for partial profiles and all-off
       profiles, with examples and complete workflow coverage.
 
 ## Faster feedback for contributors
@@ -75,11 +75,12 @@ downloads. Documentation-only changes skip rendering; renderer, shared-contract,
 release and unknown changes retain the full suite. Full renderer runs still have
 expensive software-WebGL matrices.
 
-- [ ] Record compile, draw and workflow timings for each expensive matrix.
-- [ ] Split independent rendering matrices across isolated CI jobs, with one
+- [x] Record rendering-matrix and editor/save-stage timings.
+- [x] Split independent rendering matrices across isolated CI jobs, with one
       required aggregate check that rejects missing or failed results.
-- [ ] Compare elapsed time and failure diagnostics on the same workload; retain
-      endpoint, intermediate-frame, export-parity and save-flow coverage.
+- [x] Compare the same workload locally, retaining endpoint, intermediate-frame,
+      export-parity and save-flow coverage.
+- [ ] Measure hosted runner elapsed time and inspect failed-shard diagnostics.
 
 ## Stable 1.0 acceptance
 
@@ -143,7 +144,10 @@ Goal: retain visual direction and state when actions overlap.
 - [x] Expand coverage to move/resize/close combinations and vertical layout changes.
 - [ ] Fix discontinuities demonstrated by those scenarios and add regressions.
 - [x] Preserve per-axis size velocity during tested interrupted resize transitions.
-- [ ] Resolve minimum-size clamp, timing-reload and retained shader-phase gaps.
+- [x] Retain active-axis timing through configuration reloads and reject invalid sizes.
+- [ ] Coordinate minimum-size clamping across neighboring windows.
+- [ ] Retain resize textures, deformation phase and capture-target state through
+      retargets and closing, with a separate content-update clock.
 - [x] Test floating/tiled changes with resize/open/close overlap fixtures.
 - [ ] Test physical mixed outputs and output removal.
 - [ ] Investigate acceleration continuity and shared swap transactions.

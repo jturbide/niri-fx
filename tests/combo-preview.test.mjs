@@ -336,3 +336,43 @@ test("a completion callback can start a new preview without an old frame being q
   h.frames.get(0)(1000 + plan.totalMs + 1000);
   assert.equal(h.frames.size, 2);
 });
+
+test("Preserve and Off need no fallback effect and keep distinct visible endpoints", () => {
+  const { controller: c } = harness();
+  for (const value of [null, "off"]) {
+    const document = {
+      kind: "profile",
+      schema: 2,
+      name: "No custom shaders",
+      actions: { open: value, close: value, resize: value, movement: value },
+    };
+    const plan = c.plan(document, { holdMs: 100 });
+    assert(plan.stages.every((stage) => stage.mode === "idle" && stage.effect === null));
+    assert.equal(c.sample(plan, 0).visible, true);
+    assert.equal(c.sample(plan, plan.totalMs).visible, value === null);
+    assert.match(
+      c.sample(plan, 0).support,
+      value === null ? /desktop.*context/ : /animation disabled/,
+    );
+    assert.deepEqual(plain(plan.document), document);
+    if (value === null)
+      assert.deepEqual(plain(plan.stages.map((stage) => stage.action)), ["open", "close"]);
+    else {
+      const grow = plan.stages.find((stage) => stage.direction === "grow");
+      assert.deepEqual(plain(c.sample(plan, grow.startMs).size), [800, 440]);
+      const right = plan.stages.find((stage) => stage.direction === "right");
+      assert.deepEqual(plain(c.sample(plan, right.startMs).offset), [160, 0]);
+    }
+  }
+  const pointerOnly = {
+    kind: "profile",
+    schema: 2,
+    name: "Pointer only",
+    actions: { open: null, close: null, resize: null, movement: null },
+    pointer: { strength: 0.9, damping: 50, frequency: 6 },
+  };
+  const plan = c.plan(pointerOnly),
+    pointer = plan.stages.find((stage) => stage.action === "pointer");
+  assert.equal(c.sample(plan, pointer.startMs + 250).mode, "pointer");
+  assert(c.sample(plan, pointer.startMs + 250).pointer.deformation.some((value) => value !== 0));
+});

@@ -240,6 +240,42 @@ def exercise(session, recording):
         ]
         assert config.read_bytes() == original and not include.exists()
 
+        # No shader is required for Preserve/Off; resize Off still needs consent.
+        quiet = root / "home/Quiet actions.json"
+        for value in (None, "off"):
+            quiet.write_text(
+                json.dumps(
+                    {
+                        "kind": "profile",
+                        "schema": 2,
+                        "name": "Quiet actions",
+                        "actions": dict.fromkeys(("open", "close", "resize", "movement"), value),
+                        "pointer": {"strength": 0, "damping": 50, "frequency": 6},
+                    }
+                )
+            )
+            data = action("loadUrl", quiet.as_uri())
+            assert data["changesResize"] == (value == "off")
+            assert all(
+                text == ("Off" if value == "off" else "Preserve · desktop / shell")
+                for text in data["descriptions"].values()
+            )
+            assert next(row for row in data["items"] if row["id"] == "custom")["families"] == []
+            data = action("review")
+            assert data["review"] and data["canApply"] == (value is None)
+            if value == "off":
+                action("apply")
+                assert config.read_bytes() == original and not include.exists()
+                action("resize", "true")
+            action("apply")
+            settled(lambda d: bool(d["undo"]))
+            assert include.read_text().endswith(render_kdl(parse_document(load_document(quiet))[2]))
+            assert "window-movement" not in include.read_text()
+            assert "pointer-wobble" not in include.read_text()
+            action("undo")
+            settled(lambda d: not d["undo"])
+            assert config.read_bytes() == original and not include.exists()
+
         # Load actual public profiles via a percent-encoded file URL.
         document = root / "home/Style with spaces.json"
         shutil.copyfile(ROOT / "examples/profiles/elastic-resize.json", document)

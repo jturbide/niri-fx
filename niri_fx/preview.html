@@ -136,7 +136,8 @@
       </div>
       <small id="pointer-export-note" hidden
         >Stock config exports omit pointer drag and experimental movement. JSON preserves both; the
-        experimental export requires the matching compositor extensions.</small
+        experimental export requires rebuilt compositor extensions with action-preservation
+        support.</small
       >
       <label id="share-result" hidden
         >Preview link<input id="share-url" type="text" readonly
@@ -165,22 +166,29 @@
       <h2>Build your combo</h2>
       <label for="combo-mode">Style choice</label>
       <select id="combo-mode">
-        <option value="same">Same style for each enabled action</option>
+        <option value="same">Same style for each NiriFX Style action</option>
         <option value="mixed">Different styles per action</option>
       </select>
       <label for="combo-same">Shared style</label>
       <select id="combo-same"></select>
       <div id="combo-actions"></div>
       <small
-        >Existing resize settings are preserved unless you choose a style. Move and swap share one
-        movement effect.</small
+        >Preserve keeps the underlying desktop or shell configuration. NiriFX Style uses your
+        selected effect. Off disables the action animation. Move and swap share one movement
+        effect.</small
       >
       <small id="movement-availability"></small>
       <section id="pointer-settings" aria-label="Pointer drag settings">
-        <label for="combo-pointer">Pointer drag (optional)</label>
+        <label for="combo-pointer-mode">Pointer drag</label>
+        <select id="combo-pointer-mode">
+          <option value="preserve">Preserve</option>
+          <option value="style">NiriFX Style</option>
+          <option value="off">Off</option>
+        </select>
+        <label for="combo-pointer">Pointer style</label>
         <select id="combo-pointer">
-          <option value="">Use desktop settings</option>
-          <option value="disabled">Disabled</option>
+          <option value="" hidden>Choose a style</option>
+          <option value="disabled" hidden>Off</option>
         </select>
         <small id="pointer-description"></small>
         <button id="try-pointer" type="button" aria-pressed="false" disabled>
@@ -270,10 +278,14 @@
             <option value="resize">Resize</option>
             <option value="movement">Movement (experimental)</option>
           </select>
-          <label id="action-enable-label" hidden
-            ><input id="action-enabled" type="checkbox" />
-            <span id="action-enable-text">Enable resize effect</span></label
-          >
+          <label for="action-mode">Action behavior</label>
+          <select id="action-mode">
+            <option value="preserve">Preserve</option>
+            <option value="style">NiriFX Style</option>
+            <option value="off">Off</option>
+          </select>
+          <small id="action-mode-note"></small>
+
           <small id="action-companion-note" hidden></small>
           <small
             >Each action keeps its own settings. Disabled resize leaves your existing Niri resize

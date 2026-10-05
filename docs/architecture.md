@@ -67,7 +67,9 @@ both validators and those cases together.
 
 ### Portable pointer settings
 
-A schema 1 profile keeps four shader actions: open, close, resize and movement.
+A schema 2 profile keeps four shader actions: open, close, resize and movement.
+Each stores an effect, `null` (Preserve), or `"off"`. Schema 1 imports migrate
+without changing action behavior; serialization emits schema 2.
 Optional `motion` and `pointer` objects live beside `actions`. The pointer object
 requires strength, damping and frequency. Omission or null canonicalizes to no
 override; strength zero remains an explicit disabled override. The Python document
@@ -78,7 +80,11 @@ still requires integer controls. Shared fixtures cover both acceptance and rejec
 `animation_types(..., pointer=True)` and `render_kdl(..., pointer=True)` require
 an explicit profile choice. Stock calls omit the node even for strength zero.
 The browser uses equivalent options. Pointer and timed movement are composed into
-one `window-movement` block; desktop springs retain their existing separate blocks.
+one `window-movement` block. Native contract 2 uses `preserve-movement` or
+`preserve-pointer` when only one sibling is exported, because upstream config
+merging replaces the whole animation node. The merge consumes these flags; timed
+movement Off leaves an explicitly configured pointer spring available. Global
+animation Off disables both. Desktop springs retain their separate blocks.
 Pointer remains profile metadata rather than a fifth shader slot. Its live
 renderer belongs to the optional compositor extension; Studio previews that
 renderer separately on its synthetic window texture.

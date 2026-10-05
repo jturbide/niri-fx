@@ -60,9 +60,13 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   function selectedSaved() {
     return Object.entries(managed).find(([, entry]) => sameDocument(entry.document, getDocument()));
   }
+  const isStyle = (value) => value !== null && typeof value === "object";
+  const actionMode = (value) => (isStyle(value) ? "style" : value === "off" ? "off" : "preserve");
+  const remembered = {};
+  let rememberedPointer = null;
   const normalized = (effect) => ({ ...effect, resize: false });
   const equal = (a, b) =>
-    !!a && !!b && Object.keys(catalog.defaults).every((key) => a[key] === b[key]);
+    isStyle(a) && isStyle(b) && Object.keys(catalog.defaults).every((key) => a[key] === b[key]);
   const actionEffects = (doc) =>
     doc.actions || {
       open: normalized(doc.effect),
@@ -89,44 +93,66 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       select.append(node);
     };
     if (!select.options.length) {
-      option(
-        "",
-        ["resize", "movement"].includes(action) ? "Use shell defaults" : "Custom settings",
-      );
+      option("", "Choose a style");
       for (const [id, doc] of Object.entries(styles))
         if (["open", "close"].includes(action) || catalog.families[doc.effect.family][action])
           option(id, doc.name);
     }
     select.querySelector('[value="custom"]')?.remove();
     const match = Object.keys(styles).find((id) => equal(normalized(styles[id].effect), effect));
-    if (effect && !match) {
+    if (isStyle(effect) && !match) {
       const combo = Object.values(catalog.profiles).find((doc) =>
         equal(doc.actions[action], effect),
       );
       option("custom", combo ? combo.name + " · " + actionNames[action] : "Custom settings");
     }
-    select.value = match || (effect ? "custom" : "");
+    select.value = match || (isStyle(effect) ? "custom" : "");
   }
   for (const [action, label] of Object.entries(actionNames)) {
     const row = document.createElement("div");
     row.className = "combo-row";
     const caption = document.createElement("label");
-    caption.htmlFor = "combo-" + action;
-    caption.textContent = label + (["resize", "movement"].includes(action) ? " (optional)" : "");
+    caption.htmlFor = "combo-" + action + "-mode";
+    caption.textContent = label;
+    const mode = document.createElement("select");
+    mode.id = "combo-" + action + "-mode";
+    mode.setAttribute("aria-label", label + " behavior");
+    for (const [value, text] of [
+      ["preserve", "Preserve"],
+      ["style", "NiriFX Style"],
+      ["off", "Off"],
+    ]) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = text;
+      mode.append(option);
+    }
+    mode.onchange = () => {
+      const doc = profile();
+      doc.actions[action] =
+        mode.value === "style"
+          ? { ...(remembered[action] || catalog.presets.balanced), resize: false }
+          : mode.value === "off"
+            ? "off"
+            : null;
+      select(doc, action);
+    };
     const picker = document.createElement("select");
     picker.id = "combo-" + action;
+    picker.setAttribute("aria-label", label + " style");
     const tune = document.createElement("button");
+    tune.id = "combo-" + action + "-tune";
     tune.textContent = "Tune";
     tune.setAttribute("aria-label", "Customize " + label);
     tune.onclick = () => edit(action);
     picker.onchange = () => {
       const doc = profile(),
         id = picker.value;
-      if (id === "custom" || (!id && ["open", "close"].includes(action))) return;
+      if (id === "custom") return;
       doc.actions[action] = id ? normalized(styles[id].effect) : null;
       select(doc, action);
     };
-    row.append(caption, picker, tune);
+    row.append(caption, mode, picker, tune);
     element("combo-actions").append(row);
   }
   // Pointer drag has its own native spring contract. It is profile metadata,
@@ -153,6 +179,13 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     );
   function syncPointer(doc) {
     const settings = doc.pointer;
+    if (settings?.strength > 0) rememberedPointer = { ...settings };
+    element("combo-pointer-mode").value = !settings
+      ? "preserve"
+      : settings.strength === 0
+        ? "off"
+        : "style";
+    element("combo-pointer").disabled = !settings || settings.strength === 0;
     const match = settings && pointerMatch(settings);
     element("combo-pointer").value = !settings
       ? ""
@@ -160,7 +193,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
         ? "disabled"
         : match?.[0] || "custom";
     element("pointer-description").textContent = !settings
-      ? "Keep the desktop's current pointer behavior."
+      ? "Preserve the underlying desktop or shell pointer configuration."
       : settings.strength === 0
         ? "Explicitly disable pointer deformation when these settings are applied."
         : match
@@ -171,12 +204,12 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       input.min = catalog.pointer_limits[key][0];
       input.max = catalog.pointer_limits[key][1];
       input.value = (settings || catalog.pointer_defaults)[key];
-      input.disabled = !settings;
+      input.disabled = !settings || settings.strength === 0;
     }
     const summary = !settings
-      ? "desktop settings"
+      ? "Preserve"
       : settings.strength === 0
-        ? "disabled"
+        ? "Off"
         : match?.[1].name || "custom";
     element("editor-pointer-summary").textContent =
       "Pointer drag: " + summary + ". Try it from the Library or Preview combo.";
@@ -190,6 +223,17 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       settings?.strength === 0 ? "Apply pointer drag disabled" : "Apply experimental pointer drag";
     return summary;
   }
+  element("combo-pointer-mode").onchange = () => {
+    const doc = profile(),
+      mode = element("combo-pointer-mode").value;
+    if (mode === "preserve") delete doc.pointer;
+    else
+      doc.pointer =
+        mode === "off"
+          ? { ...(doc.pointer || rememberedPointer || catalog.pointer_defaults), strength: 0 }
+          : { ...(rememberedPointer || catalog.pointer_defaults) };
+    select(core.normalizePreset(doc), "open");
+  };
   element("combo-pointer").onchange = () => {
     const doc = profile(),
       id = element("combo-pointer").value;
@@ -219,7 +263,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   element("edit-pointer").onclick = () => {
     view(false);
     element("pointer-settings").scrollIntoView({ block: "nearest" });
-    element("combo-pointer").focus();
+    element(element("combo-pointer").disabled ? "combo-pointer-mode" : "combo-pointer").focus();
   };
   for (const [id, collection] of Object.entries(catalog.collections)) {
     const option = document.createElement("option");
@@ -237,7 +281,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
             ? { ...builtins, ...customs }
             : builtins;
     const list = Object.entries(entries).filter(([id, doc]) => {
-      const effects = Object.values(actionEffects(doc)).filter(Boolean),
+      const effects = Object.values(actionEffects(doc)).filter(isStyle),
         text = [doc.name, id, ...effects.map((effect) => effect.family)].join(" ").toLowerCase();
       if (search && !text.includes(search)) return false;
       if (search && group === "recommended") return true;
@@ -265,8 +309,8 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     if (group === "all")
       list.sort(
         ([, a], [, b]) =>
-          Number(actionEffects(b).open.family === "fragments") -
-          Number(actionEffects(a).open.family === "fragments"),
+          Number(actionEffects(b).open?.family === "fragments") -
+          Number(actionEffects(a).open?.family === "fragments"),
       );
     element("library-results").replaceChildren();
     element("library-empty").hidden = list.length > 0;
@@ -284,7 +328,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       const detail = document.createElement("small"),
         a = actionEffects(doc);
       detail.textContent = doc.actions
-        ? `${title(a.open.family)} → ${title(a.close.family)} combo`
+        ? `${isStyle(a.open) ? title(a.open.family) : title(actionMode(a.open))} → ${isStyle(a.close) ? title(a.close.family) : title(actionMode(a.close))} combo`
         : title(doc.effect.family);
       if (Object.hasOwn(catalog.recommended_profiles, id))
         detail.textContent += " · " + catalog.recommended_profiles[id];
@@ -327,19 +371,22 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   function sameStyle() {
     const doc = profile(),
       chosen = element("combo-same").value,
-      effect = Object.hasOwn(styles, chosen) ? normalized(styles[chosen].effect) : doc.actions.open;
+      effect = Object.hasOwn(styles, chosen)
+        ? normalized(styles[chosen].effect)
+        : Object.values(doc.actions).find(isStyle) || normalized(catalog.presets.balanced);
     const unsupported = [];
     for (const action of Object.keys(actionNames)) {
-      if (["open", "close"].includes(action)) doc.actions[action] = { ...effect };
-      else if (doc.actions[action]) {
-        if (!catalog.families[effect.family][action]) unsupported.push(actionNames[action]);
-        doc.actions[action] = catalog.families[effect.family][action] ? { ...effect } : null;
+      if (!isStyle(doc.actions[action])) continue;
+      if (["resize", "movement"].includes(action) && !catalog.families[effect.family][action]) {
+        unsupported.push(actionNames[action]);
+        continue;
       }
+      doc.actions[action] = { ...effect };
     }
     select(doc, "open");
     if (unsupported.length)
       element("status").textContent =
-        `${title(effect.family)} does not support ${unsupported.join(" and ")}. Those actions use shell defaults.`;
+        `${title(effect.family)} does not support ${unsupported.join(" and ")}. Their selected styles were kept.`;
   }
   element("combo-same").onchange = sameStyle;
   element("combo-mode").onchange = () => {
@@ -365,9 +412,9 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     invalidate();
     const doc = getDocument(),
       actions = actionEffects(doc),
-      same = Object.values(actions)
-        .filter(Boolean)
-        .every((effect) => equal(actions.open, effect));
+      selectedStyles = Object.values(actions).filter(isStyle),
+      sharedStyle = selectedStyles[0] || remembered.open || normalized(catalog.presets.balanced),
+      same = selectedStyles.every((effect) => equal(sharedStyle, effect));
     element("selection-name").textContent = doc.name;
     element("selection-actions").textContent =
       Object.entries(actionNames)
@@ -375,23 +422,31 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
           ([action, label]) =>
             label +
             ": " +
-            (actions[action]
-              ? title(
+            (isStyle(actions[action])
+              ? "NiriFX Style · " +
+                title(
                   Object.keys(styles).find((id) =>
                     equal(normalized(styles[id].effect), actions[action]),
                   ) || actions[action].family,
                 )
-              : "shell default"),
+              : title(actionMode(actions[action]))),
         )
         .join(" · ") +
       " · Pointer drag: " +
       syncPointer(doc);
     element("combo-name").value = doc.name;
     element("combo-mode").value = same ? "same" : "mixed";
-    selectOptions(element("combo-same"), "open", actions.open);
+    selectOptions(element("combo-same"), "open", sharedStyle);
     element("combo-same").disabled = !same;
-    for (const action of Object.keys(actionNames))
-      selectOptions(element("combo-" + action), action, actions[action]);
+    for (const action of Object.keys(actionNames)) {
+      const value = actions[action],
+        style = isStyle(value);
+      if (style) remembered[action] = { ...value };
+      element("combo-" + action + "-mode").value = actionMode(value);
+      selectOptions(element("combo-" + action), action, style ? value : remembered[action]);
+      element("combo-" + action).disabled = !style;
+      element("combo-" + action + "-tune").disabled = !style;
+    }
     cards();
   }
   async function post(path, body) {
@@ -653,10 +708,10 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     });
   element("movement-availability").textContent =
     catalog.connection?.target === "standalone"
-      ? "Movement can be designed here. Applying it requires an explicitly selected experimental compositor and verified running support."
+      ? "Movement can be designed here. Applying it requires the rebuilt experimental compositor with action-preservation support and verified running support."
       : catalog.connection
-        ? "Movement can be designed and saved here. This integration applies opening, closing and enabled resize only."
-        : "Preview movement and save it in JSON. Stock Niri config exports include opening, closing and enabled resize only.";
+        ? "Movement can be designed and saved here. This integration applies selected opening, closing and resize overrides only."
+        : "Preview movement and save it in JSON. Stock Niri config exports include selected opening, closing and resize overrides only.";
   element("activation-controls").hidden = !catalog.connection;
   element("activate-movement-label").hidden = catalog.connection?.target !== "standalone";
   element("activate-movement").onchange = invalidate;

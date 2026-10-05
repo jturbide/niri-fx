@@ -145,11 +145,76 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx export-pack --output /tmp/nirifx-pack --state /tmp/nirifx-pack-state --apply
           /tmp/niri-fx-package/bin/niri-fx restore --state /tmp/nirifx-pack-state --apply
 
-  browser:
+  browser-tests:
     needs: changes
-    if: always()
+    if: needs.changes.outputs.renderer == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+      - name: Test browser lifecycle, gallery and Studio workflows
+        env:
+          CHROME_BIN: google-chrome
+        run: npm run test:browser
+
+  browser-render:
+    needs: changes
+    if: needs.changes.outputs.renderer == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: shapes-narrow
+            suite: shapes
+            aspect: "0.25"
+          - name: shapes-square
+            suite: shapes
+            aspect: "1"
+          - name: shapes-wide
+            suite: shapes
+            aspect: "4"
+          - name: motion
+            suite: motion
+            aspect: ""
+          - name: studio
+            suite: studio
+            aspect: ""
+    name: browser-render (${{ matrix.name }})
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22"
+      - name: Test isolated rendering suite
+        env:
+          CHROME_BIN: google-chrome
+          RENDER_SUITE: ${{ matrix.suite }}
+          SHAPE_ASPECT: ${{ matrix.aspect }}
+        run: |
+          node --version
+          "$CHROME_BIN" --version
+          render_command=(python scripts/studio-e2e.py --suite "$RENDER_SUITE")
+          if [[ -n "$SHAPE_ASPECT" ]]; then
+            render_command+=(--shape-aspect "$SHAPE_ASPECT")
+          fi
+          "${render_command[@]}"
+
+  browser:
+    needs: [changes, browser-tests, browser-render]
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Require successful check selection
         env:
@@ -161,25 +226,20 @@ jobs:
           [[ "$FULL_CHECKS" == true || "$FULL_CHECKS" == false ]]
           [[ "$RENDER_CHECKS" == true || "$RENDER_CHECKS" == false ]]
           [[ "$FULL_CHECKS" == true || "$RENDER_CHECKS" == false ]]
-      - if: needs.changes.outputs.renderer == 'true'
-        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
-      - if: needs.changes.outputs.renderer == 'true'
-        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
-        with:
-          python-version: "3.14"
-      - if: needs.changes.outputs.renderer == 'true'
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
-        with:
-          node-version: "22"
-      - name: Test Studio rendering, import and real save flow
-        if: needs.changes.outputs.renderer == 'true'
+      - name: Require every selected browser suite
         env:
-          CHROME_BIN: google-chrome
+          RENDER_CHECKS: ${{ needs.changes.outputs.renderer }}
+          BROWSER_TESTS_RESULT: ${{ needs.browser-tests.result }}
+          BROWSER_RENDER_RESULT: ${{ needs.browser-render.result }}
         run: |
-          node --version
-          "$CHROME_BIN" --version
-          npm run test:browser
-          python scripts/studio-e2e.py
+          if [[ "$RENDER_CHECKS" == true ]]; then
+            test "$BROWSER_TESTS_RESULT" = success
+            test "$BROWSER_RENDER_RESULT" = success
+          else
+            test "$RENDER_CHECKS" = false
+            test "$BROWSER_TESTS_RESULT" = skipped
+            test "$BROWSER_RENDER_RESULT" = skipped
+          fi
       - name: Explain skipped browser checks
         if: needs.changes.outputs.renderer == 'false'
         run: echo "Only known documentation, native or agent paths changed; portable rendering and Studio E2E were not needed. See check selection for retained checks." >> "$GITHUB_STEP_SUMMARY"

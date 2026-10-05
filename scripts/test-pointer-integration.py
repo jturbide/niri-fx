@@ -134,10 +134,35 @@ def main():
                             replace(profile, pointer=replace(profile.pointer, strength=0)),
                             False,
                         ),
+                        (
+                            "movement-off-pointer-style",
+                            replace(profile, movement="off"),
+                            True,
+                        ),
+                        (
+                            "movement-style-pointer-off",
+                            replace(
+                                profile,
+                                movement=PRESETS["momentum-glide"],
+                                pointer=replace(profile.pointer, strength=0),
+                            ),
+                            True,
+                        ),
+                        (
+                            "all-actions-off",
+                            Profile(
+                                open="off",
+                                close="off",
+                                resize="off",
+                                movement="off",
+                                pointer=replace(profile.pointer, strength=0),
+                            ),
+                            True,
+                        ),
                     ):
                         selection = {
                             "document": selected.document(case),
-                            "allow_resize": False,
+                            "allow_resize": selected.resize is not None,
                             "allow_movement": move,
                             "allow_pointer": True,
                         }
@@ -154,10 +179,11 @@ def main():
                         assert capabilities()["enabled"] is (selected.pointer.strength > 0)
                         exported = (session.config.parent / "nirifx/animations.kdl").read_text()
                         assert exported.count("window-movement {") == 1
-                        assert "window-resize" not in exported
-                        assert (
-                            "custom-shader" in exported.split("window-movement {", 1)[1]
-                        ) is move
+                        assert ("window-resize" in exported) is (selected.resize is not None)
+                        assert ("custom-shader" in exported.split("window-movement {", 1)[1]) is (
+                            move and selected.movement != "off"
+                        )
+                        assert capabilities()["pointer_wobble"] == 2
                         doctor()
                         post("/restore", {})
                         wait_for(lambda: not capabilities()["configured"], "pointer restore reload")

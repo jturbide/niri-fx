@@ -304,6 +304,9 @@ h2 {
     gap: 6px;
     align-items: end;
 }
+.combo-row select[id$="-mode"] {
+    grid-column: 1 / -1;
+}
 .combo-row label {
     grid-column: 1 / -1;
 }
