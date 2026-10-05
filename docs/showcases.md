@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **214 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **229 GIFs**, including all **80 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -154,6 +154,19 @@ The resize clips render stock Niri-compatible shaders. Choose a profile from the
 | --- | --- | --- |
 | ![Fragment Wake](gifs/preset-fragment-wake.gif) | ![Ribbon Transfer](gifs/preset-ribbon-transfer.gif) | ![Momentum Glide](gifs/preset-momentum-glide.gif) |
 | ![Native triangle wake swap](gifs/native-swap-fragment-wake.gif) | ![Native ribbon swap](gifs/native-swap-ribbon-transfer.gif) | ![Native elastic glide](gifs/native-swap-momentum-glide.gif) |
+
+For faster rearrangement, the **Movement and swaps** collection adds five styles
+at their configured 620–720 ms timing. These are timed effects, separate from
+continuous pointer dragging. The native column recordings use the shared Move
+renderer; independent Swap selections apply to explicit window-swap commands.
+
+| I want… | Native swap | Shader preview |
+| --- | --- | --- |
+| Strips that detach in stages | [Ribbon Cascade](gifs/native-swap-ribbon-cascade.gif) | [Movement](gifs/movement-ribbon-cascade.gif) |
+| A springy whole window | [Spring Rebound](gifs/native-swap-spring-rebound.gif) | [Movement](gifs/movement-spring-rebound.gif) |
+| Coarse trailing pixels | [Pixel Relay](gifs/native-swap-pixel-relay.gif) | [Movement](gifs/movement-pixel-relay.gif) |
+| Radial texture waves | [Ripple Transit](gifs/native-swap-ripple-transit.gif) | [Movement](gifs/movement-ripple-transit.gif) |
+| A partial spiral and reconstruction | [Vortex Transit](gifs/native-swap-vortex-transit.gif) | [Movement](gifs/movement-vortex-transit.gif) |
 
 ![Consume, vertical reorder and expel](gifs/native-rearrangement.gif)
 

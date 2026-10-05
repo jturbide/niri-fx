@@ -50,7 +50,11 @@ const browser = await launchBrowser();
 const { rpc, evaluate, callFunction } = browser;
 const sample = () =>
   evaluate(
-    `(()=>{const canvas=byId('stage'),gl=canvas.getContext('webgl');const pixels=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);let alpha=0,x=0,y=0,occupied=0;for(let i=0;i<pixels.length;i+=4){const a=pixels[i+3];if(a){const px=(i/4)%canvas.width,py=canvas.height-1-Math.floor(i/4/canvas.width);alpha+=a;x+=px*a;y+=py*a;occupied++;}}return {occupied,alpha,cx:alpha?x/alpha:0,cy:alpha?y/alpha:0,error:gl.getError()};})()`,
+    `(()=>{const canvas=byId('stage'),gl=canvas.getContext('webgl');const pixels=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);let alpha=0,x=0,y=0,occupied=0,partial=0;for(let i=0;i<pixels.length;i+=4){const a=pixels[i+3];if(a){const px=(i/4)%canvas.width,py=canvas.height-1-Math.floor(i/4/canvas.width);alpha+=a;x+=px*a;y+=py*a;occupied++;if(a<255)partial++;}}return {occupied,partial,alpha,cx:alpha?x/alpha:0,cy:alpha?y/alpha:0,error:gl.getError()};})()`,
+  );
+const pixelHash = () =>
+  evaluate(
+    `(()=>{const g=byId('stage').getContext('webgl'),a=new Uint8Array(1000*760*4);g.readPixels(0,0,1000,760,g.RGBA,g.UNSIGNED_BYTE,a);let h=2166136261;for(const b of a)h=Math.imul(h^b,16777619);return h>>>0;})()`,
   );
 const setProgress = async (value) => {
   await evaluate(
@@ -59,6 +63,12 @@ const setProgress = async (value) => {
 };
 try {
   await browser.navigate(url, { width: 1380, height: 1120 });
+  if (options["save-test"])
+    assert.equal(
+      await evaluate("catalog.connection?.target"),
+      "inir",
+      "Save tests require the isolated iNiR fixture target",
+    );
   finishStage("browser-startup");
   if (["all", "shapes"].includes(options.suite)) {
     await checkShapes(evaluate, shapeAspect === undefined ? undefined : [Number(shapeAspect)]);
@@ -153,12 +163,31 @@ async function checkStudio() {
       expected[name],
       name + " export matches Python",
     );
+    const distortion = await evaluate(
+      "parameters.family==='distortion'?{mode:parameters.distortion_mode,fade:parameters.distortion_fade}:null",
+    );
     await setProgress(0);
     const start = await sample();
+    const intactHash = distortion ? await pixelHash() : null;
     assert.equal(start.occupied, 600 * 380, name + " reconstructs all pixels");
     await setProgress(0.45);
     const middle = await sample();
-    assert(middle.alpha > 0 && middle.alpha < start.alpha, name + " visible partial transition");
+    if (distortion) {
+      // Warping can expand occupied area before opacity starts fading. Require
+      // actual pixel changes, then verify translucency inside the configured fade.
+      assert(middle.alpha > 0, name + " remains visible while deforming");
+      assert.notEqual(await pixelHash(), intactHash, name + " visibly changes midpoint pixels");
+      // Shockwave disappears behind its travelling mask instead of this fade.
+      if (distortion.mode !== "shockwave") {
+        await setProgress((distortion.fade + 1) / 2);
+        const fading = await sample();
+        assert(fading.occupied > 0, name + " remains visible during its fade");
+        assert.equal(fading.partial, fading.occupied, name + " fades every visible pixel");
+        assert.equal(fading.error, 0);
+        await setProgress(0.45);
+      }
+    } else
+      assert(middle.alpha > 0 && middle.alpha < start.alpha, name + " visible partial transition");
     assert.equal(middle.error, 0);
     if (
       [
@@ -485,10 +514,6 @@ async function checkStudio() {
   assert.equal(await evaluate("byId('slice-controls').hidden"), true);
   finishStage("imports");
   // New controls must visibly affect pixels, round-trip exactly and remain deterministic.
-  const pixelHash = () =>
-    evaluate(
-      `(()=>{const g=byId('stage').getContext('webgl'),a=new Uint8Array(1000*760*4);g.readPixels(0,0,1000,760,g.RGBA,g.UNSIGNED_BYTE,a);let h=2166136261;for(const b of a)h=Math.imul(h^b,16777619);return h>>>0;})()`,
-    );
   for (const preset of ["slide-apart", "balanced"]) {
     await evaluate(
       `byId('preset').value=${JSON.stringify(preset)};byId('preset').dispatchEvent(new Event('change'))`,

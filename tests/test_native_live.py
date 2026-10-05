@@ -12,7 +12,7 @@ from unittest.mock import patch
 
 import test_native_customization
 
-from niri_fx import capabilities, native_live, native_runtime, native_session, setup
+from niri_fx import capabilities, native_build, native_live, native_runtime, native_session, setup
 from niri_fx.profiles import Profile
 
 
@@ -121,7 +121,12 @@ class NativeLiveTests(unittest.TestCase):
             ),
             *(
                 (capabilities, name, {"return_value": {"activation_ready": True}})
-                for name in ("movement_capability", "pointer_capability", "fragment_capability")
+                for name in (
+                    "movement_capability",
+                    "pointer_capability",
+                    "fragment_capability",
+                    "swap_capability",
+                )
             ),
         ):
             mocker = patch.object(owner, name, **options)
@@ -172,6 +177,7 @@ class NativeLiveTests(unittest.TestCase):
             capabilities.movement_capability,
             capabilities.pointer_capability,
             capabilities.fragment_capability,
+            capabilities.swap_capability,
         ):
             probe.assert_called_once_with(self.startup["binary"], socket_path=self.socket)
 
@@ -191,6 +197,42 @@ class NativeLiveTests(unittest.TestCase):
         self.assertNotEqual(context["identity"], later["identity"])
         self.assertEqual(self.read_receipt()["status"], "applied")
         self.assertEqual((self.root / native_live.RECEIPT).stat().st_mode & 0o777, 0o600)
+
+    def test_retained_three_patch_session_applies_without_probing_swap(self):
+        fixture = self.fixture.fixture
+        fixture.record.pop("swap_patch_sha256")
+        block = fixture.record["native_build"]
+        block["inputs"]["patches"].pop()
+        block["build_id"] = native_build.fingerprint(block["inputs"])
+        fixture.save_record()
+        self.base = fixture.stage()
+        self.startup = native_session.inspect_bundle(self.root, self.base)
+        self.assertFalse(self.startup["swap_supported"])
+        self.plan = self.fixture.plan(self.base, Profile(open="off"))
+        self.fixture.apply(self.plan)
+        self.target = self.plan["selection"]["bundle_id"]
+        native_runtime._arguments.return_value = (
+            self.startup["binary"],
+            "--session",
+            "--config",
+            self.startup["config"],
+        )
+        with ipc(self.socket):
+            before = self.context()
+            self.assertTrue(before["ready"])
+            result = self.apply(before["identity"])
+            after = self.context()
+        self.assertEqual(result["status"], "applied")
+        self.assertTrue(after["ready"])
+        self.assertEqual(after["loaded_bundle"], self.target)
+        self.assertEqual(after["identity"]["pid"], before["identity"]["pid"])
+        capabilities.swap_capability.assert_not_called()
+        for probe in (
+            capabilities.movement_capability,
+            capabilities.pointer_capability,
+            capabilities.fragment_capability,
+        ):
+            self.assertTrue(probe.called)
 
     def test_initial_success_is_not_a_confirmation(self):
         with (

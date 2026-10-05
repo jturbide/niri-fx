@@ -23,12 +23,14 @@ STACKS = {
         "niri-movement.patch",
         "niri-pointer-wobble.patch",
         "niri-fragment-drag.patch",
+        "niri-swap.patch",
     ),
 }
 PATCH_FIELDS = {
     "niri-movement.patch": "patch_sha256",
     "niri-pointer-wobble.patch": "pointer_patch_sha256",
     "niri-fragment-drag.patch": "fragment_patch_sha256",
+    "niri-swap.patch": "swap_patch_sha256",
 }
 DESKTOP_FEATURES = frozenset({"dbus", "pipewire", "systemd", "xdp-gnome-screencast"})
 
@@ -76,13 +78,36 @@ def native_host(rustc, verbose):
     return hosts[0]
 
 
+def patch_sequence(inputs):
+    """Validate recorded order, including retained builds from before swap support."""
+    variant = inputs.get("variant")
+    patches = inputs.get("patches")
+    if (
+        not isinstance(variant, str)
+        or variant not in STACKS
+        or not isinstance(patches, list)
+        or any(not isinstance(item, dict) or set(item) != {"file", "sha256"} for item in patches)
+        or any(not isinstance(item["file"], str) or not _sha(item["sha256"]) for item in patches)
+    ):
+        raise ValueError("Invalid recorded patch sequence")
+    names = tuple(item["file"] for item in patches)
+    accepted = {STACKS[variant]}
+    if variant == "fragment":
+        accepted.add(STACKS[variant][:-1])
+    if names not in accepted:
+        raise ValueError("Patch sequence does not match the recorded variant")
+    return names
+
+
 def metadata(manifest, *, variant, lock_sha256, target, features, rustc_verbose):
     """Additive evidence; callers retain all existing flat manifest fields."""
     inputs = {
         "variant": variant,
         "upstream_revision": manifest["revision"],
         "patches": [
-            {"file": name, "sha256": manifest[PATCH_FIELDS[name]]} for name in STACKS[variant]
+            {"file": name, "sha256": manifest[PATCH_FIELDS[name]]}
+            for name in STACKS[variant]
+            if name != "niri-swap.patch" or "swap_patch_sha256" in manifest
         ],
         "cargo_lock_sha256": lock_sha256,
         "profile": manifest["build_profile"],
@@ -208,13 +233,10 @@ def inspect(
         return fail("incompatible", "Unknown patch-stack variant.")
     result["variant"] = variant
     patches = inputs["patches"]
-    if (
-        not isinstance(patches, list)
-        or any(not isinstance(item, dict) or set(item) != {"file", "sha256"} for item in patches)
-        or [item["file"] for item in patches] != list(STACKS[variant])
-        or any(not _sha(item["sha256"]) for item in patches)
-    ):
-        return fail("incompatible", "Patch sequence does not match the recorded variant.")
+    try:
+        names = patch_sequence(inputs)
+    except ValueError as error:
+        return fail("incompatible", str(error) + ".")
     flags = inputs["cargo_flags"]
     features = inputs["enabled_features"]
     if (
@@ -257,7 +279,7 @@ def inspect(
     if any(manifest.get(key) != value for key, value in mirrored.items()):
         return fail("incompatible", "Legacy fields disagree with versioned build inputs.")
     if (manifest.get("unmodified") is True) != (variant == "unmodified") or any(
-        field in manifest and name not in STACKS[variant] for name, field in PATCH_FIELDS.items()
+        field in manifest and name not in names for name, field in PATCH_FIELDS.items()
     ):
         return fail("incompatible", "Legacy patch selection disagrees with the build variant.")
     if (

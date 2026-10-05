@@ -96,8 +96,11 @@ are developer regression controls, not separate consumer editions.
 - [ ] Version a portable session recipe that also carries continuous fragment
       controls, with import/export in local and online Studio. Current portable
       profiles retain the action styles; native response choices stay with the bundle.
-- [ ] Add independent move and swap choices once the compositor exposes reliable
-      action identity; until then label their shared setting explicitly.
+- [x] Verify independent Move and Swap choices through explicit compositor action
+      routing, portable profiles, Studio previews, reviewed Apply and old-build refusal.
+- [ ] Extend independent Swap to additional exchange gestures only when their
+      action boundaries can be identified reliably; keep ordinary dragging and
+      column reordering on Move in the meantime.
 - [ ] Verify physical login, shell startup, capture, input, suspend and rollback
       for the declared package targets before advertising desktop support.
 - [ ] Publish the installation/support matrix with exact known limits, without
@@ -187,7 +190,7 @@ before being advertised as supported downloads.
 ## Consistent action selection
 
 Goal: choose Preserve, a style or Off independently for each supported action.
-Move and swap share the compositor's movement action. Preserve inherits the
+Updated builds distinguish explicit left/right swaps from normal movement. Preserve inherits the
 configuration underneath NiriFX, including existing user or shell customizations.
 
 - [x] Define Preserve / Style / Off for opening, closing, resize, movement and
@@ -215,6 +218,11 @@ expensive software-WebGL matrices.
       export-parity and save-flow coverage.
 - [x] Measure hosted runner elapsed time with separate timings for each rendering job.
 - [ ] Inspect failed-shard diagnostics on a hosted rendering failure.
+- [ ] Harden browser startup diagnostics and cleanup: terminate owned helper
+      processes, distinguish process exit from open pipes, and retain the original
+      startup error when cleanup also fails.
+- [ ] Bind recording provenance to the loaded preview and reject source changes
+      during capture, so a clip cannot claim a later source revision.
 
 ## Stable 1.0 acceptance
 

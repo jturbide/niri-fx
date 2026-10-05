@@ -17,7 +17,7 @@ do not need iNiR installed.
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
 | NiriFX session, with any Niri-compatible shell | [Unified desktop build and managed login](native-session.md) | Includes movement, pointer wobble, continuous fragments and interruption improvements. Source-based installation is available; distribution packages and physical acceptance remain pending. |
-| Move/swap effects | NiriFX session | One shared movement setting with independent choices for other actions. Shell plugins cannot add this rendering hook to stock Niri. |
+| Move/swap effects | NiriFX session | Updated builds support separate Move and explicit left/right Swap styles. Older retained builds share Move. Shell plugins cannot add these rendering hooks to stock Niri. |
 | Pointer-driven wobble | NiriFX session | [Pointer controls](pointer-wobble.md), portable profiles and Studio. Live Apply requires a verified running renderer; managed next-login selection validates the retained build separately. |
 | Continuous fragments | NiriFX session | Gentle, Tear and Cascade presets for square fragments. Browser movement preview does not reproduce the continuous renderer; see [tested scope](fragment-drag.md). |
 

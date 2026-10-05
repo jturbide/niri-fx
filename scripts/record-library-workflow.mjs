@@ -18,7 +18,7 @@ try {
   const { evaluate, rpc } = browser;
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(
-    `const style=document.createElement('style');style.textContent='canvas{max-height:470px;min-height:0}';document.head.append(style);const banner=document.createElement('div');banner.id='recording-step';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#172434;color:#e4efff;font:600 19px system-ui;z-index:100';document.body.append(banner);seed=.43;`,
+    `const style=document.createElement('style');style.textContent='canvas{max-height:380px;min-height:0}aside{max-height:calc(100vh - 470px)}';document.head.append(style);const banner=document.createElement('div');banner.id='recording-step';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#172434;color:#e4efff;font:600 19px system-ui;z-index:100';document.body.append(banner);seed=.43;`,
   );
   let count = 0;
   async function frames(label, seconds = 1.5, animate = false) {

@@ -41,8 +41,7 @@ function createComboPreview({
       const effect = actions[action];
       if (effect === null || effect === "off") {
         const preserved = effect === null;
-        const label =
-          action === "movement" ? "Move / swap" : action[0].toUpperCase() + action.slice(1);
+        const label = action === "movement" ? "Move" : action[0].toUpperCase() + action.slice(1);
         const stage = {
           action,
           mode: "idle",
@@ -66,27 +65,30 @@ function createComboPreview({
         totalMs += stage.durationMs;
         return;
       }
-      const mode = ["resize", "movement"].includes(action) ? action : "effect",
+      const mode =
+          action === "swap"
+            ? "movement"
+            : ["resize", "movement"].includes(action)
+              ? action
+              : "effect",
         family = families[effect.family];
       if (!family || (mode !== "effect" && !family[mode]))
         throw new Error("This family does not support " + action + ".");
-      const durationMs = effect[action + "_ms"];
+      const durationMs = effect[(action === "swap" ? "movement" : action) + "_ms"];
       if (!Number.isFinite(durationMs) || durationMs <= 0)
         throw new Error("Invalid " + action + " preview duration.");
-      const label =
-        action === "movement"
-          ? "Experimental movement shader preview · " + direction
-          : action === "resize"
-            ? "Resize · " + direction
-            : action === "open"
-              ? "Opening"
-              : "Closing";
-      const support =
-        action === "movement"
-          ? "Experimental shader preview; stock Niri exports omit movement"
-          : action === "resize"
-            ? "Stock Niri resize"
-            : "Stock Niri open/close";
+      const label = ["movement", "swap"].includes(action)
+        ? (action === "swap" ? "Swap" : "Movement") + " shader preview · " + direction
+        : action === "resize"
+          ? "Resize · " + direction
+          : action === "open"
+            ? "Opening"
+            : "Closing";
+      const support = ["movement", "swap"].includes(action)
+        ? "NiriFX shader preview; stock Niri exports omit movement and swaps"
+        : action === "resize"
+          ? "Stock Niri resize"
+          : "Stock Niri open/close";
       const stage = {
         action,
         mode,
@@ -118,6 +120,10 @@ function createComboPreview({
     if (actions.movement) {
       add("movement", "right", [0, 0], [160, 0]);
       add("movement", "left", [160, 0], [0, 0]);
+    }
+    if (actions.swap) {
+      add("swap", "right", [0, 0], [160, 0]);
+      add("swap", "left", [160, 0], [0, 0]);
     }
     if (snapshot.kind === "profile" && snapshot.pointer?.strength > 0 && !reducedMotion) {
       if (typeof pointerDemo !== "function") throw new Error("Pointer preview is unavailable.");

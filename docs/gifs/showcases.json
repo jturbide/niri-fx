@@ -1916,6 +1916,71 @@
           "source": "examples/profiles/elastic-motion-resize.json"
         }
       ]
+    },
+    {
+      "name": "movement-ribbon-cascade",
+      "mode": "movement",
+      "title": "Ribbon Cascade movement shader",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "RIBBON CASCADE / MOVEMENT SHADER",
+          "preset": "ribbon-cascade",
+          "overrides": {}
+        }
+      ]
+    },
+    {
+      "name": "movement-spring-rebound",
+      "mode": "movement",
+      "title": "Spring Rebound movement shader",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "SPRING REBOUND / MOVEMENT SHADER",
+          "preset": "spring-rebound",
+          "overrides": {}
+        }
+      ]
+    },
+    {
+      "name": "movement-pixel-relay",
+      "mode": "movement",
+      "title": "Pixel Relay movement shader",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "PIXEL RELAY / MOVEMENT SHADER",
+          "preset": "pixel-relay",
+          "overrides": {}
+        }
+      ]
+    },
+    {
+      "name": "movement-ripple-transit",
+      "mode": "movement",
+      "title": "Ripple Transit movement shader",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "RIPPLE TRANSIT / MOVEMENT SHADER",
+          "preset": "ripple-transit",
+          "overrides": {}
+        }
+      ]
+    },
+    {
+      "name": "movement-vortex-transit",
+      "mode": "movement",
+      "title": "Vortex Transit movement shader",
+      "direction": "round",
+      "panels": [
+        {
+          "label": "VORTEX TRANSIT / MOVEMENT SHADER",
+          "preset": "vortex-transit",
+          "overrides": {}
+        }
+      ]
     }
   ]
 }

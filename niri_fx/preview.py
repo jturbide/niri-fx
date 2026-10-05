@@ -101,7 +101,7 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         effect = next(
             (
                 getattr(effect, action)
-                for action in ("open", "close", "resize", "movement")
+                for action in ("open", "close", "resize", "movement", "swap")
                 if isinstance(getattr(effect, action), Effect)
             ),
             Effect(),

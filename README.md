@@ -11,7 +11,7 @@
 **Explode windows into fragments. Slide them into ribbons. Make them wobble.**
 
 NiriFX brings customizable animations to the **niri Wayland compositor**.
-Pick a finished style from **75 presets**, **9 effect families** and **16 ready-made profiles**. For further
+Pick a finished style from **80 presets**, **9 effect families** and **16 ready-made profiles**. For further
 customization, tune it in Studio, online or on your desktop. Use different effects for opening and closing, from a quiet ripple
 to a full window explosion.
 
@@ -69,7 +69,9 @@ If several shells coexist, choose the target explicitly as shown in those guides
 
 For the full NiriFX session, follow [session setup](docs/native-session.md), then
 open `python3 -m niri_fx studio --target native`. Choose presets for each action
-and review **Select for next login**. Move and swap currently share one choice.
+and review **Apply to desktop** when the running build matches, or **Select for next login**.
+Updated NiriFX builds let you choose different Move and Swap styles. Swap targets
+explicit left/right window swaps; dragging and column reordering use Move.
 The [build and acceptance matrix](docs/native-compatibility.md) explains what is
 tested and what still needs physical desktop validation.
 
@@ -79,7 +81,7 @@ is required. [Terminal guide](docs/terminal.md).
 
 Browse by look with `python3 -m niri_fx list --collections --text`, then try
 `python3 -m niri_fx list --collection shapes --text`. The same
-[nine collections](docs/collections.md) appear in Studio and the gallery.
+[ten collections](docs/collections.md) appear in Studio and the gallery.
 
 For a direct connection to your Niri configuration, run
 `python3 -m niri_fx studio --target standalone`. Previewing changes no active
@@ -414,10 +416,10 @@ ready-made profiles.
 
 ## Make it yours
 
-Open `niri-fx studio`, choose **Open**, **Close**, **Resize** or **Move / swap**,
+Open `niri-fx studio`, choose **Open**, **Close**, **Resize**, **Move** or **Swap**,
 and click a style to see it play. Mix different styles or choose a complete look
 from **Combos**. Review and apply directly from Studio. In a matching NiriFX
-session, effects update immediately; **More options** and the editor hold detailed tuning.
+session, effects update immediately; **Customize your combo** and the editor hold detailed tuning.
 
 ![Choose effects and build a combo](docs/gifs/workflow-library.gif)
 

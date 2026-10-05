@@ -47,9 +47,9 @@ activate the environment with `source .venv/bin/activate`.
 3. Choose each action's mode: **Preserve** keeps the underlying desktop or shell
    configuration; **NiriFX Style** uses the preset you select; **Off** disables
    that action. For example, keep Fragment Flow for Open, set Close to Off, and
-   leave Resize, Move / swap and Pointer drag on Preserve.
+   leave Resize, Move, Swap and Pointer drag on Preserve.
 4. Optionally use **Save to My profiles** and give the combo a name. This keeps
-   an editable copy; it does not apply it. **Export JSON** makes a portable backup.
+   an editable copy; it does not apply it. **Download JSON** makes a portable backup.
 5. Press **Review & apply** and inspect the listed files. **Cancel** leaves them
    unchanged. **Apply these changes** applies the reviewed selection and keeps
    a restore snapshot.
@@ -62,7 +62,7 @@ Restore history. Restore reports a conflict if those files changed afterward.
 The [online gallery](https://jturbide.github.io/niri-fx/gallery/?collection=profiles)
 is also available before installation; it cannot apply desktop settings.
 
-Resize changes only when explicitly set to NiriFX Style or Off. Move / swap and
+Resize changes only when explicitly set to NiriFX Style or Off. Move, Swap and
 Pointer drag can be previewed and saved, but live changes require the matching
 NiriFX session and separate activation choices. Leave them on Preserve
 for this first stock-Niri setup. See [compatibility](compatibility.md).

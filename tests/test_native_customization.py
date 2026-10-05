@@ -79,6 +79,39 @@ class NativeCustomizationTests(unittest.TestCase):
             name: (folder / name).read_bytes() for name in receipt["config_files"]
         }
 
+    def test_separate_swap_keeps_move_response_and_preserve_removes_only_swap_override(self):
+        baseline = self.stage()
+        profile = Profile(movement=PRESETS["tear"].effect, swap=STYLE_PRESETS["pixel-relay"])
+        plan = self.plan(baseline, profile, fragment_preset="tear")
+        self.apply(plan)
+        recipe, files = self.recipe_and_files(plan)
+        overlay = files[recipe["overlay_file"]].decode()
+        self.assertEqual(overlay.count("    window-swap {"), 1)
+        self.assertEqual(overlay.count("    window-movement {"), 1)
+        self.assertIn("fragment-motion {", overlay.split("window-swap")[0])
+        self.assertNotIn("fragment-motion {", overlay.split("window-swap")[1])
+        self.assertEqual(recipe["document"]["schema"], 3)
+        self.assertEqual(
+            self.report(plan)["customization"]["document"], profile.document("My desktop")
+        )
+        preserve = self.plan(
+            plan["selection"]["bundle_id"],
+            Profile(movement=profile.movement),
+            fragment_preset="tear",
+        )
+        self.apply(preserve)
+        recipe, files = self.recipe_and_files(preserve)
+        self.assertNotIn("window-swap", files[recipe["overlay_file"]].decode())
+        self.assertIn("fragment-motion", files[recipe["overlay_file"]].decode())
+        self.assertEqual(recipe["document"]["schema"], 2)
+
+    def test_older_compositor_refuses_swap_before_any_write(self):
+        baseline = self.stage(variant="movement")
+        before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        with self.assertRaisesRegex(ValueError, "updated NiriFX session"):
+            self.plan(baseline, Profile(swap="off"))
+        self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()})
+
     def test_review_is_read_only_and_apply_selects_an_independent_pair(self):
         baseline = self.stage(includes=True)
         before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}

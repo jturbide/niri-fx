@@ -1,20 +1,26 @@
 :root {
     color-scheme: dark;
+    --surface: #17222e;
+    --surface-raised: #21313f;
+    --border: #344857;
+    --accent: #99e2d2;
+    --muted: #a4b4c5;
     font:
         15px system-ui,
         sans-serif;
-    background: #10151e;
+    background: #101820;
     color: #e8ecf4;
 }
 body {
-    max-width: 1300px;
-    margin: 22px auto;
-    padding: 0 24px;
+    max-width: 1360px;
+    margin: 28px auto;
+    padding: 0 28px;
 }
 header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    gap: 16px;
 }
 .badge {
     font-size: 11px;
@@ -27,18 +33,24 @@ header {
 .tabs {
     display: flex;
     gap: 8px;
-    margin: 0 0 12px;
+    margin: 0 0 16px;
+}
+.tabs button {
+    background: transparent;
+    border-color: transparent;
+    color: var(--muted);
 }
 .tabs button[aria-pressed="true"] {
-    background: #305c61;
-    border-color: #8ed8d0;
+    background: #233b40;
+    border-color: #4c726e;
+    color: #e8faf4;
 }
 .tabs small {
     color: inherit;
     opacity: 0.65;
 }
 aside {
-    max-height: calc(100vh - 130px);
+    max-height: calc(100vh - 48px);
     overflow: auto;
 }
 #concept-note {
@@ -57,6 +69,12 @@ select:focus-visible,
 input:focus-visible {
     outline: 2px solid #8ed8d0;
     outline-offset: 3px;
+}
+summary:focus-visible,
+a:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 4px;
+    border-radius: 3px;
 }
 #pointer-preview-tools {
     padding: 12px 0;
@@ -84,20 +102,20 @@ p {
 }
 .layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 360px;
+    grid-template-columns: minmax(0, 1fr) 350px;
     gap: 24px;
     align-items: start;
 }
 canvas {
     width: 100%;
     height: auto;
-    max-height: calc(100vh - 400px);
+    max-height: 500px;
     min-height: 240px;
     object-fit: contain;
     display: block;
     background: radial-gradient(ellipse at center, #263646, #151d29);
     border-radius: 14px;
-    border: 1px solid #334155;
+    border: 1px solid var(--border);
 }
 .controls {
     display: flex;
@@ -112,21 +130,55 @@ input[type="text"],
 input[type="search"],
 .pointer-fields input {
     font: inherit;
-    padding: 9px 12px;
-    background: #233647;
+    padding: 10px 14px;
+    background: var(--surface-raised);
     color: #e0edf5;
-    border: 1px solid #3c5368;
-    border-radius: 7px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
 }
 button {
     cursor: pointer;
+    line-height: 1.35;
+    transition:
+        background-color 120ms,
+        border-color 120ms;
 }
-button:hover {
-    background: #35566c;
+button:hover:not(:disabled) {
+    background: #2b4150;
+    border-color: #617b8c;
 }
 button:disabled {
     opacity: 0.45;
     cursor: default;
+}
+.button-primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #102d2a;
+    font-weight: 650;
+}
+.selection-bar:has(#activation-controls[hidden]) #export {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #102d2a;
+    font-weight: 650;
+}
+.selection-bar:has(#activation-controls[hidden]) #export:hover {
+    background: #b1eee1;
+    border-color: #b1eee1;
+}
+.button-primary:hover:not(:disabled) {
+    background: #b1eee1;
+    border-color: #b1eee1;
+}
+.button-secondary {
+    background: #233743;
+    border-color: #496371;
+}
+.button-quiet {
+    background: transparent;
+    border-color: transparent;
+    color: #bdccda;
 }
 .controls label {
     display: flex;
@@ -141,10 +193,10 @@ input[type="range"] {
     accent-color: #8ed8d0;
 }
 aside {
-    background: #192330;
-    border: 1px solid #334155;
+    background: var(--surface);
+    border: 1px solid var(--border);
     border-radius: 14px;
-    padding: 18px;
+    padding: 22px;
 }
 aside label {
     display: block;
@@ -179,8 +231,31 @@ aside small {
     color: #a3e4c5;
     min-height: 24px;
 }
+#status:empty,
+#error:empty {
+    display: none;
+}
 small {
     color: #98a6bb;
+}
+#native-session {
+    padding: 12px 16px;
+    margin-bottom: 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+}
+#native-session p {
+    margin: 6px 0;
+}
+#native-session summary {
+    color: var(--muted);
+    cursor: pointer;
+    padding: 4px 0;
+}
+#native-session button {
+    margin: 8px 0;
 }
 #native-session small {
     display: block;
@@ -189,6 +264,7 @@ small {
 }
 #caption {
     font-size: 14px;
+    margin-bottom: 0;
 }
 @media (max-width: 900px) {
     .layout {
@@ -283,7 +359,89 @@ aside[data-view="basic"] .advanced {
 .selection-summary {
     display: grid;
     gap: 6px;
-    margin-bottom: 18px;
+    min-width: 0;
+    flex: 1 1 360px;
+}
+.selection-summary strong {
+    font-size: 18px;
+    font-weight: 600;
+}
+.selection-summary small {
+    line-height: 1.5;
+}
+.selection-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 18px 28px;
+    align-items: center;
+    padding: 16px 20px;
+    margin: 18px 0 24px;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--surface);
+}
+.eyebrow {
+    color: var(--accent);
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: 650;
+    letter-spacing: 1.5px;
+}
+#activation-controls {
+    justify-content: flex-end;
+    margin: 0;
+    max-width: 100%;
+}
+.preview-heading {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    gap: 6px 16px;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.preview-heading h2 {
+    margin: 0;
+}
+.preview-heading span {
+    font-size: 12px;
+    color: var(--muted);
+}
+.button-group {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+.playback-controls {
+    justify-content: space-between;
+    gap: 12px;
+}
+.playback-controls .timeline-control {
+    flex-basis: 100%;
+    font-size: 13px;
+    color: var(--muted);
+}
+.timeline-control output {
+    min-width: 36px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+}
+.preview-preferences {
+    font-size: 12px;
+    color: var(--muted);
+}
+.preview-preferences summary {
+    cursor: pointer;
+}
+.workspace-tools {
+    border-top: 1px solid var(--border);
+    margin-top: 28px;
+    padding-top: 8px;
+}
+.workspace-tools #transfer-options {
+    border-top: 0;
+    padding-top: 4px;
 }
 h2 {
     font-size: 18px;
@@ -291,20 +449,27 @@ h2 {
 }
 #library-results {
     display: grid;
-    gap: 6px;
-    max-height: 360px;
+    gap: 8px;
+    max-height: 410px;
     overflow: auto;
     margin: 14px 0 22px;
 }
 #library-actions {
     display: grid;
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 6px;
+    grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 8px;
     margin: 12px 0;
 }
 #library-actions button {
     text-align: left;
     min-width: 0;
+    padding: 14px 16px;
+    background: var(--surface);
+}
+#library-actions button[aria-pressed="true"] {
+    background: #223d40;
+    border-color: var(--accent);
+    box-shadow: inset 0 3px var(--accent);
 }
 #library-actions small {
     display: block;
@@ -324,6 +489,19 @@ h2 {
     width: 100%;
     box-sizing: border-box;
 }
+.library-filters {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px;
+}
+.library-filters label {
+    font-size: 12px;
+}
+.library-filters input,
+.library-filters select {
+    font-size: 13px;
+    padding: 9px 10px;
+}
 #combo-options,
 #transfer-options {
     border-top: 1px solid #425464;
@@ -340,32 +518,109 @@ html[data-workspace="library"] #compare,
 html[data-workspace="library"] #seed {
     display: none;
 }
-#review-selection,
-#apply-selection {
-    background: #305c61;
-    border-color: #8ed8d0;
+html[data-workspace="library"] #open,
+html[data-workspace="library"] #close {
+    display: none;
 }
 html[data-workspace="library"] canvas {
     max-height: 380px;
     min-height: 200px;
 }
 @media (max-width: 900px) {
+    body {
+        padding: 0 20px;
+        margin: 20px auto;
+    }
+    aside {
+        max-height: none;
+    }
     #library-panel {
         display: block;
     }
     #library-actions {
-        grid-template-columns: repeat(5, minmax(120px, 1fr));
-        overflow-x: auto;
-        padding-bottom: 5px;
+        grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
     }
     html[data-workspace="library"] canvas {
         max-height: 280px;
+    }
+    #library-results {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    .selection-summary {
+        flex-basis: 260px;
+    }
+    .selection-bar {
+        margin: 16px 0 20px;
+    }
+    #activation-controls {
+        justify-content: flex-start;
+    }
+}
+@media (max-width: 540px) {
+    body {
+        padding: 0 14px;
+    }
+    header {
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+    h1 {
+        font-size: 24px;
+    }
+    .intro {
+        font-size: 14px;
+    }
+    .badge {
+        font-size: 10px;
+    }
+    #library-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+    #library-actions button {
+        padding: 12px 10px;
+        font-size: 13px;
+    }
+    .selection-bar,
+    aside {
+        padding: 16px;
+    }
+    aside {
+        display: block;
+    }
+    #library-results {
+        grid-template-columns: 1fr;
+        max-height: 330px;
+    }
+    .selection-summary {
+        flex-basis: 100%;
+    }
+    #selection-actions {
+        display: none;
+    }
+    html[data-workspace="library"] canvas {
+        max-height: 210px;
+        min-height: 160px;
+    }
+    #activation-controls > button {
+        flex-grow: 1;
+    }
+    #preview-modes {
+        flex-wrap: wrap;
     }
 }
 .library-look {
     text-align: left;
     display: grid;
     gap: 4px;
+    padding: 13px 14px;
+    background: #1b2b37;
+}
+.library-look[aria-pressed="true"] {
+    background: #254342;
+    border-color: var(--accent);
+}
+.library-look strong {
+    font-weight: 600;
 }
 .library-look small {
     margin: 0;
@@ -386,7 +641,11 @@ html[data-workspace="library"] canvas {
     border: 1px solid #8ed8d0;
     border-radius: 12px;
     padding: 16px;
-    margin: 16px 0;
+    margin: 16px 0 24px;
+    background: #19312f;
+}
+#apply-review > button {
+    margin: 12px 6px 0 0;
 }
 #apply-review li {
     overflow-wrap: anywhere;
@@ -457,4 +716,9 @@ html[data-workspace="library"] #save-help {
     min-width: 0;
     width: 100%;
     box-sizing: border-box;
+}
+@media (prefers-reduced-motion: reduce) {
+    button {
+        transition: none;
+    }
 }

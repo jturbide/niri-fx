@@ -30,7 +30,14 @@ function createFxLibrary({
     ]),
   );
   const builtins = { ...styles, ...catalog.profiles };
-  const actionNames = { open: "Open", close: "Close", resize: "Resize", movement: "Move / swap" };
+  const actionNames = {
+    open: "Open",
+    close: "Close",
+    resize: "Resize",
+    movement: "Move",
+    swap: "Swap",
+  };
+  const capabilityFor = (action) => (action === "swap" ? "movement" : action);
   let browseAction = "open";
   let customs = {},
     managed = {},
@@ -111,12 +118,15 @@ function createFxLibrary({
   element("native-fragment-preset").onchange = () =>
     chooseFragment(element("native-fragment-preset").value);
   const actionEffects = (doc) =>
-    doc.actions || {
-      open: normalized(doc.effect),
-      close: normalized(doc.effect),
-      resize: doc.effect.resize ? normalized(doc.effect) : null,
-      movement: null,
-    };
+    doc.actions
+      ? { swap: null, ...doc.actions }
+      : {
+          open: normalized(doc.effect),
+          close: normalized(doc.effect),
+          resize: doc.effect.resize ? normalized(doc.effect) : null,
+          movement: null,
+          swap: null,
+        };
   function profile() {
     const doc = getDocument();
     return {
@@ -132,7 +142,8 @@ function createFxLibrary({
     open: "Choose an opening style",
     close: "Choose a closing style",
     resize: "Choose a resize style",
-    movement: "Choose a move / swap style",
+    movement: "Choose a move style",
+    swap: "Choose a swap style",
     combo: "Choose a complete combo",
   };
   function chooseBrowseAction(action) {
@@ -183,9 +194,13 @@ function createFxLibrary({
     element("library-action-help").textContent =
       browseAction === "combo"
         ? "A combo replaces all the choices shown above. Select an action to mix in another style."
-        : browseAction === "movement" && native
-          ? "Choose a style to preview its material. Continuous fragments follow your gestures on the NiriFX desktop."
-          : "Click a style to preview it. Your other choices stay the same.";
+        : browseAction === "swap"
+          ? native && !nativeOptions.swap_supported
+            ? "Preview and save a separate swap style here. Applying it requires an updated NiriFX compositor; this retained build shares the Move setting."
+            : "For Swap window left/right commands. Preserve keeps the underlying swap setting, which follows Move when unset. Dragging and column reordering use Move."
+          : browseAction === "movement" && native
+            ? "Choose a style to preview its material. Continuous fragments follow your gestures on the NiriFX desktop."
+            : "Click a style to preview it. Your other choices stay the same.";
   }
   for (const choice of ["preserve", "off"])
     element("library-" + choice).onclick = () => {
@@ -204,7 +219,10 @@ function createFxLibrary({
     if (!select.options.length) {
       option("", "Choose a style");
       for (const [id, doc] of Object.entries(styles))
-        if (["open", "close"].includes(action) || catalog.families[doc.effect.family][action])
+        if (
+          ["open", "close"].includes(action) ||
+          catalog.families[doc.effect.family][capabilityFor(action)]
+        )
           option(id, doc.name);
     }
     select.querySelector('[value="custom"]')?.remove();
@@ -325,7 +343,8 @@ function createFxLibrary({
     element("editor-pointer-summary").textContent =
       "Pointer drag: " + summary + ". Try it from the Library or Preview combo.";
     element("try-pointer").disabled = !settings || settings.strength <= 0;
-    element("pointer-export-note").hidden = element("pointer-kdl").hidden = !settings;
+    element("pointer-export-note").hidden = element("pointer-kdl").hidden =
+      !settings && !doc.actions?.movement && !doc.actions?.swap;
     const consentValue = JSON.stringify(settings || null);
     if (pointerConsentValue !== consentValue) element("activate-pointer").checked = false;
     pointerConsentValue = consentValue;
@@ -384,6 +403,11 @@ function createFxLibrary({
     element("library-collection").append(option);
   }
   function cards() {
+    const results = element("library-results"),
+      scroll = results.scrollTop;
+    const focused = results.contains(document.activeElement)
+      ? { ...document.activeElement.dataset }
+      : null;
     const group = element("library-collection").value,
       search = element("library-search").value.trim().toLowerCase(),
       entries =
@@ -397,14 +421,16 @@ function createFxLibrary({
         if (!doc.actions && group !== "customs") return false;
       } else if (
         doc.actions ||
-        (["resize", "movement"].includes(browseAction) &&
-          !catalog.families[doc.effect.family][browseAction])
+        (["resize", "movement", "swap"].includes(browseAction) &&
+          !catalog.families[doc.effect.family][capabilityFor(browseAction)])
       )
         return false;
       const effects = Object.values(actionEffects(doc)).filter(isStyle),
         text = [doc.name, id, ...effects.map((effect) => effect.family)].join(" ").toLowerCase();
       if (search && !text.includes(search)) return false;
       if (search && group === "recommended") return true;
+      if (group === "recommended" && ["movement", "swap"].includes(browseAction))
+        return catalog.collections.movement.styles.includes(id);
       if (group === "recommended")
         return (
           Object.hasOwn(catalog.recommended_profiles, id) ||
@@ -475,7 +501,8 @@ function createFxLibrary({
         a = actionEffects(doc);
       detail.textContent = doc.actions
         ? `${isStyle(a.open) ? title(a.open.family) : title(actionMode(a.open))} → ${isStyle(a.close) ? title(a.close.family) : title(actionMode(a.close))} combo`
-        : title(doc.effect.family);
+        : title(doc.effect.family) +
+          (["movement", "swap"].includes(browseAction) ? " · Timed movement" : "");
       if (Object.hasOwn(catalog.recommended_profiles, id))
         detail.textContent += " · " + catalog.recommended_profiles[id];
       if (id.startsWith("custom-") && !Object.hasOwn(managed, id))
@@ -491,6 +518,7 @@ function createFxLibrary({
         }
       };
       const star = document.createElement("button");
+      star.dataset.favorite = id;
       star.textContent = favorites().includes(id) ? "★" : "☆";
       star.setAttribute(
         "aria-label",
@@ -508,6 +536,16 @@ function createFxLibrary({
     const saved = selectedSaved();
     for (const id of ["copy-profile", "rename-profile", "remove-profile"])
       element(id).hidden = !saved;
+    if (focused) {
+      // Rebuilding cards must not strand keyboard users or jump a long catalog
+      // back to its beginning after a selection or favorite changes.
+      const key = ["style", "fragment", "favorite"].find((key) => focused[key]);
+      if (key)
+        [...results.querySelectorAll("button")]
+          .find((button) => button.dataset[key] === focused[key])
+          ?.focus({ preventScroll: true });
+    }
+    results.scrollTop = scroll;
   }
   function view(editor) {
     element("library-panel").hidden = editor;
@@ -537,7 +575,10 @@ function createFxLibrary({
     const unsupported = [];
     for (const action of Object.keys(actionNames)) {
       if (!isStyle(doc.actions[action])) continue;
-      if (["resize", "movement"].includes(action) && !catalog.families[effect.family][action]) {
+      if (
+        ["resize", "movement", "swap"].includes(action) &&
+        !catalog.families[effect.family][capabilityFor(action)]
+      ) {
         unsupported.push(actionNames[action]);
         continue;
       }
@@ -1018,7 +1059,7 @@ function createFxLibrary({
     element("pointer-kdl").textContent = "Export NiriFX session config";
   }
   element("movement-availability").textContent = native
-    ? "Move and swap share one effect. Continuous fragments follow your gestures on the NiriFX desktop; the canvas previews their material only."
+    ? "Move controls normal movement and dragging. Swap overrides explicit left/right window swaps. Continuous fragments follow your gestures on the desktop; the canvas previews their material only."
     : catalog.connection?.target === "standalone"
       ? "Movement can be designed here. Applying it requires a matching NiriFX session with action-preservation support and verified running support."
       : catalog.connection

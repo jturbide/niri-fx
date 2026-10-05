@@ -356,6 +356,14 @@ class Library:
         resize = effect.resize
         movement = effect.movement if isinstance(effect, Profile) else None
         pointer = effect.pointer if isinstance(effect, Profile) else None
+        swap_notes = (
+            [
+                "Swap is kept in profile JSON but not activated by this shell. "
+                "Use the managed NiriFX session target to apply independent swaps."
+            ]
+            if isinstance(effect, Profile) and effect.swap is not None
+            else []
+        )
         allow_pointer = request.get("allow_pointer", False)
         if resize and not request["allow_resize"]:
             raise ValueError("Allow this profile to change resize effects before applying")
@@ -387,7 +395,9 @@ class Library:
         if self.target == "noctalia":
             if request["allow_movement"]:
                 raise ValueError("The Noctalia preset picker activates stock Niri actions only")
-            return self.file_picker_plan(document, effect)
+            plan = self.file_picker_plan(document, effect)
+            plan["notes"].extend(swap_notes)
+            return plan
         if self.target != "inir":
             raise ValueError("Unsupported activation target")
         if request["allow_movement"]:
@@ -457,6 +467,7 @@ class Library:
                 "Resize changes only when explicitly included and allowed.",
             ]
             + (["Movement is kept in the profile but not activated by iRiS."] if movement else [])
+            + swap_notes
             + (
                 ["Pointer settings are kept in the profile but not activated by iRiS."]
                 if pointer

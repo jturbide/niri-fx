@@ -126,11 +126,16 @@ For detailed examples and adapter limits, read the
 
 ## Independent action choices
 
-Profiles use schema 2. Each shader action is an effect object (NiriFX Style),
+Profiles without a Swap override use schema 2; schema 3 adds `swap`.
+Use `profile --movement fragment-wake --swap pixel-relay` to create separate
+choices. Swap applies to explicit `swap-window-left/right` commands, requires
+the verified swap contract, and uses the preset's `movement_ms` duration.
+Existing profiles keep their shared behavior until an override is chosen.
+Each shader action is an effect object (NiriFX Style),
 `null` (Preserve) or `"off"` (Off). Schema 1 inputs normalize without changing
 behavior. Preserve inherits the configuration underneath NiriFX; it does not
 reset to stock defaults or retain a previously applied NiriFX override.
 Use `profile --open preserve --close frost-vanish --resize off` to compose a
 partial profile. Pointer preserves when absent/null, disables with strength 0,
-and selects a style with positive strength. Stock exports omit movement and
+and selects a style with positive strength. Stock exports omit movement, swap and
 pointer overrides, including Off; native activation requires contract 2.

@@ -164,8 +164,8 @@ Studio captures the selected bundle when it opens. To start from another retaine
 bundle, add `--native-base BUNDLE_ID`. The storage root and base are fixed for that
 Studio session; imported JSON cannot select filesystem paths or executables.
 
-Choose **Open**, **Close**, **Resize** or **Move / swap**, then click a style
-to preview and assign it. **Combos** selects a complete look; **More options**
+Choose **Open**, **Close**, **Resize**, **Move** or **Swap**, then click a style
+to preview and assign it. **Combos** selects a complete look; **Customize your combo**
 contains shared styles and detailed action controls. Each action can use
 **Preserve / NiriFX Style / Off**. Preserve
 inherits the chosen baseline, including its existing user settings and effects.

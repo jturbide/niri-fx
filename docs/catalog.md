@@ -11,7 +11,7 @@ JSON downloads for every built-in style and pairing.
 [Custom examples](#three-custom-examples) · [Resize](#resize) ·
 [Movement](#experimental-movement-and-swaps) · [Real workflows](#real-desktop-workflows) · [Install](../README.md#quick-start)
 
-All **75 presets** have a recording. The [visual scenario index](showcases.md)
+All **80 presets** have a recording. The [visual scenario index](showcases.md)
 also helps you compare controls and choose a combination for everyday use,
 strong explosions, drifting dust, subtle distortion or different open/close actions.
 
@@ -525,6 +525,30 @@ per window, with no shared collision simulation or particle-level interleaving.
 | --- | --- | --- |
 | ![Rounded fragments swap in native Niri](gifs/native-swap-bubble-burst.gif) | ![Center-released fragments exchange columns](gifs/native-swap-core-detonation.gif) | ![Twisting elastic windows swap columns](gifs/native-swap-twist-snap.gif) |
 | Rounded texture pieces | Staged breakup | Opaque spring rotation |
+
+**Movement collection:** these five styles reuse the open/close renderers with
+shorter, partial deformation paths. The clips below are actual nested Niri
+column swaps at each preset's 620–720 ms timing. They show timed rearrangement,
+using the shared Move renderer, not the independent Swap selection. They do not
+demonstrate continuous pointer dragging or shared particles between windows.
+
+| Ribbon Cascade | Spring Rebound | Pixel Relay |
+| --- | --- | --- |
+| ![Staggered alternating strips exchange columns](gifs/native-swap-ribbon-cascade.gif) | ![Whole windows stretch and rebound during a swap](gifs/native-swap-spring-rebound.gif) | ![Trailing coarse pixels break up and restore during a swap](gifs/native-swap-pixel-relay.gif) |
+| **Ripple Transit** | **Vortex Transit** | |
+| ![Radial ripples deform two windows during a swap](gifs/native-swap-ripple-transit.gif) | ![Two windows twist inward and restore while exchanging columns](gifs/native-swap-vortex-transit.gif) | |
+
+Their stock open/close versions traverse the full effect:
+
+| Ribbon Cascade | Spring Rebound | Pixel Relay |
+| --- | --- | --- |
+| ![Ribbon Cascade opening and closing](gifs/preset-ribbon-cascade.gif) | ![Spring Rebound opening and closing](gifs/preset-spring-rebound.gif) | ![Pixel Relay opening and closing](gifs/preset-pixel-relay.gif) |
+| [Settings](gallery/presets/nirifx-preset-ribbon-cascade.json) | [Settings](gallery/presets/nirifx-preset-spring-rebound.json) | [Settings](gallery/presets/nirifx-preset-pixel-relay.json) |
+| **Ripple Transit** | **Vortex Transit** | |
+| ![Ripple Transit opening and closing](gifs/preset-ripple-transit.gif) | ![Vortex Transit opening and closing](gifs/preset-vortex-transit.gif) | |
+| [Settings](gallery/presets/nirifx-preset-ripple-transit.json) | [Settings](gallery/presets/nirifx-preset-vortex-transit.json) | |
+
+[Movement settings and previews](movement.md#movement-presets-and-general-rearrangement).
 
 **Studio concept comparison — Crosswind / Orbital Ribbons / Tidal Fragments.**
 This is the Canvas choreography preview, separate from the native recordings.

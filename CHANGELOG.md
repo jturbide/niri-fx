@@ -9,6 +9,15 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Independent Swap styles for explicit left/right window swaps in updated NiriFX
+  builds. Move continues to control ordinary movement and dragging. Preserve
+  retains the underlying swap setting; older builds retain their shared behavior
+  and require an update before applying a separate swap override.
+- Pixel Relay, Ripple Transit, Vortex Transit, Ribbon Cascade and Spring Rebound,
+  with a Movement collection, shader previews and native rearrangement showcases.
+- Profile schema 3 and `profile --swap` carry a separate swap choice. Profiles
+  without an override continue to serialize as schema 2; stock exports omit swap
+  overrides. Native Apply checks the retained build and running swap renderer.
 - Reviewed shared tool-runtime updates for CLI, Studio and the login launcher.
   A one-time stable-entry migration keeps the working runtime selected until
   registration is verified. Later updates share one selector, retain the previous
@@ -108,9 +117,15 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
-- Studio starts with Open, Close, Resize and Move / swap choices. Selecting a
+- Studio puts the current combo, primary Apply action and JSON download above the
+  preview. Profile tools are secondary, review stays beside the action that opens
+  it, and session details are collapsed. The narrow layout wraps controls and
+  keyboard selections retain focus and catalog position.
+- Separate Move and Swap tabs preview each choice immediately. Movement choices
+  lead with curated presets; swap previews show two windows exchanging positions.
+- Studio starts with Open, Close, Resize, Move and Swap choices. Selecting a
   style previews it immediately and updates only that action; complete looks
-  live under Combos, with shared settings and detailed controls in More options.
+  live under Combos, with shared settings in Customize your combo.
   Managed NiriFX sessions are detected before shell adapters, so their effects
   can be applied directly without opening shell settings.
 

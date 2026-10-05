@@ -38,8 +38,20 @@ test("simple Studio previews one action while preserving the rest of the combo",
     const action = (name) =>
       evaluate(`document.querySelector('[data-library-action="${name}"]').click()`);
     const choose = (name) => evaluate(`document.querySelector('[data-style="${name}"]').click()`);
+    const keyboardActivate = async () => {
+      for (const type of ["keyDown", "keyUp"])
+        await browser.rpc("Input.dispatchKeyEvent", {
+          type,
+          key: "Enter",
+          code: "Enter",
+          windowsVirtualKeyCode: 13,
+          text: "\r",
+          unmodifiedText: "\r",
+        });
+    };
     assert.equal(await evaluate('byId("combo-options").open'), false);
     assert.equal(await evaluate('byId("transfer-options").open'), false);
+    assert.equal(await evaluate('byId("export").checkVisibility()'), true);
     assert.equal(
       await evaluate(
         'document.querySelector("[data-library-action=open]").getAttribute("aria-pressed")',
@@ -66,11 +78,95 @@ test("simple Studio previews one action while preserving the rest of the combo",
     assert.equal(await evaluate("mode"), "resize");
     assert.equal(await evaluate("effectDocument().actions.resize.family"), "elastic");
     await action("movement");
-    await choose("balanced");
+    await choose("fragment-wake");
     assert.equal(await evaluate("mode"), "movement");
     assert.equal(await evaluate("effectDocument().actions.movement.family"), "fragments");
+    const movement = await evaluate("effectDocument().actions.movement");
+    await action("swap");
+    await evaluate('document.querySelector("[data-style=pixel-relay]").focus()');
+    const scroll = await evaluate('byId("library-results").scrollTop');
+    await keyboardActivate();
+    assert.equal(await evaluate("editingAction"), "swap");
+    assert.equal(await evaluate("mode"), "movement");
+    assert.deepEqual(
+      await evaluate("effectDocument().actions.swap"),
+      await evaluate('({...catalog.presets["pixel-relay"], resize:false})'),
+    );
+    assert.deepEqual(await evaluate("effectDocument().actions.movement"), movement);
+    assert.equal(await evaluate("document.activeElement.dataset.style"), "pixel-relay");
+    assert.equal(await evaluate('byId("library-results").scrollTop'), scroll);
+    for (const direction of ["left", "right", "up", "down"])
+      for (const progress of [0, 1000]) {
+        const bounds = await evaluate(`(() => {
+          byId("pause").click();
+          byId("movement-direction").value=${JSON.stringify(direction)};
+          byId("movement-direction").dispatchEvent(new Event("change"));
+          byId("progress").value=${progress};
+          byId("progress").dispatchEvent(new Event("input"));
+          const canvas=byId("stage"),gl=canvas.getContext("webgl");
+          const pixels=new Uint8Array(canvas.width*canvas.height*4);
+          gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);
+          let left=canvas.width,right=-1,bottom=canvas.height,top=-1;
+          for(let y=0;y<canvas.height;y++)for(let x=0;x<canvas.width;x++)
+            if(pixels[(y*canvas.width+x)*4+3]>4){
+              left=Math.min(left,x);right=Math.max(right,x);
+              bottom=Math.min(bottom,y);top=Math.max(top,y);
+            }
+          return {left,right,bottom,top,width:canvas.width,height:canvas.height};
+        })()`);
+        assert(bounds.right > bounds.left, "Swap endpoints must contain visible windows");
+        assert(
+          bounds.left > 0 &&
+            bounds.right < bounds.width - 1 &&
+            bounds.bottom > 0 &&
+            bounds.top < bounds.height - 1,
+          `${direction} swap endpoint ${progress} must leave a visible margin on every canvas edge`,
+        );
+      }
+    await evaluate('byId("movement-direction").value="right"');
+    if (process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT) {
+      await evaluate(`
+        byId("pause").click();seed=.43;
+        byId("progress").value=450;byId("progress").dispatchEvent(new Event("input"));
+        window.scrollTo(0, 0);
+      `);
+      const shot = await browser.rpc("Page.captureScreenshot", { format: "png" });
+      writeFileSync(
+        process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT.replace(/\.png$/, "-swap.png"),
+        Buffer.from(shot.data, "base64"),
+      );
+    }
+    await evaluate('document.querySelector("[data-favorite=pixel-relay]").focus()');
+    await keyboardActivate();
+    assert.equal(await evaluate("document.activeElement.dataset.favorite"), "pixel-relay");
+    assert.match(await evaluate('document.activeElement.getAttribute("aria-label")'), /^Remove/);
+    await action("movement");
+    await evaluate('byId("library-preserve").click()');
+    assert.equal(await evaluate('byId("pointer-kdl").hidden'), false);
+    const nativeExport = await evaluate(`(() => {
+      const originalDownload = download;
+      let exported;
+      try {
+        download = (name, text) => { exported = { name, text }; };
+        byId("pointer-kdl").click();
+      } finally { download = originalDownload; }
+      return exported;
+    })()`);
+    assert.equal(nativeExport.name, "nirifx-session.kdl");
+    assert.match(nativeExport.text, /window-swap\s*\{/);
+    assert.doesNotMatch(nativeExport.text, /window-movement\s*\{|pointer-wobble/);
+    await choose("fragment-wake");
+    await action("swap");
+    await evaluate('byId("library-off").click()');
+    assert.equal(await evaluate("effectDocument().actions.swap"), "off");
+    await evaluate('byId("library-preserve").click()');
+    assert.equal(await evaluate("effectDocument().actions.swap ?? null"), null);
+    await evaluate('byId("undo").click()');
+    assert.equal(await evaluate("effectDocument().actions.swap"), "off");
+    assert.deepEqual(await evaluate("effectDocument().actions.movement"), movement);
     assert.deepEqual(await evaluate("effectDocument().actions.open"), opening);
     assert.deepEqual(await evaluate("effectDocument().actions.close"), closing);
+    await action("movement");
     await evaluate('byId("library-off").click()');
     assert.equal(await evaluate("effectDocument().actions.movement"), "off");
     await evaluate('byId("library-preserve").click()');
@@ -89,15 +185,19 @@ test("simple Studio previews one action while preserving the rest of the combo",
     assert.deepEqual(await evaluate("effectDocument()"), before);
     if (process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT) {
       await action("open");
+      await evaluate("window.scrollTo(0, 0)");
       const shot = await browser.rpc("Page.captureScreenshot", { format: "png" });
       writeFileSync(process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT, Buffer.from(shot.data, "base64"));
-      await browser.rpc("Emulation.setDeviceMetricsOverride", {
-        width: 520,
-        height: 960,
-        deviceScaleFactor: 1,
-        mobile: false,
-      });
-      assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
+    }
+    await browser.rpc("Emulation.setDeviceMetricsOverride", {
+      width: 520,
+      height: 960,
+      deviceScaleFactor: 1,
+      mobile: false,
+    });
+    assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
+    assert.equal(await evaluate('byId("export").checkVisibility()'), true);
+    if (process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT) {
       const narrow = await browser.rpc("Page.captureScreenshot", { format: "png" });
       writeFileSync(
         process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT.replace(/\.png$/, "-narrow.png"),

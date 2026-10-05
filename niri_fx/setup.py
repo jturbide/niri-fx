@@ -343,6 +343,11 @@ def plan_setup(args, effect, custom=None):
     movement = None
     pointer = None
     validation_binary = None
+    if getattr(effect, "swap", None) is not None:
+        notes.append(
+            "The Swap choice is retained in profile JSON but omitted from this stock/standalone "
+            "activation. Use Studio's managed NiriFX session target to apply independent swaps."
+        )
     if getattr(args, "enable_movement", False):
         if args.target != "standalone":
             raise ValueError("Experimental movement requires an explicit --target standalone")

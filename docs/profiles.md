@@ -2,7 +2,7 @@
 
 A style describes one effect. A profile assigns separate styles to opening,
 closing and optionally resizing or moving. Desktop springs and pointer drag can
-be stored separately from those four shader actions. For example: open with Balanced
+be stored separately from these shader actions. For example: open with Balanced
 fragments, close with Implosion, and leave your existing resize behavior unchanged.
 
 ![Textured fragments assemble and collapse inward in one profile](gifs/profile-fragment-flow.gif)
@@ -17,8 +17,9 @@ Each action has the same three choices:
 | **NiriFX Style** | Apply the selected effect or pointer preset. |
 | **Off** | Disable that action's animation. |
 
-Choose independently for Open, Close, Resize, Move / swap and Pointer drag.
-Move and swap share one compositor action. Shared styles change only actions
+Choose independently for Open, Close, Resize, Move, Swap and Pointer drag.
+Updated NiriFX builds support an independent Swap override for explicit left/right
+window swaps. Ordinary moves, pointer drags and column reordering use Move. Shared styles change only actions
 already set to **NiriFX Style**; Preserve and Off remain unchanged. If a shared
 style does not support an action, its existing selection stays in place.
 
@@ -45,6 +46,28 @@ Applying Off for movement does not turn off pointer wobble, and vice versa.
 [Continuous fragments](fragment-drag.md) follow the movement choice, including
 Off; Pointer drag controls the separate whole-window wobble. Global Niri
 animations Off still wins.
+
+## Separate Move and Swap styles
+
+```sh
+niri-fx profile --name "Fragments and Pixels" \
+  --open explosion --close frost-vanish \
+  --movement fragment-wake --swap pixel-relay > my-combo.json
+niri-fx studio --custom my-combo.json
+```
+
+Move controls normal movement and dragging. Swap targets Niri's explicit
+`swap-window-left` and `swap-window-right` commands. Column reordering and pointer
+drops remain Move, even when neighboring windows exchange places. The same
+movement-capable families can be selected for either slot. Swap uses the preset's
+movement duration and a timed shader; continuous fragment response remains with
+Move. Choose Preserve for Swap to return to the underlying configuration, or Off
+to disable explicit swap animation independently.
+
+A separate Swap choice requires an updated NiriFX compositor. Older retained
+builds can preview and save it in Studio but refuse Apply with update guidance.
+Stock configuration downloads omit both native movement and swap settings;
+portable JSON keeps them.
 
 ## Compose a partial profile
 
@@ -188,17 +211,21 @@ without activation, use `register --custom /tmp/my-profile.json`; standalone
 `setup --custom /tmp/my-profile.json --target standalone` first prints a plan.
 `--apply` activates the backed-up standalone include. See [setup](setup.md).
 
-Profiles are **kind `profile`, schema 2** documents with `name` and `actions`.
+Profiles use **kind `profile`** with `name` and `actions`. Schema 2 has open, close,
+resize and movement choices. **Schema 3** adds `swap`, using the same effect
+parameters and `movement_ms` timing as Move.
 Each of `open`, `close`, `resize` and `movement` contains an effect object for
 NiriFX Style, `null` for Preserve or the string `"off"` for Off. Schema 1 profiles
-remain readable and are normalized to schema 2 without changing their behavior.
+remain readable and normalize to schema 2 without changing their behavior.
+Documents with a Swap style or Off serialize as schema 3. Removing that override
+returns to schema 2, keeping existing saved recipes unchanged.
 Each nested effect keeps `resize: false`: the separate resize slot selects that action.
 Single-style documents continue to use effect schema 3; these are different
 document types, not compatibility aliases. [Complete example](../examples/profiles/spring-and-ember.json).
 
 The `movement` slot is validated and preserved on JSON import/export.
 Studio can edit it and preview the actual shader in **Movement (shader preview)**.
-Choose **NiriFX Style** or **Off** for Move / swap to store an override;
+Choose **NiriFX Style** or **Off** for Move or Swap to store an override;
 viewing an action alone does not select it. Stock KDL and iNiR/iRiS registrations
 omit movement nodes. The NiriFX session target includes the selected movement in
 its next-login configuration. To apply it in an already running session, use

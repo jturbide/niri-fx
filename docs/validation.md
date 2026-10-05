@@ -15,6 +15,34 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
 
+## Independent swaps and Studio selection (Unreleased)
+
+The full four-patch desktop build passes native configuration, animation and
+layout regressions for explicit left/right swaps. An owned nested compositor
+uses different synthetic materials for Move and Swap and verifies nine cases:
+ordinary movement, explicit swaps, active reload, closing during a swap, the
+next material after settling, independent Off, inheritance, Swap with Move Off,
+and swaps between stacked columns. Both participants retain their material
+through a reload. Repeated swaps after selecting Off are covered by a native
+layout regression. These results do not establish physical desktop or GPU
+performance acceptance.
+
+Python/browser contracts cover separate profile actions, schema 3 export and
+schema 2 preservation, independent native shaders, old-build refusal and guarded
+live renderer capability checks. Studio browser checks exercise choosing Move
+and Swap separately, immediate playback, Undo, Off/Preserve and keyboard focus
+retention. Previewed swaps use the real timed shader on two synthetic windows;
+they do not simulate pointer input or Niri layout.
+
+The installed package passed reviewed Studio Apply, a second CLI selection and
+CLI rollback in an owned nested session without changing its compositor PID.
+All four renderer contracts verified, separate Move/Swap recipes round-tripped,
+and the continuous fragment response remained enabled. An older three-patch
+bundle also retains its existing live Apply path without requiring the new probe.
+
+Reproduce native checks with `scripts/test-native-swap.py` and the full candidate
+manifest described in the [native guide](../experimental/README.md#independent-swap-styles).
+
 ## Native candidate isolation
 
 Temporary-directory regressions cover concurrent and repeated attempts, retained
@@ -54,8 +82,8 @@ Python upgrade test.
 
 ## Studio action selection and live settings (Unreleased)
 
-Studio's simple view assigns styles independently to Open, Close, Resize and
-Move / swap and replays each selected style. Browser regressions cover preserved
+Studio's simple view assigns styles independently to Open, Close, Resize,
+Move and Swap and replays each selected style. Browser regressions cover preserved
 sibling choices, complete combos, Preserve/Off, Undo and reduced motion. The
 advanced editor and shared-style controls retain the same documents.
 
@@ -98,11 +126,11 @@ These checks complement the rendering and native evidence below.
 | Check | Observed result |
 | --- | --- |
 | Python | Regression coverage for validation, ownership, backup/restore, temporary HTTP saving, family capabilities, curated profiles, terminal workflows, movement diagnostics, isolated patch stacks and conservative CI scope selection |
-| Portable JavaScript | All 75 presets' supported stock shaders match Python, with picker transactions, profile checks and complete combo playback |
-| Real Chromium | 75 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families |
+| Portable JavaScript | All 80 presets' supported stock shaders match Python, with picker transactions, profile checks and complete combo playback |
+| Real Chromium | 80 rendered presets with intact/transparent endpoints, extreme controls, import/export, capabilities, independent profiles and actual HTTP saving for all nine families; distortion checks verify visible deformation and transparency during the configured fade without assuming shrinking coverage |
 | New controls | Hex size/spread/spin/direction/stagger, ink origin/turbulence and glitch bands/chroma each change rendered pixels; transparent input stays transparent |
 | Browser lifecycle and gallery | Coverage includes failed startup, bounded requests, disconnect/cleanup, shared starter selection, pairing/search filters, direct anchors, collection URLs, all nine cross-family Studio filters, unchanged effect documents while browsing, narrow layouts, reduced-motion startup, single-GIF playback, hosted Studio share/download flows and explicit companion selection through import and Undo |
-| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 75 default exports, supported resize exports and 91 style/profile picker includes parse in stock Niri 26.04 |
+| GLSL and stock config | All supported open/close/movement/resize shader variants compile as GLSL ES 1.00; all 80 default exports, supported resize exports and 96 style/profile picker includes parse in stock Niri 26.04 |
 | Native stock effects | All nine added presets open, render intermediate frames, settle intact and close to an empty scene in a nested stock compositor |
 | Curated pairings | Geometric Flow, Ribbon Current and Soft Landing render partial opening/closing frames, settle intact and close to an empty scene in stock Niri. Sampling uses an 8× slower isolated animation clock to avoid missing short phases during screencopy; this does not measure real-time presentation smoothness. |
 | Fragment optimization | 1,050 reference-frame pairs across software WebGL and hardware ANGLE match byte-for-byte, including extreme settings and transparent input. Core Detonation, Mosaic Burst and Orbital Ribbons pass stock open/close checks; Core Detonation also passes native swaps, interruptions and fallback. See [measurements and reproduction](performance.md#varied-fragment-flight-bounds). |
@@ -639,7 +667,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**214 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**229 GIFs**, including all **80 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
@@ -788,7 +816,7 @@ by the harness; the installed compositor and active desktop effect are preserved
 - 147 Python tests cover portable spring validation, unchanged ordinary timing,
   registry spring triples, separate window/desktop picker review, strict runtime capability parsing, refused activation
   and Apply rechecks, alongside existing snapshot/Restore protections.
-- All 75 presets and 13 profiles have faithful shader previews and settings.
+- The catalog contains 80 presets and 16 profiles with shader previews and portable settings.
   The three desktop packs additionally have stock workspace/camera/overview
   recordings. Canvas previews show their window effects only.
 - Mixed-shape checks cover every primary/secondary pair in documents, mixture

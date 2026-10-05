@@ -11,39 +11,55 @@
     </h1>
     <span id="studio-kind" class="badge">LOCAL STUDIO</span>
   </header>
-  <p>Choose an action, try a style, then apply your choices directly from Studio.</p>
+  <p class="intro">Choose a style for each action and see how your combo feels.</p>
   <nav class="tabs" aria-label="Workspace">
     <button id="show-library" aria-pressed="true">Choose effects</button>
     <button id="show-editor" aria-pressed="false">Advanced editor</button>
   </nav>
   <nav id="library-actions" aria-label="Choose an action"></nav>
+  <section class="selection-bar" aria-label="Current combo and activation">
+    <div class="selection-summary">
+      <span class="eyebrow">Your combo</span>
+      <strong id="selection-name"></strong>
+      <small id="selection-actions"></small>
+      <small id="active-look"></small>
+    </div>
+    <div class="controls" id="activation-controls" hidden>
+      <label id="activate-movement-label" hidden
+        ><input id="activate-movement" type="checkbox" /> Apply movement</label
+      >
+      <label id="activate-pointer-label" hidden
+        ><input id="activate-pointer" type="checkbox" />
+        <span id="activate-pointer-text">Apply pointer drag</span></label
+      >
+      <button class="button-primary" id="review-selection">Review &amp; apply</button>
+      <button class="button-secondary" id="restore-selection" disabled>Restore previous</button>
+    </div>
+    <button class="button-secondary" id="export">Download JSON</button>
+  </section>
+  <p id="status" role="status" aria-live="polite"></p>
+  <pre id="error" role="alert"></pre>
+  <section id="apply-review" hidden aria-label="Review changes">
+    <p id="review-summary"></p>
+    <details id="review-file-details" open>
+      <summary>Change details</summary>
+      <p id="review-notes" hidden></p>
+      <ul id="review-files"></ul>
+    </details>
+    <button class="button-primary" id="apply-selection">Apply these changes</button>
+    <button class="button-quiet" id="cancel-review">Cancel</button>
+  </section>
   <div class="layout">
     <main>
-      <div class="selection-summary">
-        <strong id="selection-name"></strong>
-        <small id="selection-actions"></small>
-        <small id="active-look"></small>
-      </div>
-      <div class="controls" id="activation-controls" hidden>
-        <label id="activate-movement-label" hidden
-          ><input id="activate-movement" type="checkbox" /> Apply movement</label
-        >
-        <label id="activate-pointer-label" hidden
-          ><input id="activate-pointer" type="checkbox" />
-          <span id="activate-pointer-text">Apply pointer drag</span></label
-        >
-        <button id="review-selection">Review &amp; apply</button>
-        <button id="restore-selection" disabled>Restore previous</button>
-      </div>
       <section id="native-session" hidden aria-label="NiriFX session selection">
         <strong>NiriFX session</strong>
         <p id="native-session-help">
           Choose your effects here. Changes start at your next NiriFX login.
         </p>
         <small id="native-running"></small>
-        <button id="native-reopen" disabled>Reopen next-login recipe</button>
         <details>
-          <summary>Session details</summary>
+          <summary>Session details and saved recipe</summary>
+          <button class="button-quiet" id="native-reopen" disabled>Reopen next-login recipe</button>
           <small id="native-selected"></small>
           <small id="native-rollback"></small>
           <small id="native-reopen-note"></small>
@@ -52,6 +68,10 @@
           <small id="native-running-detail"></small>
         </details>
       </section>
+      <div class="preview-heading">
+        <h2>Preview</h2>
+        <span>Try styles on a sample window</span>
+      </div>
       <nav id="preview-modes" class="tabs" aria-label="Preview mode">
         <button data-mode="effect" aria-pressed="true">Open &amp; close</button
         ><button data-mode="resize" aria-pressed="false">Resize</button
@@ -82,9 +102,9 @@
       <section id="pointer-preview-tools" aria-label="Pointer drag preview" hidden>
         <p id="pointer-preview-status" role="status"></p>
         <div class="controls">
-          <button id="pointer-demo" type="button">Play drag demo</button>
-          <button id="pointer-reset" type="button">Reset position</button>
-          <button id="pointer-stop" type="button">Return to effects</button>
+          <button class="button-secondary" id="pointer-demo" type="button">Play drag demo</button>
+          <button class="button-quiet" id="pointer-reset" type="button">Reset position</button>
+          <button class="button-quiet" id="pointer-stop" type="button">Return to effects</button>
         </div>
         <small
           >Drag the sample window, or play the demo with your keyboard. Escape returns to effects.
@@ -92,13 +112,22 @@
           verify your compositor.</small
         >
       </section>
-      <div class="controls" id="effect-playback-controls">
-        <button id="preview-combo" type="button" aria-pressed="false">Preview combo</button>
-        <button id="open">Reconstruct</button><button id="close">Deconstruct</button
-        ><button id="pause">Pause</button><button id="seed">New variation</button
-        ><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button
-        ><button id="pin">Pin A</button
-        ><button id="compare" disabled aria-pressed="false">Show A</button>
+      <div class="controls playback-controls" id="effect-playback-controls">
+        <div class="button-group" role="group" aria-label="Playback">
+          <button class="button-secondary" id="preview-combo" type="button" aria-pressed="false">
+            Preview combo
+          </button>
+          <button class="button-secondary" id="open">Reconstruct</button
+          ><button class="button-secondary" id="close">Deconstruct</button
+          ><button class="button-quiet" id="pause">Pause</button>
+        </div>
+        <div class="button-group" role="group" aria-label="Edit history">
+          <button class="button-quiet" id="seed">New variation</button
+          ><button class="button-quiet" id="undo" disabled>Undo</button
+          ><button class="button-quiet" id="redo" disabled>Redo</button
+          ><button class="button-quiet" id="pin">Pin A</button
+          ><button class="button-quiet" id="compare" disabled aria-pressed="false">Show A</button>
+        </div>
         <label id="resize-direction-label" hidden
           >Direction
           <select id="resize-direction">
@@ -106,75 +135,26 @@
             <option value="shrink">Shrink</option>
           </select>
         </label>
-        <label
+        <label class="timeline-control"
           ><span id="timeline-label">Breakup</span>
           <input id="progress" type="range" min="0" max="1000" value="450" /><output id="amount"
             >45%</output
           ></label
         >
       </div>
-      <label class="motion-preference"
-        ><input id="reduced-motion" type="checkbox" /> Reduced motion: show endpoints without
-        playback</label
-      >
-      <small>Preview preference only. Use the timeline to inspect individual frames.</small>
+      <details class="preview-preferences">
+        <summary>Preview preferences</summary>
+        <label class="motion-preference"
+          ><input id="reduced-motion" type="checkbox" /> Reduced motion: show endpoints without
+          playback</label
+        >
+        <small>Preview preference only. Use the timeline to inspect individual frames.</small>
+      </details>
       <p id="caption"></p>
       <p id="combo-preview-status" role="status" hidden></p>
-      <div class="controls">
-        <button id="store-profile">Save to My profiles</button>
-        <button id="copy-profile" hidden>Save a copy</button>
-        <button id="rename-profile" hidden>Rename saved profile</button>
-        <button id="remove-profile" hidden>Remove saved profile</button>
-      </div>
-      <section id="apply-review" hidden aria-label="Review changes">
-        <p id="review-summary"></p>
-        <details id="review-file-details" open>
-          <summary>Change details</summary>
-          <p id="review-notes" hidden></p>
-          <ul id="review-files"></ul>
-        </details>
-        <button id="apply-selection">Apply these changes</button>
-        <button id="cancel-review">Cancel</button>
-      </section>
-      <p id="hosted-note" hidden>
-        Preview and customize here, then download a preset to use with your local NiriFX
-        installation. <a href="https://jturbide.github.io/niri-fx/gallery/">Browse the gallery</a> ·
-        <a href="https://github.com/jturbide/niri-fx#quick-start">Install NiriFX</a>
-      </p>
-      <details id="transfer-options">
-        <summary>Import, export and share</summary>
-        <div class="controls">
-          <button id="import">Import preset</button
-          ><input id="import-file" type="file" accept=".json,application/json" hidden /><button
-            id="export"
-          >
-            Export JSON</button
-          ><button id="kdl">Export stock Niri config</button
-          ><button id="pointer-kdl" hidden>Export NiriFX session config</button
-          ><button id="share">Share settings</button> <label for="save-target">Save target</label
-          ><select id="save-target">
-            <option value="inir">iNiR / iRiS</option>
-            <option value="noctalia">Noctalia preset file</option>
-            <option value="standalone">Standalone Niri file</option></select
-          ><button id="save">Save to iRiS</button>
-        </div>
-        <small id="pointer-export-note" hidden
-          >Stock config exports omit pointer drag and NiriFX movement. JSON preserves both; the
-          session export requires matching compositor extensions with action-preservation
-          support.</small
-        >
-        <label id="share-result" hidden
-          >Preview link<input id="share-url" type="text" readonly
-        /></label>
-        <small id="save-help"
-          >Saving adds a style to Settings → Windows → Movement → Style. Your current animation
-          stays active until you select another style there.</small
-        >
-      </details>
-      <p id="status" role="status" aria-live="polite"></p>
-      <pre id="error" role="alert"></pre>
     </main>
     <aside id="library-panel">
+      <span class="eyebrow">Make it yours</span>
       <h2 id="library-heading">Choose an opening style</h2>
       <div id="library-action-choices" class="controls">
         <button
@@ -184,23 +164,29 @@
           Preserve
         </button>
         <button id="library-off" title="Disable this action's animation">Off</button>
-        <button id="library-replay">Replay</button>
+        <button class="button-secondary" id="library-replay">Replay</button>
       </div>
       <small id="library-action-help"></small>
-      <label for="library-search">Search</label>
-      <input id="library-search" type="search" placeholder="Find a style or combo" />
-      <label for="library-collection">Browse</label>
-      <select id="library-collection">
-        <option value="recommended">Recommended</option>
-        <option value="favorites">Favorites</option>
-        <option value="customs">My profiles</option>
-        <option value="all">All effects</option>
-      </select>
+      <div class="library-filters">
+        <div>
+          <label for="library-search">Search styles</label>
+          <input id="library-search" type="search" placeholder="Name or effect" />
+        </div>
+        <div>
+          <label for="library-collection">Collection</label>
+          <select id="library-collection">
+            <option value="recommended">Recommended</option>
+            <option value="favorites">Favorites</option>
+            <option value="customs">My profiles</option>
+            <option value="all">All effects</option>
+          </select>
+        </div>
+      </div>
       <div id="library-results" role="group" aria-label="Styles and profiles"></div>
       <small id="library-warning" role="status"></small>
       <p id="library-empty" hidden>No matching looks. Try All effects or a different search.</p>
       <details id="combo-options">
-        <summary>More options</summary>
+        <summary>Customize your combo</summary>
         <h2>Fine-tune your combo</h2>
         <label for="combo-mode">Style choice</label>
         <select id="combo-mode">
@@ -212,8 +198,8 @@
         <div id="combo-actions"></div>
         <small
           >Preserve keeps the underlying desktop or shell configuration. NiriFX Style uses your
-          selected effect. Off disables the action animation. Move and swap share one movement
-          effect.</small
+          selected effect. Off disables the action animation. Move controls dragging and reordering;
+          Swap can use its own style for Swap window left/right commands.</small
         >
         <small id="movement-availability"></small>
         <section id="native-fragments" hidden aria-label="Continuous fragment motion">
@@ -323,6 +309,7 @@
             <option value="close">Close</option>
             <option value="resize">Resize</option>
             <option value="movement">Movement (NiriFX session)</option>
+            <option value="swap">Swap (NiriFX session)</option>
           </select>
           <label for="action-mode">Action behavior</label>
           <select id="action-mode">
@@ -369,6 +356,50 @@
       </div>
     </aside>
   </div>
+  <footer class="workspace-tools">
+    <div class="controls profile-tools" aria-label="Saved profiles">
+      <button class="button-secondary" id="store-profile">Save to My profiles</button>
+      <button class="button-quiet" id="copy-profile" hidden>Save a copy</button>
+      <button class="button-quiet" id="rename-profile" hidden>Rename saved profile</button>
+      <button class="button-quiet" id="remove-profile" hidden>Remove saved profile</button>
+    </div>
+    <p id="hosted-note" hidden>
+      Preview and customize here, then download a preset to use with your local NiriFX installation.
+      <a href="https://jturbide.github.io/niri-fx/gallery/">Browse the gallery</a> ·
+      <a href="https://github.com/jturbide/niri-fx#quick-start">Install NiriFX</a>
+    </p>
+    <details id="transfer-options">
+      <summary>Import, export and share</summary>
+      <div class="controls">
+        <button class="button-quiet" id="import">Import preset</button
+        ><input id="import-file" type="file" accept=".json,application/json" hidden /><button
+          class="button-quiet"
+          id="kdl"
+        >
+          Export stock Niri config</button
+        ><button class="button-quiet" id="pointer-kdl" hidden>Export NiriFX session config</button
+        ><button class="button-quiet" id="share">Share settings</button>
+        <label for="save-target">Save target</label
+        ><select id="save-target">
+          <option value="inir">iNiR / iRiS</option>
+          <option value="noctalia">Noctalia preset file</option>
+          <option value="standalone">Standalone Niri file</option></select
+        ><button class="button-quiet" id="save">Save to iRiS</button>
+      </div>
+      <small id="pointer-export-note" hidden
+        >Stock config exports omit pointer drag, movement and swaps. JSON preserves them; the
+        session export requires matching compositor extensions with action-preservation
+        support.</small
+      >
+      <label id="share-result" hidden
+        >Preview link<input id="share-url" type="text" readonly
+      /></label>
+      <small id="save-help"
+        >Saving adds a style to Settings → Windows → Movement → Style. Your current animation stays
+        active until you select another style there.</small
+      >
+    </details>
+  </footer>
   <dialog
     id="profile-dialog"
     aria-labelledby="profile-dialog-title"
@@ -383,8 +414,8 @@
       </div>
       <p id="profile-dialog-error" role="alert"></p>
       <div class="controls">
-        <button id="profile-confirm" type="submit">Save profile</button>
-        <button id="profile-cancel" type="button">Cancel</button>
+        <button class="button-primary" id="profile-confirm" type="submit">Save profile</button>
+        <button class="button-quiet" id="profile-cancel" type="button">Cancel</button>
       </div>
     </form>
   </dialog>

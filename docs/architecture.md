@@ -78,7 +78,12 @@ both validators and those cases together.
 
 A schema 2 profile keeps four shader actions: open, close, resize and movement.
 Each stores an effect, `null` (Preserve), or `"off"`. Schema 1 imports migrate
-without changing action behavior; serialization emits schema 2.
+without changing action behavior. Serialization keeps schema 2 when no swap
+override exists; schema 3 adds an independent `swap` action. Null removes that
+override, Off disables explicit swaps, and a style emits the timed `window-swap`
+shader. Stock exports omit both native actions. Explicit swaps carry an immutable
+config and shader through their active episode; ordinary moves retain their own
+material and continuous fragment response.
 Optional `motion` and `pointer` objects live beside `actions`. The pointer object
 requires strength, damping and frequency. Omission or null canonicalizes to no
 override; strength zero remains an explicit disabled override. The Python document

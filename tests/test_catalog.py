@@ -27,7 +27,7 @@ from niri_fx.cli import main, parser, selected_effect
 from niri_fx.documents import parse_document
 from niri_fx.effects import PRESETS, animation_types, render_kdl
 from niri_fx.integration import make_builtin_profile, make_presets
-from niri_fx.model import PARAMETERS
+from niri_fx.model import FAMILIES, PARAMETERS
 from niri_fx.profiles import Profile
 from niri_fx.terminal import catalog
 
@@ -76,6 +76,21 @@ class CuratedProfileTests(unittest.TestCase):
         )
         self.assertEqual(families(profile), ("fragments", "pixels", "elastic", "distortion"))
         self.assertEqual(families(PROFILES["ribbon-current"]), ("slices",))
+
+    def test_movement_collection_exports_only_when_movement_is_selected(self):
+        for name in COLLECTIONS["movement"]["styles"]:
+            with self.subTest(name=name):
+                effect = PRESETS[name]
+                self.assertTrue(FAMILIES[effect.family]["movement"])
+                self.assertNotIn("window-movement", animation_types(effect))
+                self.assertNotIn("window-resize", animation_types(effect))
+                profile = Profile(None, None, movement=effect)
+                exported = animation_types(profile, movement=True)
+                self.assertEqual(set(exported), {"window-movement"})
+                movement = exported["window-movement"]
+                self.assertEqual(movement["duration-ms"], effect.movement_ms)
+                self.assertIn("vec4 move_color(", movement["custom-shader"])
+                self.assertNotIn("@", movement["custom-shader"])
 
     def test_inir_search_keywords_cover_pairings_and_collections(self):
         registry = {p["id"]: p for p in make_presets(shell_registry())}
@@ -181,7 +196,7 @@ class CuratedProfileTests(unittest.TestCase):
             check=False,
         )
         self.assertEqual(result.returncode, 0, result.stderr)
-        self.assertEqual(len(PRESETS), 75)
+        self.assertEqual(len(PRESETS), 80)
         self.assertEqual(len(PROFILES), 16)
         for name, (opening, closing, _) in PROFILE_RECIPES.items():
             if name in PROFILE_TUNING:

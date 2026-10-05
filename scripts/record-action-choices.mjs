@@ -22,7 +22,7 @@ try {
   await evaluate(`(() => {
     seed=.43;
     const style=document.createElement('style');
-    style.textContent='canvas{max-height:470px;min-height:0}';document.head.append(style);
+    style.textContent='canvas{max-height:380px;min-height:0}aside{max-height:calc(100vh - 470px)}';document.head.append(style);
     const banner=document.createElement('div');banner.id='recording-step';
     banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#212331;color:#f0edf7;font:600 19px system-ui;z-index:100';document.body.append(banner);
     document.querySelector('[data-library-action=combo]').click();document.querySelector('[data-style=fragment-flow]').click();
@@ -53,11 +53,27 @@ try {
   assert.equal(document.actions.open, null);
   assert.equal(document.actions.close.family, "dissolve");
   assert.equal(document.actions.resize, "off");
+  await select("combo-movement", "fragment-wake");
+  await select("combo-swap", "pixel-relay");
+  const movement = await evaluate("effectDocument().actions.movement");
+  assert.equal(await evaluate("effectDocument().actions.swap.family"), "pixels");
+  await evaluate(
+    "byId('library-panel').scrollTop+=byId('combo-swap-mode').getBoundingClientRect().top-byId('library-panel').getBoundingClientRect().top-190",
+  );
+  await hold("Move with Fragment Wake / Swap with Pixel Relay", 2);
+  await select("combo-swap-mode", "off");
+  assert.deepEqual(await evaluate("effectDocument().actions.movement"), movement);
+  await hold("Turn Swap off / Your Move style stays the same", 1.5);
+  await select("combo-swap-mode", "preserve");
+  await select("combo-movement-mode", "preserve");
+  await evaluate(
+    "byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-120",
+  );
   await select("combo-mode", "same");
   assert.equal(await evaluate("effectDocument().actions.open"), null);
   assert.equal(await evaluate("effectDocument().actions.resize"), "off");
   await hold("Shared style only changes NiriFX Style actions / Preserve and Off stay selected", 2);
-  await select("combo-mode", "different");
+  await select("combo-mode", "mixed");
   await select("combo-open-mode", "off");
   await select("combo-close-mode", "off");
   await hold("All three stock actions Off / Each choice remains independent", 2);
@@ -117,6 +133,8 @@ try {
     checks: [
       "independent Preserve / NiriFX Style / Off",
       "Preserve retains underlying configuration",
+      "independent Move and Swap styles",
+      "Swap Off leaves Move unchanged",
       "shared style preserves other modes",
       "all stock actions Off",
       "actual JSON/KDL downloads",

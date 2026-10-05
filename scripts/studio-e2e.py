@@ -56,6 +56,8 @@ def main():
                 str(registry),
                 "--state",
                 str(root / "studio-state"),
+                "--target",
+                "inir",
                 "--inir-root",
                 str(root),
             ],

@@ -99,6 +99,21 @@ class NativeSessionTests(unittest.TestCase):
         self.assertEqual(report["runtime_acceptance"], "not_assessed")
         self.assertEqual(self.plan()["changes"], [])
 
+    def test_retained_three_patch_bundle_does_not_gain_swap_support(self):
+        self.record.pop("swap_patch_sha256")
+        block = self.record["native_build"]
+        block["inputs"]["patches"].pop()
+        block["build_id"] = native_build.fingerprint(block["inputs"])
+        self.save_record()
+        bundle_id = self.stage()
+        report = native_session.inspect_bundle(self.destination, bundle_id)
+        self.assertFalse(report["swap_supported"])
+        self.assertFalse(
+            (
+                self.destination / "bundles" / bundle_id / "provenance/experimental/niri-swap.patch"
+            ).exists()
+        )
+
     def test_frozen_bundle_survives_original_candidate_removal(self):
         bundle_id = self.stage()
         for folder in (self.candidate, self.repository):

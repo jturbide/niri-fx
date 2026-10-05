@@ -156,7 +156,7 @@ starting values for `render`, `preview`, `studio`, or a named `register`.
 
 ## Presets
 
-The current checkout has 75 built-ins across nine families. The original styles are listed below;
+The current checkout has 80 built-ins across nine families. The original styles are listed below;
 [new styles and controls](effect-controls.md) cover five varied Fragments, four
 additional Fragments, Slices and Elastic presets, including piece shapes, hinges and spring transforms.
 

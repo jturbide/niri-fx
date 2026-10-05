@@ -245,6 +245,7 @@ def context(root, base_bundle, *, socket_path=None):
             capabilities.movement_capability,
             capabilities.pointer_capability,
             capabilities.fragment_capability,
+            *((capabilities.swap_capability,) if base.get("swap_supported") else ()),
         ):
             if not probe(startup["binary"], socket_path=socket_path)["activation_ready"]:
                 raise ValueError("The running renderer could not verify every NiriFX interface")

@@ -25,8 +25,9 @@ def agent_info():
         "source_argv_prefix": ["python3", "-m", "niri_fx"],
         "document_formats": {
             "effect_schema": PRESET_SCHEMA,
-            "profile_schema": PROFILE_SCHEMA,
-            "accepted_profile_schemas": [1, PROFILE_SCHEMA],
+            "profile_schema": 2,
+            "profile_schema_with_swap": PROFILE_SCHEMA,
+            "accepted_profile_schemas": [1, 2, PROFILE_SCHEMA],
             "action_modes": {"preserve": None, "off": "off", "style": "effect object"},
             "pointer_modes": {
                 "preserve": "absent or null",
@@ -34,7 +35,7 @@ def agent_info():
                 "style": "positive strength settings",
             },
             "max_bytes": MAX_DOCUMENT_BYTES,
-            "shader_actions": ["open", "close", "resize", "movement"],
+            "shader_actions": ["open", "close", "resize", "movement", "swap"],
             "optional_profile_settings": ["motion", "pointer"],
         },
         "operations": {

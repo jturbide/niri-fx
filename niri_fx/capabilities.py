@@ -184,6 +184,53 @@ def _pointer_probe(binary):
     return _probe(binary, node=POINTER_NODE, label="pointer", node_name="pointer-wobble")
 
 
+def _swap_contract(connection):
+    unknown = {"status": "unknown", "detail": "Running swap shader contract is unverified."}
+    try:
+        data = _reply(connection, "NiriFxSwapCapabilities")["Ok"]["NiriFxSwapCapabilities"]
+        if (
+            not isinstance(data, dict)
+            or set(data) != {"schema", "swap_shader", "renderer_verified", "configured"}
+            or type(data["schema"]) is not int
+            or data["schema"] != 1
+            or type(data["swap_shader"]) is not int
+            or data["swap_shader"] != 1
+            or any(type(data[key]) is not bool for key in ("renderer_verified", "configured"))
+        ):
+            return unknown
+        return data | {
+            "status": "verified" if data["renderer_verified"] else "unavailable",
+            "detail": "Independent swap interface compiled in the running renderer."
+            if data["renderer_verified"]
+            else "The renderer could not verify independent swaps.",
+        }
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return unknown
+
+
+def _swap_probe(binary):
+    try:
+        with tempfile.TemporaryDirectory(prefix="nirifx-swap-capability-") as directory:
+            path = Path(directory) / "probe.kdl"
+            path.write_text(
+                "animations { window-swap { duration-ms 200; " + SHADER_NODE + " }; }\n"
+            )
+            result = subprocess.run(
+                [binary, "validate", "-c", str(path)],
+                capture_output=True,
+                text=True,
+                timeout=PROBE_TIMEOUT,
+                env=os.environ | {"NO_COLOR": "1"},
+            )
+            if result.returncode:
+                if "unexpected node `window-swap`" in result.stderr:
+                    return "unsupported", "This build does not support independent swaps."
+                return "unknown", "Could not validate the isolated swap config."
+    except (OSError, subprocess.SubprocessError) as error:
+        return "unknown", f"Swap config probe failed: {error}"
+    return "supported", "Accepts window-swap (parser check only)."
+
+
 def _session(socket_path, identity, *, contract=_contract, label="movement shader"):
     result = {
         "connected": False,
@@ -242,6 +289,11 @@ def pointer_capability(binary=None, *, socket_path=None):
 def fragment_capability(binary=None, *, socket_path=None):
     """Inspect the fragment extension without changing or enabling desktop effects."""
     return _capability(binary, socket_path, "fragment motion", _probe, _fragment_contract)
+
+
+def swap_capability(binary=None, *, socket_path=None):
+    """Keep independent swaps unavailable on older retained compositors."""
+    return _capability(binary, socket_path, "swap", _swap_probe, _swap_contract)
 
 
 def _capability(binary, socket_path, label, probe, contract):

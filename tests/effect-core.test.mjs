@@ -440,3 +440,51 @@ test("schema 2 action modes round-trip and legacy input migrates without changin
   for (const name of ["", "bad\n", null])
     assert.throws(() => core.normalizePreset({ ...document, name }), /Name must/);
 });
+
+test("independent swaps round-trip and export their own timed shader", () => {
+  for (const swap of [catalog.presets["pixel-relay"], catalog.presets.balanced, "off", null]) {
+    const input = {
+      kind: "profile",
+      schema: 3,
+      name: "Independent swaps",
+      actions: {
+        open: null,
+        close: "off",
+        resize: null,
+        movement: catalog.presets["fragment-wake"],
+        swap,
+      },
+    };
+    const doc = core.normalizePreset(input);
+    assert.equal(doc.schema, swap === null ? 2 : 3);
+    assert.deepEqual(plain(core.decodeShareDocument(core.encodeShareDocument(doc))), plain(doc));
+    for (const enabled of [false, ...(swap === null ? [] : [true])]) {
+      const options = { movement: true, swap: enabled };
+      const actual = core.renderKdl(doc, options);
+      const expected = execFileSync(
+        "python3",
+        [
+          "-c",
+          "import json,sys;from niri_fx.documents import parse_document;from niri_fx.effects import render_kdl;d=json.load(sys.stdin);print(render_kdl(parse_document(d['document'])[2], **d['options']), end='')",
+        ],
+        { input: JSON.stringify({ document: doc, options }), encoding: "utf8" },
+      );
+      assert.equal(actual.slice(actual.indexOf("\n")), expected.slice(expected.indexOf("\n")));
+      assert.equal(actual.includes("window-swap"), enabled);
+    }
+  }
+  assert.throws(() =>
+    core.normalizePreset({
+      kind: "profile",
+      schema: 2,
+      name: "Invalid",
+      actions: {
+        open: null,
+        close: null,
+        resize: null,
+        movement: null,
+        swap: "off",
+      },
+    }),
+  );
+});

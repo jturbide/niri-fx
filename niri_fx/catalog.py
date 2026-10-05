@@ -206,6 +206,20 @@ COLLECTIONS = {
         "description": "Coordinated window effects and workspace, camera and overview springs",
         "styles": ("gentle-motion", "balanced-motion", "playful-motion"),
     },
+    "movement": {
+        "label": "Movement and swaps",
+        "description": "Timed fragments, ribbons, springs, pixels and distortion for rearranging windows",
+        "styles": (
+            "fragment-wake",
+            "ribbon-transfer",
+            "ribbon-cascade",
+            "momentum-glide",
+            "spring-rebound",
+            "pixel-relay",
+            "ripple-transit",
+            "vortex-transit",
+        ),
+    },
     "everyday": {
         "label": "Everyday",
         "description": "Compact movement and readable arrivals",
@@ -340,7 +354,7 @@ def title(name):
 
 def families(style):
     effects = (
-        (style.open, style.close, style.resize, style.movement)
+        (style.open, style.close, style.resize, style.movement, style.swap)
         if isinstance(style, Profile)
         else (style,)
     )
@@ -368,7 +382,9 @@ def summaries(keys):
             optional.append("resize")
         if profile:
             optional.extend(
-                action for action in ("movement", "motion", "pointer") if getattr(style, action)
+                action
+                for action in ("movement", "swap", "motion", "pointer")
+                if getattr(style, action)
             )
         result[key] = {
             "name": title(key),

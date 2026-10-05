@@ -144,7 +144,7 @@ node scripts/record-combo-showcases.mjs --only=geometric-flow,ribbon-current,sof
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **214 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **229 GIFs**, including all **80 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -557,6 +557,26 @@ python3 scripts/build-gallery.py
 The movement shader preview is a synthetic directional path. Native swaps and
 rearrangement clips use the compositor's layout paths. See the
 [movement and resize showcases](../showcases.md#general-movement-and-shaped-resize).
+
+The additional movement collection has a stock open/close loop, a real shader
+preview and a native swap for each style. All use the preset's configured timing.
+Reproduce them in separate recording runs so browser automation cannot obscure
+the owned compositor window:
+
+```sh
+node scripts/render-readme-gifs.mjs --only=preset-ribbon-cascade,preset-spring-rebound,preset-pixel-relay,preset-ripple-transit,preset-vortex-transit,movement-ribbon-cascade,movement-spring-rebound,movement-pixel-relay,movement-ripple-transit,movement-vortex-transit
+python3 scripts/record-native-gif.py --preset ribbon-cascade --name native-swap-ribbon-cascade --duration-ms 680
+python3 scripts/record-native-gif.py --preset spring-rebound --name native-swap-spring-rebound --duration-ms 640
+python3 scripts/record-native-gif.py --preset pixel-relay --name native-swap-pixel-relay --duration-ms 620
+python3 scripts/record-native-gif.py --preset ripple-transit --name native-swap-ripple-transit --duration-ms 680
+python3 scripts/record-native-gif.py --preset vortex-transit --name native-swap-vortex-transit --duration-ms 720
+python3 scripts/build-gallery.py
+```
+
+The native captures check bounded IPC latency, round-trip layout, settled color
+populations and render logs. They exercise timed column swaps with synthetic
+clients through the shared Move renderer, not the independent Swap selection
+or continuous pointer-drag renderer.
 
 ## Mixed shapes and coordinated desktop motion
 

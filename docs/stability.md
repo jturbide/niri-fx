@@ -54,6 +54,7 @@ gate. The existing broader validation and export-parity suites remain required.
 | --- | --- |
 | Style schema 3 | Omitted parameters receive defaults; representative timing and shape bounds retain their values and units. Resize remains explicit. |
 | Profile schema 1 imports | Valid older profiles normalize to schema 2 without changing their selected styles or optional-action inheritance. Invalid legacy null opening/closing choices are rejected. |
+| Profile schema 3 swap override | Adds a fifth `swap` action using the same modes. Existing documents without an override remain schema 2. Stock exports omit it; managed activation requires the separate native swap contract. |
 | Profile schema 2 action choices | All four action keys are required. `null` means Preserve, `"off"` means Off, and an effect object means NiriFX Style. Preserve omits the override; Off emits an explicit disabling node. |
 | Pointer retention and stock export | Absent or null pointer settings preserve underlying behavior; zero strength is Off, and positive strength retains the chosen settings. Stock export omits experimental movement and pointer settings, including explicit Off choices. |
 | Unsupported input | Unknown fields, schemas and actions, partial pointer settings, unsupported resize families, booleans used as numbers and out-of-range controls fail validation. CLI `inspect` returns status 2 with a diagnostic and no success JSON. Error sentences are not frozen. |
@@ -89,8 +90,8 @@ must state its target and report settings that cannot be represented.
 Current document readers reject unknown fields. Before freezing formats, choose
 how documents identify new requirements and how unsupported input is reported;
 do not silently discard settings. Define omitted fields, `null`, defaults and
-Preserve / Style / Off explicitly. Move and swap share one compositor action;
-pointer drag has separate controls even where their exported configuration shares
+Preserve / Style / Off explicitly. Updated NiriFX builds provide a separate Swap
+override for explicit left/right swaps; pointer drag has separate controls even where their exported configuration shares
 a node. See the [action-selection work](../ROADMAP.md#consistent-action-selection).
 
 Application versions, document schema numbers, discovery schemas and native

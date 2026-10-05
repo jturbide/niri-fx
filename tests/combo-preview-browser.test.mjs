@@ -295,6 +295,14 @@ test("pointer choices survive Library editing, JSON, sharing and stock-safe expo
     assert.match(await evaluate("kdlDocument({pointer:true})"), /strength 0\.0/);
     await choose("");
     assert.equal(await evaluate('Object.hasOwn(effectDocument(),"pointer")'), false);
+    assert.equal(
+      await evaluate('byId("pointer-kdl").hidden'),
+      false,
+      "Movement still needs the session export after pointer settings are removed",
+    );
+    await evaluate(
+      'byId("combo-movement-mode").value="preserve";byId("combo-movement-mode").dispatchEvent(new Event("change"))',
+    );
     assert.equal(await evaluate('byId("pointer-kdl").hidden'), true);
     await browser.callFunction(
       `async function(text) {
