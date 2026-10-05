@@ -111,6 +111,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- NiriFX login entries no longer fail before starting the compositor when SDDM
+  treats quoted executable paths literally. Session-entry preparation rejects
+  incompatible runtime or storage paths before writing files.
 - Native bundle inspection now uses the same bounded configuration scanner as
   include snapshots, so a leading byte-order mark cannot hide an external include
   in an older single-file bundle.

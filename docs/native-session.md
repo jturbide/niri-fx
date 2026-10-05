@@ -33,6 +33,13 @@ Commands also work as `python3 -m niri_fx` from the checkout, but its location a
 Python interpreter must remain available to the login launcher. Keep the
 installation used by an existing launcher until you have reviewed its replacement.
 
+Use the default tool and session-storage paths, or paths without spaces or
+command metacharacters. SDDM splits the login command without interpreting quoted
+arguments. Entry preparation therefore accepts only letters, digits and
+`_./:@+-` in its interpreter and launcher paths, and rejects incompatible paths
+before staging. Configuration source paths are not subject to this entry-specific
+restriction.
+
 Build a desktop candidate from the NiriFX checkout:
 
 ```sh

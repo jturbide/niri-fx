@@ -5,6 +5,7 @@ import io
 import json
 import os
 import shutil
+import tempfile
 import unittest
 from contextlib import redirect_stdout
 from pathlib import Path
@@ -22,7 +23,12 @@ class NativeInstallTests(unittest.TestCase):
         self.fixture = test_native_session.NativeSessionTests(methodName="runTest")
         self.fixture.setUp()
         self.addCleanup(self.fixture.doCleanups)
-        self.root = self.fixture.destination
+        temporary = tempfile.TemporaryDirectory(prefix="native-install-")
+        self.addCleanup(temporary.cleanup)
+        self.root = Path(temporary.name) / "installed"
+        self.fixture.destination = self.root
+        self.fixture.stage_state = self.root / "state/staging"
+        self.fixture.selection_state = self.root / "state/selection"
         self.candidate = self.fixture.candidate
         (self.candidate / "bin").mkdir()
         self.fixture.binary.rename(self.candidate / "bin/niri")
@@ -62,6 +68,24 @@ class NativeInstallTests(unittest.TestCase):
         self.assertIsNone(plan["selection"]["previous"])
         self.assertEqual(Path(plan["changes"][-1]["target"]), self.root / "selection.json")
         self.assertTrue(all(Path(c["target"]).is_relative_to(self.root) for c in plan["changes"]))
+
+    def test_unsafe_login_storage_refuses_before_mutation_or_execution(self):
+        before = {p: p.read_bytes() for p in self.fixture.root.rglob("*") if p.is_file()}
+        destination = self.root.parent / "native storage"
+        with (
+            patch("subprocess.run") as command,
+            patch("subprocess.Popen") as child,
+            self.assertRaisesRegex(ValueError, "SDDM"),
+        ):
+            install_plan(destination, self.candidate, self.fixture.config)
+        command.assert_not_called()
+        child.assert_not_called()
+        self.validator.assert_not_called()
+        self.assertFalse(destination.exists())
+        self.assertFalse(self.root.exists())
+        self.assertEqual(
+            before, {p: p.read_bytes() for p in self.fixture.root.rglob("*") if p.is_file()}
+        )
 
     def test_apply_copies_candidate_config_entry_then_selects_and_validates(self):
         self.fixture.config.write_text('include "more.kdl"\nlayout {}\n')

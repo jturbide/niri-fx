@@ -4,6 +4,8 @@ import contextlib
 import io
 import json
 import os
+import shlex
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -16,7 +18,7 @@ from niri_fx.setup import apply_plan, plan_fingerprint
 
 class NativeEntryTests(unittest.TestCase):
     def setUp(self):
-        self.tmp = tempfile.TemporaryDirectory(prefix="native entry ")
+        self.tmp = tempfile.TemporaryDirectory(prefix="native-entry-")
         self.addCleanup(self.tmp.cleanup)
         self.root = Path(self.tmp.name)
         self.selection = self.root / "selection.json"
@@ -55,10 +57,106 @@ class NativeEntryTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "symlink"):
             native_entry.entry_plan(self.root)
 
-    def test_exec_arguments_escape_both_desktop_layers(self):
-        self.assertEqual(native_entry._exec_argument('a b%$`"\\'), '"a b%%\\\\$\\\\`\\\\"\\\\\\\\"')
+    def test_exec_arguments_use_tokens_safe_for_desktop_and_sddm(self):
+        value = "/tmp/niri-fx_1.0+test:@/python"
+        self.assertEqual(native_entry._exec_argument(value), value)
+        for value in (
+            "",
+            "path with spaces",
+            'quote"',
+            "quote'",
+            "backslash\\",
+            "%f",
+            "$HOME",
+            "`command`",
+            "a;b",
+            "*",
+            "?",
+            "[ab]",
+            "(a)",
+            "a>b",
+            "a<b",
+            "a|b",
+            "a&b",
+            "#a",
+            "~a",
+            "a=b",
+            "café",
+        ):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "SDDM"):
+                native_entry._exec_argument(value)
         with self.assertRaisesRegex(ValueError, "control"):
             native_entry._exec_argument("bad\npath")
+
+    def test_unsafe_launcher_or_python_path_refuses_without_writes(self):
+        before = {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        for name in ("native storage", "native%f", 'native"quoted', "native[glob]"):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "SDDM"):
+                native_entry.entry_files(self.root / name)
+        with (
+            patch.object(native_entry.sys, "executable", "/synthetic/python install/bin/python"),
+            self.assertRaisesRegex(ValueError, "SDDM"),
+        ):
+            native_entry.entry_files(self.root)
+        self.assertEqual(before, {p: p.read_bytes() for p in self.root.rglob("*") if p.is_file()})
+        self.assertEqual(list(self.root.iterdir()), [self.selection])
+
+    def test_generated_entry_runs_through_desktop_and_sddm_parsers(self):
+        # Load a harmless package instead of native_login. Package paths are
+        # Python literals, so they can still contain characters forbidden in Exec.
+        package = self.root / "package with spaces %$'\\" / "niri_fx"
+        package.mkdir(parents=True)
+        (package / "__init__.py").write_text("")
+        (package / "native_login.py").write_text(
+            "import json\ndef main(args):\n    print(json.dumps(args))\n    return 0\n"
+        )
+        with patch.object(native_entry, "__file__", str(package / "native_entry.py")):
+            plan = native_entry.entry_plan(self.root)
+        apply_plan(plan, self.root / "state")
+        entry = (self.root / "session/niri-fx.desktop").read_text()
+        command = next(line[5:] for line in entry.splitlines() if line.startswith("Exec="))
+        self.assertEqual(shlex.split(command), command.split())
+
+        # Mirror SDDM's bash/zsh dispatch without reading system or user profiles.
+        shell = self.root / "bash"
+        shell.write_text('#!/bin/sh\n[ "$1" = --login ] || exit 91\nshift\nexec /bin/sh "$@"\n')
+        shell.chmod(0o700)
+        dispatch = "exec $SHELL --login -c 'exec \"$@\"' - $@"
+        env = {"HOME": str(self.root), "SHELL": str(shell), "PATH": "/usr/bin:/bin", "LANG": "C"}
+        commands = {
+            "desktop": shlex.split(command),
+            "sddm": ["/bin/sh", "-c", dispatch, "wayland-session", command],
+        }
+        for parser, argv in commands.items():
+            with self.subTest(parser=parser):
+                result = subprocess.run(argv, env=env, capture_output=True, text=True, timeout=5)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual(json.loads(result.stdout), ["--root", str(self.root), "launch"])
+
+        old_command = " ".join(f'"{argument}"' for argument in command.split())
+        failed = subprocess.run(
+            ["/bin/sh", "-c", dispatch, "wayland-session", old_command],
+            env=env,
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        self.assertEqual(failed.returncode, 127)
+        self.assertEqual(failed.stdout, "")
+
+    def test_old_quoted_entry_requires_reviewed_repair(self):
+        plan = native_entry.entry_plan(self.root)
+        apply_plan(plan, self.root / "state")
+        entry = self.root / "session/niri-fx.desktop"
+        lines = entry.read_text().splitlines()
+        for index, line in enumerate(lines):
+            if line.startswith("Exec="):
+                lines[index] = "Exec=" + " ".join(f'"{word}"' for word in line[5:].split())
+        old = "\n".join(lines) + "\n"
+        entry.write_text(old)
+        with self.assertRaisesRegex(ValueError, "differs; preserving it for review"):
+            native_entry.entry_plan(self.root)
+        self.assertEqual(entry.read_text(), old)
 
     def test_permission_change_invalidates_review(self):
         plan = native_entry.entry_plan(self.root)
