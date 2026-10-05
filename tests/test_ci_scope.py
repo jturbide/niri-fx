@@ -79,6 +79,8 @@ class ScopeTests(unittest.TestCase):
             "tests/fixtures/pointer-native-reference.json",
             "tests/pointer-preview.test.mjs",
             "tests/pointer-preview-browser.test.mjs",
+            "tests/fragment-motion-render.test.mjs",
+            "niri_fx/shaders/fragment-motion.glsl",
             "tests/future-native-test.py",
             "scripts/test-new-native-feature.py",
             "experimental/future.patch",

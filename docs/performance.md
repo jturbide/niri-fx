@@ -480,3 +480,150 @@ at 50 fps independently of these timestamps.
 
 [Recorded settings, checks and diagnostic scope](benchmarks/pointer-wobble.json) ·
 [Reproduce the native pointer run](pointer-wobble.md#reproduce-validation-and-showcases)
+
+## Continuous fragment state
+
+The experimental continuous fragment renderer keeps individual spring states.
+Its release-mode CPU benchmark uses default native controls and **actual** cell
+counts, rather than the requested particle count before grid rounding. Input
+timestamps are simulated; wall-clock measurements cover state updates and sample
+allocation, without GPU drawing or physical presentation.
+
+A long idle previously replayed the recent two-second simulation interval even
+when the analytical catch-up had already brought every piece to exact rest. That
+replay is now skipped only when positions, spread, pinning, rotation and tilt are
+at their targets, velocities are zero, and no delayed target remains. Tiny angular
+residue and pending motion still take the original path.
+
+On an AMD Ryzen 9 7950X, the paired release-mode rerun measured:
+
+| Actual cells | Ordinary 60 Hz update before / after (ms) | Recovery after 24-hour idle before / after (ms) |
+| ---: | ---: | ---: |
+| 600 | 0.176 / 0.182 | 15.47 / 0.061 |
+| 800 | 0.237 / 0.244 | 20.37 / 0.081 |
+| 1200 | 0.359 / 0.369 | 30.99 / 0.120 |
+| 4096 | 1.245 / 1.291 | 108.52 / 0.425 |
+
+Values are medians. The idle cases start from one 100 × 20 logical-pixel target
+step; they do not measure recovery with a full delayed-input history. Ordinary
+60 Hz updates were about 3% slower in this paired run;
+this change claims a long-idle recovery improvement, not faster ordinary frames.
+The shared host had no CPU-affinity or frequency isolation. The simulated idle
+does not test physical suspend/resume. GPU cost, allocation
+outside the sampled state and multi-window presentation remain separate work.
+The [complete samples and measurement scope](benchmarks/fragment-motion-cpu.json)
+include both run pairs, 120 Hz input and sample-allocation costs.
+
+After building the fragment experiment, use a working Rust toolchain and the
+same native build dependencies to reproduce the current CPU benchmark:
+
+```sh
+cd artifacts/niri-fragment-drag-src
+NIRIFX_FRAGMENT_BENCHMARK=/tmp/nirifx-fragment-cpu.json \
+    cargo test --release --locked --lib fragment_motion_benchmark -- --ignored --nocapture
+```
+
+The benchmark refuses a debug build. Native differential tests compare the old
+and new integrators across release and held states, timing cutoffs, and extreme
+controls. The recorded default motion fixture remains byte-identical.
+
+### Recovery after dense input
+
+The single-step result above does not cover a queue of delayed movement. A
+separate release-mode benchmark feeds 255 inputs at 250 Hz, reversing direction
+every 32-event block.
+Coalescing and retention leave 154 reachable history entries. A second, synthetic
+capacity case restores all 256 entries, including the initial rest event; it is
+reported separately rather than presented as normal input.
+
+On the same Ryzen 9 7950X, the independent repeat measured these median CPU
+recovery costs with default native controls and reachable input history:
+
+| Actual cells | 2.001-second gap (ms) | 4-second gap (ms) | 24-hour gap (ms) |
+| ---: | ---: | ---: | ---: |
+| 600 | 19.859 | 19.061 | 0.305 |
+| 800 | 26.494 | 25.385 | 0.419 |
+| 1200 | 40.373 | 38.462 | 0.640 |
+| 4096 | 140.376 | 132.261 | 2.180 |
+
+Each combination has seven samples in each of two runs. The extreme-control
+case at 4096 cells took about 144 ms after a four-second gap. These are observed
+state-update costs on a shared host, not measured dropped frames or physical
+suspend/resume results. Shorter gaps still require the bounded recent replay,
+so the long-idle shortcut does not remove every recovery spike. Reducing that
+cost while retaining queued motion is a remaining optimization task. Preset
+defaults and the particle limit are unchanged.
+
+The [complete dense-history report](benchmarks/fragment-motion-dense-cpu.json)
+includes both runs, reachable and synthetic histories, default and extreme
+controls, raw samples and source fingerprints. To reproduce after building the
+fragment experiment:
+
+```sh
+cd artifacts/niri-fragment-drag-src
+NIRIFX_FRAGMENT_DENSE_BENCHMARK=/tmp/nirifx-fragment-dense-cpu.json \
+    cargo test --release --locked --lib fragment_motion_dense_benchmark -- --ignored --nocapture
+```
+
+### Continuous mesh GPU probe
+
+The hardware probe uses actual Rust-emitted meshes at 600, 800, 1200 and 4096
+source cells, the native vertex shader and mesh epilogue, and the generated
+fragment material. It draws one, two or four overlapping synthetic windows in
+1080p and 4K framebuffers. Layout scales with framebuffer size. Every window
+must contribute visible pixels; rest and settled poses must match the original
+source quad, and zero opacity must produce transparent output.
+
+The probe measures a fixed batch of 32 compositions per GPU query. Each
+composition clears once and draws all selected windows. Raw query nanoseconds
+are retained, then divided by 32 to estimate the cost of one composition. Reported
+percentiles describe these batch averages, not individual frames. Fixed batching
+improves resolution for short draws; zero or disjoint results still fail the run.
+Software renderers and missing hardware timers are rejected.
+
+Buffers and textures are uploaded before measurement, and pixel checks finish
+before warmup. The timed work excludes particle simulation, uploads, compilation,
+readbacks, compositor work and presentation. It repeats one moving pose with warm
+caches. Texture dimensions and aspect ratios also vary with density, so the
+matrix does not isolate per-cell cost or establish desktop frame rates.
+
+The RTX 4070 Ti / Chromium ANGLE OpenGL run passed all 24 combinations twice,
+with 2880 valid queries and no discarded measurement samples. The table shows
+the larger P95 **batch-average milliseconds per composition** from the two runs
+for four overlapping windows:
+
+| Cells per window | 1920×1080 | 3840×2160 |
+| ---: | ---: | ---: |
+| 600 | 0.0152 | 0.0454 |
+| 800 | 0.0178 | 0.0558 |
+| 1200 | 0.0210 | 0.0606 |
+| 4096 | 0.0320 | 0.0609 |
+
+The [full GPU report](benchmarks/fragment-motion-gpu.json) includes one- and
+two-window cases, both repeats, raw query times, per-window pixel contributions,
+coverage, geometry and source fingerprints. Pixel coverage ranges from 15.8% to
+54.9% of the framebuffer. Earlier single-composition attempts returned zero
+timer values and were rejected; they are not part of these results. This evidence
+does not remove the CPU recovery work above or establish performance on another
+GPU. Native buffer preparation, uploads and presentation still need separate
+measurement before raising particle limits.
+
+After building the experiment, emit the fixture with the same native toolchain,
+then run the hardware probe from the repository root:
+
+```sh
+(
+    cd artifacts/niri-fragment-drag-src
+    NIRIFX_FRAGMENT_MESH_BENCH_FIXTURE=/tmp/nirifx-fragment-meshes.json \
+        cargo test --release --locked --lib fragment_mesh_emit_benchmark_fixture -- --ignored --nocapture
+)
+node scripts/benchmark-fragment-gpu.mjs \
+    --fixture /tmp/nirifx-fragment-meshes.json \
+    --native-source artifacts/niri-fragment-drag-src \
+    --output /tmp/nirifx-fragment-gpu.json
+```
+
+Use a fresh output filename. Defaults collect 60 query samples per case after
+12 warmup queries and repeat the matrix in two independent Chromium profiles.
+`--check` validates fixture and source inputs without launching a browser;
+`--software` exercises rejection and must not produce a hardware measurement.

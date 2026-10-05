@@ -46,6 +46,7 @@ __all__ = [
     "shader",
     "resize_shader",
     "movement_shader",
+    "fragment_motion_eligible",
     "animation_types",
     "render_kdl",
     "preset_description",
@@ -120,6 +121,13 @@ def shader_templates():
             .replace("@FUNCTION@", family)
         )
         templates[f"move-{renderer}"] = _template(TEMPLATE_FILES[renderer], entry)
+        if renderer in {"classic", "gravity"}:
+            # The native extension owns its forward mesh and per-cell state.
+            # Older compositors and Studio use the exact timed entry below.
+            continuous = root.joinpath("fragment-motion.glsl").read_text()
+            templates[f"move-{renderer}-continuous"] = _template(
+                TEMPLATE_FILES[renderer], continuous + "\n" + entry
+            )
     return templates
 
 
@@ -154,7 +162,33 @@ def movement_shader(effect):
     """Experimental API: emit only for the pinned patched compositor."""
     if not FAMILIES[effect.family]["movement"]:
         raise ValueError(f"The {effect.family} family does not support experimental movement")
-    return _expand(shader_templates()[f"move-{renderer_name(effect)}"], effect, False)
+    suffix = "-continuous" if fragment_motion_eligible(effect) else ""
+    return _expand(shader_templates()[f"move-{renderer_name(effect)}{suffix}"], effect, False)
+
+
+def fragment_motion_eligible(effect):
+    """Limit the native mesh prototype to an unmodified square lattice.
+
+    Unsupported materials keep their existing timed renderer. Shape mixtures,
+    waves and variable cell sizes need a matching mesh material before they can
+    advertise this contract. The native block owns its motion controls; a zero
+    portable movement strength still means no continuous deformation.
+    """
+    return (
+        effect.family == "fragments"
+        and effect.movement_strength > 0
+        and effect.particles <= 4096
+        and effect.effective_shape == "square"
+        and not effect.mixed_shapes
+        and not effect.fragment_orientation
+        and not effect.fragment_roundness
+        and not effect.fragment_shrink
+        and not effect.size_variation
+        and not effect.direction_variation
+        and not effect.wave_strength
+        and effect.rotation in {"none", "random"}
+        and effect.release == "together"
+    )
 
 
 def shape_search_radius(effect, *, resizing=False):

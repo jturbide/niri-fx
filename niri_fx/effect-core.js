@@ -79,12 +79,32 @@ function createEffectCore(catalog) {
           ? "resize-shaped"
           : catalog.resize_templates[p.family]
         : moving
-          ? "move-" + renderer
+          ? "move-" + renderer + (fragmentMotionEligible(p) ? "-continuous" : "")
           : renderer
     ].replace(/@([A-Z_]+)@/g, (_, key) => {
       if (!Object.hasOwn(tokens, key)) throw new Error("Unknown shader token: " + key);
       return tokens[key];
     });
+  }
+  function fragmentMotionEligible(p) {
+    const shape = p.fragment_mix === 1 ? p.fragment_secondary : p.fragment_shape;
+    const mixed =
+      p.fragment_mix > 0 && p.fragment_mix < 1 && p.fragment_shape !== p.fragment_secondary;
+    return (
+      p.family === "fragments" &&
+      p.movement_strength > 0 &&
+      p.particles <= 4096 &&
+      shape === "square" &&
+      !mixed &&
+      !p.fragment_orientation &&
+      !p.fragment_roundness &&
+      !p.fragment_shrink &&
+      !p.size_variation &&
+      !p.direction_variation &&
+      !p.wave_strength &&
+      ["none", "random"].includes(p.rotation) &&
+      p.release === "together"
+    );
   }
   function shapeSearchRadius(p, resizing = false) {
     const shape = p.fragment_mix === 1 ? p.fragment_secondary : p.fragment_shape;

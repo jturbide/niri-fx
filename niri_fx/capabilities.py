@@ -119,6 +119,43 @@ def _identity(path):
     return stat.st_dev, stat.st_ino, stat.st_size, stat.st_mtime_ns
 
 
+def _fragment_contract(connection):
+    """Check continuous fragments separately from the timed movement interface.
+
+    The generated shader also compiles on older builds using its timed fallback.
+    Parser acceptance therefore cannot establish continuous-motion support.
+    """
+    unknown = {"status": "unknown", "detail": "Running fragment motion contract is unverified."}
+    try:
+        data = _reply(connection, "NiriFxFragmentCapabilities")["Ok"]["NiriFxFragmentCapabilities"]
+        integers = {
+            "schema": 1,
+            "fragment_motion": 3,
+            "max_deformation": 1024,
+            "max_release_ms": 2000,
+        }
+        booleans = {"renderer_verified", "fragment_configured", "fragment_enabled"}
+        if (
+            not isinstance(data, dict)
+            or set(data) != set(integers) | booleans
+            or any(
+                type(data[key]) is not int or data[key] != value for key, value in integers.items()
+            )
+            or any(type(data[key]) is not bool for key in booleans)
+            or (data["fragment_enabled"] and not data["fragment_configured"])
+        ):
+            return unknown
+        return {
+            **data,
+            "status": "verified" if data["renderer_verified"] else "unavailable",
+            "detail": "Continuous fragment motion compiled in the running renderer."
+            if data["renderer_verified"]
+            else "The running renderer could not verify continuous fragment motion.",
+        }
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return unknown
+
+
 def _probe(binary, *, node=SHADER_NODE, label="movement", node_name="custom-shader"):
     # The baseline separates a missing config node or broken executable from a
     # specific rejection of custom-shader. Neither config touches the desktop.
@@ -200,6 +237,11 @@ def movement_capability(binary=None, *, socket_path=None):
 def pointer_capability(binary=None, *, socket_path=None):
     """Probe optional pointer support without touching the active configuration."""
     return _capability(binary, socket_path, "pointer", _pointer_probe, _pointer_contract)
+
+
+def fragment_capability(binary=None, *, socket_path=None):
+    """Inspect the fragment extension without changing or enabling desktop effects."""
+    return _capability(binary, socket_path, "fragment motion", _probe, _fragment_contract)
 
 
 def _capability(binary, socket_path, label, probe, contract):

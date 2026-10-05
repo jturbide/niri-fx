@@ -43,6 +43,12 @@ class PatchStackTests(unittest.TestCase):
             git("add", "window.rs", "pointer.rs")
             second = root / "pointer.patch"
             second.write_bytes(git("diff", "--cached", movement, "--binary", "--full-index"))
+            pointer = git("write-tree").decode().strip()
+            fragment = source / "fragment.rs"
+            fragment.write_text("continuous fragments\n")
+            git("add", "fragment.rs")
+            third = root / "fragment.patch"
+            third.write_bytes(git("diff", "--cached", pointer, "--binary", "--full-index"))
             git("read-tree", "--reset", "-u", base)
 
             # Fixtures use trees, not unsigned commits. Map the production HEAD
@@ -65,6 +71,10 @@ class PatchStackTests(unittest.TestCase):
                 build.apply_patches(source, base, [first, second])
                 with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
                     build.apply_patches(source, base, [])
+                # Adding the third layer needs a separate checkout, preserving
+                # a previously accepted pointer build and its evidence.
+                with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
+                    build.apply_patches(source, base, [first, second, third])
 
                 # A base-only request cannot overwrite the optional extension.
                 with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
@@ -80,6 +90,13 @@ class PatchStackTests(unittest.TestCase):
                 with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
                     build.apply_patches(source, base, [first, second])
                 self.assertEqual(private.read_text(), "keep this work\n")
+                private.unlink()
+                git("read-tree", "--reset", "-u", base)
+                build.apply_patches(source, base, [first, second, third])
+                build.apply_patches(source, base, [first, second, third])
+                self.assertEqual(fragment.read_text(), "continuous fragments\n")
+                with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
+                    build.apply_patches(source, base, [first, second])
 
     def test_wrong_revision_stops_before_applying(self):
         with patch.object(build.subprocess, "check_output", return_value="unexpected\n"):

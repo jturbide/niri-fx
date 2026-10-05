@@ -293,8 +293,8 @@ limited to one step out of 255. At most four pixels may exceed that only when
 each crosses a foreground/background silhouette with stable foreground and
 background neighbors within one pixel in **both** images. Interior exceptions
 are forbidden; the report includes every exceptional coordinate and difference.
-All eight stationary controls matched exactly. Fragments required at most two
-silhouette exceptions per frame, with a maximum channel difference of 117;
+All eight stationary controls matched exactly. Fragments required at most one
+silhouette exception per frame, with a maximum channel difference of 121;
 Slices and Elastic stayed within one channel step everywhere.
 
 This narrow allowance follows GPU probes with identical phase, geometry and UV
@@ -325,6 +325,32 @@ cover detached trajectories, decoration rebuilding and atomic partial-target
 cleanup; they do not substitute for those hardware checks. See the
 [recording guide](gifs/README.md#native-resize-to-close-comparison)
 to reproduce the real-speed comparison.
+
+## Continuous fragments (Unreleased)
+
+The [continuous fragment experiment](fragment-drag.md#build-and-check) uses owned
+nested sessions to verify delayed screen-space following, queued reversals,
+reconstruction and working input. Companion checks cover the three presets,
+reloads during motion, immediate Off, and real shader compilation failure followed
+by recovery. Direct ScreenCapture checks require a visible public control while
+testing redaction, live rule changes, closing and interrupted input ownership.
+Each run records the tested binary, patches and harness source fingerprints.
+
+Simultaneous-motion checks also pass for two floating-window swaps/reversals and
+four-window retargets. Every source fragments in the same frame, returns to its
+expected position with zero changed source pixels, and retains client input.
+Moving one window afterward leaves the other three unchanged. Native submission
+intervals are diagnostics; they do not measure GPU execution or input latency.
+
+The [CPU benchmark](performance.md#continuous-fragment-state) measures state work
+separately from rendering. Its long-idle optimization preserves the default
+motion fixture and passes exact differential comparisons. Dense-history checks
+also record the remaining recovery spikes after short pauses. The hardware mesh
+probe passes 24 combinations twice, with native geometry and independent visible
+window contributions; its GPU query batches exclude uploads and compositor work.
+Native compositor GPU cost, renderer recreation, physical suspend/resume and Output/Screencast/PipeWire
+privacy remain separate acceptance gates; nested screenshots do not establish
+physical desktop behavior.
 
 ## Pointer-driven wobble
 

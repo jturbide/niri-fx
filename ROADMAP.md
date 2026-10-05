@@ -219,6 +219,51 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 Timed Elastic effects remain available on stock Niri. Pointer-driven deformation
 requires additional compositor support and starts in the isolated experiment.
 
+### Continuous fragment motion
+
+- [x] Drive eligible square fragments from persistent window motion during dragging
+      and timed movement, retaining state through pause, reversal, release and regrab.
+- [x] Verify long drags beyond the placement timer, interior breakup, stable
+      reconstruction, timed moves and column reordering in an owned native session.
+- [x] Verify that distant pieces initially retain their screen positions while
+      the grabbed piece follows the pointer, then catch up and reconstruct.
+- [x] Expand pieces on press without requiring pointer movement; keep the held
+      pose stable and reconstruct after a press that never becomes a drag.
+- [x] Verify per-piece delay and response with distinct nearby and far trajectories,
+      a measurable waiting interval, queued reversals and bounded release.
+- [x] Expose bounded native controls for delay, response, variation, press spread,
+      pinning, rotation, tilt and release.
+- [x] Add Gentle, Tear and Cascade presets and an isolated comparison window.
+- [x] Verify preset reloads during holding and release, immediate Off, and bounded
+      fallback for grids that exceed the renderer budget.
+- [x] Measure release-mode CPU state costs through 4096 cells and recovery after
+      simulated long idle; preserve motion when skipping redundant settled updates.
+- [x] Verify ordinary input fallback after shader compilation failure and recovery
+      after a valid reload, with display-renderer verification before fragment input.
+- [x] Verify direct ScreenCapture restrictions during motion, release and closing,
+      including live rule changes, interrupted clients and removed pointer owners.
+- [x] Measure dense-history CPU recovery separately from synthetic history-capacity stress.
+- [x] Verify independent materials, reconstruction and input during two- and
+      four-window motion, including reversal and a subsequent single-window move.
+- [x] Measure hardware GPU drawing for one, two and four continuous fragment
+      meshes at 1080p and 4K, with visible contribution checks and explicit scope.
+- [ ] Measure native buffer preparation, uploads and presentation, and collect
+      additional GPU results before raising the particle limit.
+- [ ] Reduce dense-history recovery spikes after 2–4 second pauses while preserving
+      queued motion and release continuity; repeat CPU and native acceptance checks.
+- [ ] Verify fragment recovery after renderer recreation and physical suspend/resume.
+- [ ] Verify Output/Screencast privacy and actual PipeWire capture.
+- [ ] Test the fragment path on a physical desktop, including capture restrictions,
+      mixed outputs and input behavior before expanding its supported configurations.
+- [ ] Add portable profile and Studio controls with clear independent action choices.
+- [ ] Tune per-piece motion through manual testing, including grab distance,
+      travel direction, variation, tilt and acceleration toward the released
+      window's resting position.
+- [ ] Evaluate additional shapes and interactive resize after the square prototype.
+
+The [continuous fragment prototype](docs/fragment-drag.md) defines the initial
+scope, fallback behavior and focused checks. Physical desktop acceptance remains open.
+
 ## Epic 5: workspace, camera and overview motion
 
 Goal: a coherent sense of motion across the desktop.

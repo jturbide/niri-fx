@@ -9,6 +9,26 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Experimental continuous square-fragment motion for pointer dragging, timed
+  movement and column reordering. Distant pieces initially lag behind the grabbed
+  region, then catch up with per-piece delay and response variation. Pressing can
+  expand the material before moving; held pauses keep that spread, and release
+  reconstructs the window. Native controls expose timing, variation, spread,
+  pinning, rotation, tilt and release. Focused native acceptance verifies
+  screen-position retention, independently delayed pieces, queued reversals,
+  long floating and tiled drags, stable endpoints and client input. Physical
+  desktop acceptance remains separate.
+- Gentle, Tear and Cascade presets for the continuous fragment experiment, with
+  a local comparison window, preset buttons and keyboard shortcuts. Validated
+  native controls share one canonical definition. Settings and grid changes wait
+  until the active motion has settled; Off takes effect immediately. Unsupported
+  grids use protected fallback without repeated per-frame preparation.
+- Native fragment checks cover shader failure and recovery, direct screenshot
+  privacy, interrupted clients and measured CPU state costs.
+- Continuous-fragment diagnostics cover simultaneous two- and four-window motion,
+  dense input history and hardware GPU mesh workloads. CPU measurements expose
+  remaining recovery spikes after short pauses; particle defaults and limits
+  are unchanged.
 - Experimental resize-to-close continuation retains the current material,
   deformation phase and size paths while fading out. Borders and shadows follow
   the changing geometry; each capture target owns a separate frozen material.
@@ -44,6 +64,11 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Continuous fragments skip redundant simulation after long idle when every
+  piece is exactly at rest and no delayed motion remains, preserving existing
+  motion. The CPU benchmark records both recovery and ordinary update costs.
+- A fragment shader that fails compilation keeps ordinary drag handling. The
+  display renderer must verify the effect before enabling fragment-specific input.
 - Pointer presses and consumed bindings are tracked per device in the experimental
   compositor. Removing a pointer releases only its presses and ends its owned grab;
   another device holding the same button keeps its press until it releases.

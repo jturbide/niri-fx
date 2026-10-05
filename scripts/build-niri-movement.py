@@ -15,6 +15,8 @@ PATCH = ROOT / "experimental/niri-movement.patch"
 SOURCE = ROOT / "artifacts/niri-src"
 POINTER_PATCH = ROOT / "experimental/niri-pointer-wobble.patch"
 POINTER_SOURCE = ROOT / "artifacts/niri-pointer-src"
+FRAGMENT_PATCH = ROOT / "experimental/niri-fragment-drag.patch"
+FRAGMENT_SOURCE = ROOT / "artifacts/niri-fragment-drag-src"
 BASELINE_SOURCE = ROOT / "artifacts/niri-unmodified-src"
 
 
@@ -58,6 +60,11 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--release", action="store_true", help="Build an optimized binary")
     parser.add_argument(
+        "--desktop",
+        action="store_true",
+        help="Keep upstream desktop features (D-Bus, portals and screencasting)",
+    )
+    parser.add_argument(
         "--test", action="store_true", help="Run config and animation regression tests"
     )
     variants = parser.add_mutually_exclusive_group()
@@ -67,6 +74,11 @@ def main():
         help="Build the optional pointer extension in its own checkout and target directory",
     )
     variants.add_argument(
+        "--fragment-drag",
+        action="store_true",
+        help="Build continuous fragment motion on top of movement and pointer patches",
+    )
+    variants.add_argument(
         "--unmodified",
         action="store_true",
         help="Build the identical pinned revision without patches in a separate checkout",
@@ -74,6 +86,8 @@ def main():
     args = parser.parse_args()
     if args.unmodified:
         source, patches = BASELINE_SOURCE, []
+    elif args.fragment_drag:
+        source, patches = FRAGMENT_SOURCE, [PATCH, POINTER_PATCH, FRAGMENT_PATCH]
     else:
         source = POINTER_SOURCE if args.pointer_wobble else SOURCE
         patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
@@ -104,7 +118,7 @@ def main():
     env.setdefault("CARGO_BUILD_JOBS", "8")
     env.setdefault("CARGO_PROFILE_DEV_DEBUG", "0")
     env["CARGO_TARGET_DIR"] = str(source / "target")
-    flags = ["--locked", "--no-default-features"]
+    flags = ["--locked"] + ([] if args.desktop else ["--no-default-features"])
     if args.test:
         run("cargo", "test", "--locked", "-p", "niri-config", cwd=source, env=env)
         run("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=source, env=env)
@@ -140,8 +154,11 @@ def main():
                 cwd=source,
                 env=env,
             )
-        if args.pointer_wobble:
+        if args.pointer_wobble or args.fragment_drag:
             run("cargo", "test", *flags, "--lib", "pointer_wobble", cwd=source, env=env)
+        if args.fragment_drag:
+            run("cargo", "test", *flags, "--lib", "fragment_motion", cwd=source, env=env)
+            run("cargo", "test", *flags, "--lib", "fragment_mesh", cwd=source, env=env)
     run("cargo", "build", *flags, *(["--release"] if args.release else []), cwd=source, env=env)
     profile = "release" if args.release else "debug"
     binary = source / "target" / profile / "niri"
@@ -159,12 +176,17 @@ def main():
         name = "niri-unmodified-build.json"
     else:
         manifest["patch_sha256"] = patch_hashes[PATCH.name]
-    if args.pointer_wobble:
+    if args.pointer_wobble or args.fragment_drag:
         manifest["pointer_patch_sha256"] = patch_hashes[POINTER_PATCH.name]
         name = "niri-pointer-wobble-build.json"
+    if args.fragment_drag:
+        manifest["fragment_patch_sha256"] = patch_hashes[FRAGMENT_PATCH.name]
+        name = "niri-fragment-drag-build.json"
     (ROOT / "artifacts" / name).write_text(json.dumps(manifest, indent=2) + "\n")
     if args.unmodified:
         print(f"Built unmodified baseline {binary}")
+    elif args.fragment_drag:
+        print(f"Built {binary}\nRun: python3 scripts/test-fragment-drag.py")
     else:
         option = " --pointer-wobble gentle" if args.pointer_wobble else ""
         print(f"Built {binary}\nRun: python3 scripts/nested-demo.py{option}")

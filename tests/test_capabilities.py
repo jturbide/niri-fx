@@ -11,7 +11,12 @@ from contextlib import contextmanager
 from pathlib import Path
 from unittest.mock import patch
 
-from niri_fx.capabilities import MAX_REPLY, movement_capability, pointer_capability
+from niri_fx.capabilities import (
+    MAX_REPLY,
+    fragment_capability,
+    movement_capability,
+    pointer_capability,
+)
 
 
 @contextmanager
@@ -341,6 +346,62 @@ class PointerCapabilityTests(unittest.TestCase):
             self.assertFalse(
                 pointer_capability(sys.executable, socket_path=path)["activation_ready"]
             )
+
+
+class FragmentCapabilityTests(unittest.TestCase):
+    def test_continuous_motion_requires_its_own_exact_renderer_contract(self):
+        contract = {
+            "schema": 1,
+            "fragment_motion": 3,
+            "renderer_verified": True,
+            "fragment_configured": False,
+            "fragment_enabled": False,
+            "max_deformation": 1024,
+            "max_release_ms": 2000,
+        }
+        cases = [
+            (contract, True),
+            (contract | {"fragment_configured": True, "fragment_enabled": True}, True),
+            (contract | {"fragment_enabled": True}, False),
+            (contract | {"renderer_verified": False}, False),
+            (contract | {"fragment_motion": 1}, False),
+            (contract | {"fragment_motion": 2}, False),
+            (contract | {"max_deformation": 64}, False),
+            (contract | {"max_release_ms": 2500}, False),
+            (contract | {"schema": True}, False),
+            (contract | {"fragment_configured": 1}, False),
+            (contract | {"extra": True}, False),
+            ({key: value for key, value in contract.items() if key != "fragment_motion"}, False),
+            (None, False),
+            ([], False),
+        ]
+        for value, ready in cases:
+            with (
+                self.subTest(value=value),
+                ipc_reply(
+                    [
+                        b'{"Ok":{"Version":"experimental"}}\n',
+                        json.dumps({"Ok": {"NiriFxFragmentCapabilities": value}}).encode() + b"\n",
+                    ]
+                ) as (path, requests),
+                patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+            ):
+                report = fragment_capability(sys.executable, socket_path=path)
+            self.assertEqual(report["activation_ready"], ready)
+            self.assertEqual(requests, [b'"Version"\n', b'"NiriFxFragmentCapabilities"\n'])
+
+    def test_timed_shader_parser_support_alone_does_not_prove_continuous_motion(self):
+        with (
+            ipc_reply([b'{"Ok":{"Version":"experimental"}}\n', b'{"Err":"unknown request"}\n']) as (
+                path,
+                _,
+            ),
+            patch("niri_fx.capabilities._probe", return_value=("supported", "Accepted")),
+        ):
+            report = fragment_capability(sys.executable, socket_path=path)
+        self.assertEqual(report["status"], "supported")
+        self.assertEqual(report["session"]["contract"]["status"], "unknown")
+        self.assertFalse(report["activation_ready"])
 
 
 if __name__ == "__main__":
