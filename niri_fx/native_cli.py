@@ -79,11 +79,59 @@ def add_parser(commands):
         "session-entry", help="Stage a login launcher and display-manager entry"
     )
     entry.add_argument("--name", default="NiriFX", help="Login chooser label")
-    for command in (status, stage, install, select, configure, rollback, entry):
+    tools_status = actions.add_parser(
+        "tools-status", help="Inspect shared CLI, Studio and login runtime selection"
+    )
+    tools_update = actions.add_parser(
+        "tools-update", help="Review this installed runtime as the shared NiriFX tool version"
+    )
+    tools_update.add_argument(
+        "--bootstrap-runtime",
+        type=Path,
+        help="Existing trusted virtual environment to retain during first login-entry migration",
+    )
+    tools_update.add_argument("--cli-path", type=Path, help="Managed CLI launcher location")
+    tools_update.add_argument(
+        "--legacy-tools-runtime",
+        type=Path,
+        help="Trusted existing CLI/Studio environment if it differs from the bootstrap login runtime",
+    )
+    tools_update.add_argument("--desktop-path", type=Path, help="Managed Studio desktop file")
+    tools_rollback = actions.add_parser(
+        "tools-rollback", help="Review restoring the previous compatible NiriFX tool runtime"
+    )
+    for command in (tools_status, tools_update, tools_rollback):
+        command.add_argument(
+            "--registered-entry",
+            type=Path,
+            required=command is not tools_status,
+            help="Display manager's NiriFX desktop file to verify without modifying it",
+        )
+    for command in (
+        status,
+        stage,
+        install,
+        select,
+        configure,
+        rollback,
+        entry,
+        tools_status,
+        tools_update,
+        tools_rollback,
+    ):
         command.add_argument(
             "--root", type=Path, default=default_root(), help="Native session storage"
         )
-    for command in (stage, install, select, configure, rollback, entry):
+    for command in (
+        stage,
+        install,
+        select,
+        configure,
+        rollback,
+        entry,
+        tools_update,
+        tools_rollback,
+    ):
         command.add_argument("--apply", action="store_true", help="Write the reviewed changes")
         command.add_argument(
             "--expect-plan", help="Require this reviewed plan_sha256 when applying"
@@ -108,6 +156,35 @@ def run(args):
     root = args.root.expanduser().absolute()
     if getattr(args, "expect_plan", None) and not args.apply:
         raise ValueError("--expect-plan requires --apply")
+    if action.startswith("tools-"):
+        from . import native_tools
+
+        if action == "tools-status":
+            result = native_tools.status(root, registered_entry=args.registered_entry)
+        else:
+            if args.apply and not args.expect_plan:
+                raise ValueError("Tool runtime changes require --expect-plan from a fresh review")
+            plan = (
+                native_tools.update_plan(
+                    root,
+                    bootstrap_runtime=args.bootstrap_runtime,
+                    legacy_tools_runtime=args.legacy_tools_runtime,
+                    registered_entry=args.registered_entry,
+                    cli_path=args.cli_path,
+                    desktop_path=args.desktop_path,
+                )
+                if action == "tools-update"
+                else native_tools.rollback_plan(root, registered_entry=args.registered_entry)
+            )
+            result = (
+                native_tools.apply_tools(plan, root, expected=args.expect_plan)
+                if args.apply
+                else summarize(plan)
+            )
+            result.pop("restore", None)
+            result["dry_run"] = not args.apply
+        print(json.dumps(result, indent=2))
+        return 0
     live_requested = getattr(args, "live", False)
     if live_requested and args.apply and not args.expect_plan:
         raise ValueError("--live --apply requires --expect-plan from a live review")

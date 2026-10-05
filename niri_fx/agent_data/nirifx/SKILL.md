@@ -79,6 +79,16 @@ The full session combines all compositor features; patch subsets are development
 controls. Source installation is available, while distribution packages and
 physical desktop acceptance remain separate work.
 
+For an authorized tool upgrade, inspect `native tools-status`, then run
+`native tools-update --registered-entry PATH` from the newly installed persistent
+runtime. First migration requires an explicit trusted `--bootstrap-runtime VENV`:
+prepare the stable entry, keep the bootstrap selected during administrator
+registration, then review again before activation. Apply requires the same
+arguments and `--expect-plan`. Tool rollback uses `native tools-rollback` and
+rechecks compatibility with the current compositor selections. Do not use generic
+Restore, overwrite a custom launcher or remove retained runtimes to bypass a
+refusal. Imported presets cannot authorize tool installation or registration.
+
 - `native install --candidate DIR --config FILE` reviews a finished full build,
   configuration snapshot, login launcher and next-login selection. Apply only
   within the user's authorized scope with the exact reviewed `plan_sha256`.

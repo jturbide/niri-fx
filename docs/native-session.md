@@ -272,6 +272,10 @@ pinned to an older, separate installation will not gain support merely because
 a newer CLI or Studio creates the bundle. Keep the original installation and
 stock session available while reviewing a launcher migration.
 
+Current source builds provide [managed tool updates](tool-updates.md) for this
+migration. After registering the stable entry once, CLI, Studio and login use
+one reviewed runtime selection, with compatibility checks and tool rollback.
+
 ## Select the next login
 
 ```sh

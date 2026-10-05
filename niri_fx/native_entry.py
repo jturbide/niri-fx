@@ -34,6 +34,12 @@ def entry_files(root, name="NiriFX"):
     ):
         raise ValueError("Session name must contain 1 to 80 characters without control characters")
     root = _path(root)
+    if (root / "tools/selection.json").exists():
+        from .native_tools import entry_files as managed_entry_files
+
+        if name != "NiriFX":
+            raise ValueError("The managed tools login entry uses the NiriFX name")
+        return managed_entry_files(root)
     directory = _path(root / "session")
     launcher = _path(directory / "launch.py")
     entry = _path(directory / "niri-fx.desktop")

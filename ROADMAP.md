@@ -160,20 +160,23 @@ are developer regression controls, not separate consumer editions.
 ### Coherent tool upgrades
 
 Goal: update CLI, Studio and the login launcher together, retaining a working
-version for recovery. Independently pinned runtimes currently require a reviewed
-launcher migration when their supported bundle formats differ.
+version for recovery. The [managed tool workflow](docs/tool-updates.md) migrates
+existing entries once, then switches their shared runtime selection.
 
-- [ ] Review installed tool versions, launcher ownership and supported bundle
+- [x] Review installed tool versions, launcher ownership and supported bundle
       formats in one update plan.
-- [ ] Stage a persistent replacement runtime and validate selected and rollback
-      bundles before changing any launcher references.
-- [ ] Update owned CLI, Studio and login references through one recoverable
+- [x] Review an installed persistent replacement runtime and validate selected,
+      rollback and baseline bundles before changing launcher references.
+- [x] Update owned CLI, Studio and login references through one recoverable
       transaction; refuse stale plans and externally changed entries.
-- [ ] Retain the previous runtime and provide reviewed rollback, including
+- [x] Retain the previous runtime and provide reviewed rollback, including
       recovery from interrupted display-manager registration.
-- [ ] Verify clean installation, runtime upgrades, incompatible receipts,
-      interrupted registration and rollback while preserving the running
-      compositor, stock Niri and shell sources.
+- [x] Verify temporary-account adoption, installed runtime upgrades, incompatible
+      receipts, interrupted registration and rollback without desktop activation.
+- [ ] Include environment creation, shared tool setup and login registration in
+      supported distribution packages and an accessible update UI.
+- [ ] Verify the migrated login entry on supported physical desktops, including
+      system Python upgrades and return to stock Niri.
 
 The [desktop update guide](docs/desktop-updates.md) separates current tools
 from this planned package/session workflow. Build identity is not runtime or

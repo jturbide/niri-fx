@@ -89,6 +89,16 @@ class AgentDiscoveryTests(unittest.TestCase):
         for action in ("native_configure", "native_rollback"):
             self.assertFalse(parser().parse_args(operations[f"{action}_apply"]["argv"]).live)
 
+    def test_tool_runtime_changes_have_separate_review_and_required_registration_target(self):
+        operations = agent_info()["operations"]
+        for action in ("native_tools_update", "native_tools_rollback"):
+            review = parser().parse_args(operations[f"{action}_review"]["argv"])
+            apply = parser().parse_args(operations[f"{action}_apply"]["argv"])
+            self.assertFalse(review.apply)
+            self.assertTrue(apply.apply)
+            self.assertEqual(review.registered_entry, apply.registered_entry)
+            self.assertEqual(apply.expect_plan, "REVIEWED_PLAN_SHA256")
+
     def test_compact_catalog_keeps_full_catalog_filters_and_real_document_ids(self):
         for filters in (("--recommended",), ("--family", "fragments"), ("--search", "frost")):
             with self.subTest(filters=filters):

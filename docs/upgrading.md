@@ -11,6 +11,11 @@ Users of the earlier compact iRiS source integration should follow its reviewed
 removal path before updating the shell. Normal preset registration remains
 available without modifying iNiR's checkout.
 
+For managed NiriFX sessions in current source builds, use
+[tool-runtime updates](tool-updates.md) to keep CLI, Studio and the login launcher
+on the same installation. That workflow retains complete environments for
+rollback; the historical in-place package commands below describe their releases.
+
 Current source builds use [isolated native candidates](../experimental/README.md#isolated-build-candidates).
 Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned

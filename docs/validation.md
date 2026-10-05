@@ -36,6 +36,22 @@ These checks establish build/selection ownership, not physical desktop, capture
 or dependency compatibility. The [native lifecycle roadmap](../ROADMAP.md#updates-and-native-build-lifecycle)
 keeps installation, session selection and rollback as separate release gates.
 
+## Shared tool-runtime updates (Unreleased)
+
+Temporary installation checks cover different existing login and CLI/Studio
+runtimes, read-only review, preparation without replacing legacy launchers,
+interrupted registration, activation and reviewed tool rollback. An installed
+wheel completed that sequence with synthetic retained compositor configurations;
+the shared CLI selected the new package, restored the earlier package and returned
+to the new one without changing compositor selection or re-registering the entry.
+
+Focused regressions refuse changed runtime inventories, custom launcher files,
+unexpected modes, stale plans and incompatible rollback targets. Link transactions
+preserve old runtime contents and restore exact symlink targets on handled
+failures. Compatible system-interpreter changes do not invalidate the retained
+pure-Python package. These checks do not constitute a physical login or a system
+Python upgrade test.
+
 ## Studio action selection and live settings (Unreleased)
 
 Studio's simple view assigns styles independently to Open, Close, Resize and

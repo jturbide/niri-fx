@@ -99,6 +99,10 @@ The CLI supports reviewed local bundles, next-login selection, rollback and
 a staged per-user systemd login entry. [Studio's native target](native-session.md#choose-effects-in-studio)
 adds reviewed effect changes and rollback using the same retained bundles.
 Registering the entry with a display manager remains an administrator step.
+The [managed tool update workflow](tool-updates.md) provides a one-time stable
+launcher migration, then reviewed runtime selection for CLI, Studio and future
+logins together. It retains the previous runtime and checks bundle compatibility
+again before tool rollback.
 Dependency-aware distribution packages and signed compositor downloads are still
 planned:
 

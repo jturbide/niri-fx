@@ -153,6 +153,57 @@ def agent_info():
                 "effect": "read-only full-session installation review; no candidate execution",
                 "output": "json with bundle, staged entry, next-login selection and plan_sha256",
             },
+            "native_tools_status": {
+                "argv": ["native", "tools-status"],
+                "effect": "inspects shared tool runtime and launcher registration without desktop IPC",
+                "output": "json with current and previous tool runtimes and registration state",
+            },
+            "native_tools_update_review": {
+                "argv": [
+                    "native",
+                    "tools-update",
+                    "--registered-entry",
+                    "/path/to/niri-fx.desktop",
+                ],
+                "effect": "reviews the currently executing installed runtime; first migration requires an explicit trusted bootstrap runtime",
+                "output": "json with migration phase, compatibility checks, affected paths and plan_sha256",
+            },
+            "native_tools_update_apply": {
+                "argv": [
+                    "native",
+                    "tools-update",
+                    "--registered-entry",
+                    "/path/to/niri-fx.desktop",
+                    "--apply",
+                    "--expect-plan",
+                    "REVIEWED_PLAN_SHA256",
+                ],
+                "effect": "stages stable launchers or switches the shared tool runtime after registration verification; no compositor restart",
+                "output": "json with phase and retained tool runtime selection",
+            },
+            "native_tools_rollback_review": {
+                "argv": [
+                    "native",
+                    "tools-rollback",
+                    "--registered-entry",
+                    "/path/to/niri-fx.desktop",
+                ],
+                "effect": "checks the previous tool runtime against current retained compositor bundles",
+                "output": "json with plan_sha256; incompatible runtime rollback is refused",
+            },
+            "native_tools_rollback_apply": {
+                "argv": [
+                    "native",
+                    "tools-rollback",
+                    "--registered-entry",
+                    "/path/to/niri-fx.desktop",
+                    "--apply",
+                    "--expect-plan",
+                    "REVIEWED_PLAN_SHA256",
+                ],
+                "effect": "switches CLI, Studio and future login launches to the reviewed previous runtime; retains files",
+                "output": "json with shared tool runtime selection and transaction identity",
+            },
             "native_configure_review": {
                 "argv": ["native", "configure", "BASE_BUNDLE_ID", "--document", "./my-combo.json"],
                 "effect": "read-only review against an exact retained baseline",

@@ -184,6 +184,22 @@ acceptance establishes physical desktop support. See the
 profile data cannot authorize installation, session switching or privileged
 display-manager registration.
 
+## Keep tool runtimes coherent
+
+Use `native tools-status` to inspect shared tool selection. When a tool upgrade
+is authorized, run `native tools-update --registered-entry PATH` from the new
+trusted persistent installation. The first migration also needs an explicitly
+selected `--bootstrap-runtime VENV`. It prepares the stable entry while retaining
+that working runtime; administrator registration is a separate step. Review again
+after registration before activating the new version.
+
+Apply requires `--expect-plan` with the same arguments. Runtime files, launcher
+ownership, registration and selected/rollback bundle compatibility are bound to
+the review. Use `native tools-rollback --registered-entry PATH` to review tool
+recovery, then repeat with `--apply --expect-plan REVIEWED_PLAN_SHA256`. Preserve
+refused custom launcher files and incompatible runtimes for investigation; never
+delete recovery data to force an update. See [managed tool updates](tool-updates.md).
+
 ## Restore and handle conflicts
 
 ```sh

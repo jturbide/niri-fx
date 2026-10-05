@@ -9,6 +9,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Reviewed shared tool-runtime updates for CLI, Studio and the login launcher.
+  A one-time stable-entry migration keeps the working runtime selected until
+  registration is verified. Later updates share one selector, retain the previous
+  runtime, and check current compositor bundle compatibility before rollback.
 - Studio's NiriFX session target applies reviewed effects directly to a verified
   matching compositor and saves them for the next login. Stock, offline and
   different-build sessions keep next-login selection. It retains the previous
