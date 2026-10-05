@@ -1,5 +1,8 @@
 blank_issues_enabled: true
 contact_links:
+  - name: Questions and ideas
+    url: https://github.com/jturbide/niri-fx/discussions
+    about: Ask for help, share your desktop setup or discuss an idea.
   - name: Documentation and troubleshooting
     url: https://github.com/jturbide/niri-fx/blob/main/docs/README.md
     about: Installation, controls, compatibility and troubleshooting.

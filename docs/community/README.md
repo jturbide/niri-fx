@@ -2,6 +2,10 @@
 
 NiriFX is an independent project for people who enjoy customizing their Niri desktop.
 Feedback, presets, documentation improvements and code contributions are welcome.
+Use [Discussions](https://github.com/jturbide/niri-fx/discussions) for questions,
+ideas and sharing your desktop; use issues for reproducible bugs and concrete work.
+You can also support development through
+[GitHub Sponsors](https://github.com/sponsors/jturbide).
 
 ## Share a preset
 
