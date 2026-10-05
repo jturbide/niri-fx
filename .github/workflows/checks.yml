@@ -98,10 +98,19 @@ jobs:
       - name: Compile all shader variants
         if: needs.changes.outputs.renderer == 'true'
         run: python scripts/validate.py --require-glsl
-      - name: Build and smoke-test installed package
+      - name: Build and smoke-test source and installed packages
         if: needs.changes.outputs.full == 'true'
         run: |
           python -m build
+          # Exercise source-only tools outside the checkout; wheel imports cannot prove these inputs ship.
+          source_package=$(mktemp -d)
+          tar -xzf dist/*.tar.gz -C "$source_package"
+          (
+            cd "$source_package"/*
+            python scripts/check-native-compatibility.py matrix
+            python scripts/build-nirifx-session.py --help
+            python -c "from pathlib import Path; from niri_fx.native_build import STACKS; assert all((Path('experimental') / name).read_bytes() for stack in STACKS.values() for name in stack); assert Path('experimental/COPYING-NIRI').read_bytes()"
+          )
           python -m venv /tmp/niri-fx-package
           /tmp/niri-fx-package/bin/pip install --no-deps dist/*.whl
           cd /tmp

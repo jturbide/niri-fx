@@ -93,7 +93,9 @@ Without a variable, existing tools retain their earlier fixed manifest paths.
 New builds never replace those manifests, binaries or source directories. Legacy
 Movement Demo launchers therefore keep their previous build; use the printed
 candidate command to try a newer one. Candidate testing does not install or
-select a login session. Versioned installation and rollback are still planned.
+select a login session. The [managed session workflow](../docs/native-session.md)
+provides reviewed installation, next-login selection and rollback for a full build.
+Distribution packages and supported compositor downloads remain planned.
 
 ### Inspect build identity
 

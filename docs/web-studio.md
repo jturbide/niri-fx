@@ -2,7 +2,7 @@
 
 Open [Web Studio](https://jturbide.github.io/niri-fx/studio/) in a WebGL-capable
 browser. No Niri installation is needed to preview effects. The hosted editor
-uses the same shader templates and controls as local Studio, with synthetic
+uses the same portable shader templates and controls as local Studio, with synthetic
 window content. It cannot change desktop settings or capture your windows.
 
 ## Start from a showcase
@@ -35,6 +35,12 @@ These previews do not verify compositor support. **Export stock Niri config** om
 NiriFX session nodes. **Export NiriFX session config** includes selected pointer,
 Move and Swap settings for the matching native build. Read the
 [pointer guide](pointer-wobble.md) before using that configuration.
+
+The managed session's **Gentle / Tear / Cascade continuous-fragment response**
+is separate from pointer wobble and timed movement. Those native controls are
+currently kept in the local session recipe, not in portable profiles, JSON,
+share links or config downloads. Web Studio therefore cannot reproduce or
+transfer that complete session choice. See [continuous fragments](fragment-drag.md).
 
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
    nine recommended looks. **Open/close pairings** shows sixteen finished combinations;
@@ -100,7 +106,7 @@ Previews start paused when someone opens the link.
 | Mode | Preview and JSON/config export | Reviewed desktop Apply |
 | --- | --- | --- |
 | Web Studio | Yes | No |
-| Local `studio` command | Yes | Standalone, installed iNiR or connected Noctalia target |
+| Local `studio` command | Yes | Standalone, installed iNiR, connected Noctalia or a matching managed NiriFX session |
 | Exported `preview` HTML | Yes, without a server | No |
 
 The hosted page is a static GitHub Pages site. It has no analytics or preset
