@@ -1,7 +1,7 @@
 // Test the actual offline browser core without a DOM or graphics driver.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { test } from "node:test";
 import { runInNewContext } from "node:vm";
 import { projectRoot } from "../scripts/lib/browser.mjs";
@@ -37,6 +37,85 @@ const create = (catalog) =>
 const core = create(catalog);
 const plain = (value) => JSON.parse(JSON.stringify(value));
 const cases = JSON.parse(readFileSync(new URL("fixtures/documents.json", import.meta.url)));
+const compatibilityRoot = new URL("fixtures/compatibility/", import.meta.url);
+const compatibility = readdirSync(compatibilityRoot, { withFileTypes: true })
+  .filter((entry) => entry.isDirectory())
+  .map((entry) =>
+    JSON.parse(readFileSync(new URL(`${entry.name}/contract.json`, compatibilityRoot))),
+  );
+const subset = (actual, expected) =>
+  expected && typeof expected === "object" && !Array.isArray(expected)
+    ? Object.fromEntries(
+        Object.entries(expected).map(([key, value]) => [key, subset(actual[key], value)]),
+      )
+    : actual;
+
+test("versioned document examples retain Python and browser semantics", () => {
+  assert(compatibility.length, "The versioned compatibility corpus is missing");
+  const cases = compatibility.flatMap((corpus) => corpus.accepted_documents);
+  const normalized = cases.map((item) => plain(core.normalizePreset(item.document)));
+  const references = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `
+import json, sys
+sys.path.insert(0, 'tests')
+from helpers import stock_action_contract
+from niri_fx.documents import parse_document, effect_document
+from niri_fx.effects import render_kdl
+data = json.load(sys.stdin)
+result = []
+for document, browser_export in zip(data['documents'], data['exports'], strict=True):
+    name, _, effect = parse_document(document)
+    result.append({'normalized': effect_document(name, effect),
+                   'python_stock': stock_action_contract(render_kdl(effect)),
+                   'browser_stock': stock_action_contract(browser_export)})
+print(json.dumps(result))
+`,
+      ],
+      {
+        cwd: projectRoot,
+        input: JSON.stringify({
+          documents: cases.map((item) => item.document),
+          exports: normalized.map((document) => core.renderKdl(document)),
+        }),
+        encoding: "utf8",
+        maxBuffer: 4 * 1024 * 1024,
+      },
+    ),
+  );
+  for (const [index, item] of cases.entries()) {
+    assert.deepEqual(subset(normalized[index], item.normalized), item.normalized, item.id);
+    for (const key of item.absent) assert(!Object.hasOwn(normalized[index], key), item.id);
+    assert.deepEqual(normalized[index], references[index].normalized, item.id);
+    assert.deepEqual(references[index].python_stock, item.stock_actions, item.id);
+    assert.deepEqual(references[index].browser_stock, item.stock_actions, item.id);
+  }
+});
+
+test("versioned unsupported documents fail instead of dropping settings", () => {
+  for (const corpus of compatibility)
+    for (const item of corpus.rejected_documents)
+      assert.throws(() => core.normalizePreset(item.document), undefined, item.id);
+});
+
+test("versioned catalog IDs retain their representative style and profile meanings", () => {
+  for (const corpus of compatibility)
+    for (const [identifier, expected] of Object.entries(corpus.catalog_documents)) {
+      const document = catalog.profiles[identifier] || {
+        schema: catalog.schema,
+        name: identifier,
+        effect: catalog.presets[identifier],
+      };
+      assert.deepEqual(
+        subset(plain(core.normalizePreset(document)), expected),
+        expected,
+        identifier,
+      );
+    }
+});
 
 test("movement shader previews match the native exports and reject unsupported families", () => {
   for (const [name, effect] of Object.entries(catalog.presets)) {
