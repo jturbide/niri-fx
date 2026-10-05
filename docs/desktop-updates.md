@@ -75,6 +75,11 @@ New source builds record [versioned build identity](../experimental/README.md#in
 The read-only inspector detects changed files and missing desktop build
 prerequisites. Its result does not approve a login-session upgrade.
 
+Every build now creates an [isolated candidate](../experimental/README.md#isolated-build-candidates)
+with separate source, build output and a copied executable. Failed attempts
+cannot overwrite an earlier working build. Testing requires choosing that
+candidate's manifest explicitly; no build updates a launcher or login selection.
+
 Today, the supported developer workflow is a pinned build and an isolated
 nested preview. Building does not install a compositor or upgrade the login
 session. Use the [experimental guide](../experimental/README.md) and preserve

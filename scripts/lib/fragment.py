@@ -8,6 +8,7 @@ from niri_fx.effects import render_kdl
 from niri_fx.fragment_motion import PRESETS, render_node
 from niri_fx.profiles import Profile
 
+from .native_selection import explicit_manifest
 from .nested import ROOT, NestedSession
 from .pointer_scene import BASE
 
@@ -46,8 +47,13 @@ def config(preset_name, *, movement_off=False, effect=None, settings=None):
 
 
 def experiment():
-    manifest = json.loads((ROOT / "artifacts/niri-fragment-drag-build.json").read_text())
-    binary = Path(manifest["binary"])
+    selected = explicit_manifest("fragment", repository=ROOT)
+    manifest = (
+        selected[1]
+        if selected
+        else json.loads((ROOT / "artifacts/niri-fragment-drag-build.json").read_text())
+    )
+    binary = selected[0] if selected else Path(manifest["binary"])
     inputs = [
         (binary, manifest["binary_sha256"]),
         (ROOT / "experimental/niri-movement.patch", manifest["patch_sha256"]),

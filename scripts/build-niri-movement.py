@@ -4,6 +4,7 @@
 import argparse
 import json
 import os
+import shlex
 import shutil
 import subprocess
 import sys
@@ -12,14 +13,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.native_build import REVISION, cargo_artifact, digest, metadata, native_host
+from lib.native_candidates import Candidate
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCH = ROOT / "experimental/niri-movement.patch"
-SOURCE = ROOT / "artifacts/niri-src"
 POINTER_PATCH = ROOT / "experimental/niri-pointer-wobble.patch"
-POINTER_SOURCE = ROOT / "artifacts/niri-pointer-src"
 FRAGMENT_PATCH = ROOT / "experimental/niri-fragment-drag.patch"
-FRAGMENT_SOURCE = ROOT / "artifacts/niri-fragment-drag-src"
+# Kept only for the comparison reader's explicit legacy fallback. New builds
+# never write into this checkout or any of the legacy manifest/output slots.
 BASELINE_SOURCE = ROOT / "artifacts/niri-unmodified-src"
 
 
@@ -88,32 +89,48 @@ def main():
     )
     args = parser.parse_args()
     if args.unmodified:
-        source, patches = BASELINE_SOURCE, []
+        patches = []
         variant = "unmodified"
     elif args.fragment_drag:
-        source, patches = FRAGMENT_SOURCE, [PATCH, POINTER_PATCH, FRAGMENT_PATCH]
+        patches = [PATCH, POINTER_PATCH, FRAGMENT_PATCH]
         variant = "fragment"
     else:
-        source = POINTER_SOURCE if args.pointer_wobble else SOURCE
         patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
         variant = "pointer" if args.pointer_wobble else "movement"
-    # Resolve every input before creating a checkout or invoking Git.
-    patch_hashes = {path.name: digest(path) for path in patches}
-    source.parent.mkdir(parents=True, exist_ok=True)
-    if not source.exists():
-        run("git", "init", str(source))
-        run(
-            "git",
-            "-C",
-            str(source),
-            "remote",
-            "add",
-            "origin",
-            "https://github.com/niri-wm/niri.git",
-        )
-        run("git", "-C", str(source), "fetch", "--depth=1", "origin", REVISION)
-        run("git", "-C", str(source), "checkout", "--detach", "FETCH_HEAD")
-    apply_patches(source, REVISION, patches)
+    candidate = Candidate(ROOT / "artifacts/native-builds", variant)
+    print(f"Candidate attempt: {candidate.root}", flush=True)
+    try:
+        destination = build_candidate(args, variant, patches, candidate)
+    except BaseException as error:
+        status = "interrupted" if isinstance(error, KeyboardInterrupt) else "failed"
+        candidate.record(candidate.state["stage"], status=status, error=error)
+        raise
+    variable, command = {
+        "unmodified": ("NIRIFX_BASELINE_MANIFEST", "scripts/test-native-baseline.py"),
+        "movement": ("NIRIFX_MOVEMENT_MANIFEST", "scripts/nested-demo.py"),
+        "pointer": ("NIRIFX_POINTER_MANIFEST", "scripts/nested-demo.py --pointer-wobble gentle"),
+        "fragment": ("NIRIFX_FRAGMENT_MANIFEST", "scripts/fragment-demo.py"),
+    }[variant]
+    print(
+        f"Compiled candidate manifest: {destination}\n"
+        "Runtime and desktop acceptance remain unassessed.\n"
+        f"Inspect: python3 scripts/inspect-native-build.py --manifest {shlex.quote(str(destination))} "
+        f"--source {shlex.quote(str(candidate.source))}\n"
+        f"Try: {variable}={shlex.quote(str(destination))} python3 {command}"
+    )
+
+
+def build_candidate(args, variant, patches, candidate):
+    source = candidate.source
+    frozen_patches, patch_hashes = candidate.snapshot(patches)
+    command = candidate.command
+    candidate.record("checkout")
+    command("git", "init", str(source))
+    command("git", "remote", "add", "origin", "https://github.com/niri-wm/niri.git")
+    command("git", "fetch", "--depth=1", "origin", REVISION)
+    command("git", "checkout", "--detach", "FETCH_HEAD")
+    candidate.record("apply-patches")
+    apply_patches(source, REVISION, frozen_patches)
     lock_sha256 = digest(source / "Cargo.lock")
     env = os.environ.copy()
     toolchain = ROOT / "artifacts/toolchain"
@@ -134,24 +151,28 @@ def main():
     if not compiler:
         raise SystemExit("Selected Rust compiler was not found on the build PATH")
     env["RUSTC"] = compiler
-    rustc = subprocess.check_output([compiler, "--version"], cwd=source, env=env, text=True).strip()
-    rustc_verbose = subprocess.check_output(
-        [compiler, "-vV"], cwd=source, env=env, text=True
-    ).strip()
+    candidate.record("toolchain")
+    rustc = command(compiler, "--version", env=env).stdout.strip()
+    rustc_verbose = command(compiler, "-vV", env=env).stdout.strip()
     host = native_host(rustc, rustc_verbose)
     print(rustc, flush=True)
     env.setdefault("CARGO_BUILD_JOBS", "8")
     env.setdefault("CARGO_PROFILE_DEV_DEBUG", "0")
-    env["CARGO_TARGET_DIR"] = str(source / "target")
+    env["CARGO_TARGET_DIR"] = str(candidate.target)
+    env["CARGO_BUILD_TARGET_DIR"] = str(candidate.target)
+    env["CARGO_BUILD_BUILD_DIR"] = str(candidate.target)
     flags = ["--locked"] + ([] if args.desktop else ["--no-default-features"])
     if args.test:
-        run("cargo", "test", "--locked", "-p", "niri-config", cwd=source, env=env)
-        run("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=source, env=env)
+        candidate.record("tests")
+        command("cargo", "test", "--locked", "-p", "niri-config", cwd=source, env=env)
+        command("cargo", "test", *flags, "--lib", "layout::tests::animations", cwd=source, env=env)
         if not args.unmodified:
-            run("cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=source, env=env)
-            run("cargo", "test", *flags, "--lib", "animation::size::tests", cwd=source, env=env)
-            run("cargo", "test", *flags, "--lib", "resize_close", cwd=source, env=env)
-            run(
+            command(
+                "cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=source, env=env
+            )
+            command("cargo", "test", *flags, "--lib", "animation::size::tests", cwd=source, env=env)
+            command("cargo", "test", *flags, "--lib", "resize_close", cwd=source, env=env)
+            command(
                 "cargo",
                 "test",
                 *flags,
@@ -160,8 +181,10 @@ def main():
                 cwd=source,
                 env=env,
             )
-            run("cargo", "test", *flags, "--lib", "tests::pointer_ownership", cwd=source, env=env)
-            run(
+            command(
+                "cargo", "test", *flags, "--lib", "tests::pointer_ownership", cwd=source, env=env
+            )
+            command(
                 "cargo",
                 "test",
                 *flags,
@@ -170,7 +193,7 @@ def main():
                 cwd=source,
                 env=env,
             )
-            run(
+            command(
                 "cargo",
                 "test",
                 *flags,
@@ -180,22 +203,18 @@ def main():
                 env=env,
             )
         if args.pointer_wobble or args.fragment_drag:
-            run("cargo", "test", *flags, "--lib", "pointer_wobble", cwd=source, env=env)
+            command("cargo", "test", *flags, "--lib", "pointer_wobble", cwd=source, env=env)
         if args.fragment_drag:
-            run("cargo", "test", *flags, "--lib", "fragment_motion", cwd=source, env=env)
-            run("cargo", "test", *flags, "--lib", "fragment_mesh", cwd=source, env=env)
-    result = subprocess.run(
-        [
-            "cargo",
-            "build",
-            *flags,
-            *(["--release"] if args.release else []),
-            "--message-format=json-render-diagnostics",
-        ],
-        cwd=source,
+            command("cargo", "test", *flags, "--lib", "fragment_motion", cwd=source, env=env)
+            command("cargo", "test", *flags, "--lib", "fragment_mesh", cwd=source, env=env)
+    candidate.record("compile")
+    result = command(
+        "cargo",
+        "build",
+        *flags,
+        *(["--release"] if args.release else []),
+        "--message-format=json-render-diagnostics",
         env=env,
-        stdout=subprocess.PIPE,
-        text=True,
         check=False,
     )
     # Cargo JSON carries rendered compiler diagnostics on stdout. Keep those
@@ -212,11 +231,12 @@ def main():
                 print(rendered, end="", file=sys.stderr)
     result.check_returncode()
     profile = "release" if args.release else "debug"
-    binary, features, target = cargo_artifact(result.stdout, source / "target", profile, host)
+    binary, features, target = cargo_artifact(result.stdout, candidate.target, profile, host)
     # Do not publish evidence for inputs that changed while Cargo was running.
-    apply_patches(source, REVISION, patches, verify_only=True)
+    candidate.record("verify-output")
+    apply_patches(source, REVISION, frozen_patches, verify_only=True)
     if digest(source / "Cargo.lock") != lock_sha256 or any(
-        digest(path) != patch_hashes[path.name] for path in patches
+        digest(path) != patch_hashes[path.name] for path in (*patches, *frozen_patches)
     ):
         raise SystemExit("Build inputs changed during compilation; manifest was not updated")
     manifest = {
@@ -227,18 +247,14 @@ def main():
         "build_flags": flags,
         "rustc": rustc,
     }
-    name = "niri-movement-build.json"
     if args.unmodified:
         manifest["unmodified"] = True
-        name = "niri-unmodified-build.json"
     else:
         manifest["patch_sha256"] = patch_hashes[PATCH.name]
     if args.pointer_wobble or args.fragment_drag:
         manifest["pointer_patch_sha256"] = patch_hashes[POINTER_PATCH.name]
-        name = "niri-pointer-wobble-build.json"
     if args.fragment_drag:
         manifest["fragment_patch_sha256"] = patch_hashes[FRAGMENT_PATCH.name]
-        name = "niri-fragment-drag-build.json"
     manifest["native_build"] = metadata(
         manifest,
         variant=variant,
@@ -247,27 +263,7 @@ def main():
         features=features,
         rustc_verbose=rustc_verbose,
     )
-    destination = ROOT / "artifacts" / name
-    with tempfile.NamedTemporaryFile(mode="w", dir=destination.parent, delete=False) as stream:
-        temporary = Path(stream.name)
-        try:
-            stream.write(json.dumps(manifest, indent=2) + "\n")
-            stream.flush()
-            os.fsync(stream.fileno())
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
-    try:
-        os.replace(temporary, destination)
-    finally:
-        temporary.unlink(missing_ok=True)
-    if args.unmodified:
-        print(f"Built unmodified baseline {binary}")
-    elif args.fragment_drag:
-        print(f"Built {binary}\nRun: python3 scripts/test-fragment-drag.py")
-    else:
-        option = " --pointer-wobble gentle" if args.pointer_wobble else ""
-        print(f"Built {binary}\nRun: python3 scripts/nested-demo.py{option}")
+    return candidate.publish(manifest)
 
 
 if __name__ == "__main__":

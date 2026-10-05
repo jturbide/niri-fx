@@ -21,6 +21,7 @@ from unittest.mock import patch
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from lib.movement import experiment
+from lib.native_selection import explicit_manifest
 from lib.nested import NestedSession, source_hashes, wait_for
 from lib.pointer import VirtualPointer, build_pointer, pointer_protocol
 from lib.pointer_scene import client, config, grab, place_floating
@@ -57,15 +58,24 @@ class ObservedSession(NestedSession):
 
 
 def baseline():
-    manifest = json.loads((ROOT / "artifacts/niri-unmodified-build.json").read_text())
+    selected = explicit_manifest("unmodified", repository=ROOT)
+    manifest = (
+        selected[1]
+        if selected
+        else json.loads((ROOT / "artifacts/niri-unmodified-build.json").read_text())
+    )
     if manifest.get("unmodified") is not True or manifest.get("revision") != builder.REVISION:
         raise RuntimeError("Build the pinned baseline with --unmodified first")
-    if "patch_sha256" in manifest or "pointer_patch_sha256" in manifest:
+    if any(
+        field in manifest
+        for field in ("patch_sha256", "pointer_patch_sha256", "fragment_patch_sha256")
+    ):
         raise RuntimeError("Baseline manifest unexpectedly contains an experiment patch")
     # Refuse changed sources as well as replaced binaries. The empty patch stack
     # uses the builder's complete staged, unstaged and untracked change guard.
-    builder.apply_patches(builder.BASELINE_SOURCE, builder.REVISION, [])
-    binary = Path(manifest["binary"])
+    source = selected[2] if selected else builder.BASELINE_SOURCE
+    builder.apply_patches(source, builder.REVISION, [], verify_only=True)
+    binary = selected[0] if selected else Path(manifest["binary"])
     if hashlib.sha256(binary.read_bytes()).hexdigest() != manifest["binary_sha256"]:
         raise RuntimeError("Baseline binary changed; rebuild it before comparison")
     return binary, manifest

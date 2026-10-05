@@ -269,6 +269,12 @@ The Noctalia preset folder uses a generic temporary path. The publication crop
 excludes the surrounding bar, which may read system services even with a private
 session bus. Do not publish uncropped raw recordings.
 
+Native recording commands use the [selected candidate manifest](../../experimental/README.md#isolated-build-candidates).
+Set `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
+`NIRIFX_FRAGMENT_MANIFEST` for the recording's renderer in the test terminal.
+A new build never changes that selection automatically; preserved comparison
+baselines stay explicit command arguments.
+
 For actual movement interruption, first follow the
 [pinned build instructions](../../experimental/README.md), then run:
 

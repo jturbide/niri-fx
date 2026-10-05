@@ -5,6 +5,7 @@ import importlib.util
 import json
 from pathlib import Path
 
+from .native_selection import explicit_manifest
 from .nested import ROOT, wait_for
 
 PALETTE = {"Notes": "#b7e8db", "Library": "#d6c5ef"}
@@ -12,8 +13,9 @@ PALETTE = {"Notes": "#b7e8db", "Library": "#d6c5ef"}
 
 def experiment(*, pointer_wobble=False):
     name = "niri-pointer-wobble-build.json" if pointer_wobble else "niri-movement-build.json"
-    manifest = json.loads((ROOT / "artifacts" / name).read_text())
-    binary = Path(manifest["binary"])
+    selected = explicit_manifest("pointer" if pointer_wobble else "movement", repository=ROOT)
+    manifest = selected[1] if selected else json.loads((ROOT / "artifacts" / name).read_text())
+    binary = selected[0] if selected else Path(manifest["binary"])
     inputs = [
         (binary, manifest["binary_sha256"]),
         (ROOT / "experimental/niri-movement.patch", manifest["patch_sha256"]),

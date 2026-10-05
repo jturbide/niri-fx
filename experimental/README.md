@@ -11,14 +11,16 @@ Rust toolchain installed:
 
 ```sh
 python3 scripts/build-niri-movement.py --release --test
-python3 scripts/nested-demo.py
+# Use the exact candidate manifest printed by the builder:
+NIRIFX_MOVEMENT_MANIFEST=/path/to/candidate/manifest.json python3 scripts/nested-demo.py
 ```
 
 For the separate [pointer-wobble prototype](../docs/pointer-wobble.md):
 
 ```sh
 python3 scripts/build-niri-movement.py --pointer-wobble --release --test
-python3 scripts/nested-demo.py --pointer-wobble gentle
+NIRIFX_POINTER_MANIFEST=/path/to/candidate/manifest.json \
+  python3 scripts/nested-demo.py --pointer-wobble gentle
 ```
 
 This adds `niri-pointer-wobble.patch` on top of the movement patch in its own
@@ -32,7 +34,8 @@ profile with or without a timed movement shader. See the
 [profile and activation guide](../docs/pointer-wobble.md#choose-it-in-studio).
 
 For [continuous square fragments](../docs/fragment-drag.md), build with
-`--fragment-drag --release --test`, then run `python3 scripts/test-fragment-drag.py`.
+`--fragment-drag --release --test`, then run the printed command with
+`NIRIFX_FRAGMENT_MANIFEST` pointing to that candidate's manifest.
 This adds `niri-fragment-drag.patch` after both existing patches in a separate
 checkout. Eligible square movement shaders use persistent springs for dragging
 and timed moves; earlier builds retain their timed shader behavior. The extension
@@ -52,9 +55,43 @@ It refuses unrelated source changes. `--release` builds
 an optimized binary; the default debug build is for development, not benchmarking.
 The launcher rejects a changed binary or patch until rebuilt.
 
+### Isolated build candidates
+
+Every invocation creates a new `artifacts/native-builds/` candidate directory.
+Its source, Cargo target directory, copied patches and published executable are
+separate from every earlier attempt. Both Cargo's final-output and intermediate
+[build directories](https://doc.rust-lang.org/cargo/reference/config.html#buildbuild-dir)
+are scoped to that attempt. Successful builds publish `manifest.json`
+and an independent `bin/niri`; a later Cargo build cannot overwrite that copy.
+Failed or interrupted attempts remain available for diagnosis and do not become
+selectable candidates. A retry creates another directory.
+
+The builder prints the candidate path and a command to test it. There is no
+automatic latest-build selection. Set the matching variable for the commands
+you intend to run; do not add these development selections to shell startup:
+
+| Build | Manifest selection |
+| --- | --- |
+| Movement | `NIRIFX_MOVEMENT_MANIFEST` |
+| Pointer wobble | `NIRIFX_POINTER_MANIFEST` |
+| Continuous fragments | `NIRIFX_FRAGMENT_MANIFEST` |
+| Unmodified baseline | `NIRIFX_BASELINE_MANIFEST` |
+
+For several checks, export the variable in that test terminal and unset it
+afterward. An explicit selection must pass its build metadata, variant, binary
+and current-patch checks; invalid selections fail rather than falling back.
+Recorded patch copies preserve provenance, but do not make an older executable
+compatible with a changed harness or configuration contract.
+
+Without a variable, existing tools retain their earlier fixed manifest paths.
+New builds never replace those manifests, binaries or source directories. Legacy
+Movement Demo launchers therefore keep their previous build; use the printed
+candidate command to try a newer one. Candidate testing does not install or
+select a login session. Versioned installation and rollback are still planned.
+
 ### Inspect build identity
 
-New builds also record a versioned `native_build` block in their existing local
+New builds also record a versioned `native_build` block in their candidate
 manifest: the pinned upstream revision, ordered patch hashes, Cargo lockfile,
 reported executable features, build profile, Rust compiler and native host target.
 The input fingerprint and binary hash identify different things: recorded build
@@ -67,12 +104,12 @@ Inspect a build without running its executable:
 
 ```sh
 python3 scripts/inspect-native-build.py \
-  --manifest artifacts/niri-fragment-drag-build.json \
-  --source artifacts/niri-fragment-drag-src
+  --manifest /path/to/candidate/manifest.json \
+  --source /path/to/candidate/source
 # Check the release/default-feature prerequisites for a desktop candidate:
 python3 scripts/inspect-native-build.py \
-  --manifest artifacts/niri-fragment-drag-build.json \
-  --source artifacts/niri-fragment-drag-src --desktop
+  --manifest /path/to/candidate/manifest.json \
+  --source /path/to/candidate/source --desktop
 ```
 
 The inspector reads the manifest, binary, current patch files and source lockfile.
@@ -84,8 +121,7 @@ fields; old artifacts are not rewritten to invent missing build inputs.
 `--desktop` checks recorded release mode and the full default desktop feature set.
 It does not establish renderer support, library/driver compatibility or physical
 desktop acceptance. Neither inspection mode executes a candidate, changes
-configuration or installs/selects a session. Fresh candidate directories,
-versioned packages and next-login selection are separate
+configuration or installs/selects a session. Versioned packages and next-login selection are separate
 [planned lifecycle work](../docs/desktop-updates.md#planned-user-workflow).
 
 ### Toolchain and isolated demo
@@ -101,10 +137,6 @@ Niri window with two synthetic app cards. Click inside it, then use:
 - **Alt+Left / Alt+Right:** exchange adjacent columns.
 - **Alt+R:** change column width (fragment resize requires `--resize`).
 - **Alt+Q:** close the demo.
-
-For an optional app-launcher entry, run `python3 scripts/install-desktop.py --movement-demo`,
-then open **NiriFX Movement Demo**. Remove
-`~/.local/share/applications/niri-fx-movement-demo.desktop` to remove it.
 
 The parent desktop may reserve some keys. The demo runs without `--session`,
 uses a generated config with no startup shell/bar, and directs its clients to
