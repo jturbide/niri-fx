@@ -9,6 +9,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- `native status` distinguishes the advertised running session from next-login
+  and rollback selections, and reports each retained bundle's file and allocated
+  storage sizes. Missing selections stay visible. `--offline` skips IPC; status
+  never executes a candidate or changes desktop settings.
 - `native stage --snapshot-includes` imports split Niri configurations into a
   closed, verified bundle while preserving include order and file boundaries.
   Review covers every source, including absent optional files. Login entries

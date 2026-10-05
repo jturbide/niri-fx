@@ -105,6 +105,43 @@ its existing binary and config, even if you select another pair while logged in.
 `metadata-match` means recorded files and desktop build prerequisites match;
 it does not certify graphics drivers, portals, capture or physical-desktop behavior.
 
+### Inspect the running and selected versions
+
+`native status` returns JSON with one entry per retained bundle, including missing
+or damaged bundles referenced by the selection. Each entry has a `roles` list:
+
+| Role | Meaning |
+| --- | --- |
+| `next-login` | Selected for the next login through this installation's launcher. |
+| `rollback` | Previous selection retained by the selector. |
+| `running` | The advertised Niri IPC process matches this bundle's executable and startup configuration path. |
+
+A bundle may have several roles. Selecting an update while Niri is running can
+leave one bundle marked `running` and another marked `next-login`.
+
+The top-level `running` result distinguishes a `matched` bundle from an `external`
+session, `offline` inspection and `unknown` identity. The CLI uses `NIRI_SOCKET`;
+it checks the kernel-reported peer, executable identity, process lifetime and
+explicit config argument. It never launches an executable found through IPC.
+Use `--offline` to inspect retained files without contacting a session:
+
+```sh
+niri-fx native status --offline
+```
+
+This observes only the advertised IPC session, which could be a nested preview.
+It does not discover every session or prove that the running renderer has enabled
+an effect. Continue to use `doctor` and the manual acceptance checks below. An
+empty role list is not permission to delete a bundle; cleanup remains planned.
+
+Each bundle's `storage` reports logical regular-file bytes and filesystem-allocated
+regular-file bytes, deduplicating hard links within that bundle. The measurement
+does not follow symbolic links or include directory metadata, link storage,
+separate Python environments, source checkouts or transaction history outside the
+bundle. Filesystem compression and shared extents can make allocated bytes differ
+from reclaimable space. An interrupted, inaccessible or bounded scan reports
+incomplete results instead of treating unknown space as zero.
+
 ## Add the login entry
 
 ```sh

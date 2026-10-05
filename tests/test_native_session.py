@@ -304,6 +304,87 @@ class NativeSessionTests(unittest.TestCase):
         self.apply_selection(native_session.rollback_plan(self.destination))
         self.assertEqual(native_session.load_selection(self.destination)["selected"], bundle_id)
 
+    def test_status_distinguishes_running_next_login_and_rollback_without_writes(self):
+        identifiers = []
+        for slowdown in (0.8, 0.9, 1.0, 1.1):
+            self.config.write_text(f"animations {{ slowdown {slowdown}; }}\n")
+            identifiers.append(self.stage())
+        first, previous, selected, unused = identifiers
+        self.apply_selection(native_session.select_plan(self.destination, previous))
+        self.apply_selection(native_session.select_plan(self.destination, selected))
+        before = {path: path.read_bytes() for path in self.destination.rglob("*") if path.is_file()}
+        self.validator.reset_mock()
+        with patch(
+            "niri_fx.native_runtime.inspect_running",
+            return_value={"status": "matched", "bundle_id": first},
+        ) as inspect:
+            report = native_session.status(self.destination, socket_path="/example/niri.sock")
+        inspect.assert_called_once()
+        self.assertEqual(inspect.call_args.kwargs, {"socket_path": "/example/niri.sock"})
+        self.assertEqual(len(inspect.call_args.args[0]), 4)
+        by_id = {item["bundle_id"]: item for item in report["bundles"]}
+        for bundle_id, roles in (
+            (first, ["running"]),
+            (previous, ["rollback"]),
+            (selected, ["next-login"]),
+            (unused, []),
+        ):
+            self.assertEqual(by_id[bundle_id]["roles"], roles)
+            self.assertEqual(by_id[bundle_id]["storage"]["status"], "complete")
+            self.assertGreater(by_id[bundle_id]["storage"]["logical_bytes"], 0)
+        self.assertIn("does not establish", report["note"])
+        self.assertEqual(
+            before,
+            {path: path.read_bytes() for path in self.destination.rglob("*") if path.is_file()},
+        )
+        self.validator.assert_not_called()
+
+    def test_status_keeps_missing_selected_and_previous_bundles_visible(self):
+        self.destination.mkdir()
+        selection = self.destination / "selection.json"
+        selection.write_text(json.dumps({"schema": 1, "selected": "a" * 64, "previous": "b" * 64}))
+        selection.chmod(0o600)
+        with patch(
+            "niri_fx.native_runtime.inspect_running",
+            return_value={"status": "unknown", "bundle_id": None},
+        ) as inspect:
+            report = native_session.status(self.destination)
+        self.assertEqual(inspect.call_args.args[0], [])
+        self.assertEqual(
+            [item["roles"] for item in report["bundles"]], [["next-login"], ["rollback"]]
+        )
+        self.assertTrue(all(item["status"] == "unavailable" for item in report["bundles"]))
+        self.assertFalse((self.destination / "bundles").exists())
+
+    def test_status_combines_running_and_next_login_roles(self):
+        selected = self.stage()
+        self.apply_selection(native_session.select_plan(self.destination, selected))
+        with patch(
+            "niri_fx.native_runtime.inspect_running",
+            return_value={"status": "matched", "bundle_id": selected},
+        ):
+            report = native_session.status(self.destination)
+        self.assertEqual(report["bundles"][0]["roles"], ["next-login", "running"])
+
+    def test_damaged_running_bundle_is_unknown_instead_of_external(self):
+        selected = self.stage()
+        self.apply_selection(native_session.select_plan(self.destination, selected))
+        folder = self.destination / "bundles" / selected
+        (folder / "config.kdl").write_text("changed after selection\n")
+        with patch(
+            "niri_fx.native_runtime.inspect_running",
+            return_value={
+                "status": "external",
+                "bundle_id": None,
+                "binary": str(folder / "bin/niri"),
+            },
+        ):
+            report = native_session.status(self.destination)
+        self.assertEqual(report["running"]["status"], "unknown")
+        self.assertIsNone(report["running"]["bundle_id"])
+        self.assertEqual(report["bundles"][0]["roles"], ["next-login"])
+        self.assertEqual(report["bundles"][0]["status"], "unavailable")
+
     def test_selection_conflict_and_plan_fingerprint_prevent_stale_apply(self):
         first = self.stage()
         first_plan = native_session.select_plan(self.destination, first)
