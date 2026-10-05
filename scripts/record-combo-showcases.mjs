@@ -2,42 +2,44 @@
 // Only synthetic textures are captured; no desktop or installed effects change.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
+import { recordingProvenance } from "./lib/recording-provenance.mjs";
 
 process.chdir(projectRoot);
-const defaults = [
-  "fragment-flow",
-  "soft-landing",
-  "ribbon-current",
-  "playful-motion",
-  "geometric-flow",
-];
-const args = process.argv.slice(2);
-assert(
-  args.length <= 1 && (!args[0] || args[0].startsWith("--only=")),
-  "Use --only=profile-id,profile-id",
-);
-const selected = args[0] ? args[0].slice("--only=".length).split(",") : defaults;
-assert(selected.length && new Set(selected).size === selected.length, "Select distinct profiles");
-const specifications = JSON.parse(readFileSync("docs/gifs/showcases.json", "utf8")).clips;
-const clips = selected.map((id) => {
-  const spec = specifications.find((spec) => spec.name === "profile-" + id);
-  assert(spec?.panels?.length === 1 && spec.panels[0].source, "Unknown one-panel profile: " + id);
-  return { id, spec, source: spec.panels[0].source };
-});
-mkdirSync("artifacts", { recursive: true });
-const scratch = mkdtempSync(join(projectRoot, "artifacts/combo-showcases-"));
-const page = join(scratch, "preview.html");
-execFileSync("python3", ["-m", "niri_fx", "preview", "--output", page]);
-const browser = await launchBrowser();
-const fps = 20;
+const capture = recordingProvenance("scripts/record-combo-showcases.mjs");
+let browser;
 try {
+  const defaults = [
+    "fragment-flow",
+    "soft-landing",
+    "ribbon-current",
+    "playful-motion",
+    "geometric-flow",
+  ];
+  const args = process.argv.slice(2);
+  assert(
+    args.length <= 1 && (!args[0] || args[0].startsWith("--only=")),
+    "Use --only=profile-id,profile-id",
+  );
+  const selected = args[0] ? args[0].slice("--only=".length).split(",") : defaults;
+  assert(selected.length && new Set(selected).size === selected.length, "Select distinct profiles");
+  const specifications = JSON.parse(readFileSync("docs/gifs/showcases.json", "utf8")).clips;
+  const clips = selected.map((id) => {
+    const spec = specifications.find((spec) => spec.name === "profile-" + id);
+    assert(spec?.panels?.length === 1 && spec.panels[0].source, "Unknown one-panel profile: " + id);
+    return { id, spec, source: spec.panels[0].source };
+  });
+  mkdirSync("artifacts", { recursive: true });
+  const scratch = mkdtempSync(join(projectRoot, "artifacts/combo-showcases-"));
+  const page = join(scratch, "preview.html");
+  capture.generate(page);
+  browser = await launchBrowser();
+  const fps = 20;
+
   const { evaluate, rpc } = browser;
-  await browser.navigate(pathToFileURL(page).href, { width: 720, height: 616 });
+  await capture.navigate(browser, { width: 720, height: 616 });
   await evaluate(`(() => {
     const style=document.createElement('style');
     style.textContent='html,body{width:720px;height:616px;max-width:none;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,#library-actions,#transfer-options,.selection-summary,.selection-bar,.preview-heading,.workspace-tools,#apply-review,.preview-preferences,#concept-note,#movement-preview-controls,#caption,#status,main>small,.motion-preference,#error,#combo-preview-status{display:none!important}.layout{display:block;margin:0 14px}html[data-workspace] canvas{width:690px;height:524px!important;max-height:none!important;min-height:0!important;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
@@ -134,13 +136,13 @@ print(json.dumps({'document':effect_document(name,profile),'shaders':shaders,'so
           return state.complete?state:null;
         })()`);
       }
-      const capture = await rpc("Page.captureScreenshot", {
+      const screenshot = await rpc("Page.captureScreenshot", {
         format: "png",
         captureBeyondViewport: false,
       });
       writeFileSync(
         join(directory, String(frame).padStart(4, "0") + ".png"),
-        Buffer.from(capture.data, "base64"),
+        Buffer.from(screenshot.data, "base64"),
       );
     }
     assert.equal(final?.action, "close");
@@ -166,6 +168,7 @@ print(json.dumps({'document':effect_document(name,profile),'shaders':shaders,'so
     // Keep an uncompressed endpoint and opening hold for independent review.
     writeFileSync(join(directory, "timeline.json"), JSON.stringify(plan, null, 2) + "\n");
     const target = "docs/gifs/" + spec.name + ".gif";
+    const encoded = join(directory, "rendered.gif");
     execFileSync("ffmpeg", [
       "-v",
       "error",
@@ -178,17 +181,26 @@ print(json.dumps({'document':effect_document(name,profile),'shaders':shaders,'so
       "scale=480:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=192:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle",
       "-loop",
       "0",
-      target,
+      encoded,
     ]);
-    assert(statSync(target).size > 1000);
-    const manifestPath = "docs/gifs/manifest.json",
-      manifest = JSON.parse(readFileSync(manifestPath));
+    const sources = [
+      source,
+      "niri_fx/library.js",
+      "niri_fx/effect-core.js",
+      "niri_fx/pointer-preview.js",
+      "niri_fx/preview.py",
+      "niri_fx/combo-preview.js",
+      "niri_fx/studio.js",
+      "niri_fx/preview.html",
+      "niri_fx/studio.css",
+      "scripts/record-combo-showcases.mjs",
+      ...expected.sources,
+    ];
     const entry = {
       file: target,
       mode: "effect",
       frames: count,
       fps,
-      bytes: statSync(target).size,
       backend: "actual Studio combo playback / synthetic WebGL texture",
       panels: [
         {
@@ -198,21 +210,6 @@ print(json.dumps({'document':effect_document(name,profile),'shaders':shaders,'so
           label: spec.panels[0].label,
         },
       ],
-      sources: Object.fromEntries(
-        [
-          source,
-          "niri_fx/library.js",
-          "niri_fx/effect-core.js",
-          "niri_fx/pointer-preview.js",
-          "niri_fx/preview.py",
-          "niri_fx/combo-preview.js",
-          "niri_fx/studio.js",
-          "niri_fx/preview.html",
-          "niri_fx/studio.css",
-          "scripts/record-combo-showcases.mjs",
-          ...expected.sources,
-        ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
-      ),
       combo: {
         document: expected.document,
         seed: plan.seed,
@@ -235,15 +232,21 @@ print(json.dumps({'document':effect_document(name,profile),'shaders':shaders,'so
         "document and Undo history unchanged",
       ],
     };
-    const index = manifest.clips.findIndex((clip) => clip.file === target);
-    assert(index >= 0, "Existing profile manifest row required");
-    manifest.clips[index] = entry;
-    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-    console.log(
-      `Rendered ${spec.name}: ${count} frames at ${fps} fps, ${statSync(target).size} bytes`,
-    );
+    const published = await capture.publish({
+      sources,
+      encoded,
+      destination: target,
+      manifestPath: "docs/gifs/manifest.json",
+      entry,
+      requireExisting: true,
+    });
+    console.log(`Rendered ${spec.name}: ${count} frames at ${fps} fps, ${published.bytes} bytes`);
   }
   console.log("PASS: complete combo cycles. Evidence: " + scratch);
 } finally {
-  await browser.close();
+  try {
+    await browser?.close();
+  } finally {
+    await capture.close();
+  }
 }

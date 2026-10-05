@@ -880,8 +880,8 @@
     "poster": "412f6fd276d88395f577f5ffe6ba0a577270c29906695bc874670505577ee778"
   },
   "workflow-action-choices": {
-    "source": "6a8003f2145baf4ed66386233583b52c81c1f3b11ddf66eec0f9cc17ff07a733",
-    "poster": "5446f47b3f08343aa2d9825717a2ff07ecb41ae36365d63dc2774f99ebd9ac80"
+    "source": "8d999854d2e8c2e7727e2f9f672bf34953e3c7efd01f23e37d3444407de7f9df",
+    "poster": "bb155a64609043632ff5f0b61543031304bbd82def6489be3037d654c001cf86"
   },
   "workflow-dms": {
     "source": "c1c96cacb890e169b12f53805a4752fab8e13127db4d1fbe4881a13340eca603",
@@ -896,7 +896,7 @@
     "poster": "1765aaac814a80d1b257fdb2c8c3aa0f43dd7b8f51e49e9dbc47cb26873228e2"
   },
   "workflow-library": {
-    "source": "dbc661a2853aefa1236ee5f6ebde164b806bc66f7cdb4d6cd2286884fa3938a5",
+    "source": "0dd4b52bc19e8afba18e21a16e439df104e15daefdfa92029ab9c1627ef8c1c6",
     "poster": "1ef9948609f44bba5800110411e2f886e3644dd1529977662ab570b4acd227e7"
   },
   "workflow-noctalia": {
@@ -908,7 +908,7 @@
     "poster": "95a2528a9b3e809c35fae6e6b8c2cd0defc69fa7811ee927aae5ff096047e3b1"
   },
   "workflow-studio-profile": {
-    "source": "d60d59e51a7aead38afd66000faef7be4ae8a47934ff550b0098d063c20ee4d8",
+    "source": "8ad12ae7deddec9aa705392f87103afb91a63f47936892727a56cf6a015fcf12",
     "poster": "56871b224bd497aba9eadb29907efe5113a0b1db23cac2fa9c11c0899b552d4f"
   },
   "workflow-terminal": {

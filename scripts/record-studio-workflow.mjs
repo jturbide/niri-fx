@@ -1,22 +1,24 @@
 // Record real Studio controls with a synthetic profile; no desktop or HTTP save.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { setTimeout as delay } from "node:timers/promises";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
+import { recordingProvenance } from "./lib/recording-provenance.mjs";
 
 process.chdir(projectRoot);
-mkdirSync("artifacts", { recursive: true });
-const root = mkdtempSync(join(projectRoot, "artifacts/studio-workflow-"));
-const page = join(root, "preview.html");
-execFileSync("python3", ["-m", "niri_fx", "preview", "--output", page]);
-const browser = await launchBrowser();
+const capture = recordingProvenance("scripts/record-studio-workflow.mjs");
+let browser;
 try {
+  mkdirSync("artifacts", { recursive: true });
+  const root = mkdtempSync(join(projectRoot, "artifacts/studio-workflow-"));
+  const page = join(root, "preview.html");
+  capture.generate(page);
+  browser = await launchBrowser();
+
   const { rpc, evaluate } = browser;
-  await browser.navigate(pathToFileURL(page).href, { width: 1280, height: 1080 });
+  await capture.navigate(browser, { width: 1280, height: 1080 });
   await evaluate("byId('show-editor').click();byId('transfer-options').open=true");
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(`
@@ -98,6 +100,7 @@ try {
   execFileSync("niri", ["validate", "-c", join(root, kdl)]);
   await frames("Saved files are ready to review / Preview and export do not activate effects", 2);
   const destination = "docs/gifs/workflow-studio-profile.gif";
+  const encoded = join(root, "rendered.gif");
   execFileSync("ffmpeg", [
     "-v",
     "error",
@@ -110,31 +113,24 @@ try {
     "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=none",
     "-loop",
     "0",
-    destination,
+    encoded,
   ]);
-  const path = "docs/gifs/scenario-manifest.json";
-  const { existsSync, statSync } = await import("node:fs");
-  const manifest = existsSync(path) ? JSON.parse(readFileSync(path)) : { clips: [] };
-  manifest.clips = manifest.clips.filter((clip) => clip.name !== "workflow-studio-profile");
-  manifest.clips.push({
+  const sources = [
+    "examples/profiles/burst-and-drift.json",
+    "niri_fx/effect-core.js",
+    "niri_fx/pointer-preview.js",
+    "niri_fx/preview.py",
+    "niri_fx/combo-preview.js",
+    "niri_fx/library.js",
+    "niri_fx/studio.js",
+    "niri_fx/preview.html",
+    "niri_fx/studio.css",
+    "scripts/record-studio-workflow.mjs",
+  ];
+  const entry = {
     name: "workflow-studio-profile",
     file: destination,
-    bytes: statSync(destination).size,
     backend: "actual offline Studio UI / synthetic WebGL texture",
-    sources: Object.fromEntries(
-      [
-        "examples/profiles/burst-and-drift.json",
-        "niri_fx/effect-core.js",
-        "niri_fx/pointer-preview.js",
-        "niri_fx/preview.py",
-        "niri_fx/combo-preview.js",
-        "niri_fx/library.js",
-        "niri_fx/studio.js",
-        "niri_fx/preview.html",
-        "niri_fx/studio.css",
-        "scripts/record-studio-workflow.mjs",
-      ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
-    ),
     fps: 10,
     frames: count,
     checks: [
@@ -147,9 +143,19 @@ try {
       "stock Niri validation",
       "resize absent",
     ],
+  };
+  await capture.publish({
+    sources,
+    encoded,
+    destination,
+    manifestPath: "docs/gifs/scenario-manifest.json",
+    entry,
   });
-  writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n");
   console.log(`PASS: Studio workflow and downloads; ${count} frames. Evidence: ${root}`);
 } finally {
-  await browser.close();
+  try {
+    await browser?.close();
+  } finally {
+    await capture.close();
+  }
 }

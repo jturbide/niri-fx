@@ -1,20 +1,22 @@
 // Record the actual library/combo controls and downloads on synthetic content.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, statSync, renameSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, renameSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
+import { recordingProvenance } from "./lib/recording-provenance.mjs";
 
 process.chdir(projectRoot);
-mkdirSync("artifacts", { recursive: true });
-const root = mkdtempSync(join(projectRoot, "artifacts/library-workflow-"));
-const page = join(root, "preview.html");
-execFileSync("python3", ["-m", "niri_fx", "preview", "--output", page]);
-const browser = await launchBrowser();
+const capture = recordingProvenance("scripts/record-library-workflow.mjs");
+let browser;
 try {
-  await browser.navigate(pathToFileURL(page).href, { width: 1440, height: 1160 });
+  mkdirSync("artifacts", { recursive: true });
+  const root = mkdtempSync(join(projectRoot, "artifacts/library-workflow-"));
+  const page = join(root, "preview.html");
+  capture.generate(page);
+  browser = await launchBrowser();
+
+  await capture.navigate(browser, { width: 1440, height: 1160 });
   const { evaluate, rpc } = browser;
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(
@@ -147,6 +149,7 @@ try {
   assert.deepEqual(JSON.parse(readFileSync(join(root, "nirifx-preset.json"))), expected);
   execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
   const destination = "docs/gifs/workflow-library.gif";
+  const encoded = join(root, "rendered.gif");
   execFileSync("ffmpeg", [
     "-y",
     "-loglevel",
@@ -159,32 +162,26 @@ try {
     "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=none",
     "-loop",
     "0",
-    destination,
+    encoded,
   ]);
-  const path = "docs/gifs/scenario-manifest.json",
-    manifest = JSON.parse(readFileSync(path));
-  manifest.clips = manifest.clips.filter((clip) => clip.name !== "workflow-library");
-  manifest.clips.push({
+  const sources = [
+    "niri_fx/library.js",
+    "niri_fx/pointer.py",
+    "niri_fx/pointer-preview.js",
+    "niri_fx/preview.py",
+    "niri_fx/effect-core.js",
+    "niri_fx/combo-preview.js",
+    "niri_fx/studio.js",
+    "niri_fx/preview.html",
+    "niri_fx/studio.css",
+    "scripts/record-library-workflow.mjs",
+  ];
+  const entry = {
     name: "workflow-library",
     file: destination,
-    bytes: statSync(destination).size,
     backend: "actual offline library UI / synthetic WebGL texture",
     fps: 20,
     frames: count,
-    sources: Object.fromEntries(
-      [
-        "niri_fx/library.js",
-        "niri_fx/pointer.py",
-        "niri_fx/pointer-preview.js",
-        "niri_fx/preview.py",
-        "niri_fx/effect-core.js",
-        "niri_fx/combo-preview.js",
-        "niri_fx/studio.js",
-        "niri_fx/preview.html",
-        "niri_fx/studio.css",
-        "scripts/record-library-workflow.mjs",
-      ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
-    ),
     checks: [
       "recommended selection",
       "independent open/close",
@@ -204,11 +201,21 @@ try {
       "actual JSON and KDL downloads",
       "stock Niri validation",
     ],
+  };
+  await capture.publish({
+    sources,
+    encoded,
+    destination,
+    manifestPath: "docs/gifs/scenario-manifest.json",
+    entry,
   });
-  writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n");
   const shot = await rpc("Page.captureScreenshot", { format: "png" });
   writeFileSync(join(root, "review.png"), Buffer.from(shot.data, "base64"));
   console.log(`PASS: library workflow and downloads; ${count} frames. Evidence: ${root}`);
 } finally {
-  await browser.close();
+  try {
+    await browser?.close();
+  } finally {
+    await capture.close();
+  }
 }

@@ -1,23 +1,25 @@
 // Record real action controls and portable downloads with synthetic content.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
+import { recordingProvenance } from "./lib/recording-provenance.mjs";
 
 process.chdir(projectRoot);
-mkdirSync("artifacts", { recursive: true });
-const root = mkdtempSync(join(projectRoot, "artifacts/action-choices-"));
-const page = join(root, "preview.html");
-execFileSync("python3", ["-m", "niri_fx", "preview", "--output", page]);
-const browser = await launchBrowser();
-const fps = 20;
-let count = 0;
+const capture = recordingProvenance("scripts/record-action-choices.mjs");
+let browser;
 try {
+  mkdirSync("artifacts", { recursive: true });
+  const root = mkdtempSync(join(projectRoot, "artifacts/action-choices-"));
+  const page = join(root, "preview.html");
+  capture.generate(page);
+  browser = await launchBrowser();
+  const fps = 20;
+  let count = 0;
+
   const { evaluate, rpc, callFunction } = browser;
-  await browser.navigate(pathToFileURL(page).href, { width: 1440, height: 1160 });
+  await capture.navigate(browser, { width: 1440, height: 1160 });
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(`(() => {
     seed=.43;
@@ -95,6 +97,7 @@ try {
   assert.match(kdl, /window-resize\s*\{\s*off\s*\}/);
   execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
   const destination = "docs/gifs/workflow-action-choices.gif";
+  const encoded = join(root, "rendered.gif");
   execFileSync("ffmpeg", [
     "-y",
     "-loglevel",
@@ -107,29 +110,23 @@ try {
     "scale=960:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=128[p];[b][p]paletteuse=dither=none",
     "-loop",
     "0",
-    destination,
+    encoded,
   ]);
-  const path = "docs/gifs/scenario-manifest.json";
-  const manifest = JSON.parse(readFileSync(path));
-  manifest.clips = manifest.clips.filter((clip) => clip.name !== "workflow-action-choices");
-  manifest.clips.push({
+  const sources = [
+    "niri_fx/library.js",
+    "niri_fx/effect-core.js",
+    "niri_fx/preview.py",
+    "niri_fx/studio.js",
+    "niri_fx/preview.html",
+    "niri_fx/studio.css",
+    "scripts/record-action-choices.mjs",
+  ];
+  const entry = {
     name: "workflow-action-choices",
     file: destination,
-    bytes: statSync(destination).size,
     backend: "actual offline Library UI / synthetic texture",
     fps,
     frames: count,
-    sources: Object.fromEntries(
-      [
-        "niri_fx/library.js",
-        "niri_fx/effect-core.js",
-        "niri_fx/preview.py",
-        "niri_fx/studio.js",
-        "niri_fx/preview.html",
-        "niri_fx/studio.css",
-        "scripts/record-action-choices.mjs",
-      ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
-    ),
     checks: [
       "independent Preserve / NiriFX Style / Off",
       "Preserve retains underlying configuration",
@@ -140,9 +137,19 @@ try {
       "actual JSON/KDL downloads",
       "stock Niri validation",
     ],
+  };
+  await capture.publish({
+    sources,
+    encoded,
+    destination,
+    manifestPath: "docs/gifs/scenario-manifest.json",
+    entry,
   });
-  writeFileSync(path, JSON.stringify(manifest, null, 2) + "\n");
   console.log(`PASS: action choices and actual downloads; ${count} frames. Evidence: ${root}`);
 } finally {
-  await browser.close();
+  try {
+    await browser?.close();
+  } finally {
+    await capture.close();
+  }
 }
