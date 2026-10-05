@@ -448,27 +448,66 @@ def rollback_plan(root):
     return _selection_plan(root, None, rollback=True)
 
 
-def status(root):
+def status(root, *, socket_path=None):
+    """Inspect retained files and the explicitly advertised session without activation."""
+    from .native_runtime import inspect_running
+    from .native_storage import inspect_storage
+
     root = _path(root)
     selection = load_selection(root)
     bundles = []
     parent = _path(root / "bundles")
+    identifiers = {value for key, value in selection.items() if key != "schema" and value}
     if parent.exists():
-        for folder in sorted(parent.iterdir()):
-            if not _ID.fullmatch(folder.name):
-                continue
-            try:
-                report = inspect_bundle(root, folder.name)
-                report.pop("observed")
-                bundles.append(report | {"status": "metadata-match"})
-            except (OSError, ValueError, UnicodeError) as error:
-                bundles.append(
-                    {"bundle_id": folder.name, "status": "unavailable", "reason": str(error)}
-                )
+        identifiers.update(folder.name for folder in parent.iterdir() if _ID.fullmatch(folder.name))
+    for bundle_id in sorted(identifiers):
+        try:
+            report = inspect_bundle(root, bundle_id)
+            report.pop("observed")
+            report["status"] = "metadata-match"
+        except (OSError, ValueError, UnicodeError) as error:
+            report = {"bundle_id": bundle_id, "status": "unavailable", "reason": str(error)}
+        report["storage"] = inspect_storage(parent / bundle_id)
+        bundles.append(report)
+    running = inspect_running(
+        [report for report in bundles if report["status"] == "metadata-match"],
+        socket_path=socket_path,
+    )
+    # A damaged retained bundle cannot establish a running match, but it should
+    # not make its live process look like an unrelated external installation.
+    if running["status"] == "external" and running.get("binary"):
+        binary = Path(running["binary"])
+        if any(
+            report["status"] == "unavailable"
+            and binary.is_relative_to(Path(os.path.abspath(parent / report["bundle_id"])))
+            for report in bundles
+        ):
+            running = running | {
+                "status": "unknown",
+                "bundle_id": None,
+                "detail": "The advertised executable belongs to a retained bundle that could "
+                "not be verified. Its running bundle identity remains unknown.",
+            }
+    for report in bundles:
+        bundle_id = report["bundle_id"]
+        report["roles"] = [
+            name
+            for name, matches in (
+                ("next-login", selection["selected"] == bundle_id),
+                ("rollback", selection.get("previous") == bundle_id),
+                ("running", running["status"] == "matched" and running["bundle_id"] == bundle_id),
+            )
+            if matches
+        ]
     return {
         "schema": SCHEMA,
         "root": str(root),
         "selection": selection,
         "bundles": bundles,
-        "note": "Selection applies at the next NiriFX login; stock Niri is unchanged.",
+        "running": running,
+        "note": (
+            "Selection applies at the next NiriFX login. Running identity covers only the "
+            "advertised IPC session; an empty role list does not establish that a bundle "
+            "is unused. No files or desktop settings are changed."
+        ),
     }

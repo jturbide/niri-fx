@@ -111,8 +111,10 @@ compositor build with an explicit upgrade path.
       per-file review, preserved ordering and retained missing-optional state.
 - [ ] Connect shell/Studio settings to a reviewed candidate-editing workflow
       without changing stock config ownership or editing retained bundles.
-- [ ] Show candidate disk usage and provide reviewed cleanup that preserves
-      running, selected and rollback versions.
+- [x] Show retained-bundle storage sizes and distinguish the advertised running
+      session from next-login and rollback selections, with explicit unknown states.
+- [ ] Provide reviewed cleanup that preserves all running, selected and rollback
+      versions; a single advertised IPC session is insufficient to authorize removal.
 - [ ] Verify failed install, interrupted update, changed shared dependencies,
       rollback and return to stock on supported physical desktops.
 - [ ] Publish signed artifacts and source/patch provenance for declared

@@ -1,6 +1,7 @@
 """Explicit native-session preparation and next-login selection commands."""
 
 import json
+import os
 from pathlib import Path
 
 from .native_session import default_root
@@ -10,6 +11,9 @@ def add_parser(commands):
     native = commands.add_parser("native", help="Prepare experimental compositor sessions")
     actions = native.add_subparsers(dest="native_command", required=True)
     status = actions.add_parser("status", help="Inspect installed bundles and next-login selection")
+    status.add_argument(
+        "--offline", action="store_true", help="Inspect stored bundles without connecting to Niri"
+    )
     stage = actions.add_parser("stage", help="Review an isolated desktop binary/configuration pair")
     stage.add_argument("--manifest", type=Path, required=True)
     stage.add_argument(
@@ -51,7 +55,9 @@ def run(args):
     if getattr(args, "expect_plan", None) and not args.apply:
         raise ValueError("--expect-plan requires --apply")
     if action == "status":
-        result = native_session.status(root)
+        result = native_session.status(
+            root, socket_path=None if args.offline else os.environ.get("NIRI_SOCKET")
+        )
     else:
         if action == "stage":
             plan = native_session.stage_plan(

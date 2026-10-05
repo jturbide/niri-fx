@@ -3,6 +3,7 @@
 import contextlib
 import io
 import json
+import os
 import tempfile
 import unittest
 from pathlib import Path
@@ -93,9 +94,23 @@ class NativeEntryTests(unittest.TestCase):
         self.assertFalse((self.root / "session").exists())
         empty = self.root / "empty"
         with contextlib.redirect_stdout(io.StringIO()) as output:
-            self.assertEqual(main(["native", "status", "--root", str(empty)]), 0)
+            self.assertEqual(main(["native", "status", "--offline", "--root", str(empty)]), 0)
         self.assertEqual(json.loads(output.getvalue())["bundles"], [])
         self.assertFalse(empty.exists())
+
+    def test_status_uses_advertised_socket_unless_offline(self):
+        for offline in (False, True):
+            with (
+                self.subTest(offline=offline),
+                patch.dict(os.environ, {"NIRI_SOCKET": "/example/niri.sock"}),
+                patch("niri_fx.native_session.status", return_value={}) as inspect,
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                args = ["native", "status", "--root", str(self.root)]
+                self.assertEqual(main(args + (["--offline"] if offline else [])), 0)
+                inspect.assert_called_once_with(
+                    self.root, socket_path=None if offline else "/example/niri.sock"
+                )
 
 
 if __name__ == "__main__":
