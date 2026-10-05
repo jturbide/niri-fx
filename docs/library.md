@@ -1,10 +1,29 @@
 # Choose and combine window effects
 
 Open `niri-fx studio` to start in **Library**. Choose a finished look, use one
-style across enabled actions, or build a combo with different styles. **Customize
+style across selected actions, or build a combo with different styles. **Customize
 in Studio** opens the detailed controls in the same app.
 
 ![Choose a look, mix actions and export a profile](gifs/workflow-library.gif)
+
+## First use: choose, review and restore
+
+After [installation](getting-started.md#install-and-open-library), open
+`niri-fx studio` and choose **Fragment Flow** in Recommended. Press **Preview
+combo**, then try setting Close to **Off** while leaving Open on **NiriFX Style**
+and Resize, Move / swap and Pointer drag on **Preserve**.
+
+Use **Save to My profiles** if you want a named copy. Press **Review & apply**,
+inspect the listed files, then **Apply these changes**. **Cancel** leaves the
+config untouched. Open and close a test window to see the result; **Restore
+previous** returns to the settings from before Apply while keeping your saved
+profile. Reopening the app with the same target, config and state directory
+retains this Restore history.
+
+The default connection detects iNiR's helper or uses standalone Niri. Choose an
+explicit [connection](#one-interface-different-configuration-owners) if several
+shells coexist or another tool owns the animation file. Previewing, naming and
+saving do not require registration of the built-in catalog.
 
 ## Pick a look
 
@@ -22,7 +41,7 @@ the underlying desktop or shell configuration; Off disables the selected action.
 Choose a preset after selecting NiriFX Style.
 
 Choose **Different styles per action** to mix effects, or **Same style for each
-enabled action** to share a style across actions already set to NiriFX Style.
+NiriFX Style action** to share a style across actions already set to NiriFX Style.
 Preserve and Off choices stay unchanged. If a shared style cannot support a
 selected resize or movement action, its existing style stays selected and the
 interface explains why. See [action choices](profiles.md#choose-which-actions-to-customize).
@@ -34,8 +53,9 @@ match a built-in style or combo action. Undo/Redo also works for combo changes. 
 compositor's movement effect; they are not independent shader slots.
 
 **Pointer drag** is a separate native experiment with a browser preview in
-version 0.18 and newer. Choose Gentle, Rubber Sheet or Release Settle, then expand its
-controls to tune strength, damping and frequency. **Preserve** leaves
+version 0.18 and newer. Select **NiriFX Style**, choose Gentle, Rubber Sheet or
+Release Settle, then expand its controls to tune strength, damping and frequency.
+**Preserve** leaves
 the underlying pointer behavior alone; **Off** stores an explicit zero-strength
 override. Changing the shared window style preserves this independent choice.
 See [pointer-driven wobble](pointer-wobble.md) for its compositor requirements.
@@ -45,8 +65,9 @@ See [pointer-driven wobble](pointer-wobble.md) for its compositor requirements.
 Press **Preview combo** to play the selected opening effect, hold the intact
 window and finish with its closing effect. Each action uses its own settings and
 duration. Resize and movement join the sequence only when explicitly selected in
-the combo; shell-default actions are skipped. Previewing leaves the saved document
-and your desktop configuration unchanged.
+the combo. Preserve uses no invented animation: its real behavior needs the
+desktop context. Off shows the action's endpoint immediately. Previewing leaves
+the saved document and your desktop configuration unchanged.
 
 The movement phase is labelled **experimental** and uses a synthetic path. It
 does not test native compositor movement or desktop springs. See the

@@ -44,6 +44,18 @@ npm run test:browser
 python3 scripts/studio-e2e.py
 ```
 
+For changes to installation or first-use guidance, exercise Library with an empty
+temporary account and the candidate package:
+
+```sh
+node scripts/test-first-use.mjs
+node scripts/test-first-use.mjs --wheel dist/niri_fx-X.Y.Z-py3-none-any.whl
+```
+
+This checks selection, per-action choices, save/review/cancel, Apply, reopening
+Studio and exact Restore through the real UI. It needs Node 22+, Chromium and
+stock Niri for config validation; it does not connect to a desktop session.
+
 Use a fresh output filename. `--save-test` is only for a Studio process explicitly
 pointed at a temporary registry. Software WebGL validates rendering behavior and
 export parity; it is not a compositor GPU benchmark. See

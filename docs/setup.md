@@ -1,8 +1,12 @@
 # Setup, diagnostics and restore
 
-For a guided preset workflow, run `niri-fx` in a terminal or
-`python3 -m niri_fx` from the checkout. [Choose, review, apply and undo](terminal.md)
-without installing another interface. The commands below remain available for scripts.
+For the visual workflow, open `niri-fx studio`, choose a combo in
+[Library](library.md), and review its per-action choices before applying it.
+Library also restores the previous setup.
+
+For a guided terminal workflow, run `niri-fx` or `python3 -m niri_fx` from the
+checkout. [Choose, review, apply and undo](terminal.md) without installing another
+interface. The commands below remain available for scripts and diagnostics.
 
 Run from the checkout, or replace `python3 -m niri_fx` with the installed
 `niri-fx` command. Python 3.10+ and a working Niri configuration are required.
