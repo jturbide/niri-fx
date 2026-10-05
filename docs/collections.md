@@ -8,6 +8,7 @@ belong to more than one collection. The full catalog remains available.
 | --- | --- | --- |
 | `action-sets` | Coordinated effects with separately enabled resize/movement companions | Fragments Motion |
 | `desktop` | Window effects with workspace, camera and overview timing | Balanced Motion |
+| `movement` | Timed rearrangement, from trailing pieces to whole-window deformation | Fragment Wake or Spring Rebound |
 | `everyday` | Compact movement and readable arrivals | Balanced or Soft Landing |
 | `bursts` | Explosions, inward collapse and gravity | Explosion or Burst and Drift |
 | `shapes` | Geometric pieces and joined layouts | Triangle Shatter or Geometric Flow |

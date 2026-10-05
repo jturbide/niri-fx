@@ -18,7 +18,7 @@ try {
   const { evaluate, rpc } = browser;
   await rpc("Browser.setDownloadBehavior", { behavior: "allow", downloadPath: root });
   await evaluate(
-    `const style=document.createElement('style');style.textContent='canvas{max-height:470px;min-height:0}';document.head.append(style);const banner=document.createElement('div');banner.id='recording-step';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#172434;color:#e4efff;font:600 19px system-ui;z-index:100';document.body.append(banner);seed=.43;`,
+    `const style=document.createElement('style');style.textContent='canvas{max-height:380px;min-height:0}aside{max-height:calc(100vh - 470px)}';document.head.append(style);const banner=document.createElement('div');banner.id='recording-step';banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#172434;color:#e4efff;font:600 19px system-ui;z-index:100';document.body.append(banner);seed=.43;`,
   );
   let count = 0;
   async function frames(label, seconds = 1.5, animate = false) {
@@ -63,10 +63,12 @@ try {
     );
   }
   await frames("1 / Start with a recommended look");
-  await evaluate(`document.querySelector('[data-style=fragments-motion]').click()`);
+  await evaluate(
+    `document.querySelector('[data-library-action=combo]').click();document.querySelector('[data-style=fragments-motion]').click()`,
+  );
   await frames("Fragments Motion / Resize and movement preserve desktop settings", 2, true);
   await evaluate(
-    `byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130;byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'))`,
+    `byId('combo-options').open=true;byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130;byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'))`,
   );
   await frames("2 / Keep fragments for opening, choose Frost Vanish for closing", 2, true);
   await evaluate(
@@ -86,7 +88,9 @@ try {
   assert.deepEqual(pointerDocument.pointer, { strength: 0.75, damping: 85, frequency: 10 });
   await frames("Customize the spring / Try pointer drag to preview the response", 1.25);
   await comboFrames("Preview pointer drag and release together with your combo");
-  await evaluate(`byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`);
+  await evaluate(
+    `byId('transfer-options').open=true;byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`,
+  );
   await frames("JSON keeps pointer settings / Stock config leaves them out", 1.25);
   assert.deepEqual(
     JSON.parse(readFileSync(join(root, "nirifx-preset.json"))).pointer,

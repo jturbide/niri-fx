@@ -68,7 +68,12 @@ def baseline():
         raise RuntimeError("Build the pinned baseline with --unmodified first")
     if any(
         field in manifest
-        for field in ("patch_sha256", "pointer_patch_sha256", "fragment_patch_sha256")
+        for field in (
+            "patch_sha256",
+            "pointer_patch_sha256",
+            "fragment_patch_sha256",
+            "swap_patch_sha256",
+        )
     ):
         raise RuntimeError("Baseline manifest unexpectedly contains an experiment patch")
     # Refuse changed sources as well as replaced binaries. The empty patch stack

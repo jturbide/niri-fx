@@ -73,6 +73,8 @@ const sessionSettings =
 const isActionStyle = (value) => value !== null && typeof value === "object";
 const actionMode = (value) =>
   isActionStyle(value) ? "style" : value === "off" ? "off" : "preserve";
+const previewModeForAction = (action) =>
+  ["movement", "swap"].includes(action) ? "movement" : action === "resize" ? "resize" : "effect";
 const rememberedActions = {};
 let editingAction = "open",
   pinned = null,
@@ -298,7 +300,8 @@ function labels() {
     !!actions &&
     (["open", "close"].some((action) => !isActionStyle(actions[action])) ||
       actions.resize === "off" ||
-      actions.movement !== null);
+      actions.movement !== null ||
+      actions.swap != null);
   const companion = ["resize", "movement"].includes(editingAction) && matchingActionSet();
   byId("action-companion-note").hidden = !companion || selectedMode !== "preserve";
   if (companion)
@@ -412,21 +415,22 @@ function effectDocument() {
   // keep them even while the editor uses its single-style representation.
   if (actions || pointerSettings) {
     commitAction();
-    return {
+    return normalizePreset({
       kind: "profile",
       schema: catalog.profile_schema,
       name: byId("name").value.trim(),
       actions: actions
-        ? structuredClone(actions)
+        ? { swap: null, ...structuredClone(actions) }
         : {
             open: { ...parameters, resize: false },
             close: { ...parameters, resize: false },
             resize: parameters.resize ? { ...parameters, resize: false } : null,
             movement: null,
+            swap: null,
           },
       ...(desktopMotion ? { motion: structuredClone(desktopMotion) } : {}),
       ...(pointerSettings ? { pointer: structuredClone(pointerSettings) } : {}),
-    };
+    });
   }
   return { schema: catalog.schema, name: byId("name").value.trim(), effect: { ...parameters } };
 }
@@ -450,14 +454,18 @@ function kdlDocument(options = {}) {
 byId("kdl").onclick = () => {
   download("nirifx.kdl", kdlDocument(), "text/plain");
   byId("status").textContent =
-    "Downloaded stock Niri config. NiriFX movement and pointer drag are omitted; JSON preserves those settings.";
+    "Downloaded stock Niri config. NiriFX movement, swaps and pointer drag are omitted; JSON preserves those settings.";
 };
 byId("pointer-kdl").onclick = () => {
   try {
     const doc = effectDocument();
     download(
       "nirifx-session.kdl",
-      renderKdl(doc, { pointer: true, movement: !!doc.actions?.movement }),
+      renderKdl(doc, {
+        pointer: !!doc.pointer,
+        movement: !!doc.actions?.movement,
+        swap: !!doc.actions?.swap,
+      }),
       "text/plain",
     );
     byId("status").textContent =
@@ -540,7 +548,7 @@ byId("save").onclick = async () => {
       byId("status").textContent =
         target === "noctalia"
           ? "Place the downloaded file in the Noctalia Niri Animations preset folder, then select it in the picker."
-          : "Downloaded a stock Niri animation include. NiriFX movement and pointer drag are omitted; JSON preserves those settings.";
+          : "Downloaded a stock Niri animation include. NiriFX movement, swaps and pointer drag are omitted; JSON preserves those settings.";
     } catch (error) {
       byId("error").textContent = error.message;
     }
@@ -668,7 +676,13 @@ try {
         ? POINTER_PREVIEW_SHADER
         : idle
           ? "vec4 close_color(vec3 coords,vec3 size){vec2 p=coords.xy;if(p.x<0.0||p.y<0.0||p.x>1.0||p.y>1.0)return vec4(0.0);return texture2D(niri_tex,p);}"
-          : shaderFor(renderEffect, false, resizing, moving);
+          : shaderFor(
+              renderEffect,
+              false,
+              resizing,
+              moving,
+              (previewFrame?.action || editingAction) !== "swap",
+            );
     const renderKey =
       source + "\n// " + renderMode + (previewFrame ? " centered preview geometry" : "");
     if (renderKey === lastSource) return;
@@ -721,6 +735,10 @@ try {
     const renderMode = previewFrame?.mode || mode;
     if (["move", "swap"].includes(renderMode)) motionPreview.draw(value, mode, parameters, seed);
     else {
+      const swapping =
+        renderMode === "movement" &&
+        (previewFrame?.action || editingAction) === "swap" &&
+        (previewFrame || byId("action-mode").value === "style");
       gl.viewport(0, 0, canvas.width, canvas.height);
       gl.uniform2f(gl.getUniformLocation(program, "fx_surface"), canvas.width, canvas.height);
       gl.uniform2f(
@@ -799,7 +817,43 @@ try {
           actions &&
           byId("action-mode").value === "off" &&
           editingAction === "close");
-      if (!hiddenEndpoint) gl.drawArrays(gl.TRIANGLES, 0, 6);
+      if (!hiddenEndpoint) {
+        if (swapping) {
+          // Two independent samples share the timed swap material; this is a
+          // shader preview, not a simulation of Niri's layout or input routing.
+          const eased = value * value * (3 - 2 * value);
+          const distance = direction[0] ? 480 : 360;
+          const size = [400, 256];
+          gl.uniform2f(gl.getUniformLocation(program, "fx_window"), ...size);
+          gl.enable(gl.BLEND);
+          gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
+          for (const [index, sign] of [
+            [0, 1],
+            [1, -1],
+          ]) {
+            gl.uniform1i(gl.getUniformLocation(program, "niri_tex"), index);
+            gl.uniform2f(
+              gl.getUniformLocation(program, "fx_move_origin"),
+              (canvas.width - size[0]) * 0.5 + sign * direction[0] * distance * (eased - 0.5),
+              (canvas.height - size[1]) * 0.5 + sign * direction[1] * distance * (eased - 0.5),
+            );
+            gl.uniform2f(
+              gl.getUniformLocation(program, "niri_move_delta"),
+              sign * direction[0] * distance,
+              sign * direction[1] * distance,
+            );
+            gl.uniform2f(
+              gl.getUniformLocation(program, "niri_move_impulse"),
+              sign * direction[0],
+              sign * direction[1],
+            );
+            gl.uniform1f(gl.getUniformLocation(program, "niri_random_seed"), seed + index * 0.17);
+            gl.drawArrays(gl.TRIANGLES, 0, 6);
+          }
+          gl.disable(gl.BLEND);
+          gl.uniform1i(gl.getUniformLocation(program, "niri_tex"), 0);
+        } else gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
     }
     if (!pointerPreviewFrame) {
       byId("progress").value = Math.round(value * 1000);
@@ -817,7 +871,7 @@ try {
       const count = Math.ceil(600 / tile) * Math.ceil(380 / tile);
       const caption =
         mode === "movement"
-          ? `NiriFX movement · ${parameters.movement_ms} ms · JSON preserves the effect; stock exports omit it`
+          ? `NiriFX ${editingAction === "swap" ? "swap" : "movement"} shader preview · ${parameters.movement_ms} ms · Stock exports omit this action`
           : mode === "resize"
             ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
             : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
@@ -1345,8 +1399,8 @@ try {
     parameters = { ...catalog.presets[byId("preset").value] };
     if (
       actions &&
-      ["resize", "movement"].includes(editingAction) &&
-      !catalog.families[parameters.family][editingAction]
+      ["resize", "movement", "swap"].includes(editingAction) &&
+      !catalog.families[parameters.family][editingAction === "swap" ? "movement" : editingAction]
     ) {
       parameters = { ...catalog.presets.balanced };
       byId("status").textContent =
@@ -1539,13 +1593,7 @@ try {
     chooseAction(byId("action").value);
     byId("preset").value = "";
     populate();
-    document
-      .querySelector(
-        ["resize", "movement"].includes(editingAction)
-          ? `[data-mode=${editingAction}]`
-          : "[data-mode=effect]",
-      )
-      .click();
+    document.querySelector(`[data-mode=${previewModeForAction(editingAction)}]`).click();
     refresh();
   };
   byId("action-mode").onchange = () => {
@@ -1606,7 +1654,7 @@ try {
     if (!shared.has("style")) return;
     try {
       const doc = decodeShareDocument(shared.get("style"));
-      const action = ["open", "close", "resize", "movement"].includes(shared.get("action"))
+      const action = ["open", "close", "resize", "movement", "swap"].includes(shared.get("action"))
         ? shared.get("action")
         : "open";
       cancelAnimationFrame(frame);
@@ -1651,11 +1699,18 @@ try {
       loadDocument(normalizePreset(doc), action);
       byId("preset").value = "";
       populate();
-      document
-        .querySelector(`[data-mode=${["resize", "movement"].includes(action) ? action : "effect"}]`)
-        .click();
+      document.querySelector(`[data-mode=${previewModeForAction(action)}]`).click();
       refresh();
       recordHistory();
+    },
+    preview: (action) => {
+      cancelPointerPreview();
+      cancelComboPreview();
+      if (actions) chooseAction(action);
+      populate();
+      document.querySelector(`[data-mode=${previewModeForAction(action)}]`).click();
+      refresh();
+      animate(action === "open");
     },
     edit: (action) => {
       if (!actions) byId("independent").click();

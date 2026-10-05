@@ -1,0 +1,1070 @@
+diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
+index 9d3682a..ce33d06 100644
+--- a/niri-config/src/animations.rs
++++ b/niri-config/src/animations.rs
+@@ -13,6 +13,7 @@ pub struct Animations {
+     pub window_close: WindowCloseAnim,
+     pub horizontal_view_movement: HorizontalViewMovementAnim,
+     pub window_movement: WindowMovementAnim,
++    pub window_swap: Option<WindowSwapAnim>,
+     pub window_resize: WindowResizeAnim,
+     pub config_notification_open_close: ConfigNotificationOpenCloseAnim,
+     pub exit_confirmation_open_close: ExitConfirmationOpenCloseAnim,
+@@ -29,6 +30,7 @@ impl Default for Animations {
+             workspace_switch: Default::default(),
+             horizontal_view_movement: Default::default(),
+             window_movement: Default::default(),
++            window_swap: None,
+             window_open: Default::default(),
+             window_close: Default::default(),
+             window_resize: Default::default(),
+@@ -60,6 +62,8 @@ pub struct AnimationsPart {
+     #[knuffel(child)]
+     pub window_movement: Option<WindowMovementAnim>,
+     #[knuffel(child)]
++    pub window_swap: Option<WindowSwapAnim>,
++    #[knuffel(child)]
+     pub window_resize: Option<WindowResizeAnim>,
+     #[knuffel(child)]
+     pub config_notification_open_close: Option<ConfigNotificationOpenCloseAnim>,
+@@ -99,6 +103,9 @@ impl MergeWith<AnimationsPart> for Animations {
+             value.preserve_pointer = false;
+             self.window_movement = value;
+         }
++        if let Some(value) = &part.window_swap {
++            self.window_swap = Some(value.clone());
++        }
+         merge_clone!(
+             (self, part),
+             workspace_switch,
+@@ -380,6 +387,40 @@ mod movement_shader_tests {
+         Ok(config)
+     }
+ 
++    #[test]
++    fn swap_is_independent_and_omission_inherits_movement() {
++        let empty = parse_layers("animations {}").unwrap();
++        assert!(empty.animations.window_swap.is_none());
++        let initial = r#"animations { window-movement {
++            duration-ms 700; custom-shader "move";
++        }; window-swap { duration-ms 450; curve "linear"; custom-shader "swap"; }; }"#;
++        let settings = parse_layers(initial).unwrap().animations;
++        assert_eq!(
++            settings
++                .window_swap
++                .as_ref()
++                .unwrap()
++                .custom_shader
++                .as_deref(),
++            Some("swap")
++        );
++        let next = parse_layers(&format!(
++            "{initial}\nanimations {{ window-movement {{ off; }}; }}"
++        ))
++        .unwrap()
++        .animations;
++        assert!(next.window_movement.anim.off);
++        assert_eq!(next.window_swap, settings.window_swap);
++        let disabled = parse_layers(&format!(
++            "{initial}\nanimations {{ window-swap {{ off; }}; }}"
++        ))
++        .unwrap()
++        .animations;
++        assert!(disabled.window_swap.unwrap().anim.off);
++        assert_eq!(disabled.window_movement, settings.window_movement);
++        assert!(parse_layers("animations { window-swap { fragment-motion {}; }; }").is_err());
++    }
++
+     #[test]
+     fn fragment_motion_settings_are_bounded_and_preserved_with_movement() {
+         let base = "animations { window-movement { fragment-motion {}; }; }";
+@@ -1307,3 +1348,39 @@ where
+         })
+     }
+ }
++
++/// An explicit swap owns its timed material; absence follows ordinary movement.
++#[derive(Debug, Clone, PartialEq)]
++pub struct WindowSwapAnim {
++    pub anim: Animation,
++    pub custom_shader: Option<String>,
++}
++
++impl<S> knuffel::Decode<S> for WindowSwapAnim
++where
++    S: knuffel::traits::ErrorSpan,
++{
++    fn decode_node(
++        node: &knuffel::ast::SpannedNode<S>,
++        ctx: &mut knuffel::decode::Context<S>,
++    ) -> Result<Self, DecodeError<S>> {
++        let mut custom_shader = None;
++        let anim = Animation::decode_node(
++            node,
++            ctx,
++            WindowMovementAnim::default().anim,
++            |child, ctx| {
++                if &**child.node_name == "custom-shader" {
++                    custom_shader = parse_arg_node("custom-shader", child, ctx)?;
++                    Ok(true)
++                } else {
++                    Ok(false)
++                }
++            },
++        )?;
++        Ok(Self {
++            anim,
++            custom_shader,
++        })
++    }
++}
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index a0a488d..cca2a2d 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -1568,6 +1568,7 @@ mod tests {
+                     preserve_movement: false,
+                     preserve_pointer: false,
+                 },
++                window_swap: None,
+                 window_resize: WindowResizeAnim {
+                     anim: Animation {
+                         off: false,
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index 3600c7e..17a9bcd 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -69,6 +69,8 @@ pub enum Request {
+     Version,
+     /// Verify the experimental NiriFX movement shader interface in the running renderer.
+     NiriFxCapabilities,
++    /// Independently selectable shaders for explicit swap-window commands.
++    NiriFxSwapCapabilities,
+     /// Query the independent opt-in pointer deformation experiment.
+     NiriFxPointerCapabilities,
+     /// Query the continuous square-fragment movement interface.
+@@ -149,6 +151,8 @@ pub enum Response {
+     Version(String),
+     /// Versioned experimental shader support; this query never activates an effect.
+     NiriFxCapabilities(NiriFxCapabilities),
++    /// Separate swap shader contract.
++    NiriFxSwapCapabilities(NiriFxSwapCapabilities),
+     /// Pointer support is independent of the existing movement contract.
+     NiriFxPointerCapabilities(NiriFxPointerCapabilities),
+     /// Continuous square-fragment movement support in the current renderer.
+@@ -2196,3 +2200,17 @@ mod tests {
+         assert!("10% ".parse::<PositionChange>().is_err());
+     }
+ }
++
++/// Timed swaps use movement texture/progress uniforms with explicit action routing.
++#[derive(Serialize, Deserialize, Debug, Clone)]
++#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
++pub struct NiriFxSwapCapabilities {
++    /// Response format version.
++    pub schema: u32,
++    /// Explicit action routing and timed material interface version.
++    pub swap_shader: u32,
++    /// An isolated movement shader compiled in the current renderer.
++    pub renderer_verified: bool,
++    /// Independent swap settings exist; capability does not activate them.
++    pub configured: bool,
++}
+diff --git a/src/animation/movement.rs b/src/animation/movement.rs
+index f27f87e..99cf79d 100644
+--- a/src/animation/movement.rs
++++ b/src/animation/movement.rs
+@@ -12,6 +12,7 @@ use super::{Animation, ResizePath};
+ pub(crate) struct MoveAnimation {
+     pub anim: Animation,
+     pub from: f64,
++    pub swap: Option<std::rc::Rc<niri_config::animations::WindowSwapAnim>>,
+     handoff: Option<Handoff>,
+     minimum: Option<f64>,
+     resize: Vec<(ResizePath, f64)>,
+@@ -77,6 +78,7 @@ impl MoveAnimation {
+         Self {
+             anim,
+             from,
++            swap: None,
+             handoff,
+             minimum: None,
+             resize: Vec::new(),
+diff --git a/src/backend/tty.rs b/src/backend/tty.rs
+index 665122d..2b8dbe8 100644
+--- a/src/backend/tty.rs
++++ b/src/backend/tty.rs
+@@ -843,6 +843,14 @@ impl Tty {
+             if let Some(src) = config.animations.window_open.custom_shader.as_deref() {
+                 shaders::set_custom_open_program(gles_renderer, Some(src));
+             }
++            shaders::prepare_swap_program(
++                gles_renderer,
++                config
++                    .animations
++                    .window_swap
++                    .as_ref()
++                    .and_then(|swap| swap.custom_shader.as_deref()),
++            );
+             if let Some(src) = config.animations.window_movement.custom_shader.as_deref() {
+                 shaders::set_custom_move_program(gles_renderer, Some(src));
+             }
+diff --git a/src/backend/winit.rs b/src/backend/winit.rs
+index 339f88d..0739d6a 100644
+--- a/src/backend/winit.rs
++++ b/src/backend/winit.rs
+@@ -168,6 +168,14 @@ impl Winit {
+         if let Some(src) = config.animations.window_open.custom_shader.as_deref() {
+             shaders::set_custom_open_program(renderer, Some(src));
+         }
++        shaders::prepare_swap_program(
++            renderer,
++            config
++                .animations
++                .window_swap
++                .as_ref()
++                .and_then(|swap| swap.custom_shader.as_deref()),
++        );
+         if let Some(src) = config.animations.window_movement.custom_shader.as_deref() {
+             shaders::set_custom_move_program(renderer, Some(src));
+         }
+diff --git a/src/cli.rs b/src/cli.rs
+index e9ed81c..ed7d704 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -63,6 +63,8 @@ pub enum Sub {
+ pub enum Msg {
+     /// Verify the running experimental NiriFX shader interface without activation.
+     NiriFxCapabilities,
++    /// Verify independent shaders for explicit swap-window commands.
++    NiriFxSwapCapabilities,
+     /// Query the independent opt-in pointer deformation experiment.
+     NiriFxPointerCapabilities,
+     /// Verify the additive continuous fragment movement interface.
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 4810d24..18345d8 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -31,6 +31,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+ 
+     let request = match &msg {
+         Msg::NiriFxCapabilities => Request::NiriFxCapabilities,
++        Msg::NiriFxSwapCapabilities => Request::NiriFxSwapCapabilities,
+         Msg::NiriFxPointerCapabilities => Request::NiriFxPointerCapabilities,
+         Msg::NiriFxFragmentCapabilities => Request::NiriFxFragmentCapabilities,
+         Msg::NiriFxFrameTimings => Request::NiriFxFrameTimings,
+@@ -116,6 +117,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+ 
+     match msg {
+         Msg::NiriFxCapabilities
++        | Msg::NiriFxSwapCapabilities
+         | Msg::NiriFxPointerCapabilities
+         | Msg::NiriFxFragmentCapabilities
+         | Msg::NiriFxFrameTimings => {
+diff --git a/src/ipc/server.rs b/src/ipc/server.rs
+index 3cbc92a..1ae5163 100644
+--- a/src/ipc/server.rs
++++ b/src/ipc/server.rs
+@@ -272,6 +272,27 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
+     let response = match request {
+         Request::ReturnError => return Err(String::from("example compositor error")),
+         Request::Version => Response::Version(version()),
++        Request::NiriFxSwapCapabilities => {
++            let (tx, rx) = async_channel::bounded(1);
++            ctx.event_loop.insert_idle(move |state| {
++                let renderer_verified = state
++                    .backend
++                    .with_primary_renderer(crate::render_helpers::shaders::verify_move_contract)
++                    .unwrap_or(false);
++                let configured = state.niri.config.borrow().animations.window_swap.is_some();
++                let _ = tx.send_blocking(niri_ipc::NiriFxSwapCapabilities {
++                    schema: 1,
++                    swap_shader: 1,
++                    renderer_verified,
++                    configured,
++                });
++            });
++            Response::NiriFxSwapCapabilities(
++                rx.recv()
++                    .await
++                    .map_err(|_| String::from("error verifying swap renderer"))?,
++            )
++        }
+         Request::NiriFxCapabilities => {
+             let (tx, rx) = async_channel::bounded(1);
+             ctx.event_loop.insert_idle(move |state| {
+diff --git a/src/layout/closing_window.rs b/src/layout/closing_window.rs
+index 55e8f31..e247448 100644
+--- a/src/layout/closing_window.rs
++++ b/src/layout/closing_window.rs
+@@ -37,6 +37,7 @@ pub enum AnimationContinuation {
+         path: crate::render_helpers::movement::MovementContinuation,
+         random_seed: f32,
+         delta: Point<f64, Logical>,
++        material: Option<crate::render_helpers::shader_element::ShaderProgram>,
+     },
+ }
+ 
+@@ -335,6 +336,7 @@ impl ClosingWindow {
+         let closing = self.anim_state.progress();
+         let fade = closing * closing * (3. - 2. * closing);
+         let mut program = ProgramType::Close;
++        let mut pinned_program = None;
+         let mut progress = anim.value();
+         let mut random_seed = self.random_seed;
+         let mut alpha = if resizing {
+@@ -360,8 +362,10 @@ impl ClosingWindow {
+                     path,
+                     random_seed: seed,
+                     delta: travel,
++                    material,
+                 } => {
+                     program = ProgramType::Move;
++                    pinned_program = material.clone();
+                     let (phase, direction, displacement) = path.sample();
+                     progress = phase;
+                     random_seed = *seed;
+@@ -375,7 +379,7 @@ impl ClosingWindow {
+         let clamped_progress = progress.clamp(0., 1.);
+ 
+         if (!resizing || self.continuation.is_some())
+-            && Shaders::get(ctx.renderer).program(program).is_some()
++            && (pinned_program.is_some() || Shaders::get(ctx.renderer).program(program).is_some())
+         {
+             let area_loc = Vec2::new(view_rect.loc.x as f32, view_rect.loc.y as f32);
+             let area_size = Vec2::new(view_rect.size.w as f32, view_rect.size.h as f32);
+@@ -416,20 +420,23 @@ impl ClosingWindow {
+                     [delta.x as f32, delta.y as f32],
+                 ));
+             }
+-            return Some(
+-                ShaderRenderElement::new(
+-                    program,
+-                    view_rect.size,
+-                    None,
+-                    scale.x as f32,
+-                    alpha,
+-                    Rc::from(uniforms),
+-                    HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
+-                    Kind::Unspecified,
+-                )
+-                .with_location(Point::from((0., 0.)))
+-                .into(),
+-            );
++            let elem = ShaderRenderElement::new(
++                program,
++                view_rect.size,
++                None,
++                scale.x as f32,
++                alpha,
++                Rc::from(uniforms),
++                HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
++                Kind::Unspecified,
++            )
++            .with_location(Point::from((0., 0.)));
++            let elem = if let Some(program) = pinned_program {
++                elem.with_pinned_program(program)
++            } else {
++                elem
++            };
++            return Some(elem.into());
+         }
+ 
+         let elem = TextureRenderElement::from_texture_buffer(
+diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
+index 01c4931..3cae1d1 100644
+--- a/src/layout/scrolling.rs
++++ b/src/layout/scrolling.rs
+@@ -1702,6 +1702,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+     }
+ 
+     fn move_column_to(&mut self, new_idx: usize) {
++        self.move_column_to_with_swap(new_idx, false);
++    }
++
++    fn move_column_to_with_swap(&mut self, new_idx: usize, swap: bool) {
+         if self.active_column_idx == new_idx {
+             return;
+         }
+@@ -1721,17 +1725,17 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+ 
+         // The column we just moved is offset by the difference between its new and old position.
+         let new_col_x = self.column_x(new_idx);
+-        self.columns[new_idx].animate_move_from(current_col_x - new_col_x);
++        self.columns[new_idx].animate_action_from(current_col_x - new_col_x, swap);
+ 
+         // All columns in between moved by the width of the column that we just moved.
+         let others_x_offset = next_col_x - current_col_x;
+         if self.active_column_idx < new_idx {
+             for col in &mut self.columns[self.active_column_idx..new_idx] {
+-                col.animate_move_from(others_x_offset);
++                col.animate_action_from(others_x_offset, swap);
+             }
+         } else {
+             for col in &mut self.columns[new_idx + 1..=self.active_column_idx] {
+-                col.animate_move_from(-others_x_offset);
++                col.animate_action_from(-others_x_offset, swap);
+             }
+         }
+ 
+@@ -2087,13 +2091,19 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+         if self.columns[source_column_idx].tiles.len() == 1
+             && self.columns[target_column_idx].tiles.len() == 1
+         {
+-            return self.move_column_to(target_column_idx);
++            return self.move_column_to_with_swap(target_column_idx, true);
+         }
+ 
+         let source_tile_idx = self.columns[source_column_idx].active_tile_idx;
+         let target_tile_idx = self.columns[target_column_idx].active_tile_idx;
+         let source_column_drained = self.columns[source_column_idx].tiles.len() == 1;
+ 
++        // Capture before insertion/removal creates incidental layout animations.
++        let source_swap =
++            self.columns[source_column_idx].tiles[source_tile_idx].swap_animation_config();
++        let target_swap =
++            self.columns[target_column_idx].tiles[target_tile_idx].swap_animation_config();
++
+         // capture the original positions of the tiles
+         let (mut source_pt, mut target_pt) = (
+             self.columns[source_column_idx].render_offset()
+@@ -2168,7 +2178,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+ 
+         // Animations
+         self.columns[target_column_idx].tiles[target_tile_idx]
+-            .animate_move_from(source_pt - target_pt);
++            .animate_swap_from(source_pt - target_pt, source_swap);
+         self.columns[target_column_idx].tiles[target_tile_idx].ensure_alpha_animates_to_1();
+ 
+         // FIXME: this stop_move_animations() causes the target tile animation to "reset" when
+@@ -2178,7 +2188,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+         // cancel all ongoing target tile animations.
+         self.columns[source_column_idx].tiles[source_tile_idx].stop_move_animations();
+         self.columns[source_column_idx].tiles[source_tile_idx]
+-            .animate_move_from(target_pt - source_pt);
++            .animate_swap_from(target_pt - source_pt, target_swap);
+         self.columns[source_column_idx].tiles[source_tile_idx].ensure_alpha_animates_to_1();
+ 
+         self.activate_column(target_column_idx);
+@@ -2996,6 +3006,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+                             Point::from((-m.distance(), 0.)),
+                             self.clock.now(),
+                         )
++                        .with_swap(m.swap.clone())
+                         .with_layout(
+                             Point::from((-m.offset(), 0.)),
+                             Point::from((m.velocity(), 0.)),
+@@ -4211,6 +4222,34 @@ impl<W: LayoutElement> Column<W> {
+         MoveAnimation::follow_resize(&mut self.move_animation, path, factor, delta);
+     }
+ 
++    #[cfg(test)]
++    pub(super) fn swap_animation(&self) -> Option<&Rc<niri_config::animations::WindowSwapAnim>> {
++        self.move_animation
++            .as_ref()
++            .and_then(|motion| motion.swap.as_ref())
++    }
++
++    fn animate_action_from(&mut self, offset: f64, swap: bool) {
++        if let Some(config) = self.options.animations.window_swap.clone().filter(|_| swap) {
++            let config = if config.anim.off {
++                Rc::new(config)
++            } else {
++                self.move_animation
++                    .as_ref()
++                    .filter(|motion| !motion.is_done())
++                    .and_then(|motion| motion.swap.clone())
++                    .unwrap_or_else(|| std::rc::Rc::new(config))
++            };
++            if let Some(motion) = &mut self.move_animation {
++                motion.swap = Some(config.clone());
++            }
++            self.animate_move_from_with_config(offset, config.anim);
++            self.move_animation.as_mut().unwrap().swap = Some(config);
++        } else {
++            self.animate_move_from(offset);
++        }
++    }
++
+     pub fn animate_move_from(&mut self, from_x_offset: f64) {
+         self.animate_move_from_with_config(
+             from_x_offset,
+@@ -4238,13 +4277,14 @@ impl<W: LayoutElement> Column<W> {
+                     .window_movement
+                     .custom_shader
+                     .is_some()
++                    || movement.swap.is_some()
+                     || movement.has_resize())
+                     && !movement.is_done()
+             })
+             .map(MoveAnimation::velocity);
+         // Opted-in active handoffs keep their timing just like tile movements.
+         // A config reload applies after the current path has settled.
+-        let anim = if velocity.is_some() {
++        let anim = if velocity.is_some() && !config.off {
+             self.move_animation
+                 .as_ref()
+                 .unwrap()
+diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
+index c2f7968..81c57a0 100644
+--- a/src/layout/tests/animations.rs
++++ b/src/layout/tests/animations.rs
+@@ -2490,3 +2490,118 @@ fn fragment_motion_renderer_reload_defers_verdict_and_retires_failed_episode() {
+         .borrow()
+         .is_none());
+ }
++
++fn swap_test_options() -> Options {
++    let mut options = make_options();
++    options.animations.window_movement.custom_shader = Some("move".into());
++    options.animations.window_swap = Some(niri_config::animations::WindowSwapAnim {
++        anim: options.animations.window_movement.anim,
++        custom_shader: Some("swap".into()),
++    });
++    options
++}
++
++fn swap_sources(layout: &Layout<TestWindow>) -> Vec<String> {
++    let scrolling = layout.active_workspace().unwrap().scrolling();
++    scrolling
++        .columns()
++        .filter_map(|col| col.swap_animation())
++        .chain(scrolling.tiles().filter_map(|tile| tile.swap_animation()))
++        .filter_map(|config| config.custom_shader.clone())
++        .collect()
++}
++
++#[test]
++fn swap_routing_tags_both_singleton_columns_and_keeps_ordinary_moves_separate() {
++    let mut layout = resize_handoff_layout_with_options(false, swap_test_options());
++    assert!(swap_sources(&layout).is_empty());
++    Op::SwapWindowInDirection(ScrollDirection::Right).apply(&mut layout);
++    assert_eq!(swap_sources(&layout), vec!["swap", "swap"]);
++    Op::CompleteAnimations.apply(&mut layout);
++    Op::MoveColumnLeft.apply(&mut layout);
++    assert!(swap_sources(&layout).is_empty());
++}
++
++#[test]
++fn swap_routing_tags_only_the_two_swapped_tiles_in_stacked_columns() {
++    let mut layout = check_ops_with_options(
++        swap_test_options(),
++        [
++            Op::AddOutput(1),
++            Op::AddWindow {
++                params: TestWindowParams::new(1),
++            },
++            Op::AddWindow {
++                params: TestWindowParams::new(2),
++            },
++            Op::FocusColumnLeft,
++            Op::ConsumeWindowIntoColumn,
++            Op::AddWindow {
++                params: TestWindowParams::new(3),
++            },
++            Op::CompleteAnimations,
++            Op::SwapWindowInDirection(ScrollDirection::Left),
++        ],
++    );
++    assert_eq!(swap_sources(&layout), vec!["swap", "swap"]);
++    layout.verify_invariants();
++    let mut changed = swap_test_options();
++    changed
++        .animations
++        .window_swap
++        .as_mut()
++        .unwrap()
++        .custom_shader = Some("next".into());
++    layout.update_options(changed);
++    Op::SwapWindowInDirection(ScrollDirection::Right).apply(&mut layout);
++    assert_eq!(swap_sources(&layout), vec!["swap", "swap"]);
++    Op::CompleteAnimations.apply(&mut layout);
++    assert!(swap_sources(&layout).is_empty());
++}
++
++#[test]
++fn swap_routing_config_reload_keeps_the_current_episode_material() {
++    let mut layout = resize_handoff_layout_with_options(false, swap_test_options());
++    Op::SwapWindowInDirection(ScrollDirection::Right).apply(&mut layout);
++    let mut changed = swap_test_options();
++    changed
++        .animations
++        .window_swap
++        .as_mut()
++        .unwrap()
++        .custom_shader = Some("next".into());
++    layout.update_options(changed);
++    assert_eq!(swap_sources(&layout), vec!["swap", "swap"]);
++    Op::SwapWindowInDirection(ScrollDirection::Left).apply(&mut layout);
++    assert_eq!(swap_sources(&layout), vec!["swap", "swap"]);
++    Op::CompleteAnimations.apply(&mut layout);
++    Op::SwapWindowInDirection(ScrollDirection::Right).apply(&mut layout);
++    assert_eq!(swap_sources(&layout), vec!["next", "next"]);
++}
++
++#[test]
++fn swap_routing_without_override_retains_ordinary_movement() {
++    let mut options = swap_test_options();
++    options.animations.window_swap = None;
++    let mut layout = resize_handoff_layout_with_options(false, options);
++    Op::SwapWindowInDirection(ScrollDirection::Right).apply(&mut layout);
++    assert!(swap_sources(&layout).is_empty());
++    assert!(layout.are_animations_ongoing(None));
++}
++
++#[test]
++fn swap_routing_off_overrides_an_active_material_on_repeat() {
++    let mut layout = resize_handoff_layout_with_options(false, swap_test_options());
++    Op::SwapWindowInDirection(ScrollDirection::Right).apply(&mut layout);
++    let mut changed = swap_test_options();
++    let config = changed.animations.window_swap.as_mut().unwrap();
++    config.anim.off = true;
++    config.custom_shader = None;
++    layout.update_options(changed);
++    Op::SwapWindowInDirection(ScrollDirection::Left).apply(&mut layout);
++    let columns = layout.active_workspace().unwrap().scrolling();
++    assert!(columns
++        .columns()
++        .all(|column| column.swap_animation().unwrap().anim.off));
++    assert!(swap_sources(&layout).is_empty());
++}
+diff --git a/src/layout/tile.rs b/src/layout/tile.rs
+index 214c579..caa75c1 100644
+--- a/src/layout/tile.rs
++++ b/src/layout/tile.rs
+@@ -944,6 +944,65 @@ impl<W: LayoutElement> Tile<W> {
+         MoveAnimation::follow_resize(&mut self.move_y_animation, path, 1., delta);
+     }
+ 
++    #[cfg(test)]
++    pub(super) fn swap_animation(&self) -> Option<&Rc<niri_config::animations::WindowSwapAnim>> {
++        self.move_x_animation
++            .as_ref()
++            .and_then(|motion| motion.swap.as_ref())
++            .or_else(|| {
++                self.move_y_animation
++                    .as_ref()
++                    .and_then(|motion| motion.swap.as_ref())
++            })
++    }
++
++    pub(super) fn swap_animation_config(
++        &self,
++    ) -> Option<Rc<niri_config::animations::WindowSwapAnim>> {
++        let config = self.options.animations.window_swap.clone()?;
++        Some(if config.anim.off {
++            Rc::new(config)
++        } else {
++            self.move_x_animation
++                .as_ref()
++                .and_then(|motion| {
++                    (!motion.is_done())
++                        .then_some(motion.swap.as_ref())
++                        .flatten()
++                })
++                .or_else(|| {
++                    self.move_y_animation.as_ref().and_then(|motion| {
++                        (!motion.is_done())
++                            .then_some(motion.swap.as_ref())
++                            .flatten()
++                    })
++                })
++                .cloned()
++                .unwrap_or_else(|| Rc::new(config))
++        })
++    }
++
++    pub fn animate_swap_from(
++        &mut self,
++        from: Point<f64, Logical>,
++        config: Option<Rc<niri_config::animations::WindowSwapAnim>>,
++    ) {
++        let Some(config) = config else {
++            self.animate_move_from(from);
++            return;
++        };
++        for motion in [&mut self.move_x_animation, &mut self.move_y_animation]
++            .into_iter()
++            .flatten()
++        {
++            motion.swap = Some(config.clone());
++        }
++        self.animate_move_x_from_with_config(from.x, config.anim);
++        self.animate_move_y_from_with_config(from.y, config.anim);
++        self.move_x_animation.as_mut().unwrap().swap = Some(config.clone());
++        self.move_y_animation.as_mut().unwrap().swap = Some(config);
++    }
++
+     pub fn animate_move_from(&mut self, from: Point<f64, Logical>) {
+         self.animate_move_x_from(from.x);
+         self.animate_move_y_from(from.y);
+@@ -967,12 +1026,14 @@ impl<W: LayoutElement> Tile<W> {
+                     .window_movement
+                     .custom_shader
+                     .is_some()
++                    || movement.swap.is_some()
+                     || movement.has_resize())
+                     && !movement.is_done()
+             })
+             .map(MoveAnimation::velocity);
+         let anim = previous.as_ref().map(MoveAnimation::render_animation);
+         let anim = anim
++            .filter(|_| !config.off)
+             .map(|anim| anim.restarted(1., 0., 0.))
+             .unwrap_or_else(|| Animation::new(self.clock.clone(), 1., 0., 0., config));
+ 
+@@ -1000,12 +1061,14 @@ impl<W: LayoutElement> Tile<W> {
+                     .window_movement
+                     .custom_shader
+                     .is_some()
++                    || movement.swap.is_some()
+                     || movement.has_resize())
+                     && !movement.is_done()
+             })
+             .map(MoveAnimation::velocity);
+         let anim = previous.as_ref().map(MoveAnimation::render_animation);
+         let anim = anim
++            .filter(|_| !config.off)
+             .map(|anim| anim.restarted(1., 0., 0.))
+             .unwrap_or_else(|| Animation::new(self.clock.clone(), 1., 0., 0., config));
+ 
+@@ -1823,7 +1886,7 @@ impl<W: LayoutElement> Tile<W> {
+         // A dropped tiled window can still follow its column after its own
+         // offset finishes. Keep pointer arbitration until that clock finishes.
+         if self.pointer_wobble.is_some() {
+-            if let Some(parent) = parent_motion {
++            if let Some(parent) = parent_motion.as_ref() {
+                 self.pointer_parent_end.set(Some(parent.end_time()));
+             }
+         }
+@@ -1853,11 +1916,15 @@ impl<W: LayoutElement> Tile<W> {
+                     delta,
+                     self.clock.now(),
+                 )
+-                .with_layout(remaining, velocity);
+-                motion = Some(motion.map_or(own, |state| state.combined(own)));
++                .with_layout(remaining, velocity)
++                .with_swap(movement.swap.clone());
++                motion =
++                    Some(motion.map_or_else(|| own.clone(), |state| state.combined(own.clone())));
+             }
+         }
+-        let fragment_compiled = self.fragment_motion_requested()
++        let explicit_swap = motion.as_ref().is_some_and(|motion| motion.swap.is_some());
++        let fragment_compiled = !explicit_swap
++            && self.fragment_motion_requested()
+             && Shaders::get(ctx.renderer).fragment_configured(
+                 self.options
+                     .animations
+@@ -1874,9 +1941,16 @@ impl<W: LayoutElement> Tile<W> {
+                 m.progress >= 0. && m.progress < 1. && (m.delta.x.abs() + m.delta.y.abs()) > 0.01
+             };
+             active
+-                && Shaders::get(ctx.renderer)
+-                    .program(ProgramType::Move)
+-                    .is_some()
++                && if let Some(swap) = &m.swap {
++                    !swap.anim.off
++                        && swap.custom_shader.as_deref().is_some_and(|source| {
++                            !Shaders::get(ctx.renderer).swap_source_failed(source)
++                        })
++                } else {
++                    Shaders::get(ctx.renderer)
++                        .program(ProgramType::Move)
++                        .is_some()
++                }
+         });
+         let fragment = if fragment_enabled {
+             let now = self.clock.now();
+@@ -1903,7 +1977,7 @@ impl<W: LayoutElement> Tile<W> {
+                 .unwrap();
+                 state.configure(config, grid);
+                 state.advance(now);
+-                state.layout(motion.map(|motion| motion.fragment_layout()), now);
++                state.layout(motion.as_ref().map(|motion| motion.fragment_layout()), now);
+                 (state.active(now) && !state.failed()).then(|| FragmentRenderState {
+                     motion: handle.clone(),
+                     at: now,
+diff --git a/src/niri.rs b/src/niri.rs
+index 974d340..e748b03 100644
+--- a/src/niri.rs
++++ b/src/niri.rs
+@@ -1579,6 +1579,17 @@ impl State {
+             });
+             shaders_changed = true;
+         }
++        if config.animations.window_swap != old_config.animations.window_swap {
++            let source = config
++                .animations
++                .window_swap
++                .as_ref()
++                .and_then(|swap| swap.custom_shader.as_deref());
++            self.backend
++                .with_primary_renderer(|renderer| shaders::prepare_swap_program(renderer, source));
++            shaders_changed = true;
++        }
++
+         if config.animations.window_movement.custom_shader
+             != old_config.animations.window_movement.custom_shader
+         {
+diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
+index 7a2fd38..614e4e4 100644
+--- a/src/render_helpers/movement.rs
++++ b/src/render_helpers/movement.rs
+@@ -18,9 +18,10 @@ use crate::animation::{Animation, Clock};
+ 
+ /// Layout samples use the compositor clock, so slow-motion and repeated render
+ /// passes cannot change the effect's trajectory. Velocity is in logical units/s.
+-#[derive(Debug, Clone, Copy)]
++#[derive(Debug, Clone)]
+ pub struct MovementState {
+     pub progress: f64,
++    pub swap: Option<Rc<niri_config::animations::WindowSwapAnim>>,
+     pub delta: Point<f64, Logical>,
+     at: Duration,
+     end: Duration,
+@@ -30,6 +31,11 @@ pub struct MovementState {
+ }
+ 
+ impl MovementState {
++    pub fn with_swap(mut self, swap: Option<Rc<niri_config::animations::WindowSwapAnim>>) -> Self {
++        self.swap = swap;
++        self
++    }
++
+     pub fn fragment_layout(&self) -> FragmentLayout {
+         FragmentLayout {
+             remaining: self.remaining,
+@@ -65,6 +71,7 @@ impl MovementState {
+         };
+         Self {
+             progress,
++            swap: None,
+             delta,
+             at,
+             end: animation.end_time(),
+@@ -88,11 +95,14 @@ impl MovementState {
+ 
+     pub fn combined(self, other: Self) -> Self {
+         let driver = if self.progress <= other.progress {
+-            self
++            self.clone()
+         } else {
+-            other
++            other.clone()
+         };
++        // An explicit swap stays a swap when incidental resize/column paths coexist.
++        let swap = self.swap.clone().or_else(|| other.swap.clone());
+         Self {
++            swap,
+             delta: self.delta + other.delta,
+             travel_velocity: self.travel_velocity + other.travel_velocity,
+             remaining: self.remaining + other.remaining,
+@@ -182,6 +192,7 @@ impl MotionContinuity {
+         // frame. Render passes at the same clock value are exactly idempotent.
+         let elapsed = self
+             .previous
++            .as_ref()
+             .map_or(0., |old| at.saturating_sub(old.at).as_secs_f64());
+         let value = (self.phase.value + self.phase.velocity * elapsed).clamp(0., 1.);
+         (
+@@ -198,7 +209,7 @@ impl MotionContinuity {
+             if motion.delta.x < 0. { -1. } else { 1. },
+             if motion.delta.y < 0. { -1. } else { 1. },
+         ];
+-        if let Some(previous) = self.previous {
++        if let Some(previous) = self.previous.as_ref() {
+             if motion.progress < previous.progress || motion.delta != previous.delta {
+                 let (phase, impulse) = self.values_at(motion.at);
+                 self.curves = Some((
+@@ -263,6 +274,13 @@ pub struct MovementEffect {
+     buffer: OffscreenBuffer,
+     continuity: RefCell<MotionContinuity>,
+     fragment_active: Cell<bool>,
++    swap_program: RefCell<
++        Option<(
++            smithay::backend::renderer::ContextId<smithay::backend::renderer::gles::GlesTexture>,
++            String,
++            super::shader_element::ShaderProgram,
++        )>,
++    >,
+ }
+ 
+ impl MovementEffect {
+@@ -273,6 +291,7 @@ impl MovementEffect {
+             buffer: OffscreenBuffer::default(),
+             continuity: RefCell::new(MotionContinuity::default()),
+             fragment_active: Cell::new(false),
++            swap_program: RefCell::new(None),
+         }
+     }
+ 
+@@ -287,7 +306,7 @@ impl MovementEffect {
+             return None;
+         }
+         let state = self.continuity.borrow();
+-        let motion = state.previous?;
++        let motion = state.previous.as_ref()?;
+         let at = self.clock.now();
+         let (phase, impulse) = state.values_at(at);
+         let remaining = motion.remaining;
+@@ -322,6 +341,11 @@ impl MovementEffect {
+                 },
+                 random_seed: self.random_seed,
+                 delta: motion.delta,
++                material: self
++                    .swap_program
++                    .borrow()
++                    .as_ref()
++                    .map(|(_, _, program)| program.clone()),
+             },
+         )
+     }
+@@ -338,13 +362,37 @@ impl MovementEffect {
+         motion: Option<MovementState>,
+         fragment: Option<FragmentRenderState>,
+     ) -> anyhow::Result<(ShaderRenderElement, OffscreenData)> {
++        use smithay::backend::renderer::Renderer as _;
++        let swap = motion.as_ref().and_then(|motion| motion.swap.as_ref());
++        let pinned = if let Some(swap) = swap {
++            let context = renderer.context_id();
++            let mut slot = self.swap_program.borrow_mut();
++            let source = swap
++                .custom_shader
++                .as_deref()
++                .context("swap has no custom shader")?;
++            if slot
++                .as_ref()
++                .is_some_and(|(old, old_source, _)| *old != context || old_source != source)
++            {
++                slot.take();
++            }
++            if slot.is_none() {
++                let program = super::shaders::swap_program(renderer, source)?;
++                *slot = Some((context, source.into(), program));
++            }
++            slot.as_ref().map(|(_, _, program)| program.clone())
++        } else {
++            self.swap_program.borrow_mut().take();
++            None
++        };
+         self.fragment_active.set(fragment.is_some());
+         let (progress, impulse) = if fragment.is_some() {
+             (1., [0., 0.])
+         } else {
+             self.continuity
+                 .borrow_mut()
+-                .sample(motion.expect("timed movement driver"))
++                .sample(motion.clone().expect("timed movement driver"))
+         };
+         let clamped_progress = progress.clamp(0., 1.);
+         let (elem, _sync_point, mut data) = self
+@@ -436,6 +484,12 @@ impl MovementEffect {
+         )
+         .with_location(area.loc);
+ 
++        let elem = if let Some(program) = pinned {
++            elem.with_pinned_program(program)
++        } else {
++            elem
++        };
++
+         // We're drawing the shader, not the offscreen itself.
+         data.id = elem.id().clone();
+ 
+@@ -882,6 +936,7 @@ mod tests {
+ 
+     fn state(progress: f64, x: f64, seconds: f64, end: f64) -> MovementState {
+         MovementState {
++            swap: None,
+             progress,
+             delta: Point::from((x, 0.)),
+             at: Duration::from_secs_f64(seconds),
+diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
+index 309f224..464a3bd 100644
+--- a/src/render_helpers/shaders/mod.rs
++++ b/src/render_helpers/shaders/mod.rs
+@@ -23,6 +23,8 @@ pub struct Shaders {
+     retired_resize: RefCell<Vec<ShaderProgram>>,
+     pub custom_close: RefCell<Option<ShaderProgram>>,
+     pub custom_move: RefCell<Option<ShaderProgram>>,
++    swap_programs: RefCell<std::collections::HashMap<String, ShaderProgram>>,
++    failed_swap_sources: RefCell<std::collections::HashSet<String>>,
+     fragment_mesh: RefCell<Option<ShaderProgram>>,
+     fragment_source: RefCell<Option<String>>,
+     pub pointer_wobble: Option<ShaderProgram>,
+@@ -45,6 +47,10 @@ pub enum ProgramType {
+ impl Shaders {
+     /// Compare the effective source with the successfully compiled program.
+     /// Failed reloads retain the previous shader and must not verify new settings.
++    pub fn swap_source_failed(&self, source: &str) -> bool {
++        self.failed_swap_sources.borrow().contains(source)
++    }
++
+     pub fn fragment_configured(&self, source: Option<&str>) -> bool {
+         crate::animation::fragment_motion::selected(
+             self.fragment_source.borrow().as_deref(),
+@@ -200,6 +206,8 @@ impl Shaders {
+             custom_close: RefCell::new(None),
+             custom_open: RefCell::new(None),
+             custom_move: RefCell::new(None),
++            swap_programs: RefCell::new(std::collections::HashMap::new()),
++            failed_swap_sources: RefCell::new(std::collections::HashSet::new()),
+             fragment_mesh: RefCell::new(None),
+             fragment_source: RefCell::new(None),
+             pointer_wobble,
+@@ -574,3 +582,54 @@ pub fn mat3_uniform(name: &str, mat: Mat3) -> Uniform<'_> {
+         },
+     )
+ }
++
++/// Swap snapshots carry their source across reloads; each renderer owns its cache.
++pub fn swap_program(renderer: &mut GlesRenderer, source: &str) -> Result<ShaderProgram, GlesError> {
++    let old = Shaders::get(renderer).swap_programs.take();
++    let mut live = std::collections::HashMap::new();
++    for (key, program) in old {
++        if key == source || !program.is_unique() {
++            live.insert(key, program);
++        } else if let Err(err) = program.destroy(renderer) {
++            warn!("error destroying retired swap shader: {err:?}");
++        }
++    }
++    let cached = live.get(source).cloned();
++    Shaders::get(renderer).swap_programs.replace(live);
++    if let Some(program) = cached {
++        return Ok(program);
++    }
++    let program = match compile_move_program(renderer, source) {
++        Ok(program) => program,
++        Err(error) => {
++            Shaders::get(renderer)
++                .failed_swap_sources
++                .borrow_mut()
++                .insert(source.into());
++            return Err(error);
++        }
++    };
++    Shaders::get(renderer)
++        .failed_swap_sources
++        .borrow_mut()
++        .remove(source);
++    Shaders::get(renderer)
++        .swap_programs
++        .borrow_mut()
++        .insert(source.into(), program.clone());
++    Ok(program)
++}
++
++/// Compile configured swaps at the same startup/reload boundary as movement.
++pub fn prepare_swap_program(renderer: &mut GlesRenderer, source: Option<&str>) {
++    // Failed sources only suppress retries in this configuration generation.
++    Shaders::get(renderer)
++        .failed_swap_sources
++        .borrow_mut()
++        .clear();
++    if let Some(source) = source {
++        if let Err(error) = swap_program(renderer, source) {
++            warn!("error compiling custom swap shader: {error:?}");
++        }
++    }
++}

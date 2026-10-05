@@ -5,11 +5,13 @@ sources feed browser previews and CLI exports; parity is checked in CI.
 """
 
 import base64
+import hashlib
 import json
 from dataclasses import asdict
 from html import escape
 from importlib.resources import files
 
+from . import __version__
 from .action_sets import companion_documents
 from .catalog import (
     PROFILE_RECIPES,
@@ -34,6 +36,36 @@ from .effects import (
 from .motion import SPRING_LIMITS, Spring, motion_documents
 from .pointer import POINTER_LIMITS, PointerWobble, pointer_documents
 from .profiles import PROFILE_SCHEMA, Profile
+
+_STUDIO_ASSETS = (
+    "assets/niri-fx.svg",
+    "preview.py",
+    "preview.html",
+    "studio.css",
+    "studio.js",
+    "library.js",
+    "effect-core.js",
+    "motion-preview.js",
+    "pointer-preview.js",
+    "combo-preview.js",
+)
+
+
+def studio_identity(builtins):
+    """Identify packaged UI inputs without reading Git, user files or session state."""
+    root = files("niri_fx")
+    inputs = {
+        "version": __version__,
+        "catalog": builtins,
+        "assets": {
+            name: hashlib.sha256(root.joinpath(name).read_bytes()).hexdigest()
+            for name in _STUDIO_ASSETS
+        },
+    }
+    digest = hashlib.sha256(
+        json.dumps(inputs, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+    return {"version": __version__, "build": digest[:12]}
 
 
 def parameter_controls():
@@ -101,21 +133,19 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         effect = next(
             (
                 getattr(effect, action)
-                for action in ("open", "close", "resize", "movement")
+                for action in ("open", "close", "resize", "movement", "swap")
                 if isinstance(getattr(effect, action), Effect)
             ),
             Effect(),
         )
 
-    return {
+    # Keep public built-ins separate: user choices must never change or enter
+    # the UI identity, even in an authenticated local Studio session.
+    builtins = {
         "schema": PRESET_SCHEMA,
         "profile_schema": PROFILE_SCHEMA,
         "max_document_bytes": MAX_DOCUMENT_BYTES,
-        "profile": profile,
-        "preferences": preferences,
         "specifications": PARAMETERS,
-        "parameters": asdict(effect),
-        "name": name,
         "presets": describe_presets(),
         "profiles": documents(PROFILES),
         "recommended": RECOMMENDED,
@@ -135,6 +165,14 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "defaults": asdict(Effect()),
         "families": FAMILIES,
         "elastic_anchors": ELASTIC_ANCHORS,
+    }
+    return {
+        **builtins,
+        "studio": studio_identity(builtins),
+        "profile": profile,
+        "preferences": preferences,
+        "parameters": asdict(effect),
+        "name": name,
         "connection": connection,
         "hosted": hosted,
         "save_target": connection.get("target", "inir") if connection else "standalone",
@@ -146,10 +184,23 @@ def preview_document(effect, name="balanced", connection=None, preferences=None,
     payload = preview_catalog(effect, name, connection, preferences, hosted=hosted)
     # Escape HTML's script-end delimiter even inside an inert JSON script block.
     data = json.dumps(payload).replace("</", "<\\/")
+    mode_help = (
+        "Web Studio previews and exports settings; it cannot apply them to your desktop. "
+        "Reload this page after a site update."
+        if hosted
+        else "Local Studio uses your installed NiriFX tools. Close and reopen Studio after "
+        "updating them; existing windows keep the editor they loaded."
+        if connection
+        else "This offline preview is a snapshot of NiriFX. Generate a new HTML file to get "
+        "updated controls and presets."
+    )
     root = files("niri_fx")
     return (
         root.joinpath("preview.html")
         .read_text()
+        .replace("@STUDIO_VERSION@", escape(payload["studio"]["version"]))
+        .replace("@STUDIO_BUILD@", payload["studio"]["build"])
+        .replace("@STUDIO_MODE_HELP@", mode_help)
         .replace("@EFFECT_JSON@", data)
         .replace("@PARAMETER_CONTROLS@", parameter_controls())
         .replace(

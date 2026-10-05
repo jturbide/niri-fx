@@ -108,6 +108,13 @@ class NativeBuildTests(unittest.TestCase):
                 self.assertEqual(result["status"], "metadata-match")
                 self.assertEqual(result["desktop_prerequisites"], "satisfied")
 
+    def test_retained_three_patch_fragment_build_remains_inspectable(self):
+        self.manifest.pop("swap_patch_sha256")
+        self.manifest["native_build"]["inputs"]["patches"].pop()
+        self.assertEqual(self.inspect(desktop=True, rehash=True)["status"], "metadata-match")
+        self.manifest["swap_patch_sha256"] = "0" * 64
+        self.assertEqual(self.inspect()["status"], "incompatible")
+
     def test_minimal_and_debug_match_but_do_not_satisfy_desktop(self):
         for desktop, profile in ((False, "release"), (True, "debug")):
             self.manifest = self.make_manifest(desktop=desktop, profile=profile)

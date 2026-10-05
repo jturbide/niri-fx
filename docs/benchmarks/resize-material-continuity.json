@@ -28,8 +28,8 @@
     "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732",
     "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
     "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
-    "niri_fx/effects.py": "1870ea0f985c6bba097d050fde8d6e7684600a9d63dbf1783ba4655539275a5d",
-    "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
+    "niri_fx/effects.py": "3318957b686b1cbb98b9dc924e8105ce6b31059c5dbc2c31503dcfc17b63c3db",
+    "niri_fx/presets.py": "86f3e6e77daf38c3b6ae4414911345a656d1bb85939a4d84de1ee55c1834309f",
     "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
     "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
     "niri_fx/shaders/resize-shaped.glsl": "f0b16b24d92d43ccf20203d9a087f99b4f6b6d1af579b906c6e09a1979005d53"
@@ -44,7 +44,7 @@
       "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
       "shader_sha256": "2febfff457d8d6c7c1d0a6133bd4e5f7ed5af32a7e24a24c200d4e47fad1f414",
       "config_sha256": "e79d1fd00663626e0deef7ae3ab53bdec1b45c0c7fb9561e9792626af6bc0f88",
-      "video_sha256": "4e940662a1d0c2251dfded6109b07ebfb43ba3c4ace15ba86530be1088f5fc2d",
+      "video_sha256": "b2a8f44b28abd56f2226157d40adaec288d69df1ae9ba8110980277fe247527e",
       "dimensions": [
         1280,
         800
@@ -55,19 +55,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6151
+          "committed_s": 0.6156
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0701
+          "committed_s": 1.0733
         },
         {
           "axis": "width",
           "extent": 520,
-          "request_s": 1.3502,
-          "committed_s": 1.3689
+          "request_s": 1.3501,
+          "committed_s": 1.3624
         }
       ],
       "final_size": [
@@ -76,7 +76,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 5400,
+        "after_two_retargets": 5335,
         "settled": 0
       }
     },
@@ -86,7 +86,7 @@
       "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
       "shader_sha256": "92f0f2e260685c8d526d7e1929a73c98f63943b1a692d20f3ed46c3882d08b15",
       "config_sha256": "7bf7b2d8fe8d9d8e30d06c5ef20c037502628d4116a9a16851a2a21074bc173d",
-      "video_sha256": "0df98e721ca3fea7b35351bf264f30d1f61f2b853b3bec0643079fa1115f05cb",
+      "video_sha256": "0ed2b1106985629a3a3f6fc521455efe00d5d83c28f4bd64b27aadf797f67a4d",
       "dimensions": [
         1280,
         800
@@ -97,19 +97,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6161
+          "committed_s": 0.6146
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0669
+          "committed_s": 1.0671
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3721
+          "committed_s": 1.3622
         }
       ],
       "final_size": [
@@ -118,7 +118,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 6300,
+        "after_two_retargets": 6251,
         "settled": 0
       }
     },
@@ -128,7 +128,7 @@
       "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "2febfff457d8d6c7c1d0a6133bd4e5f7ed5af32a7e24a24c200d4e47fad1f414",
       "config_sha256": "e79d1fd00663626e0deef7ae3ab53bdec1b45c0c7fb9561e9792626af6bc0f88",
-      "video_sha256": "512a6787340f42ab020eb2f74184d71d8f7bc99015f269b1b5b0377404d38601",
+      "video_sha256": "8f3efe7f0d7bb870784f82b895ee07fda4a1ba87c4fdfc13bc4ba85e07357e17",
       "dimensions": [
         1280,
         800
@@ -139,19 +139,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6171
+          "committed_s": 0.6177
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0641
+          "committed_s": 1.0652
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.372
+          "committed_s": 1.3674
         }
       ],
       "final_size": [
@@ -160,7 +160,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 42627,
+        "after_two_retargets": 42487,
         "settled": 0
       }
     },
@@ -170,7 +170,7 @@
       "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "92f0f2e260685c8d526d7e1929a73c98f63943b1a692d20f3ed46c3882d08b15",
       "config_sha256": "7bf7b2d8fe8d9d8e30d06c5ef20c037502628d4116a9a16851a2a21074bc173d",
-      "video_sha256": "7a07cf833dd140bf3429e93c80789fd9de1a09bfc653f97b09e740ec9240511e",
+      "video_sha256": "cfde16b2fa9410e2c8bfbfde00f5fdc211b658e5eecf863da2b5b2f1d73d6195",
       "dimensions": [
         1280,
         800
@@ -181,19 +181,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6143
+          "committed_s": 0.6117
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0646
+          "committed_s": 1.0685
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3693
+          "committed_s": 1.3624
         }
       ],
       "final_size": [
@@ -202,7 +202,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 43820,
+        "after_two_retargets": 43717,
         "settled": 0
       }
     }
@@ -210,11 +210,11 @@
   "comparisons": [
     {
       "file": "docs/gifs/native-resize-material-fragments-comparison.gif",
-      "gif_sha256": "b53bb34385d27f9365aef1f3b00329a0a328d30805dee6d3158de02dfcd9e0f1"
+      "gif_sha256": "38514cbc2f7df2acdd674f509153344c302cfa45c45ec97098b67ca21933e5f4"
     },
     {
       "file": "docs/gifs/native-resize-material-triangles-comparison.gif",
-      "gif_sha256": "c55253434f1a35602a4e7760296e0c496df9cab2ed92faa237dca18a0a2491bc"
+      "gif_sha256": "b58b3bd17a59ac672bc884c49eef9f4b0f0ef9b3288272cc6d0b1e5b75b0492c"
     }
   ]
 }

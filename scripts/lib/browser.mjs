@@ -43,6 +43,7 @@ export async function launchBrowser({
   profilePrefix = "niri-fx-browser-",
 } = {}) {
   const profile = mkdtempSync(join(tmpdir(), profilePrefix));
+  const ownsProcessGroup = process.platform !== "win32";
   const browserProcess = spawn(
     command,
     [
@@ -58,10 +59,11 @@ export async function launchBrowser({
       "--user-data-dir=" + profile,
       "about:blank",
     ],
-    { stdio: ["ignore", "ignore", "pipe"] },
+    { detached: ownsProcessGroup, stdio: ["ignore", "ignore", "pipe"] },
   );
   let diagnostics = "",
     launchError,
+    exited = false,
     closed = false,
     socket,
     sequence = 0,
@@ -73,12 +75,36 @@ export async function launchBrowser({
   browserProcess.on("error", (error) => {
     launchError = error;
   });
-  const exited = new Promise((resolve) =>
-    browserProcess.once("close", () => {
-      closed = true;
-      resolve();
-    }),
-  );
+  browserProcess.once("exit", () => {
+    exited = true;
+  });
+  browserProcess.once("close", () => {
+    closed = true;
+  });
+
+  function signalOwnedProcesses(signal) {
+    if (!browserProcess.pid) return false; // A failed spawn has no process to signal.
+    try {
+      if (ownsProcessGroup) process.kill(-browserProcess.pid, signal);
+      else browserProcess.kill(signal);
+      return true;
+    } catch (error) {
+      if (error.code !== "ESRCH") throw error;
+      return false;
+    }
+  }
+
+  function stopped() {
+    return closed && (!ownsProcessGroup || !signalOwnedProcesses(0));
+  }
+
+  async function waitForStop(milliseconds, message) {
+    const deadline = Date.now() + milliseconds;
+    while (!stopped()) {
+      if (Date.now() >= deadline) throw new Error(message);
+      await delay(Math.min(50, deadline - Date.now()));
+    }
+  }
 
   function rejectPending(error) {
     for (const item of pending.values()) {
@@ -94,13 +120,15 @@ export async function launchBrowser({
     return (closing ??= (async () => {
       rejectPending(new Error("Browser session closed"));
       socket?.close();
-      if (!closed) {
-        browserProcess.kill("SIGTERM");
+      if (!stopped()) {
+        // Helpers can outlive the leader with or without inherited pipes. Wait
+        // for the group created by this launch as well as its output to close.
+        signalOwnedProcesses("SIGTERM");
         try {
-          await withTimeout(exited, 3000, "Chrome did not stop");
+          await waitForStop(3000, "Chrome did not stop");
         } catch {
-          browserProcess.kill("SIGKILL");
-          await withTimeout(exited, 3000, "Chrome did not exit after SIGKILL");
+          signalOwnedProcesses("SIGKILL");
+          await waitForStop(3000, "Chrome process group did not stop after SIGKILL");
         }
       }
       // Chrome helpers can finish flushing briefly after the main process exits.
@@ -197,9 +225,9 @@ export async function launchBrowser({
     const portFile = join(profile, "DevToolsActivePort");
     let port, portProblem;
     while (port === undefined) {
-      if (launchError || closed || Date.now() >= deadline)
+      if (launchError || exited || closed || Date.now() >= deadline)
         throw new Error(
-          `Chrome did not start (${launchError?.message ?? (closed ? "exit " + browserProcess.exitCode : "timeout")}).\n${portProblem ? portProblem + "\n" : ""}${diagnostics}`,
+          `Chrome did not start (${launchError?.message ?? (exited || closed ? "exit " + (browserProcess.exitCode ?? browserProcess.signalCode) : "timeout")}).\n${portProblem ? portProblem + "\n" : ""}${diagnostics}`,
           { cause: launchError },
         );
       try {
@@ -231,13 +259,22 @@ export async function launchBrowser({
     // Retry only an empty target list, within the same bounded startup window.
     let page;
     while (!page) {
-      if (launchError || closed || Date.now() >= deadline)
-        throw new Error("Chrome did not create a page target before startup ended");
-      const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
-        signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
-      });
-      if (!response.ok) throw new Error("Chrome debugging endpoint failed: " + response.status);
-      page = (await response.json()).find((tab) => tab.type === "page");
+      if (launchError || exited || closed || Date.now() >= deadline)
+        throw new Error(
+          "Chrome did not create a page target before startup ended.\n" + diagnostics,
+        );
+      try {
+        const response = await fetch(`http://127.0.0.1:${port}/json/list`, {
+          signal: AbortSignal.timeout(Math.max(1, deadline - Date.now())),
+        });
+        if (!response.ok) throw new Error("HTTP " + response.status);
+        page = (await response.json()).find((tab) => tab.type === "page");
+      } catch (error) {
+        throw new Error(
+          `Chrome debugging endpoint failed during startup (${error.message || error.name}).\n${diagnostics}`,
+          { cause: error },
+        );
+      }
       if (!page) await delay(50);
     }
     socket = new WebSocket(page.webSocketDebuggerUrl);
@@ -270,7 +307,18 @@ export async function launchBrowser({
     await rpc("Runtime.enable");
     return { rpc, evaluate, callFunction, navigate, close, profile };
   } catch (error) {
-    await close();
+    let cleanupError;
+    try {
+      await close();
+    } catch (failure) {
+      cleanupError = failure;
+    }
+    if (cleanupError)
+      throw new AggregateError(
+        [error, cleanupError],
+        `${error.message}\nBrowser cleanup also failed: ${cleanupError.message}`,
+        { cause: error },
+      );
     throw error;
   }
 }

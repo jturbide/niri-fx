@@ -14,20 +14,29 @@ Changing iRiS settings alone cannot add a compositor rendering hook.
 The [NiriFX session](native-session.md) includes movement and swap effects,
 pointer wobble, continuous fragments and interruption improvements in one build.
 After preparing a session, open `niri-fx studio --target native`, choose a combo
-and set **Move / swap** to **Preserve**, **NiriFX Style** or **Off**. Move and swap
-share one effect. Review **Select for next login** to save the selection; this
-does not change the running desktop or edit a shell checkout. The managed
-workflow is available in the current source checkout; distribution packages and
-broader physical-session acceptance remain pending.
+and set **Move** and **Swap** independently to **Preserve**, **NiriFX Style** or
+**Off**. Move covers dragging and ordinary tile/column rearrangement. Swap
+overrides explicit `swap-window-left` / `swap-window-right` commands; when no
+separate swap setting exists, it follows Move. Older NiriFX builds need updating
+before a separate Swap choice can be applied.
+
+Review **Apply to desktop** to see the exact action changes. A verified running
+NiriFX session can load them immediately; otherwise Studio saves the selection
+for the next login and reports that outcome. Applying does not edit a shell
+checkout. The managed workflow is available in the current source checkout;
+distribution packages and broader physical-session acceptance remain pending.
 
 Studio's **Movement (shader preview)** tab renders the same GLSL used by the
 pinned compositor, with a synthetic texture and a simple directional path. Niri
-owns actual window positions, timing handoffs and interruptions. The older
+owns actual window positions, timing handoffs and interruptions. Choosing **Swap**
+in Library previews its timed shader on two synthetic windows exchanging places.
+Each window has its own texture and deformation; this is not a shared particle
+simulation or a native desktop recording. The older
 **Move concept** and **Swap concept** tabs remain Canvas design prototypes. Each fragment keeps
 its own source image coordinates. The two color streams overlap in the middle,
 then reconstruct their original contents in opposite columns. No window contents
-are captured: both images are synthetic. Portable profile JSON retains movement
-and pointer choices. **Export stock Niri config** omits those nodes;
+are captured: both images are synthetic. Portable profile JSON retains separate
+movement, swap and pointer choices. **Export stock Niri config** omits those nodes;
 **Export NiriFX session config** includes them for a matching NiriFX build.
 The [isolated native demos](../experimental/README.md) demonstrate
 fragment, elastic, slice, pixel and distortion column swaps in a separate compositor.
@@ -124,13 +133,44 @@ These commands open isolated demos. They do not replace the login compositor.
 
 ## Movement presets and general rearrangement
 
-NiriFX 0.13 adds three movement-oriented choices. They also work as stock opening
-and closing styles; native movement still requires the pinned compositor.
+The **Movement and swaps** collection groups styles tuned for rearranging
+windows. They also work as stock opening and closing styles; native movement
+requires the NiriFX session.
 
 | Fragment Wake | Ribbon Transfer | Momentum Glide |
 | --- | --- | --- |
 | ![Triangle wake swap](gifs/native-swap-fragment-wake.gif) | ![Ribbon transfer swap](gifs/native-swap-ribbon-transfer.gif) | ![Elastic glide swap](gifs/native-swap-momentum-glide.gif) |
 | 850 ms, trailing triangle breakup | 900 ms, alternating ribbons | 750 ms, gentle elastic deformation |
+
+Five more choices keep rearrangement within 620–720 ms. Pick ribbons or pixels
+for breakup, Spring Rebound for whole-window motion, or a distortion that keeps
+the window visible throughout the transition.
+
+| Style | Movement | Shader preview | Native swap |
+| --- | --- | --- | --- |
+| Ribbon Cascade | 680 ms, alternating vertical strips detach in stages | [Preview](gifs/movement-ribbon-cascade.gif) | [Recording](gifs/native-swap-ribbon-cascade.gif) |
+| Spring Rebound | 640 ms, elastic stretch with a small twist | [Preview](gifs/movement-spring-rebound.gif) | [Recording](gifs/native-swap-spring-rebound.gif) |
+| Pixel Relay | 620 ms, coarse pixels break up along the trailing edge | [Preview](gifs/movement-pixel-relay.gif) | [Recording](gifs/native-swap-pixel-relay.gif) |
+| Ripple Transit | 680 ms, radial ripples deform the window texture | [Preview](gifs/movement-ripple-transit.gif) | [Recording](gifs/native-swap-ripple-transit.gif) |
+| Vortex Transit | 720 ms, a partial spiral with gentle contraction | [Preview](gifs/movement-vortex-transit.gif) | [Recording](gifs/native-swap-vortex-transit.gif) |
+
+Shader previews use synthetic directional paths. Native swaps record actual
+column rearrangement in an owned nested compositor, using the shared Move
+renderer. Independent **Swap** selections apply to explicit
+`swap-window-left` / `swap-window-right` commands; dragging and column reordering
+still use **Move**. These presets use timed deformation; they do not add
+continuous pointer materials for their families.
+For continuous dragging, see [fragments](fragment-drag.md) and
+[pointer wobble](pointer-wobble.md).
+
+In Studio, choose the movement action and filter the Library to **Movement and
+swaps**, then select a style to preview it. The same catalog is available from
+the CLI:
+
+```sh
+niri-fx list --collection movement
+niri-fx studio --preset spring-rebound
+```
 
 `movement_strength` controls deformation, `movement_ms` sets the demo/preview
 clock, and `movement_focus` emphasizes the trailing edge for Fragments, Slices,
@@ -177,4 +217,5 @@ For coordinated stock workspace, camera and overview motion, use the
 apply fragment shaders to workspaces. To change effects in an already running
 NiriFX session, use the
 [verified live setup workflow](setup.md#activate-movement-in-a-running-session).
-Managed Studio selections instead take effect at the next login.
+Studio also reviews and applies selections directly. Its result reports whether
+the running managed session loaded them or they were saved for the next login.

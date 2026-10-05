@@ -60,6 +60,8 @@ def experiment():
         (ROOT / "experimental/niri-pointer-wobble.patch", manifest["pointer_patch_sha256"]),
         (ROOT / "experimental/niri-fragment-drag.patch", manifest["fragment_patch_sha256"]),
     ]
+    if "swap_patch_sha256" in manifest:
+        inputs.append((ROOT / "experimental/niri-swap.patch", manifest["swap_patch_sha256"]))
     for path, expected in inputs:
         if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             raise RuntimeError(

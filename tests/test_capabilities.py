@@ -17,6 +17,7 @@ from niri_fx.capabilities import (
     fragment_capability,
     movement_capability,
     pointer_capability,
+    swap_capability,
 )
 
 
@@ -446,3 +447,46 @@ class DoctorFragmentTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class SwapCapabilityTests(unittest.TestCase):
+    def test_swap_contract_requires_exact_version_types_and_renderer(self):
+        valid = {"schema": 1, "swap_shader": 1, "renderer_verified": True, "configured": False}
+        for data, expected in (
+            (valid, True),
+            (valid | {"swap_shader": 2}, False),
+            (valid | {"schema": True}, False),
+            (valid | {"renderer_verified": False}, False),
+            (valid | {"configured": 1}, False),
+            (valid | {"unknown": True}, False),
+            ({}, False),
+            ([], False),
+        ):
+            with (
+                self.subTest(data=data),
+                ipc_reply(
+                    [
+                        b'{"Ok":{"Version":"NiriFX"}}\n',
+                        json.dumps({"Ok": {"NiriFxSwapCapabilities": data}}).encode() + b"\n",
+                    ]
+                ) as (path, requests),
+                patch("niri_fx.capabilities._swap_probe", return_value=("supported", "Accepted")),
+            ):
+                result = swap_capability(sys.executable, socket_path=path)
+            self.assertEqual(result["activation_ready"], expected)
+            self.assertEqual(requests, [b'"Version"\n', b'"NiriFxSwapCapabilities"\n'])
+
+    def test_parser_support_is_not_renderer_or_live_support(self):
+        paths = []
+
+        def validate(command, **kwargs):
+            path = Path(command[3])
+            paths.append(path)
+            self.assertIn("window-swap", path.read_text())
+            return subprocess.CompletedProcess(command, 0, "", "")
+
+        with patch("niri_fx.capabilities.subprocess.run", side_effect=validate):
+            result = swap_capability(sys.executable)
+        self.assertEqual(result["status"], "supported")
+        self.assertFalse(result["activation_ready"])
+        self.assertTrue(all(not path.exists() for path in paths))

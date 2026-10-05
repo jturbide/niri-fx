@@ -26,12 +26,19 @@ try {
     const { evaluate, rpc } = browser;
     await evaluate(`(() => {
       const style=document.createElement('style');
-      style.textContent='html,body{width:720px;height:616px;max-width:none;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,.selection-summary,#concept-note,#movement-preview-controls,#pointer-preview-tools,#caption,#status,main>small,.motion-preference,#error,#combo-preview-status{display:none!important}.layout{display:block;margin:0 14px}canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
+      style.textContent='html,body{width:720px;height:616px;max-width:none;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,#library-actions,#transfer-options,.selection-summary,.selection-bar,.preview-heading,.workspace-tools,#apply-review,.preview-preferences,#concept-note,#movement-preview-controls,#pointer-preview-tools,#caption,#status,main>small,.motion-preference,#error,#combo-preview-status{display:none!important}.layout{display:block;margin:0 14px}html[data-workspace] canvas{width:690px;height:524px!important;max-height:none!important;min-height:0!important;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
       document.head.append(style);
       const heading=document.createElement('div');heading.id='gif-heading';heading.textContent=${JSON.stringify(document.name)};document.body.prepend(heading);
       const note=document.createElement('div');note.id='gif-note';document.body.append(note);
       byId('reduced-motion').checked=false;seed=0.43;
     })()`);
+    assert(
+      await evaluate(`(() => {
+      const canvas=byId('stage').getBoundingClientRect();
+      return canvas.top >= 53 && canvas.top <= 55 && canvas.height >= 524 && canvas.bottom < 590;
+    })()`),
+      "Capture layout must show the complete preview canvas without Studio controls",
+    );
     const before = await evaluate(
       "({document:effectDocument(),history:editHistory,historyIndex,editingAction,mode,seed})",
     );

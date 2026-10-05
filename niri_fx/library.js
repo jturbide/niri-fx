@@ -4,7 +4,8 @@
 function createFxLibrary({
   catalog,
   getDocument,
-  select,
+  select: selectDocument,
+  preview,
   edit,
   favorites,
   favorite,
@@ -29,7 +30,15 @@ function createFxLibrary({
     ]),
   );
   const builtins = { ...styles, ...catalog.profiles };
-  const actionNames = { open: "Open", close: "Close", resize: "Resize", movement: "Move / swap" };
+  const actionNames = {
+    open: "Open",
+    close: "Close",
+    resize: "Resize",
+    movement: "Move",
+    swap: "Swap",
+  };
+  const capabilityFor = (action) => (action === "swap" ? "movement" : action);
+  let browseAction = "open";
   let customs = {},
     managed = {},
     warnings = [],
@@ -37,6 +46,10 @@ function createFxLibrary({
     review = null,
     busy = false,
     revision = 0;
+  function select(doc, action, play = false) {
+    selectDocument(doc, action);
+    if (play && Object.hasOwn(actionNames, action)) preview(action);
+  }
   function readBrowserProfiles() {
     customs = {};
     warnings = [];
@@ -81,6 +94,14 @@ function createFxLibrary({
   const equal = (a, b) =>
     isStyle(a) && isStyle(b) && Object.keys(catalog.defaults).every((key) => a[key] === b[key]);
   const fragmentChoices = nativeOptions?.fragment_choices || {};
+  function chooseFragment(id) {
+    nativeSettings.fragment_preset = id || null;
+    if (id) {
+      const doc = profile();
+      doc.actions.movement = structuredClone(fragmentChoices[id].effect);
+      select(doc, "movement", true);
+    } else sessionChanged();
+  }
   function sessionName(bundle, fallback) {
     if (!bundle) return fallback;
     const item = nativeListing?.bundles.find((row) => row.bundle_id === bundle);
@@ -94,23 +115,18 @@ function createFxLibrary({
     element("native-fragment-preset").append(option);
   }
   element("native-fragments").hidden = !native || nativeOptions.variant !== "fragment";
-  element("native-fragment-preset").onchange = () => {
-    nativeSettings.fragment_preset = element("native-fragment-preset").value || null;
-    if (nativeSettings.fragment_preset) {
-      const doc = profile();
-      doc.actions.movement = structuredClone(
-        fragmentChoices[nativeSettings.fragment_preset].effect,
-      );
-      select(doc, "movement");
-    } else sessionChanged();
-  };
+  element("native-fragment-preset").onchange = () =>
+    chooseFragment(element("native-fragment-preset").value);
   const actionEffects = (doc) =>
-    doc.actions || {
-      open: normalized(doc.effect),
-      close: normalized(doc.effect),
-      resize: doc.effect.resize ? normalized(doc.effect) : null,
-      movement: null,
-    };
+    doc.actions
+      ? { swap: null, ...doc.actions }
+      : {
+          open: normalized(doc.effect),
+          close: normalized(doc.effect),
+          resize: doc.effect.resize ? normalized(doc.effect) : null,
+          movement: null,
+          swap: null,
+        };
   function profile() {
     const doc = getDocument();
     return {
@@ -122,6 +138,77 @@ function createFxLibrary({
       ...(doc.pointer ? { pointer: structuredClone(doc.pointer) } : {}),
     };
   }
+  const actionLabels = {
+    open: "Choose an opening style",
+    close: "Choose a closing style",
+    resize: "Choose a resize style",
+    movement: "Choose a move style",
+    swap: "Choose a swap style",
+    combo: "Choose a complete combo",
+  };
+  function chooseBrowseAction(action) {
+    browseAction = action;
+    if (action !== "combo" && element("library-collection").value === "customs")
+      element("library-collection").value = "recommended";
+    syncBrowse();
+    cards();
+    if (action !== "combo") preview(action);
+  }
+  for (const [action, label] of Object.entries({ ...actionNames, combo: "Combos" })) {
+    const button = document.createElement("button");
+    button.dataset.libraryAction = action;
+    const caption = document.createElement("strong");
+    caption.textContent = label;
+    const selection = document.createElement("small");
+    button.append(caption, selection);
+    button.onclick = () => chooseBrowseAction(action);
+    element("library-actions").append(button);
+  }
+  function styleName(effect) {
+    return title(
+      Object.keys(styles).find((id) => equal(normalized(styles[id].effect), effect)) ||
+        effect.family,
+    );
+  }
+  function syncBrowse() {
+    const actions = actionEffects(getDocument());
+    for (const button of element("library-actions").children) {
+      const action = button.dataset.libraryAction;
+      button.setAttribute("aria-pressed", String(action === browseAction));
+      button.querySelector("small").textContent =
+        action === "combo"
+          ? "All actions together"
+          : action === "movement" && nativeSettings.fragment_preset
+            ? fragmentChoices[nativeSettings.fragment_preset].name
+            : isStyle(actions[action])
+              ? styleName(actions[action])
+              : title(actionMode(actions[action]));
+    }
+    element("library-heading").textContent = actionLabels[browseAction];
+    element("library-action-choices").hidden = browseAction === "combo";
+    for (const choice of ["preserve", "off"])
+      element("library-" + choice).setAttribute(
+        "aria-pressed",
+        String(actionMode(actions[browseAction]) === choice),
+      );
+    element("library-action-help").textContent =
+      browseAction === "combo"
+        ? "A combo replaces all the choices shown above. Select an action to mix in another style."
+        : browseAction === "swap"
+          ? native && !nativeOptions.swap_supported
+            ? "Preview and save a separate swap style here. Applying it requires an updated NiriFX compositor; this retained build shares the Move setting."
+            : "For Swap window left/right commands. Preserve keeps the underlying swap setting, which follows Move when unset. Dragging and column reordering use Move."
+          : browseAction === "movement" && native
+            ? "Choose a style to preview its material. Continuous fragments follow your gestures on the NiriFX desktop."
+            : "Click a style to preview it. Your other choices stay the same.";
+  }
+  for (const choice of ["preserve", "off"])
+    element("library-" + choice).onclick = () => {
+      const doc = profile();
+      doc.actions[browseAction] = choice === "off" ? "off" : null;
+      select(doc, browseAction, true);
+    };
+  element("library-replay").onclick = () => preview(browseAction);
   function selectOptions(select, action, effect) {
     const option = (value, text) => {
       const node = document.createElement("option");
@@ -132,7 +219,10 @@ function createFxLibrary({
     if (!select.options.length) {
       option("", "Choose a style");
       for (const [id, doc] of Object.entries(styles))
-        if (["open", "close"].includes(action) || catalog.families[doc.effect.family][action])
+        if (
+          ["open", "close"].includes(action) ||
+          catalog.families[doc.effect.family][capabilityFor(action)]
+        )
           option(id, doc.name);
     }
     select.querySelector('[value="custom"]')?.remove();
@@ -172,7 +262,7 @@ function createFxLibrary({
           : mode.value === "off"
             ? "off"
             : null;
-      select(doc, action);
+      select(doc, action, true);
     };
     const picker = document.createElement("select");
     picker.id = "combo-" + action;
@@ -187,7 +277,7 @@ function createFxLibrary({
         id = picker.value;
       if (id === "custom") return;
       doc.actions[action] = id ? normalized(styles[id].effect) : null;
-      select(doc, action);
+      select(doc, action, true);
     };
     row.append(caption, mode, picker, tune);
     element("combo-actions").append(row);
@@ -253,7 +343,8 @@ function createFxLibrary({
     element("editor-pointer-summary").textContent =
       "Pointer drag: " + summary + ". Try it from the Library or Preview combo.";
     element("try-pointer").disabled = !settings || settings.strength <= 0;
-    element("pointer-export-note").hidden = element("pointer-kdl").hidden = !settings;
+    element("pointer-export-note").hidden = element("pointer-kdl").hidden =
+      !settings && !doc.actions?.movement && !doc.actions?.swap;
     const consentValue = JSON.stringify(settings || null);
     if (pointerConsentValue !== consentValue) element("activate-pointer").checked = false;
     pointerConsentValue = consentValue;
@@ -301,6 +392,7 @@ function createFxLibrary({
     };
   element("edit-pointer").onclick = () => {
     view(false);
+    element("combo-options").open = true;
     element("pointer-settings").scrollIntoView({ block: "nearest" });
     element(element("combo-pointer").disabled ? "combo-pointer-mode" : "combo-pointer").focus();
   };
@@ -311,6 +403,11 @@ function createFxLibrary({
     element("library-collection").append(option);
   }
   function cards() {
+    const results = element("library-results"),
+      scroll = results.scrollTop;
+    const focused = results.contains(document.activeElement)
+      ? { ...document.activeElement.dataset }
+      : null;
     const group = element("library-collection").value,
       search = element("library-search").value.trim().toLowerCase(),
       entries =
@@ -320,10 +417,20 @@ function createFxLibrary({
             ? { ...builtins, ...customs }
             : builtins;
     const list = Object.entries(entries).filter(([id, doc]) => {
+      if (browseAction === "combo") {
+        if (!doc.actions && group !== "customs") return false;
+      } else if (
+        doc.actions ||
+        (["resize", "movement", "swap"].includes(browseAction) &&
+          !catalog.families[doc.effect.family][capabilityFor(browseAction)])
+      )
+        return false;
       const effects = Object.values(actionEffects(doc)).filter(isStyle),
         text = [doc.name, id, ...effects.map((effect) => effect.family)].join(" ").toLowerCase();
       if (search && !text.includes(search)) return false;
       if (search && group === "recommended") return true;
+      if (group === "recommended" && ["movement", "swap"].includes(browseAction))
+        return catalog.collections.movement.styles.includes(id);
       if (group === "recommended")
         return (
           Object.hasOwn(catalog.recommended_profiles, id) ||
@@ -352,15 +459,41 @@ function createFxLibrary({
           Number(actionEffects(a).open?.family === "fragments"),
       );
     element("library-results").replaceChildren();
-    element("library-empty").hidden = list.length > 0;
+    const continuous =
+      browseAction === "movement" &&
+      nativeOptions?.variant === "fragment" &&
+      ["recommended", "all"].includes(group)
+        ? Object.entries(fragmentChoices).filter(([id, choice]) =>
+            [id, choice.name, "continuous fragments"].join(" ").toLowerCase().includes(search),
+          )
+        : [];
+    element("library-empty").hidden = list.length + continuous.length > 0;
     element("library-warning").textContent = [...new Set(warnings)].join(" ");
+    for (const [id, choice] of continuous) {
+      const button = document.createElement("button");
+      button.className = "library-look";
+      button.dataset.fragment = id;
+      button.setAttribute("aria-pressed", String(nativeSettings.fragment_preset === id));
+      const name = document.createElement("strong");
+      name.textContent = choice.name;
+      const detail = document.createElement("small");
+      detail.textContent = "Continuous fragments · " + choice.description;
+      button.append(name, detail);
+      button.onclick = () => chooseFragment(id);
+      element("library-results").append(button);
+    }
     for (const [id, doc] of list) {
       const button = document.createElement("button");
       button.className = "library-look";
       button.dataset.style = id;
       button.setAttribute(
         "aria-pressed",
-        String(JSON.stringify(doc) === JSON.stringify(getDocument())),
+        String(
+          browseAction === "combo"
+            ? sameDocument(doc, getDocument())
+            : !(browseAction === "movement" && nativeSettings.fragment_preset) &&
+                equal(actionEffects(getDocument())[browseAction], normalized(doc.effect)),
+        ),
       );
       const name = document.createElement("strong");
       name.textContent = doc.name;
@@ -368,14 +501,24 @@ function createFxLibrary({
         a = actionEffects(doc);
       detail.textContent = doc.actions
         ? `${isStyle(a.open) ? title(a.open.family) : title(actionMode(a.open))} → ${isStyle(a.close) ? title(a.close.family) : title(actionMode(a.close))} combo`
-        : title(doc.effect.family);
+        : title(doc.effect.family) +
+          (["movement", "swap"].includes(browseAction) ? " · Timed movement" : "");
       if (Object.hasOwn(catalog.recommended_profiles, id))
         detail.textContent += " · " + catalog.recommended_profiles[id];
       if (id.startsWith("custom-") && !Object.hasOwn(managed, id))
         detail.textContent += " · from shell";
       button.append(name, detail);
-      button.onclick = () => select(core.normalizePreset(doc), "open");
+      button.onclick = () => {
+        if (browseAction === "combo") select(core.normalizePreset(doc), "open", true);
+        else {
+          const chosen = profile();
+          if (browseAction === "movement") nativeSettings.fragment_preset = null;
+          chosen.actions[browseAction] = normalized(doc.effect);
+          select(chosen, browseAction, true);
+        }
+      };
       const star = document.createElement("button");
+      star.dataset.favorite = id;
       star.textContent = favorites().includes(id) ? "★" : "☆";
       star.setAttribute(
         "aria-label",
@@ -393,9 +536,20 @@ function createFxLibrary({
     const saved = selectedSaved();
     for (const id of ["copy-profile", "rename-profile", "remove-profile"])
       element(id).hidden = !saved;
+    if (focused) {
+      // Rebuilding cards must not strand keyboard users or jump a long catalog
+      // back to its beginning after a selection or favorite changes.
+      const key = ["style", "fragment", "favorite"].find((key) => focused[key]);
+      if (key)
+        [...results.querySelectorAll("button")]
+          .find((button) => button.dataset[key] === focused[key])
+          ?.focus({ preventScroll: true });
+    }
+    results.scrollTop = scroll;
   }
   function view(editor) {
     element("library-panel").hidden = editor;
+    element("library-actions").hidden = editor;
     element("editor-panel").hidden = !editor;
     element("show-library").setAttribute("aria-pressed", String(!editor));
     element("show-editor").setAttribute("aria-pressed", String(editor));
@@ -406,7 +560,12 @@ function createFxLibrary({
     sync();
   };
   element("show-editor").onclick = () => view(true);
-  element("library-search").oninput = element("library-collection").onchange = cards;
+  element("library-search").oninput = cards;
+  element("library-collection").onchange = () => {
+    if (element("library-collection").value === "customs") browseAction = "combo";
+    syncBrowse();
+    cards();
+  };
   function sameStyle() {
     const doc = profile(),
       chosen = element("combo-same").value,
@@ -416,13 +575,16 @@ function createFxLibrary({
     const unsupported = [];
     for (const action of Object.keys(actionNames)) {
       if (!isStyle(doc.actions[action])) continue;
-      if (["resize", "movement"].includes(action) && !catalog.families[effect.family][action]) {
+      if (
+        ["resize", "movement", "swap"].includes(action) &&
+        !catalog.families[effect.family][capabilityFor(action)]
+      ) {
         unsupported.push(actionNames[action]);
         continue;
       }
       doc.actions[action] = { ...effect };
     }
-    select(doc, "open");
+    select(doc, "open", true);
     if (unsupported.length)
       element("status").textContent =
         `${title(effect.family)} does not support ${unsupported.join(" and ")}. Their selected styles were kept.`;
@@ -463,7 +625,7 @@ function createFxLibrary({
     element("native-fragment-preset").value = fragmentPreset || "";
     element("native-fragment-description").textContent = fragmentPreset
       ? fragmentChoices[fragmentPreset].description +
-        " This selects its square movement material and continuous response. The canvas previews the material; continuous native motion requires your next login."
+        " The canvas previews its material only; the continuous response runs on your NiriFX desktop."
       : "Preserve keeps the base movement. A movement Style uses its timed effect; Off disables movement animation. Choosing a continuous preset explicitly replaces the movement style. Editing that style clears the continuous preset.";
     element("selection-name").textContent = doc.name;
     element("selection-actions").textContent =
@@ -497,6 +659,7 @@ function createFxLibrary({
       element("combo-" + action).disabled = !style;
       element("combo-" + action + "-tune").disabled = !style;
     }
+    syncBrowse();
     cards();
   }
   async function post(path, body) {
@@ -533,6 +696,13 @@ function createFxLibrary({
     element("active-look").textContent = (native ? "Next login: " : "Active: ") + data.active_name;
     if (native) {
       nativeListing = data.native;
+      const live = nativeListing.live;
+      element("native-session-help").textContent = live?.ready
+        ? "Apply your choices directly to this desktop and keep them for your next NiriFX login."
+        : "Choose your effects here and select them for your next NiriFX login.";
+      element("review-selection").textContent = live?.ready
+        ? "Review & apply"
+        : "Review next login";
       const selection = nativeListing.selection;
       element("native-base").textContent =
         "Editing bundle: " +
@@ -551,7 +721,9 @@ function createFxLibrary({
       element("native-running").textContent =
         "Running: " +
         (running.status === "matched"
-          ? sessionName(running.bundle_id, "NiriFX session")
+          ? live && !live.ready
+            ? "NiriFX; effects not confirmed"
+            : sessionName(live?.loaded_bundle || running.bundle_id, "NiriFX session")
           : running.status === "external"
             ? "Another Niri session"
             : running.status === "offline"
@@ -562,7 +734,8 @@ function createFxLibrary({
         running.status +
         (running.bundle_id ? " · " + running.bundle_id : "") +
         ". " +
-        running.detail;
+        running.detail +
+        (live?.detail ? " " + live.detail : "");
       element("native-bundles").textContent =
         "Next-login bundle: " +
         (selection.selected || "None") +
@@ -581,7 +754,10 @@ function createFxLibrary({
   async function operation(work) {
     if (busy) return;
     busy = true;
-    element("library-panel").inert = element("editor-panel").inert = true;
+    element("library-actions").inert =
+      element("library-panel").inert =
+      element("editor-panel").inert =
+        true;
     element("error").textContent = "";
     for (const id of [
       "review-selection",
@@ -604,7 +780,10 @@ function createFxLibrary({
         element("error").textContent = error.message;
       });
       busy = false;
-      element("library-panel").inert = element("editor-panel").inert = false;
+      element("library-actions").inert =
+        element("library-panel").inert =
+        element("editor-panel").inert =
+          false;
       element("review-selection").disabled =
         element("store-profile").disabled =
         element("copy-profile").disabled =
@@ -637,13 +816,28 @@ function createFxLibrary({
       if (revision !== reviewedRevision)
         throw new Error("Selection changed. Review again before applying.");
       review = { selection, expected: plan.plan_sha256 };
-      showReview(plan, (native ? "Select for next login: " : "Apply ") + doc.name + ". ");
+      showReview(
+        plan,
+        (native && plan.activation !== "live-and-next-login"
+          ? "Select for next login: "
+          : "Apply ") +
+          doc.name +
+          ". ",
+      );
     });
   function showReview(plan, message) {
+    const live = native && plan.activation === "live-and-next-login";
+    element("apply-selection").textContent = native
+      ? live
+        ? "Apply to desktop"
+        : "Select for next login"
+      : "Apply these changes";
     element("review-summary").textContent =
       message +
       (native
-        ? "Your current desktop stays unchanged. The previous selection stays available for rollback."
+        ? live
+          ? "Update this desktop and your next NiriFX login. Your previous selection stays available for rollback."
+          : "Your current desktop stays unchanged. The previous selection stays available for rollback."
         : plan.notes.join(" "));
     element("review-file-details").open = !native;
     element("review-notes").hidden = !native;
@@ -654,11 +848,12 @@ function createFxLibrary({
       row.textContent = file.action + ": " + file.path;
       element("review-files").append(row);
     }
-    if (!plan.changes.length)
+    if (!plan.changes.length && !live)
       element("review-summary").textContent = native
         ? "This next-login selection is already stored. The running session stays unchanged."
         : "This look is already applied.";
     element("apply-review").hidden = false;
+    element("apply-review").scrollIntoView({ block: "nearest" });
   }
   element("apply-selection").onclick = () =>
     operation(async () => {
@@ -668,9 +863,13 @@ function createFxLibrary({
         : await post("/apply", review);
       invalidate();
       element("status").textContent = native
-        ? result.selection?.selected === null
-          ? "No managed version is selected. Your current session stays unchanged. Choose stock Niri at the next login."
-          : "Selected for next login. Your current session stays unchanged. Log out when ready and choose NiriFX."
+        ? result.live?.status === "applied"
+          ? "Applied to this desktop and saved for your next NiriFX login."
+          : result.live && ["failed", "unconfirmed", "unavailable"].includes(result.live.status)
+            ? "Saved for next login. The desktop update was not confirmed. " + result.live.detail
+            : result.selection?.selected === null
+              ? "No managed version is selected. Your current session stays unchanged. Choose stock Niri at the next login."
+              : "Selected for next login. Your current session stays unchanged. Log out when ready and choose NiriFX."
         : "Applied. Use Restore previous to return to your earlier settings.";
     });
   element("cancel-review").onclick = invalidate;
@@ -830,7 +1029,12 @@ function createFxLibrary({
         if (revision !== reviewedRevision)
           throw new Error("Selection changed. Review rollback again.");
         review = { rollback: true, expected: plan.plan_sha256 };
-        showReview(plan, "Restore the previous next-login selection. ");
+        showReview(
+          plan,
+          plan.activation === "live-and-next-login"
+            ? "Restore your previous effects. "
+            : "Restore the previous next-login selection. ",
+        );
         return;
       }
       await post("/restore", {});
@@ -842,7 +1046,7 @@ function createFxLibrary({
     nativeSettings.fragment_preset = nativeListing.recipe.fragment_preset;
     select(nativeListing.recipe.document, "open");
     element("status").textContent =
-      "Reopened the next-login recipe. Review any edits before selecting them.";
+      "Reopened your saved choices. Review any edits before applying them.";
   };
   element("native-session").hidden = !native;
   if (native) {
@@ -850,11 +1054,12 @@ function createFxLibrary({
     element("review-selection").textContent = "Review next login";
     element("restore-selection").textContent = "Review rollback";
     element("apply-selection").textContent = "Select for next login";
+    element("native-reopen").textContent = "Reopen saved choices";
     document.querySelector('[data-mode="movement"] small').textContent = "shader preview";
     element("pointer-kdl").textContent = "Export NiriFX session config";
   }
   element("movement-availability").textContent = native
-    ? "Preserve keeps your saved baseline; Style and Off override that action. Move and swap currently share one effect. Your running desktop stays unchanged."
+    ? "Move controls normal movement and dragging. Swap overrides explicit left/right window swaps. Continuous fragments follow your gestures on the desktop; the canvas previews their material only."
     : catalog.connection?.target === "standalone"
       ? "Movement can be designed here. Applying it requires a matching NiriFX session with action-preservation support and verified running support."
       : catalog.connection
@@ -867,7 +1072,7 @@ function createFxLibrary({
   element("pointer-availability").textContent = !catalog.connection
     ? "Save pointer settings here, then use the local app with a verified pointer-enabled compositor to apply them."
     : native
-      ? "Pointer choices are stored for the next login and validated against the retained build. This does not verify the running renderer."
+      ? "Pointer choices are validated against your NiriFX build. Review shows whether they can be applied to this desktop or saved for your next login."
       : pointerReady
         ? "This running compositor supports pointer drag. Select settings, then explicitly enable them in Review & apply."
         : catalog.connection.pointer?.target_detail ||

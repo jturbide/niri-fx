@@ -81,19 +81,28 @@ are developer regression controls, not separate consumer editions.
       until packages provide it.
 - [ ] Install the NiriFX app, full compositor and login entry through one supported
       package workflow, keeping stock Niri available.
-- [ ] Start Library from the selected session with its configuration owner detected
-      and a simple first-use flow.
+- [x] Detect a verified managed session before shell adapters and present direct
+      per-action preset choices with immediate previews.
+- [x] Apply reviewed effects and same-build rollback directly to the running
+      managed session, with configuration-load confirmation and next-login storage.
 - [ ] Load normal user/shell settings beneath a NiriFX-owned effect overlay and
       follow their updates, retaining a validated full snapshot for recovery.
       The current frozen baseline requires a new import for other desktop changes.
 - [x] Present recommended combos and per-action presets first; keep configuration
-      paths, build identities and technical controls in advanced details.
+      paths, compositor build identities and technical controls in advanced details.
+- [x] Identify the loaded Studio version and UI build in local, web and offline
+      modes, with update guidance separate from compositor identity.
 - [x] Offer the same preset/action choices through CLI and agent discovery.
+- [x] Share verified live Apply and rollback between Studio, CLI and agents,
+      binding each desktop reload to its reviewed session and configuration.
 - [ ] Version a portable session recipe that also carries continuous fragment
       controls, with import/export in local and online Studio. Current portable
       profiles retain the action styles; native response choices stay with the bundle.
-- [ ] Add independent move and swap choices once the compositor exposes reliable
-      action identity; until then label their shared setting explicitly.
+- [x] Verify independent Move and Swap choices through explicit compositor action
+      routing, portable profiles, Studio previews, reviewed Apply and old-build refusal.
+- [ ] Extend independent Swap to additional exchange gestures only when their
+      action boundaries can be identified reliably; keep ordinary dragging and
+      column reordering on Move in the meantime.
 - [ ] Verify physical login, shell startup, capture, input, suspend and rollback
       for the declared package targets before advertising desktop support.
 - [ ] Publish the installation/support matrix with exact known limits, without
@@ -153,6 +162,27 @@ are developer regression controls, not separate consumer editions.
 - [ ] Publish signed artifacts and source/patch provenance for declared
       distributions and architectures without holding normal system updates.
 
+### Coherent tool upgrades
+
+Goal: update CLI, Studio and the login launcher together, retaining a working
+version for recovery. The [managed tool workflow](docs/tool-updates.md) migrates
+existing entries once, then switches their shared runtime selection.
+
+- [x] Review installed tool versions, launcher ownership and supported bundle
+      formats in one update plan.
+- [x] Review an installed persistent replacement runtime and validate selected,
+      rollback and baseline bundles before changing launcher references.
+- [x] Update owned CLI, Studio and login references through one recoverable
+      transaction; refuse stale plans and externally changed entries.
+- [x] Retain the previous runtime and provide reviewed rollback, including
+      recovery from interrupted display-manager registration.
+- [x] Verify temporary-account adoption, installed runtime upgrades, incompatible
+      receipts, interrupted registration and rollback without desktop activation.
+- [ ] Include environment creation, shared tool setup and login registration in
+      supported distribution packages and an accessible update UI.
+- [ ] Verify the migrated login entry on supported physical desktops, including
+      system Python upgrades and return to stock Niri.
+
 The [desktop update guide](docs/desktop-updates.md) separates current tools
 from this planned package/session workflow. Build identity is not runtime or
 physical acceptance; the native capture and input gates remain required.
@@ -162,7 +192,7 @@ before being advertised as supported downloads.
 ## Consistent action selection
 
 Goal: choose Preserve, a style or Off independently for each supported action.
-Move and swap share the compositor's movement action. Preserve inherits the
+Updated builds distinguish explicit left/right swaps from normal movement. Preserve inherits the
 configuration underneath NiriFX, including existing user or shell customizations.
 
 - [x] Define Preserve / Style / Off for opening, closing, resize, movement and
@@ -190,6 +220,11 @@ expensive software-WebGL matrices.
       export-parity and save-flow coverage.
 - [x] Measure hosted runner elapsed time with separate timings for each rendering job.
 - [ ] Inspect failed-shard diagnostics on a hosted rendering failure.
+- [x] Harden browser startup diagnostics and cleanup: terminate owned helper
+      processes, distinguish process exit from open pipes, and retain the original
+      startup error when cleanup also fails.
+- [ ] Bind recording provenance to the loaded preview and reject source changes
+      during capture, so a clip cannot claim a later source revision.
 
 ## Stable 1.0 acceptance
 

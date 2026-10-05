@@ -97,6 +97,7 @@ def make_server(arguments, effect):
             "view": "editor" if getattr(arguments, "edit", False) else "library",
         }
         if target == "native":
+            from .capabilities import swap_capability
             from .native_customization import fragment_choices
 
             value["native"] = {
@@ -104,6 +105,8 @@ def make_server(arguments, effect):
                 "variant": library.native_base["variant"],
                 "recipe": library.native_base.get("customization") if not native_document else None,
                 "fragment_choices": fragment_choices(),
+                "swap_supported": library.native_base.get("swap_supported", False)
+                and swap_capability(library.native_base["binary"])["status"] == "supported",
             }
         else:
             value["pointer"] = pointer_capability(
@@ -294,7 +297,7 @@ def serve(arguments, effect):
     with make_server(arguments, effect) as server:
         print(f"NiriFX Studio: {server.session_url}", flush=True)
         print(
-            "Choose a look, review it, then Select for next login. Your current session stays unchanged. Ctrl+C stops the app."
+            "Choose effects for each action, preview, then review and apply. A verified matching NiriFX session supports live Apply; otherwise choices are saved for the next login. Ctrl+C stops the app."
             if server.save_target == "native"
             else "Choose a look in Library or customize it in Studio. Review & apply activates effects. Ctrl+C stops the app.",
             flush=True,

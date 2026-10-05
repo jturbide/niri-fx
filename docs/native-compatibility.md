@@ -7,7 +7,7 @@ patch stack. Build that complete session candidate with:
 python3 scripts/build-nirifx-session.py
 ```
 
-This command always uses all three patches, upstream desktop features, release
+This command always uses the full four-patch stack, upstream desktop features, release
 optimization and focused native regressions. It reuses the isolated builder;
 there is no feature-subset choice or automatic installation. The
 [compatibility matrix](../experimental/native-compatibility.json) describes
@@ -26,10 +26,10 @@ Adding a matrix row alone does not establish compatibility.
 
 | Case | Ordered patch stack | Cargo feature policy |
 | --- | --- | --- |
-| `nirifx-desktop` (default) | Movement, pointer wobble, continuous fragments | Upstream defaults |
+| `nirifx-desktop` (default) | Movement, pointer wobble, continuous fragments, independent swaps | Upstream defaults |
 | `movement-desktop` (internal control) | Movement | Upstream defaults |
 | `pointer-desktop` (internal control) | Movement, pointer wobble | Upstream defaults |
-| `fragment-minimal` (internal control) | Movement, pointer wobble, continuous fragments | `--no-default-features` |
+| `fragment-minimal` (internal control) | Movement, pointer wobble, continuous fragments, independent swaps | `--no-default-features` |
 
 Desktop features include D-Bus, systemd and GNOME screencasting support, with
 the PipeWire feature enabled by the latter. The runner checks Cargo's actual
@@ -45,7 +45,8 @@ produced by `build-nirifx-session.py`.
 Every run first checks clean patch application for unmodified, movement,
 pointer and fragment variants. Compile cases reuse the existing builder's
 configuration, layout, animation, resize, input ownership and renderer-helper
-regressions, plus the pointer and fragment tests applicable to each stack.
+regressions, plus the pointer, fragment and explicit-swap routing tests applicable
+to each stack.
 They do not launch a compositor or exercise GPU rendering and capture.
 
 ## Run a check

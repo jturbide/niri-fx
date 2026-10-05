@@ -8,32 +8,32 @@ window content. It cannot change desktop settings or capture your windows.
 ## Start from a showcase
 
 Opening [Web Studio](https://jturbide.github.io/niri-fx/studio/) directly starts in
-Library. Choose a recommended look, mix styles per action, or use a shared style.
-The first five recommendations are complete combos: Fragment Flow, Soft Landing,
-Ribbon Current, Playful Motion and Geometric Flow. Fragments appear first;
-single styles and coordinated action sets remain available below them.
-**Customize in Studio** opens detailed controls. **Save to My profiles** uses
-this browser's local storage; **Export JSON** keeps a portable copy. Local Apply
+Library. Choose Open, Close, Resize, Move or Swap, then click a style to preview
+and assign it. **Combos** offers complete looks: Fragment Flow, Soft Landing,
+Ribbon Current, Playful Motion and Geometric Flow. **Customize your combo** lets
+you share a style across selected actions; **Advanced editor** opens detailed
+controls. **Save to My profiles** uses
+this browser's local storage; **Download JSON** keeps a portable copy. Local Apply
 and Restore controls are absent from the hosted page. See [Library](library.md).
 
 Press **Preview combo** to try the selected opening and closing effects as one
 sequence, with an intact hold between them. Each action uses its own style and
-timing. Explicitly selected resize or experimental movement effects are included;
+timing. Selected Resize, Move and Swap effects are included;
 an unset optional action is skipped. This works online and in the installed app
 without applying settings or enabling an optional action.
 
-Movement previews use a synthetic shader path. Actual move/swap effects need the
-verified experimental Niri compositor; Web Studio cannot provide compositor
+Movement previews use a synthetic shader path; Swap shows two sample windows.
+Actual Move/Swap effects need a matching NiriFX compositor; Web Studio cannot provide compositor
 hooks. Stock desktop springs are described and recorded separately in the
 [desktop motion guide](desktop-motion.md).
 
-Library also stores experimental **Pointer drag** presets and custom strength,
+Library also stores **Pointer drag** presets and custom strength,
 damping and frequency. Online Studio can edit, share and download these settings;
 combo playback includes a scripted drag when strength is above zero. **Try pointer
 drag** lets you drag the synthetic window with native spring and shader math.
 These previews do not verify compositor support. **Export stock Niri config** omits
-NiriFX session nodes. **Export NiriFX session config** includes selected pointer and
-movement settings for the matching native build. Read the
+NiriFX session nodes. **Export NiriFX session config** includes selected pointer,
+Move and Swap settings for the matching native build. Read the
 [pointer guide](pointer-wobble.md) before using that configuration.
 
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
@@ -46,7 +46,7 @@ movement settings for the matching native build. Read the
    concept cards say **Edit open/close style**: Web Studio does not run a compositor.
 3. Adjust the controls. Use **Basic** for the main look or **Advanced** for detailed
    tuning. **Pause** and the timeline let you inspect a single frame.
-4. **Export JSON** keeps editable settings; **Export stock Niri config** exports stock shaders.
+4. **Download JSON** keeps editable settings; **Export stock Niri config** exports stock shaders.
    Neither download activates an effect. The config preserves existing resize
    settings unless the document selects a resize effect, as the labelled resize profiles do.
 
@@ -68,7 +68,7 @@ For a file exported by Studio, run this from the source checkout, using the actu
 path to your download:
 
 ```sh
-python3 -m niri_fx studio --custom /path/to/nirifx-preset.json --target standalone
+python3 -m niri_fx studio --custom /path/to/nirifx-preset.json
 ```
 
 You can also choose **Import preset** inside local Studio. To activate an effect,
@@ -104,7 +104,13 @@ Previews start paused when someone opens the link.
 | Exported `preview` HTML | Yes, without a server | No |
 
 The hosted page is a static GitHub Pages site. It has no analytics or preset
-backend. For use without hosting, generate the self-contained editor:
+backend. Its footer shows the version and **UI build**, which identifies the
+editor and built-in catalog independently of your settings. Compare it with
+local Studio when checking whether both use the same UI. Reload the web page
+after an update; an exported HTML file needs to be regenerated. This identity
+does not describe or verify a running compositor.
+
+For use without hosting, generate the self-contained editor:
 
 ```sh
 python3 -m niri_fx preview --preset explosion --output /tmp/nirifx-studio.html

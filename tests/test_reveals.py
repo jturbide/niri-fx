@@ -1,7 +1,9 @@
+import os
 import tempfile
 import unittest
 from argparse import Namespace
 from pathlib import Path
+from unittest.mock import patch
 
 from niri_fx.cli import parser, selected_effect
 from niri_fx.effects import FAMILIES, PRESETS, movement_shader, resize_shader
@@ -54,9 +56,13 @@ class RevealTests(unittest.TestCase):
                 ):
                     render(effect)
 
-    def test_studio_targets_are_explicit_and_auto_requires_an_installed_helper(self):
-        # The selection affects the first UI save action, never compositor config.
-        with tempfile.TemporaryDirectory() as directory:
+    def test_studio_targets_are_explicit_and_auto_shell_fallback_requires_a_helper(self):
+        # Exercise shell fallback without inheriting a real managed desktop.
+        # Managed-session precedence is covered by test_native_library.
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            patch.dict(os.environ, {"NIRI_SOCKET": ""}),
+        ):
             root = Path(directory)
             args = Namespace(
                 port=0, preset="balanced", inir_root=root, registry=root / "presets.json"

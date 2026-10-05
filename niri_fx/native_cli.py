@@ -1,4 +1,4 @@
-"""Explicit native-session preparation and next-login selection commands."""
+"""Reviewed native-session preparation, selection and explicit desktop reloads."""
 
 import json
 import os
@@ -69,15 +69,69 @@ def add_parser(commands):
         help="Explicitly replace movement with this continuous response and its matching material",
     )
     rollback = actions.add_parser("rollback", help="Restore the previous next-login selection")
+    for command in (configure, rollback):
+        command.add_argument(
+            "--live",
+            action="store_true",
+            help="Also reload the verified NiriFX desktop; Apply requires --expect-plan",
+        )
     entry = actions.add_parser(
         "session-entry", help="Stage a login launcher and display-manager entry"
     )
     entry.add_argument("--name", default="NiriFX", help="Login chooser label")
-    for command in (status, stage, install, select, configure, rollback, entry):
+    tools_status = actions.add_parser(
+        "tools-status", help="Inspect shared CLI, Studio and login runtime selection"
+    )
+    tools_update = actions.add_parser(
+        "tools-update", help="Review this installed runtime as the shared NiriFX tool version"
+    )
+    tools_update.add_argument(
+        "--bootstrap-runtime",
+        type=Path,
+        help="Existing trusted virtual environment to retain during first login-entry migration",
+    )
+    tools_update.add_argument("--cli-path", type=Path, help="Managed CLI launcher location")
+    tools_update.add_argument(
+        "--legacy-tools-runtime",
+        type=Path,
+        help="Trusted existing CLI/Studio environment if it differs from the bootstrap login runtime",
+    )
+    tools_update.add_argument("--desktop-path", type=Path, help="Managed Studio desktop file")
+    tools_rollback = actions.add_parser(
+        "tools-rollback", help="Review restoring the previous compatible NiriFX tool runtime"
+    )
+    for command in (tools_status, tools_update, tools_rollback):
+        command.add_argument(
+            "--registered-entry",
+            type=Path,
+            required=command is not tools_status,
+            help="Display manager's NiriFX desktop file to verify without modifying it",
+        )
+    for command in (
+        status,
+        stage,
+        install,
+        select,
+        configure,
+        rollback,
+        entry,
+        tools_status,
+        tools_update,
+        tools_rollback,
+    ):
         command.add_argument(
             "--root", type=Path, default=default_root(), help="Native session storage"
         )
-    for command in (stage, install, select, configure, rollback, entry):
+    for command in (
+        stage,
+        install,
+        select,
+        configure,
+        rollback,
+        entry,
+        tools_update,
+        tools_rollback,
+    ):
         command.add_argument("--apply", action="store_true", help="Write the reviewed changes")
         command.add_argument(
             "--expect-plan", help="Require this reviewed plan_sha256 when applying"
@@ -102,6 +156,41 @@ def run(args):
     root = args.root.expanduser().absolute()
     if getattr(args, "expect_plan", None) and not args.apply:
         raise ValueError("--expect-plan requires --apply")
+    if action.startswith("tools-"):
+        from . import native_tools
+
+        if action == "tools-status":
+            result = native_tools.status(root, registered_entry=args.registered_entry)
+        else:
+            if args.apply and not args.expect_plan:
+                raise ValueError("Tool runtime changes require --expect-plan from a fresh review")
+            plan = (
+                native_tools.update_plan(
+                    root,
+                    bootstrap_runtime=args.bootstrap_runtime,
+                    legacy_tools_runtime=args.legacy_tools_runtime,
+                    registered_entry=args.registered_entry,
+                    cli_path=args.cli_path,
+                    desktop_path=args.desktop_path,
+                )
+                if action == "tools-update"
+                else native_tools.rollback_plan(root, registered_entry=args.registered_entry)
+            )
+            result = (
+                native_tools.apply_tools(plan, root, expected=args.expect_plan)
+                if args.apply
+                else summarize(plan)
+            )
+            result.pop("restore", None)
+            result["dry_run"] = not args.apply
+        print(json.dumps(result, indent=2))
+        return 0
+    live_requested = getattr(args, "live", False)
+    if live_requested and args.apply and not args.expect_plan:
+        raise ValueError("--live --apply requires --expect-plan from a live review")
+    # Capture the advertised socket once; review and activation must use the
+    # same endpoint even if another component changes the process environment.
+    live_socket = os.environ.get("NIRI_SOCKET") if live_requested else None
     if action == "status":
         result = native_session.status(
             root, socket_path=None if args.offline else os.environ.get("NIRI_SOCKET")
@@ -151,6 +240,13 @@ def run(args):
 
             plan = entry_plan(root, args.name)
             scope = "entry"
+        if live_requested:
+            from .native_live import activation_plan
+
+            live_base = args.bundle if action == "configure" else plan["selection"]["selected"]
+            plan = activation_plan(
+                plan, root, live_base, socket_path=live_socket, require_live=True
+            )
         if args.apply and action == "configure":
             from .native_customization import apply_native
 
@@ -161,6 +257,10 @@ def run(args):
                 if args.apply
                 else summarize(plan)
             )
+        if live_requested and args.apply:
+            from .native_live import activation_result
+
+            result = activation_result(plan, result, root, live_base, socket_path=live_socket)
         # Bundles are retained recovery data. Generic Restore can remove files;
         # the native command exposes selector-only rollback instead.
         result.pop("restore", None)
@@ -176,4 +276,12 @@ def run(args):
             if action in ("select", "configure", "rollback")
             else "Review the staged desktop entry before administrator registration."
         )
+        if live_requested:
+            result["next_step"] = (
+                result["live"]["detail"]
+                if args.apply
+                else "Review these changes, then repeat this command with --apply "
+                "--expect-plan and the reviewed plan_sha256."
+            )
     print(json.dumps(result, indent=2))
+    return 1 if live_requested and args.apply and result["live"]["status"] != "applied" else 0

@@ -2,9 +2,18 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
 import fs from "node:fs";
-import { existsSync, readdirSync } from "node:fs";
+import {
+  chmodSync,
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { test } from "node:test";
 import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
@@ -35,6 +44,95 @@ test("failed Chrome launch cleans its owned profile and reports the cause", asyn
     /Chrome did not start.*ENOENT/,
   );
   assert(!readdirSync(tmpdir()).some((name) => name.startsWith(prefix)));
+});
+
+for (const inheritedStderr of [true, false])
+  test(
+    inheritedStderr
+      ? "startup failure stops owned helpers holding stderr after the leader exits"
+      : "startup failure kills owned helpers that close stderr and ignore SIGTERM",
+    { skip: process.platform === "win32" },
+    async (t) => {
+      const directory = mkdtempSync(join(tmpdir(), "niri-fx-browser-helper-"));
+      const command = join(directory, "browser.mjs");
+      const prefix = "niri-fx-inherited-stderr-" + process.pid + "-";
+      t.after(() => {
+        const pids = join(directory, "pids.json");
+        if (existsSync(pids))
+          for (const pid of JSON.parse(readFileSync(pids))) {
+            try {
+              process.kill(pid, "SIGKILL");
+            } catch (error) {
+              if (error.code !== "ESRCH") throw error;
+            }
+          }
+        rmSync(directory, { recursive: true, force: true });
+        for (const name of readdirSync(tmpdir()).filter((name) => name.startsWith(prefix)))
+          rmSync(join(tmpdir(), name), { recursive: true, force: true });
+      });
+      const helper = `
+    const {writeFileSync} = require('node:fs');
+    process.on('SIGTERM', () => {
+      writeFileSync(${JSON.stringify(join(directory, "helper-signaled"))}, 'SIGTERM');
+      ${inheritedStderr ? "process.exit(0);" : "// Stay alive until the harness escalates to SIGKILL."}
+    });
+    setInterval(() => {}, 1000);
+    process.send('ready');
+  `;
+      writeFileSync(
+        command,
+        `#!${process.execPath}
+import {spawn} from 'node:child_process';
+import {writeFileSync} from 'node:fs';
+const helper = spawn(process.execPath, ['-e', ${JSON.stringify(helper)}], {
+  stdio: ['ignore', 'ignore', ${inheritedStderr ? "process.stderr" : "'ignore'"}, 'ipc']
+});
+writeFileSync(${JSON.stringify(join(directory, "pids.json"))}, JSON.stringify([process.pid, helper.pid]));
+helper.once('message', () => {
+  process.stderr.write('synthetic startup failure with an inherited stderr handle\\n');
+  process.exit(7);
+});
+`,
+      );
+      chmodSync(command, 0o700);
+      const started = Date.now();
+      await assert.rejects(
+        launchBrowser({ command, launchTimeout: 3000, profilePrefix: prefix }),
+        /Chrome did not start \(exit 7\).*synthetic startup failure/s,
+      );
+      assert.equal(readFileSync(join(directory, "helper-signaled"), "utf8"), "SIGTERM");
+      const [group] = JSON.parse(readFileSync(join(directory, "pids.json")));
+      assert.throws(() => process.kill(-group, 0), { code: "ESRCH" });
+      assert(Date.now() - started < 10000, "startup and inherited-pipe cleanup remain bounded");
+      assert(!readdirSync(tmpdir()).some((name) => name.startsWith(prefix)));
+    },
+  );
+
+test("cleanup errors retain the original browser startup failure", async (t) => {
+  const prefix = "niri-fx-cleanup-error-" + process.pid + "-";
+  const original = fs.rmSync;
+  t.after(() => {
+    t.mock.restoreAll();
+    syncBuiltinESMExports();
+    for (const name of readdirSync(tmpdir()).filter((name) => name.startsWith(prefix)))
+      original(join(tmpdir(), name), { recursive: true, force: true });
+  });
+  t.mock.method(fs, "rmSync", (path, ...options) => {
+    if (String(path).includes(prefix)) throw new Error("synthetic cleanup failure");
+    return original(path, ...options);
+  });
+  syncBuiltinESMExports();
+  await assert.rejects(
+    launchBrowser({ command: "/nonexistent/niri-fx-chrome", profilePrefix: prefix }),
+    (error) => {
+      assert(error instanceof AggregateError);
+      assert.match(error.message, /Chrome did not start.*ENOENT.*cleanup also failed/s);
+      assert.match(error.errors[0].message, /ENOENT/);
+      assert.equal(error.cause, error.errors[0]);
+      assert.equal(error.errors[1].message, "synthetic cleanup failure");
+      return true;
+    },
+  );
 });
 
 test("browser protocol failures are bounded and cleanup rejects in-flight requests", async () => {

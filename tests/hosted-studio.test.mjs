@@ -76,6 +76,21 @@ test("hosted gallery settings load, edit, share and download without local endpo
     await browser.navigate(base + "/studio/" + new URL(settings.url).hash);
     assert.equal(await browser.evaluate("catalog.connection"), null);
     assert.equal(await browser.evaluate('byId("studio-kind").textContent'), "WEB STUDIO");
+    assert.equal(
+      await browser.evaluate('byId("studio-build").textContent'),
+      await browser.evaluate("catalog.studio.build"),
+    );
+    assert.match(
+      await browser.evaluate('byId("studio-identity").textContent'),
+      /Studio \d+\.\d+\.\d+ · UI build [0-9a-f]{12}/,
+    );
+    assert.equal(await browser.evaluate('byId("studio-about").open'), false);
+    await browser.evaluate('byId("studio-about").open=true');
+    assert.match(
+      await browser.evaluate('byId("studio-mode-help").textContent'),
+      /Web Studio.*Reload this page/s,
+    );
+    await browser.evaluate('byId("studio-about").open=false');
     assert.deepEqual(await browser.evaluate("effectDocument()"), doc);
     await browser.evaluate(
       'byId("hex_spin").value=230;byId("hex_spin").dispatchEvent(new Event("input"));seed=.72;draw(.32)',

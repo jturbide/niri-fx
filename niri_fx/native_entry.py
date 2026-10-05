@@ -1,6 +1,7 @@
 """Stage a per-user login entry without writing display-manager directories."""
 
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -9,14 +10,18 @@ from .setup import change
 
 
 def _exec_argument(value):
-    # Desktop Entry Exec has its own quoting layer; it is not a shell command.
-    # The general string parser consumes backslashes before Exec tokenization.
     if any(ord(char) < 32 or ord(char) == 127 for char in value):
         raise ValueError("Login entry paths cannot contain control characters")
-    value = value.replace("%", "%%")
-    for old, new in (("\\", "\\\\"), ('"', '\\"'), ("`", "\\`"), ("$", "\\$")):
-        value = value.replace(old, new)
-    return '"' + value.replace("\\", "\\\\") + '"'
+    # SDDM's Wayland wrapper word-splits the raw Exec value without removing
+    # quotes. Use only tokens shared by that parser and Desktop Entry Exec;
+    # quoting unsafe paths would produce a valid entry that cannot log in.
+    if not re.fullmatch(r"[A-Za-z0-9_./:@+-]+", value):
+        raise ValueError(
+            "Login entry paths must use only ASCII letters, digits and / . _ : @ + -; "
+            "choose persistent Python and native storage paths without spaces or "
+            "other special characters. SDDM cannot launch quoted session paths."
+        )
+    return value
 
 
 def entry_files(root, name="NiriFX"):
@@ -29,6 +34,12 @@ def entry_files(root, name="NiriFX"):
     ):
         raise ValueError("Session name must contain 1 to 80 characters without control characters")
     root = _path(root)
+    if (root / "tools/selection.json").exists():
+        from .native_tools import entry_files as managed_entry_files
+
+        if name != "NiriFX":
+            raise ValueError("The managed tools login entry uses the NiriFX name")
+        return managed_entry_files(root)
     directory = _path(root / "session")
     launcher = _path(directory / "launch.py")
     entry = _path(directory / "niri-fx.desktop")

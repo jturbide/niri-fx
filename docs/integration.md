@@ -86,5 +86,5 @@ configuration owners; they do not use iNiR's registry. See
 
 The CLI, registry generator and ID prefix are `niri-fx`; the Python package is
 `niri_fx`. Single-effect documents use schema 3; independent action profiles use
-kind `profile`, schema 2, with schema 1 import support. Registry paths remain
+kind `profile`, schema 2 without a Swap override or schema 3 with one, with schema 1 import support. Stock shell adapters omit native Swap overrides. Registry paths remain
 those defined by iNiR's external-preset API, including its config-root selection.

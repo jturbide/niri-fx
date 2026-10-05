@@ -11,10 +11,25 @@ Users of the earlier compact iRiS source integration should follow its reviewed
 removal path before updating the shell. Normal preset registration remains
 available without modifying iNiR's checkout.
 
+For managed NiriFX sessions in current source builds, use
+[tool-runtime updates](tool-updates.md) to keep CLI, Studio and the login launcher
+on the same installation. That workflow retains complete environments for
+rollback; the historical in-place package commands below describe their releases.
+
 Current source builds use [isolated native candidates](../experimental/README.md#isolated-build-candidates).
 Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned
 upgrade notes below describe their original release workflows.
+
+## Independent swaps in Unreleased
+
+Updated NiriFX builds add independent styles for explicit left/right window swaps.
+Existing profiles and retained builds keep their current shared Move behavior.
+Selecting a Swap style or Off writes profile schema 3, which older NiriFX tools
+cannot read. Choosing Preserve again removes the override and saves schema 2.
+Update tools and the full NiriFX compositor before applying independent swaps;
+Studio reports older retained builds without replacing them. Stock Niri exports
+omit Swap overrides and portable JSON retains them.
 
 ## From 0.18 to 0.19
 

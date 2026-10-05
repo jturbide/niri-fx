@@ -314,3 +314,28 @@ Quickshell cards and isolated configuration, state and D-Bus directories. It use
 the selected movement duration unless `--duration-ms` overrides it. General
 rearrangement checks run with `python3 scripts/test-movement.py`; see the
 [movement guide](../docs/movement.md#movement-presets-and-general-rearrangement).
+## Independent swap styles
+
+The full NiriFX builder includes `niri-swap.patch` after movement, pointer and
+continuous-fragment support. This is part of the complete session, not a separate
+consumer build. Older retained three-patch bundles remain readable and keep their
+shared movement behavior.
+
+`animations { window-swap { ... } }` selects a timed movement shader for explicit
+`swap-window-left` and `swap-window-right` commands. Omission uses the movement
+configuration; `off` disables these swaps independently. Pointer dragging and
+column reordering retain their movement style. An active swap retains its shader
+through reloads and closing; later episodes use the new settings. Explicit Off
+wins when another swap starts. The separate `NiriFxSwapCapabilities` IPC contract
+reports parser-independent renderer verification without activating an effect.
+
+Build the full session, select its manifest, and run:
+
+```sh
+NIRIFX_FRAGMENT_MANIFEST=/path/to/candidate/manifest.json \
+  python3 scripts/test-native-swap.py
+```
+
+The owned nested test uses synthetic color shaders to distinguish action routing,
+including singleton and stacked columns, reload, close, inheritance and Off.
+It does not replace the running desktop or establish physical-monitor acceptance.

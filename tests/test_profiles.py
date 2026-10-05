@@ -10,6 +10,7 @@ from niri_fx.effects import (
     PRESETS,
     Effect,
     animation_types,
+    movement_shader,
     render_kdl,
     shader,
 )
@@ -21,6 +22,39 @@ from niri_fx.profiles import Profile
 
 
 class ProfileTests(unittest.TestCase):
+    def test_swap_override_round_trips_without_migrating_unchanged_profiles(self):
+        previous = Profile(open=Effect(), movement=PRESETS["fragment-wake"])
+        self.assertEqual(previous.document("Saved")["schema"], 2)
+        self.assertNotIn("swap", previous.document("Saved")["actions"])
+        for choice in (PRESETS["pixel-relay"], "off"):
+            with self.subTest(choice=choice):
+                profile = replace(previous, swap=choice)
+                doc = profile.document("Saved")
+                self.assertEqual(doc["schema"], 3)
+                self.assertEqual(parse_document(doc)[2], profile)
+                self.assertNotIn("window-swap", animation_types(profile))
+                native = animation_types(profile, movement=True, swap=True)
+                self.assertEqual(
+                    native["window-movement"]["custom-shader"], movement_shader(previous.movement)
+                )
+                if choice == "off":
+                    self.assertEqual(native["window-swap"], {"off": True})
+                else:
+                    self.assertEqual(native["window-swap"]["duration-ms"], choice.movement_ms)
+                    self.assertEqual(
+                        native["window-swap"]["custom-shader"],
+                        movement_shader(choice, continuous_fragments=False),
+                    )
+        kept = previous.document("Saved")
+        kept["schema"] = 3
+        kept["actions"]["swap"] = None
+        self.assertEqual(parse_document(kept)[2].document("Saved"), previous.document("Saved"))
+        kept["schema"] = 2
+        with self.assertRaises(ValueError):
+            parse_document(kept)
+        with self.assertRaises(ValueError):
+            Profile(swap=PRESETS["frost-vanish"])
+
     def test_independent_actions_generate_their_own_shaders_and_durations(self):
         profile = Profile(PRESETS["spring-wobble"], PRESETS["core-detonation"])
         types = animation_types(profile)

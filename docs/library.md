@@ -1,17 +1,29 @@
 # Choose and combine window effects
 
-Open `niri-fx studio` to start in **Library**. Choose a finished look, use one
-style across selected actions, or build a combo with different styles. **Customize
-in Studio** opens the detailed controls in the same app.
+Open `niri-fx studio` and choose **Open**, **Close**, **Resize**, **Move** or **Swap**.
+Click a style to replay its preview and assign it to that action. Choose **Combos**
+for a complete look, or **Customize your combo** to share one style across several actions.
+The current combo and primary Apply button stay above the preview. Saving a named
+profile, sharing and importing are secondary tools below it. Online Studio offers
+Download JSON as its primary finishing action. Detailed tuning stays available in
+the same app.
+
+The footer shows the Studio version and **UI build**. Use both when reporting
+an issue or comparing the installed app with Web Studio; development builds can
+share a version number. After updating the installed tools, close and reopen
+Studio. Existing windows keep the editor they loaded. **About this Studio**
+explains the current mode. The compositor has its own identity under
+**Session details and saved recipe** when using a NiriFX session.
 
 ![Choose a look, mix actions and export a profile](gifs/workflow-library.gif)
 
 ## First use: choose, review and restore
 
 After [installation](getting-started.md#install-and-open-library), open
-`niri-fx studio` and choose **Fragment Flow** in Recommended. Press **Preview
-combo**, then try setting Close to **Off** while leaving Open on **NiriFX Style**
-and Resize, Move / swap and Pointer drag on **Preserve**.
+`niri-fx studio`. Select **Open**, click a style, then select **Close** and choose
+another. Each choice previews immediately and leaves the other actions intact.
+**Preserve** keeps the underlying settings; **Off** disables the selected action.
+Choose **Combos** and **Fragment Flow** to start from a complete look instead.
 
 Use **Save to My profiles** if you want a named copy. Press **Review & apply**,
 inspect the listed files, then **Apply these changes**. **Cancel** leaves the
@@ -20,23 +32,30 @@ previous** returns to the settings from before Apply while keeping your saved
 profile. Reopening the app with the same target, config and state directory
 retains this Restore history.
 
-The default connection detects iNiR's helper or uses standalone Niri. Choose an
+The default connection recognizes a verified managed NiriFX session first, then
+detects iNiR's helper or uses standalone Niri. In a matching NiriFX session,
+**Apply to desktop** loads the reviewed effects immediately and saves them for the
+next login. You do not need to open your shell's settings. When a matching session
+is unavailable, `niri-fx studio --target native` lets you prepare effects with
+**Select for next login** instead. Choose an
 explicit [connection](#one-interface-different-configuration-owners) if several
 shells coexist or another tool owns the animation file. Previewing, naming and
 saving do not require registration of the built-in catalog.
 
 ## Pick a look
 
-Start with **Recommended** for five complete combos, beginning with Fragment
-Flow. Soft Landing offers a quiet frosted exit; Ribbon Current has flowing strips;
+Each action tab shows styles available for that action. Switch to **Combos**
+and **Recommended** for five complete combos, beginning with Fragment Flow.
+Soft Landing offers a quiet frosted exit; Ribbon Current has flowing strips;
 Playful Motion combines a spring with bubbles; Geometric Flow uses triangles and
 hexagons. Single-style recommendations and coordinated action sets remain
 available, along with collections, **Favorites**, **My profiles** and **All effects**.
 Searching Recommended searches the full built-in catalog.
-Choosing a card updates the actual shader preview without changing your desktop.
+Choosing a card replays the actual shader preview without changing your desktop.
+Apply is a separate action after review.
 
-The combo builder shows Open, Close, Resize and Move / swap together, with
-Pointer drag below. Each has **Preserve / NiriFX Style / Off**. Preserve keeps
+**Customize your combo** shows all action choices together, with Pointer drag below.
+Each has **Preserve / NiriFX Style / Off**. Preserve keeps
 the underlying desktop or shell configuration; Off disables the selected action.
 Choose a preset after selecting NiriFX Style.
 
@@ -49,8 +68,10 @@ interface explains why. See [action choices](profiles.md#choose-which-actions-to
 Use **Tune** beside an action for its detailed settings. Returning to Library
 keeps those edits. Refined actions show the matching combo name, such as
 **Fragment Flow · Open**; **Custom settings** identifies settings that no longer
-match a built-in style or combo action. Undo/Redo also works for combo changes. Move and swap share the
-compositor's movement effect; they are not independent shader slots.
+match a built-in style or combo action. Undo/Redo also works for combo changes. Updated NiriFX builds support a separate Swap style for explicit `swap-window-left`
+and `swap-window-right` commands. Dragging and column reordering keep the Move
+style. Preserve uses the underlying swap settings, which follow Move when unset.
+Older retained builds require an update before applying a separate Swap choice.
 
 **Pointer drag** controls the NiriFX session's drag response independently of the
 window style, with a browser preview in version 0.18 and newer. Select **NiriFX Style**, choose Gentle, Rubber Sheet or
@@ -93,19 +114,19 @@ the pointer phase. Previewing is available without a patched compositor.
 
 - **Save to My profiles** asks for a name and keeps an editable document without activation.
   An existing name shows **Replace saved profile** before replacing that Library copy.
-- **Export JSON** produces a portable style/profile for every supported setup.
-- **Export stock Niri config** produces stock Niri shaders. Movement and pointer nodes are omitted.
-- **Export NiriFX session config** appears when pointer settings are selected. It includes
-  those settings and any selected movement shader in one movement block, for the
-  matching NiriFX compositor only. Neither download activates settings.
+- **Download JSON** produces a portable style/profile for every supported setup.
+- **Export stock Niri config** produces stock Niri shaders. Move, Swap and pointer settings are omitted.
+- **Export NiriFX session config** appears when Move, Swap or pointer settings are selected.
+  It includes those choices for the matching NiriFX compositor. Neither download activates settings.
 - In the installed app, **Review & apply** lists the configuration changes.
   **Apply these changes** activates exactly that reviewed selection.
 - **Restore previous** restores this app's most recent change for the same setup and config. Later file edits
   cause a conflict rather than being overwritten.
 
-The **NiriFX session** (`native`) target uses **Select for next login** and reviewed
-rollback instead of live Apply/Restore. Each selection retains a separate
-binary/configuration pair. See [managed session editing](native-session.md#choose-effects-in-studio)
+The **NiriFX session** (`native`) target offers live Apply when the running
+compositor matches the selected build and verifies the required renderer contracts.
+Otherwise, it uses **Select for next login**. Each selection retains a separate
+binary/configuration pair for reviewed rollback. See [managed session editing](native-session.md#choose-effects-in-studio)
 for baseline semantics and continuous fragment presets.
 
 The profile name identifies saved looks. Names are case insensitive; spaces,
@@ -133,7 +154,7 @@ changed profile from another tab. Refresh or reload before trying again after a
 conflict. Damaged or unsupported documents are skipped with a message, so valid
 profiles remain available; browsing does not repair or remove their data.
 
-Use **Export JSON** to back up a selected profile or transfer it between the
+Use **Download JSON** to back up a selected profile or transfer it between the
 online Studio and an installed app. **Import preset**, then **Save to My profiles**
 adds the imported document to the current Library. Browser storage is local to
 the current browser and site; it does not sync to another computer.
@@ -154,7 +175,7 @@ stock actions only; its portable JSON retains the NiriFX session choices.
 | iNiR, including iRiS | `niri-fx studio --target inir --active` | Installed iNiR serializer, external registry and watched animation block |
 | DankMaterialShell / Material Shell | Use the NiriFX launcher's Studio entry | Standalone include outside DMS-owned files |
 | Noctalia 5 with Niri Animations | Connect the folder/file below | Existing picker's preset folder and target file |
-| NiriFX session, with any shell | `niri-fx studio --target native` | New retained bundle and reviewed next-login selection |
+| NiriFX session, with any shell | `niri-fx studio` | Reviewed live Apply on a matching build, plus next-login selection |
 | Web Studio | [Open online](https://jturbide.github.io/niri-fx/studio/) | Preview, browser-saved profiles and downloads |
 
 All paths share the same FX, presets, profiles and combo builder. No bar or
@@ -175,8 +196,9 @@ preserving its global off/slowdown controls. It does not add another configurati
 manager. Read the [Noctalia guide](noctalia.md) for first-time connection and its
 optional NiriFX shortcut.
 
-The app chooses iNiR automatically when its helper is installed. If several
-shells coexist, choose `--target` explicitly, or launch through the appropriate
+Outside a verified managed NiriFX session, the app chooses iNiR automatically
+when its helper is installed. If several shells coexist, choose `--target`
+explicitly, or launch through the appropriate
 shell adapter. With iNiR, use its normal config/registry paths; an unrecognized
 custom animation block requires an explicit `--base` instead of guessed timings.
 

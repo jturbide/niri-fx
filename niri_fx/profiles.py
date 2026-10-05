@@ -7,8 +7,9 @@ from .model import FAMILIES, Effect
 from .motion import DesktopMotion, parse_motion
 from .pointer import PointerWobble, parse_pointer
 
-PROFILE_SCHEMA = 2
-ACTIONS = ("open", "close", "resize", "movement")
+PROFILE_SCHEMA = 3
+BASE_ACTIONS = ("open", "close", "resize", "movement")
+ACTIONS = (*BASE_ACTIONS, "swap")
 Action = Effect | Literal["off"] | None
 
 
@@ -31,6 +32,7 @@ class Profile:
     close: Action = None
     resize: Action = None
     movement: Action = None
+    swap: Action = None
     motion: DesktopMotion | None = None
     pointer: PointerWobble | None = None
 
@@ -49,17 +51,20 @@ class Profile:
                 raise ValueError(
                     "Profile actions use a separate resize slot; leave effect.resize off"
                 )
-            if action in ("resize", "movement") and not FAMILIES[effect.family][action]:
+            capability = "movement" if action == "swap" else action
+            if capability in ("resize", "movement") and not FAMILIES[effect.family][capability]:
                 raise ValueError(f"The {effect.family} family does not support {action}")
 
     def document(self, name):
         document = {
             "kind": "profile",
-            "schema": PROFILE_SCHEMA,
+            # Keep existing saved recipes byte-stable until a swap override is
+            # chosen. Schema 3 adds that slot without reinterpreting schema 2.
+            "schema": PROFILE_SCHEMA if self.swap is not None else 2,
             "name": name,
             "actions": {
                 key: asdict(value) if isinstance(value := getattr(self, key), Effect) else value
-                for key in ACTIONS
+                for key in (ACTIONS if self.swap is not None else BASE_ACTIONS)
             },
         }
         if self.motion is not None:
@@ -70,16 +75,17 @@ class Profile:
 
 
 def parse_profile(data):
-    if type(data.get("schema")) is not int or data["schema"] not in (1, PROFILE_SCHEMA):
-        raise ValueError(f"Profile requires schema: 1 or {PROFILE_SCHEMA}")
+    if type(data.get("schema")) is not int or data["schema"] not in (1, 2, PROFILE_SCHEMA):
+        raise ValueError(f"Profile requires schema: 1, 2 or {PROFILE_SCHEMA}")
     required = {"kind", "schema", "name", "actions"}
     if not required <= set(data) or set(data) - required - {"motion", "pointer"}:
         raise ValueError(
             "Profile requires kind, schema, name, actions and optional motion or pointer only"
         )
     actions = data.get("actions")
-    if not isinstance(actions, dict) or set(actions) != {"open", "close", "resize", "movement"}:
-        raise ValueError("Profile actions must contain open, close, resize and movement")
+    expected = ACTIONS if data["schema"] == PROFILE_SCHEMA else BASE_ACTIONS
+    if not isinstance(actions, dict) or set(actions) != set(expected):
+        raise ValueError("Profile actions must contain " + ", ".join(expected))
     # Legacy profiles require open/close styles. Do not reinterpret malformed
     # old documents as new Preserve/Off choices during migration.
     if data["schema"] == 1 and any(

@@ -284,3 +284,22 @@ for this new path. Those remain dedicated acceptance work before broader use.
 See [native movement](movement.md), [pointer wobble](pointer-wobble.md) and the
 [roadmap](../ROADMAP.md#epic-4-pointer-driven-wobble) for the related behavior and
 remaining work.
+
+## Window size and texture reuse
+
+A window can shrink when it moves to a smaller display while its offscreen
+texture keeps a larger allocation. Fragment UV coordinates use that allocation's
+dimensions; window layout and cell positions keep using the content dimensions.
+This preserves the window's proportions during the drag and its settling tail.
+
+Run the owned nested regression against a finished full candidate:
+
+```sh
+NIRIFX_FRAGMENT_MANIFEST=/path/to/candidate/manifest.json \
+  python3 scripts/test-fragment-texture-reuse.py
+```
+
+It compares source pixels while a synthetic window shrinks under a held grab and
+after release, for width, height and both dimensions. The software-GPU mesh
+check also covers retained allocation sizes. Physical mixed-monitor interaction
+still needs desktop testing.

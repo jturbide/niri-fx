@@ -95,7 +95,7 @@ export parity; it is not a compositor GPU benchmark. See
   Unreleased and provide practical migration guidance. The future 1.0 release
   will define a public contract that remains backward compatible throughout 1.x;
   see the [stability policy](docs/stability.md) before changing public interfaces.
-  Single-effect documents use schema 3; independent profiles use kind `profile`, schema 2 (schema 1 imports retain their behavior).
+  Single-effect documents use schema 3; independent profiles use kind `profile`, schema 2 without a swap override and schema 3 with one (schema 1 imports retain their behavior).
 - Python targets 3.10+, uses four spaces and Ruff lint/format (100 columns).
   Run `.venv/bin/ruff check --fix .` and `.venv/bin/ruff format .` before review.
 - JavaScript, CSS, HTML and workflow YAML use Prettier; JavaScript also uses ESLint.

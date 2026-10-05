@@ -45,7 +45,9 @@ class ActionModeTests(unittest.TestCase):
                     profile = replace(Profile(), **{action: value})
                     self.assertEqual(parse_document(profile.document("Choices"))[2], profile)
                     native = action == "movement" and value is not None
-                    exported = animation_types(profile, movement=native)
+                    exported = animation_types(
+                        profile, movement=native, swap=action == "swap" and value is not None
+                    )
                     if value is None:
                         self.assertEqual(exported, {})
                     elif value == "off":

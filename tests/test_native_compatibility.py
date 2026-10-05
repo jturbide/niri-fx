@@ -178,6 +178,7 @@ class NativeCompatibilityTests(unittest.TestCase):
             "niri-movement.patch": "patch_sha256",
             "niri-pointer-wobble.patch": "pointer_patch_sha256",
             "niri-fragment-drag.patch": "fragment_patch_sha256",
+            "niri-swap.patch": "swap_patch_sha256",
         }
         for filename in native.STACKS[case["variant"]]:
             file = experiment / filename

@@ -111,6 +111,7 @@ def _overlay(effect, fragment_preset, variant):
         effect,
         movement=movement,
         pointer=pointer,
+        swap=isinstance(effect, Profile) and effect.swap is not None,
         continuous_fragments=fragment_preset is not None,
     )
     if fragment_preset is not None:
@@ -215,6 +216,11 @@ def configure_plan(root, base_bundle, document, *, fragment_preset=None):
     source_files = _owned_files(source)
     original = native_session._object(source_files["bundle.json"], "native session bundle")
     document, effect = _document(document)
+    if isinstance(effect, Profile) and effect.swap is not None and not source.get("swap_supported"):
+        raise ValueError(
+            "This retained compositor shares Move and Swap. Build an updated NiriFX session "
+            "with independent swap support, or choose Preserve for Swap."
+        )
     generated = _overlay(effect, fragment_preset, source["variant"])
     prior = original.get("customization")
     if prior is not None:
@@ -328,8 +334,9 @@ def configure_plan(root, base_bundle, document, *, fragment_preset=None):
         notes=[
             "Creates a retained binary/configuration pair and selects it for the next login.",
             "Preserve inherits the original saved baseline, including its existing styles.",
-            "Global animations off in the baseline stays in effect and can suppress chosen styles.",
-            "Existing bundles, stock configuration and the running desktop remain unchanged.",
+            "Global animations off or slowdown in the baseline stays in effect and can suppress "
+            "or slow chosen styles.",
+            "Existing bundles and stock configuration remain unchanged.",
             "The login launcher's NiriFX runtime must support bundle schema 3 before the next login.",
             "A retained build's variant does not certify the current shader interface or renderer.",
             "Apply validates this trusted executable's copied config; this is not renderer acceptance.",

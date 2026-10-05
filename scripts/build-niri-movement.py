@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[1]
 PATCH = ROOT / "experimental/niri-movement.patch"
 POINTER_PATCH = ROOT / "experimental/niri-pointer-wobble.patch"
 FRAGMENT_PATCH = ROOT / "experimental/niri-fragment-drag.patch"
+SWAP_PATCH = ROOT / "experimental/niri-swap.patch"
 # Kept only for the comparison reader's explicit legacy fallback. New builds
 # never write into this checkout or any of the legacy manifest/output slots.
 BASELINE_SOURCE = ROOT / "artifacts/niri-unmodified-src"
@@ -92,7 +93,7 @@ def main():
         patches = []
         variant = "unmodified"
     elif args.fragment_drag:
-        patches = [PATCH, POINTER_PATCH, FRAGMENT_PATCH]
+        patches = [PATCH, POINTER_PATCH, FRAGMENT_PATCH, SWAP_PATCH]
         variant = "fragment"
     else:
         patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
@@ -255,6 +256,7 @@ def build_candidate(args, variant, patches, candidate):
         manifest["pointer_patch_sha256"] = patch_hashes[POINTER_PATCH.name]
     if args.fragment_drag:
         manifest["fragment_patch_sha256"] = patch_hashes[FRAGMENT_PATCH.name]
+        manifest["swap_patch_sha256"] = patch_hashes[SWAP_PATCH.name]
     manifest["native_build"] = metadata(
         manifest,
         variant=variant,

@@ -196,6 +196,17 @@ def parser():
         ],
         help="Save a NiriFX movement action in JSON; activate it separately",
     )
+    profile.add_argument(
+        "--swap",
+        "--swap-preset",
+        dest="swap_preset",
+        choices=[
+            *[k for k, e in PRESETS.items() if FAMILIES[e.family]["movement"]],
+            "preserve",
+            "off",
+        ],
+        help="Independent explicit-swap style; requires the NiriFX swap contract",
+    )
     for name, help_text in (
         ("render", "Print a standalone Niri KDL animation override"),
         ("preview", "Write a self-contained interactive editor; no desktop changes"),
@@ -391,7 +402,7 @@ def main(argv=None):
         if arguments.command == "native":
             from .native_cli import run
 
-            run(arguments)
+            return run(arguments) or 0
         elif arguments.command == "families":
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "agent-info":
@@ -477,6 +488,7 @@ def main(argv=None):
                         "close_preset",
                         "resize_preset",
                         "movement_preset",
+                        "swap_preset",
                         "desktop_motion",
                     )
                 ):
@@ -507,6 +519,7 @@ def main(argv=None):
                     close=choose(arguments.close_preset, "core-detonation"),
                     resize=choose(arguments.resize_preset),
                     movement=choose(arguments.movement_preset),
+                    swap=choose(arguments.swap_preset),
                     motion=MOTION_PACKS[arguments.desktop_motion]
                     if arguments.desktop_motion
                     else None,

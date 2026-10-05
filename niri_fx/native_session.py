@@ -213,7 +213,7 @@ def inspect_bundle(root, bundle_id):
             _read(provenance / "Cargo.lock", MAX_METADATA_BYTES, mode=0o600),
         )
     )
-    for name in native_build.STACKS[variant]:
+    for name in native_build.patch_sequence(metadata["inputs"]):
         path = provenance / "experimental" / name
         evidence.append((path, _read(path, MAX_CONFIG_BYTES, mode=0o600)))
     report = native_build.inspect(
@@ -239,6 +239,7 @@ def inspect_bundle(root, bundle_id):
         "config_file_count": len(config_files) if config_files is not None else 1,
         "build_id": report["build_id"],
         "variant": report["variant"],
+        "swap_supported": "niri-swap.patch" in native_build.patch_sequence(metadata["inputs"]),
         "desktop_prerequisites": report["desktop_prerequisites"],
         "runtime_acceptance": "not_assessed",
         "physical_desktop_acceptance": "not_assessed",
@@ -304,7 +305,7 @@ def stage_plan(
     patch_root = (
         _path(patch_directory) if patch_directory is not None else repository / "experimental"
     )
-    for name in native_build.STACKS[variant]:
+    for name in native_build.patch_sequence(inputs):
         path = patch_root / name
         provenance.append((path, _read(path, MAX_CONFIG_BYTES), "experimental/" + name))
     report = native_build.inspect(
@@ -458,7 +459,7 @@ def _selection_plan(root, bundle_id, *, rollback=False):
         config=selected["config"] if selected else None,
         binary=selected["binary"] if selected else None,
         notes=[
-            "Changes the next-login selection only; running sessions are unchanged.",
+            "Updates the retained next-login selection.",
             "Previously staged bundles remain available for rollback.",
         ],
     )

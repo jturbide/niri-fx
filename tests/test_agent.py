@@ -75,6 +75,30 @@ class AgentDiscoveryTests(unittest.TestCase):
             self.assertNotIn("window-movement", stock)
             self.assertEqual(json.loads(path.read_text()), document)
 
+    def test_managed_live_operations_require_separate_review_and_explicit_apply(self):
+        operations = agent_info()["operations"]
+        for action in ("native_live", "native_live_rollback"):
+            review = parser().parse_args(operations[f"{action}_review"]["argv"])
+            apply = parser().parse_args(operations[f"{action}_apply"]["argv"])
+            self.assertTrue(review.live)
+            self.assertFalse(review.apply)
+            self.assertTrue(apply.live)
+            self.assertTrue(apply.apply)
+            self.assertEqual(apply.expect_plan, "REVIEWED_PLAN_SHA256")
+            self.assertIn("exit 1", operations[f"{action}_apply"]["output"])
+        for action in ("native_configure", "native_rollback"):
+            self.assertFalse(parser().parse_args(operations[f"{action}_apply"]["argv"]).live)
+
+    def test_tool_runtime_changes_have_separate_review_and_required_registration_target(self):
+        operations = agent_info()["operations"]
+        for action in ("native_tools_update", "native_tools_rollback"):
+            review = parser().parse_args(operations[f"{action}_review"]["argv"])
+            apply = parser().parse_args(operations[f"{action}_apply"]["argv"])
+            self.assertFalse(review.apply)
+            self.assertTrue(apply.apply)
+            self.assertEqual(review.registered_entry, apply.registered_entry)
+            self.assertEqual(apply.expect_plan, "REVIEWED_PLAN_SHA256")
+
     def test_compact_catalog_keeps_full_catalog_filters_and_real_document_ids(self):
         for filters in (("--recommended",), ("--family", "fragments"), ("--search", "frost")):
             with self.subTest(filters=filters):

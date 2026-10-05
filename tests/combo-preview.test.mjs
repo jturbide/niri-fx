@@ -34,7 +34,7 @@ const plain = (value) => JSON.parse(JSON.stringify(value));
 const effect = (name, changes = {}) => ({ ...catalog.presets[name], resize: false, ...changes });
 const mixed = () => ({
   kind: "profile",
-  schema: catalog.profile_schema,
+  schema: 2,
   name: "Mixed actions",
   actions: {
     open: effect("balanced", { open_ms: 320 }),
@@ -90,7 +90,7 @@ test("a mixed combo plays each action's own style, duration and direction", () =
     assert.equal(state.direction, direction);
     assert.equal(state.seed, 0.42);
   }
-  assert.match(c.sample(plan, 980).label, /Experimental movement shader preview/);
+  assert.match(c.sample(plan, 980).label, /Movement shader preview/);
   assert.match(c.sample(plan, 980).support, /stock Niri exports omit movement/);
   assert.match(c.sample(plan, 480).support, /Stock Niri resize/);
   assert(c.sample(plan, 2340).complete);
@@ -375,4 +375,20 @@ test("Preserve and Off need no fallback effect and keep distinct visible endpoin
     pointer = plan.stages.find((stage) => stage.action === "pointer");
   assert.equal(c.sample(plan, pointer.startMs + 250).mode, "pointer");
   assert(c.sample(plan, pointer.startMs + 250).pointer.deformation.some((value) => value !== 0));
+});
+
+test("explicit swaps retain their own material and timing beside movement", () => {
+  const { controller: c } = harness();
+  const doc = { ...mixed(), schema: 3 };
+  doc.actions.swap = effect("vortex-transit", { movement_ms: 560 });
+  const plan = c.plan(doc, { holdMs: 100 });
+  const swap = plan.stages.find((stage) => stage.action === "swap");
+  const movement = plan.stages.find((stage) => stage.action === "movement");
+  assert.equal(swap.effect.family, "distortion");
+  assert.equal(swap.actionDurationMs, 560);
+  assert.equal(movement.effect.family, "pixels");
+  assert.equal(movement.actionDurationMs, 240);
+  assert.equal(c.sample(plan, swap.startMs + 280).action, "swap");
+  assert.equal(c.sample(plan, swap.startMs + 280).mode, "movement");
+  assert.equal(c.sample(plan, swap.startMs + 280).progress, 0.5);
 });
