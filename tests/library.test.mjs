@@ -712,11 +712,21 @@ finally:
       const started=Date.now();function check(){if(${expression})resolve();else if(Date.now()-started>7000)reject(new Error('Managed operation timeout: '+byId('error').textContent));else setTimeout(check,30)}check();
     })`);
     const settle = () => wait("!byId('review-selection').disabled");
-    const click = (id) => browser.callFunction("function(id){byId(id).click()}", [id]);
+    const diagnose = async (action, operation) => {
+      try {
+        return await operation();
+      } catch (error) {
+        throw new Error(`Managed Studio ${action}: ${error.message}`, { cause: error });
+      }
+    };
+    const click = (id) =>
+      diagnose(`click ${id}`, () => browser.callFunction("function(id){byId(id).click()}", [id]));
     const choose = (id, value) =>
-      browser.callFunction(
-        "function(id,value){byId(id).value=value;byId(id).dispatchEvent(new Event('change'))}",
-        [id, value],
+      diagnose(`change ${id}`, () =>
+        browser.callFunction(
+          "function(id,value){byId(id).value=value;byId(id).dispatchEvent(new Event('change'))}",
+          [id, value],
+        ),
       );
     await wait("byId('active-look').textContent.startsWith('Next login: ')");
     assert.equal(

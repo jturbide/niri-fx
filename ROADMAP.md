@@ -220,7 +220,7 @@ expensive software-WebGL matrices.
       export-parity and save-flow coverage.
 - [x] Measure hosted runner elapsed time with separate timings for each rendering job.
 - [ ] Inspect failed-shard diagnostics on a hosted rendering failure.
-- [ ] Harden browser startup diagnostics and cleanup: terminate owned helper
+- [x] Harden browser startup diagnostics and cleanup: terminate owned helper
       processes, distinguish process exit from open pipes, and retain the original
       startup error when cleanup also fails.
 - [ ] Bind recording provenance to the loaded preview and reject source changes

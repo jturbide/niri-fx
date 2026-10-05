@@ -145,6 +145,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Browser checks stop their owned helper processes when startup fails and retain
+  the original error if cleanup also fails. Managed Studio failures identify the
+  control being exercised without extending test deadlines.
 - Continuous fragments retain the correct window proportions when content shrinks
   after moving to another display. Both the fragment mesh and resting image now
   sample the content region within a reused larger texture allocation.
