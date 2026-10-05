@@ -94,9 +94,17 @@ class PatchStackTests(unittest.TestCase):
                 git("read-tree", "--reset", "-u", base)
                 build.apply_patches(source, base, [first, second, third])
                 build.apply_patches(source, base, [first, second, third])
+                build.apply_patches(source, base, [first, second, third], verify_only=True)
                 self.assertEqual(fragment.read_text(), "continuous fragments\n")
                 with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
                     build.apply_patches(source, base, [first, second])
+                # A concurrent pristine reset after compilation must fail the
+                # verification step without applying patches to hide that reset.
+                git("read-tree", "--reset", "-u", base)
+                with self.assertRaisesRegex(SystemExit, "refusing to overwrite"):
+                    build.apply_patches(source, base, [first, second, third], verify_only=True)
+                self.assertEqual(original.read_text(), "ordinary renderer\n")
+                self.assertFalse(fragment.exists())
 
     def test_wrong_revision_stops_before_applying(self):
         with patch.object(build.subprocess, "check_output", return_value="unexpected\n"):

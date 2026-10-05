@@ -88,8 +88,9 @@ lives under `~/.local/share/inir`, honoring `XDG_DATA_HOME`. `--registry` and
 `--inir-root` support other installations.
 
 Registering the entire built-in pack for selection through iRiS Settings is an
-optional [setup workflow](setup.md), not a prerequisite for Library. The optional
-[compact iRiS entry](library.md#compact-iris-entry) can launch the same app.
+optional [setup workflow](setup.md), not a prerequisite for Library. Use the
+[app launcher](library.md#iris-access-without-source-changes) to keep access
+independent of the shell's source files.
 
 ## Standalone Niri
 

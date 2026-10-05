@@ -9,6 +9,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- A reviewed migration removes the earlier compact iRiS source integration
+  without discarding newer upstream changes. Customized or ambiguous files are
+  preserved for manual review.
+- Native build identity records the ordered patch stack, locked dependencies,
+  toolchain, target and features. A read-only inspector checks artifact identity
+  and desktop build prerequisites without starting or installing a compositor.
 - Experimental continuous square-fragment motion for pointer dragging, timed
   movement and column reordering. Distant pieces initially lag behind the grabbed
   region, then catch up with per-piece delay and response variation. Pressing can
@@ -55,6 +61,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
+- New installs use Library/Studio and external shell configuration. The optional
+  iRiS source-patching installer is retired to avoid blocking shell updates;
+  historical exact Restore remains available. The desktop update guide describes
+  cleanup and the planned separate native package/session lifecycle.
 - Setup guides lead with Library for choosing a combo and reviewing independent
   action choices, Apply and Restore. Terminal and scriptable setup remain available.
 - Generated resize shaders use retained material when the native extension is
@@ -64,6 +74,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Library inspection loads the current iNiR serializer without creating or
+  reusing bytecode in the shell checkout.
 - Continuous fragments skip redundant simulation after long idle when every
   piece is exactly at rest and no delayed motion remains, preserving existing
   motion. The CPU benchmark records both recovery and ordinary update costs.

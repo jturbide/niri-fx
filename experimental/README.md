@@ -52,6 +52,44 @@ It refuses unrelated source changes. `--release` builds
 an optimized binary; the default debug build is for development, not benchmarking.
 The launcher rejects a changed binary or patch until rebuilt.
 
+### Inspect build identity
+
+New builds also record a versioned `native_build` block in their existing local
+manifest: the pinned upstream revision, ordered patch hashes, Cargo lockfile,
+reported executable features, build profile, Rust compiler and native host target.
+The input fingerprint and binary hash identify different things: recorded build
+inputs and output bytes. They are not a signature or a reproducible-build claim.
+The builder selects `RUSTC` when set, otherwise `rustc` on its selected `PATH`,
+and passes that same compiler to Cargo. Ambient Cargo configuration, wrappers
+and compiler flags are not a complete part of this fingerprint.
+
+Inspect a build without running its executable:
+
+```sh
+python3 scripts/inspect-native-build.py \
+  --manifest artifacts/niri-fragment-drag-build.json \
+  --source artifacts/niri-fragment-drag-src
+# Check the release/default-feature prerequisites for a desktop candidate:
+python3 scripts/inspect-native-build.py \
+  --manifest artifacts/niri-fragment-drag-build.json \
+  --source artifacts/niri-fragment-drag-src --desktop
+```
+
+The inspector reads the manifest, binary, current patch files and source lockfile.
+It reports `metadata-match`, `stale`, `incompatible` or `unknown`; only a metadata
+match exits successfully. Older manifests without the new evidence remain
+`unknown` to this inspector. Existing demo readers still accept their original
+fields; old artifacts are not rewritten to invent missing build inputs.
+
+`--desktop` checks recorded release mode and the full default desktop feature set.
+It does not establish renderer support, library/driver compatibility or physical
+desktop acceptance. Neither inspection mode executes a candidate, changes
+configuration or installs/selects a session. Fresh candidate directories,
+versioned packages and next-login selection are separate
+[planned lifecycle work](../docs/desktop-updates.md#planned-user-workflow).
+
+### Toolchain and isolated demo
+
 The prototype was validated with Rust 1.99.0. A working toolchain on `PATH` is
 sufficient. For an isolated toolchain, the build script also detects rustup under
 `artifacts/toolchain/{cargo,rustup}`. Toolchain installation is separate from the

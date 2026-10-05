@@ -24,6 +24,7 @@ a versioned package and its matching documentation.
 | Check requirements and supported features | [Compatibility](compatibility.md) |
 | Diagnose setup or undo a change | [Setup and restore](setup.md), [troubleshooting](troubleshooting.md) |
 | Update an installation | [Updating NiriFX](upgrading.md) |
+| Update Niri or a desktop shell | [Desktop updates and native build lifecycle](desktop-updates.md) |
 | Choose a version or understand release downloads | [Releases](releases.md) |
 
 ## Choose and customize effects

@@ -303,7 +303,9 @@ class Library:
         helper = Path(args.inir_root) / "scripts/niri-config.py"
         spec = importlib.util.spec_from_file_location("_nirifx_inir_helper", helper)
         module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
+        # Retain module metadata without reading or writing the shell checkout's
+        # bytecode cache. Review must use current source and leave updates clean.
+        exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
         animation = module.resolve_niri_section_file("config.d/60-animations.kdl")
         before = read_bytes(animation.resolve())
         captured = []

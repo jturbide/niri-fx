@@ -6,6 +6,11 @@ tagged release, follow the documentation shipped with that version. The
 [stability policy](stability.md) describes the planned 1.x compatibility contract;
 that freeze has not happened yet.
 
+For shell or compositor upgrades, see [Desktop updates](desktop-updates.md).
+Users of the earlier compact iRiS source integration should follow its reviewed
+removal path before updating the shell. Normal preset registration remains
+available without modifying iNiR's checkout.
+
 ## From 0.18 to 0.19
 
 Install the verified wheel in the same environment and reopen Studio:

@@ -12,13 +12,15 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Broaden desktop acceptance.** Verify physical input removal, capture and
+1. **Make desktop updates independent.** Keep shell integrations outside vendor
+   source trees and prepare versioned native builds with review and rollback.
+2. **Broaden desktop acceptance.** Verify physical input removal, capture and
    presentation, and collect additional GPU/output results.
-2. **Finish native capture reliability.** Resolve the remaining stale-output
+3. **Finish native capture reliability.** Resolve the remaining stale-output
    probe and expand popup, blur and PipeWire acceptance.
-3. **Keep contributor feedback fast and useful.** Track the longest rendering
+4. **Keep contributor feedback fast and useful.** Track the longest rendering
    stages and verify failed-job diagnostics while retaining complete coverage.
-4. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
+5. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
    retaining room to improve the 0.x design.
 
 New presets should demonstrate a distinct useful look, with importable settings
@@ -59,6 +61,57 @@ acceptance boundary.
       Restore, including partial and all-Off profiles.
 - [x] Verify upgrades from published 0.19 with active Preserve/Off choices,
       conflict-aware Restore and first-use Library flows through iNiR/iRiS.
+
+## Updates and native build lifecycle
+
+Goal: use NiriFX without blocking normal Niri or shell updates. Stock effects
+use external configuration. Native features need a separately maintained
+compositor build with an explicit upgrade path.
+
+### Shell integration
+
+- [x] Retire new installation of the source-patched iRiS entry; keep the app and
+      external registry as the supported access path.
+- [x] Provide reviewed removal of the earlier entry, preserving upstream and
+      unrelated edits and refusing ambiguous or customized files.
+- [x] Load the iNiR serializer without writing bytecode into its checkout;
+      verify read-only inspection against complete temporary-tree snapshots.
+- [ ] Test supported shell upgrades with active profiles, changed helper
+      contracts and exact Restore while keeping their checkouts unchanged.
+- [ ] Add an external iNiR widget or upstream settings extension for one NiriFX
+      entry; avoid maintaining a local settings-page patch.
+
+### Native build identity and compatibility
+
+- [x] Record versioned build identity, ordered patch hashes, locked dependencies,
+      toolchain, target, profile and enabled features; inspect artifacts read-only.
+- [ ] Build changed patch stacks into fresh candidate directories without
+      overwriting the working or previous build.
+- [ ] Maintain a tested upstream revision/feature matrix and CI that checks
+      clean patch application, compilation and native regressions on candidates.
+- [ ] Separate upstream compatibility failures from user updates; offer only
+      candidates that pass the declared release gates.
+- [ ] Evaluate narrow upstream contributions for rendering hooks and shell
+      extension points, with no dependency on their acceptance.
+
+### Installation, selection and rollback
+
+- [ ] Present candidate status, review and rollback through the existing CLI and
+      Studio, with no additional background configuration manager.
+- [ ] Package a distinctly named compositor and NiriFX login session alongside
+      stock Niri, including desktop features, portals and service lifecycle.
+- [ ] Review candidate configuration separately, keeping unsupported native
+      nodes out of the stock-session configuration.
+- [ ] Select updates for the next login; retain the previous binary/config pair
+      and never restart a running compositor from a background updater.
+- [ ] Verify failed install, interrupted update, changed shared dependencies,
+      rollback and return to stock on supported physical desktops.
+- [ ] Publish signed artifacts and source/patch provenance for declared
+      distributions and architectures without holding normal system updates.
+
+The [desktop update guide](docs/desktop-updates.md) separates current tools
+from this planned package/session workflow. Build identity is not runtime or
+physical acceptance; the native capture and input gates remain required.
 
 ## Consistent action selection
 

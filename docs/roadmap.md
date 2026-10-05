@@ -29,6 +29,12 @@ An adapter needs a maintained Niri-compatible target and a supported UI extensio
 point. Compositor shader support determines which effects can run; shell integration
 provides the controls for choosing and applying them.
 
+Keep adapter data and launchers outside the shell's source checkout. Do not patch
+tracked settings pages or require stashing NiriFX edits before a shell update.
+An embedded entry needs a supported external extension point or an accepted
+upstream hook. Include an update regression that preserves user settings and
+leaves the shell checkout unchanged. See [Desktop updates](desktop-updates.md).
+
 ## Further integration work
 
 Full-shell embedding and Caelestia/ML4W assessments remain planned. Each assessment
