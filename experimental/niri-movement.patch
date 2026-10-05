@@ -1,8 +1,33 @@
 diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
-index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187cd9dd398f 100644
+index 346b62517aa84ada1406aa388faceb9bb0d561ac..3188ab080d90f2d81aaf1813069b3bc518e95aaa 100644
 --- a/niri-config/src/animations.rs
 +++ b/niri-config/src/animations.rs
-@@ -209,19 +209,56 @@ impl Default for HorizontalViewMovementAnim {
+@@ -84,13 +84,23 @@ impl MergeWith<AnimationsPart> for Animations {
+ 
+         // Animation properties are fairly tied together, except maybe `off`. So let's just save
+         // ourselves the work and not merge within individual animations.
++        if let Some(value) = &part.window_movement {
++            let mut value = value.clone();
++            if value.preserve_movement {
++                value.anim = self.window_movement.anim;
++                value.custom_shader = self.window_movement.custom_shader.clone();
++            }
++            // Merge directives belong to this part, never to the effective config.
++            value.preserve_movement = false;
++            value.preserve_pointer = false;
++            self.window_movement = value;
++        }
+         merge_clone!(
+             (self, part),
+             workspace_switch,
+             window_open,
+             window_close,
+             horizontal_view_movement,
+-            window_movement,
+             window_resize,
+             config_notification_open_close,
+             exit_confirmation_open_close,
+@@ -209,19 +219,121 @@ impl Default for HorizontalViewMovementAnim {
      }
  }
  
@@ -12,6 +37,8 @@ index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187c
 +pub struct WindowMovementAnim {
 +    pub anim: Animation,
 +    pub custom_shader: Option<String>,
++    pub preserve_movement: bool,
++    pub preserve_pointer: bool,
 +}
  
  impl Default for WindowMovementAnim {
@@ -34,6 +61,8 @@ index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187c
 +                }),
 +            },
 +            custom_shader: None,
++            preserve_movement: false,
++            preserve_pointer: false,
 +        }
 +    }
 +}
@@ -41,6 +70,67 @@ index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187c
 +#[cfg(test)]
 +mod movement_shader_tests {
 +    use super::*;
++
++    // Each decoded part is the same unit that an include merges into Config.
++    fn parse_layers(text: &str) -> Result<crate::Config, knuffel::Error> {
++        let parts: Vec<AnimationsPart> = knuffel::parse("layers.kdl", text)?;
++        let mut config = crate::Config::default();
++        for part in parts {
++            config.animations.merge_with(&part);
++        }
++        Ok(config)
++    }
++
++    #[test]
++    fn merge_directives_preserve_movement_and_are_consumed() {
++        let base = r#"animations { window-movement {
++            duration-ms 937; curve "linear"; custom-shader "base shader";
++        }; }"#;
++        let initial = parse_layers(base).unwrap().animations.window_movement;
++        let kept = parse_layers(&format!(
++            r#"{base}
++            animations {{ window-movement {{ preserve-movement; preserve-pointer; }}; }}"#
++        ))
++        .unwrap()
++        .animations
++        .window_movement;
++        assert_eq!(kept, initial);
++        assert!(!kept.preserve_movement && !kept.preserve_pointer);
++        let reset = parse_layers(&format!(
++            r#"{base}
++            animations {{ window-movement {{ preserve-movement; preserve-pointer; }}; }}
++            animations {{ window-movement {{ preserve-pointer; off; }}; }}"#
++        ))
++        .unwrap();
++        assert!(reset.animations.window_movement.anim.off);
++        assert!(reset.animations.window_movement.custom_shader.is_none());
++        let defaults = parse_layers(
++            "animations { window-movement { preserve-movement; preserve-pointer; }; }",
++        )
++        .unwrap();
++        assert_eq!(
++            defaults.animations.window_movement,
++            WindowMovementAnim::default()
++        );
++    }
++
++    #[test]
++    fn merge_directives_reject_ambiguous_movement_settings() {
++        for value in [
++            "preserve-movement; off",
++            "preserve-movement; duration-ms 0",
++            "preserve-movement; curve \"linear\"",
++            "preserve-movement; custom-shader \"shader\"",
++            "preserve-movement; spring { damping-ratio 1; stiffness 800; epsilon 0.0001; }",
++            "preserve-movement; preserve-movement",
++            "preserve-pointer; preserve-pointer",
++            "preserve-pointer true",
++            "preserve-movement { unexpected; }",
++        ] {
++            let config = format!("animations {{ window-movement {{ {value}; }}; }}");
++            assert!(parse_layers(&config).is_err(), "{value}");
++        }
++    }
 +
 +    #[test]
 +    fn legacy_movement_config_keeps_default_and_accepts_shader() {
@@ -69,7 +159,7 @@ index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187c
      }
  }
  
-@@ -364,10 +401,21 @@ where
+@@ -364,10 +476,54 @@ where
          node: &knuffel::ast::SpannedNode<S>,
          ctx: &mut knuffel::decode::Context<S>,
      ) -> Result<Self, DecodeError<S>> {
@@ -79,24 +169,57 @@ index 346b62517aa84ada1406aa388faceb9bb0d561ac..c9d7a8b3442876d065d8065c3751187c
 -        })?))
 +        let default = Self::default().anim;
 +        let mut custom_shader = None;
++        let mut preserve_movement = false;
++        let mut preserve_pointer = false;
 +        let anim = Animation::decode_node(node, ctx, default, |child, ctx| {
 +            if &**child.node_name == "custom-shader" {
 +                custom_shader = parse_arg_node("custom-shader", child, ctx)?;
++                Ok(true)
++            } else if matches!(&**child.node_name, "preserve-movement" | "preserve-pointer") {
++                knuffel::decode::check_flag_node(child, ctx);
++                let flag = if &**child.node_name == "preserve-movement" {
++                    &mut preserve_movement
++                } else {
++                    &mut preserve_pointer
++                };
++                if *flag {
++                    ctx.emit_error(DecodeError::unexpected(
++                        child,
++                        "node",
++                        "duplicate preserve directive",
++                    ));
++                }
++                *flag = true;
 +                Ok(true)
 +            } else {
 +                Ok(false)
 +            }
 +        })?;
 +
++        if preserve_movement
++            && node.children().any(|child| {
++                matches!(
++                    &**child.node_name,
++                    "off" | "duration-ms" | "curve" | "spring" | "custom-shader"
++                )
++            })
++        {
++            ctx.emit_error(DecodeError::conversion(
++                node,
++                "preserve-movement conflicts with movement settings",
++            ));
++        }
 +        Ok(Self {
 +            anim,
 +            custom_shader,
++            preserve_movement,
++            preserve_pointer,
 +        })
      }
  }
  
 diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
-index 329b76696d817c54c77e4f29a1ea5e4779508996..554bed226d12ae6c880ea2902c70ed2dcc22a737 100644
+index 329b76696d817c54c77e4f29a1ea5e4779508996..2b0291d9f8bcc1186bbce54869218b0b35daed21 100644
 --- a/niri-config/src/lib.rs
 +++ b/niri-config/src/lib.rs
 @@ -1551,8 +1551,8 @@ mod tests {
@@ -110,12 +233,14 @@ index 329b76696d817c54c77e4f29a1ea5e4779508996..554bed226d12ae6c880ea2902c70ed2d
                          off: false,
                          kind: Spring(
                              SpringParams {
-@@ -1562,7 +1562,8 @@ mod tests {
+@@ -1562,7 +1562,10 @@ mod tests {
                              },
                          ),
                      },
 -                ),
 +                    custom_shader: None,
++                    preserve_movement: false,
++                    preserve_pointer: false,
 +                },
                  window_resize: WindowResizeAnim {
                      anim: Animation {
@@ -466,10 +591,10 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +}
 diff --git a/src/animation/size.rs b/src/animation/size.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..07168abbbc486aa6f06945921d5b5b24e76f7536
+index 0000000000000000000000000000000000000000..b5ee82a370fc3aefb78ad038ec998febcf4b2062
 --- /dev/null
 +++ b/src/animation/size.rs
-@@ -0,0 +1,244 @@
+@@ -0,0 +1,307 @@
 +//! Per-axis size paths for the experimental movement renderer.
 +//!
 +//! Resize and the displacement of neighboring tiles must follow the same path.
@@ -506,7 +631,8 @@ index 0000000000000000000000000000000000000000..07168abbbc486aa6f06945921d5b5b24
 +                let moving = !previous.anim.is_done()
 +                    && (previous.offset() != 0. || previous.velocity() != 0.);
 +                let velocity = moving.then(|| previous.velocity());
-+                return MoveAnimation::new(anim.restarted(1., 0., 0.), from - target, velocity);
++                let clock = if moving { &previous.anim } else { anim };
++                return MoveAnimation::new(clock.restarted(1., 0., 0.), from - target, velocity);
 +            }
 +            MoveAnimation::new(anim.restarted(1., 0., 0.), from - target, None)
 +        };
@@ -526,9 +652,12 @@ index 0000000000000000000000000000000000000000..07168abbbc486aa6f06945921d5b5b24
 +    }
 +
 +    pub fn value(&self) -> Size<f64, Logical> {
++        // Smithay rejects negative Size values in debug builds. Apply the
++        // renderer's existing one-pixel floor before constructing the Size.
++        // Neighbor offsets remain unconstrained; this is not a shared-path fix.
 +        Size::new(
-+            self.target.w + self.width.offset(),
-+            self.target.h + self.height.offset(),
++            (self.target.w + self.width.offset()).max(1.),
++            (self.target.h + self.height.offset()).max(1.),
 +        )
 +    }
 +
@@ -539,7 +668,7 @@ index 0000000000000000000000000000000000000000..07168abbbc486aa6f06945921d5b5b24
 +    /// A client may change size without an animated configure. While this
 +    /// resize exists, layout starts another resize movement for its neighbors;
 +    /// retarget the changed axes on that clock too, retaining their momentum.
-+    pub fn update_target(&mut self, target: Size<f64, Logical>) {
++    pub fn update_target(&mut self, target: Size<f64, Logical>, anim: &Animation) {
 +        for (axis, old, new) in [
 +            (&mut self.width, self.target.w, target.w),
 +            (&mut self.height, self.target.h, target.h),
@@ -548,7 +677,8 @@ index 0000000000000000000000000000000000000000..07168abbbc486aa6f06945921d5b5b24
 +                let from = old + axis.offset() - new;
 +                let moving = !axis.anim.is_done() && (axis.offset() != 0. || axis.velocity() != 0.);
 +                let velocity = moving.then(|| axis.velocity());
-+                *axis = MoveAnimation::new(axis.anim.restarted(1., 0., 0.), from, velocity);
++                let clock = if moving { &axis.anim } else { anim };
++                *axis = MoveAnimation::new(clock.restarted(1., 0., 0.), from, velocity);
 +            }
 +        }
 +        self.target = target;
@@ -604,6 +734,64 @@ index 0000000000000000000000000000000000000000..07168abbbc486aa6f06945921d5b5b24
 +        clock.set_unadjusted(Duration::from_millis(1600));
 +        near(size.value().w, 150.);
 +        near(size.value().h, 100.);
++        assert!(size.is_done());
++    }
++
++    #[test]
++    fn extreme_shrink_retains_valid_geometry_before_and_after_retarget() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let size = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(1000., 100.),
++            Size::new(10., 100.),
++            None,
++        );
++        clock.set_unadjusted(Duration::from_millis(950));
++        let size = SizeAnimation::new(
++            &phase(&clock),
++            size.value(),
++            Size::new(11., 100.),
++            Some(size),
++        );
++        clock.set_unadjusted(Duration::from_millis(1250));
++        // The unconstrained Hermite path crossed zero. It must not construct
++        // an invalid Smithay Size before the renderer can apply its floor.
++        near(size.value().w, 1.);
++        near(size.value().h, 100.);
++        let size = SizeAnimation::new(
++            &phase(&clock),
++            size.value(),
++            Size::new(100., 100.),
++            Some(size),
++        );
++        near(size.value().w, 1.);
++        for time in 1250..2251 {
++            clock.set_unadjusted(Duration::from_millis(time));
++            assert!(size.value().w.is_finite() && size.value().w >= 1.);
++        }
++        near(size.value().w, 100.);
++    }
++
++    #[test]
++    fn timing_reload_keeps_active_axis_clock_and_uses_new_clock_at_rest() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let size = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(100., 100.),
++            Size::new(300., 100.),
++            None,
++        );
++        clock.set_unadjusted(Duration::from_millis(500));
++        let new_phase = Animation::ease(clock.clone(), 0., 1., 0., 200, Curve::Linear);
++        let size = SizeAnimation::new(&new_phase, size.value(), Size::new(100., 300.), Some(size));
++        // Horizontal neighbors retained the old one-second clock; vertical
++        // neighbors were stationary and start on the new 200 ms clock.
++        assert_eq!(size.width.anim.end_time(), Duration::from_millis(1500));
++        assert_eq!(size.height.anim.end_time(), Duration::from_millis(700));
++        clock.set_unadjusted(Duration::from_millis(700));
++        near(size.value().h, 300.);
++        assert!(!size.is_done());
++        clock.set_unadjusted(Duration::from_millis(1500));
 +        assert!(size.is_done());
 +    }
 +
@@ -819,7 +1007,7 @@ index 40a58efa19974cd65b9c8d55ae0281daf363d871..02929c75d4f6ddfa0db8f39a11050063
              bail!("unexpected response: expected an error, got {response:?}");
          }
 diff --git a/src/ipc/server.rs b/src/ipc/server.rs
-index db71da6dbdc27ba1fc474a57090a76ffff8ca8c7..71590d785d624434681a30a2fd10cbb5f51c7a8a 100644
+index db71da6dbdc27ba1fc474a57090a76ffff8ca8c7..1762b7c50a2ce9a4905ea865b3cc9f35f6a76aa4 100644
 --- a/src/ipc/server.rs
 +++ b/src/ipc/server.rs
 @@ -272,6 +272,46 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
@@ -843,7 +1031,7 @@ index db71da6dbdc27ba1fc474a57090a76ffff8ca8c7..71590d785d624434681a30a2fd10cbb5
 +                    .is_some();
 +                let _ = tx.send_blocking(niri_ipc::NiriFxCapabilities {
 +                    schema: 1,
-+                    movement_shader: 1,
++                    movement_shader: 2,
 +                    renderer_verified,
 +                    movement_configured,
 +                    frame_timings: true,
@@ -1123,10 +1311,10 @@ index 5ba97a3598ec7dcb7e5797d5e764298be28ec4d7..6877db315a48a588eb3b14f1d3c1f9d2
          self.anim.is_done()
      }
 diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
-index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e5533618b 100644
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb9bb5f827 100644
 --- a/src/layout/scrolling.rs
 +++ b/src/layout/scrolling.rs
-@@ -16,7 +16,7 @@ use super::tab_indicator::{TabIndicator, TabIndicatorRenderElement, TabInfo};
+@@ -16,15 +16,15 @@ use super::tab_indicator::{TabIndicator, TabIndicatorRenderElement, TabInfo};
  use super::tile::{Tile, TileRenderElement, TileRenderSnapshot};
  use super::workspace::{InteractiveResize, ResolvedSize};
  use super::{ConfigureIntent, HitType, InteractiveResizeData, LayoutElement, Options, RemovedTile};
@@ -1135,6 +1323,16 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e
  use crate::input::swipe_tracker::SwipeTracker;
  use crate::layout::SizingMode;
  use crate::niri_render_elements;
++use crate::render_helpers::RenderCtx;
+ use crate::render_helpers::renderer::NiriRenderer;
+ use crate::render_helpers::xray::XrayPos;
+-use crate::render_helpers::RenderCtx;
+-use crate::utils::transaction::{Transaction, TransactionBlocker};
+ use crate::utils::ResizeEdge;
++use crate::utils::transaction::{Transaction, TransactionBlocker};
+ use crate::window::ResolvedWindowRules;
+ 
+ /// Amount of touchpad movement to scroll the view for the width of one working area.
 @@ -276,12 +276,6 @@ pub enum ScrollDirection {
      Right,
  }
@@ -1317,14 +1515,14 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e
          );
      }
  
-@@ -4178,23 +4197,31 @@ impl<W: LayoutElement> Column<W> {
+@@ -4178,23 +4197,42 @@ impl<W: LayoutElement> Column<W> {
          let current_offset = self
              .move_animation
              .as_ref()
 -            .map_or(0., |move_| move_.from * move_.anim.value());
 +            .map_or(0., |move_| move_.offset());
  
-         let anim = Animation::new(self.clock.clone(), 1., 0., 0., config);
+-        let anim = Animation::new(self.clock.clone(), 1., 0., 0., config);
 -        self.move_animation = Some(MoveAnimation {
 +        let velocity = self
 +            .move_animation
@@ -1338,6 +1536,18 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e
 +                    && !movement.anim.is_done()
 +            })
 +            .map(MoveAnimation::velocity);
++        // Opted-in active handoffs keep their timing just like tile movements.
++        // A config reload applies after the current path has settled.
++        let anim = if velocity.is_some() {
++            self.move_animation
++                .as_ref()
++                .unwrap()
++                .anim
++                .restarted(1., 0., 0.)
++        } else {
++            Animation::new(self.clock.clone(), 1., 0., 0., config)
++        };
++
 +        self.move_animation = Some(MoveAnimation::new(
              anim,
 -            from: from_x_offset + current_offset,
@@ -1359,7 +1569,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e
          }
      }
  
-@@ -5149,7 +5176,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5149,7 +5187,7 @@ impl<W: LayoutElement> Column<W> {
                  } else {
                      (0., 1.)
                  };
@@ -1368,7 +1578,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e
              }
          }
  
-@@ -5157,7 +5184,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5157,7 +5195,7 @@ impl<W: LayoutElement> Column<W> {
          if display == ColumnDisplay::Tabbed {
              self.tab_indicator.start_open_animation(
                  self.clock.clone(),
@@ -1378,10 +1588,10 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..370db5be52b6d37f6a2c47576863475e
          }
  
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
-index 85df548c10d78083c7bb0094fdc9421fd67e0047..d0f18f85ab6da9fa25270f901c745862a1f3856f 100644
+index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356fd0d7e389 100644
 --- a/src/layout/tests/animations.rs
 +++ b/src/layout/tests/animations.rs
-@@ -36,11 +36,244 @@ fn make_options() -> Options {
+@@ -36,11 +36,298 @@ fn make_options() -> Options {
          ..Options::default()
      };
      options.animations.window_resize.anim.kind = LINEAR;
@@ -1547,6 +1757,60 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..d0f18f85ab6da9fa25270f901c745862
 +}
 +
 +#[test]
++fn resize_handoff_timing_reload_keeps_neighbor_clock() {
++    for vertical in [false, true] {
++        for duration_ms in [200, 2400] {
++            let mut layout = resize_handoff_layout(vertical, true);
++            resize_handoff_set_size(&mut layout, vertical, 200);
++            Op::AdvanceAnimations { msec_delta: 500 }.apply(&mut layout);
++            let mut options = make_options();
++            options.animations.window_movement.custom_shader = Some(String::new());
++            options.animations.window_resize.anim.kind = Kind::Easing(EasingParams {
++                duration_ms,
++                curve: Curve::EaseOutCubic,
++            });
++            layout.update_options(options);
++            resize_handoff_set_size(&mut layout, vertical, 100);
++            for _ in 0..25 {
++                Op::AdvanceAnimations { msec_delta: 100 }.apply(&mut layout);
++                resize_handoff_assert_neighbors(&layout, vertical);
++            }
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_timing_reload_uses_new_clock_for_unrequested_stationary_axis() {
++    for vertical in [false, true] {
++        let mut layout = resize_handoff_layout(vertical, true);
++        resize_handoff_set_size(&mut layout, !vertical, 200);
++        Op::AdvanceAnimations { msec_delta: 500 }.apply(&mut layout);
++        let mut options = make_options();
++        options.animations.window_movement.custom_shader = Some(String::new());
++        options.animations.window_resize.anim.kind = Kind::Easing(EasingParams {
++            duration_ms: 200,
++            curve: Curve::Linear,
++        });
++        layout.update_options(options);
++        check_ops_on_layout(
++            &mut layout,
++            [
++                Op::SetForcedSize {
++                    id: 1,
++                    size: Some(Size::new(200, 200)),
++                },
++                Op::Communicate(1),
++                Op::Communicate(2),
++            ],
++        );
++        for _ in 0..12 {
++            Op::AdvanceAnimations { msec_delta: 50 }.apply(&mut layout);
++            resize_handoff_assert_neighbors(&layout, vertical);
++        }
++    }
++}
++
++#[test]
 +fn resize_handoff_stock_resize_keeps_original_path() {
 +    for vertical in [false, true] {
 +        let mut layout = resize_handoff_layout(vertical, false);
@@ -1627,7 +1891,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..d0f18f85ab6da9fa25270f901c745862
  fn set_up_two_in_column() -> Layout<TestWindow> {
      let ops = [
          Op::AddOutput(1),
-@@ -859,7 +1092,7 @@ fn height_resize_cancel_with_stationary_second_window() {
+@@ -859,7 +1146,7 @@ fn height_resize_cancel_with_stationary_second_window() {
      ];
      let mut options = make_options();
      // Window movement will happen instantly.
@@ -1637,7 +1901,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..d0f18f85ab6da9fa25270f901c745862
  
      // The resize is in progress.
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e1e39970e 100644
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4c8221577 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,4 +1,5 @@
@@ -1646,9 +1910,12 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
  use std::rc::Rc;
  
  use niri_config::utils::MergeWith as _;
-@@ -15,16 +16,19 @@ use super::{
+@@ -13,18 +14,21 @@ use super::opening_window::{OpenAnimation, OpeningWindowRenderElement};
+ use super::shadow::Shadow;
+ use super::{
      HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
-     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
+-    SizeFrac, RESIZE_ANIMATION_THRESHOLD,
++    RESIZE_ANIMATION_THRESHOLD, SizeFrac,
  };
 -use crate::animation::{Animation, Clock};
 +use crate::animation::{Animation, Clock, MoveAnimation, SizeAnimation};
@@ -1815,7 +2082,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
                  self.resize_animation = Some(ResizeAnimation {
                      anim,
                      size_from,
-@@ -378,12 +428,27 @@ impl<W: LayoutElement> Tile<W> {
+@@ -378,12 +428,34 @@ impl<W: LayoutElement> Tile<W> {
                      tile_size_from,
                      fullscreen_progress,
                      expanded_progress,
@@ -1836,14 +2103,21 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
 +            .as_mut()
 +            .and_then(|resize| resize.geometry.as_mut())
 +        {
-+            geometry.window.update_target(window_size);
-+            geometry.tile.update_target(tile_size);
++            let anim = Animation::new(
++                self.clock.clone(),
++                0.,
++                1.,
++                0.,
++                self.options.animations.window_resize.anim,
++            );
++            geometry.window.update_target(window_size, &anim);
++            geometry.tile.update_target(tile_size, &anim);
 +        }
 +
          let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
  
          let rules = self.window.rules();
-@@ -418,7 +483,12 @@ impl<W: LayoutElement> Tile<W> {
+@@ -418,7 +490,12 @@ impl<W: LayoutElement> Tile<W> {
          }
  
          if let Some(resize) = &mut self.resize_animation {
@@ -1857,7 +2131,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
                  self.resize_animation = None;
              }
          }
-@@ -547,10 +617,10 @@ impl<W: LayoutElement> Tile<W> {
+@@ -547,10 +624,10 @@ impl<W: LayoutElement> Tile<W> {
          let mut offset = Point::from((0., 0.));
  
          if let Some(move_) = &self.move_x_animation {
@@ -1870,7 +2144,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
          }
  
          offset += self.interactive_move_offset;
-@@ -578,51 +648,64 @@ impl<W: LayoutElement> Tile<W> {
+@@ -578,51 +655,64 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn animate_move_x_from(&mut self, from: f64) {
@@ -1953,7 +2227,20 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
          }
      }
  
-@@ -826,6 +909,11 @@ impl<W: LayoutElement> Tile<W> {
+@@ -697,11 +787,7 @@ impl<W: LayoutElement> Tile<W> {
+             }
+         }
+ 
+-        if self.sizing_mode.is_normal() {
+-            0.
+-        } else {
+-            1.
+-        }
++        if self.sizing_mode.is_normal() { 0. } else { 1. }
+     }
+ 
+     /// Returns `None` if the border is hidden and `Some(width)` if it should be shown.
+@@ -826,6 +912,11 @@ impl<W: LayoutElement> Tile<W> {
  
              size.w = f64::max(1., size_from.w + (size.w - size_from.w) * val);
              size.h = f64::max(1., size_from.h + (size.h - size_from.h) * val);
@@ -1965,7 +2252,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
              size = size
                  .to_physical_precise_round(self.scale)
                  .to_logical(self.scale);
-@@ -843,6 +931,11 @@ impl<W: LayoutElement> Tile<W> {
+@@ -843,6 +934,11 @@ impl<W: LayoutElement> Tile<W> {
  
              size.w = f64::max(1., size_from.w + (size.w - size_from.w) * val);
              size.h = f64::max(1., size_from.h + (size.h - size_from.h) * val);
@@ -1977,7 +2264,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
              size = size
                  .to_physical_precise_round(self.scale)
                  .to_logical(self.scale);
-@@ -1315,11 +1408,25 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1315,11 +1411,25 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn render<R: NiriRenderer>(
@@ -2003,7 +2290,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render");
-@@ -1334,6 +1441,45 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1334,6 +1444,45 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -2049,7 +2336,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
          if let Some(open) = &self.open_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1361,6 +1507,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1361,6 +1510,34 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }
@@ -2084,7 +2371,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1415,8 +1589,28 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1415,8 +1592,28 @@ impl<W: LayoutElement> Tile<W> {
      ) -> TileRenderSnapshot {
          let _span = tracy_client::span!("Tile::render_snapshot");
  
@@ -2114,7 +2401,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
              RenderCtx {
                  target: RenderTarget::Output,
                  renderer,
-@@ -1467,7 +1661,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1467,7 +1664,8 @@ impl<W: LayoutElement> Tile<W> {
                  xray.backdrop[output_idx] = screencast_backdrop.clone().unwrap();
  
                  let mut contents = Vec::new();
@@ -2124,7 +2411,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
                      RenderCtx {
                          target: RenderTarget::Output,
                          renderer,
-@@ -1487,7 +1682,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1487,7 +1685,8 @@ impl<W: LayoutElement> Tile<W> {
  
          // A bit of a hack to render blocked out as for screencast, but I think it's fine here.
          let mut blocked_out_contents = Vec::new();
@@ -2134,7 +2421,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..31384d5ed108a78a042e0ce0df75f36e
              RenderCtx {
                  target: RenderTarget::Screencast,
                  renderer,
-@@ -1510,15 +1706,18 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1510,15 +1709,18 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
