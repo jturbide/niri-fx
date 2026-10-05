@@ -1,0 +1,112 @@
+name: Native compatibility
+
+on:
+  workflow_dispatch:
+    inputs:
+      expanded_matrix:
+        description: Also compile internal patch-subset and minimal-feature controls
+        type: boolean
+        required: true
+        default: false
+  pull_request:
+    paths:
+      - ".github/workflows/native-compatibility.yml"
+      - "experimental/*.patch"
+      - "experimental/native-compatibility.json"
+      - "niri_fx/native_build.py"
+      - "scripts/build-niri-movement.py"
+      - "scripts/build-nirifx-session.py"
+      - "scripts/check-native-compatibility.py"
+      - "scripts/lib/native_build.py"
+      - "scripts/lib/native_candidates.py"
+      - "tests/test_native_compatibility.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-compatibility-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  patches:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      matrix: ${{ steps.matrix.outputs.cases }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Validate explicit matrix
+        id: matrix
+        env:
+          EXPANDED_MATRIX: ${{ github.event_name == 'workflow_dispatch' && inputs.expanded_matrix }}
+        run: |
+          if [[ "$EXPANDED_MATRIX" == "true" ]]; then
+            cases=$(python3 scripts/check-native-compatibility.py matrix --expanded)
+          else
+            cases=$(python3 scripts/check-native-compatibility.py matrix)
+          fi
+          printf 'cases=%s\n' "$cases" >> "$GITHUB_OUTPUT"
+      - name: Check clean patch stacks
+        run: python3 scripts/check-native-compatibility.py patches --report artifacts/native-compatibility/patches.json
+      - name: Retain patch diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-patch-diagnostics
+          path: |
+            artifacts/native-compatibility/patches.json
+            artifacts/native-compatibility/attempts/*/attempt.json
+            artifacts/native-compatibility/attempts/*/logs/*.log
+          retention-days: 7
+
+  compile:
+    needs: patches
+    name: Native ${{ matrix.id }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix: ${{ fromJSON(needs.patches.outputs.matrix) }}
+    env:
+      RUSTUP_TOOLCHAIN: ${{ matrix.rust_toolchain }}
+      CARGO_BUILD_JOBS: "2"
+      CARGO_PROFILE_DEV_DEBUG: "0"
+      CASE_ID: ${{ matrix.id }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned-source build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            build-essential clang pkg-config curl libudev-dev libgbm-dev \
+            libxkbcommon-dev libegl1-mesa-dev libwayland-dev libinput-dev \
+            libdbus-1-dev libsystemd-dev libseat-dev libpipewire-0.3-dev \
+            libpango1.0-dev libdisplay-info-dev
+      - name: Install exact Rust toolchain
+        run: rustup toolchain install "$RUSTUP_TOOLCHAIN" --profile minimal
+      - name: Cache dependency downloads only
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: |
+            ~/.cargo/registry/index
+            ~/.cargo/registry/cache
+            ~/.cargo/git/db
+          key: native-downloads-${{ matrix.runner }}-${{ matrix.target }}-${{ matrix.rust_toolchain }}-${{ matrix.id }}-${{ hashFiles('experimental/native-compatibility.json', 'experimental/*.patch') }}
+      - name: Compile and run focused native regressions
+        run: python3 scripts/check-native-compatibility.py build --case "$CASE_ID" --report "artifacts/native-compatibility/$CASE_ID.json"
+      - name: Retain compile diagnostics
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: native-${{ matrix.id }}-diagnostics
+          path: |
+            artifacts/native-compatibility/*.json
+            artifacts/native-builds/*/attempt.json
+            artifacts/native-builds/*/logs/*.log
+          retention-days: 7

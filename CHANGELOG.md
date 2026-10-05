@@ -9,6 +9,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- One `build-nirifx-session.py` command builds all compositor features with
+  desktop support, release optimization and focused regressions. A pinned native
+  compatibility matrix and isolated patch/build checks separate
+  upstream port failures from desktop updates. The native release checklist
+  covers dependency-aware packages, provenance, rollback and physical acceptance
+  before compositor binaries are advertised as supported downloads.
 - `native status` distinguishes the advertised running session from next-login
   and rollback selections, and reports each retained bundle's file and allocated
   storage sizes. Missing selections stay visible. `--offline` skips IPC; status
