@@ -67,6 +67,63 @@ class NativeLibraryFixture(unittest.TestCase):
 
 
 class NativeLibraryTests(NativeLibraryFixture):
+    def test_auto_target_prefers_a_verified_managed_session_over_the_shell(self):
+        args = SimpleNamespace(target="auto", inir_root=self.args.inir_root)
+        with (
+            patch.dict(os.environ, {"NIRI_SOCKET": "/synthetic/niri.sock"}),
+            patch.object(native_session, "status") as status,
+        ):
+            status.return_value = {"running": {"status": "matched"}}
+            self.assertEqual(studio_target(args), "native")
+            for state in ("external", "offline", "unknown"):
+                status.return_value = {"running": {"status": state}}
+                self.assertEqual(studio_target(args), "standalone")
+            status.side_effect = ValueError("Unusable retained storage")
+            self.assertEqual(studio_target(args), "standalone")
+
+    def test_live_apply_requires_the_same_reviewed_session_and_records_confirmation(self):
+        live = {"ready": True, "identity": {"pid": 123, "start_ticks": 42}}
+        with (
+            patch("niri_fx.native_live.context", return_value=live),
+            patch("niri_fx.native_live.apply", return_value={"status": "applied"}) as reload,
+        ):
+            review = self.library.review(self.selection)
+            self.assertEqual(review["activation"], "live-and-next-login")
+            result = self.library.apply(
+                {"selection": self.selection, "expected": review["plan_sha256"]}
+            )
+        self.assertEqual(result["activation"], "live-and-next-login")
+        self.assertEqual(result["live"]["status"], "applied")
+        self.assertEqual(reload.call_args.kwargs["expected_identity"], live["identity"])
+        self.assertEqual(
+            reload.call_args.args[2], native_session.load_selection(self.native)["selected"]
+        )
+
+    def test_changed_live_identity_invalidates_review_before_staging(self):
+        with patch("niri_fx.native_live.context") as context:
+            context.return_value = {"ready": True, "identity": {"pid": 123}}
+            review = self.library.review(self.selection)
+            before = snapshot(self.native)
+            context.return_value = {"ready": True, "identity": {"pid": 456}}
+            with self.assertRaisesRegex(ValueError, "plan changed"):
+                self.library.apply({"selection": self.selection, "expected": review["plan_sha256"]})
+            self.assertEqual(snapshot(self.native), before)
+
+    def test_unconfirmed_reload_does_not_claim_the_desktop_changed(self):
+        with (
+            patch(
+                "niri_fx.native_live.context",
+                return_value={"ready": True, "identity": {"pid": 123}},
+            ),
+            patch(
+                "niri_fx.native_live.apply",
+                return_value={"status": "unconfirmed", "detail": "Reload confirmation timed out"},
+            ),
+        ):
+            result = self.apply()
+        self.assertEqual(result["activation"], "next-login")
+        self.assertEqual(result["live"]["status"], "unconfirmed")
+
     def test_explicit_cli_choices_are_not_replaced_by_the_saved_recipe(self):
         for choice in (
             [],

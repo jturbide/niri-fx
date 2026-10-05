@@ -25,7 +25,8 @@ try {
     style.textContent='canvas{max-height:470px;min-height:0}';document.head.append(style);
     const banner=document.createElement('div');banner.id='recording-step';
     banner.style.cssText='position:fixed;bottom:0;left:0;right:0;padding:14px 24px;background:#212331;color:#f0edf7;font:600 19px system-ui;z-index:100';document.body.append(banner);
-    document.querySelector('[data-style=fragment-flow]').click();
+    document.querySelector('[data-library-action=combo]').click();document.querySelector('[data-style=fragment-flow]').click();
+    byId('combo-options').open=true;
     byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-120;
   })()`);
   async function select(id, value) {
@@ -68,7 +69,7 @@ try {
   await select("combo-close-mode", "style");
   await select("combo-close", "frost-vanish");
   await select("combo-name", "Quiet Exit");
-  await evaluate("byId('export').click();byId('kdl').click()");
+  await evaluate("byId('transfer-options').open=true;byId('export').click();byId('kdl').click()");
   await hold("Export editable JSON and Niri config / Previewing leaves your desktop unchanged", 2);
   const saved = JSON.parse(readFileSync(join(root, "nirifx-preset.json")));
   assert.equal(saved.actions.open, null);

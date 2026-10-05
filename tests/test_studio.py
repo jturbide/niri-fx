@@ -47,6 +47,9 @@ class ServerTests(unittest.TestCase):
         config.parent.mkdir()
         config.write_text("animations {}\n")
         args = Namespace(
+            # These HTTP contracts own a temporary standalone configuration;
+            # the desktop running the suite must not select a managed adapter.
+            target="standalone",
             port=0,
             preset="earth",
             base="auto",

@@ -46,6 +46,20 @@ def studio_target(arguments):
     ):
         raise ValueError("--native-root and --native-base require --target native")
     if target == "auto":
+        from . import native_session
+
+        # A verified managed compositor owns its effects independently of the
+        # surrounding shell. Merely having a retained bundle is not enough.
+        socket_path = os.environ.get("NIRI_SOCKET")
+        if socket_path:
+            try:
+                report = native_session.status(
+                    native_session.default_root(), socket_path=socket_path
+                )
+                if report["running"]["status"] == "matched":
+                    return "native"
+            except (OSError, ValueError):
+                pass
         return (
             "inir"
             if (Path(arguments.inir_root) / "scripts/niri-config.py").is_file()
@@ -171,7 +185,7 @@ class Library:
 
     def native_listing(self):
         """Separate retained configuration from the advertised running renderer."""
-        from . import native_session
+        from . import native_live, native_session
 
         report = native_session.status(self.native_root, socket_path=self.native_socket)
         managed, warnings = self.saved_profiles()
@@ -212,6 +226,11 @@ class Library:
                 "bundles": report["bundles"],
                 "recipe": recipe,
                 "reopen": reopen,
+                "live": native_live.context(
+                    self.native_root,
+                    self.native_base["bundle_id"],
+                    socket_path=self.native_socket,
+                ),
             },
         }
 
@@ -313,12 +332,13 @@ class Library:
                 raise ValueError(
                     "Managed review accepts a document and optional fragment preset only"
                 )
-            return configure_plan(
+            plan = configure_plan(
                 self.native_root,
                 self.native_base["bundle_id"],
                 request["document"],
                 fragment_preset=request.get("fragment_preset"),
             )
+            return self.native_activation_plan(plan, self.native_base["bundle_id"])
         required = {"document", "allow_resize", "allow_movement"}
         if (
             not isinstance(request, dict)
@@ -520,6 +540,21 @@ class Library:
     def review(self, request):
         return summarize(self.plan(request))
 
+    def native_activation_plan(self, plan, base_bundle):
+        """Bind direct desktop activation to the same review as retained selection."""
+        from . import native_live
+
+        return native_live.activation_plan(
+            plan, self.native_root, base_bundle, socket_path=self.native_socket
+        )
+
+    def native_activation_result(self, plan, result, base_bundle):
+        from . import native_live
+
+        return native_live.activation_result(
+            plan, result, self.native_root, base_bundle, socket_path=self.native_socket
+        )
+
     def apply(self, request):
         if (
             not isinstance(request, dict)
@@ -531,7 +566,8 @@ class Library:
         if self.target == "native":
             from .native_customization import apply_native
 
-            return apply_native(plan, self.native_root, expected=request["expected"])
+            result = apply_native(plan, self.native_root, expected=request["expected"])
+            return self.native_activation_result(plan, result, self.native_base["bundle_id"])
         plan["selection_document"] = request["selection"]["document"]
         plan["library_scope"] = self.scope()
         return apply_plan(plan, self.state, expected=request["expected"])
@@ -539,7 +575,7 @@ class Library:
     def undo(self):
         if self.target == "native":
             raise ValueError(
-                "Managed rollback requires Review rollback, then Select for next login"
+                "Managed rollback requires Review rollback, then confirm the reviewed changes"
             )
         return restore(
             self.state,
@@ -553,7 +589,8 @@ class Library:
             raise ValueError("Managed rollback accepts no client-selected path or bundle")
         from .native_session import rollback_plan
 
-        return summarize(rollback_plan(self.native_root))
+        plan = rollback_plan(self.native_root)
+        return summarize(self.native_activation_plan(plan, plan["selection"]["selected"]))
 
     def rollback_apply(self, request):
         if (
@@ -565,10 +602,13 @@ class Library:
             raise ValueError("Managed rollback requires the exact reviewed fingerprint")
         from .native_session import rollback_plan
 
+        plan = rollback_plan(self.native_root)
+        base = plan["selection"]["selected"]
+        plan = self.native_activation_plan(plan, base)
         result = apply_plan(
-            rollback_plan(self.native_root),
+            plan,
             self.native_root / "state/selection",
             expected=request["expected"],
         )
         result.pop("restore", None)
-        return result
+        return self.native_activation_result(plan, result, base)

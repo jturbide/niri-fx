@@ -391,7 +391,7 @@ def main(argv=None):
         if arguments.command == "native":
             from .native_cli import run
 
-            run(arguments)
+            return run(arguments) or 0
         elif arguments.command == "families":
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "agent-info":

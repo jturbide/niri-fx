@@ -63,10 +63,12 @@ try {
     );
   }
   await frames("1 / Start with a recommended look");
-  await evaluate(`document.querySelector('[data-style=fragments-motion]').click()`);
+  await evaluate(
+    `document.querySelector('[data-library-action=combo]').click();document.querySelector('[data-style=fragments-motion]').click()`,
+  );
   await frames("Fragments Motion / Resize and movement preserve desktop settings", 2, true);
   await evaluate(
-    `byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130;byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'))`,
+    `byId('combo-options').open=true;byId('library-panel').scrollTop=byId('combo-actions').offsetTop-byId('library-panel').offsetTop-130;byId('combo-close').value='frost-vanish';byId('combo-close').dispatchEvent(new Event('change'))`,
   );
   await frames("2 / Keep fragments for opening, choose Frost Vanish for closing", 2, true);
   await evaluate(
@@ -86,7 +88,9 @@ try {
   assert.deepEqual(pointerDocument.pointer, { strength: 0.75, damping: 85, frequency: 10 });
   await frames("Customize the spring / Try pointer drag to preview the response", 1.25);
   await comboFrames("Preview pointer drag and release together with your combo");
-  await evaluate(`byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`);
+  await evaluate(
+    `byId('transfer-options').open=true;byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`,
+  );
   await frames("JSON keeps pointer settings / Stock config leaves them out", 1.25);
   assert.deepEqual(
     JSON.parse(readFileSync(join(root, "nirifx-preset.json"))).pointer,

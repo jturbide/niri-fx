@@ -3147,10 +3147,10 @@ index f4b37c727d6aeb3d98aef7d464462a0c75bcd40a..214c579d78d96c42a47d7e5cde5ac672
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
 diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
-index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0d63a84fa 100644
+index fddf12b49ee8c844a75b48c14f7157507e5ef246..7a2fd3881eed81df4bd9047ae8b16723c6c1f97a 100644
 --- a/src/render_helpers/movement.rs
 +++ b/src/render_helpers/movement.rs
-@@ -8,11 +8,12 @@ use smithay::backend::renderer::element::{Element, Kind, RenderElement};
+@@ -8,11 +8,12 @@
  use smithay::backend::renderer::gles::{GlesRenderer, Uniform};
  use smithay::backend::renderer::Texture;
  use smithay::utils::{Logical, Point, Rectangle, Scale, Size};
@@ -3164,7 +3164,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
  use crate::animation::{Animation, Clock};
  
  /// Layout samples use the compositor clock, so slow-motion and repeated render
-@@ -29,6 +30,22 @@ pub struct MovementState {
+@@ -29,6 +30,22 @@
  }
  
  impl MovementState {
@@ -3187,7 +3187,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
      pub fn end_time(&self) -> Duration {
          self.end
      }
-@@ -245,6 +262,7 @@ pub struct MovementEffect {
+@@ -245,6 +262,7 @@
      clock: Clock,
      buffer: OffscreenBuffer,
      continuity: RefCell<MotionContinuity>,
@@ -3195,18 +3195,19 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
  }
  
  impl MovementEffect {
-@@ -254,10 +272,20 @@ impl MovementEffect {
+@@ -254,10 +272,20 @@
              clock,
              buffer: OffscreenBuffer::default(),
              continuity: RefCell::new(MotionContinuity::default()),
+-        }
 +            fragment_active: Cell::new(false),
-         }
-     }
- 
-+    pub fn start_fragment(&self) {
-+        self.fragment_active.set(true);
++        }
 +    }
 +
++    pub fn start_fragment(&self) {
++        self.fragment_active.set(true);
+     }
+ 
      pub fn continuation(&self) -> Option<crate::layout::closing_window::AnimationContinuation> {
 +        // The timed close continuation has no fragment spring ABI. Freeze the
 +        // existing target-protected rendered snapshot instead of re-fragmenting it.
@@ -3216,7 +3217,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
          let state = self.continuity.borrow();
          let motion = state.previous?;
          let at = self.clock.now();
-@@ -307,9 +335,17 @@ impl MovementEffect {
+@@ -307,9 +335,17 @@
          location: Point<f64, Logical>,
          scale: Scale<f64>,
          alpha: f32,
@@ -3236,7 +3237,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
          let clamped_progress = progress.clamp(0., 1.);
          let (elem, _sync_point, mut data) = self
              .buffer
-@@ -321,14 +357,35 @@ impl MovementEffect {
+@@ -321,14 +357,40 @@
          let texture = elem.texture();
          let texture_size = elem.logical_size();
  
@@ -3248,7 +3249,12 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +            let sample = fragment
 +                .sample(geo_size, texture_rect)
 +                .map_err(anyhow::Error::msg)?;
-+            let (vertices, bounds) = fragment_mesh_vertices(&sample, texture_rect, scale)?;
++            let allocation_size = texture
++                .size()
++                .to_f64()
++                .to_logical(scale, smithay::utils::Transform::Normal);
++            let (vertices, bounds) =
++                fragment_mesh_vertices(&sample, texture_rect, allocation_size, scale)?;
 +            let elem = ShaderRenderElement::new(
 +                ProgramType::FragmentMesh,
 +                bounds.size,
@@ -3278,7 +3284,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
          area.loc -= diff;
          area.size += diff.upscale(2.).to_size();
  
-@@ -364,7 +421,9 @@ impl MovementEffect {
+@@ -364,7 +426,9 @@
                  Uniform::new("niri_move_impulse", impulse),
                  Uniform::new(
                      "niri_move_delta",
@@ -3289,7 +3295,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
                  ),
              ]),
              HashMap::from([(String::from("niri_tex"), texture.clone())]),
-@@ -379,9 +438,363 @@ impl MovementEffect {
+@@ -379,9 +443,442 @@
      }
  }
  
@@ -3299,6 +3305,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +fn fragment_mesh_vertices(
 +    sample: &FragmentSample,
 +    texture_rect: Rectangle<f64, Logical>,
++    allocation_size: Size<f64, Logical>,
 +    scale: Scale<f64>,
 +) -> anyhow::Result<(Rc<[[f32; 9]]>, Rectangle<f64, Logical>)> {
 +    anyhow::ensure!(
@@ -3307,6 +3314,8 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +            texture_rect.loc.y,
 +            texture_rect.size.w,
 +            texture_rect.size.h,
++            allocation_size.w,
++            allocation_size.h,
 +            scale.x,
 +            scale.y
 +        ]
@@ -3316,8 +3325,20 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +        "invalid fragment geometry"
 +    );
 +    anyhow::ensure!(
-+        texture_rect.size.w > 0. && texture_rect.size.h > 0. && scale.x > 0. && scale.y > 0.,
++        texture_rect.size.w > 0.
++            && texture_rect.size.h > 0.
++            && allocation_size.w >= texture_rect.size.w
++            && allocation_size.h >= texture_rect.size.h
++            && scale.x > 0.
++            && scale.y > 0.,
 +        "invalid fragment texture dimensions"
++    );
++    // OffscreenBuffer retains its high-water allocation when content shrinks or
++    // an output scale decreases. Geometry covers only current content, while
++    // normalized sampling coordinates must refer to the entire backing texture.
++    let uv_extent = Vec2::new(
++        (texture_rect.size.w / allocation_size.w) as f32,
++        (texture_rect.size.h / allocation_size.h) as f32,
 +    );
 +    if !sample.cells.is_empty()
 +        && sample.cells.iter().all(|cell| {
@@ -3344,8 +3365,8 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +            [
 +                x,
 +                y,
-+                x,
-+                y,
++                x * uv_extent.x,
++                y * uv_extent.y,
 +                (x * 2. - 1.) * half[0],
 +                (y * 2. - 1.) * half[1],
 +                half[0],
@@ -3403,8 +3424,8 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +            );
 +            let position = center + Vec2::from_array(cell.translation) + rotated;
 +            let uv = Vec2::new(
-+                (source.x - texture_rect.loc.x as f32) / texture_rect.size.w as f32,
-+                (source.y - texture_rect.loc.y as f32) / texture_rect.size.h as f32,
++                (source.x - texture_rect.loc.x as f32) / allocation_size.w as f32,
++                (source.y - texture_rect.loc.y as f32) / allocation_size.h as f32,
 +            );
 +            anyhow::ensure!(
 +                position.is_finite() && uv.is_finite() && cell.edge_blend.is_finite(),
@@ -3474,7 +3495,8 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +            .into(),
 +            max_lag: 768.,
 +        };
-+        let (vertices, area) = fragment_mesh_vertices(&sample, rect, Scale::from(1.25)).unwrap();
++        let (vertices, area) =
++            fragment_mesh_vertices(&sample, rect, rect.size, Scale::from(1.25)).unwrap();
 +        assert_eq!(vertices.len(), 6);
 +        for vertex in vertices.iter() {
 +            assert!(vertex.iter().all(|v| v.is_finite()));
@@ -3485,7 +3507,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +        assert!((area.loc.x * 1.25).fract().abs() < 1e-9);
 +        assert!(((area.loc.x + area.size.w) * 1.25).fract().abs() < 1e-9);
 +        let bad = Rectangle::new((f64::NAN, 0.).into(), (120., 96.).into());
-+        assert!(fragment_mesh_vertices(&sample, bad, Scale::from(1.)).is_err());
++        assert!(fragment_mesh_vertices(&sample, bad, rect.size, Scale::from(1.)).is_err());
 +    }
 +
 +    #[test]
@@ -3494,7 +3516,8 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +        let size = Size::from((500., 500.));
 +        let rect = Rectangle::new((-12., -8.).into(), (524., 516.).into());
 +        let sample = motion.sample(Duration::ZERO, size, rect).unwrap();
-+        let (vertices, area) = fragment_mesh_vertices(&sample, rect, Scale::from(1.)).unwrap();
++        let (vertices, area) =
++            fragment_mesh_vertices(&sample, rect, rect.size, Scale::from(1.)).unwrap();
 +        assert_eq!(
 +            vertices.len(),
 +            6,
@@ -3527,6 +3550,55 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +        }
 +    }
 +
++    #[test]
++    fn fragment_mesh_reused_texture_preserves_pixels_after_size_or_scale_decreases() {
++        // A 4K-to-1440p move shrinks the content while OffscreenBuffer keeps its
++        // high-water allocation. Scale changes can produce the same mismatch.
++        for (content, allocation, scale) in [
++            ((800., 600.), (1200., 900.), 1.),
++            ((900., 500.), (1200., 500.), 1.),
++            ((900., 500.), (900., 750.), 1.),
++            ((800., 600.), (1600., 1200.), 1.),
++            ((800., 600.), (1280., 960.), 1.25),
++        ] {
++            let rect = Rectangle::new((-12., -8.).into(), content.into());
++            let allocation = Size::from(allocation);
++            for translation in [[0., 0.], [37., -19.]] {
++                let sample = FragmentSample {
++                    cells: vec![FragmentCell {
++                        center: [
++                            rect.loc.x as f32 + content.0 as f32 / 2.,
++                            rect.loc.y as f32 + content.1 as f32 / 2.,
++                        ],
++                        half_extent: [content.0 as f32 / 2., content.1 as f32 / 2.],
++                        translation,
++                        rotation: 0.,
++                        tilt: [0., 0.],
++                        edge_blend: 0.,
++                        pin_weight: 0.,
++                    }]
++                    .into(),
++                    max_lag: 768.,
++                };
++                let (vertices, area) =
++                    fragment_mesh_vertices(&sample, rect, allocation, Scale::from(scale)).unwrap();
++                for vertex in vertices.iter() {
++                    let source = [
++                        rect.loc.x + f64::from(vertex[2]) * allocation.w,
++                        rect.loc.y + f64::from(vertex[3]) * allocation.h,
++                    ];
++                    let destination = [
++                        area.loc.x + f64::from(vertex[0]) * area.size.w,
++                        area.loc.y + f64::from(vertex[1]) * area.size.h,
++                    ];
++                    for axis in 0..2 {
++                        assert!((destination[axis] - f64::from(translation[axis]) - source[axis]).abs() < 0.001, "source texel position changed for content {content:?}, allocation {allocation:?}, scale {scale}, translation {translation:?}");
++                    }
++                }
++            }
++        }
++    }
++
 +    /// Export the real state and vertex builder for the software GPU oracle.
 +    #[test]
 +    #[ignore = "requires NIRIFX_FRAGMENT_MESH_FIXTURE; run explicitly with --ignored"]
@@ -3542,11 +3614,24 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +            let sample = motion
 +                .sample(Duration::from_millis(ms), size, rect)
 +                .unwrap();
-+            let (vertices, area) = fragment_mesh_vertices(&sample, rect, Scale::from(1.)).unwrap();
++            let (vertices, area) =
++                fragment_mesh_vertices(&sample, rect, rect.size, Scale::from(1.)).unwrap();
 +            frames.push(serde_json::json!({
 +                "name": name, "ms": ms, "target": target,
 +                "area": [area.loc.x, area.loc.y, area.size.w, area.size.h],
 +                "vertices": vertices.as_ref(),
++                "reused_textures": ([
++                    (rect.size.w * 1.5, rect.size.h),
++                    (rect.size.w, rect.size.h * 1.5),
++                    (rect.size.w * 2., rect.size.h * 2.),
++                ].map(|(w, h)| {
++                    let (vertices, area) = fragment_mesh_vertices(&sample, rect, (w, h).into(), Scale::from(1.)).unwrap();
++                    serde_json::json!({
++                        "allocation_size": [w, h],
++                        "area": [area.loc.x, area.loc.y, area.size.w, area.size.h],
++                        "vertices": vertices.as_ref(),
++                    })
++                })),
 +                "cells": sample.cells.iter().map(|cell| serde_json::json!({
 +                    "center": cell.center, "translation": cell.translation,
 +                    "rotation": cell.rotation, "tilt": cell.tilt, "pin": cell.pin_weight,
@@ -3614,7 +3699,7 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +                        .unwrap();
 +                    assert_eq!(sample.cells.len(), count);
 +                    let (vertices, area) =
-+                        fragment_mesh_vertices(&sample, rect, Scale::from(1.)).unwrap();
++                        fragment_mesh_vertices(&sample, rect, rect.size, Scale::from(1.)).unwrap();
 +                    let identity = name == "rest" || name == "settled";
 +                    assert_eq!(vertices.len(), if identity { 6 } else { count * 6 });
 +                    assert!(vertices.iter().flatten().all(|value| value.is_finite()));
@@ -3653,10 +3738,12 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
  
      fn state(progress: f64, x: f64, seconds: f64, end: f64) -> MovementState {
          MovementState {
-@@ -395,6 +808,29 @@ mod tests {
+@@ -393,6 +890,29 @@
+             travel_velocity: Point::from((x, 0.)),
+             remaining: Point::from((x * (1. - progress), 0.)),
          }
-     }
- 
++    }
++
 +    #[test]
 +    fn fragment_motion_opposed_total_deltas_keep_real_combined_travel() {
 +        let parent = state(0.3, 500., 0.3, 1.3).with_layout((100., 0.).into(), (500., 0.).into());
@@ -3678,11 +3765,9 @@ index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0
 +        assert!(effect.continuation().is_some());
 +        effect.start_fragment();
 +        assert!(effect.continuation().is_none());
-+    }
-+
+     }
+ 
      #[test]
-     fn uninterrupted_phase_matches_layout() {
-         let mut motion = MotionContinuity::default();
 diff --git a/src/render_helpers/shader_element.rs b/src/render_helpers/shader_element.rs
 index 7309e62d00b111adcf90b65d584fa028f7f58f6f..6ac71b3a12af9755cc456eb398d8730d325ab0fb 100644
 --- a/src/render_helpers/shader_element.rs

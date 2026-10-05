@@ -437,6 +437,7 @@ def summarize(plan):
         "activation": plan.get("activation"),
         "movement": plan.get("movement"),
         "pointer_activation": plan.get("pointer_activation"),
+        "native_live": plan.get("native_live"),
         "validation_binary": plan.get("validation_binary"),
         "changes": [
             {
@@ -468,6 +469,8 @@ def plan_fingerprint(plan):
         "pointer": plan.get("pointer"),
         "movement": plan.get("movement"),
         "pointer_activation": plan.get("pointer_activation"),
+        "native_live": plan.get("native_live"),
+        "activation": plan.get("activation"),
         "validation_binary": plan.get("validation_binary"),
         "changes": [
             {k: item[k] for k in ("logical", "target", "mode")}

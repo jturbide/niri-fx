@@ -7,6 +7,113 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
+test("simple Studio previews one action while preserving the rest of the combo", async () => {
+  const html = execFileSync(
+    "python3",
+    [
+      "-c",
+      'from niri_fx.preview import preview_document; from niri_fx.presets import PRESETS; print(preview_document(PRESETS["balanced"], hosted=True))',
+    ],
+    { cwd: projectRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+  );
+  const server = createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(html);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const browser = await launchBrowser();
+  try {
+    await browser.navigate(`http://127.0.0.1:${server.address().port}/?breakup=0`, {
+      width: 1320,
+      height: 960,
+    });
+    const { evaluate } = browser;
+    await evaluate(`
+      window.simpleFrames = new Map(); window.simpleFrameId = 0;
+      window.requestAnimationFrame = callback => {
+        simpleFrames.set(++simpleFrameId, callback); return simpleFrameId;
+      };
+      window.cancelAnimationFrame = id => simpleFrames.delete(id);
+    `);
+    const action = (name) =>
+      evaluate(`document.querySelector('[data-library-action="${name}"]').click()`);
+    const choose = (name) => evaluate(`document.querySelector('[data-style="${name}"]').click()`);
+    assert.equal(await evaluate('byId("combo-options").open'), false);
+    assert.equal(await evaluate('byId("transfer-options").open'), false);
+    assert.equal(
+      await evaluate(
+        'document.querySelector("[data-library-action=open]").getAttribute("aria-pressed")',
+      ),
+      "true",
+    );
+    assert.equal(await evaluate('document.querySelector("[data-style=fragment-flow]")'), null);
+    await choose("explosion");
+    assert.equal(await evaluate("editingAction"), "open");
+    assert.equal(await evaluate("simpleFrames.size"), 1, "Selecting a card starts playback");
+    assert.deepEqual(
+      await evaluate("effectDocument().actions.open"),
+      await evaluate("({...catalog.presets.explosion,resize:false})"),
+    );
+    const opening = await evaluate("effectDocument().actions.open");
+    await action("close");
+    await choose("frost-vanish");
+    assert.equal(await evaluate("editingAction"), "close");
+    assert.deepEqual(await evaluate("effectDocument().actions.open"), opening);
+    const closing = await evaluate("effectDocument().actions.close");
+    await action("resize");
+    assert.equal(await evaluate('document.querySelector("[data-style=frost-vanish]")'), null);
+    await choose("spring-wobble");
+    assert.equal(await evaluate("mode"), "resize");
+    assert.equal(await evaluate("effectDocument().actions.resize.family"), "elastic");
+    await action("movement");
+    await choose("balanced");
+    assert.equal(await evaluate("mode"), "movement");
+    assert.equal(await evaluate("effectDocument().actions.movement.family"), "fragments");
+    assert.deepEqual(await evaluate("effectDocument().actions.open"), opening);
+    assert.deepEqual(await evaluate("effectDocument().actions.close"), closing);
+    await evaluate('byId("library-off").click()');
+    assert.equal(await evaluate("effectDocument().actions.movement"), "off");
+    await evaluate('byId("library-preserve").click()');
+    assert.equal(await evaluate("effectDocument().actions.movement"), null);
+    await evaluate('byId("undo").click()');
+    assert.equal(await evaluate("effectDocument().actions.movement"), "off");
+    const before = await evaluate("effectDocument()");
+    await action("close");
+    await evaluate(`
+      byId("reduced-motion").checked = true;
+      byId("reduced-motion").dispatchEvent(new Event("change"));
+      byId("library-replay").click();
+    `);
+    assert.equal(await evaluate("simpleFrames.size"), 0);
+    assert.equal(await evaluate("progress"), 1);
+    assert.deepEqual(await evaluate("effectDocument()"), before);
+    if (process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT) {
+      await action("open");
+      const shot = await browser.rpc("Page.captureScreenshot", { format: "png" });
+      writeFileSync(process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT, Buffer.from(shot.data, "base64"));
+      await browser.rpc("Emulation.setDeviceMetricsOverride", {
+        width: 520,
+        height: 960,
+        deviceScaleFactor: 1,
+        mobile: false,
+      });
+      assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
+      const narrow = await browser.rpc("Page.captureScreenshot", { format: "png" });
+      writeFileSync(
+        process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT.replace(/\.png$/, "-narrow.png"),
+        Buffer.from(narrow.data, "base64"),
+      );
+    }
+    await action("combo");
+    await choose("fragment-flow");
+    assert.equal(await evaluate("effectDocument().name"), "Fragment Flow");
+    assert.equal(await evaluate('byId("error").textContent'), "");
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
+  }
+});
+
 test("library combines supported actions, preserves edits and saves offline without activation", async () => {
   const html = execFileSync(
     "python3",
@@ -78,7 +185,9 @@ test("library combines supported actions, preserves edits and saves offline with
     assert.equal(await evaluate('byId("activation-controls").hidden'), true);
     assert.equal(await evaluate('getComputedStyle(byId("save-target")).display'), "none");
     assert.equal(await evaluate("effectDocument().effect.resize"), false);
-    await evaluate('document.querySelector("[data-style=fragments-motion]").click()');
+    await evaluate(
+      'document.querySelector("[data-library-action=combo]").click();document.querySelector("[data-style=fragments-motion]").click()',
+    );
     assert.equal(await evaluate("effectDocument().actions.resize"), null);
     await evaluate(
       'byId("combo-close").value="frost-vanish";byId("combo-close").dispatchEvent(new Event("change"))',
@@ -504,7 +613,14 @@ finally:
     assert.equal(await evaluate("effectDocument().effect.spin"), 50);
     assert.equal(await evaluate("byId('preset').value"), "");
     assert.equal(await evaluate("catalog.connection.pointer"), undefined);
-    await evaluate('document.querySelector("[data-style=fragments-motion]").click()');
+    await evaluate('document.querySelector("[data-library-action=movement]").click()');
+    assert.equal(await evaluate('document.querySelectorAll("[data-fragment]").length'), 3);
+    await evaluate('document.querySelector("[data-fragment=gentle]").click()');
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "gentle");
+    assert.equal(await evaluate("effectDocument().actions.movement.family"), "fragments");
+    await evaluate(
+      'document.querySelector("[data-library-action=combo]").click();document.querySelector("[data-style=fragments-motion]").click()',
+    );
     await choose("combo-open-mode", "preserve");
     await choose("combo-close", "frost-vanish");
     await choose("combo-resize-mode", "off");
@@ -619,6 +735,46 @@ finally:
     assert.equal(selection().selected, null);
     assert.match(await evaluate("byId('status').textContent"), /Choose stock Niri/);
     assert.equal(await evaluate("byId('error').textContent"), "");
+    // The backend owns live identity checks. Exercise presentation with explicit
+    // protocol responses; these requests never activate a real compositor.
+    await evaluate(`
+      window.realLibraryFetch = fetch;
+      window.liveResult = "applied";
+      window.fetch = async (path, options) => {
+        if (path === "/review") return new Response(JSON.stringify({
+          activation: "live-and-next-login", changes: [], notes: [], plan_sha256: "reviewed"
+        }));
+        if (path === "/apply") return new Response(JSON.stringify({
+          selection: {selected: "synthetic"}, activation: "live-and-next-login",
+          live: {status: window.liveResult, detail: "Synthetic desktop result."}
+        }));
+        const response = await realLibraryFetch(path, options);
+        if (String(path).startsWith("/library?")) {
+          const data = await response.json();
+          data.native.running.status = "matched";
+          data.native.live = {ready: window.liveResult === "applied", detail: "Synthetic verified session."};
+          return new Response(JSON.stringify(data));
+        }
+        return response;
+      };
+    `);
+    for (const status of ["applied", "failed", "unconfirmed"]) {
+      await browser.callFunction("function(status){window.liveResult=status}", [status]);
+      await click("review-selection");
+      await settle();
+      assert.equal(await evaluate("byId('apply-selection').textContent"), "Apply to desktop");
+      assert.equal(
+        await evaluate("byId('review-selection').textContent"),
+        status === "applied" ? "Review & apply" : "Review next login",
+      );
+      await click("apply-selection");
+      await settle();
+      const message = await evaluate("byId('status').textContent");
+      assert.match(message, status === "applied" ? /Applied to this desktop/ : /not confirmed/);
+      if (status !== "applied") assert.doesNotMatch(message, /Applied to this desktop/);
+      if (status !== "applied")
+        assert.match(await evaluate("byId('native-running').textContent"), /effects not confirmed/);
+    }
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) {

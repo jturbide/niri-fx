@@ -40,7 +40,7 @@ try {
   await browser.navigate(pathToFileURL(page).href, { width: 720, height: 616 });
   await evaluate(`(() => {
     const style=document.createElement('style');
-    style.textContent='html,body{width:720px;height:616px;max-width:none;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,.selection-summary,#concept-note,#movement-preview-controls,#caption,#status,main>small,.motion-preference,#error,#combo-preview-status{display:none!important}.layout{display:block;margin:0 14px}canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
+    style.textContent='html,body{width:720px;height:616px;max-width:none;margin:0;padding:0;overflow:hidden;background:#10151e}header,body>p,aside,.tabs,.controls,#library-actions,#transfer-options,.selection-summary,#concept-note,#movement-preview-controls,#caption,#status,main>small,.motion-preference,#error,#combo-preview-status{display:none!important}.layout{display:block;margin:0 14px}html[data-workspace] canvas{width:690px;height:524px;max-height:none;min-height:0;border-radius:12px}canvas[hidden]{display:none}#gif-heading{height:53px;padding:18px 22px 0;box-sizing:border-box;font-size:18px;font-weight:600;color:#dfedf5}#gif-note{padding:10px 22px;font-size:12px;color:#93b5c5;display:block!important}';
     document.head.append(style);
     const heading=document.createElement('div');heading.id='gif-heading';document.body.prepend(heading);
     const note=document.createElement('div');note.id='gif-note';document.body.append(note);
@@ -92,7 +92,7 @@ print(json.dumps({'document':effect_document(name,profile),'shaders':shaders,'so
       ),
     );
     await evaluate(
-      `document.querySelector('[data-style=${id}]').click();byId('gif-heading').textContent=${JSON.stringify(input.name)};seed=0.43;`,
+      `document.querySelector('[data-library-action=combo]').click();document.querySelector('[data-style=${id}]').click();byId('gif-heading').textContent=${JSON.stringify(input.name)};seed=0.43;`,
     );
     assert.deepEqual(await evaluate("effectDocument()"), expected.document);
     for (const [action, shader] of Object.entries(expected.shaders))

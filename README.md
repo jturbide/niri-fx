@@ -414,9 +414,10 @@ ready-made profiles.
 
 ## Make it yours
 
-Open `niri-fx studio` to choose a finished look in **Library**. Choose opening
-and closing styles, then choose Preserve, NiriFX Style or Off for resize,
-Move / swap and pointer drag. **Customize in Studio** opens detailed tuning in the same app.
+Open `niri-fx studio`, choose **Open**, **Close**, **Resize** or **Move / swap**,
+and click a style to see it play. Mix different styles or choose a complete look
+from **Combos**. Review and apply directly from Studio. In a matching NiriFX
+session, effects update immediately; **More options** and the editor hold detailed tuning.
 
 ![Choose effects and build a combo](docs/gifs/workflow-library.gif)
 

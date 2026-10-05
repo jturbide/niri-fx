@@ -152,6 +152,36 @@ try {
     }
     render[filter] = result;
   }
+  const reusedTextures = {};
+  for (let allocation = 0; allocation < 3; allocation++) {
+    const allocationSize = frames.rest.reused_textures?.[allocation]?.allocation_size;
+    assert.ok(
+      allocationSize,
+      "Fixture must include native meshes for retained texture allocations",
+    );
+    const reusedFixture = {
+      ...fixture,
+      allocation_size: allocationSize,
+      frames: fixture.frames.map((frame) => {
+        const reused = frame.reused_textures[allocation];
+        assert.deepEqual(reused.allocation_size, allocationSize);
+        return { ...frame, vertices: reused.vertices, area: reused.area };
+      }),
+    };
+    for (const filter of ["nearest", "linear"]) {
+      const result = await browser.callFunction(renderFragmentMeshes.toString(), [
+        { source, vertex, epilogue, fixture: reusedFixture, filter },
+      ]);
+      assert.equal(result.rest.max, 0, `${filter}: retained allocation changed resting pixels`);
+      assert.equal(result.settled.max, 0, `${filter}: retained allocation changed settled pixels`);
+      assert.ok(
+        result.moving.changed > 1000,
+        "retained allocation did not render moving fragments",
+      );
+      assert.ok(result.premultiplied && result.sourceClip);
+      reusedTextures[`${allocationSize.join("x")}-${filter}`] = result;
+    }
+  }
   console.log(
     JSON.stringify(
       {
@@ -160,6 +190,7 @@ try {
         delayedTrajectories: traces.size,
         farCellsHeld: farHeld,
         render,
+        reusedTextures,
       },
       null,
       2,

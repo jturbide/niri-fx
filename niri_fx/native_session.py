@@ -458,7 +458,7 @@ def _selection_plan(root, bundle_id, *, rollback=False):
         config=selected["config"] if selected else None,
         binary=selected["binary"] if selected else None,
         notes=[
-            "Changes the next-login selection only; running sessions are unchanged.",
+            "Updates the retained next-login selection.",
             "Previously staged bundles remain available for rollback.",
         ],
     )

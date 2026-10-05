@@ -9,8 +9,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
-- Studio's NiriFX session target prepares reviewed effect changes for the next
-  login. It retains the previous binary/configuration pair, reopens saved recipes
+- Studio's NiriFX session target applies reviewed effects directly to a verified
+  matching compositor and saves them for the next login. Stock, offline and
+  different-build sessions keep next-login selection. It retains the previous
+  binary/configuration pair, reopens saved recipes
   and reviews rollback separately. Independent action choices and Gentle, Tear
   and Cascade continuous-fragment presets use the retained build. Session and
   file details are collapsed behind the main preset controls.
@@ -21,6 +23,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   session stay unchanged.
 - `native configure` exposes the same immutable preset editing through the CLI
   and agent discovery, with exact review fingerprints and retained rollback.
+- `native configure --live` and `native rollback --live` share Studio's verified
+  desktop Apply flow. They require a live review fingerprint, refuse unavailable
+  sessions before staging, and report failed or unconfirmed reloads separately
+  from a saved next-login selection.
 - One `build-nirifx-session.py` command builds all compositor features with
   desktop support, release optimization and focused regressions. A pinned native
   compatibility matrix and isolated patch/build checks separate
@@ -98,6 +104,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
+- Studio starts with Open, Close, Resize and Move / swap choices. Selecting a
+  style previews it immediately and updates only that action; complete looks
+  live under Combos, with shared settings and detailed controls in More options.
+  Managed NiriFX sessions are detected before shell adapters, so their effects
+  can be applied directly without opening shell settings.
+
 - New installs use Library/Studio and external shell configuration. The optional
   iRiS source-patching installer is retired to avoid blocking shell updates;
   historical exact Restore remains available. The desktop update guide describes
@@ -111,6 +123,13 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Continuous fragments retain the correct window proportions when content shrinks
+  after moving to another display. Both the fragment mesh and resting image now
+  sample the content region within a reused larger texture allocation.
+
+- NiriFX login entries no longer fail before starting the compositor when SDDM
+  treats quoted executable paths literally. Session-entry preparation rejects
+  incompatible runtime or storage paths before writing files.
 - Native bundle inspection now uses the same bounded configuration scanner as
   include snapshots, so a leading byte-order mark cannot hide an external include
   in an older single-file bundle.

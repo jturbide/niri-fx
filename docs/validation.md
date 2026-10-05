@@ -36,6 +36,37 @@ These checks establish build/selection ownership, not physical desktop, capture
 or dependency compatibility. The [native lifecycle roadmap](../ROADMAP.md#updates-and-native-build-lifecycle)
 keeps installation, session selection and rollback as separate release gates.
 
+## Studio action selection and live settings (Unreleased)
+
+Studio's simple view assigns styles independently to Open, Close, Resize and
+Move / swap and replays each selected style. Browser regressions cover preserved
+sibling choices, complete combos, Preserve/Off, Undo and reduced motion. The
+advanced editor and shared-style controls retain the same documents.
+
+An owned nested session using a fresh full desktop build accepted two different
+Studio recipes and a reviewed rollback without changing the compositor PID.
+Each operation received a subsequent successful `ConfigLoaded` event; retained
+recipes, the process-bound live receipt and next-login selection agreed. Failed
+or unconfirmed reloads are reported separately from persisted selection. The
+IPC event carries no request ID, so this confirmation does not resolve races
+with unrelated clients loading configurations simultaneously.
+
+The installed CLI package passed the same two-change and rollback sequence in an
+owned nested session. Focused regressions cover read-only review, stale session
+refusal, required fingerprints, unavailable rollback targets and nonzero exit
+status for failed or unconfirmed reloads. Ordinary next-login commands do not
+probe or reload the running session.
+
+The fragment texture-reuse regression reproduces a held window shrinking while
+its offscreen allocation remains larger. The old renderer compressed the source
+content; the corrected renderer preserves it. The full candidate passed
+width-only, height-only and combined shrink cases, along with Rust mesh tests
+and nearest/linear software-GPU sampling checks. A subsequent desktop retest
+reported that the cross-display size problem was resolved. This is one observed
+setup; broader mixed-scale and hotplug acceptance remains open. Run
+`scripts/test-fragment-texture-reuse.py` against a finished candidate for the
+owned nested test. These checks do not replace physical cross-display testing.
+
 ## Public catalog checks
 
 Automated checks enforce catalog completeness. The generated

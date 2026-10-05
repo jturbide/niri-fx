@@ -294,7 +294,7 @@ def serve(arguments, effect):
     with make_server(arguments, effect) as server:
         print(f"NiriFX Studio: {server.session_url}", flush=True)
         print(
-            "Choose a look, review it, then Select for next login. Your current session stays unchanged. Ctrl+C stops the app."
+            "Choose effects for each action, preview, then review and apply. A verified matching NiriFX session supports live Apply; otherwise choices are saved for the next login. Ctrl+C stops the app."
             if server.save_target == "native"
             else "Choose a look in Library or customize it in Studio. Review & apply activates effects. Ctrl+C stops the app.",
             flush=True,

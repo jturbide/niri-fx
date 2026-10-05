@@ -109,6 +109,7 @@ canvas {
 button,
 select,
 input[type="text"],
+input[type="search"],
 .pointer-fields input {
     font: inherit;
     padding: 9px 12px;
@@ -291,9 +292,75 @@ h2 {
 #library-results {
     display: grid;
     gap: 6px;
-    max-height: 240px;
+    max-height: 360px;
     overflow: auto;
     margin: 14px 0 22px;
+}
+#library-actions {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 6px;
+    margin: 12px 0;
+}
+#library-actions button {
+    text-align: left;
+    min-width: 0;
+}
+#library-actions small {
+    display: block;
+    margin-top: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#library-action-choices {
+    margin: 10px 0;
+    gap: 6px;
+}
+#library-action-help {
+    margin-bottom: 12px;
+}
+#library-search {
+    width: 100%;
+    box-sizing: border-box;
+}
+#combo-options,
+#transfer-options {
+    border-top: 1px solid #425464;
+    padding-top: 14px;
+}
+#combo-options summary,
+#transfer-options summary {
+    cursor: pointer;
+    color: #a5e8dd;
+}
+html[data-workspace="library"] #preview-modes,
+html[data-workspace="library"] #pin,
+html[data-workspace="library"] #compare,
+html[data-workspace="library"] #seed {
+    display: none;
+}
+#review-selection,
+#apply-selection {
+    background: #305c61;
+    border-color: #8ed8d0;
+}
+html[data-workspace="library"] canvas {
+    max-height: 380px;
+    min-height: 200px;
+}
+@media (max-width: 900px) {
+    #library-panel {
+        display: block;
+    }
+    #library-actions {
+        grid-template-columns: repeat(5, minmax(120px, 1fr));
+        overflow-x: auto;
+        padding-bottom: 5px;
+    }
+    html[data-workspace="library"] canvas {
+        max-height: 280px;
+    }
 }
 .library-look {
     text-align: left;
