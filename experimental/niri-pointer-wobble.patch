@@ -1,8 +1,7 @@
 diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
-index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328f08abe58 100644
 --- a/niri-config/src/animations.rs
 +++ b/niri-config/src/animations.rs
-@@ -90,6 +90,9 @@ impl MergeWith<AnimationsPart> for Animations {
+@@ -90,6 +90,9 @@
                  value.anim = self.window_movement.anim;
                  value.custom_shader = self.window_movement.custom_shader.clone();
              }
@@ -12,7 +11,7 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
              // Merge directives belong to this part, never to the effective config.
              value.preserve_movement = false;
              value.preserve_pointer = false;
-@@ -223,6 +226,7 @@ impl Default for HorizontalViewMovementAnim {
+@@ -223,6 +226,7 @@
  pub struct WindowMovementAnim {
      pub anim: Animation,
      pub custom_shader: Option<String>,
@@ -20,17 +19,17 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
      pub preserve_movement: bool,
      pub preserve_pointer: bool,
  }
-@@ -239,12 +243,35 @@ impl Default for WindowMovementAnim {
+@@ -239,8 +243,31 @@
                  }),
              },
              custom_shader: None,
 +            pointer_wobble: None,
              preserve_movement: false,
              preserve_pointer: false,
-         }
-     }
- }
- 
++        }
++    }
++}
++
 +/// Pointer deformation is opt-in and independent of a timed movement shader.
 +/// Damping is a percentage of critical damping, frequency is measured in Hz.
 +#[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
@@ -49,17 +48,15 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
 +            strength: FloatOrInt(0.7),
 +            damping: 65,
 +            frequency: 8,
-+        }
-+    }
-+}
-+
- #[cfg(test)]
- mod movement_shader_tests {
-     use super::*;
-@@ -259,6 +286,107 @@ mod movement_shader_tests {
-         Ok(config)
+         }
      }
- 
+ }
+@@ -257,6 +284,107 @@
+             config.animations.merge_with(&part);
+         }
+         Ok(config)
++    }
++
 +    #[test]
 +    fn movement_pointer_merge_directives_preserve_only_the_selected_action() {
 +        let base = r#"animations { window-movement {
@@ -159,12 +156,10 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
 +            "animations { window-movement { pointer-wobble {}; pointer-wobble {}; }; }"
 +        )
 +        .is_err());
-+    }
-+
+     }
+ 
      #[test]
-     fn merge_directives_preserve_movement_and_are_consumed() {
-         let base = r#"animations { window-movement {
-@@ -478,6 +606,7 @@ where
+@@ -478,6 +606,7 @@
      ) -> Result<Self, DecodeError<S>> {
          let default = Self::default().anim;
          let mut custom_shader = None;
@@ -172,7 +167,7 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
          let mut preserve_movement = false;
          let mut preserve_pointer = false;
          let anim = Animation::decode_node(node, ctx, default, |child, ctx| {
-@@ -500,6 +629,23 @@ where
+@@ -500,6 +629,23 @@
                  }
                  *flag = true;
                  Ok(true)
@@ -196,7 +191,7 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
              } else {
                  Ok(false)
              }
-@@ -518,9 +664,16 @@ where
+@@ -518,9 +664,16 @@
                  "preserve-movement conflicts with movement settings",
              ));
          }
@@ -214,10 +209,9 @@ index 3188ab080d90f2d81aaf1813069b3bc518e95aaa..24527698d492ed573297643663728328
              preserve_pointer,
          })
 diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
-index 2b0291d9f8bcc1186bbce54869218b0b35daed21..2120b4879a149f3b05ed843cde94bf7c7acc05d1 100644
 --- a/niri-config/src/lib.rs
 +++ b/niri-config/src/lib.rs
-@@ -1563,6 +1563,7 @@ mod tests {
+@@ -1563,6 +1563,7 @@
                          ),
                      },
                      custom_shader: None,
@@ -226,10 +220,9 @@ index 2b0291d9f8bcc1186bbce54869218b0b35daed21..2120b4879a149f3b05ed843cde94bf7c
                      preserve_pointer: false,
                  },
 diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
-index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef0668d741f6 100644
 --- a/niri-ipc/src/lib.rs
 +++ b/niri-ipc/src/lib.rs
-@@ -69,6 +69,8 @@ pub enum Request {
+@@ -69,6 +69,8 @@
      Version,
      /// Verify the experimental NiriFX movement shader interface in the running renderer.
      NiriFxCapabilities,
@@ -238,7 +231,7 @@ index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef06
      /// Read the bounded native presentation/submission timing history.
      NiriFxFrameTimings,
      /// Request information about connected outputs.
-@@ -145,6 +147,8 @@ pub enum Response {
+@@ -145,6 +147,8 @@
      Version(String),
      /// Versioned experimental shader support; this query never activates an effect.
      NiriFxCapabilities(NiriFxCapabilities),
@@ -247,10 +240,12 @@ index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef06
      /// The latest native output timing samples (at most 512).
      NiriFxFrameTimings(Vec<NiriFxFrameTiming>),
      /// Information about connected outputs.
-@@ -191,6 +195,26 @@ pub struct NiriFxCapabilities {
+@@ -189,6 +193,26 @@
+     pub movement_configured: bool,
+     /// Native frame timing history is available.
      pub frame_timings: bool,
- }
- 
++}
++
 +/// Separate versioned capability response for direct pointer deformation.
 +#[derive(Serialize, Deserialize, Debug, Clone)]
 +#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
@@ -269,16 +264,13 @@ index c3360f83bf08282b94c3edc27bbb1e2e4f39847d..a75e3ac913847c22178edabcd36eef06
 +    pub max_deformation: u32,
 +    /// Maximum settling ownership time after release in milliseconds.
 +    pub max_release_ms: u32,
-+}
-+
+ }
+ 
  /// One native output frame. DRM samples use presentation feedback; winit samples
- /// use estimated submission time and must never be described as physical scanout.
- #[derive(Serialize, Deserialize, Debug, Clone)]
 diff --git a/src/animation/mod.rs b/src/animation/mod.rs
-index 0e5c10e0d18ca244b703372aa93d6ec020845291..266ce3bce650d27115cd8376ad6b120f2a7ade79 100644
 --- a/src/animation/mod.rs
 +++ b/src/animation/mod.rs
-@@ -3,6 +3,7 @@ use std::time::Duration;
+@@ -3,6 +3,7 @@
  use keyframe::functions::{EaseOutCubic, EaseOutQuad};
  use keyframe::EasingFunction;
  
@@ -288,7 +280,6 @@ index 0e5c10e0d18ca244b703372aa93d6ec020845291..266ce3bce650d27115cd8376ad6b120f
  
 diff --git a/src/animation/pointer_wobble.rs b/src/animation/pointer_wobble.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..8228adf6e9592948004f56109b30e350c0a5ae89
 --- /dev/null
 +++ b/src/animation/pointer_wobble.rs
 @@ -0,0 +1,291 @@
@@ -584,10 +575,9 @@ index 0000000000000000000000000000000000000000..8228adf6e9592948004f56109b30e350
 +    }
 +}
 diff --git a/src/cli.rs b/src/cli.rs
-index 0dbb22c02c40a01e05679de3415075f7270d2de2..2b1cbd6bac7300d52a7b9c8550c47af85f9931bc 100644
 --- a/src/cli.rs
 +++ b/src/cli.rs
-@@ -63,6 +63,8 @@ pub enum Sub {
+@@ -63,6 +63,8 @@
  pub enum Msg {
      /// Verify the running experimental NiriFX shader interface without activation.
      NiriFxCapabilities,
@@ -597,10 +587,9 @@ index 0dbb22c02c40a01e05679de3415075f7270d2de2..2b1cbd6bac7300d52a7b9c8550c47af8
      NiriFxFrameTimings,
      /// List connected outputs.
 diff --git a/src/ipc/client.rs b/src/ipc/client.rs
-index 02929c75d4f6ddfa0db8f39a11050063345f0f12..8a8beb2c12d1edc288d0324591738cbdc586bbf5 100644
 --- a/src/ipc/client.rs
 +++ b/src/ipc/client.rs
-@@ -31,6 +31,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+@@ -31,6 +31,7 @@
  
      let request = match &msg {
          Msg::NiriFxCapabilities => Request::NiriFxCapabilities,
@@ -608,7 +597,7 @@ index 02929c75d4f6ddfa0db8f39a11050063345f0f12..8a8beb2c12d1edc288d0324591738cbd
          Msg::NiriFxFrameTimings => Request::NiriFxFrameTimings,
          Msg::Version => Request::Version,
          Msg::Outputs => Request::Outputs,
-@@ -113,7 +114,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+@@ -113,7 +114,7 @@
      let response = reply.map_err(|err_msg| anyhow!(err_msg).context("niri returned an error"))?;
  
      match msg {
@@ -618,10 +607,9 @@ index 02929c75d4f6ddfa0db8f39a11050063345f0f12..8a8beb2c12d1edc288d0324591738cbd
              println!("{}", serde_json::to_string(&response)?);
          }
 diff --git a/src/ipc/server.rs b/src/ipc/server.rs
-index 1762b7c50a2ce9a4905ea865b3cc9f35f6a76aa4..c265d53381ce010258aff3cd794dedcc848133b4 100644
 --- a/src/ipc/server.rs
 +++ b/src/ipc/server.rs
-@@ -301,6 +301,40 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
+@@ -301,6 +301,40 @@
                      .map_err(|_| String::from("error verifying movement renderer"))?,
              )
          }
@@ -663,10 +651,9 @@ index 1762b7c50a2ce9a4905ea865b3cc9f35f6a76aa4..c265d53381ce010258aff3cd794dedcc
              let (tx, rx) = async_channel::bounded(1);
              ctx.event_loop.insert_idle(move |state| {
 diff --git a/src/layout/mod.rs b/src/layout/mod.rs
-index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71340c5448 100644
 --- a/src/layout/mod.rs
 +++ b/src/layout/mod.rs
-@@ -3982,6 +3982,8 @@ impl<W: LayoutElement> Layout<W> {
+@@ -3982,6 +3982,8 @@
                      .with_merged_layout(workspace_config.as_ref().map(|(_, c)| c))
                      .adjusted_for_scale(scale);
                  tile.update_config(view_size, scale, Rc::new(options));
@@ -675,7 +662,7 @@ index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71
  
                  if is_floating {
                      // Unlock the view in case we locked it moving a fullscreen window that is
-@@ -4069,6 +4071,9 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4069,6 +4071,9 @@
                      move_.tile.update_config(view_size, scale, Rc::new(options));
                  }
  
@@ -685,23 +672,23 @@ index 4eb294900ef874e3edf5a181212880420f79f510..252524675abd39e82bbd938b88623e71
                  move_.pointer_pos_within_output = pointer_pos_within_output;
  
                  self.interactive_move = Some(InteractiveMoveState::Moving(move_));
-@@ -4132,6 +4137,8 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4131,6 +4136,8 @@
+         let Some(InteractiveMoveState::Moving(mut move_)) = self.interactive_move.take() else {
              unreachable!()
          };
- 
-+        move_.tile.release_pointer_wobble();
 +
++        move_.tile.release_pointer_wobble();
+ 
          for mon in self.monitors_mut() {
              mon.dnd_scroll_gesture_end();
-         }
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
-index c8af8ab1ac2fd4999113b7d0890d356fd0d7e389..448c81d1e19d04c27b5dbe24c917dedb10ee3a49 100644
 --- a/src/layout/tests/animations.rs
 +++ b/src/layout/tests/animations.rs
-@@ -1384,3 +1384,279 @@ fn width_resize_and_cancel_of_column_to_the_left() {
+@@ -1387,6 +1387,280 @@
+     100 × 100 at x:  0 y:  0
      200 × 200 at x:100 y:  0
      ");
- }
++}
 +
 +#[test]
 +fn pointer_wobble_follows_grab_release_and_animation_off() {
@@ -931,11 +918,9 @@ index c8af8ab1ac2fd4999113b7d0890d356fd0d7e389..448c81d1e19d04c27b5dbe24c917dedb
 +        // monitor can render a frame, and a later output must recover the tile.
 +        assert_pointer_wobble_release_settles(&mut layout);
 +        check_ops_on_layout(&mut layout, [Op::AddOutput(2)]);
-+        assert!(
-+            dropped_pointer_wobble_tile(&layout)
-+                .pointer_wobble
-+                .is_none()
-+        );
++        assert!(dropped_pointer_wobble_tile(&layout)
++            .pointer_wobble
++            .is_none());
 +        let (monitor, _) = layout.windows().next().unwrap();
 +        assert_eq!(monitor.unwrap().output.name(), "output2");
 +    }
@@ -977,9 +962,10 @@ index c8af8ab1ac2fd4999113b7d0890d356fd0d7e389..448c81d1e19d04c27b5dbe24c917dedb
 +        let (monitor, _) = layout.windows().next().unwrap();
 +        assert_eq!(monitor.unwrap().output.name(), "output2");
 +    }
-+}
+ }
+ 
+ #[test]
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b71d19be09 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,5 +1,5 @@
@@ -989,35 +975,35 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
  use std::rc::Rc;
  
  use niri_config::utils::MergeWith as _;
-@@ -16,6 +16,7 @@ use super::{
+@@ -16,6 +16,7 @@
      HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
-     RESIZE_ANIMATION_THRESHOLD, SizeFrac,
+     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
  };
 +use crate::animation::pointer_wobble::PointerWobble;
- use crate::animation::{Animation, Clock, MoveAnimation, SizeAnimation};
+ use crate::animation::{Animation, Clock, MoveAnimation, ResizePath, SizeAnimation};
  use crate::layout::SizingMode;
  use crate::niri_render_elements;
-@@ -25,6 +26,7 @@ use crate::render_helpers::clipped_surface::{ClippedSurfaceRenderElement, Rounde
+@@ -25,6 +26,7 @@
  use crate::render_helpers::damage::ExtraDamage;
  use crate::render_helpers::movement::{MovementEffect, MovementState};
  use crate::render_helpers::offscreen::{OffscreenBuffer, OffscreenRenderElement};
 +use crate::render_helpers::pointer_wobble::PointerWobbleEffect;
  use crate::render_helpers::renderer::NiriRenderer;
- use crate::render_helpers::resize::ResizeRenderElement;
- use crate::render_helpers::shader_element::ShaderRenderElement;
-@@ -100,6 +102,11 @@ pub struct Tile<W: LayoutElement> {
+ use crate::render_helpers::resize::{
+     supports_retained_material, ResizeMaterial, ResizeRenderElement,
+@@ -101,6 +103,11 @@
+ 
      /// Lazily allocated only while a movement shader is active.
      movement_effect: RefCell<Option<MovementEffect>>,
- 
++
 +    /// Input owns the grab; this only deforms its texture and settles after release.
 +    pub(super) pointer_wobble: Option<PointerWobble>,
 +    pointer_wobble_effect: RefCell<Option<PointerWobbleEffect>>,
 +    pointer_parent_end: Cell<Option<std::time::Duration>>,
-+
+ 
      /// The animation of the tile's opacity.
      pub(super) alpha_animation: Option<AlphaAnimation>,
- 
-@@ -219,6 +226,9 @@ impl<W: LayoutElement> Tile<W> {
+@@ -226,6 +233,9 @@
              move_x_animation: None,
              move_y_animation: None,
              movement_effect: RefCell::new(None),
@@ -1027,7 +1013,7 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -246,6 +256,16 @@ impl<W: LayoutElement> Tile<W> {
+@@ -253,6 +263,16 @@
  
          self.view_size = view_size;
          self.scale = scale;
@@ -1042,9 +1028,9 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
 +            self.pointer_parent_end.set(None);
 +        }
          self.options = options;
- 
-         let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
-@@ -482,6 +502,55 @@ impl<W: LayoutElement> Tile<W> {
+         // Off is an explicit immediate choice, not a shader-reload handoff.
+         if self.options.animations.off || self.options.animations.window_resize.anim.off {
+@@ -548,6 +568,55 @@
          self.rounded_corner_damage.set_corner_radius(radius);
      }
  
@@ -1100,7 +1086,7 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
      pub fn advance_animations(&mut self) {
          if let Some(open) = &mut self.open_animation {
              if open.is_done() {
-@@ -511,6 +580,29 @@ impl<W: LayoutElement> Tile<W> {
+@@ -581,6 +650,29 @@
              }
          }
  
@@ -1130,7 +1116,7 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
          if let Some(alpha) = &mut self.alpha_animation {
              if !alpha.hold_after_done && alpha.anim.is_done() {
                  self.alpha_animation = None;
-@@ -524,6 +616,10 @@ impl<W: LayoutElement> Tile<W> {
+@@ -594,6 +686,10 @@
  
      pub fn are_transitions_ongoing(&self) -> bool {
          self.open_animation.is_some()
@@ -1141,7 +1127,7 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
              || self.resize_animation.is_some()
              || self.move_x_animation.is_some()
              || self.move_y_animation.is_some()
-@@ -1444,6 +1540,13 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1594,6 +1690,13 @@
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -1155,7 +1141,7 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
          let mut motion = parent_motion;
          for (movement, horizontal) in [
              (&self.move_x_animation, true),
-@@ -1478,8 +1581,14 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1632,8 +1735,14 @@
                      .program(ProgramType::Move)
                      .is_some()
          });
@@ -1171,10 +1157,11 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
              self.movement_effect.borrow_mut().take();
          }
  
-@@ -1510,6 +1619,35 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1663,6 +1772,35 @@
+                 Err(err) => {
                      warn!("error rendering window opening animation: {err:?}");
                  }
-             }
++            }
 +        } else if let Some(pointer) = pointer {
 +            let mut ctx = ctx.as_gles();
 +            let mut elements = Vec::new();
@@ -1203,15 +1190,13 @@ index 2aa5f20a83e90567225ee9efc7b1b3a4c8221577..0c95eb65bd80437e62667d5cc365e9b7
 +                    pushed = true;
 +                }
 +                Err(err) => warn!("error rendering pointer wobble: {err:?}"),
-+            }
+             }
          } else if let Some(motion) = motion {
              let mut ctx = ctx.as_gles();
-             let mut elements = Vec::new();
 diff --git a/src/render_helpers/mod.rs b/src/render_helpers/mod.rs
-index fe6157cd893d9d8e9414b8c3a08134fc3fc3bc3e..6154fec3a552a70b5e41036a96b7ae95605d87c8 100644
 --- a/src/render_helpers/mod.rs
 +++ b/src/render_helpers/mod.rs
-@@ -37,6 +37,7 @@ pub mod framebuffer_effect;
+@@ -37,6 +37,7 @@
  pub mod gradient_fade_texture;
  pub mod memory;
  pub mod movement;
@@ -1220,10 +1205,9 @@ index fe6157cd893d9d8e9414b8c3a08134fc3fc3bc3e..6154fec3a552a70b5e41036a96b7ae95
  pub mod primary_gpu_texture;
  pub mod render_elements;
 diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
-index 1712d7e9bcc763358027ed917a822ab53d89deb8..fddf12b49ee8c844a75b48c14f7157507e5ef246 100644
 --- a/src/render_helpers/movement.rs
 +++ b/src/render_helpers/movement.rs
-@@ -29,6 +29,10 @@ pub struct MovementState {
+@@ -29,6 +29,10 @@
  }
  
  impl MovementState {
@@ -1236,7 +1220,6 @@ index 1712d7e9bcc763358027ed917a822ab53d89deb8..fddf12b49ee8c844a75b48c14f715750
          // Sampling the existing curve avoids duplicating Niri's easing and
 diff --git a/src/render_helpers/pointer_wobble.rs b/src/render_helpers/pointer_wobble.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..0ec97736f11b3ed2eeeafc60573041c8c1bd454d
 --- /dev/null
 +++ b/src/render_helpers/pointer_wobble.rs
 @@ -0,0 +1,93 @@
@@ -1334,18 +1317,17 @@ index 0000000000000000000000000000000000000000..0ec97736f11b3ed2eeeafc60573041c8
 +    }
 +}
 diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
-index 8a711357f7275c8f76f4eff0057bfdbf4ee04008..459d90a33ff4c11f550b218520a7d7ccd27f6a51 100644
 --- a/src/render_helpers/shaders/mod.rs
 +++ b/src/render_helpers/shaders/mod.rs
-@@ -21,6 +21,7 @@ pub struct Shaders {
-     pub custom_resize: RefCell<Option<ShaderProgram>>,
+@@ -23,6 +23,7 @@
+     retired_resize: RefCell<Vec<ShaderProgram>>,
      pub custom_close: RefCell<Option<ShaderProgram>>,
      pub custom_move: RefCell<Option<ShaderProgram>>,
 +    pub pointer_wobble: Option<ShaderProgram>,
      pub custom_open: RefCell<Option<ShaderProgram>>,
  }
  
-@@ -32,6 +33,7 @@ pub enum ProgramType {
+@@ -35,6 +36,7 @@
      Close,
      Open,
      Move,
@@ -1353,7 +1335,7 @@ index 8a711357f7275c8f76f4eff0057bfdbf4ee04008..459d90a33ff4c11f550b218520a7d7cc
  }
  
  impl Shaders {
-@@ -150,6 +152,21 @@ impl Shaders {
+@@ -157,6 +159,21 @@
              })
              .ok();
  
@@ -1375,7 +1357,7 @@ index 8a711357f7275c8f76f4eff0057bfdbf4ee04008..459d90a33ff4c11f550b218520a7d7cc
          Self {
              border,
              shadow,
-@@ -162,6 +179,7 @@ impl Shaders {
+@@ -171,6 +188,7 @@
              custom_close: RefCell::new(None),
              custom_open: RefCell::new(None),
              custom_move: RefCell::new(None),
@@ -1383,7 +1365,7 @@ index 8a711357f7275c8f76f4eff0057bfdbf4ee04008..459d90a33ff4c11f550b218520a7d7cc
          }
      }
  
-@@ -218,6 +236,7 @@ impl Shaders {
+@@ -245,6 +263,7 @@
              ProgramType::Close => self.custom_close.borrow().clone(),
              ProgramType::Open => self.custom_open.borrow().clone(),
              ProgramType::Move => self.custom_move.borrow().clone(),
@@ -1393,7 +1375,6 @@ index 8a711357f7275c8f76f4eff0057bfdbf4ee04008..459d90a33ff4c11f550b218520a7d7cc
  }
 diff --git a/src/render_helpers/shaders/pointer_wobble.frag b/src/render_helpers/shaders/pointer_wobble.frag
 new file mode 100644
-index 0000000000000000000000000000000000000000..28194b553a0d5f5a89190c191d8daaa3cb987d5a
 --- /dev/null
 +++ b/src/render_helpers/shaders/pointer_wobble.frag
 @@ -0,0 +1,41 @@

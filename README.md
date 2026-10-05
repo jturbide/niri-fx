@@ -38,7 +38,7 @@ stability guarantees and acceptance criteria.
 
 **Try without installing:** choose from [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter), open [Web Studio](https://jturbide.github.io/niri-fx/studio/),
 or choose **Try in Studio** from the [gallery](https://jturbide.github.io/niri-fx/gallery/).
-Choose a ready-made combo in **Library**, use one style for every action or mix
+Choose a ready-made combo in **Library**, share one style across selected actions or mix
 opening and closing styles. Click **Preview combo** to watch the whole sequence.
 Choose **Preserve / NiriFX Style / Off** independently for each action.
 Preserve uses your underlying Niri or shell configuration, including customizations. Save a named profile, share its
@@ -46,24 +46,32 @@ settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
 For a small install without the source gallery, use the [release wheel](docs/releases.md#0190-prerelease).
-On Niri with Python 3.10+, you can also start the guided workflow from source:
+On Niri with Python 3.10+, you can also open Library from source:
 
 ```sh
 git clone --depth 1 https://github.com/jturbide/niri-fx.git
 cd niri-fx
-python3 -m niri_fx
+python3 -m niri_fx studio
 ```
 
-Choose a preset, review its files and type `apply`. Run it again and choose `undo`
-to restore the previous settings. With iNiR, it registers the collection for your
-existing iRiS picker. No extra UI toolkit is required. [Terminal guide](docs/terminal.md).
+Choose a recommended combo, set each action to **Preserve / NiriFX Style / Off**,
+then choose **Review & apply**. Review the proposed changes before clicking
+**Apply these changes**. **Restore previous** returns to your previous settings.
+Use the same [Library workflow](docs/library.md) with plain Niri or a supported
+shell; [setup guides](docs/getting-started.md) explain each connection.
+If several shells coexist, choose the target explicitly as shown in those guides.
+
+Prefer the terminal? Run `python3 -m niri_fx` to choose a preset, review its files
+and type `apply`. Run it again and choose `undo` to restore. No extra UI toolkit
+is required. [Terminal guide](docs/terminal.md).
 
 Browse by look with `python3 -m niri_fx list --collections --text`, then try
 `python3 -m niri_fx list --collection shapes --text`. The same
 [nine collections](docs/collections.md) appear in Studio and the gallery.
 
-For a visual editor, run `python3 -m niri_fx studio --target standalone`.
-Previewing changes no active animations. For scriptable setup on plain Niri:
+For a direct connection to your Niri configuration, run
+`python3 -m niri_fx studio --target standalone`. Previewing changes no active
+animations. For scriptable setup on plain Niri:
 
 ```sh
 python3 -m niri_fx setup --target standalone --preset balanced
@@ -346,6 +354,28 @@ updated geometry, using plain synthetic cards.
 
 [Behavior, requirements and limits](docs/resize.md#resize-reversals-in-the-experimental-compositor)
 
+The **Unreleased experimental build** also maintains spacing between neighboring
+windows when an extreme resize reaches the minimum size:
+
+| Minimum width | Minimum height |
+| --- | --- |
+| ![Minimum-width resize before and after shared motion](docs/gifs/native-resize-minimum-width-comparison.gif) | ![Minimum-height resize before and after shared motion](docs/gifs/native-resize-minimum-height-comparison.gif) |
+
+### Resize effects that continue through retargets
+
+The **Unreleased experimental build** preserves an active NiriFX resize effect
+when another size change arrives. Pieces keep their layout and deformation phase;
+new window content blends into that continuing animation.
+
+| Fragments | Triangles |
+| --- | --- |
+| ![Fragment resize retargets in 0.19 and the updated compositor](docs/gifs/native-resize-material-fragments-comparison.gif) | ![Triangle resize retargets in 0.19 and the updated compositor](docs/gifs/native-resize-material-triangles-comparison.gif) |
+
+These are native recordings at their configured speed. Rebuild the experimental
+compositor and regenerate the resize shader from the same checkout to try it.
+Stock Niri keeps its existing resize behavior. Closing during resize still uses
+a snapshot. [Retained resize appearance and limits](docs/resize.md#retained-resize-appearance).
+
 ### Shaped resize
 
 Use triangles, hexagons and other fragment shapes during resize with these
@@ -382,7 +412,8 @@ only through Review & apply.
 
 Studio offers a **Basic / Advanced** control view, search and favorites, independent
 action profiles, Undo/Redo and pinned A/B comparisons. **Preview combo** plays
-opening, a pause, selected resize/movement loops and closing using each action's
+opening, a pause, selected resize/movement loops, optional pointer drag and release,
+then closing using each action's
 style and timing. Pause or scrub individual action previews;
 Reduced Motion shows endpoints without playback and respects the system preference.
 Preview preferences do not change exported effects.

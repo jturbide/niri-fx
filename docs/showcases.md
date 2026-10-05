@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **209 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **213 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -72,6 +72,10 @@ Undo/Redo and pinned A/B comparisons.
 | Resize with the center readable | [Edge Rebuild](gifs/resize-edge.gif), [Soft Reflow](gifs/resize-soft.gif) | Stock Niri; explicitly enable fragment resize |
 | Reverse width while keeping neighboring edges together | [Baseline and updated width](gifs/native-resize-width-comparison.gif) | Experimental movement renderer with resize enabled; [geometry evidence and limits](validation.md#resize-geometry-continuity) |
 | Reverse height in a stacked column | [Baseline and updated height](gifs/native-resize-height-comparison.gif) | Experimental movement renderer with resize enabled; identical passthrough shaders expose geometry |
+| Retarget near the minimum width | [Minimum width comparison](gifs/native-resize-minimum-width-comparison.gif) | Experimental renderer; shared constrained geometry keeps neighboring edges together |
+| Retarget near the minimum height | [Minimum height comparison](gifs/native-resize-minimum-height-comparison.gif) | Experimental renderer; synthetic masks isolate geometry from texture filtering |
+| Keep fragment appearance through two resize retargets | [Retained fragments](gifs/native-resize-material-fragments-comparison.gif) | Updated experimental renderer; [material acceptance](validation.md#retained-material-acceptance-unreleased) |
+| Keep triangle appearance through two resize retargets | [Retained triangles](gifs/native-resize-material-triangles-comparison.gif) | Updated experimental renderer; identical generated shaders and actual configured speed |
 | Real fragment swaps | [Original swap](gifs/native-swap.gif), [Crosswind](gifs/native-swap-crosswind.gif), [Orbital Ribbons](gifs/native-swap-orbital-ribbons.gif), [Bubble Burst](gifs/native-swap-bubble-burst.gif), [Core Detonation](gifs/native-swap-core-detonation.gif) | Separately built experimental Niri patch |
 | Real elastic swaps | [Spring Wobble](gifs/native-swap-spring-wobble.gif), [Twist Snap](gifs/native-swap-twist-snap.gif) | Separately built experimental Niri patch |
 | Studio pointer combos | [Gentle Fragments](gifs/pointer-preview-gentle.gif), [Rubber Sheet Fragments](gifs/pointer-preview-rubber-sheet.gif), [Release Settle Fragments](gifs/pointer-preview-release-settle.gif) | Browser native-math preview with synthetic input; [portable JSON](../examples/profiles/README.md#pointer-preview-combos) |
@@ -81,10 +85,13 @@ Undo/Redo and pinned A/B comparisons.
 See [resize controls](usage.md), [movement limits](movement.md) and the
 [nested compositor experiment](../experimental/README.md). Wisps, Dissolve, Iris and Hexagons currently support opening/closing only. Pixels also supports experimental movement; Slices and Distortion now support movement and resize.
 
-The resize comparisons show v0.18.0 on the left and the updated experiment on the
-right. They measure geometric handoff during a reversal; they do not demonstrate
-continuous resize shader phase or resize-to-close motion.
-[Reproduce the comparisons](gifs/README.md#native-resize-geometry-comparisons).
+The width/height reversal pairs compare v0.18.0 with the updated experiment and
+measure geometry independently of deformation. The minimum-size and retained
+material pairs compare v0.19.0 with the updated experiment. Retained material
+keeps the original effect phase through two new size targets; closing during
+resize still uses a snapshot.
+[Reproduce geometry comparisons](gifs/README.md#native-resize-geometry-comparisons) ·
+[Reproduce material comparisons](gifs/README.md#native-retained-resize-comparisons).
 
 ## Workflows and real compositor scenarios
 

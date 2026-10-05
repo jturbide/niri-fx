@@ -86,6 +86,7 @@ def _template(filename, entry=None):
         "NOISE": "noise",
         "EDGE_COLOR": "edge-color",
         "RESIZE_COMMON": "resize-common",
+        "RESIZE_STATE": "resize-state",
         "FRAGMENT_SHAPES": "fragment-shapes",
     }.items():
         if f"@{token}@" in source:

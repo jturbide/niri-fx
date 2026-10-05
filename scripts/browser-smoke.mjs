@@ -65,7 +65,7 @@ try {
     finishStage("shapes");
   }
   if (["all", "motion"].includes(options.suite)) {
-    await checkMotion(evaluate, setProgress, sample);
+    await checkMotion(evaluate, setProgress, sample, callFunction);
     finishStage("motion");
   }
   if (hasStudio) await checkStudio();

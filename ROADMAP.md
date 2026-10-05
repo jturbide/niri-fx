@@ -12,12 +12,12 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Make interrupted motion continuous.** Retain resize textures and deformation
-   through retargets and closing, and coordinate minimum-size limits with neighbors.
+1. **Continue resize into closing.** Carry retained material, geometry and
+   decorations through the closing fade, including capture restrictions.
 2. **Broaden desktop acceptance.** Resolve native input/capture failures and
    collect physical presentation and additional GPU/output results.
-3. **Verify CI improvements on hosted runners.** Compare parallel rendering
-   duration and failure diagnostics while retaining complete coverage.
+3. **Keep contributor feedback fast and useful.** Track the longest rendering
+   stages and verify failed-job diagnostics while retaining complete coverage.
 4. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
    retaining room to improve the 0.x design.
 
@@ -36,16 +36,19 @@ and [release history](CHANGELOG.md) for delivered features and version details.
 
 ## Next release and motion continuity
 
-Interrupted resize geometry now retains size velocity independently per axis;
-width and height comparisons are published. Shader deformation phase and the
-remaining edge cases below have separate acceptance criteria.
+Interrupted resize geometry retains size velocity independently per axis. The
+development renderer also coordinates minimum-size limits with neighbors and
+retains NiriFX deformation across retargets. Closing has a separate handoff and
+acceptance boundary.
 
 - [x] Retain active resize timing across reloads; apply new timing to new axes.
 - [x] Publish native orthogonal-retarget and timing-reload comparisons.
-- [ ] Share constrained resize displacement with affected neighbors at the minimum
+- [x] Share constrained resize displacement with affected neighbors at the minimum
       size, including simultaneous resizes and source removal.
-- [ ] Retain resize shader state through retargeting and investigate closing
-      continuity; distinguish geometry from texture/deformation continuity.
+- [x] Retain resize material, deformation phase and shader identity through
+      retargeting and reloads, with independent content updates and capture targets.
+- [ ] Continue resize through closing with separate decoration and privacy
+      snapshots; verify the last mapped frame matches the first closing frame.
 - [ ] Resolve native device-disconnection and stale-output failures, retaining
       the unmodified pinned-Niri baseline comparison (Epic 4).
 - [ ] Collect physical capture/presentation and another GPU result before adding
@@ -67,6 +70,8 @@ configuration underneath NiriFX, including existing user or shell customizations
       preserving unrelated settings and reporting unavailable compositor features.
 - [x] Verify reviewed Apply and exact Restore for partial profiles and all-off
       profiles, with examples and complete workflow coverage.
+- [x] Verify a clean installation through Library selection, per-action choices,
+      reviewed Apply and Restore, and make this path consistent across setup guides.
 
 ## Faster feedback for contributors
 
@@ -80,7 +85,8 @@ expensive software-WebGL matrices.
       required aggregate check that rejects missing or failed results.
 - [x] Compare the same workload locally, retaining endpoint, intermediate-frame,
       export-parity and save-flow coverage.
-- [ ] Measure hosted runner elapsed time and inspect failed-shard diagnostics.
+- [x] Measure hosted runner elapsed time with separate timings for each rendering job.
+- [ ] Inspect failed-shard diagnostics on a hosted rendering failure.
 
 ## Stable 1.0 acceptance
 
@@ -93,7 +99,7 @@ The [stability policy](docs/stability.md) defines the proposed scope and detaile
 acceptance criteria. The release checklist is:
 
 - [ ] Publish exact stable interfaces, experimental boundaries and support policies.
-- [ ] Establish versioned document and CLI/JSON compatibility fixtures.
+- [ ] Complete versioned document and CLI/JSON fixtures for the declared public interface.
 - [ ] Prove upgrades preserve user data, configuration and Restore history.
 - [ ] Verify review, ownership, failure recovery and compositor capability checks.
 - [ ] Pass the declared environment/adapter matrix and publish its tested limits.
@@ -101,6 +107,11 @@ acceptance criteria. The release checklist is:
 
 Research epics need not all be complete for a stable stock-Niri core. Any native
 feature advertised as stable must meet its own input, capture and runtime gates.
+
+The initial [0.19 compatibility corpus](docs/stability.md#starting-compatibility-corpus-019)
+records document migration, action semantics and representative CLI JSON responses.
+It is a tested starting point; completing the supported interface inventory and
+upgrade matrix remains part of the unchecked gates above.
 
 ## Epic 1: general window movement
 
@@ -145,9 +156,11 @@ Goal: retain visual direction and state when actions overlap.
 - [ ] Fix discontinuities demonstrated by those scenarios and add regressions.
 - [x] Preserve per-axis size velocity during tested interrupted resize transitions.
 - [x] Retain active-axis timing through configuration reloads and reject invalid sizes.
-- [ ] Coordinate minimum-size clamping across neighboring windows.
-- [ ] Retain resize textures, deformation phase and capture-target state through
-      retargets and closing, with a separate content-update clock.
+- [x] Coordinate minimum-size constraints across neighboring windows.
+- [x] Retain resize material, deformation phase and capture-target state through
+      retargets, with a separate content-update clock.
+- [ ] Carry retained resize material and geometry through closing without applying
+      deformation twice or stretching decorations; test opening/movement overlap.
 - [x] Test floating/tiled changes with resize/open/close overlap fixtures.
 - [ ] Test physical mixed outputs and output removal.
 - [ ] Investigate acceleration continuity and shared swap transactions.
@@ -186,7 +199,10 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 - [x] Check direct ScreenCapture privacy during rule changes, dragging and closing, with visible controls.
 - [x] Test abrupt exit of grabbed tiled/floating clients and subsequent survivor input.
 - [x] Compare held-button virtual-pointer disconnection and stale output with unmodified pinned Niri.
-- [ ] Investigate device-owned disconnect cleanup and verify overlapping input devices.
+- [x] Compare overlapping virtual-pointer devices, ownership changes and same-button
+      releases against unmodified Niri; distinguish surviving grabs from stale state.
+- [ ] Implement device-owned disconnect cleanup, retaining another device's valid
+      presses and grabs, and test physical removal and device identity reuse.
 - [ ] Resolve stale parent output in the strict two-compositor capture probe, including the effects-disabled baseline.
 - [ ] Validate Output/Screencast privacy and actual PipeWire capture, including popups and blurred backgrounds.
 - [ ] Verify physical output hotplug, mixed monitors and graphics-reset recovery.

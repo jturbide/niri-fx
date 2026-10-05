@@ -4,8 +4,8 @@
   "backend": "Pinned Niri pointer extension, nested winit, optimized release build",
   "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
   "patches": {
-    "experimental/niri-movement.patch": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
-    "experimental/niri-pointer-wobble.patch": "5e86dacbbcc4e57ed6b89b98f7439b80aa068b0740c11e9125b4fcef2e914d1a"
+    "experimental/niri-movement.patch": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
+    "experimental/niri-pointer-wobble.patch": "033d2b90a75ab608e6c8bfe223fa26d93fbb94b5ac403e5a6cf1bc475f5ac0c3"
   },
   "output": {
     "width": 1280,
@@ -33,10 +33,12 @@
         "damping": 85,
         "frequency": 10
       },
+      "renderer": "NVIDIA GeForce RTX 4070 Ti/PCIe/SSE2",
+      "software_rendering_requested": true,
       "checks": [
         {
           "case": "floating-reversals-release",
-          "changed_pixels": 8719,
+          "changed_pixels": 1222,
           "geometry": [
             490.0,
             200.0,
@@ -64,6 +66,10 @@
           "case": "tiled-drag-layout-input"
         },
         {
+          "case": "timed-movement-off-preserves-pointer-during-grab",
+          "release_sample_ms": 91.71133799827658
+        },
+        {
           "case": "disable-during-grab",
           "mode": "omitted"
         },
@@ -73,41 +79,101 @@
         },
         {
           "case": "disable-during-grab",
-          "mode": "movement-off"
-        },
-        {
-          "case": "disable-during-grab",
           "mode": "animations-off"
         },
         {
           "case": "close-cancels-grab-survivor-input"
         }
       ],
+      "capture_timings": [
+        {
+          "sample": "cycle-before",
+          "capture_ms": 7.521121005993336
+        },
+        {
+          "sample": "released",
+          "capture_ms": 63.77126299776137
+        },
+        {
+          "sample": "released-settled",
+          "capture_ms": 15.584833003231324
+        },
+        {
+          "sample": "cycle-after",
+          "capture_ms": 15.610304006258957
+        },
+        {
+          "sample": "held-active",
+          "capture_ms": 7.506220994400792
+        },
+        {
+          "sample": "held-idle",
+          "capture_ms": 7.5627309997798875
+        },
+        {
+          "sample": "held-quiet",
+          "capture_ms": 15.787812997587025
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 7.583391008665785
+        },
+        {
+          "sample": "tiled-detached",
+          "capture_ms": 7.469500997103751
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 7.473261997802183
+        },
+        {
+          "sample": "timed-off-pointer-active",
+          "capture_ms": 63.74236199189909
+        },
+        {
+          "sample": "timed-off-pointer-settled",
+          "capture_ms": 7.559790989034809
+        },
+        {
+          "sample": "locate-2",
+          "capture_ms": 7.539981001173146
+        }
+      ],
       "timing": {
-        "native_frames": 201,
-        "winit_interval_p95_ms": 8.375871,
-        "winit_interval_max_ms": 95.944796,
+        "native_frames": 90,
+        "winit_interval_p95_ms": 18.406904,
+        "winit_interval_max_ms": 308.856243,
         "pointer_motion_socket_flush": {
-          "samples": 269,
-          "p95_ms": 0.09237999620381743,
-          "max_ms": 0.5804810061817989
+          "samples": 278,
+          "p95_ms": 0.06084000051487237,
+          "max_ms": 0.18837000243365765
         },
         "pointer_server_roundtrip": {
           "samples": 42,
-          "p95_ms": 10.375033001764677,
-          "max_ms": 12.789296000846662
+          "p95_ms": 31.781596000655554,
+          "max_ms": 33.34749600617215
         }
       },
       "recording": {
-        "gif_bytes": 1537118,
-        "gif_sha256": "035201767aa1aab202df3cad0f287ab20c3c01f12a67e8448d65267e44df9b61",
-        "gif_frames": 215,
-        "gif_duration_ms": 4300,
+        "gif_bytes": 1022776,
+        "gif_sha256": "d7cbb02e3b11e72c1b3aac8100891b4d7ad04fcbfd8aa15b22283c798b90a71d",
+        "gif_frames": 216,
+        "gif_duration_ms": 4320,
         "frame_durations_ms": [
           20
         ],
         "round_trip_changed_pixels": 0,
-        "encoded_endpoint_changed_pixels": 360
+        "encoded_endpoint_changed_pixels": 456
+      },
+      "sources": {
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
+        "scripts/lib/pointer.py": "109419de611b6aeb7095a98fcfb754d7afb9f9481b6ad8edca1bb03eb3723ea3",
+        "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "scripts/test-pointer-wobble.py": "928bd227cef7af640df8043eb7a8cf19253571a033ff7cf1aa5da1fe6670d7f1",
+        "examples/experimental/pointer-wobble-gentle.kdl": "79621b46f12462e23dbb52afdbc14a7782f0e57bc8e481bd9107727d92951640"
       }
     },
     {
@@ -117,10 +183,12 @@
         "damping": 50,
         "frequency": 6
       },
+      "renderer": "NVIDIA GeForce RTX 4070 Ti/PCIe/SSE2",
+      "software_rendering_requested": true,
       "checks": [
         {
           "case": "floating-reversals-release",
-          "changed_pixels": 27256,
+          "changed_pixels": 579,
           "geometry": [
             490.0,
             200.0,
@@ -148,6 +216,10 @@
           "case": "tiled-drag-layout-input"
         },
         {
+          "case": "timed-movement-off-preserves-pointer-during-grab",
+          "release_sample_ms": 91.15481999469921
+        },
+        {
           "case": "disable-during-grab",
           "mode": "omitted"
         },
@@ -157,41 +229,113 @@
         },
         {
           "case": "disable-during-grab",
-          "mode": "movement-off"
-        },
-        {
-          "case": "disable-during-grab",
           "mode": "animations-off"
         },
         {
           "case": "close-cancels-grab-survivor-input"
         }
       ],
+      "capture_timings": [
+        {
+          "sample": "cycle-before",
+          "capture_ms": 7.467759991413914
+        },
+        {
+          "sample": "released",
+          "capture_ms": 63.74125099682715
+        },
+        {
+          "sample": "released-settled",
+          "capture_ms": 18.071811005938798
+        },
+        {
+          "sample": "cycle-after",
+          "capture_ms": 15.708530001575127
+        },
+        {
+          "sample": "held-active",
+          "capture_ms": 7.529390000854619
+        },
+        {
+          "sample": "held-idle",
+          "capture_ms": 7.530489994678646
+        },
+        {
+          "sample": "held-quiet",
+          "capture_ms": 7.546769993496127
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 7.5571299967123196
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 15.644280007109046
+        },
+        {
+          "sample": "tiled-detached",
+          "capture_ms": 7.442838992574252
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 7.53149000229314
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 7.512869997299276
+        },
+        {
+          "sample": "timed-off-pointer-active",
+          "capture_ms": 63.70007099758368
+        },
+        {
+          "sample": "timed-off-pointer-settled",
+          "capture_ms": 7.530440998380072
+        },
+        {
+          "sample": "locate-2",
+          "capture_ms": 7.4624800035962835
+        },
+        {
+          "sample": "locate-2",
+          "capture_ms": 7.487149996450171
+        }
+      ],
       "timing": {
-        "native_frames": 220,
-        "winit_interval_p95_ms": 9.066511,
-        "winit_interval_max_ms": 95.630101,
+        "native_frames": 94,
+        "winit_interval_p95_ms": 18.04021,
+        "winit_interval_max_ms": 84.154482,
         "pointer_motion_socket_flush": {
-          "samples": 269,
-          "p95_ms": 0.13880099868401885,
-          "max_ms": 1.6515419993083924
+          "samples": 278,
+          "p95_ms": 0.05190999945625663,
+          "max_ms": 0.3208199923392385
         },
         "pointer_server_roundtrip": {
           "samples": 42,
-          "p95_ms": 10.987073997966945,
-          "max_ms": 12.542415992356837
+          "p95_ms": 27.440479010692798,
+          "max_ms": 33.414079996873625
         }
       },
       "recording": {
-        "gif_bytes": 1919710,
-        "gif_sha256": "038fdb4ab274c99eb5d3d50ee65021b17b5a818c1ccbd71772ae487c2706b934",
-        "gif_frames": 215,
-        "gif_duration_ms": 4300,
+        "gif_bytes": 1205921,
+        "gif_sha256": "373d8bae3bf5543ef02d1dde059c07ba79b5a15a125953e52664918f7897c437",
+        "gif_frames": 216,
+        "gif_duration_ms": 4320,
         "frame_durations_ms": [
           20
         ],
         "round_trip_changed_pixels": 0,
-        "encoded_endpoint_changed_pixels": 501
+        "encoded_endpoint_changed_pixels": 274
+      },
+      "sources": {
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
+        "scripts/lib/pointer.py": "109419de611b6aeb7095a98fcfb754d7afb9f9481b6ad8edca1bb03eb3723ea3",
+        "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "scripts/test-pointer-wobble.py": "928bd227cef7af640df8043eb7a8cf19253571a033ff7cf1aa5da1fe6670d7f1",
+        "examples/experimental/pointer-wobble-rubber-sheet.kdl": "44fc62a6149ac053157dd98f5c01a115d4ba52ffadfcd269ccb59a9d745a33b8"
       }
     },
     {
@@ -201,10 +345,12 @@
         "damping": 42,
         "frequency": 8
       },
+      "renderer": "NVIDIA GeForce RTX 4070 Ti/PCIe/SSE2",
+      "software_rendering_requested": true,
       "checks": [
         {
           "case": "floating-reversals-release",
-          "changed_pixels": 15761,
+          "changed_pixels": 7523,
           "geometry": [
             490.0,
             200.0,
@@ -232,6 +378,10 @@
           "case": "tiled-drag-layout-input"
         },
         {
+          "case": "timed-movement-off-preserves-pointer-during-grab",
+          "release_sample_ms": 58.52037700242363
+        },
+        {
           "case": "disable-during-grab",
           "mode": "omitted"
         },
@@ -241,51 +391,110 @@
         },
         {
           "case": "disable-during-grab",
-          "mode": "movement-off"
-        },
-        {
-          "case": "disable-during-grab",
           "mode": "animations-off"
         },
         {
           "case": "close-cancels-grab-survivor-input"
         }
       ],
+      "capture_timings": [
+        {
+          "sample": "cycle-before",
+          "capture_ms": 7.525140012148768
+        },
+        {
+          "sample": "released",
+          "capture_ms": 63.7377370003378
+        },
+        {
+          "sample": "released-settled",
+          "capture_ms": 15.63245001307223
+        },
+        {
+          "sample": "cycle-after",
+          "capture_ms": 15.756059001432732
+        },
+        {
+          "sample": "held-active",
+          "capture_ms": 7.494830002542585
+        },
+        {
+          "sample": "held-idle",
+          "capture_ms": 7.500769992475398
+        },
+        {
+          "sample": "held-quiet",
+          "capture_ms": 15.593008996802382
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 7.5714190024882555
+        },
+        {
+          "sample": "tiled-detached",
+          "capture_ms": 7.4670600006356835
+        },
+        {
+          "sample": "locate-1",
+          "capture_ms": 15.614619012922049
+        },
+        {
+          "sample": "timed-off-pointer-active",
+          "capture_ms": 31.628208002075553
+        },
+        {
+          "sample": "timed-off-pointer-settled",
+          "capture_ms": 7.713119994150475
+        },
+        {
+          "sample": "locate-2",
+          "capture_ms": 7.552619004854932
+        }
+      ],
       "timing": {
-        "native_frames": 199,
-        "winit_interval_p95_ms": 10.350973,
-        "winit_interval_max_ms": 95.818597,
+        "native_frames": 88,
+        "winit_interval_p95_ms": 17.931729,
+        "winit_interval_max_ms": 82.869047,
         "pointer_motion_socket_flush": {
-          "samples": 269,
-          "p95_ms": 0.06982000195421278,
-          "max_ms": 0.39597100112587214
+          "samples": 278,
+          "p95_ms": 0.059300000430084765,
+          "max_ms": 0.36451999039854854
         },
         "pointer_server_roundtrip": {
           "samples": 42,
-          "p95_ms": 11.181762994965538,
-          "max_ms": 11.858523008413613
+          "p95_ms": 30.506349008646794,
+          "max_ms": 32.03484899131581
         }
       },
       "recording": {
-        "gif_bytes": 1775448,
-        "gif_sha256": "bf0e1d32596efa09a6485ae9d51cad7afad41f87c5b4416b2ad244ee5b3a97e5",
-        "gif_frames": 215,
-        "gif_duration_ms": 4300,
+        "gif_bytes": 1080651,
+        "gif_sha256": "740aabe95dbb827ccad39419b60732564bee6adf6b107d1ac40b79b4748dd055",
+        "gif_frames": 216,
+        "gif_duration_ms": 4320,
         "frame_durations_ms": [
           20
         ],
         "round_trip_changed_pixels": 0,
-        "encoded_endpoint_changed_pixels": 232
+        "encoded_endpoint_changed_pixels": 273
+      },
+      "sources": {
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
+        "scripts/lib/pointer.py": "109419de611b6aeb7095a98fcfb754d7afb9f9481b6ad8edca1bb03eb3723ea3",
+        "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "scripts/test-pointer-wobble.py": "928bd227cef7af640df8043eb7a8cf19253571a033ff7cf1aa5da1fe6670d7f1",
+        "examples/experimental/pointer-wobble-release-settle.kdl": "633626dde2a2daa4ef299af5127464633a6963d0d58b4f409d36d542bf755c9e"
       }
     }
   ],
-  "host_gpu": {
-    "model": "NVIDIA GeForce RTX 4070 Ti",
-    "driver": "615.71.09"
-  },
   "timing_scope": {
     "native_frames": "First outward drag, reversals and release settling; excludes return drag. Intervals include idle holds and recording load.",
     "pointer_motion_socket_flush": "All motion commands across the ten lifecycle checks. Measures helper acknowledgement after flushing the Wayland socket, not compositor dispatch.",
     "pointer_server_roundtrip": "All button and explicit synchronization commands across the ten lifecycle checks. Measures ordered server-roundtrip acknowledgement, not presentation."
-  }
+  },
+  "renderer_scope": "The requested LIBGL_ALWAYS_SOFTWARE=1 did not select software rendering: each accepted session reported the NVIDIA renderer recorded below. These are functional native checks, not GPU-performance or physical-presentation acceptance.",
+  "sample_scope": "PPM avoids PNG encoding on short deformation samples; a release sample beyond 200 ms is rejected. Only the three completed passing runs appear here; failed/stalled attempts remain separate.",
+  "percentile_method": "Nearest rank over the recorded samples."
 }

@@ -23,7 +23,7 @@ See [tested versions and reproduction details](validation.md#workflow-and-compos
 for the scope of each integration check.
 
 The standard preset pack leaves existing resize behavior unchanged. Add a resize
-style with `--resize` or Studio's checkbox.
+style with `--resize`, or set Resize to **NiriFX Style** in Library or Studio.
 
 ## Niri + DankMaterialShell
 

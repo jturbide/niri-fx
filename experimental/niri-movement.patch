@@ -312,7 +312,7 @@ index 0aa3cb4f48963524b2eb0498e1c8ae41b28b63e5..c3360f83bf08282b94c3edc27bbb1e2e
  #[derive(Serialize, Deserialize, Debug, Clone)]
  #[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
 diff --git a/src/animation/mod.rs b/src/animation/mod.rs
-index 73a79c5e435f7f29d96f5ea7aea1bfd41d88df39..0e5c10e0d18ca244b703372aa93d6ec020845291 100644
+index 73a79c5e435f7f29d96f5ea7aea1bfd41d88df39..a31ed5182a43f0b1c4127d8cf30dfdfaec0f6367 100644
 --- a/src/animation/mod.rs
 +++ b/src/animation/mod.rs
 @@ -3,6 +3,12 @@ use std::time::Duration;
@@ -323,17 +323,17 @@ index 73a79c5e435f7f29d96f5ea7aea1bfd41d88df39..0e5c10e0d18ca244b703372aa93d6ec0
 +pub(crate) use movement::MoveAnimation;
 +
 +mod size;
-+pub(crate) use size::SizeAnimation;
++pub(crate) use size::{ResizePath, SizeAnimation};
 +
  mod bezier;
  use bezier::CubicBezier;
  
 diff --git a/src/animation/movement.rs b/src/animation/movement.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c01ec8be9
+index 0000000000000000000000000000000000000000..166e97c818f3fdbe4542dff3cca24d6bb9d0e768
 --- /dev/null
 +++ b/src/animation/movement.rs
-@@ -0,0 +1,255 @@
+@@ -0,0 +1,477 @@
 +//! Position continuity for the optional movement-shader experiment.
 +//!
 +//! Layout still owns the destination. Only an interrupted, opted-in movement
@@ -342,13 +342,17 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +
 +use std::time::Duration;
 +
-+use super::Animation;
++use super::{Animation, ResizePath};
 +
 +#[derive(Debug)]
 +pub(crate) struct MoveAnimation {
 +    pub anim: Animation,
 +    pub from: f64,
 +    handoff: Option<Handoff>,
++    minimum: Option<f64>,
++    resize: Vec<(ResizePath, f64)>,
++    folded: Vec<ResizePath>,
++    corrections: Vec<MoveAnimation>,
 +}
 +
 +#[derive(Debug)]
@@ -357,6 +361,7 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +    velocity: f64,
 +    start: Duration,
 +    end: Duration,
++    brake: Option<(f64, f64)>,
 +}
 +
 +impl Handoff {
@@ -365,7 +370,23 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +        if seconds <= 0. || at >= self.end {
 +            return (0., 0.);
 +        }
-+        let t = at.saturating_sub(self.start).as_secs_f64() / seconds;
++        let elapsed = at.saturating_sub(self.start).as_secs_f64();
++        if let Some((brake_time, stopped)) = self.brake {
++            if elapsed < brake_time {
++                let acceleration = -self.velocity / brake_time;
++                return (
++                    self.position + self.velocity * elapsed + acceleration * elapsed * elapsed / 2.,
++                    self.velocity + acceleration * elapsed,
++                );
++            }
++            let duration = seconds - brake_time;
++            let t = (elapsed - brake_time) / duration;
++            return (
++                stopped * (2. * t * t * t - 3. * t * t + 1.),
++                stopped * (6. * t * t - 6. * t) / duration,
++            );
++        }
++        let t = elapsed / seconds;
 +        let t2 = t * t;
 +        let t3 = t2 * t;
 +        let slope = self.velocity * seconds;
@@ -387,15 +408,198 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +                velocity,
 +                start: anim.start_time(),
 +                end: anim.end_time(),
++                brake: None,
 +            });
 +        Self {
 +            anim,
 +            from,
 +            handoff,
++            minimum: None,
++            resize: Vec::new(),
++            folded: Vec::new(),
++            corrections: Vec::new(),
 +        }
 +    }
 +
++    /// Constrain only a source resize path, never the sum of layout movements.
++    pub fn with_minimum(mut self, minimum: f64) -> Self {
++        self.minimum = Some(minimum);
++        if let Some(handoff) = &mut self.handoff {
++            let duration = handoff.end.saturating_sub(handoff.start).as_secs_f64();
++            // The cubic's extrema identify whether incoming momentum would cross
++            // the floor. If it does, brake to rest before the floor, then finish
++            // with a zero-tangent cubic. Position and speed agree at both joins.
++            let p = handoff.position;
++            let v = handoff.velocity * duration;
++            let a = 6. * p + 3. * v;
++            let b = -6. * p - 4. * v;
++            let c = v;
++            let mut low = p.min(0.);
++            let mut check = |t: f64| {
++                if 0. < t && t < 1. {
++                    low = low.min(
++                        p * (2. * t.powi(3) - 3. * t * t + 1.) + v * (t.powi(3) - 2. * t * t + t),
++                    );
++                }
++            };
++            if a.abs() < 1e-12 {
++                if b.abs() >= 1e-12 {
++                    check(-c / b);
++                }
++            } else {
++                let discriminant = b * b - 4. * a * c;
++                if discriminant >= 0. {
++                    check((-b - discriminant.sqrt()) / (2. * a));
++                    check((-b + discriminant.sqrt()) / (2. * a));
++                }
++            }
++            if low < minimum && handoff.velocity < 0. && duration > 0. {
++                let distance = (p - minimum).max(0.);
++                let braking = (2. * distance / -handoff.velocity).min(duration / 2.);
++                if braking > 1e-9 {
++                    let stopped = (p + handoff.velocity * braking / 2.).max(minimum);
++                    handoff.brake = Some((braking, stopped));
++                } else {
++                    // A negative tangent at the floor is physically infeasible.
++                    // Keep position and discard only the outward velocity.
++                    handoff.velocity = 0.;
++                }
++            }
++        }
++        self
++    }
++
++    pub fn has_resize(&self) -> bool {
++        !self.resize.is_empty() || !self.folded.is_empty() || !self.corrections.is_empty()
++    }
++
++    pub fn is_done(&self) -> bool {
++        self.anim.is_done()
++            && self.resize.iter().all(|(path, _)| path.is_done())
++            && self.folded.iter().all(ResizePath::is_done)
++            && self.corrections.iter().all(Self::is_done)
++    }
++
++    /// Attach once per source axis. Retargets update the shared path in place;
++    /// another source and any unrelated movement keep their own clocks.
++    pub fn with_folded_sources(mut self, previous: Option<&Self>) -> Self {
++        if let Some(previous) = previous {
++            for path in previous
++                .resize
++                .iter()
++                .map(|(path, _)| path)
++                .chain(previous.folded.iter())
++            {
++                if !path.is_done()
++                    && !self
++                        .folded
++                        .iter()
++                        .any(|existing| existing.same_source(path))
++                {
++                    self.folded.push(path.clone());
++                }
++            }
++        }
++        self
++    }
++
++    pub fn follow_resize(
++        slot: &mut Option<Self>,
++        path: ResizePath,
++        factor: f64,
++        source_delta: f64,
++    ) {
++        let old_factor = slot
++            .as_ref()
++            .and_then(|movement| {
++                movement
++                    .resize
++                    .iter()
++                    .find(|(existing, _)| existing.same_source(&path))
++                    .map(|(_, factor)| *factor)
++            })
++            .unwrap_or(0.);
++        if factor == 0. && old_factor == 0. {
++            return;
++        }
++        let movement = slot.get_or_insert_with(|| Self::new(path.animation(), 0., None));
++        let folded = movement
++            .folded
++            .iter()
++            .any(|existing| existing.same_source(&path));
++        let correction = (old_factor - factor) * (path.offset() - source_delta);
++        if old_factor != factor && (old_factor != 0. || folded || correction.abs() > 1e-8) {
++            // A shared correction clock matters when focus changes the anchor
++            // side: flattening the same correction into columns with different
++            // movement deadlines would make their spacing diverge later.
++            let velocity = (old_factor - factor) * path.velocity();
++            let anim = path.animation();
++            let now = anim.clock.now();
++            let mut correction = Self::new(anim, correction, Some(velocity));
++            if let Some(handoff) = &mut correction.handoff {
++                // An orthogonal client commit can reassign this source without
++                // retargeting its axis. Keep its deadline, but start the new
++                // correction at the sampled current state, never in the past.
++                handoff.start = now;
++            }
++            movement.corrections.push(correction);
++        }
++        movement
++            .corrections
++            .retain(|correction| !correction.is_done());
++        movement
++            .resize
++            .retain(|(existing, _)| !existing.same_source(&path) && !existing.is_done());
++        movement
++            .folded
++            .retain(|existing| !existing.same_source(&path) && !existing.is_done());
++        if factor != 0. {
++            movement.resize.push((path, factor));
++        } else {
++            movement.folded.push(path);
++        }
++    }
++
++    /// Shader phase follows an active constituent; geometric sampling below
++    /// always sums each independent path, including ones with later deadlines.
++    pub fn render_animation(&self) -> Animation {
++        self.resize
++            .iter()
++            .filter(|(path, _)| !path.is_done())
++            .map(|(path, _)| path.animation())
++            .chain(
++                self.corrections
++                    .iter()
++                    .filter(|correction| !correction.is_done())
++                    .map(Self::render_animation),
++            )
++            .chain((!self.anim.is_done()).then(|| self.anim.clone()))
++            .max_by_key(Animation::start_time)
++            .unwrap_or_else(|| self.anim.clone())
++    }
++
++    pub fn distance(&self) -> f64 {
++        self.from
++            + self
++                .resize
++                .iter()
++                .map(|(path, factor)| path.distance() * factor)
++                .sum::<f64>()
++            + self.corrections.iter().map(Self::distance).sum::<f64>()
++    }
++
 +    pub fn offset(&self) -> f64 {
++        let raw = self.own_offset();
++        let own = self.minimum.map_or(raw, |minimum| raw.max(minimum));
++        own + self
++            .resize
++            .iter()
++            .map(|(path, factor)| path.offset() * factor)
++            .sum::<f64>()
++            + self.corrections.iter().map(Self::offset).sum::<f64>()
++    }
++
++    fn own_offset(&self) -> f64 {
 +        if let Some(handoff) = &self.handoff {
 +            if self.anim.is_done() {
 +                return 0.;
@@ -409,6 +613,23 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +    }
 +
 +    pub fn velocity(&self) -> f64 {
++        let own = if self
++            .minimum
++            .is_some_and(|minimum| self.own_offset() < minimum)
++        {
++            0.
++        } else {
++            self.own_velocity()
++        };
++        own + self
++            .resize
++            .iter()
++            .map(|(path, factor)| path.velocity() * factor)
++            .sum::<f64>()
++            + self.corrections.iter().map(Self::velocity).sum::<f64>()
++    }
++
++    fn own_velocity(&self) -> f64 {
 +        if self.anim.is_done() {
 +            return 0.;
 +        }
@@ -434,10 +655,11 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +    pub fn offset_current(&mut self, offset: f64) {
 +        if self.handoff.is_some() && !self.anim.is_done() {
 +            self.handoff = Some(Handoff {
-+                position: self.offset() + offset,
-+                velocity: self.velocity(),
++                position: self.own_offset() + offset,
++                velocity: self.own_velocity(),
 +                start: self.anim.clock.now(),
 +                end: self.anim.end_time(),
++                brake: None,
 +            });
 +        }
 +        let value = self.anim.value();
@@ -591,97 +813,214 @@ index 0000000000000000000000000000000000000000..53fd50ac9063e235156f13510fa6883c
 +}
 diff --git a/src/animation/size.rs b/src/animation/size.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..b5ee82a370fc3aefb78ad038ec998febcf4b2062
+index 0000000000000000000000000000000000000000..fd8517a887c86f5d0798c485ccde442f8b533b74
 --- /dev/null
 +++ b/src/animation/size.rs
-@@ -0,0 +1,307 @@
-+//! Per-axis size paths for the experimental movement renderer.
-+//!
-+//! Resize and the displacement of neighboring tiles must follow the same path.
-+//! A single restarted progress cannot retain both incoming axis velocities, and
-+//! restarting an unchanged axis would separate it from its still-moving neighbor.
+@@ -0,0 +1,587 @@
++//! Shared per-axis resize geometry and neighboring layout displacement.
++use std::cell::RefCell;
++use std::rc::Rc;
 +
 +use smithay::utils::{Logical, Size};
 +
 +use super::{Animation, MoveAnimation};
 +
 +#[derive(Debug)]
++struct ResizeAxis {
++    target: f64,
++    movement: MoveAnimation,
++    maximum: Option<Vec<(Option<ResizePath>, f64)>>,
++    extra: f64,
++    finished: bool,
++}
++
++/// A source axis retains this identity through retargets. Neighboring layout
++/// movements hold only this path, so they cannot clamp or restart each other.
++#[derive(Debug, Clone)]
++pub(crate) struct ResizePath(Rc<RefCell<ResizeAxis>>);
++
++impl ResizePath {
++    fn new(anim: &Animation, from: f64, target: f64) -> Self {
++        Self(Rc::new(RefCell::new(ResizeAxis {
++            target,
++            movement: MoveAnimation::new(anim.restarted(1., 0., 0.), from - target, None)
++                .with_minimum(1. - target),
++            maximum: None,
++            extra: 0.,
++            finished: false,
++        })))
++    }
++
++    fn retarget(&self, anim: &Animation, from: f64, target: f64) {
++        let mut axis = self.0.borrow_mut();
++        if target == axis.target {
++            return;
++        }
++        let moving = !axis.movement.is_done()
++            && (axis.movement.offset() != 0. || axis.movement.velocity() != 0.);
++        let velocity = moving.then(|| axis.movement.velocity());
++        let clock = if moving { &axis.movement.anim } else { anim };
++        axis.movement = MoveAnimation::new(clock.restarted(1., 0., 0.), from - target, velocity)
++            .with_minimum(1. - target);
++        axis.target = target;
++    }
++
++    /// Column width is the maximum of its constituent tile widths. Share that
++    /// envelope rather than following whichever asynchronous client committed last.
++    pub fn update_maximum(
++        slot: &mut Option<Self>,
++        target: f64,
++        extra: f64,
++        members: Vec<(Option<Self>, f64)>,
++    ) {
++        let animation = members
++            .iter()
++            .filter_map(|(path, _)| path.as_ref())
++            .map(Self::animation)
++            .max_by_key(Animation::start_time);
++        if slot.is_none() {
++            let Some(anim) = animation else {
++                return;
++            };
++            *slot = Some(Self::new(&anim, target, target));
++        }
++        let mut axis = slot.as_ref().unwrap().0.borrow_mut();
++        axis.target = target;
++        axis.extra = extra;
++        axis.maximum = Some(members);
++    }
++
++    pub fn animation(&self) -> Animation {
++        let axis = self.0.borrow();
++        axis.maximum
++            .as_ref()
++            .and_then(|members| {
++                members
++                    .iter()
++                    .filter_map(|(path, _)| path.as_ref())
++                    .filter(|path| !path.is_done())
++                    .map(Self::animation)
++                    .max_by_key(Animation::start_time)
++            })
++            .unwrap_or_else(|| axis.movement.anim.clone())
++    }
++    pub fn same_source(&self, other: &Self) -> bool {
++        Rc::ptr_eq(&self.0, &other.0)
++    }
++    pub fn finish(&self) {
++        self.0.borrow_mut().finished = true;
++    }
++
++    pub fn is_done(&self) -> bool {
++        let axis = self.0.borrow();
++        if axis.finished {
++            return true;
++        }
++        axis.maximum.as_ref().map_or_else(
++            || axis.movement.is_done(),
++            |members| {
++                members
++                    .iter()
++                    .all(|(path, _)| path.as_ref().is_none_or(Self::is_done))
++            },
++        )
++    }
++    pub fn offset(&self) -> f64 {
++        let axis = self.0.borrow();
++        Self::value_of(&axis) - axis.target
++    }
++    pub fn velocity(&self) -> f64 {
++        let axis = self.0.borrow();
++        if axis.finished {
++            return 0.;
++        }
++        if let Some(members) = &axis.maximum {
++            Self::widest(members)
++                .and_then(|(path, _)| path.as_ref())
++                .map_or(0., Self::velocity)
++        } else {
++            axis.movement.velocity()
++        }
++    }
++    pub fn distance(&self) -> f64 {
++        let axis = self.0.borrow();
++        if axis.finished {
++            return 0.;
++        }
++        if let Some(members) = &axis.maximum {
++            Self::widest(members)
++                .and_then(|(path, _)| path.as_ref())
++                .map_or(0., Self::distance)
++        } else {
++            axis.movement.from
++        }
++    }
++    fn widest(members: &[(Option<Self>, f64)]) -> Option<&(Option<Self>, f64)> {
++        members.iter().max_by(|(a, size_a), (b, size_b)| {
++            a.as_ref()
++                .map_or(*size_a, Self::value)
++                .total_cmp(&b.as_ref().map_or(*size_b, Self::value))
++        })
++    }
++    fn value_of(axis: &ResizeAxis) -> f64 {
++        if axis.finished {
++            return axis.target;
++        }
++        if let Some(members) = &axis.maximum {
++            Self::widest(members)
++                .map_or(1., |(path, size)| path.as_ref().map_or(*size, Self::value))
++                + axis.extra
++        } else {
++            (axis.target + axis.movement.offset()).max(1.)
++        }
++    }
++    fn value(&self) -> f64 {
++        Self::value_of(&self.0.borrow())
++    }
++}
++
++#[derive(Debug)]
 +pub(crate) struct SizeAnimation {
-+    target: Size<f64, Logical>,
-+    width: MoveAnimation,
-+    height: MoveAnimation,
++    pub width: ResizePath,
++    pub height: ResizePath,
 +}
 +
 +impl SizeAnimation {
-+    /// `anim` is the enabled resize's 0→1 texture-blend clock. Geometry uses
-+    /// inverse offset clocks so it shares the neighboring tile's movement math.
 +    pub fn new(
 +        anim: &Animation,
 +        from: Size<f64, Logical>,
 +        target: Size<f64, Logical>,
 +        previous: Option<Self>,
 +    ) -> Self {
-+        let axis = |from, target, previous: Option<(f64, MoveAnimation)>| {
-+            if let Some((old_target, previous)) = previous {
-+                if target == old_target {
-+                    // No new layout offset was sent to the adjacent tile on this
-+                    // axis. Keep its original curve and deadline, including rest.
-+                    return previous;
-+                }
-+                let moving = !previous.anim.is_done()
-+                    && (previous.offset() != 0. || previous.velocity() != 0.);
-+                let velocity = moving.then(|| previous.velocity());
-+                let clock = if moving { &previous.anim } else { anim };
-+                return MoveAnimation::new(clock.restarted(1., 0., 0.), from - target, velocity);
-+            }
-+            MoveAnimation::new(anim.restarted(1., 0., 0.), from - target, None)
-+        };
-+        let (width, height) = if let Some(previous) = previous {
-+            (
-+                axis(from.w, target.w, Some((previous.target.w, previous.width))),
-+                axis(from.h, target.h, Some((previous.target.h, previous.height))),
-+            )
++        if let Some(previous) = previous {
++            previous.width.retarget(anim, from.w, target.w);
++            previous.height.retarget(anim, from.h, target.h);
++            previous
 +        } else {
-+            (axis(from.w, target.w, None), axis(from.h, target.h, None))
-+        };
-+        Self {
-+            target,
-+            width,
-+            height,
++            Self {
++                width: ResizePath::new(anim, from.w, target.w),
++                height: ResizePath::new(anim, from.h, target.h),
++            }
 +        }
 +    }
 +
 +    pub fn value(&self) -> Size<f64, Logical> {
-+        // Smithay rejects negative Size values in debug builds. Apply the
-+        // renderer's existing one-pixel floor before constructing the Size.
-+        // Neighbor offsets remain unconstrained; this is not a shared-path fix.
-+        Size::new(
-+            (self.target.w + self.width.offset()).max(1.),
-+            (self.target.h + self.height.offset()).max(1.),
-+        )
++        Size::new(self.width.value(), self.height.value())
++    }
++
++    /// Explicit Off settles every consumer before the source drops its state.
++    pub fn finish(&self) {
++        self.width.finish();
++        self.height.finish();
 +    }
 +
 +    pub fn is_done(&self) -> bool {
-+        self.width.anim.is_done() && self.height.anim.is_done()
++        self.width.is_done() && self.height.is_done()
 +    }
 +
-+    /// A client may change size without an animated configure. While this
-+    /// resize exists, layout starts another resize movement for its neighbors;
-+    /// retarget the changed axes on that clock too, retaining their momentum.
 +    pub fn update_target(&mut self, target: Size<f64, Logical>, anim: &Animation) {
-+        for (axis, old, new) in [
-+            (&mut self.width, self.target.w, target.w),
-+            (&mut self.height, self.target.h, target.h),
-+        ] {
-+            if old != new {
-+                let from = old + axis.offset() - new;
-+                let moving = !axis.anim.is_done() && (axis.offset() != 0. || axis.velocity() != 0.);
-+                let velocity = moving.then(|| axis.velocity());
-+                let clock = if moving { &axis.anim } else { anim };
-+                *axis = MoveAnimation::new(clock.restarted(1., 0., 0.), from, velocity);
-+            }
-+        }
-+        self.target = target;
++        self.width.retarget(anim, self.width.value(), target.w);
++        self.height.retarget(anim, self.height.value(), target.h);
 +    }
 +}
 +
@@ -756,15 +1095,16 @@ index 0000000000000000000000000000000000000000..b5ee82a370fc3aefb78ad038ec998feb
 +        clock.set_unadjusted(Duration::from_millis(1250));
 +        // The unconstrained Hermite path crossed zero. It must not construct
 +        // an invalid Smithay Size before the renderer can apply its floor.
-+        near(size.value().w, 1.);
++        assert!(size.value().w >= 1.);
 +        near(size.value().h, 100.);
++        let before = size.value().w;
 +        let size = SizeAnimation::new(
 +            &phase(&clock),
 +            size.value(),
 +            Size::new(100., 100.),
 +            Some(size),
 +        );
-+        near(size.value().w, 1.);
++        near(size.value().w, before);
 +        for time in 1250..2251 {
 +            clock.set_unadjusted(Duration::from_millis(time));
 +            assert!(size.value().w.is_finite() && size.value().w >= 1.);
@@ -786,8 +1126,14 @@ index 0000000000000000000000000000000000000000..b5ee82a370fc3aefb78ad038ec998feb
 +        let size = SizeAnimation::new(&new_phase, size.value(), Size::new(100., 300.), Some(size));
 +        // Horizontal neighbors retained the old one-second clock; vertical
 +        // neighbors were stationary and start on the new 200 ms clock.
-+        assert_eq!(size.width.anim.end_time(), Duration::from_millis(1500));
-+        assert_eq!(size.height.anim.end_time(), Duration::from_millis(700));
++        assert_eq!(
++            size.width.animation().end_time(),
++            Duration::from_millis(1500)
++        );
++        assert_eq!(
++            size.height.animation().end_time(),
++            Duration::from_millis(700)
++        );
 +        clock.set_unadjusted(Duration::from_millis(700));
 +        near(size.value().h, 300.);
 +        assert!(!size.is_done());
@@ -900,6 +1246,162 @@ index 0000000000000000000000000000000000000000..b5ee82a370fc3aefb78ad038ec998feb
 +        clock.set_complete_instantly(true);
 +        assert_eq!(size.value(), Size::new(100., 300.));
 +        assert!(size.is_done());
++    }
++    #[test]
++    fn braking_at_floor_keeps_shared_position_velocity_and_deadline() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let size = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(1000., 100.),
++            Size::new(10., 100.),
++            None,
++        );
++        let mut neighbor = None;
++        MoveAnimation::follow_resize(&mut neighbor, size.width.clone(), 1., size.width.offset());
++        clock.set_unadjusted(Duration::from_millis(950));
++        let before = size.value().w;
++        let velocity = size.width.velocity();
++        let size = SizeAnimation::new(
++            &phase(&clock),
++            size.value(),
++            Size::new(11., 100.),
++            Some(size),
++        );
++        near(size.value().w, before);
++        near(size.width.velocity(), velocity);
++        for micros in [
++            1, 20_000, 100_000, 118_181, 118_182, 118_183, 200_000, 500_000, 999_000,
++        ] {
++            clock.set_unadjusted(Duration::from_micros(950_000 + micros));
++            let width = size.value().w;
++            assert!(width >= 1.);
++            near(11. + neighbor.as_ref().unwrap().offset(), width);
++            near(neighbor.as_ref().unwrap().velocity(), size.width.velocity());
++            let speed = size.width.velocity();
++            clock.set_unadjusted(Duration::from_micros(950_001 + micros));
++            assert!(((size.value().w - width) / 1e-6 - speed).abs() < 0.01);
++        }
++        clock.set_unadjusted(Duration::from_millis(1950));
++        near(size.value().w, 11.);
++        assert!(neighbor.unwrap().is_done());
++    }
++
++    #[test]
++    fn two_sources_and_unrelated_movement_keep_independent_clocks() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let first = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(1000., 100.),
++            Size::new(10., 100.),
++            None,
++        );
++        let mut neighbor = Some(MoveAnimation::new(
++            phase(&clock).restarted(1., 0., 0.),
++            70.,
++            None,
++        ));
++        MoveAnimation::follow_resize(&mut neighbor, first.width.clone(), 1., first.width.offset());
++        clock.set_unadjusted(Duration::from_millis(400));
++        let second = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(100., 100.),
++            Size::new(300., 100.),
++            None,
++        );
++        MoveAnimation::follow_resize(
++            &mut neighbor,
++            second.width.clone(),
++            1.,
++            second.width.offset(),
++        );
++        clock.set_unadjusted(Duration::from_millis(950));
++        let first = SizeAnimation::new(
++            &phase(&clock),
++            first.value(),
++            Size::new(11., 100.),
++            Some(first),
++        );
++        MoveAnimation::follow_resize(&mut neighbor, first.width.clone(), 1., first.width.offset());
++        for time in [950, 1000, 1100, 1250, 1400, 1600, 1950] {
++            clock.set_unadjusted(Duration::from_millis(time));
++            let ordinary = 70. * (1. - time as f64 / 1000.).max(0.);
++            near(
++                neighbor.as_ref().unwrap().offset(),
++                ordinary + first.value().w - 11. + second.value().w - 300.,
++            );
++        }
++        assert!(neighbor.unwrap().is_done());
++    }
++    #[test]
++    fn column_maximum_clock_ignores_a_later_finished_axis() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let first = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(100., 100.),
++            Size::new(1000., 100.),
++            None,
++        );
++        clock.set_unadjusted(Duration::from_millis(200));
++        let shorter = Animation::ease(clock.clone(), 0., 1., 0., 100, Curve::Linear);
++        let second =
++            SizeAnimation::new(&shorter, Size::new(100., 100.), Size::new(200., 100.), None);
++        let mut maximum = None;
++        ResizePath::update_maximum(
++            &mut maximum,
++            1000.,
++            0.,
++            vec![
++                (Some(first.width.clone()), 1000.),
++                (Some(second.width.clone()), 200.),
++            ],
++        );
++        clock.set_unadjusted(Duration::from_millis(400));
++        let maximum = maximum.unwrap();
++        assert!(!maximum.is_done());
++        assert!(!maximum.animation().is_done());
++        assert_eq!(maximum.animation().end_time(), Duration::from_millis(1000));
++    }
++    #[test]
++    fn delayed_resize_reattachment_keeps_sampled_position_and_derivative() {
++        for delay in [0, 170, 550] {
++            let mut clock = Clock::with_time(Duration::ZERO);
++            let size = SizeAnimation::new(
++                &phase(&clock),
++                Size::new(1000., 100.),
++                Size::new(10., 100.),
++                None,
++            );
++            let mut neighbor = None;
++            MoveAnimation::follow_resize(&mut neighbor, size.width.clone(), 1., 990.);
++            clock.set_unadjusted(Duration::from_millis(400));
++            let previous = neighbor.take().unwrap();
++            neighbor = Some(
++                MoveAnimation::new(
++                    phase(&clock).restarted(1., 0., 0.),
++                    previous.offset() + 200.,
++                    Some(previous.velocity()),
++                )
++                .with_folded_sources(Some(&previous)),
++            );
++            clock.set_unadjusted(Duration::from_millis(400 + delay));
++            let before = neighbor.as_ref().unwrap().offset();
++            let velocity = neighbor.as_ref().unwrap().velocity();
++            let size = SizeAnimation::new(
++                &phase(&clock),
++                size.value(),
++                Size::new(11., 100.),
++                Some(size),
++            );
++            MoveAnimation::follow_resize(&mut neighbor, size.width.clone(), 1., -1.);
++            let neighbor = neighbor.unwrap();
++            near(neighbor.offset(), before - 1.);
++            near(neighbor.velocity(), velocity);
++            clock.set_unadjusted(Duration::from_micros((400 + delay) * 1000 + 1));
++            assert!(((neighbor.offset() - before + 1.) / 1e-6 - velocity).abs() < 0.02);
++            clock.set_unadjusted(Duration::from_secs(3));
++            assert!(neighbor.is_done());
++            near(neighbor.offset(), 0.);
++        }
 +    }
 +}
 diff --git a/src/backend/tty.rs b/src/backend/tty.rs
@@ -1311,29 +1813,29 @@ index 5ba97a3598ec7dcb7e5797d5e764298be28ec4d7..6877db315a48a588eb3b14f1d3c1f9d2
          self.anim.is_done()
      }
 diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
-index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb9bb5f827 100644
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c118499a6b4882 100644
 --- a/src/layout/scrolling.rs
 +++ b/src/layout/scrolling.rs
-@@ -16,15 +16,15 @@ use super::tab_indicator::{TabIndicator, TabIndicatorRenderElement, TabInfo};
+@@ -16,7 +16,7 @@ use super::tab_indicator::{TabIndicator, TabIndicatorRenderElement, TabInfo};
  use super::tile::{Tile, TileRenderElement, TileRenderSnapshot};
  use super::workspace::{InteractiveResize, ResolvedSize};
  use super::{ConfigureIntent, HitType, InteractiveResizeData, LayoutElement, Options, RemovedTile};
 -use crate::animation::{Animation, Clock};
-+use crate::animation::{Animation, Clock, MoveAnimation};
++use crate::animation::{Animation, Clock, MoveAnimation, ResizePath};
  use crate::input::swipe_tracker::SwipeTracker;
  use crate::layout::SizingMode;
  use crate::niri_render_elements;
-+use crate::render_helpers::RenderCtx;
- use crate::render_helpers::renderer::NiriRenderer;
- use crate::render_helpers::xray::XrayPos;
--use crate::render_helpers::RenderCtx;
--use crate::utils::transaction::{Transaction, TransactionBlocker};
- use crate::utils::ResizeEdge;
-+use crate::utils::transaction::{Transaction, TransactionBlocker};
- use crate::window::ResolvedWindowRules;
+@@ -195,6 +195,9 @@ pub struct Column<W: LayoutElement> {
+     /// Animation of the render offset during window swapping.
+     move_animation: Option<MoveAnimation>,
  
- /// Amount of touchpad movement to scroll the view for the width of one working area.
-@@ -276,12 +276,6 @@ pub enum ScrollDirection {
++    /// Shared visible maximum of independently resizing tiles in this column.
++    resize_width: Option<ResizePath>,
++
+     /// Latest known view size for this column's workspace.
+     view_size: Size<f64, Logical>,
+ 
+@@ -276,12 +279,6 @@ pub enum ScrollDirection {
      Right,
  }
  
@@ -1346,7 +1848,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
  impl<W: LayoutElement> ScrollingSpace<W> {
      pub fn new(
          view_size: Size<f64, Logical>,
-@@ -920,11 +914,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -920,11 +917,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              if target_column.active_tile_idx == tile_idx {
                  // Fade out the previously active tile.
                  let tile = &mut target_column.tiles[prev_active_tile_idx];
@@ -1360,7 +1862,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              }
          }
  
-@@ -993,7 +987,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -993,7 +990,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          // Animate movement of other columns.
          let offset = self.column_x(idx + 1) - self.column_x(idx);
@@ -1369,7 +1871,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          if self.active_column_idx <= idx {
              for col in &mut self.columns[idx + 1..] {
                  col.animate_move_from_with_config(-offset, config);
-@@ -1070,7 +1064,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1070,7 +1067,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
          let column = &mut self.columns[column_idx];
          let prev_width = self.data[column_idx].width;
  
@@ -1378,7 +1880,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
  
          // Animate movement of other tiles.
          // FIXME: tiles can move by X too, in a centered or resizing layout with one window smaller
-@@ -1165,7 +1159,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1165,7 +1162,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
          anim_config: Option<niri_config::Animation>,
      ) -> Column<W> {
          // Animate movement of the other columns.
@@ -1387,7 +1889,33 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          let offset = self.column_x(column_idx + 1) - self.column_x(column_idx);
          if self.active_column_idx <= column_idx {
              for col in &mut self.columns[column_idx + 1..] {
-@@ -1530,7 +1524,14 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1279,7 +1276,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+ 
+         // Move other columns in tandem with resizing.
+         let ongoing_resize_anim = column.tiles[tile_idx].resize_animation().is_some();
+-        if offset != 0. {
++        column.update_resize_width();
++        let resize_path = column.resize_width.clone().filter(|path| !path.is_done());
++        if let Some(path) = resize_path {
++            for (index, col) in self.columns.iter_mut().enumerate() {
++                let factor = if self.active_column_idx <= col_idx {
++                    if index > col_idx {
++                        1.
++                    } else {
++                        0.
++                    }
++                } else if index <= col_idx {
++                    -1.
++                } else {
++                    0.
++                };
++                col.follow_resize_x(path.clone(), factor, offset);
++            }
++        } else if offset != 0. {
+             if self.active_column_idx <= col_idx {
+                 for col in &mut self.columns[col_idx + 1..] {
+                     // If there's a resize animation on the tile (that may have just started in
+@@ -1530,7 +1544,14 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          let scale = Scale::from(self.scale);
          let res = ClosingWindow::new(
@@ -1403,7 +1931,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          );
          match res {
              Ok(closing) => {
-@@ -1711,7 +1712,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1711,7 +1732,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              }
          }
  
@@ -1415,7 +1943,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
      }
  
      pub fn move_left(&mut self) -> bool {
-@@ -1825,7 +1829,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1825,7 +1849,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -1424,7 +1952,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1851,7 +1855,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1851,7 +1875,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -1433,7 +1961,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              );
  
              if source_tile_was_active {
-@@ -1921,7 +1925,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1921,7 +1945,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -1442,7 +1970,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1945,7 +1949,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1945,7 +1969,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -1451,7 +1979,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              );
  
              offset.x += if self.active_column_idx <= target_column_idx {
-@@ -2019,7 +2023,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2019,7 +2043,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              false,
              removed.width,
              removed.is_full_width,
@@ -1460,7 +1988,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          );
  
          offset.x += cur_x - self.column_x(target_col_idx);
-@@ -2957,9 +2961,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2957,9 +2981,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  }
  
                  let xray_pos = xray_pos.offset(tile_pos);
@@ -1474,8 +2002,8 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
 +                    focus_ring,
 +                    col.move_animation.as_ref().map(|m| {
 +                        crate::render_helpers::movement::MovementState::from_animation(
-+                            &m.anim,
-+                            Point::from((-m.from, 0.)),
++                            &m.render_animation(),
++                            Point::from((-m.distance(), 0.)),
 +                            self.clock.now(),
 +                        )
 +                        .with_layout(
@@ -1488,7 +2016,15 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              }
          }
      }
-@@ -3997,7 +4016,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -3971,6 +4010,7 @@ impl<W: LayoutElement> Column<W> {
+             display_mode,
+             tab_indicator: TabIndicator::new(options.layout.tab_indicator),
+             move_animation: None,
++            resize_width: None,
+             view_size,
+             working_area,
+             parent_area,
+@@ -3997,7 +4037,7 @@ impl<W: LayoutElement> Column<W> {
              // Usually new columns are created together with window movement actions. For new
              // windows, we handle that in start_open_animation().
              rv.tab_indicator
@@ -1497,7 +2033,16 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          }
  
          rv
-@@ -4157,7 +4176,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4073,7 +4113,7 @@ impl<W: LayoutElement> Column<W> {
+ 
+     pub fn advance_animations(&mut self) {
+         if let Some(move_) = &mut self.move_animation {
+-            if move_.anim.is_done() {
++            if move_.is_done() {
+                 self.move_animation = None;
+             }
+         }
+@@ -4157,16 +4197,20 @@ impl<W: LayoutElement> Column<W> {
          let mut offset = Point::from((0., 0.));
  
          if let Some(move_) = &self.move_animation {
@@ -1506,7 +2051,12 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          }
  
          offset
-@@ -4166,7 +4185,7 @@ impl<W: LayoutElement> Column<W> {
+     }
+ 
++    fn follow_resize_x(&mut self, path: ResizePath, factor: f64, delta: f64) {
++        MoveAnimation::follow_resize(&mut self.move_animation, path, factor, delta);
++    }
++
      pub fn animate_move_from(&mut self, from_x_offset: f64) {
          self.animate_move_from_with_config(
              from_x_offset,
@@ -1515,7 +2065,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          );
      }
  
-@@ -4178,23 +4197,42 @@ impl<W: LayoutElement> Column<W> {
+@@ -4178,23 +4222,43 @@ impl<W: LayoutElement> Column<W> {
          let current_offset = self
              .move_animation
              .as_ref()
@@ -1524,16 +2074,21 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
  
 -        let anim = Animation::new(self.clock.clone(), 1., 0., 0., config);
 -        self.move_animation = Some(MoveAnimation {
+-            anim,
+-            from: from_x_offset + current_offset,
+-        });
 +        let velocity = self
 +            .move_animation
 +            .as_ref()
 +            .filter(|movement| {
-+                self.options
++                (self
++                    .options
 +                    .animations
 +                    .window_movement
 +                    .custom_shader
 +                    .is_some()
-+                    && !movement.anim.is_done()
++                    || movement.has_resize())
++                    && !movement.is_done()
 +            })
 +            .map(MoveAnimation::velocity);
 +        // Opted-in active handoffs keep their timing just like tile movements.
@@ -1542,19 +2097,16 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
 +            self.move_animation
 +                .as_ref()
 +                .unwrap()
-+                .anim
++                .render_animation()
 +                .restarted(1., 0., 0.)
 +        } else {
 +            Animation::new(self.clock.clone(), 1., 0., 0., config)
 +        };
 +
-+        self.move_animation = Some(MoveAnimation::new(
-             anim,
--            from: from_x_offset + current_offset,
--        });
-+            from_x_offset + current_offset,
-+            velocity,
-+        ));
++        self.move_animation = Some(
++            MoveAnimation::new(anim, from_x_offset + current_offset, velocity)
++                .with_folded_sources(self.move_animation.as_ref()),
++        );
      }
  
      pub fn offset_move_anim_current(&mut self, offset: f64) {
@@ -1569,7 +2121,53 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          }
      }
  
-@@ -5149,7 +5187,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4339,6 +4403,7 @@ impl<W: LayoutElement> Column<W> {
+         let offset = prev_height - self.data[tile_idx].size.h;
+ 
+         let is_tabbed = self.display_mode == ColumnDisplay::Tabbed;
++        let resize_path = tile.resize_path(false);
+ 
+         // Move windows below in tandem with resizing.
+         //
+@@ -4347,7 +4412,11 @@ impl<W: LayoutElement> Column<W> {
+         // animated vs. non-animated resizes? For example, an animated +20 resize followed by two
+         // non-animated -10 resizes.
+         if !is_tabbed && offset != 0. {
+-            if tile.resize_animation().is_some() {
++            if let Some(path) = resize_path {
++                for tile in &mut self.tiles[tile_idx + 1..] {
++                    tile.follow_resize_y(path.clone(), offset);
++                }
++            } else if tile.resize_animation().is_some() {
+                 // If there's a resize animation (that may have just started in
+                 // tile.update_window()), then the apparent size change is smooth with no sudden
+                 // jumps. This corresponds to adding an Y animation to tiles below.
+@@ -4709,6 +4778,24 @@ impl<W: LayoutElement> Column<W> {
+         }
+     }
+ 
++    fn update_resize_width(&mut self) {
++        let members = self
++            .tiles
++            .iter()
++            .map(|tile| (tile.resize_path(true), tile.tile_size().w))
++            .collect();
++        let extra = if self.display_mode == ColumnDisplay::Tabbed && self.sizing_mode().is_normal()
++        {
++            self.tab_indicator
++                .extra_size(self.tiles.len(), self.scale)
++                .w
++        } else {
++            0.
++        };
++        let target = self.width();
++        ResizePath::update_maximum(&mut self.resize_width, target, extra, members);
++    }
++
+     fn width(&self) -> f64 {
+         let mut tiles_width = self
+             .data
+@@ -5149,7 +5236,7 @@ impl<W: LayoutElement> Column<W> {
                  } else {
                      (0., 1.)
                  };
@@ -1578,7 +2176,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
              }
          }
  
-@@ -5157,7 +5195,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5157,7 +5244,7 @@ impl<W: LayoutElement> Column<W> {
          if display == ColumnDisplay::Tabbed {
              self.tab_indicator.start_open_animation(
                  self.clock.clone(),
@@ -1588,10 +2186,10 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..dab54a95f523e41471577f9beb7594fb
          }
  
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
-index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356fd0d7e389 100644
+index 85df548c10d78083c7bb0094fdc9421fd67e0047..5ab2291337eb9c000bcd0eff2f6124e4d679db0a 100644
 --- a/src/layout/tests/animations.rs
 +++ b/src/layout/tests/animations.rs
-@@ -36,11 +36,298 @@ fn make_options() -> Options {
+@@ -36,11 +36,302 @@ fn make_options() -> Options {
          ..Options::default()
      };
      options.animations.window_resize.anim.kind = LINEAR;
@@ -1646,11 +2244,15 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356f
 +}
 +
 +fn resize_handoff_set_size(layout: &mut Layout<TestWindow>, vertical: bool, extent: i32) {
++    resize_source_set_size(layout, 1, vertical, extent);
++}
++
++fn resize_source_set_size(layout: &mut Layout<TestWindow>, id: usize, vertical: bool, extent: i32) {
 +    let mut size = layout
 +        .active_workspace()
 +        .unwrap()
 +        .tiles()
-+        .find(|tile| *tile.window().id() == 1)
++        .find(|tile| *tile.window().id() == id)
 +        .unwrap()
 +        .window()
 +        .size();
@@ -1662,12 +2264,12 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356f
 +    let change = SizeChange::SetFixed(extent);
 +    let request = if vertical {
 +        Op::SetWindowHeight {
-+            id: Some(1),
++            id: Some(id),
 +            change,
 +        }
 +    } else {
 +        Op::SetWindowWidth {
-+            id: Some(1),
++            id: Some(id),
 +            change,
 +        }
 +    };
@@ -1676,10 +2278,10 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356f
 +        [
 +            request,
 +            Op::SetForcedSize {
-+                id: 1,
++                id,
 +                size: Some(size),
 +            },
-+            Op::Communicate(1),
++            Op::Communicate(id),
 +            Op::Communicate(2),
 +        ],
 +    );
@@ -1891,7 +2493,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356f
  fn set_up_two_in_column() -> Layout<TestWindow> {
      let ops = [
          Op::AddOutput(1),
-@@ -859,7 +1146,7 @@ fn height_resize_cancel_with_stationary_second_window() {
+@@ -859,7 +1150,7 @@ fn height_resize_cancel_with_stationary_second_window() {
      ];
      let mut options = make_options();
      // Window movement will happen instantly.
@@ -1900,8 +2502,505 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..c8af8ab1ac2fd4999113b7d0890d356f
      let mut layout = check_ops_with_options(options, ops);
  
      // The resize is in progress.
+@@ -1097,3 +1388,496 @@ fn width_resize_and_cancel_of_column_to_the_left() {
+     200 × 200 at x:100 y:  0
+     ");
+ }
++
++#[test]
++fn resize_handoff_minimum_floor_keeps_neighbors_through_repeated_reversals() {
++    for vertical in [false, true] {
++        let mut layout = resize_handoff_layout(vertical, true);
++        resize_handoff_set_size(&mut layout, vertical, 1000);
++        Op::CompleteAnimations.apply(&mut layout);
++        resize_handoff_set_size(&mut layout, vertical, 10);
++        Op::AdvanceAnimations { msec_delta: 950 }.apply(&mut layout);
++        resize_handoff_set_size(&mut layout, vertical, 11);
++        for (delay, target) in [(120, 100), (20, 1), (350, 10), (100, 400)] {
++            for _ in 0..delay / 10 {
++                Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++                resize_handoff_assert_neighbors(&layout, vertical);
++            }
++            resize_handoff_set_size(&mut layout, vertical, target);
++            resize_handoff_assert_neighbors(&layout, vertical);
++        }
++        for _ in 0..101 {
++            Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++            resize_handoff_assert_neighbors(&layout, vertical);
++        }
++    }
++}
++
++fn resize_three_sources(vertical: bool) -> Layout<TestWindow> {
++    let mut layout = resize_handoff_layout(vertical, true);
++    Op::FocusWindow(2).apply(&mut layout);
++    Op::AddWindow {
++        params: TestWindowParams::new(3),
++    }
++    .apply(&mut layout);
++    if vertical {
++        Op::FocusWindow(2).apply(&mut layout);
++        Op::ConsumeWindowIntoColumn.apply(&mut layout);
++    }
++    Op::FocusWindow(1).apply(&mut layout);
++    for id in 1..=3 {
++        Op::SetForcedSize {
++            id,
++            size: Some(Size::new(100, 100)),
++        }
++        .apply(&mut layout);
++        Op::Communicate(id).apply(&mut layout);
++    }
++    Op::CompleteAnimations.apply(&mut layout);
++    layout
++}
++
++fn resize_all_neighbors(layout: &Layout<TestWindow>, vertical: bool) {
++    let ws = layout.active_workspace().unwrap();
++    let mut tiles: Vec<_> = ws.tiles_with_render_positions().collect();
++    tiles.sort_by_key(|(tile, _, _)| *tile.window().id());
++    for pair in tiles.windows(2) {
++        let (source, pos, _) = pair[0];
++        let (_, next, _) = pair[1];
++        let gap = if vertical {
++            next.y - pos.y - source.animated_tile_size().h
++        } else {
++            next.x - pos.x - source.animated_tile_size().w
++        };
++        assert!(gap.abs() <= 0.51, "gap {gap}: {}", format_tiles(layout));
++    }
++}
++
++#[test]
++fn resize_handoff_two_adjacent_sources_keep_independent_displacements() {
++    for vertical in [false, true] {
++        let mut layout = resize_three_sources(vertical);
++        resize_source_set_size(&mut layout, 1, vertical, 1000);
++        Op::CompleteAnimations.apply(&mut layout);
++        resize_source_set_size(&mut layout, 1, vertical, 10);
++        Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++        resize_source_set_size(&mut layout, 2, vertical, 300);
++        Op::AdvanceAnimations { msec_delta: 550 }.apply(&mut layout);
++        resize_source_set_size(&mut layout, 1, vertical, 11);
++        for _ in 0..101 {
++            Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++            resize_all_neighbors(&layout, vertical);
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_source_removal_folds_displacement_without_a_jump() {
++    for vertical in [false, true] {
++        let mut layout = resize_three_sources(vertical);
++        resize_source_set_size(&mut layout, 1, vertical, 1000);
++        Op::CompleteAnimations.apply(&mut layout);
++        resize_source_set_size(&mut layout, 1, vertical, 10);
++        Op::AdvanceAnimations { msec_delta: 950 }.apply(&mut layout);
++        resize_source_set_size(&mut layout, 1, vertical, 11);
++        Op::AdvanceAnimations { msec_delta: 120 }.apply(&mut layout);
++        let positions = |layout: &Layout<TestWindow>| {
++            let mut result: Vec<_> = layout
++                .active_workspace()
++                .unwrap()
++                .tiles_with_render_positions()
++                .filter(|(tile, _, _)| *tile.window().id() != 1)
++                .map(|(tile, pos, _)| (*tile.window().id(), if vertical { pos.y } else { pos.x }))
++                .collect();
++            result.sort_by_key(|(id, _)| *id);
++            result
++        };
++        let before = positions(&layout);
++        Op::CloseWindow(1).apply(&mut layout);
++        let after = positions(&layout);
++        for ((id, before), (other, after)) in before.iter().zip(&after) {
++            assert_eq!(id, other);
++            assert!((before - after).abs() <= 1., "{before} -> {after}");
++        }
++        Op::CompleteAnimations.apply(&mut layout);
++        resize_all_neighbors(&layout, vertical);
++        assert_eq!(positions(&layout).len(), 2);
++    }
++}
++
++#[test]
++fn resize_handoff_floor_is_independent_of_an_unrelated_swap() {
++    for vertical in [false, true] {
++        let mut reference = resize_three_sources(vertical);
++        let mut swapped = resize_three_sources(vertical);
++        for layout in [&mut reference, &mut swapped] {
++            resize_source_set_size(layout, 1, vertical, 1000);
++            Op::CompleteAnimations.apply(layout);
++            resize_source_set_size(layout, 1, vertical, 10);
++            Op::AdvanceAnimations { msec_delta: 950 }.apply(layout);
++            resize_source_set_size(layout, 1, vertical, 11);
++            Op::AdvanceAnimations { msec_delta: 100 }.apply(layout);
++            Op::FocusWindow(2).apply(layout);
++        }
++        let positions = |layout: &Layout<TestWindow>| {
++            let mut result: Vec<_> = layout
++                .active_workspace()
++                .unwrap()
++                .tiles_with_render_positions()
++                .map(|(tile, pos, _)| (*tile.window().id(), if vertical { pos.y } else { pos.x }))
++                .collect();
++            result.sort_by_key(|(id, _)| *id);
++            result
++        };
++        let before = positions(&swapped);
++        if vertical {
++            Op::MoveWindowDown.apply(&mut swapped);
++        } else {
++            Op::MoveColumnRight.apply(&mut swapped);
++        }
++        let after = positions(&swapped);
++        for ((id, before), (other, after)) in before.iter().zip(&after) {
++            assert_eq!(id, other);
++            assert!((before - after).abs() <= 1., "{before} -> {after}");
++        }
++        for _ in 0..110 {
++            for layout in [&mut reference, &mut swapped] {
++                Op::AdvanceAnimations { msec_delta: 10 }.apply(layout);
++                assert!(positions(layout).iter().all(|(_, value)| value.is_finite()));
++            }
++            let size = |layout: &Layout<TestWindow>| {
++                layout
++                    .active_workspace()
++                    .unwrap()
++                    .tiles()
++                    .find(|tile| *tile.window().id() == 1)
++                    .unwrap()
++                    .animated_tile_size()
++            };
++            assert_eq!(size(&reference), size(&swapped));
++        }
++        let ws = swapped.active_workspace().unwrap();
++        let mut tiles: Vec<_> = ws.tiles_with_render_positions().collect();
++        tiles.sort_by(|(_, a, _), (_, b, _)| {
++            if vertical {
++                a.y.total_cmp(&b.y)
++            } else {
++                a.x.total_cmp(&b.x)
++            }
++        });
++        for pair in tiles.windows(2) {
++            let (source, pos, _) = pair[0];
++            let (_, next, _) = pair[1];
++            let gap = if vertical {
++                next.y - pos.y - source.animated_tile_size().h
++            } else {
++                next.x - pos.x - source.animated_tile_size().w
++            };
++            assert!(gap.abs() <= 0.51, "{gap}");
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_shared_width_path_handles_sources_left_of_focus() {
++    let mut layout = resize_three_sources(false);
++    resize_source_set_size(&mut layout, 1, false, 1000);
++    Op::CompleteAnimations.apply(&mut layout);
++    Op::FocusWindow(3).apply(&mut layout);
++    Op::CompleteAnimations.apply(&mut layout);
++    resize_source_set_size(&mut layout, 1, false, 10);
++    Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++    resize_source_set_size(&mut layout, 2, false, 300);
++    Op::AdvanceAnimations { msec_delta: 550 }.apply(&mut layout);
++    resize_source_set_size(&mut layout, 1, false, 11);
++    for _ in 0..101 {
++        Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++        resize_all_neighbors(&layout, false);
++    }
++}
++
++#[test]
++fn resize_handoff_column_width_follows_the_visible_maximum_of_stacked_tiles() {
++    let mut layout = resize_handoff_layout(true, true);
++    Op::AddWindow {
++        params: TestWindowParams::new(3),
++    }
++    .apply(&mut layout);
++    Op::SetForcedSize {
++        id: 3,
++        size: Some(Size::new(100, 100)),
++    }
++    .apply(&mut layout);
++    Op::Communicate(3).apply(&mut layout);
++    Op::FocusWindow(1).apply(&mut layout);
++    Op::CompleteAnimations.apply(&mut layout);
++    resize_source_set_size(&mut layout, 1, false, 1000);
++    Op::CompleteAnimations.apply(&mut layout);
++    resize_source_set_size(&mut layout, 1, false, 10);
++    Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++    resize_source_set_size(&mut layout, 2, false, 300);
++    Op::AdvanceAnimations { msec_delta: 550 }.apply(&mut layout);
++    resize_source_set_size(&mut layout, 1, false, 11);
++    for _ in 0..101 {
++        Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++        let ws = layout.active_workspace().unwrap();
++        let mut tiles: Vec<_> = ws.tiles_with_render_positions().collect();
++        tiles.sort_by_key(|(tile, _, _)| *tile.window().id());
++        let right = tiles[..2]
++            .iter()
++            .map(|(tile, pos, _)| pos.x + tile.animated_tile_size().w)
++            .max_by(f64::total_cmp)
++            .unwrap();
++        assert!(
++            (right - tiles[2].1.x).abs() <= 0.51,
++            "{}",
++            format_tiles(&layout)
++        );
++    }
++}
++
++fn resize_render_positions(layout: &Layout<TestWindow>, vertical: bool) -> Vec<(usize, f64)> {
++    let mut positions: Vec<_> = layout
++        .active_workspace()
++        .unwrap()
++        .tiles_with_render_positions()
++        .map(|(tile, pos, _)| (*tile.window().id(), if vertical { pos.y } else { pos.x }))
++        .collect();
++    positions.sort_by_key(|(id, _)| *id);
++    positions
++}
++
++#[test]
++fn resize_handoff_retarget_after_neighbor_swap_does_not_count_folded_path_twice() {
++    for vertical in [false, true] {
++        for delay in [0, 170, 550] {
++            let mut layout = resize_three_sources(vertical);
++            resize_source_set_size(&mut layout, 1, vertical, 1000);
++            Op::CompleteAnimations.apply(&mut layout);
++            resize_source_set_size(&mut layout, 1, vertical, 10);
++            Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++            Op::FocusWindow(2).apply(&mut layout);
++            if vertical {
++                Op::MoveWindowDown.apply(&mut layout);
++            } else {
++                Op::MoveColumnRight.apply(&mut layout);
++            }
++            Op::AdvanceAnimations { msec_delta: delay }.apply(&mut layout);
++            let before = resize_render_positions(&layout, vertical);
++            resize_source_set_size(&mut layout, 1, vertical, 11);
++            let after = resize_render_positions(&layout, vertical);
++            for ((id, before), (other, after)) in before.iter().zip(after) {
++                assert_eq!(*id, other);
++                assert!(
++                    (before - after).abs() <= 1.,
++                    "vertical={vertical} delay={delay}: {before} -> {after}"
++                );
++            }
++            Op::CompleteAnimations.apply(&mut layout);
++            let positions = resize_render_positions(&layout, vertical);
++            assert!(positions.iter().all(|(_, pos)| pos.is_finite()));
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_focus_side_change_reassigns_the_existing_source() {
++    let mut layout = resize_three_sources(false);
++    resize_source_set_size(&mut layout, 1, false, 500);
++    Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++    Op::FocusWindow(3).apply(&mut layout);
++    Op::AdvanceAnimations { msec_delta: 100 }.apply(&mut layout);
++    let before = resize_render_positions(&layout, false);
++    resize_source_set_size(&mut layout, 1, false, 10);
++    let after = resize_render_positions(&layout, false);
++    for ((_, before), (_, after)) in before.iter().zip(after) {
++        assert!((before - after).abs() <= 1., "{before} -> {after}");
++    }
++    for _ in 0..101 {
++        Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++        let ws = layout.active_workspace_mut().unwrap();
++        let mut raw: Vec<_> = ws
++            .tiles_with_render_positions_mut(false)
++            .map(|(tile, pos)| {
++                (
++                    *tile.window().id(),
++                    pos.x,
++                    tile.tile_size().w + tile.resize_path(true).map_or(0., |path| path.offset()),
++                )
++            })
++            .collect();
++        raw.sort_by_key(|(id, _, _)| *id);
++        for pair in raw.windows(2) {
++            assert!((pair[1].1 - pair[0].1 - pair[0].2).abs() < 1e-6, "{raw:?}");
++        }
++        // Scrolling origin, size and neighbor origin round independently. A
++        // fractional view translation can therefore differ by one physical px.
++        let ws = layout.active_workspace().unwrap();
++        let mut rendered: Vec<_> = ws.tiles_with_render_positions().collect();
++        rendered.sort_by_key(|(tile, _, _)| *tile.window().id());
++        for pair in rendered.windows(2) {
++            assert!((pair[1].1.x - pair[0].1.x - pair[0].0.animated_tile_size().w).abs() <= 1.);
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_surviving_source_retargets_after_another_source_is_removed() {
++    for vertical in [false, true] {
++        let mut layout = resize_three_sources(vertical);
++        resize_source_set_size(&mut layout, 1, vertical, 500);
++        Op::AdvanceAnimations { msec_delta: 200 }.apply(&mut layout);
++        resize_source_set_size(&mut layout, 2, vertical, 300);
++        Op::AdvanceAnimations { msec_delta: 200 }.apply(&mut layout);
++        Op::CloseWindow(1).apply(&mut layout);
++        Op::AdvanceAnimations { msec_delta: 180 }.apply(&mut layout);
++        let before = resize_render_positions(&layout, vertical);
++        resize_source_set_size(&mut layout, 2, vertical, 10);
++        let after = resize_render_positions(&layout, vertical);
++        for ((_, before), (_, after)) in before.iter().zip(after) {
++            assert!((before - after).abs() <= 1., "{before} -> {after}");
++        }
++        Op::CompleteAnimations.apply(&mut layout);
++        resize_all_neighbors(&layout, vertical);
++    }
++}
++
++#[test]
++fn resize_handoff_focus_side_change_on_an_orthogonal_commit_keeps_the_old_deadline() {
++    let mut layout = resize_three_sources(false);
++    resize_source_set_size(&mut layout, 1, false, 500);
++    Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++    Op::FocusWindow(3).apply(&mut layout);
++    Op::AdvanceAnimations { msec_delta: 100 }.apply(&mut layout);
++    let before = resize_render_positions(&layout, false);
++    resize_source_set_size(&mut layout, 1, true, 200);
++    let after = resize_render_positions(&layout, false);
++    for ((_, before), (_, after)) in before.iter().zip(after) {
++        assert!((before - after).abs() <= 1., "{before} -> {after}");
++    }
++    for _ in 0..101 {
++        Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++        let ws = layout.active_workspace_mut().unwrap();
++        let mut raw: Vec<_> = ws
++            .tiles_with_render_positions_mut(false)
++            .map(|(tile, pos)| {
++                (
++                    *tile.window().id(),
++                    pos.x,
++                    tile.tile_size().w + tile.resize_path(true).map_or(0., |path| path.offset()),
++                )
++            })
++            .collect();
++        raw.sort_by_key(|(id, _, _)| *id);
++        for pair in raw.windows(2) {
++            assert!((pair[1].1 - pair[0].1 - pair[0].2).abs() < 1e-6, "{raw:?}");
++        }
++        // Scrolling origin, size and neighbor origin round independently. A
++        // fractional view translation can therefore differ by one physical px.
++        let ws = layout.active_workspace().unwrap();
++        let mut rendered: Vec<_> = ws.tiles_with_render_positions().collect();
++        rendered.sort_by_key(|(tile, _, _)| *tile.window().id());
++        for pair in rendered.windows(2) {
++            assert!((pair[1].1.x - pair[0].1.x - pair[0].0.animated_tile_size().w).abs() <= 1.);
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_marked_resize_without_movement_shader_shares_floor_geometry() {
++    for vertical in [false, true] {
++        let mut options = make_options();
++        options.animations.window_resize.custom_shader =
++            Some("// niri-fx resize-continuity: 1\n".into());
++        let mut layout = resize_handoff_layout_with_options(vertical, options);
++        resize_handoff_set_size(&mut layout, vertical, 1000);
++        Op::CompleteAnimations.apply(&mut layout);
++        resize_handoff_set_size(&mut layout, vertical, 10);
++        Op::AdvanceAnimations { msec_delta: 950 }.apply(&mut layout);
++        resize_handoff_set_size(&mut layout, vertical, 11);
++        for _ in 0..101 {
++            Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++            resize_handoff_assert_neighbors(&layout, vertical);
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_explicit_off_settles_source_and_shared_neighbors_immediately() {
++    for vertical in [false, true] {
++        for global in [false, true] {
++            for marked in [false, true] {
++                let mut options = make_options();
++                if marked {
++                    options.animations.window_resize.custom_shader =
++                        Some("// niri-fx resize-continuity: 1\n".into());
++                } else {
++                    options.animations.window_movement.custom_shader = Some(String::new());
++                }
++                let mut layout = resize_handoff_layout_with_options(vertical, options.clone());
++                resize_handoff_set_size(&mut layout, vertical, 500);
++                Op::AdvanceAnimations { msec_delta: 500 }.apply(&mut layout);
++                if global {
++                    options.animations.off = true;
++                } else {
++                    options.animations.window_resize.anim.off = true;
++                }
++                layout.update_options(options);
++                let tiles: Vec<_> = layout.active_workspace().unwrap().tiles().collect();
++                for tile in tiles {
++                    assert!(tile.resize_animation().is_none());
++                    assert_eq!(tile.animated_tile_size(), tile.tile_size());
++                }
++                resize_handoff_assert_neighbors(&layout, vertical);
++                Op::AdvanceAnimations { msec_delta: 20 }.apply(&mut layout);
++                resize_handoff_assert_neighbors(&layout, vertical);
++            }
++        }
++    }
++}
++
++#[test]
++fn resize_handoff_off_after_focus_reassignment_settles_shared_size_without_new_gaps() {
++    let mut layout = resize_three_sources(false);
++    resize_source_set_size(&mut layout, 1, false, 500);
++    Op::AdvanceAnimations { msec_delta: 400 }.apply(&mut layout);
++    Op::FocusWindow(3).apply(&mut layout);
++    Op::AdvanceAnimations { msec_delta: 100 }.apply(&mut layout);
++    let before = resize_render_positions(&layout, false);
++    resize_source_set_size(&mut layout, 1, false, 10);
++    let after = resize_render_positions(&layout, false);
++    for ((_, before), (_, after)) in before.iter().zip(after) {
++        assert!((before - after).abs() <= 1., "{before} -> {after}");
++    }
++    Op::AdvanceAnimations { msec_delta: 170 }.apply(&mut layout);
++    let mut options = make_options();
++    options.animations.window_movement.custom_shader = Some(String::new());
++    options.animations.window_resize.anim.off = true;
++    layout.update_options(options);
++    for _ in 0..101 {
++        Op::AdvanceAnimations { msec_delta: 10 }.apply(&mut layout);
++        let ws = layout.active_workspace_mut().unwrap();
++        let mut raw: Vec<_> = ws
++            .tiles_with_render_positions_mut(false)
++            .map(|(tile, pos)| {
++                (
++                    *tile.window().id(),
++                    pos.x,
++                    tile.tile_size().w + tile.resize_path(true).map_or(0., |path| path.offset()),
++                )
++            })
++            .collect();
++        raw.sort_by_key(|(id, _, _)| *id);
++        for pair in raw.windows(2) {
++            assert!((pair[1].1 - pair[0].1 - pair[0].2).abs() < 1e-6, "{raw:?}");
++        }
++        // Scrolling origin, size and neighbor origin round independently. A
++        // fractional view translation can therefore differ by one physical px.
++        let ws = layout.active_workspace().unwrap();
++        let mut rendered: Vec<_> = ws.tiles_with_render_positions().collect();
++        rendered.sort_by_key(|(tile, _, _)| *tile.window().id());
++        for pair in rendered.windows(2) {
++            assert!((pair[1].1.x - pair[0].1.x - pair[0].0.animated_tile_size().w).abs() <= 1.);
++        }
++    }
++}
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4c8221577 100644
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d04530408 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,4 +1,5 @@
@@ -1910,15 +3009,12 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
  use std::rc::Rc;
  
  use niri_config::utils::MergeWith as _;
-@@ -13,18 +14,21 @@ use super::opening_window::{OpenAnimation, OpeningWindowRenderElement};
- use super::shadow::Shadow;
- use super::{
+@@ -15,16 +16,21 @@ use super::{
      HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
--    SizeFrac, RESIZE_ANIMATION_THRESHOLD,
-+    RESIZE_ANIMATION_THRESHOLD, SizeFrac,
+     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
  };
 -use crate::animation::{Animation, Clock};
-+use crate::animation::{Animation, Clock, MoveAnimation, SizeAnimation};
++use crate::animation::{Animation, Clock, MoveAnimation, ResizePath, SizeAnimation};
  use crate::layout::SizingMode;
  use crate::niri_render_elements;
  use crate::render_helpers::background_effect::BackgroundEffectElement;
@@ -1928,13 +3024,16 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +use crate::render_helpers::movement::{MovementEffect, MovementState};
  use crate::render_helpers::offscreen::{OffscreenBuffer, OffscreenRenderElement};
  use crate::render_helpers::renderer::NiriRenderer;
- use crate::render_helpers::resize::ResizeRenderElement;
+-use crate::render_helpers::resize::ResizeRenderElement;
++use crate::render_helpers::resize::{
++    supports_retained_material, ResizeMaterial, ResizeRenderElement,
++};
 +use crate::render_helpers::shader_element::ShaderRenderElement;
 +use crate::render_helpers::shaders::{ProgramType, Shaders};
  use crate::render_helpers::shadow::ShadowRenderElement;
  use crate::render_helpers::snapshot::RenderSnapshot;
  use crate::render_helpers::solid_color::{SolidColorBuffer, SolidColorRenderElement};
-@@ -93,6 +97,9 @@ pub struct Tile<W: LayoutElement> {
+@@ -93,6 +99,9 @@ pub struct Tile<W: LayoutElement> {
      /// The animation of a tile visually moving vertically.
      move_y_animation: Option<MoveAnimation>,
  
@@ -1944,7 +3043,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
      /// The animation of the tile's opacity.
      pub(super) alpha_animation: Option<AlphaAnimation>,
  
-@@ -127,6 +134,7 @@ niri_render_elements! {
+@@ -127,6 +136,7 @@ niri_render_elements! {
          SolidColor = SolidColorRenderElement,
          Opening = OpeningWindowRenderElement,
          Resize = ResizeRenderElement,
@@ -1952,7 +3051,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          Border = BorderRenderElement,
          Shadow = ShadowRenderElement,
          ClippedSurface = ClippedSurfaceRenderElement<R>,
-@@ -136,8 +144,11 @@ niri_render_elements! {
+@@ -136,11 +146,16 @@ niri_render_elements! {
      }
  }
  
@@ -1966,13 +3065,21 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
  
  #[derive(Debug)]
  struct ResizeAnimation {
-@@ -154,12 +165,15 @@ struct ResizeAnimation {
++    // Arriving-content clock, restarted at each retarget. Unmarked shaders also
++    // use it as their legacy appearance phase.
+     anim: Animation,
+     size_from: Size<f64, Logical>,
+     snapshot: LayoutElementRenderSnapshot,
+@@ -154,12 +169,18 @@ struct ResizeAnimation {
      fullscreen_progress: Option<Animation>,
      // Similar to above but for fullscreen-or-maximized.
      expanded_progress: Option<Animation>,
-+    // Only the opted-in movement renderer retains geometric momentum. Keep
-+    // the shader's texture-blend clock separate from the two size axes.
++    // Marked resize materials and the movement experiment retain independent
++    // geometry-axis paths. Neighboring tiles can share those size paths.
 +    geometry: Option<ResizeGeometry>,
++    // Original material phase/reference; it does not restart with content or
++    // either geometry axis when a new client size arrives.
++    material: Option<ResizeMaterial>,
  }
  
  #[derive(Debug)]
@@ -1985,7 +3092,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
  }
  
  #[derive(Debug)]
-@@ -204,6 +218,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -204,6 +225,7 @@ impl<W: LayoutElement> Tile<W> {
              resize_animation: None,
              move_x_animation: None,
              move_y_animation: None,
@@ -1993,21 +3100,58 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -266,6 +281,13 @@ impl<W: LayoutElement> Tile<W> {
+@@ -232,6 +254,18 @@ impl<W: LayoutElement> Tile<W> {
+         self.view_size = view_size;
+         self.scale = scale;
+         self.options = options;
++        // Off is an explicit immediate choice, not a shader-reload handoff.
++        if self.options.animations.off || self.options.animations.window_resize.anim.off {
++            if let Some(geometry) = self
++                .resize_animation
++                .as_ref()
++                .and_then(|resize| resize.geometry.as_ref())
++            {
++                geometry.window.finish();
++                geometry.tile.finish();
++            }
++            self.resize_animation = None;
++        }
+ 
+         let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
+ 
+@@ -265,7 +299,30 @@ impl<W: LayoutElement> Tile<W> {
+         let prev_sizing_mode = self.sizing_mode;
          self.sizing_mode = self.window.sizing_mode();
  
-         if let Some(animate_from) = self.window.take_animation_snapshot() {
-+            let continuous_geometry = self
+-        if let Some(animate_from) = self.window.take_animation_snapshot() {
++        let resize_snapshot = self.window.take_animation_snapshot();
++        if self.options.animations.off || self.options.animations.window_resize.anim.off {
++            self.resize_animation = None;
++        } else if let Some(animate_from) = resize_snapshot {
++            let retained_material = self
 +                .options
 +                .animations
-+                .window_movement
++                .window_resize
 +                .custom_shader
-+                .is_some()
++                .as_deref()
++                .is_some_and(supports_retained_material);
++            let active_material = self
++                .resize_animation
++                .as_ref()
++                .is_some_and(|resize| resize.material.is_some());
++            let continuous_geometry = (retained_material
++                || active_material
++                || self
++                    .options
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .is_some())
 +                && !self.options.animations.window_resize.anim.off;
              let params = if let Some(resize) = self.resize_animation.take() {
                  // Compute like in animated_window_size(), but using the snapshot geometry (since
                  // the current one is already overwritten).
-@@ -277,6 +299,9 @@ impl<W: LayoutElement> Tile<W> {
+@@ -277,6 +334,9 @@ impl<W: LayoutElement> Tile<W> {
  
                  size.w = size_from.w + (size.w - size_from.w) * val;
                  size.h = size_from.h + (size.h - size_from.h) * val;
@@ -2017,7 +3161,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
  
                  let mut tile_size = animate_from.size;
                  if prev_sizing_mode.is_fullscreen() {
-@@ -290,6 +315,9 @@ impl<W: LayoutElement> Tile<W> {
+@@ -290,6 +350,9 @@ impl<W: LayoutElement> Tile<W> {
  
                  tile_size.w = tile_size_from.w + (tile_size.w - tile_size_from.w) * val;
                  tile_size.h = tile_size_from.h + (tile_size.h - tile_size_from.h) * val;
@@ -2027,18 +3171,20 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
  
                  let fullscreen_from = resize
                      .fullscreen_progress
-@@ -312,6 +340,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -312,6 +375,8 @@ impl<W: LayoutElement> Tile<W> {
                      fullscreen_from,
                      expanded_from,
                      resize.offscreen,
 +                    resize.geometry,
++                    resize.material,
                  )
              } else {
                  let size = animate_from.size;
-@@ -341,16 +370,28 @@ impl<W: LayoutElement> Tile<W> {
+@@ -341,16 +406,33 @@ impl<W: LayoutElement> Tile<W> {
                      fullscreen_from,
                      expanded_from,
                      OffscreenBuffer::default(),
++                    None,
 +                    None,
                  )
              };
@@ -2050,6 +3196,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +                expanded_from,
 +                offscreen,
 +                previous_geometry,
++                previous_material,
 +            ) = params;
  
              let change = self.window.size().to_f64().to_point() - size_from.to_point();
@@ -2062,11 +3209,14 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +                && previous_geometry
 +                    .as_ref()
 +                    .is_some_and(|geometry| !geometry.window.is_done() || !geometry.tile.is_done());
-+            if change > RESIZE_ANIMATION_THRESHOLD || continue_geometry {
++            let continue_material = previous_material
++                .as_ref()
++                .is_some_and(|material| !material.phase.is_done());
++            if change > RESIZE_ANIMATION_THRESHOLD || continue_geometry || continue_material {
                  let anim = Animation::new(
                      self.clock.clone(),
                      0.,
-@@ -370,6 +411,15 @@ impl<W: LayoutElement> Tile<W> {
+@@ -370,6 +452,25 @@ impl<W: LayoutElement> Tile<W> {
                  let expanded_progress = (expanded_from != expanded_to)
                      .then(|| anim.restarted(expanded_from, expanded_to, 0.));
  
@@ -2079,14 +3229,25 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +                        tile: SizeAnimation::new(&anim, tile_size_from, self.tile_size(), tile),
 +                    }
 +                });
++                let material = previous_material
++                    .map(|mut material| {
++                        material.retarget(self.window_size());
++                        material
++                    })
++                    .or_else(|| {
++                        retained_material.then(|| {
++                            ResizeMaterial::new(anim.clone(), size_from, self.window_size())
++                        })
++                    });
                  self.resize_animation = Some(ResizeAnimation {
                      anim,
                      size_from,
-@@ -378,12 +428,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -378,12 +479,49 @@ impl<W: LayoutElement> Tile<W> {
                      tile_size_from,
                      fullscreen_progress,
                      expanded_progress,
 +                    geometry,
++                    material,
                  });
              } else {
                  self.resize_animation = None;
@@ -2098,6 +3259,20 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +        // movements retarget while this resize is still active.
 +        let window_size = self.window_size();
 +        let tile_size = self.tile_size();
++        if let Some(resize) = &mut self.resize_animation {
++            if let Some(material) = &mut resize.material {
++                if material.content_size != window_size {
++                    material.retarget(window_size);
++                    resize.anim = Animation::new(
++                        self.clock.clone(),
++                        0.,
++                        1.,
++                        0.,
++                        self.options.animations.window_resize.anim,
++                    );
++                }
++            }
++        }
 +        if let Some(geometry) = self
 +            .resize_animation
 +            .as_mut()
@@ -2117,12 +3292,16 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
  
          let rules = self.window.rules();
-@@ -418,7 +490,12 @@ impl<W: LayoutElement> Tile<W> {
+@@ -418,18 +556,27 @@ impl<W: LayoutElement> Tile<W> {
          }
  
          if let Some(resize) = &mut self.resize_animation {
 -            if resize.anim.is_done() {
 +            if resize.anim.is_done()
++                && resize
++                    .material
++                    .as_ref()
++                    .is_none_or(|material| material.phase.is_done())
 +                && resize
 +                    .geometry
 +                    .as_ref()
@@ -2131,7 +3310,20 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
                  self.resize_animation = None;
              }
          }
-@@ -547,10 +624,10 @@ impl<W: LayoutElement> Tile<W> {
+ 
+         if let Some(move_) = &mut self.move_x_animation {
+-            if move_.anim.is_done() {
++            if move_.is_done() {
+                 self.move_x_animation = None;
+             }
+         }
+         if let Some(move_) = &mut self.move_y_animation {
+-            if move_.anim.is_done() {
++            if move_.is_done() {
+                 self.move_y_animation = None;
+             }
+         }
+@@ -547,10 +694,10 @@ impl<W: LayoutElement> Tile<W> {
          let mut offset = Point::from((0., 0.));
  
          if let Some(move_) = &self.move_x_animation {
@@ -2144,7 +3336,26 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          }
  
          offset += self.interactive_move_offset;
-@@ -578,51 +655,64 @@ impl<W: LayoutElement> Tile<W> {
+@@ -572,57 +719,93 @@ impl<W: LayoutElement> Tile<W> {
+         self.resize_animation.as_ref().map(|resize| &resize.anim)
+     }
+ 
++    pub(crate) fn resize_path(&self, horizontal: bool) -> Option<ResizePath> {
++        let geometry = self.resize_animation.as_ref()?.geometry.as_ref()?;
++        Some(if horizontal {
++            geometry.tile.width.clone()
++        } else {
++            geometry.tile.height.clone()
++        })
++    }
++
++    pub(crate) fn follow_resize_y(&mut self, path: ResizePath, delta: f64) {
++        MoveAnimation::follow_resize(&mut self.move_y_animation, path, 1., delta);
++    }
++
+     pub fn animate_move_from(&mut self, from: Point<f64, Logical>) {
+         self.animate_move_x_from(from.x);
+         self.animate_move_y_from(from.y);
      }
  
      pub fn animate_move_x_from(&mut self, from: f64) {
@@ -2161,15 +3372,17 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +        let velocity = previous
 +            .as_ref()
 +            .filter(|movement| {
-+                self.options
++                (self
++                    .options
 +                    .animations
 +                    .window_movement
 +                    .custom_shader
 +                    .is_some()
-+                    && !movement.anim.is_done()
++                    || movement.has_resize())
++                    && !movement.is_done()
 +            })
 +            .map(MoveAnimation::velocity);
-+        let anim = previous.map(|move_| move_.anim);
++        let anim = previous.as_ref().map(MoveAnimation::render_animation);
          let anim = anim
              .map(|anim| anim.restarted(1., 0., 0.))
              .unwrap_or_else(|| Animation::new(self.clock.clone(), 1., 0., 0., config));
@@ -2178,7 +3391,10 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 -            anim,
 -            from: from + current_offset,
 -        });
-+        self.move_x_animation = Some(MoveAnimation::new(anim, from + current_offset, velocity));
++        self.move_x_animation = Some(
++            MoveAnimation::new(anim, from + current_offset, velocity)
++                .with_folded_sources(previous.as_ref()),
++        );
      }
  
      pub fn animate_move_y_from(&mut self, from: f64) {
@@ -2195,15 +3411,17 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +        let velocity = previous
 +            .as_ref()
 +            .filter(|movement| {
-+                self.options
++                (self
++                    .options
 +                    .animations
 +                    .window_movement
 +                    .custom_shader
 +                    .is_some()
-+                    && !movement.anim.is_done()
++                    || movement.has_resize())
++                    && !movement.is_done()
 +            })
 +            .map(MoveAnimation::velocity);
-+        let anim = previous.map(|move_| move_.anim);
++        let anim = previous.as_ref().map(MoveAnimation::render_animation);
          let anim = anim
              .map(|anim| anim.restarted(1., 0., 0.))
              .unwrap_or_else(|| Animation::new(self.clock.clone(), 1., 0., 0., config));
@@ -2212,7 +3430,10 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 -            anim,
 -            from: from + current_offset,
 -        });
-+        self.move_y_animation = Some(MoveAnimation::new(anim, from + current_offset, velocity));
++        self.move_y_animation = Some(
++            MoveAnimation::new(anim, from + current_offset, velocity)
++                .with_folded_sources(previous.as_ref()),
++        );
      }
  
      pub fn offset_move_y_anim_current(&mut self, offset: f64) {
@@ -2227,20 +3448,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          }
      }
  
-@@ -697,11 +787,7 @@ impl<W: LayoutElement> Tile<W> {
-             }
-         }
- 
--        if self.sizing_mode.is_normal() {
--            0.
--        } else {
--            1.
--        }
-+        if self.sizing_mode.is_normal() { 0. } else { 1. }
-     }
- 
-     /// Returns `None` if the border is hidden and `Some(width)` if it should be shown.
-@@ -826,6 +912,11 @@ impl<W: LayoutElement> Tile<W> {
+@@ -826,6 +1009,11 @@ impl<W: LayoutElement> Tile<W> {
  
              size.w = f64::max(1., size_from.w + (size.w - size_from.w) * val);
              size.h = f64::max(1., size_from.h + (size.h - size_from.h) * val);
@@ -2252,7 +3460,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
              size = size
                  .to_physical_precise_round(self.scale)
                  .to_logical(self.scale);
-@@ -843,6 +934,11 @@ impl<W: LayoutElement> Tile<W> {
+@@ -843,6 +1031,11 @@ impl<W: LayoutElement> Tile<W> {
  
              size.w = f64::max(1., size_from.w + (size.w - size_from.w) * val);
              size.h = f64::max(1., size_from.h + (size.h - size_from.h) * val);
@@ -2264,7 +3472,94 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
              size = size
                  .to_physical_precise_round(self.scale)
                  .to_logical(self.scale);
-@@ -1315,11 +1411,25 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1030,6 +1223,7 @@ impl<W: LayoutElement> Tile<W> {
+         push: &mut dyn FnMut(TileRenderElement<R>),
+     ) {
+         let _span = tracy_client::span!("Tile::render_inner");
++        Shaders::collect_retired_resize(ctx.renderer.as_gles_renderer());
+ 
+         let scale = Scale::from(self.scale);
+         let fullscreen_progress = self.fullscreen_progress();
+@@ -1124,19 +1318,71 @@ impl<W: LayoutElement> Tile<W> {
+                         // inside the geometry() call gives us the same physical result back.
+                         let texture_current_geo = elem_current.geometry(scale);
+ 
+-                        let elem = ResizeRenderElement::new(
++                        let mut previous = texture_from.clone();
++                        let mut previous_size = resize.snapshot.size;
++                        let mut current = (texture_current, texture_current_geo);
++                        let mut current_size = window_size;
++                        let mut material_state = None;
++                        let mut material_program = None;
++                        if let Some(material) = &resize.material {
++                            // Mapped::render_snapshot captures the raw surface tree only;
++                            // render_normal also excludes background effects. Xray's two Output
++                            // passes can therefore share material, but never background pixels.
++                            debug_assert!(resize.snapshot.contents_with_blocked_out_bg.is_none());
++                            material_program = material.program(ctx.renderer);
++                            // A newly blocked capture cannot fall back to its old unredacted
++                            // snapshot even if allocating the content composite fails. A
++                            // newly visible target must not inherit old redaction either.
++                            if ctx.target.should_block_out(rules.block_out_from)
++                                || ctx.target.should_block_out(resize.snapshot.block_out_from)
++                                || material.ignores_snapshot()
++                            {
++                                previous = current.clone();
++                                previous_size = current_size;
++                            }
++                            match material.composite(
++                                ctx.renderer,
++                                ctx.target,
++                                scale,
++                                area.size,
++                                previous.clone(),
++                                previous_size,
++                                current.clone(),
++                                current_size,
++                                resize.anim.clamped_value().clamp(0., 1.) as f32,
++                                ctx.target.should_block_out(rules.block_out_from),
++                            ) {
++                                Ok(composite) => {
++                                    previous = composite.clone();
++                                    current = composite;
++                                    previous_size = area.size;
++                                    current_size = area.size;
++                                    material_state = Some(material);
++                                }
++                                Err(err) => warn!("error compositing resize material: {err:?}"),
++                            }
++                        }
++                        let phase = material_state
++                            .map(|material| &material.phase)
++                            .unwrap_or(&resize.anim);
++                        let mut elem = ResizeRenderElement::new(
+                             area,
+                             scale,
+-                            texture_from.clone(),
+-                            resize.snapshot.size,
+-                            (texture_current, texture_current_geo),
+-                            window_size,
+-                            resize.anim.value() as f32,
+-                            resize.anim.clamped_value().clamp(0., 1.) as f32,
++                            previous,
++                            previous_size,
++                            current,
++                            current_size,
++                            phase.value() as f32,
++                            phase.clamped_value().clamp(0., 1.) as f32,
+                             radius,
+                             clip_to_geometry,
+                             win_alpha,
++                            ProgramType::Resize,
++                            material_state,
+                         );
++                        if let Some(program) = material_program {
++                            elem = elem.with_pinned_program(program);
++                        }
+ 
+                         // We're drawing the resize shader, not the offscreen directly.
+                         data.id = elem.id().clone();
+@@ -1315,11 +1561,25 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn render<R: NiriRenderer>(
@@ -2290,7 +3585,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render");
-@@ -1334,6 +1444,45 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1334,6 +1594,49 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -2301,9 +3596,9 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +        ] {
 +            if let Some(movement) = movement {
 +                let delta = if horizontal {
-+                    Point::from((-movement.from, 0.))
++                    Point::from((-movement.distance(), 0.))
 +                } else {
-+                    Point::from((0., -movement.from))
++                    Point::from((0., -movement.distance()))
 +                };
 +                let remaining = if horizontal {
 +                    Point::from((-movement.offset(), 0.))
@@ -2315,8 +3610,12 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
 +                } else {
 +                    Point::from((0., movement.velocity()))
 +                };
-+                let own = MovementState::from_animation(&movement.anim, delta, self.clock.now())
-+                    .with_layout(remaining, velocity);
++                let own = MovementState::from_animation(
++                    &movement.render_animation(),
++                    delta,
++                    self.clock.now(),
++                )
++                .with_layout(remaining, velocity);
 +                motion = Some(motion.map_or(own, |state| state.combined(own)));
 +            }
 +        }
@@ -2336,7 +3635,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          if let Some(open) = &self.open_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1361,6 +1510,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1361,6 +1664,34 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }
@@ -2371,7 +3670,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1415,8 +1592,28 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1415,8 +1746,28 @@ impl<W: LayoutElement> Tile<W> {
      ) -> TileRenderSnapshot {
          let _span = tracy_client::span!("Tile::render_snapshot");
  
@@ -2401,7 +3700,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
              RenderCtx {
                  target: RenderTarget::Output,
                  renderer,
-@@ -1467,7 +1664,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1467,7 +1818,8 @@ impl<W: LayoutElement> Tile<W> {
                  xray.backdrop[output_idx] = screencast_backdrop.clone().unwrap();
  
                  let mut contents = Vec::new();
@@ -2411,7 +3710,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
                      RenderCtx {
                          target: RenderTarget::Output,
                          renderer,
-@@ -1487,7 +1685,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1487,7 +1839,8 @@ impl<W: LayoutElement> Tile<W> {
  
          // A bit of a hack to render blocked out as for screencast, but I think it's fine here.
          let mut blocked_out_contents = Vec::new();
@@ -2421,7 +3720,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..2aa5f20a83e90567225ee9efc7b1b3a4
              RenderCtx {
                  target: RenderTarget::Screencast,
                  renderer,
-@@ -1510,15 +1709,18 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1510,15 +1863,18 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
@@ -3031,35 +4330,477 @@ index 0000000000000000000000000000000000000000..1712d7e9bcc763358027ed917a822ab5
 +        assert_eq!(combined.travel_velocity, Point::from((450., 75.)));
 +    }
 +}
+diff --git a/src/render_helpers/resize.rs b/src/render_helpers/resize.rs
+index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff62966a9f 100644
+--- a/src/render_helpers/resize.rs
++++ b/src/render_helpers/resize.rs
+@@ -1,3 +1,4 @@
++use std::cell::{Cell, RefCell};
+ use std::collections::HashMap;
+ use std::rc::Rc;
+ 
+@@ -6,16 +7,196 @@ use niri_config::CornerRadius;
+ use smithay::backend::renderer::element::{Element, Id, Kind, RenderElement, UnderlyingStorage};
+ use smithay::backend::renderer::gles::{GlesError, GlesFrame, GlesRenderer, GlesTexture, Uniform};
+ use smithay::backend::renderer::utils::{CommitCounter, DamageSet, OpaqueRegions};
+-use smithay::backend::renderer::Texture as _;
++use smithay::backend::renderer::{ContextId, Renderer as _, Texture as _};
+ use smithay::gpu_span_location;
+ use smithay::utils::user_data::UserDataMap;
+-use smithay::utils::{Buffer, Logical, Physical, Rectangle, Scale, Size, Transform};
++use smithay::utils::{Buffer, Logical, Physical, Point, Rectangle, Scale, Size, Transform};
+ 
++use super::offscreen::OffscreenBuffer;
+ use super::renderer::{AsGlesFrame, NiriRenderer};
+-use super::shader_element::ShaderRenderElement;
++use super::shader_element::{ShaderProgram, ShaderRenderElement};
+ use super::shaders::{mat3_uniform, ProgramType, Shaders};
++use super::RenderTarget;
++use crate::animation::Animation;
+ use crate::backend::tty::{TtyFrame, TtyRenderer, TtyRendererError};
+ 
++/// Explicit opt-in; arbitrary custom resize shaders keep the stock contract.
++pub fn supports_retained_material(source: &str) -> bool {
++    source
++        .lines()
++        .any(|line| line.trim() == "// niri-fx resize-continuity: 1")
++}
++
++#[derive(Debug, Clone)]
++struct MaterialTexture {
++    texture: (GlesTexture, Rectangle<i32, Physical>),
++    size: Size<f64, Logical>,
++}
++
++#[derive(Debug, Default)]
++struct TargetMaterial {
++    previous: Option<MaterialTexture>,
++    displayed: Option<MaterialTexture>,
++    composite: OffscreenBuffer,
++    scale: Option<Scale<f64>>,
++    blocked: Option<bool>,
++}
++
++/// One phase/reference and at most two retained material textures per capture
++/// target. Retargeting promotes a flat undeformed composite, never a chain of
++/// snapshots or an image that already contains the custom deformation.
++#[derive(Debug)]
++pub struct ResizeMaterial {
++    pub phase: Animation,
++    pub reference_size: Size<f64, Logical>,
++    pub reference_from_size: Size<f64, Logical>,
++    pub reference_to_size: Size<f64, Logical>,
++    pub content_size: Size<f64, Logical>,
++    targets: RefCell<[TargetMaterial; 3]>,
++    program: RefCell<Option<ShaderProgram>>,
++    context: RefCell<Option<ContextId<GlesTexture>>>,
++    ignore_snapshot: Cell<bool>,
++}
++
++impl ResizeMaterial {
++    pub fn new(phase: Animation, from: Size<f64, Logical>, to: Size<f64, Logical>) -> Self {
++        Self {
++            phase,
++            reference_size: to,
++            reference_from_size: from,
++            reference_to_size: to,
++            content_size: to,
++            targets: RefCell::new(std::array::from_fn(|_| TargetMaterial::default())),
++            program: RefCell::new(None),
++            context: RefCell::new(None),
++            ignore_snapshot: Cell::new(false),
++        }
++    }
++
++    pub fn retarget(&mut self, size: Size<f64, Logical>) {
++        self.content_size = size;
++        for target in self.targets.get_mut() {
++            // If this target has not rendered since the previous retarget,
++            // retain its existing base rather than discarding protected content.
++            if let Some(displayed) = target.displayed.take() {
++                target.previous = Some(displayed);
++            }
++        }
++    }
++
++    pub fn program(&self, renderer: &mut GlesRenderer) -> Option<ShaderProgram> {
++        let context = renderer.context_id();
++        let changed = self
++            .context
++            .borrow()
++            .as_ref()
++            .is_some_and(|old| *old != context);
++        if changed {
++            // GL object names belong to a context. Never reinterpret retained textures or
++            // programs after renderer recreation. The old snapshot can also be cached in
++            // the previous context, so use current content for the rest of this episode.
++            self.targets
++                .replace(std::array::from_fn(|_| TargetMaterial::default()));
++            self.program.replace(None);
++            self.ignore_snapshot.set(true);
++        }
++        self.context.replace(Some(context));
++        let mut program = self.program.borrow_mut();
++        if program.is_none() {
++            *program = Shaders::get(renderer).program(ProgramType::Resize);
++        }
++        program.clone()
++    }
++
++    pub fn ignores_snapshot(&self) -> bool {
++        self.ignore_snapshot.get()
++    }
++
++    #[allow(clippy::too_many_arguments)]
++    pub fn composite(
++        &self,
++        renderer: &mut GlesRenderer,
++        target: RenderTarget,
++        scale: Scale<f64>,
++        material_size: Size<f64, Logical>,
++        previous: (GlesTexture, Rectangle<i32, Physical>),
++        previous_size: Size<f64, Logical>,
++        current: (GlesTexture, Rectangle<i32, Physical>),
++        current_size: Size<f64, Logical>,
++        progress: f32,
++        blocked: bool,
++    ) -> anyhow::Result<(GlesTexture, Rectangle<i32, Physical>)> {
++        anyhow::ensure!(
++            Shaders::get(renderer)
++                .program(ProgramType::ResizeContent)
++                .is_some(),
++            "resize content shader is unavailable"
++        );
++        let mut targets = self.targets.borrow_mut();
++        let cache = &mut targets[target as usize];
++        // A texture rendered for one capture target is never reused for another.
++        // A scale change starts a fresh content blend from the safe snapshot;
++        // reinterpreting cached pixel coordinates at the new scale is incorrect.
++        if cache.scale.is_some_and(|old| old != scale) {
++            cache.previous = None;
++            cache.displayed = None;
++        }
++        if cache.blocked.is_some_and(|old| old != blocked) {
++            // A policy boundary starts a new source generation in both directions.
++            // Retain current raw content, so later frames cannot fall back to a
++            // snapshot from the previous policy or promote an old redacted blend.
++            cache.previous = Some(MaterialTexture {
++                texture: current.clone(),
++                size: current_size,
++            });
++            cache.displayed = None;
++        }
++        cache.scale = Some(scale);
++        cache.blocked = Some(blocked);
++        let (previous, previous_size) = if blocked || self.ignore_snapshot.get() {
++            (current.clone(), current_size)
++        } else {
++            (previous, previous_size)
++        };
++        let (previous, previous_size) = cache
++            .previous
++            .as_ref()
++            .map(|previous| (previous.texture.clone(), previous.size))
++            .unwrap_or((previous, previous_size));
++        cache.displayed = None;
++        let element = ResizeRenderElement::new(
++            Rectangle::new(Point::from((0., 0.)), material_size),
++            scale,
++            previous,
++            previous_size,
++            current,
++            current_size,
++            progress,
++            progress,
++            CornerRadius::default(),
++            false,
++            1.,
++            ProgramType::ResizeContent,
++            None,
++        );
++        let composite = cache.composite.render(renderer, scale, &[element]);
++        // Restore the default framebuffer before EGL rebinds a window surface.
++        // Leaving an offscreen FBO current across that transition can preserve
++        // GL_NONE as the window's default read/draw buffer on surfaceless EGL.
++        // This must also run before the safe-content fallback on render errors.
++        renderer.with_context(|gl| unsafe {
++            gl.BindFramebuffer(smithay::backend::renderer::gles::ffi::FRAMEBUFFER, 0);
++        })?;
++        let (element, _, _) = composite?;
++        let texture = (element.texture().clone(), element.geometry(scale));
++        cache.displayed = Some(MaterialTexture {
++            texture: texture.clone(),
++            size: material_size,
++        });
++        Ok(texture)
++    }
++}
++
+ #[derive(Debug)]
+ pub struct ResizeRenderElement(ShaderRenderElement);
+ 
+@@ -33,6 +214,8 @@ impl ResizeRenderElement {
+         corner_radius: CornerRadius,
+         clip_to_geometry: bool,
+         result_alpha: f32,
++        program: ProgramType,
++        material: Option<&ResizeMaterial>,
+     ) -> Self {
+         let curr_geo = area;
+ 
+@@ -88,7 +271,7 @@ impl ResizeRenderElement {
+         // Create the shader.
+         Self(
+             ShaderRenderElement::new(
+-                ProgramType::Resize,
++                program,
+                 area.size,
+                 None,
+                 scale.x,
+@@ -104,6 +287,33 @@ impl ResizeRenderElement {
+                     Uniform::new("niri_clamped_progress", clamped_progress),
+                     Uniform::new("niri_corner_radius", <[f32; 4]>::from(corner_radius)),
+                     Uniform::new("niri_clip_to_geometry", clip_to_geometry),
++                    Uniform::new(
++                        "niri_resize_retained",
++                        if material.is_some() { 1. } else { 0. },
++                    ),
++                    Uniform::new(
++                        "niri_resize_reference_size",
++                        material
++                            .map(|m| [m.reference_size.w as f32, m.reference_size.h as f32])
++                            .unwrap_or([0., 0.]),
++                    ),
++                    Uniform::new(
++                        "niri_resize_reference_from_size",
++                        material
++                            .map(|m| {
++                                [
++                                    m.reference_from_size.w as f32,
++                                    m.reference_from_size.h as f32,
++                                ]
++                            })
++                            .unwrap_or([0., 0.]),
++                    ),
++                    Uniform::new(
++                        "niri_resize_reference_to_size",
++                        material
++                            .map(|m| [m.reference_to_size.w as f32, m.reference_to_size.h as f32])
++                            .unwrap_or([0., 0.]),
++                    ),
+                 ]),
+                 HashMap::from([
+                     (String::from("niri_tex_prev"), texture_prev),
+@@ -115,7 +325,13 @@ impl ResizeRenderElement {
+         )
+     }
+ 
++    pub fn with_pinned_program(mut self, program: ShaderProgram) -> Self {
++        self.0 = self.0.with_pinned_program(program);
++        self
++    }
++
+     pub fn has_shader(renderer: &mut impl NiriRenderer) -> bool {
++        Shaders::collect_retired_resize(renderer.as_gles_renderer());
+         Shaders::get(renderer)
+             .program(ProgramType::Resize)
+             .is_some()
+@@ -215,3 +431,51 @@ impl<'render> RenderElement<TtyRenderer<'render>> for ResizeRenderElement {
+         self.0.underlying_storage(renderer)
+     }
+ }
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use crate::animation::{Clock, Curve};
++    use std::time::Duration;
++
++    #[test]
++    fn retained_resize_requires_explicit_supported_marker() {
++        assert!(supports_retained_material(
++            " // niri-fx resize-continuity: 1 \nvoid main() {}"
++        ));
++        for source in [
++            "",
++            "// niri-fx resize-continuity: 2",
++            "// niri-fx resize-continuity: 10",
++            "// explanation: // niri-fx resize-continuity: 1",
++        ] {
++            assert!(!supports_retained_material(source));
++        }
++    }
++
++    #[test]
++    fn retained_resize_keeps_phase_and_material_coordinates_through_retargets() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let phase = Animation::ease(clock.clone(), 0., 1., 0., 1000, Curve::Linear);
++        let from = Size::new(400., 300.);
++        let to = Size::new(800., 600.);
++        let mut material = ResizeMaterial::new(phase, from, to);
++        clock.set_unadjusted(Duration::from_millis(350));
++        for target in [
++            Size::new(200., 600.),
++            Size::new(1000., 200.),
++            Size::new(400., 300.),
++        ] {
++            material.retarget(target);
++            assert_eq!(material.phase.value(), 0.35);
++            assert_eq!(material.reference_size, to);
++            assert_eq!(material.reference_from_size, from);
++            assert_eq!(material.reference_to_size, to);
++            assert_eq!(material.content_size, target);
++            assert_eq!(material.targets.borrow().len(), 3);
++        }
++        clock.set_unadjusted(Duration::from_millis(1000));
++        assert!(material.phase.is_done());
++        assert_eq!(material.phase.value(), 1.);
++    }
++}
+diff --git a/src/render_helpers/shader_element.rs b/src/render_helpers/shader_element.rs
+index f1bf978b73a11ff42b758aa66187b436b54000ee..7309e62d00b111adcf90b65d584fa028f7f58f6f 100644
+--- a/src/render_helpers/shader_element.rs
++++ b/src/render_helpers/shader_element.rs
+@@ -22,6 +22,7 @@ use crate::backend::tty::{TtyFrame, TtyRenderer, TtyRendererError};
+ #[derive(Debug, Clone)]
+ pub struct ShaderRenderElement {
+     program: ProgramType,
++    pinned_program: Option<ShaderProgram>,
+     id: Id,
+     commit_counter: CommitCounter,
+     area: Rectangle<f64, Logical>,
+@@ -169,6 +170,10 @@ impl ShaderProgram {
+         })?
+     }
+ 
++    pub fn is_unique(&self) -> bool {
++        Rc::strong_count(&self.0) == 1
++    }
++
+     pub fn destroy(self, renderer: &mut GlesRenderer) -> Result<(), GlesError> {
+         renderer.with_context(move |gl| unsafe {
+             gl.DeleteProgram(self.0.normal.program);
+@@ -192,6 +197,7 @@ impl ShaderRenderElement {
+     ) -> Self {
+         Self {
+             program,
++            pinned_program: None,
+             id: Id::new(),
+             commit_counter: CommitCounter::default(),
+             area: Rectangle::from_size(size),
+@@ -207,6 +213,7 @@ impl ShaderRenderElement {
+     pub fn empty(program: ProgramType, kind: Kind) -> Self {
+         Self {
+             program,
++            pinned_program: None,
+             id: Id::new(),
+             commit_counter: CommitCounter::default(),
+             area: Rectangle::default(),
+@@ -219,6 +226,11 @@ impl ShaderRenderElement {
+         }
+     }
+ 
++    pub fn with_pinned_program(mut self, program: ShaderProgram) -> Self {
++        self.pinned_program = Some(program);
++        self
++    }
++
+     pub fn damage_all(&mut self) {
+         self.commit_counter.increment();
+     }
+@@ -300,7 +312,11 @@ impl RenderElement<GlesRenderer> for ShaderRenderElement {
+ 
+         let frame = frame.as_gles_frame();
+ 
+-        let Some(shader) = Shaders::get_from_frame(frame).program(self.program) else {
++        let Some(shader) = self
++            .pinned_program
++            .clone()
++            .or_else(|| Shaders::get_from_frame(frame).program(self.program))
++        else {
+             return Ok(());
+         };
+ 
 diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
-index 7be9b159fde97328eb11d5872ba254a36c119055..8a711357f7275c8f76f4eff0057bfdbf4ee04008 100644
+index 7be9b159fde97328eb11d5872ba254a36c119055..08ee7e59aef507cd41726ba4b358c61f0791ef7c 100644
 --- a/src/render_helpers/shaders/mod.rs
 +++ b/src/render_helpers/shaders/mod.rs
-@@ -20,6 +20,7 @@ pub struct Shaders {
+@@ -16,10 +16,13 @@ pub struct Shaders {
+     pub clipped_surface: Option<GlesTexProgram>,
+     pub postprocess_and_clip: Option<GlesTexProgram>,
+     pub resize: Option<ShaderProgram>,
++    resize_content: Option<ShaderProgram>,
+     pub gradient_fade: Option<GlesTexProgram>,
      pub blur: Option<BlurProgram>,
      pub custom_resize: RefCell<Option<ShaderProgram>>,
++    retired_resize: RefCell<Vec<ShaderProgram>>,
      pub custom_close: RefCell<Option<ShaderProgram>>,
 +    pub custom_move: RefCell<Option<ShaderProgram>>,
      pub custom_open: RefCell<Option<ShaderProgram>>,
  }
  
-@@ -30,6 +31,7 @@ pub enum ProgramType {
+@@ -28,8 +31,10 @@ pub enum ProgramType {
+     Border,
+     Shadow,
      Resize,
++    ResizeContent,
      Close,
      Open,
 +    Move,
  }
  
  impl Shaders {
-@@ -159,6 +161,7 @@ impl Shaders {
+@@ -132,6 +137,10 @@ impl Shaders {
+             })
+             .ok();
+ 
++        let resize_content = compile_resize_program(renderer, include_str!("resize_content.frag"))
++            .map_err(|err| warn!("error compiling resize content shader: {err:?}"))
++            .ok();
++
+         let gradient_fade = renderer
+             .compile_custom_texture_shader(
+                 include_str!("gradient_fade.frag"),
+@@ -154,11 +163,14 @@ impl Shaders {
+             clipped_surface,
+             postprocess_and_clip,
+             resize,
++            resize_content,
+             gradient_fade,
+             blur,
              custom_resize: RefCell::new(None),
++            retired_resize: RefCell::new(Vec::new()),
              custom_close: RefCell::new(None),
              custom_open: RefCell::new(None),
 +            custom_move: RefCell::new(None),
          }
      }
  
-@@ -196,6 +199,13 @@ impl Shaders {
+@@ -175,6 +187,23 @@ impl Shaders {
+             .expect("shaders::init() must be called when creating the renderer")
+     }
+ 
++    /// Old programs remain valid while retained materials or in-flight elements own them.
++    /// Each resize/config change reclaims programs after their last material disappears.
++    pub fn collect_retired_resize(renderer: &mut GlesRenderer) {
++        let retired = Self::get(renderer).retired_resize.take();
++        let mut live = Vec::new();
++        for program in retired {
++            if program.is_unique() {
++                if let Err(err) = program.destroy(renderer) {
++                    warn!("error destroying retired resize shader: {err:?}");
++                }
++            } else {
++                live.push(program);
++            }
++        }
++        Self::get(renderer).retired_resize.replace(live);
++    }
++
+     pub fn replace_custom_resize_program(
+         &self,
+         program: Option<ShaderProgram>,
+@@ -196,10 +225,18 @@ impl Shaders {
          self.custom_open.replace(program)
      }
  
@@ -3073,7 +4814,12 @@ index 7be9b159fde97328eb11d5872ba254a36c119055..8a711357f7275c8f76f4eff0057bfdbf
      pub fn program(&self, program: ProgramType) -> Option<ShaderProgram> {
          match program {
              ProgramType::Border => self.border.clone(),
-@@ -207,6 +217,7 @@ impl Shaders {
+             ProgramType::Shadow => self.shadow.clone(),
++            ProgramType::ResizeContent => self.resize_content.clone(),
+             ProgramType::Resize => self
+                 .custom_resize
+                 .borrow()
+@@ -207,6 +244,7 @@ impl Shaders {
                  .or_else(|| self.resize.clone()),
              ProgramType::Close => self.custom_close.borrow().clone(),
              ProgramType::Open => self.custom_open.borrow().clone(),
@@ -3081,7 +4827,38 @@ index 7be9b159fde97328eb11d5872ba254a36c119055..8a711357f7275c8f76f4eff0057bfdbf
          }
      }
  }
-@@ -353,6 +364,68 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
+@@ -242,6 +280,10 @@ fn compile_resize_program(
+             UniformName::new("niri_clamped_progress", UniformType::_1f),
+             UniformName::new("niri_corner_radius", UniformType::_4f),
+             UniformName::new("niri_clip_to_geometry", UniformType::_1f),
++            UniformName::new("niri_resize_retained", UniformType::_1f),
++            UniformName::new("niri_resize_reference_size", UniformType::_2f),
++            UniformName::new("niri_resize_reference_from_size", UniformType::_2f),
++            UniformName::new("niri_resize_reference_to_size", UniformType::_2f),
+         ],
+         &["niri_tex_prev", "niri_tex_next"],
+     )
+@@ -260,9 +302,17 @@ pub fn set_custom_resize_program(renderer: &mut GlesRenderer, src: Option<&str>)
+         None
+     };
+ 
++    Shaders::collect_retired_resize(renderer);
+     if let Some(prev) = Shaders::get(renderer).replace_custom_resize_program(program) {
+-        if let Err(err) = prev.destroy(renderer) {
+-            warn!("error destroying previous custom resize shader: {err:?}");
++        if prev.is_unique() {
++            if let Err(err) = prev.destroy(renderer) {
++                warn!("error destroying previous custom resize shader: {err:?}");
++            }
++        } else {
++            Shaders::get(renderer)
++                .retired_resize
++                .borrow_mut()
++                .push(prev);
+         }
+     }
+ }
+@@ -353,6 +403,68 @@ pub fn set_custom_open_program(renderer: &mut GlesRenderer, src: Option<&str>) {
      }
  }
  
@@ -3206,6 +4983,45 @@ index 0000000000000000000000000000000000000000..49bbdbab3c2ce2869c7f5aa41609034c
 +
 +// Direction impulse blended continuously when a movement is retargeted.
 +uniform vec2 niri_move_impulse;
+diff --git a/src/render_helpers/shaders/resize_content.frag b/src/render_helpers/shaders/resize_content.frag
+new file mode 100644
+index 0000000000000000000000000000000000000000..429dadba8fba980bc18f906f09108deaae3fc883
+--- /dev/null
++++ b/src/render_helpers/shaders/resize_content.frag
+@@ -0,0 +1,11 @@
++// Flat premultiplied content only: deformation is applied once afterward.
++vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
++    vec2 prev = (niri_geo_to_tex_prev * coords_curr_geo).xy;
++    vec2 next = (niri_geo_to_tex_next * coords_curr_geo).xy;
++    vec4 a = vec4(0.0), b = vec4(0.0);
++    if (all(greaterThanEqual(prev, vec2(0.0))) && all(lessThan(prev, vec2(1.0))))
++        a = texture2D(niri_tex_prev, prev);
++    if (all(greaterThanEqual(next, vec2(0.0))) && all(lessThan(next, vec2(1.0))))
++        b = texture2D(niri_tex_next, next);
++    return mix(a, b, smoothstep(0.2, 0.8, niri_clamped_progress));
++}
+diff --git a/src/render_helpers/shaders/resize_prelude.frag b/src/render_helpers/shaders/resize_prelude.frag
+index 6e672f423f8a92caba7338e7438f994a6cf6f599..6fa2b85309af1c233921f4bf25de3720d0c65485 100644
+--- a/src/render_helpers/shaders/resize_prelude.frag
++++ b/src/render_helpers/shaders/resize_prelude.frag
+@@ -1,5 +1,17 @@
+ precision highp float;
+ 
++// A custom shader opts into retained material state only with the exact source
++// marker: // niri-fx resize-continuity: 1
++// Stock Niri does not define this macro: guarded shader source keeps its fallback.
++#define NIRIFX_RESIZE_CONTINUITY_V1
++uniform float niri_resize_retained;
++uniform vec2 niri_resize_reference_size;
++uniform vec2 niri_resize_reference_from_size;
++uniform vec2 niri_resize_reference_to_size;
++// When retained > 0.5, niri_progress is the original material phase, not the
++// restarted arriving-content clock. Both standard textures contain the same
++// undeformed content composite in current animated geometry.
++
+ #if defined(DEBUG_FLAGS)
+ uniform float niri_tint;
+ #endif
 diff --git a/src/tests/animations.rs b/src/tests/animations.rs
 index 51c57f7380c47a5e51cfac0a92ff0d76c324ef62..c2cd6f5cfe51d14e6a5bba2da818e1d644b0b34a 100644
 --- a/src/tests/animations.rs

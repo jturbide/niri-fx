@@ -142,7 +142,7 @@ class ResizeDecodedFramesTests(unittest.TestCase):
         draw.rectangle((1200, 880, 1202, 882), fill=recorder.PALETTE["Resizing"])
         return frame.tobytes()
 
-    def measure(self, data, vertical):
+    def measure(self, data, vertical, **options):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "synthetic.mkv"
 
@@ -153,7 +153,7 @@ class ResizeDecodedFramesTests(unittest.TestCase):
                 Path(command[-1]).write_bytes(data)
 
             with patch.object(recorder.subprocess, "run", side_effect=decode):
-                return recorder.measure_video(source, vertical)
+                return recorder.measure_video(source, vertical, **options)
 
     def test_both_axes_report_native_gaps_and_ignore_isolated_pixels(self):
         for vertical in (False, True):
@@ -162,6 +162,28 @@ class ResizeDecodedFramesTests(unittest.TestCase):
                 self.assertEqual(result["decoded_frames"], 2)
                 self.assertEqual(result["min_gap_px"], 16)
                 self.assertEqual(result["max_gap_px"], 40)
+
+    def test_floor_frames_report_clearance_separately_from_visible_edges(self):
+        collapsed = Image.new("RGB", (1280, 900), "#111827")
+        ImageDraw.Draw(collapsed).rectangle((33, 16, 392, 883), fill=recorder.PALETTE["Neighbor"])
+        data = self.frame(False) + collapsed.tobytes()
+        with self.assertRaisesRegex(RuntimeError, "Resizing population missing"):
+            self.measure(data, False)
+        result = self.measure(data, False, allow_floor=True)
+        self.assertEqual(result["decoded_frames"], 2)
+        self.assertEqual(result["visible_gap_frames"], 1)
+        self.assertEqual(result["collapsed_frames"], 1)
+        self.assertEqual(result["min_floor_clearance_px"], 16)
+        self.assertEqual(result["max_floor_clearance_px"], 16)
+        self.assertEqual(result["min_gap_px"], 16)
+
+    def test_floor_measurement_rejects_a_moving_source_origin(self):
+        shifted = Image.new("RGB", (1280, 900), "#111827")
+        draw = ImageDraw.Draw(shifted)
+        draw.rectangle((40, 16, 399, 883), fill=recorder.PALETTE["Resizing"])
+        draw.rectangle((416, 16, 775, 883), fill=recorder.PALETTE["Neighbor"])
+        with self.assertRaisesRegex(RuntimeError, "source origin moved"):
+            self.measure(self.frame(False) + shifted.tobytes(), False, allow_floor=True)
 
     def test_empty_or_truncated_decodes_are_not_successful_measurements(self):
         for data in (b"", b"partial frame"):

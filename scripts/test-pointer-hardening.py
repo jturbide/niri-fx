@@ -268,6 +268,108 @@ def disconnected_pointer(binary, protocol, enabled):
     }
 
 
+def overlapping_pointers(binary, protocol, enabled):
+    """Observe one shared seat with two independent virtual-pointer clients.
+
+    Distinguish a lost grab owner from an idle device, including an idle device
+    with an earlier grab. Paired same-button events are observations: a Wayland
+    seat has one pointer, so continuation alone does not prove device ownership.
+    """
+    records = []
+    for scenario in (
+        "idle-b-destroyed",
+        "owner-a-destroyed",
+        "former-owner-a-destroyed",
+        "same-button-a-released",
+        "same-button-a-destroyed",
+    ):
+        with NestedSession(
+            config(WOBBLE if enabled else None), binary=binary, width=1280, height=800
+        ) as session:
+            helper = build_pointer(session.root / "pointer", protocol)
+            _, primary = client(session, "Two pointers", PUBLIC)
+            place_floating(session, primary)
+            initial = geometry(session, primary)
+            with (
+                VirtualPointer(session, helper, label="pointer-a") as first,
+                VirtualPointer(session, helper, label="pointer-b") as second,
+            ):
+                start = grab(session, first, primary)
+                first.move(start[0] + 80, start[1] + 40)
+                first.sync()
+                time.sleep(0.2)
+                position = geometry(session, primary)
+                assert position[0] - initial[0] > 50, "Initial A grab did not move"
+
+                survivor = first if scenario == "idle-b-destroyed" else second
+                if scenario == "former-owner-a-destroyed":
+                    first.release()
+                    time.sleep(0.2)
+                    start = grab(session, second, primary)
+                    second.move(start[0] + 40, start[1] + 20)
+                    second.sync()
+                    time.sleep(0.2)
+                    assert geometry(session, primary)[0] - position[0] > 25, "B grab did not start"
+                elif scenario.startswith("same-button"):
+                    second.press()
+
+                before = geometry(session, primary)
+                if scenario == "same-button-a-released":
+                    first.release()
+                else:
+                    removed = second if scenario == "idle-b-destroyed" else first
+                    stop(removed.process, signal.SIGKILL)
+                # The surviving client's barrier and delay let destruction be
+                # dispatched before measuring motion, without a recovery click.
+                survivor.sync()
+                time.sleep(0.2)
+                survivor.move(start[0] + 160, start[1] + 80)
+                survivor.sync()
+                time.sleep(0.3)
+                after = geometry(session, primary)
+                continued = before[:2] != after[:2]
+                record = {
+                    "scenario": scenario,
+                    "survivor_button_held": survivor.pressed,
+                    "motion_moved_window": continued,
+                    "delta": [round(after[i] - before[i], 3) for i in (0, 1)],
+                }
+                if scenario == "owner-a-destroyed":
+                    record["expected_motion_moved_window"] = False
+                elif scenario in ("idle-b-destroyed", "former-owner-a-destroyed"):
+                    record["expected_motion_moved_window"] = True
+                if "expected_motion_moved_window" in record:
+                    record["passed"] = continued == record["expected_motion_moved_window"]
+
+                # End any real or stale shared-seat press, then prove input
+                # recovery using the synthetic client's own click counter.
+                if not survivor.pressed:
+                    survivor.press()
+                survivor.release()
+                time.sleep(0.3)
+                settled = geometry(session, primary)
+                survivor.move(start[0] + 200, start[1] + 100)
+                survivor.sync()
+                time.sleep(0.2)
+                record["release_stopped_window"] = geometry(session, primary)[:2] == settled[:2]
+                assert record["release_stopped_window"], "Surviving release did not end grab"
+                # Reposition only after the release oracle: a retained grab can
+                # have dragged the fixture's click target below the owned output.
+                place_floating(session, primary)
+                click(session, survivor, primary, 1)
+                record["survivor_click_recovered"] = True
+                print("OVERLAP: " + json.dumps(record), flush=True)
+            session.check_render_log()
+            records.append(record)
+    return {
+        "pointer_effect_enabled": enabled,
+        "scenarios": records,
+        "failed_controls": [
+            record["scenario"] for record in records if record.get("passed") is False
+        ],
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pointer-protocol", type=Path)

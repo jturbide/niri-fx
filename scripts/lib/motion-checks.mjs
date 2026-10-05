@@ -2,18 +2,103 @@
 import assert from "node:assert/strict";
 import { renderShape } from "./shape-checks.mjs";
 
-export async function checkMotion(evaluate, setProgress, sample) {
+export async function checkMotion(evaluate, setProgress, sample, callFunction) {
   const started = performance.now();
   await evaluate(`window.niriFxMotionProbe=${renderShape.toString()}`);
   const before = await evaluate(
     '({document:effectDocument(),preset:byId("preset").value,resizeDirection:byId("resize-direction").value,movementDirection:byId("movement-direction").value})',
   );
-  const scene = (effect, options = {}, moving = false, wide = false) =>
-    `(()=>{
-    let source=shaderFor({...catalog.defaults,...${JSON.stringify(effect)}},false,${!moving},${moving});
-    ${wide ? "source=source.replace(/for \\(int ([xy]) = -(\\d+); \\1 <= \\2; \\1\\+\\+\\)/g,(_,axis,r)=>`for (int ${axis} = -${+r+3}; ${axis} <= ${+r+3}; ${axis}++)`);" : ""}
-    return window.niriFxMotionProbe(source,${JSON.stringify({ entry: moving ? "move_color" : "resize_color", ...options })});})()`;
-  const probe = (...args) => evaluate(scene(...args));
+  const probe = (effect, options = {}, moving = false, wide = false) =>
+    callFunction(
+      String.raw`function(effect, options, moving, wide) {
+        let source = shaderFor({...catalog.defaults, ...effect}, false, !moving, moving);
+        if (wide) source = source.replace(
+          /for \(int ([xy]) = -(\d+); \1 <= \2; \1\+\+\)/g,
+          (_, axis, radius) => 'for (int ' + axis + ' = -' + (+radius + 3) + '; '
+            + axis + ' <= ' + (+radius + 3) + '; ' + axis + '++)'
+        );
+        return window.niriFxMotionProbe(source, {
+          entry: moving ? 'move_color' : 'resize_color', ...options
+        });
+      }`,
+      [effect, options, moving, wide],
+    );
+  // A retained material is sampled in current geometry. New client endpoints
+  // must not repartition pieces or reverse deformation at the same phase. This
+  // checks the generated native branch, not compositor cache/privacy ownership.
+  const retainedResize = {
+    active: true,
+    size: [192, 144],
+    from: [144, 96],
+    to: [192, 144],
+  };
+  for (const style of [
+    { family: "fragments" },
+    { family: "fragments", fragment_shape: "triangle", fragment_orientation: 37 },
+    { family: "fragments", fragment_shape: "hexagon", resize_mode: "edge" },
+    { family: "slices", slice_angle: 37 },
+    { family: "elastic", elastic_frequency: 1, elastic_damping: 0, elastic_strength: 1 },
+    { family: "distortion", distortion_resize_mode: "ripple" },
+    { family: "distortion", distortion_resize_mode: "edge-ripple" },
+    { family: "distortion", distortion_resize_mode: "torsion" },
+  ]) {
+    const effect = { ...style, resize_strength: 0.9, particles: 120 };
+    const options = { progress: 0.25, retainedResize };
+    const material = await probe(effect, options);
+    assert.equal(material.error, 0);
+    assert(
+      material.occupied > 0 && material.occupied <= 144 * 96,
+      `${style.family}: retained material stays in bounds`,
+    );
+    assert.equal(
+      (await probe(effect, { ...options, alphaValue: 0 })).occupied,
+      0,
+      `${style.family}: retained transparent content stays transparent`,
+    );
+    assert.deepEqual(
+      await probe(effect, { ...options, from: [220, 32], to: [48, 160] }),
+      material,
+      `${style.family}: incoming client sizes do not reset the retained material`,
+    );
+    assert.notEqual(
+      (await probe(effect, { ...options, progress: 0.5 })).hash,
+      material.hash,
+      `${style.family}: retained deformation continues advancing`,
+    );
+    assert.deepEqual(
+      await probe(effect, { ...options, retainedResize: { ...retainedResize, active: false } }),
+      await probe(effect, { progress: options.progress }),
+      `${style.family}: inactive native state matches stock rendering`,
+    );
+    const uninterrupted = {
+      progress: 0.25,
+      width: 120,
+      height: 90,
+      from: [96, 72],
+      to: [192, 144],
+    };
+    const retainedFirst = {
+      ...uninterrupted,
+      retainedResize: { ...retainedResize, from: uninterrupted.from },
+    };
+    const firstImage = await probe(effect, retainedFirst);
+    const stockImage = await probe(effect, uninterrupted);
+    if (firstImage.hash !== stockImage.hash) {
+      const a = (await probe(effect, { ...retainedFirst, includePixels: true })).pixels;
+      const b = (await probe(effect, { ...uninterrupted, includePixels: true })).pixels;
+      // Separate shader programs can round a sample differently. Permit one
+      // 8-bit channel step, as in the search-bound comparison below; coverage
+      // and alpha totals must still match exactly, and larger changes fail.
+      let worst = 0;
+      for (let i = 0; i < a.length; i++) worst = Math.max(worst, Math.abs(a[i] - b[i]));
+      assert(worst <= 1, `${style.family}: uninterrupted material differs by ${worst}`);
+    }
+    assert.deepEqual(
+      { ...firstImage, hash: 0 },
+      { ...stockImage, hash: 0 },
+      `${style.family}/${style.distortion_resize_mode || "default"}: the first uninterrupted resize retains its stock appearance`,
+    );
+  }
   for (const shape of [
     "square",
     "rectangle",
@@ -202,7 +287,10 @@ export async function checkMotion(evaluate, setProgress, sample) {
     !(await evaluate("kdlDocument().includes('window-movement')")),
     "stock export excludes native movement",
   );
-  assert.deepEqual(await evaluate(`normalizePreset(${JSON.stringify(document)})`), document);
+  assert.deepEqual(
+    await callFunction("function(document) { return normalizePreset(document); }", [document]),
+    document,
+  );
   await evaluate(
     "byId('movement_ms').value=1200;byId('movement_ms').dispatchEvent(new Event('input'));byId('undo').click()",
   );
@@ -213,10 +301,21 @@ export async function checkMotion(evaluate, setProgress, sample) {
     "byId('action-mode').value='preserve';byId('action-mode').dispatchEvent(new Event('change'))",
   );
   assert.equal(await evaluate("effectDocument().actions.movement"), null);
-  await evaluate(
-    `loadDocument(${JSON.stringify(before.document)});byId('preset').value=${JSON.stringify(before.preset)};byId('resize-direction').value=${JSON.stringify(before.resizeDirection)};byId('movement-direction').value=${JSON.stringify(before.movementDirection)};populate();document.querySelector('[data-mode=effect]').click();refresh();window.niriFxMotionProbe.context.getExtension('WEBGL_lose_context')?.loseContext();delete window.niriFxMotionProbe`,
+  await callFunction(
+    `function(before) {
+      loadDocument(before.document);
+      byId('preset').value = before.preset;
+      byId('resize-direction').value = before.resizeDirection;
+      byId('movement-direction').value = before.movementDirection;
+      populate();
+      document.querySelector('[data-mode=effect]').click();
+      refresh();
+      window.niriFxMotionProbe.context.getExtension('WEBGL_lose_context')?.loseContext();
+      delete window.niriFxMotionProbe;
+    }`,
+    [before],
   );
   console.log(
-    `PASS: shaped resize ownership, bounds, endpoints, eight silhouettes; directional movement and independent JSON-only editing (${Math.round(performance.now() - started)} ms)`,
+    `PASS: retained resize references, phase advancement and stock fallback; shaped resize ownership, bounds, endpoints, eight silhouettes; directional movement and independent JSON-only editing (${Math.round(performance.now() - started)} ms)`,
   );
 }

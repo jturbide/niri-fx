@@ -3,6 +3,7 @@
 // The current rectangle stretches that space during resize, without changing
 // piece identities or repartitioning at every frame. Stock resize supplies two
 // textures, but no pointer anchor or persistent per-piece simulation state.
+@RESIZE_STATE@
 const float FR_TILE = @TILE@;
 const float FR_COUNT = @PARTICLES@;
 const float FR_STRENGTH = @RESIZE@;
@@ -48,7 +49,7 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
     float pulse = pow(sin(p * 3.14159265359), 2.0) * FR_STRENGTH;
     vec2 current_size = max(size_curr_geo.xy, vec2(1.0));
     vec2 next_scale = vec2(niri_curr_geo_to_next_geo[0][0], niri_curr_geo_to_next_geo[1][1]);
-    vec2 size = current_size / max(next_scale, vec2(0.0001));
+    vec2 size = fx_resize_reference_size(current_size / max(next_scale, vec2(0.0001)));
     vec2 pixel = coords_curr_geo.xy * size;
     // Border/shadow pixels keep their ordinary crossfade. Interior pieces never
     // need an expanded offscreen rectangle, which stock resize cannot promise.
@@ -62,9 +63,13 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
     radius *= tile;
     vec2 grid = inverse_layout * (pixel - size * 0.5) / (tile * stretch);
     vec2 candidate = floor(FX_SHAPE == 5 && FX_MIX == 0.0 ? shaped_axial(grid) : grid);
-    vec2 changing = step(vec2(0.0001), abs(next_scale - vec2(1.0)));
+    vec2 changing = step(vec2(0.0001), abs(fx_resize_reference_ratio(next_scale) - vec2(1.0)));
     // Metric for a conservative antialias width under anisotropic stretching.
-    float metric = tile * min(stretch.x, stretch.y) * min(next_scale.x, next_scale.y);
+    vec2 material_scale = next_scale;
+#ifdef NIRIFX_RESIZE_CONTINUITY_V1
+    if (niri_resize_retained > 0.5) material_scale = current_size / size;
+#endif
+    float metric = tile * min(stretch.x, stretch.y) * min(material_scale.x, material_scale.y);
     vec4 result = vec4(0.0);
     for (int y = -@SHAPED_RESIZE_RADIUS@; y <= @SHAPED_RESIZE_RADIUS@; y++) {
       for (int x = -@SHAPED_RESIZE_RADIUS@; x <= @SHAPED_RESIZE_RADIUS@; x++) {

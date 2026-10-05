@@ -95,9 +95,9 @@ python3 -m niri_fx studio --custom examples/profiles/triangle-edge-rebuild.json
 python3 scripts/test-interruptions.py --resize-profile examples/profiles/triangle-edge-rebuild.json
 ```
 
-The shader keeps deterministic piece identities within one resize, but has no
-persistent particle state across successive resizes. See the
-[roadmap](../ROADMAP.md#epic-3-continuous-transitions) for interruption work.
+On stock Niri, the shader keeps deterministic piece identities within one resize,
+but has no retained state across successive resizes. The current experimental
+renderer adds the bounded continuation described below.
 
 ## Resize reversals in the experimental compositor
 
@@ -106,7 +106,8 @@ along matching paths. The development build after 0.18 retains the incoming
 width and height velocities separately, and leaves an unchanged axis on its
 original timeline. Active paths keep their timing through a configuration reload;
 a newly moving axis uses the reloaded timing. This addresses tested gaps between
-adjacent columns and stacked windows when the custom movement renderer is configured.
+adjacent columns and stacked windows. The current development build enables this
+path for a custom movement shader or a marked NiriFX resize shader.
 
 | Width reversal | Height reversal |
 | --- | --- |
@@ -124,9 +125,41 @@ retargeting the other axis while a resize is active. The
 shows the previous development build beside the fix after changing resize timing
 from 1200 ms to 350 ms and reversing.
 
-Build the [development compositor](../experimental/README.md) to use these changes.
-Resize remains an explicit profile choice. The resize shader still restarts its
-texture-blend phase, and closing during resize does not retain that shader state.
-Extreme shrinking can still separate neighboring paths at the minimum-size floor.
-The floor now prevents invalid geometry in debug builds; shared constrained motion
-remains [planned work](next-phases.md#rendering-and-interruptions).
+### Minimum-size retargets
+
+The current development build shares a constrained displacement between each
+resizing axis and its affected neighbors. A reversal that would cross the
+one-pixel geometry floor brakes before reaching it; the neighboring edge samples
+the same path. Independent resizing sources keep separate contributions, and a
+stacked column follows the largest sampled tile width. Swaps, source removal and
+focus changes preserve the sampled handoff instead of adding a source twice.
+
+| Minimum width | Minimum height |
+| --- | --- |
+| ![Minimum width retarget before and after shared geometry](gifs/native-resize-minimum-width-comparison.gif) | ![Minimum height retarget before and after shared geometry](gifs/native-resize-minimum-height-comparison.gif) |
+
+These comparisons use the preserved 0.19 build and the current development build
+with identical synthetic geometry masks. The masks remove stretched texture-edge
+filtering so the gap remains measurable. Frames where a one-pixel source disappears
+in video conversion report neighbor clearance separately. Those frames are excluded
+from the visible-edge gap range. See the [native results](validation.md#resize-geometry-continuity).
+
+### Retained resize appearance
+
+The current [development compositor](../experimental/README.md) retains the
+original resize phase, reference geometry and shader program for an active NiriFX
+resize episode. Newly committed content blends on its own clock. Retargeting or
+replacing a shader therefore does not reconstruct the existing fragment grid;
+the next episode adopts the new shader. Resize Off or global animations Off ends
+the retained episode immediately. Resize remains an explicit profile choice.
+
+This requires the current experimental build and a generated shader carrying the
+resize-continuity marker. A verified movement contract 2 alone does **not** prove
+retained resize support: older builds also advertise that movement contract.
+Stock Niri and unmarked custom shaders retain their existing resize interface.
+
+Closing during resize still uses a snapshot and does not continue the retained
+resize material. The [acceptance scope](validation.md#retained-material-acceptance-unreleased)
+separates the tested native phase and capture paths from closing, background blur,
+popups, mixed scales and graphics-reset recovery. These remain explicit follow-on
+work in the [design notes](next-phases.md#rendering-and-interruptions).

@@ -7,6 +7,45 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+### Added
+
+- Experimental resize effects retain their deformation phase, piece layout and
+  current material across repeated size changes. Client content updates on a
+  separate clock; shader replacements take effect on the next resize episode.
+  Output and capture targets keep separate material caches and respond to
+  changes in capture restrictions.
+- Native before/after comparisons for minimum-size width and height retargets
+  and retained fragment and triangle resize effects.
+- A versioned 0.19 compatibility corpus shared by Python and browser tests,
+  covering document migration, action choices, rejected input, representative
+  catalog IDs and CLI JSON consumers. This begins compatibility testing toward
+  1.0; it does not freeze current 0.x interfaces.
+- A clean-account first-use check for source and wheel installations, covering
+  Library selection, all action modes, saved profiles, review/cancel, Apply,
+  reopening Studio and exact Restore without connecting to a desktop session.
+- An overlapping-pointer diagnostic covering idle-device removal, held-owner
+  removal, ownership changes and shared-button releases. It reproduces the
+  stale-grab failure in unmodified Niri and records the limits of global cleanup.
+
+### Changed
+
+- Setup guides lead with Library for choosing a combo and reviewing independent
+  action choices, Apply and Restore. Terminal and scriptable setup remain available.
+- Generated resize shaders use retained material when the native extension is
+  available. Build the experimental compositor from the same checkout to use it;
+  stock Niri and older experimental builds keep their existing shader behavior.
+- Update the pinned checkout, Python/Node setup and Pages publishing actions.
+
+### Fixed
+
+- Minimum-size resize paths now share constrained displacement with neighboring
+  windows, preventing the overlap caused by independent curves. Regressions cover
+  simultaneous resizes, source removal, swaps and focus changes.
+- Turning resize or all animations off finishes the shared resize paths before
+  removing their source, so neighboring windows settle with the resized window.
+
+Closing during resize still uses a snapshot.
+
 ## 0.19.0 — 2026-10-04
 
 ### Added

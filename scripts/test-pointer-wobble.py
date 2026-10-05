@@ -7,7 +7,10 @@ show compositor-rendered motion at its actual speed, never browser simulations.
 
 import argparse
 import json
+import os
+import re
 import signal
+import subprocess
 import sys
 import time
 from dataclasses import asdict, replace
@@ -24,18 +27,52 @@ from lib.pointer_scene import (
     client,
     config,
     geometry,
-    grab,
     place_floating,
     window,
 )
+from lib.pointer_scene import (
+    grab as scene_grab,
+)
 from lib.pointer_wobble import PRESETS
+
+
+class PointerSession(NestedSession):
+    def launch(self, command, name, *, env=None, private_bus=False):
+        if name == "niri":
+            env = env | {"RUST_LOG": env["RUST_LOG"] + ",smithay::backend::renderer::gles=info"}
+        return super().launch(command, name, env=env, private_bus=private_bus)
+
+    def capture(self, name):
+        # Compression can outlast Gentle's short release tail. PPM preserves
+        # the same native pixels without placing PNG encoding on that path.
+        destination = self.root / f"{name}.ppm"
+        started = time.monotonic()
+        subprocess.run(
+            ["grim", "-t", "ppm", "-o", "winit", str(destination)],
+            env=self.env,
+            check=True,
+            timeout=10,
+        )
+        if not hasattr(self, "capture_timings"):
+            self.capture_timings = []
+        self.capture_timings.append(
+            {"sample": name, "capture_ms": (time.monotonic() - started) * 1000}
+        )
+        return destination
+
+
+def grab(session, pointer, window_id):
+    # Keep the owned outer winit window visible for each gesture. Occlusion can
+    # stall host frame callbacks and dispatch long enough to miss a release tail.
+    session.focus()
+    return scene_grab(session, pointer, window_id)
 
 
 def exercise(name, protocol, *, capture=False):
     binary, build, _ = experiment(pointer_wobble=True)
     preset = PRESETS[name]
     wobble = preset.wobble
-    with NestedSession(config(wobble), binary=binary, width=1280, height=800) as session:
+    with PointerSession(config(wobble), binary=binary, width=1280, height=800) as session:
         capabilities = json.loads(session.msg("-j", "niri-fx-pointer-capabilities"))[
             "NiriFxPointerCapabilities"
         ]
@@ -171,14 +208,24 @@ def exercise(name, protocol, *, capture=False):
                 "NiriFxPointerCapabilities"
             ]
             assert independent["enabled"]
-            pointer.path((end, (end[0] + 90, end[1] - 20)), 0.15)
+            # Release already confirms dispatch of preceding motion; a second
+            # barrier would consume more of the short deformation tail.
+            pointer.path((end, (end[0] + 90, end[1] - 20)), 0.15, synchronize=False)
+            released_at = time.monotonic()
             pointer.release()
             active = session.capture("timed-off-pointer-active")
+            release_sample_ms = (time.monotonic() - released_at) * 1000
+            assert release_sample_ms < 200, ("Release sample missed its window", release_sample_ms)
             time.sleep(1.2)
             settled = session.capture("timed-off-pointer-settled")
             assert changed_pixels(active, settled) > 30
             assert {w["id"] for w in session.windows()} == ids
-            checks.append({"case": "timed-movement-off-preserves-pointer-during-grab"})
+            checks.append(
+                {
+                    "case": "timed-movement-off-preserves-pointer-during-grab",
+                    "release_sample_ms": release_sample_ms,
+                }
+            )
             session.reload(config(wobble))
 
             # Reload each supported disable path while a live grab owns the tile.
@@ -214,6 +261,11 @@ def exercise(name, protocol, *, capture=False):
             click_check(session, pointer, secondary, 1)
             checks.append({"case": "close-cancels-grab-survivor-input"})
             session.check_render_log()
+            renderer = re.search(
+                r'GL Renderer: "([^"\n]+)"', (session.root / "niri.log").read_text()
+            )
+            assert renderer is not None, "Native renderer identity was not recorded"
+            renderer = renderer[1]
             evidence = {
                 "preset": name,
                 "wobble": asdict(wobble),
@@ -221,6 +273,9 @@ def exercise(name, protocol, *, capture=False):
                 "checks": checks,
                 "pointer_acknowledgements": pointer.timings,
                 "native_frame_timings": frame_timings,
+                "capture_timings": session.capture_timings,
+                "renderer": renderer,
+                "software_rendering_requested": os.environ.get("LIBGL_ALWAYS_SOFTWARE") == "1",
                 "native_frame_timing_scope": "First outward drag, reversals and release settle; excludes return drag. Nested winit submission timestamps include idle holds and recording load, not physical scanout.",
                 "timing_scope": "Motion measures local Wayland socket flush acknowledgement; button and sync commands measure server-roundtrip acknowledgement. Native paths include an ordered dispatch barrier before assertions. Neither measures input-to-photon latency.",
                 "revision": build["revision"],
@@ -248,6 +303,10 @@ def exercise(name, protocol, *, capture=False):
                             "width": 800,
                             "colors": 64,
                             "backend": "pinned patched Niri nested winit; virtual pointer and synthetic client",
+                            "renderer": renderer,
+                            "software_rendering_requested": evidence[
+                                "software_rendering_requested"
+                            ],
                             "revision": build["revision"],
                             "patch_sha256": build["patch_sha256"],
                             "pointer_patch_sha256": build["pointer_patch_sha256"],

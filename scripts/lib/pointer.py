@@ -132,13 +132,17 @@ def path_samples(points, duration, fps=60):
 
 
 class VirtualPointer:
-    def __init__(self, session, binary):
+    def __init__(self, session, binary, *, label="pointer"):
+        if not label or any(
+            character not in "abcdefghijklmnopqrstuvwxyz0123456789-" for character in label
+        ):
+            raise ValueError("Pointer log label must use lowercase letters, digits or hyphens")
         socket = owned_socket(session)
         self.session = session
         self.pressed = False
         self.timings = []
         self.selector = selectors.DefaultSelector()
-        log = (session.root / "pointer.log").open("w")
+        log = (session.root / f"{label}.log").open("w")
         session.logs.append(log)
         self.process = subprocess.Popen(
             [str(binary), str(socket), str(session.width), str(session.height)],

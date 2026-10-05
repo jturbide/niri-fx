@@ -5,7 +5,7 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
     vec2 uv = coords_curr_geo.xy;
     if (p <= 0.0 || p >= 1.0 || @RESIZE@ <= 0.0) return resize_sample(uv, blend);
     vec2 axis = vec2(cos(radians(@SLICE_ANGLE@)), sin(radians(@SLICE_ANGLE@)));
-    vec2 size = max(size_curr_geo.xy, vec2(1.0));
+    vec2 size = fx_resize_material_size(max(size_curr_geo.xy, vec2(1.0)));
     float span = max(dot(abs(axis), size), 1.0);
     float strip = dot(uv * size, axis) / span * float(@SLICE_COUNT@);
     float fold = sin(strip * 3.14159265359 + p * @SLICE_STAGGER@ * 6.2831853);

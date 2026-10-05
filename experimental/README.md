@@ -134,17 +134,24 @@ determines the remaining travel distance. Fading has its own closing clock.
 This interruption path takes precedence over the usual closing style, including
 when a profile has different opening and closing families.
 
-With a custom movement shader configured and resize animation enabled,
+With a custom movement shader or an opted-in NiriFX resize shader configured,
 interrupted resizing also retains the displayed width and height and their
 sampled velocities. Each axis owns its curve: changing width leaves an ongoing
 height transition on its original deadline. Matching neighbor movement keeps
-stacked and adjacent edges together through the tested reversals. Stock rendering
-and explicitly disabled resize keep their existing behavior. Profiles preserve
-existing resize settings unless a resize style is selected.
+stacked and adjacent edges together through the tested reversals and minimum-size
+retargets. Active paths keep their timing across a reload; newly moving axes use
+the new timing. Profiles preserve existing resize settings unless NiriFX Style
+or Off is selected for Resize.
 
-This geometry handoff does not preserve the resize shader's phase or continue
-its deformation when closing. Extreme minimum-size clamps and changing animation
-timing during a resize can still separate neighboring paths. See the
+The current development build also retains the original phase, reference geometry
+and shader program for generated resize shaders carrying the continuity marker.
+New client content blends on a separate clock; a replacement shader takes effect
+on the next episode. Stock Niri and unmarked shaders keep their existing interface.
+Build the experimental compositor from the same checkout to use this behavior;
+movement contract 2 alone does not establish retained resize support.
+
+Closing during resize still uses a snapshot rather than continuing the retained
+resize material. See the [retained resize guide](../docs/resize.md#retained-resize-appearance),
 [width and height comparisons](../docs/validation.md#resize-geometry-continuity)
 and their [reproduction guide](../docs/gifs/README.md#native-resize-geometry-comparisons).
 
@@ -166,7 +173,10 @@ Verified locally: column swaps with both textured windows fragmented, intact
 arrival, animated resize, shader removal on hot reload, legacy config parsing,
 repeated retargets, close-during-open and close-during-move, width/height reversal
 with matching neighbor geometry, orthogonal resize retargets,
-and resize/cancellation layout regression tests.
+and resize/cancellation layout regression tests. Marked resize shaders also pass
+retained phase/reference, shader reload/removal, and changing capture restrictions
+in owned nested Output, ScreenCapture and debug Screencast views. See the
+[material acceptance scope](../docs/validation.md#retained-material-acceptance-unreleased).
 
 This is not the complete transaction/particle engine described in
 [the movement design](../docs/movement.md):
@@ -183,8 +193,8 @@ This is not the complete transaction/particle engine described in
 - Large excursions can clip at output/workspace boundaries. The expanded draw
   region and offscreen pass cost GPU work; there is no frame-time acceptance yet.
 - Sequential 1×/1.5×/2× scales and resize/fullscreen interruptions have a nested
-  stress harness. Real mixed outputs, capture restrictions, popups,
-  interrupted resize/close and graphics-reset behavior need broader validation
+  stress harness. Real mixed outputs, blurred-background capture, PipeWire, popups,
+  retained resize-to-close and graphics-reset behavior need broader validation
   before replacing a login compositor. The TTY path compiles but was not activated.
 
 Stock configuration exports contain supported window actions and selected stock

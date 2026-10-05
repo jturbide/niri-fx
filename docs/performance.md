@@ -458,20 +458,20 @@ settling; the showcase then returns to its starting position with a real drag.
 The optimized build reports submission timestamps separately from input
 acknowledgements across all ten lifecycle checks.
 
-The host used an NVIDIA GeForce RTX 4070 Ti with driver 615.71.09. The nested
+The accepted runs reported an NVIDIA GeForce RTX 4070 Ti renderer. The nested
 output advertised 60 Hz; its submission intervals are not a measurement of the
-host display's refresh rate. These refreshed recordings used a different host
-callback cadence from the earlier run; lower intervals do not establish a
-renderer optimization.
+host display's refresh rate. Host callbacks, capture and scheduling affect these
+diagnostics, so differences from earlier recordings do not establish a renderer
+optimization or regression.
 
 | Preset | Native samples | Submission interval p95 | Server round-trip p95 |
 | --- | ---: | ---: | ---: |
-| Gentle | 200 | 9.12 ms | 12.84 ms |
-| Rubber Sheet | 221 | 8.78 ms | 10.43 ms |
-| Release Settle | 205 | 8.95 ms | 10.65 ms |
+| Gentle | 90 | 18.41 ms | 31.78 ms |
+| Rubber Sheet | 94 | 18.04 ms | 27.44 ms |
+| Release Settle | 88 | 17.93 ms | 30.51 ms |
 
 Submission intervals include idle holds while the window settles; maximum gaps
-were about 93–97 ms. They are not per-frame GPU cost. Motion commands flush
+were about 83–309 ms. They are not per-frame GPU cost. Motion commands flush
 asynchronously; their local socket acknowledgements are separate from the server
 round trips for buttons and synchronization barriers. Those round trips include
 protocol and scheduling overhead. None of these measures is physical

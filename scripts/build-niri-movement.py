@@ -116,6 +116,15 @@ def main():
                 "test",
                 *flags,
                 "--lib",
+                "render_helpers::resize::tests",
+                cwd=source,
+                env=env,
+            )
+            run(
+                "cargo",
+                "test",
+                *flags,
+                "--lib",
                 "render_helpers::movement::tests",
                 cwd=source,
                 env=env,

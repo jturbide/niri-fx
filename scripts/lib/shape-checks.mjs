@@ -15,6 +15,7 @@ export function renderShape(
     alphaValue = 128,
     includePixels = false,
     impulse = [1, 0],
+    retainedResize = null,
   } = {},
 ) {
   // Reuse one owned context; repeatedly losing contexts can race GPU cleanup.
@@ -32,13 +33,14 @@ export function renderShape(
   if (!gl) throw new Error("WebGL unavailable");
   const shaders = [];
   const cache = (renderShape.programs ??= new Map());
-  const fragment = `precision highp float;
+  const fragment = `${retainedResize ? "#define NIRIFX_RESIZE_CONTINUITY_V1\n" : ""}precision highp float;
       uniform sampler2D niri_tex;uniform mat3 niri_geo_to_tex;
       uniform float niri_random_seed;uniform float niri_clamped_progress;
       uniform sampler2D niri_tex_prev;uniform sampler2D niri_tex_next;
       uniform mat3 niri_geo_to_tex_prev;uniform mat3 niri_geo_to_tex_next;
       uniform mat3 niri_curr_geo_to_prev_geo;uniform mat3 niri_curr_geo_to_next_geo;
       uniform vec2 niri_move_delta;uniform vec2 niri_move_impulse;
+      ${retainedResize ? "uniform float niri_resize_retained;uniform vec2 niri_resize_reference_size;uniform vec2 niri_resize_reference_from_size;uniform vec2 niri_resize_reference_to_size;" : ""}
       ${source}
       void main(){vec2 size=vec2(${width}.0,${height}.0);vec2 coords=(gl_FragCoord.xy-(vec2(240.,192.)-size)*.5)/size;
         gl_FragColor=${entry}(vec3(coords,1.),vec3(size,1.)${entry === "fragments_phase" ? ",0.0,0" : ""});}`;
@@ -121,6 +123,18 @@ export function renderShape(
     gl.uniform2f(gl.getUniformLocation(program, "niri_move_delta"), ...impulse.map((v) => v * 160));
     gl.uniform1f(gl.getUniformLocation(program, "niri_random_seed"), seed);
     gl.uniform1f(gl.getUniformLocation(program, "niri_clamped_progress"), progress);
+    if (retainedResize) {
+      gl.uniform1f(
+        gl.getUniformLocation(program, "niri_resize_retained"),
+        retainedResize.active ? 1 : 0,
+      );
+      for (const [name, value] of [
+        ["size", retainedResize.size],
+        ["from_size", retainedResize.from],
+        ["to_size", retainedResize.to],
+      ])
+        gl.uniform2f(gl.getUniformLocation(program, "niri_resize_reference_" + name), ...value);
+    }
     gl.viewport(0, 0, canvas.width, canvas.height);
     gl.clearColor(0, 0, 0, 0);
     gl.clear(gl.COLOR_BUFFER_BIT);

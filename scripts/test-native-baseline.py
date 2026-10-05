@@ -189,7 +189,7 @@ def output_probe(binary, protocol, enabled, preview):
     }
 
 
-def disconnect_probe(binary, protocol, enabled):
+def disconnect_probe(binary, protocol, enabled, *, overlapping=False):
     renderers = []
 
     class DisconnectSession(ObservedSession):
@@ -203,7 +203,9 @@ def disconnect_probe(binary, protocol, enabled):
                 super().__exit__(exc_type, *args)
 
     with patch.object(hardening, "NestedSession", DisconnectSession):
-        result = hardening.disconnected_pointer(binary, protocol, enabled)
+        probe = hardening.overlapping_pointers if overlapping else hardening.disconnected_pointer
+        result = probe(binary, protocol, enabled)
+    assert renderers and all(value == renderers[0] for value in renderers), "Probe changed renderer"
     result["renderer"] = renderers[0]
     return result
 
@@ -211,7 +213,9 @@ def disconnect_probe(binary, protocol, enabled):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--pointer-protocol", type=Path)
-    parser.add_argument("--probe", choices=("all", "disconnect", "output"), default="all")
+    parser.add_argument(
+        "--probe", choices=("all", "disconnect", "overlap", "output"), default="all"
+    )
     parser.add_argument("--report", type=Path, default=ROOT / "artifacts/native-baseline.json")
     args = parser.parse_args()
     unmodified, base_build = baseline()
@@ -278,6 +282,14 @@ def main():
                     f"{name}: {observation['target']} stale={observation['stale_parent_output_reproduced']}",
                     flush=True,
                 )
+        if args.probe in ("all", "overlap"):
+            result["overlap"] = disconnect_probe(binary, protocol, enabled, overlapping=True)
+            defect |= bool(result["overlap"]["failed_controls"])
+            current = result["overlap"]["renderer"]
+            if renderer is not None:
+                assert current == renderer, "Comparison changed renderer"
+            renderer = current
+            print(f"{name}: overlap failures={result['overlap']['failed_controls']}", flush=True)
         evidence["results"].append(result)
         # Preserve complete variants even if a later setup or control fails.
         args.report.write_text(json.dumps(evidence, indent=2) + "\n")

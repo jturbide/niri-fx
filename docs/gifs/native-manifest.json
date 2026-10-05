@@ -121,7 +121,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 8112127,
+      "bytes": 8079034,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -135,7 +135,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -266,7 +266,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 11273135,
+      "bytes": 11243383,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -280,7 +280,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -411,7 +411,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 9692812,
+      "bytes": 9549118,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -425,7 +425,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -556,7 +556,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 7009488,
+      "bytes": 6935483,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -570,7 +570,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -701,7 +701,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 2706299,
+      "bytes": 2760551,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -715,7 +715,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -846,7 +846,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 6788298,
+      "bytes": 6853506,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -860,7 +860,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -991,7 +991,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 5891781,
+      "bytes": 6139408,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1005,7 +1005,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1136,7 +1136,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 3384411,
+      "bytes": 3376862,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1150,7 +1150,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1281,7 +1281,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 4219612,
+      "bytes": 3949848,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1295,7 +1295,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1426,7 +1426,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 3926917,
+      "bytes": 3942837,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1440,7 +1440,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1571,7 +1571,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 2667718,
+      "bytes": 2844943,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1585,7 +1585,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1716,7 +1716,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 2436989,
+      "bytes": 2462133,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1730,7 +1730,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -1861,7 +1861,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 10200399,
+      "bytes": 10206557,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -1875,7 +1875,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2006,7 +2006,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 9253564,
+      "bytes": 9196977,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2020,7 +2020,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2151,7 +2151,7 @@
         "movement_ms": 850
       },
       "duration_ms": 850,
-      "bytes": 4712361,
+      "bytes": 4741090,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2165,7 +2165,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2296,7 +2296,7 @@
         "movement_ms": 900
       },
       "duration_ms": 900,
-      "bytes": 2062263,
+      "bytes": 2095972,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2310,7 +2310,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2441,7 +2441,7 @@
         "movement_ms": 750
       },
       "duration_ms": 750,
-      "bytes": 1482295,
+      "bytes": 1556561,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2455,7 +2455,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",
@@ -2586,7 +2586,7 @@
         "movement_ms": 900
       },
       "duration_ms": 1200,
-      "bytes": 6012900,
+      "bytes": 6005484,
       "fps": 50,
       "width": 640,
       "colors": 32,
@@ -2600,7 +2600,7 @@
         "scripts/record-native-gif.py": "43eb94ec99b251b4a73f354a8492ffa7b2330fe0adf59e67b5b073fb0687c27d"
       },
       "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+      "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
       "backend": "pinned patched Niri nested winit; synthetic clients",
       "checks": [
         "bounded IPC latency",

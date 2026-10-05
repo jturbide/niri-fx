@@ -218,6 +218,9 @@ it does not replace it. Examples should use generic paths and names.
 Changes to either Niri patch need the pinned build/tests and a nested-session check.
 Do not replace a contributor's login compositor to run tests. Explain any new
 capture, damage, rendering or interruption behavior and its validation limits.
+Run native captures one at a time and keep their owned compositor window visible.
+Concurrent browser automation or an obscured window can delay frame callbacks;
+a late sample cannot establish that a short animation is absent.
 
 Original NiriFX contributions use [MIT](LICENSE). Changes derived from Niri
 in the movement/pointer patches and their browser pointer-preview adapter use
