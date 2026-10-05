@@ -126,6 +126,10 @@ export parity; it is not a compositor GPU benchmark. See
   Python and compares supported stock/native shaders and combined pointer KDL. `npm run test:browser`
   tests real Chromium launch/error/timeout/cleanup and gallery filtering/playback before the full editor E2E.
   Avoid duplicating these with a separate framework just to increase test counts.
+  Library save and desktop Apply workflows emulate reduced motion before loading
+  Studio, including after reloads, to avoid queuing unrelated software-GPU playback.
+  Their real WebGL previews and transaction assertions remain enabled; dedicated
+  animation tests and rendering matrices cover intermediate frames.
 - GitHub Actions classifies changes conservatively. Documentation/media changes
   keep lint, Node tests, docs checks and site construction. An exact allowlist of
   native compositor tools/patches and agent discovery files also keeps both Python

@@ -7,6 +7,36 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
+async function reduceTransactionMotion(browser) {
+  // Selecting a Library card automatically replays it. Transaction checks keep
+  // real shaders at their endpoints; dedicated preview tests exercise playback.
+  await browser.rpc("Emulation.setEmulatedMedia", {
+    features: [{ name: "prefers-reduced-motion", value: "reduce" }],
+  });
+  await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
+    source: `
+      window.transactionFrameRequests = 0;
+      const requestFrame = window.requestAnimationFrame;
+      window.requestAnimationFrame = callback => {
+        window.transactionFrameRequests++;
+        return requestFrame(callback);
+      };
+    `,
+  });
+}
+
+async function assertTransactionMotion(browser) {
+  assert.deepEqual(
+    await browser.evaluate(`({
+      preference: matchMedia("(prefers-reduced-motion: reduce)").matches,
+      reduced: byId("reduced-motion").checked,
+      frames: window.transactionFrameRequests
+    })`),
+    { preference: true, reduced: true, frames: 0 },
+    "Transaction workflows must honor reduced motion without queuing playback",
+  );
+}
+
 test("simple Studio previews one action while preserving the rest of the combo", async () => {
   const html = execFileSync(
     "python3",
@@ -247,12 +277,17 @@ test("library combines supported actions, preserves edits and saves offline with
   const url = `http://127.0.0.1:${server.address().port}/studio/?breakup=0`;
   const browser = await launchBrowser();
   try {
+    await reduceTransactionMotion(browser);
     await browser.rpc("Page.addScriptToEvaluateOnNewDocument", {
       source: `window.libraryBootErrors=[];addEventListener('error',event=>window.libraryBootErrors.push(String(event.message).replace(/https?:\\/\\/\\S+/g,'[url]')));`,
     });
+    let loaded = false;
     async function reload() {
       try {
+        if (loaded) await assertTransactionMotion(browser);
         await browser.navigate(url);
+        loaded = true;
+        await assertTransactionMotion(browser);
       } catch (error) {
         console.error(
           "Library reload diagnostics",
@@ -272,7 +307,11 @@ test("library combines supported actions, preserves edits and saves offline with
           })(),
           attributes: {...document.documentElement.dataset},
           storageKeys: Object.keys(localStorage),
-          performance: performance.getEntriesByType("navigation").map(entry=>({type:entry.type,load:entry.loadEventEnd,dom:entry.domContentLoadedEventEnd})),
+          performance: performance.getEntriesByType("navigation").map(entry=>({
+            type:entry.type,fetch:entry.fetchStart,responseStart:entry.responseStart,
+            responseEnd:entry.responseEnd,interactive:entry.domInteractive,
+            dom:entry.domContentLoadedEventEnd,load:entry.loadEventEnd
+          })),
           visibility: document.visibilityState
         })`),
         );
@@ -303,6 +342,8 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate(
       'byId("combo-close").value="frost-vanish";byId("combo-close").dispatchEvent(new Event("change"))',
     );
+    assert.equal(await evaluate("progress"), 1, "Reduced-motion Close renders its endpoint");
+    await assertTransactionMotion(browser);
     assert.equal(await evaluate("effectDocument().actions.open.fragment_mix"), 0.5);
     assert.equal(await evaluate("effectDocument().actions.close.family"), "dissolve");
     assert.equal(await evaluate('byId("combo-mode").value'), "mixed");
@@ -447,6 +488,7 @@ test("library combines supported actions, preserves edits and saves offline with
     await evaluate('byId("profile-cancel").click()');
     assert(requests.every((path) => path === "/studio/?breakup=0" || path === "/favicon.ico"));
     assert.equal(await evaluate('byId("error").textContent'), "");
+    await assertTransactionMotion(browser);
   } finally {
     await browser.close();
     await new Promise((resolve) => server.close(resolve));
@@ -705,7 +747,9 @@ finally:
     const selection = () => JSON.parse(readFileSync(selector));
     const originalBundles = files(join(fixture.native, "bundles"));
     browser = await launchBrowser({ requestTimeout: 20000 });
+    await reduceTransactionMotion(browser);
     await browser.navigate(url + "&breakup=0", { width: 1440, height: 1080 });
+    await assertTransactionMotion(browser);
     const { evaluate } = browser;
     const wait = (expression) =>
       evaluate(`new Promise((resolve,reject)=>{
@@ -904,6 +948,7 @@ finally:
       if (status !== "applied")
         assert.match(await evaluate("byId('native-running').textContent"), /effects not confirmed/);
     }
+    await assertTransactionMotion(browser);
   } finally {
     if (browser) await browser.close();
     if (child.exitCode === null) {

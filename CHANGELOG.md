@@ -145,6 +145,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Library save and desktop Apply checks use reduced-motion previews to avoid
+  software-GPU backlogs during repeated selections and reloads. Full animation
+  rendering remains covered separately, with existing test deadlines unchanged.
 - Browser checks stop their owned helper processes when startup fails and retain
   the original error if cleanup also fails. Managed Studio failures identify the
   control being exercised without extending test deadlines.

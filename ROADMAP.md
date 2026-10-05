@@ -223,6 +223,8 @@ expensive software-WebGL matrices.
 - [x] Harden browser startup diagnostics and cleanup: terminate owned helper
       processes, distinguish process exit from open pipes, and retain the original
       startup error when cleanup also fails.
+- [x] Keep Library save and Apply workflow checks free of unnecessary preview
+      playback, while retaining full animation coverage in rendering checks.
 - [ ] Bind recording provenance to the loaded preview and reject source changes
       during capture, so a clip cannot claim a later source revision.
 
