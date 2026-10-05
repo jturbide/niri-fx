@@ -107,8 +107,10 @@ compositor build with an explicit upgrade path.
       native nodes out of the stock-session configuration.
 - [x] Select updates for the next login; retain the previous binary/config pair
       and never restart a running compositor from a background updater.
-- [ ] Import existing include trees into an isolated candidate configuration
-      with a reviewable ownership boundary.
+- [x] Import literal include trees into isolated candidate configuration with
+      per-file review, preserved ordering and retained missing-optional state.
+- [ ] Connect shell/Studio settings to a reviewed candidate-editing workflow
+      without changing stock config ownership or editing retained bundles.
 - [ ] Show candidate disk usage and provide reviewed cleanup that preserves
       running, selected and rollback versions.
 - [ ] Verify failed install, interrupted update, changed shared dependencies,

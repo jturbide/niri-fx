@@ -9,6 +9,11 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- `native stage --snapshot-includes` imports split Niri configurations into a
+  closed, verified bundle while preserving include order and file boundaries.
+  Review covers every source, including absent optional files. Login entries
+  support custom names, and `doctor` reports continuous-fragment capability
+  separately from timed movement.
 - Experimental `native stage`, `status`, `select`, `rollback` and `session-entry`
   commands prepare retained desktop binary/configuration pairs and reviewed
   next-login selection. The per-user systemd launcher preserves the stock Niri
@@ -84,6 +89,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Native bundle inspection now uses the same bounded configuration scanner as
+  include snapshots, so a leading byte-order mark cannot hide an external include
+  in an older single-file bundle.
 - Library inspection loads the current iNiR serializer without creating or
   reusing bytecode in the shell checkout.
 - Continuous fragments skip redundant simulation after long idle when every

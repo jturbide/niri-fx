@@ -46,6 +46,7 @@ import-boundary test enforces that separation.
 | [setup.py](../niri_fx/setup.py), [pack.py](../niri_fx/pack.py) | Inspectable plans, apply/restore snapshots, standalone includes and picker folders. |
 | [storage.py](../niri_fx/storage.py) | Staged, flushed file writes and atomic replacement. Callers decide ownership, locking and symlink policy. |
 | [native_build.py](../niri_fx/native_build.py), [native_session.py](../niri_fx/native_session.py) | Read-only native build evidence, retained desktop bundles and selector-only next-login rollback. Reuses setup plans and transactions; never writes stock config. |
+| [native_config.py](../niri_fx/native_config.py) | Bounded include-graph snapshots. Rewrites literal include paths while retaining file boundaries and positional merges; verifies the entire owned graph before selection. |
 | [native_cli.py](../niri_fx/native_cli.py), [native_entry.py](../niri_fx/native_entry.py), [native_login.py](../niri_fx/native_login.py) | Experimental CLI and staged per-user login entry. A process-bound runtime lease preserves upstream `niri.service` lifecycle; selection cannot restart a desktop. |
 | [scripts/lib/browser.mjs](../scripts/lib/browser.mjs) | Isolated Chromium lifecycle and bounded CDP requests for tests, recording and measurement. Not a runtime dependency. |
 

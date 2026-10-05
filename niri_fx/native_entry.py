@@ -19,7 +19,14 @@ def _exec_argument(value):
     return '"' + value.replace("\\", "\\\\") + '"'
 
 
-def entry_plan(root):
+def entry_plan(root, name="NiriFX (experimental)"):
+    if (
+        not isinstance(name, str)
+        or not name.strip()
+        or len(name) > 80
+        or any(ord(char) < 32 or ord(char) == 127 for char in name)
+    ):
+        raise ValueError("Session name must contain 1 to 80 characters without control characters")
     root = _path(root)
     selector = root / "selection.json"
     selected_bytes = _read(selector, MAX_METADATA_BYTES, mode=0o600)
@@ -41,9 +48,10 @@ def entry_plan(root):
         "from niri_fx.native_login import main\n"
         f"raise SystemExit(main(['--root', {str(root)!r}, 'launch']))\n"
     ).encode()
+    escaped_name = name.replace("\\", "\\\\")
     desktop = (
         "[Desktop Entry]\n"
-        "Name=NiriFX (experimental)\n"
+        f"Name={escaped_name}\n"
         "Comment=Niri with separately selected experimental window effects\n"
         f"Exec={_exec_argument(python)} {_exec_argument(str(launcher))}\n"
         "Type=Application\nDesktopNames=niri\n"
@@ -65,7 +73,7 @@ def entry_plan(root):
             item["expected_mode"] = item["mode"]
     return {
         "target": "native-session-entry",
-        "selection": {"entry": str(entry), "launcher": str(launcher)},
+        "selection": {"entry": str(entry), "launcher": str(launcher), "name": name},
         "activation": "Administrator registration, then next login",
         "notes": [
             "Stages a per-user launcher and desktop entry; no system session directory is changed.",

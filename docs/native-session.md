@@ -31,9 +31,10 @@ Create and review a **self-contained** candidate configuration. You can start
 with the pinned Niri source's `resources/default-config.kdl` and add your desired
 effects using the [experimental guide](../experimental/README.md). Configure your
 terminal, shell startup and exit binding before logging in. Active `include`
-nodes are refused: copying a config that still includes mutable stock files
-would not preserve a binary/configuration pair. The source config is never edited.
-KDL node type annotations are also refused by the initial isolation scanner.
+nodes are refused by default: copying a config that still includes mutable stock
+files would not preserve a binary/configuration pair. The source config is never
+edited. Use the reviewed include snapshot below for a split configuration.
+KDL node type annotations remain unsupported by the isolation scanner.
 
 ```sh
 niri-fx native stage \
@@ -57,6 +58,39 @@ stage it again to create a new pair; do not edit the stored bundle.
 All commands accept `--root /path/to/native-storage` for a separate installation
 or temporary testing. Use that same root throughout the workflow.
 
+### Import an existing include tree
+
+Add `--snapshot-includes` to `native stage` when the source config uses includes:
+
+```sh
+niri-fx native stage \
+  --manifest /path/to/candidate/manifest.json \
+  --source /path/to/candidate/source \
+  --repository /path/to/niri-fx \
+  --config /path/to/desktop/config.kdl \
+  --snapshot-includes
+```
+
+The review lists every source file and hash, including any missing optional
+includes. Apply copies the complete include tree and rewrites only include paths
+to files inside the bundle. File boundaries, include order and repeated includes
+are preserved. Later source edits do not affect the installed snapshot; they
+require another review and stage operation.
+
+Literal quoted and raw-string paths, absolute paths and `~/` paths are supported.
+A missing `optional=true` include becomes an empty owned file, keeping its absent
+state even if the original appears later. Cycles, symlinks, special files, glob
+paths, unsupported annotations and trees beyond the file, size or depth limits
+are refused. Niri still validates the copied result before selection.
+
+Only Niri configuration includes are copied. Applications, startup scripts,
+wallpapers and other paths referenced inside ordinary settings remain external
+dependencies. In particular, a frozen bundle does not redirect iRiS's config
+writer: iRiS continues editing its usual stock Niri files. For this experimental
+workflow, edit the source configuration and stage a new pair to change persistent
+settings in the NiriFX session. Do not redirect global `XDG_CONFIG_HOME` to work
+around this boundary.
+
 ## Select the next login
 
 ```sh
@@ -77,6 +111,9 @@ it does not certify graphics drivers, portals, capture or physical-desktop behav
 niri-fx native session-entry
 niri-fx native session-entry --apply --expect-plan REVIEWED_SHA256
 ```
+
+Use `--name "NiriFX (managed test)"` on both commands to distinguish a new test
+entry from an existing experimental login. The name is part of the reviewed plan.
 
 This prepares `session/launch.py` and `session/niri-fx.desktop` inside native
 storage. Review the desktop entry's Python and launcher paths. It is a per-user
@@ -133,6 +170,27 @@ move/swap, resize, screen sharing, suspend/resume, clean logout and return to
 stock. Automated temporary-storage tests cover failed writes, edited files,
 selection races, rollback and stale leases. Physical login, GPU, portal and
 suspend behavior remain separate acceptance gates.
+
+After logging in, run:
+
+```sh
+niri-fx doctor --niri-binary /path/to/bundle/bin/niri --config /path/to/bundle/config.kdl
+```
+
+Its `fragment_capability` result distinguishes
+continuous fragments from timed movement; a matching version string or working
+timed animation is not evidence that the continuous-fragment renderer is enabled.
+
+| Manual check | Expected result |
+| --- | --- |
+| Sign in | Familiar shell, outputs, shortcuts and input settings load. |
+| Open, close and resize | Chosen effects run; client content and input remain usable. |
+| Drag, pause, reverse and drop | With continuous fragments configured, held pieces remain separated and reconstruct after release. |
+| Keyboard move and swap | The selected movement style runs and window focus/order stay correct. |
+| Screen sharing | The portal picker opens and the selected stream reaches a test application. |
+| Suspend and resume | Displays, input, shell and capture recover normally. |
+| Logout and stock login | The temporary lease is removed and stock Niri starts without native config nodes. |
+| Previous candidate | Reviewed rollback selects the retained pair for the next login. |
 
 See [Niri packaging](https://niri-wm.github.io/niri/Packaging-niri.html),
 [Niri session setup](https://niri-wm.github.io/niri/Getting-Started.html) and
