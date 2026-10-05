@@ -1,9 +1,22 @@
 // Library-first presentation over the same validated documents as Studio.
 // Selecting a card changes only the preview. Review and Apply are separate,
 // and optional actions are never inferred from a family capability.
-function createFxLibrary({ catalog, getDocument, select, edit, favorites, favorite }) {
+function createFxLibrary({
+  catalog,
+  getDocument,
+  select,
+  edit,
+  favorites,
+  favorite,
+  sessionSettings,
+  sessionChanged,
+}) {
   const element = (id) => document.getElementById(id);
   const core = createEffectCore(catalog);
+  const native = catalog.connection?.target === "native";
+  const nativeOptions = catalog.connection?.native;
+  let nativeListing = null;
+  const nativeSettings = sessionSettings || { fragment_preset: null };
   const title = (id) => id.replaceAll("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const styles = Object.fromEntries(
     Object.entries(catalog.presets).map(([id, effect]) => [
@@ -67,6 +80,30 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   const normalized = (effect) => ({ ...effect, resize: false });
   const equal = (a, b) =>
     isStyle(a) && isStyle(b) && Object.keys(catalog.defaults).every((key) => a[key] === b[key]);
+  const fragmentChoices = nativeOptions?.fragment_choices || {};
+  function sessionName(bundle, fallback) {
+    if (!bundle) return fallback;
+    const item = nativeListing?.bundles.find((row) => row.bundle_id === bundle);
+    if (item?.status === "unavailable") return "Unavailable selection";
+    return item?.customization?.document?.name || "NiriFX session";
+  }
+  for (const [id, choice] of Object.entries(fragmentChoices)) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = choice.name;
+    element("native-fragment-preset").append(option);
+  }
+  element("native-fragments").hidden = !native || nativeOptions.variant !== "fragment";
+  element("native-fragment-preset").onchange = () => {
+    nativeSettings.fragment_preset = element("native-fragment-preset").value || null;
+    if (nativeSettings.fragment_preset) {
+      const doc = profile();
+      doc.actions.movement = structuredClone(
+        fragmentChoices[nativeSettings.fragment_preset].effect,
+      );
+      select(doc, "movement");
+    } else sessionChanged();
+  };
   const actionEffects = (doc) =>
     doc.actions || {
       open: normalized(doc.effect),
@@ -193,7 +230,9 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
         ? "disabled"
         : match?.[0] || "custom";
     element("pointer-description").textContent = !settings
-      ? "Preserve the underlying desktop or shell pointer configuration."
+      ? native
+        ? "Preserve the pointer settings from this session's original saved baseline."
+        : "Preserve the underlying desktop or shell pointer configuration."
       : settings.strength === 0
         ? "Explicitly disable pointer deformation when these settings are applied."
         : match
@@ -220,7 +259,7 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     pointerConsentValue = consentValue;
     element("activate-pointer-label").hidden = !settings || !pointerReady;
     element("activate-pointer-text").textContent =
-      settings?.strength === 0 ? "Apply pointer drag disabled" : "Apply experimental pointer drag";
+      settings?.strength === 0 ? "Apply pointer drag disabled" : "Apply pointer drag";
     return summary;
   }
   element("combo-pointer-mode").onchange = () => {
@@ -415,6 +454,17 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       selectedStyles = Object.values(actions).filter(isStyle),
       sharedStyle = selectedStyles[0] || remembered.open || normalized(catalog.presets.balanced),
       same = selectedStyles.every((effect) => equal(sharedStyle, effect));
+    if (
+      nativeSettings.fragment_preset &&
+      !equal(actions.movement, fragmentChoices[nativeSettings.fragment_preset]?.effect)
+    )
+      nativeSettings.fragment_preset = null;
+    const fragmentPreset = nativeSettings.fragment_preset;
+    element("native-fragment-preset").value = fragmentPreset || "";
+    element("native-fragment-description").textContent = fragmentPreset
+      ? fragmentChoices[fragmentPreset].description +
+        " This selects its square movement material and continuous response. The canvas previews the material; continuous native motion requires your next login."
+      : "Preserve keeps the base movement. A movement Style uses its timed effect; Off disables movement animation. Choosing a continuous preset explicitly replaces the movement style. Editing that style clears the continuous preset.";
     element("selection-name").textContent = doc.name;
     element("selection-actions").textContent =
       Object.entries(actionNames)
@@ -480,7 +530,52 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
     managed = data.managed;
     warnings = data.warnings;
     element("restore-selection").disabled = !data.restore;
-    element("active-look").textContent = "Active: " + data.active_name;
+    element("active-look").textContent = (native ? "Next login: " : "Active: ") + data.active_name;
+    if (native) {
+      nativeListing = data.native;
+      const selection = nativeListing.selection;
+      element("native-base").textContent =
+        "Editing bundle: " +
+        nativeListing.base_bundle +
+        ". Preserve inherits original baseline " +
+        nativeListing.baseline_bundle +
+        ".";
+      element("native-selected").textContent =
+        "Next login: " + sessionName(selection.selected, "Stock Niri");
+      element("native-rollback").textContent =
+        "Retained rollback: " +
+        (Object.hasOwn(selection, "previous")
+          ? sessionName(selection.previous, "Stock Niri")
+          : "No previous selection");
+      const running = nativeListing.running;
+      element("native-running").textContent =
+        "Running: " +
+        (running.status === "matched"
+          ? sessionName(running.bundle_id, "NiriFX session")
+          : running.status === "external"
+            ? "Another Niri session"
+            : running.status === "offline"
+              ? "No session detected"
+              : "Not verified");
+      element("native-running-detail").textContent =
+        "Advertised running session: " +
+        running.status +
+        (running.bundle_id ? " · " + running.bundle_id : "") +
+        ". " +
+        running.detail;
+      element("native-bundles").textContent =
+        "Next-login bundle: " +
+        (selection.selected || "None") +
+        ". Retained rollback bundle: " +
+        (Object.hasOwn(selection, "previous") ? selection.previous || "None" : "No history") +
+        ".";
+      element("native-reopen").disabled = !nativeListing.reopen;
+      element("native-reopen-note").textContent = nativeListing.reopen
+        ? "Reopen the saved choices without selecting or activating them."
+        : nativeListing.recipe
+          ? "This recipe uses another baseline. Relaunch Studio with that bundle as --native-base to edit it."
+          : "This bundle has no editable recipe. Preserve keeps its existing configuration.";
+    }
     cards();
   }
   async function operation(work) {
@@ -496,11 +591,13 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       "remove-profile",
       "restore-selection",
       "apply-selection",
+      "native-reopen",
     ])
       element(id).disabled = true;
     try {
       await work();
     } catch (error) {
+      if (native) invalidate();
       element("error").textContent = error.message;
     } finally {
       await listing().catch((error) => {
@@ -522,37 +619,59 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
       const reviewedRevision = revision;
       const doc = core.normalizePreset(getDocument()),
         actions = actionEffects(doc);
-      const selection = {
-        document: doc,
-        allow_resize: !!actions.resize,
-        allow_movement:
-          !!actions.movement &&
-          catalog.connection.target === "standalone" &&
-          element("activate-movement").checked,
-        allow_pointer: !!doc.pointer && pointerReady && element("activate-pointer").checked,
-      };
+      const selection = native
+        ? {
+            document: doc,
+            fragment_preset: nativeSettings.fragment_preset,
+          }
+        : {
+            document: doc,
+            allow_resize: !!actions.resize,
+            allow_movement:
+              !!actions.movement &&
+              catalog.connection.target === "standalone" &&
+              element("activate-movement").checked,
+            allow_pointer: !!doc.pointer && pointerReady && element("activate-pointer").checked,
+          };
       const plan = await post("/review", selection);
       if (revision !== reviewedRevision)
         throw new Error("Selection changed. Review again before applying.");
       review = { selection, expected: plan.plan_sha256 };
-      element("review-summary").textContent = "Apply " + doc.name + ". " + plan.notes.join(" ");
-      element("review-files").replaceChildren();
-      for (const file of plan.changes) {
-        const row = document.createElement("li");
-        row.textContent = file.action + ": " + file.path;
-        element("review-files").append(row);
-      }
-      if (!plan.changes.length)
-        element("review-summary").textContent = "This look is already applied.";
-      element("apply-review").hidden = false;
+      showReview(plan, (native ? "Select for next login: " : "Apply ") + doc.name + ". ");
     });
+  function showReview(plan, message) {
+    element("review-summary").textContent =
+      message +
+      (native
+        ? "Your current desktop stays unchanged. The previous selection stays available for rollback."
+        : plan.notes.join(" "));
+    element("review-file-details").open = !native;
+    element("review-notes").hidden = !native;
+    element("review-notes").textContent = native ? plan.notes.join(" ") : "";
+    element("review-files").replaceChildren();
+    for (const file of plan.changes) {
+      const row = document.createElement("li");
+      row.textContent = file.action + ": " + file.path;
+      element("review-files").append(row);
+    }
+    if (!plan.changes.length)
+      element("review-summary").textContent = native
+        ? "This next-login selection is already stored. The running session stays unchanged."
+        : "This look is already applied.";
+    element("apply-review").hidden = false;
+  }
   element("apply-selection").onclick = () =>
     operation(async () => {
       if (!review) throw new Error("Review the current selection first");
-      await post("/apply", review);
+      const result = review.rollback
+        ? await post("/rollback-apply", { expected: review.expected })
+        : await post("/apply", review);
       invalidate();
-      element("status").textContent =
-        "Applied. Use Restore previous to return to your earlier settings.";
+      element("status").textContent = native
+        ? result.selection?.selected === null
+          ? "No managed version is selected. Your current session stays unchanged. Choose stock Niri at the next login."
+          : "Selected for next login. Your current session stays unchanged. Log out when ready and choose NiriFX."
+        : "Applied. Use Restore previous to return to your earlier settings.";
     });
   element("cancel-review").onclick = invalidate;
   function suggestedCopy(name) {
@@ -610,6 +729,9 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
           : exists && action === "save"
             ? "A saved profile already uses this name. Replacing it updates the Library copy only; your active effects stay the same."
             : "Keep an editable Library copy. Your active effects stay the same.";
+    if (native && nativeSettings.fragment_preset && ["save", "copy"].includes(action))
+      element("profile-dialog-help").textContent +=
+        " My profiles and exported JSON keep the portable styles, but exclude continuous fragment response. Select for next login retains that response in the session recipe.";
   }
   for (const [id, action] of Object.entries({
     "store-profile": "save",
@@ -702,13 +824,39 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   };
   element("restore-selection").onclick = () =>
     operation(async () => {
+      if (native) {
+        const reviewedRevision = revision;
+        const plan = await post("/rollback-review", {});
+        if (revision !== reviewedRevision)
+          throw new Error("Selection changed. Review rollback again.");
+        review = { rollback: true, expected: plan.plan_sha256 };
+        showReview(plan, "Restore the previous next-login selection. ");
+        return;
+      }
       await post("/restore", {});
       invalidate();
       element("status").textContent = "Restored previous settings.";
     });
-  element("movement-availability").textContent =
-    catalog.connection?.target === "standalone"
-      ? "Movement can be designed here. Applying it requires the rebuilt experimental compositor with action-preservation support and verified running support."
+  element("native-reopen").onclick = () => {
+    if (busy || !nativeListing?.reopen) return;
+    nativeSettings.fragment_preset = nativeListing.recipe.fragment_preset;
+    select(nativeListing.recipe.document, "open");
+    element("status").textContent =
+      "Reopened the next-login recipe. Review any edits before selecting them.";
+  };
+  element("native-session").hidden = !native;
+  if (native) {
+    element("active-look").hidden = true;
+    element("review-selection").textContent = "Review next login";
+    element("restore-selection").textContent = "Review rollback";
+    element("apply-selection").textContent = "Select for next login";
+    document.querySelector('[data-mode="movement"] small').textContent = "shader preview";
+    element("pointer-kdl").textContent = "Export NiriFX session config";
+  }
+  element("movement-availability").textContent = native
+    ? "Preserve keeps your saved baseline; Style and Off override that action. Move and swap currently share one effect. Your running desktop stays unchanged."
+    : catalog.connection?.target === "standalone"
+      ? "Movement can be designed here. Applying it requires a matching NiriFX session with action-preservation support and verified running support."
       : catalog.connection
         ? "Movement can be designed and saved here. This integration applies selected opening, closing and resize overrides only."
         : "Preview movement and save it in JSON. Stock Niri config exports include selected opening, closing and resize overrides only.";
@@ -718,10 +866,12 @@ function createFxLibrary({ catalog, getDocument, select, edit, favorites, favori
   element("activate-pointer").onchange = invalidate;
   element("pointer-availability").textContent = !catalog.connection
     ? "Save pointer settings here, then use the local app with a verified pointer-enabled compositor to apply them."
-    : pointerReady
-      ? "This running compositor supports pointer drag. Select settings, then explicitly enable them in Review & apply."
-      : catalog.connection.pointer?.target_detail ||
-        "Pointer activation requires the standalone target and a verified running pointer extension. These settings can still be saved and exported.";
+    : native
+      ? "Pointer choices are stored for the next login and validated against the retained build. This does not verify the running renderer."
+      : pointerReady
+        ? "This running compositor supports pointer drag. Select settings, then explicitly enable them in Review & apply."
+        : catalog.connection.pointer?.target_detail ||
+          "Pointer activation requires the standalone target and a verified running pointer extension. These settings can still be saved and exported.";
   view(
     catalog.connection?.view === "editor" ||
       !!location.hash ||

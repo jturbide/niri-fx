@@ -17,11 +17,20 @@ let parameters = { ...catalog.parameters },
   lastSource = "",
   mode = "effect";
 const query = new URLSearchParams(location.search);
-const initialPreset = Object.hasOwn(catalog.presets, query.get("preset"))
+const requestedPreset = Object.hasOwn(catalog.presets, query.get("preset"))
   ? query.get("preset")
-  : catalog.name;
-if (Object.hasOwn(catalog.presets, initialPreset))
-  parameters = { ...catalog.presets[initialPreset] };
+  : null;
+// The catalog already contains CLI/imported edits. Only an explicit preview-link
+// choice replaces them; a document name alone cannot select different settings.
+if (requestedPreset) parameters = { ...catalog.presets[requestedPreset] };
+const initialPreset =
+  requestedPreset ||
+  (Object.hasOwn(catalog.presets, catalog.name) &&
+  Object.keys(catalog.defaults).every(
+    (key) => parameters[key] === catalog.presets[catalog.name][key],
+  )
+    ? catalog.name
+    : "");
 let progress = Number(query.get("breakup") ?? 0.45);
 progress = Number.isFinite(progress) ? Math.min(1, Math.max(0, progress)) : 0.45;
 const title = (s) => s.replaceAll("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
@@ -42,9 +51,10 @@ for (const name of Object.keys(catalog.presets)) {
   byId("preset").append(option);
 }
 byId("preset").value = Object.hasOwn(catalog.presets, initialPreset) ? initialPreset : "";
-byId("name").value = catalog.presets[catalog.name]
-  ? "My " + title(byId("preset").value)
-  : catalog.name;
+byId("name").value =
+  initialPreset && catalog.presets[catalog.name]
+    ? "My " + title(byId("preset").value)
+    : catalog.name;
 for (const [id, doc] of Object.entries(catalog.profiles)) {
   const option = document.createElement("option");
   option.value = id;
@@ -54,6 +64,12 @@ for (const [id, doc] of Object.entries(catalog.profiles)) {
 let actions = catalog.profile ? structuredClone(catalog.profile.actions) : null;
 let desktopMotion = catalog.profile?.motion ? structuredClone(catalog.profile.motion) : null;
 let pointerSettings = catalog.profile?.pointer ? structuredClone(catalog.profile.pointer) : null;
+// Native response settings are editor history, not portable profile parameters.
+// Bundle recipes persist them separately; JSON export remains shell independent.
+const sessionSettings =
+  catalog.connection?.target === "native"
+    ? { fragment_preset: catalog.connection.native.recipe?.fragment_preset || null }
+    : null;
 const isActionStyle = (value) => value !== null && typeof value === "object";
 const actionMode = (value) =>
   isActionStyle(value) ? "style" : value === "off" ? "off" : "preserve";
@@ -145,10 +161,12 @@ function recordHistory() {
   // This chooser starts a document; edits and Undo must never leave a stale
   // pairing selected after the current settings have diverged from it.
   byId("profile").value = "";
+  workspace?.sync();
   const snapshot = JSON.stringify({
     document: effectDocument(),
     preset: byId("preset").value,
     action: editingAction,
+    ...(sessionSettings ? { session: sessionSettings } : {}),
   });
   if (editHistory[historyIndex] === snapshot) return;
   editHistory = editHistory.slice(0, historyIndex + 1);
@@ -156,7 +174,6 @@ function recordHistory() {
   if (editHistory.length > 100) editHistory.shift();
   historyIndex = editHistory.length - 1;
   historyButtons();
-  workspace?.sync();
 }
 function historyButtons() {
   byId("undo").disabled = historyIndex < 1;
@@ -263,7 +280,7 @@ function labels() {
   byId("family-note").textContent =
     "Stock Niri open/close" +
     (capabilities.resize ? " and resize." : ".") +
-    (capabilities.movement ? " Native movement requires the experimental patched compositor." : "");
+    (capabilities.movement ? " Native movement requires a matching NiriFX session." : "");
   byId("movement-controls").hidden = mode !== "movement" || !capabilities.movement;
   byId("movement-preview-controls").hidden = mode !== "movement";
   filterPresets();
@@ -271,7 +288,9 @@ function labels() {
   const selectedMode = actions ? byId("action-mode").value : "style";
   byId("action-mode-note").textContent =
     selectedMode === "preserve"
-      ? "Preserve keeps the underlying desktop or shell configuration. Its animation cannot be previewed without that context."
+      ? catalog.connection?.target === "native"
+        ? "Preserve uses this session's original saved baseline. Its animation cannot be previewed without that context."
+        : "Preserve keeps the underlying desktop or shell configuration. Its animation cannot be previewed without that context."
       : selectedMode === "off"
         ? "Off disables this action animation. The preview shows its endpoint."
         : "Customize the NiriFX style for this action.";
@@ -340,7 +359,7 @@ function labels() {
       : fragment
         ? parameters.fragment_shape !== "square" || parameters.fragment_orientation !== 0
           ? "Size variation changes piece sizes during flight so the starting layout stays joined. Shapes, elongated pieces and waves can cost more to render."
-          : "Uneven cells and waves cost more to render. Resize uses size variation during flight; waves and direction variation affect open/close and experimental movement."
+          : "Uneven cells and waves cost more to render. Resize uses size variation during flight; waves and direction variation affect open/close and NiriFX movement."
         : "Size variation keeps adjacent strip boundaries joined. Frequency controls the wavelength; lower frequencies make wider waves.";
   byId("seed").disabled =
     mode === "resize" ||
@@ -431,18 +450,18 @@ function kdlDocument(options = {}) {
 byId("kdl").onclick = () => {
   download("nirifx.kdl", kdlDocument(), "text/plain");
   byId("status").textContent =
-    "Downloaded stock Niri config. Experimental movement and pointer drag are omitted; JSON preserves those settings.";
+    "Downloaded stock Niri config. NiriFX movement and pointer drag are omitted; JSON preserves those settings.";
 };
 byId("pointer-kdl").onclick = () => {
   try {
     const doc = effectDocument();
     download(
-      "nirifx-experimental.kdl",
+      "nirifx-session.kdl",
       renderKdl(doc, { pointer: true, movement: !!doc.actions?.movement }),
       "text/plain",
     );
     byId("status").textContent =
-      "Downloaded experimental Niri config with all selected actions and pointer settings. It requires the matching compositor extensions.";
+      "Downloaded NiriFX session config with all selected actions and pointer settings. It requires matching compositor extensions.";
   } catch (error) {
     byId("error").textContent = error.message;
   }
@@ -492,6 +511,12 @@ function saveTarget() {
 byId("save-target").onchange = saveTarget;
 byId("save-target").value = catalog.save_target;
 saveTarget();
+if (catalog.connection?.target === "native") {
+  byId("save-target").hidden = byId("save").hidden = true;
+  document.querySelector('label[for="save-target"]').hidden = true;
+  byId("save-help").textContent =
+    "Save to My profiles keeps portable settings. Select for next login stores the managed recipe, including its continuous fragment choice. Your current desktop stays unchanged.";
+}
 if (catalog.connection)
   setInterval(
     () => fetch("/ping?token=" + encodeURIComponent(catalog.connection.token)).catch(() => {}),
@@ -515,7 +540,7 @@ byId("save").onclick = async () => {
       byId("status").textContent =
         target === "noctalia"
           ? "Place the downloaded file in the Noctalia Niri Animations preset folder, then select it in the picker."
-          : "Downloaded a stock Niri animation include. Experimental movement and pointer drag are omitted; JSON preserves those settings.";
+          : "Downloaded a stock Niri animation include. NiriFX movement and pointer drag are omitted; JSON preserves those settings.";
     } catch (error) {
       byId("error").textContent = error.message;
     }
@@ -792,7 +817,7 @@ try {
       const count = Math.ceil(600 / tile) * Math.ceil(380 / tile);
       const caption =
         mode === "movement"
-          ? `Experimental movement · ${parameters.movement_ms} ms · JSON preserves the effect; stock exports omit it`
+          ? `NiriFX movement · ${parameters.movement_ms} ms · JSON preserves the effect; stock exports omit it`
           : mode === "resize"
             ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
             : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
@@ -1538,6 +1563,8 @@ try {
     byId(direction).onclick = () => {
       historyIndex += direction === "undo" ? -1 : 1;
       const snapshot = JSON.parse(editHistory[historyIndex]);
+      if (sessionSettings)
+        sessionSettings.fragment_preset = snapshot.session?.fragment_preset || null;
       editingAction = snapshot.action;
       loadDocument(snapshot.document, snapshot.action);
       byId("action").value = editingAction;
@@ -1616,6 +1643,8 @@ try {
   workspace = createFxLibrary({
     catalog,
     getDocument: effectDocument,
+    sessionSettings,
+    sessionChanged: recordHistory,
     select: (doc, action) => {
       cancelAnimationFrame(frame);
       comparing = false;

@@ -23,18 +23,33 @@
         <small id="selection-actions"></small>
         <small id="active-look"></small>
       </div>
+      <section id="native-session" hidden aria-label="NiriFX session selection">
+        <strong>NiriFX session</strong>
+        <p>Choose your effects here. Changes start at your next NiriFX login.</p>
+        <small id="native-selected"></small>
+        <small id="native-rollback"></small>
+        <small id="native-running"></small>
+        <button id="native-reopen" disabled>Reopen next-login recipe</button>
+        <small id="native-reopen-note"></small>
+        <details>
+          <summary>Session details</summary>
+          <small id="native-base"></small>
+          <small id="native-bundles"></small>
+          <small id="native-running-detail"></small>
+        </details>
+      </section>
       <nav class="tabs" aria-label="Preview mode">
         <button data-mode="effect" aria-pressed="true">Open &amp; close</button
         ><button data-mode="resize" aria-pressed="false">Resize</button
         ><button data-mode="movement" aria-pressed="false">
-          Movement <small>experimental shader</small></button
+          Movement <small>shader preview</small></button
         ><button data-mode="move" aria-pressed="false">Move <small>concept</small></button
         ><button data-mode="swap" aria-pressed="false">Swap <small>concept</small></button>
       </nav>
       <p id="concept-note" hidden>
-        Design preview only. Niri needs a compositor extension for these movements. Saving and
-        exporting affect open/close and enabled resize animations. The experimental native movement
-        demo runs separately.
+        Concept preview, not a simulation of the compositor renderer. Portable profiles retain your
+        action choices. Stock Niri config exports omit movement and pointer effects; use the NiriFX
+        session for those effects.
       </p>
       <canvas
         id="motion-stage"
@@ -93,11 +108,11 @@
       <p id="combo-preview-status" role="status" hidden></p>
       <div class="controls" id="activation-controls" hidden>
         <label id="activate-movement-label" hidden
-          ><input id="activate-movement" type="checkbox" /> Apply experimental movement</label
+          ><input id="activate-movement" type="checkbox" /> Apply movement</label
         >
         <label id="activate-pointer-label" hidden
           ><input id="activate-pointer" type="checkbox" />
-          <span id="activate-pointer-text">Apply experimental pointer drag</span></label
+          <span id="activate-pointer-text">Apply pointer drag</span></label
         >
         <button id="review-selection">Review &amp; apply</button>
         <button id="restore-selection" disabled>Restore previous</button>
@@ -110,7 +125,11 @@
       </div>
       <section id="apply-review" hidden aria-label="Review changes">
         <p id="review-summary"></p>
-        <ul id="review-files"></ul>
+        <details id="review-file-details" open>
+          <summary>Change details</summary>
+          <p id="review-notes" hidden></p>
+          <ul id="review-files"></ul>
+        </details>
         <button id="apply-selection">Apply these changes</button>
         <button id="cancel-review">Cancel</button>
       </section>
@@ -126,7 +145,7 @@
         >
           Export JSON</button
         ><button id="kdl">Export stock Niri config</button
-        ><button id="pointer-kdl" hidden>Export experimental config</button
+        ><button id="pointer-kdl" hidden>Export NiriFX session config</button
         ><button id="share">Share settings</button> <label for="save-target">Save target</label
         ><select id="save-target">
           <option value="inir">iNiR / iRiS</option>
@@ -135,8 +154,8 @@
         ><button id="save">Save to iRiS</button>
       </div>
       <small id="pointer-export-note" hidden
-        >Stock config exports omit pointer drag and experimental movement. JSON preserves both; the
-        experimental export requires rebuilt compositor extensions with action-preservation
+        >Stock config exports omit pointer drag and NiriFX movement. JSON preserves both; the
+        session export requires matching compositor extensions with action-preservation
         support.</small
       >
       <label id="share-result" hidden
@@ -178,6 +197,13 @@
         effect.</small
       >
       <small id="movement-availability"></small>
+      <section id="native-fragments" hidden aria-label="Continuous fragment motion">
+        <label for="native-fragment-preset">Continuous fragments</label>
+        <select id="native-fragment-preset">
+          <option value="">Use profile movement</option>
+        </select>
+        <small id="native-fragment-description"></small>
+      </section>
       <section id="pointer-settings" aria-label="Pointer drag settings">
         <label for="combo-pointer-mode">Pointer drag</label>
         <select id="combo-pointer-mode">
@@ -246,8 +272,8 @@
           <option value="up">Up</option>
         </select>
         <small
-          >Actual experimental shader on synthetic content. The desktop controls position and
-          interruptions; this preview uses a simple path. Stock Niri exports omit movement.</small
+          >NiriFX shader on synthetic content. The desktop controls position and interruptions; this
+          preview uses a simple path. Stock Niri exports omit movement.</small
         >
       </div>
       <div class="wide profile-controls">
@@ -276,7 +302,7 @@
             <option value="open">Open</option>
             <option value="close">Close</option>
             <option value="resize">Resize</option>
-            <option value="movement">Movement (experimental)</option>
+            <option value="movement">Movement (NiriFX session)</option>
           </select>
           <label for="action-mode">Action behavior</label>
           <select id="action-mode">
@@ -288,9 +314,8 @@
 
           <small id="action-companion-note" hidden></small>
           <small
-            >Each action keeps its own settings. Disabled resize leaves your existing Niri resize
-            behavior unchanged. Movement is saved in JSON only and needs the experimental
-            compositor.</small
+            >Each action keeps its own settings. Preserve keeps the underlying configuration; Off
+            disables that action. Native movement requires a matching NiriFX session.</small
           >
         </div>
       </div>
@@ -317,9 +342,9 @@
         <small
           >Count is approximate. Triangles and hexagons start joined; circles, ellipses, diamonds
           and stars emerge as pieces separate. Orientation turns the starting layout; spin controls
-          its motion. Shape controls affect opening, closing, resize and experimental movement.
-          Gravity is an artistic motion control, not a physical simulation. This preview uses the
-          real effect shader; monitor clipping and desktop performance can differ.</small
+          its motion. Shape controls affect opening, closing, resize and NiriFX movement. Gravity is
+          an artistic motion control, not a physical simulation. This preview uses the real effect
+          shader; monitor clipping and desktop performance can differ.</small
         >
       </div>
     </aside>

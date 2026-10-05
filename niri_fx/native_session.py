@@ -80,7 +80,7 @@ def _bundle_path(root, bundle_id):
     return _path(_path(root) / "bundles" / bundle_id)
 
 
-def _bundle_id(binary_sha256, config_sha256, metadata, config_files=None):
+def _bundle_id(binary_sha256, config_sha256, metadata, config_files=None, customization=None):
     identity = {
         "binary_sha256": binary_sha256,
         "config_sha256": config_sha256,
@@ -88,6 +88,8 @@ def _bundle_id(binary_sha256, config_sha256, metadata, config_files=None):
     }
     if config_files is not None:
         identity["config_files"] = config_files
+    if customization is not None:
+        identity["customization"] = customization
     return native_build.fingerprint(identity)
 
 
@@ -116,7 +118,10 @@ def inspect_bundle(root, bundle_id):
         "source_manifest_sha256",
     }
     config_files = receipt.get("config_files")
-    if receipt.get("schema") == 2:
+    customization = receipt.get("customization")
+    if receipt.get("schema") == 3:
+        fields.add("customization")
+    if receipt.get("schema") in (2, 3):
         fields.add("config_files")
         if (
             not isinstance(config_files, dict)
@@ -133,7 +138,7 @@ def inspect_bundle(root, bundle_id):
     if (
         set(receipt) != fields
         or type(receipt["schema"]) is not int
-        or receipt["schema"] not in (1, 2)
+        or receipt["schema"] not in (1, 2, 3)
         or receipt["bundle_id"] != bundle_id
         or receipt["binary"] != "bin/niri"
         or receipt["config"] != "config.kdl"
@@ -146,6 +151,7 @@ def inspect_bundle(root, bundle_id):
             receipt["config_sha256"],
             receipt["native_build"],
             config_files,
+            customization,
         )
         != bundle_id
     ):
@@ -192,6 +198,14 @@ def inspect_bundle(root, bundle_id):
     variant = metadata["inputs"].get("variant")
     if not isinstance(variant, str) or variant not in native_build.STACKS:
         raise ValueError("Invalid native session build variant")
+    public_recipe = None
+    if receipt["schema"] == 3:
+        from .native_customization import validate_customization
+
+        baseline = folder / "customization/base-config.kdl"
+        baseline_data = _read(baseline, MAX_CONFIG_BYTES, mode=0o600)
+        public_recipe = validate_customization(customization, files, baseline_data, variant=variant)
+        config_evidence.append((baseline, baseline_data))
     evidence = [(provenance / "manifest.json", manifest_data)]
     evidence.append(
         (
@@ -216,13 +230,13 @@ def inspect_bundle(root, bundle_id):
     observed.extend(_observed(path, data, 0o600) for path, data in config_evidence)
     observed.extend(_observed(path, data, 0o600) for path, data in evidence)
     observed.append(_observed(folder / "bundle.json", receipt_data, 0o600))
-    return {
+    result = {
         "bundle_id": bundle_id,
         "binary": str(binary),
         "config": str(config),
         "binary_sha256": receipt["binary_sha256"],
         "config_sha256": receipt["config_sha256"],
-        "config_file_count": len(config_evidence),
+        "config_file_count": len(config_files) if config_files is not None else 1,
         "build_id": report["build_id"],
         "variant": report["variant"],
         "desktop_prerequisites": report["desktop_prerequisites"],
@@ -230,6 +244,9 @@ def inspect_bundle(root, bundle_id):
         "physical_desktop_acceptance": "not_assessed",
         "observed": observed,
     }
+    if public_recipe is not None:
+        result["customization"] = public_recipe
+    return result
 
 
 def _plan(target, selection, changes, observed, *, config=None, binary=None, notes=()):
@@ -246,7 +263,9 @@ def _plan(target, selection, changes, observed, *, config=None, binary=None, not
     }
 
 
-def stage_plan(manifest, source, repository, config, root, *, snapshot_includes=False):
+def stage_plan(
+    manifest, source, repository, config, root, *, snapshot_includes=False, patch_directory=None
+):
     """Review a desktop build and copy a closed configuration on Apply."""
     manifest, source, repository, config, root = map(
         _path, (manifest, source, repository, config, root)
@@ -282,10 +301,15 @@ def stage_plan(manifest, source, repository, config, root, *, snapshot_includes=
     variant = inputs.get("variant") if isinstance(inputs, dict) else None
     if not isinstance(variant, str) or variant not in native_build.STACKS:
         raise ValueError("Native candidate has no supported versioned build metadata")
+    patch_root = (
+        _path(patch_directory) if patch_directory is not None else repository / "experimental"
+    )
     for name in native_build.STACKS[variant]:
-        path = repository / "experimental" / name
+        path = patch_root / name
         provenance.append((path, _read(path, MAX_CONFIG_BYTES), "experimental/" + name))
-    report = native_build.inspect(manifest, source=source, repository=repository, desktop=True)
+    report = native_build.inspect(
+        manifest, source=source, repository=repository, desktop=True, patch_directory=patch_root
+    )
     if report["status"] != "metadata-match":
         raise ValueError("Candidate cannot be staged: " + "; ".join(report["reasons"]))
     if digest(binary_data) != record["binary_sha256"]:

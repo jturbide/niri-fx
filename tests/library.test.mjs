@@ -421,3 +421,210 @@ test("all action modes survive editing, shared styles, preview, Undo and saved J
     await new Promise((resolve) => server.close(resolve));
   }
 });
+
+test("managed Studio reviews immutable recipes, cancellation, stale selection and rollback", async () => {
+  const environment = { ...process.env, PYTHONDONTWRITEBYTECODE: "1" };
+  for (const key of ["NIRI_SOCKET", "WAYLAND_DISPLAY", "DISPLAY", "DBUS_SESSION_BUS_ADDRESS"])
+    delete environment[key];
+  const child = spawn(
+    "python3",
+    [
+      "-c",
+      `
+import json, signal, sys
+from pathlib import Path
+sys.path.insert(0, str(Path.cwd() / "tests"))
+from test_native_library import NativeLibraryFixture
+from niri_fx.cli import main
+fixture = NativeLibraryFixture()
+fixture.setUp()
+signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+print("Fixture: " + json.dumps({"root": str(fixture.root), "native": str(fixture.native), "base": fixture.base}), flush=True)
+try:
+    main(["studio", "--target", "native", "--native-root", str(fixture.native),
+        "--state", str(fixture.args.state), "--no-browser", "--preset", "balanced", "--spin", "50"])
+finally:
+    fixture.doCleanups()
+`,
+    ],
+    { cwd: projectRoot, env: environment, stdio: ["ignore", "pipe", "pipe"] },
+  );
+  let browser;
+  try {
+    const { url, fixture } = await new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error("Managed Studio startup timed out")), 20000);
+      let output = "";
+      child.stdout.on("data", (chunk) => {
+        output += chunk;
+        const url = output.match(/NiriFX Studio: (http:\/\/127\.0\.0\.1:[^\s]+)/)?.[1];
+        const fixture = output.match(/Fixture: (.+)/)?.[1];
+        if (url && fixture) {
+          clearTimeout(timer);
+          resolve({ url, fixture: JSON.parse(fixture) });
+        }
+      });
+      child.once("error", (error) => {
+        clearTimeout(timer);
+        reject(error);
+      });
+      child.once("exit", () => {
+        clearTimeout(timer);
+        reject(new Error("Managed Studio stopped before readiness"));
+      });
+    });
+    const files = (folder) =>
+      Object.fromEntries(
+        readdirSync(folder, { recursive: true, withFileTypes: true })
+          .filter((entry) => entry.isFile())
+          .map((entry) => {
+            const path = join(entry.parentPath, entry.name);
+            return [path.slice(folder.length), readFileSync(path).toString("base64")];
+          }),
+      );
+    const selector = join(fixture.native, "selection.json");
+    const selection = () => JSON.parse(readFileSync(selector));
+    const originalBundles = files(join(fixture.native, "bundles"));
+    browser = await launchBrowser({ requestTimeout: 20000 });
+    await browser.navigate(url + "&breakup=0", { width: 1440, height: 1080 });
+    const { evaluate } = browser;
+    const wait = (expression) =>
+      evaluate(`new Promise((resolve,reject)=>{
+      const started=Date.now();function check(){if(${expression})resolve();else if(Date.now()-started>7000)reject(new Error('Managed operation timeout: '+byId('error').textContent));else setTimeout(check,30)}check();
+    })`);
+    const settle = () => wait("!byId('review-selection').disabled");
+    const click = (id) => browser.callFunction("function(id){byId(id).click()}", [id]);
+    const choose = (id, value) =>
+      browser.callFunction(
+        "function(id,value){byId(id).value=value;byId(id).dispatchEvent(new Event('change'))}",
+        [id, value],
+      );
+    await wait("byId('active-look').textContent.startsWith('Next login: ')");
+    assert.equal(await evaluate("byId('native-session').hidden"), false);
+    assert.equal(await evaluate("byId('save-target').hidden"), true);
+    assert.equal(await evaluate("effectDocument().effect.spin"), 50);
+    assert.equal(await evaluate("byId('preset').value"), "");
+    assert.equal(await evaluate("catalog.connection.pointer"), undefined);
+    await evaluate('document.querySelector("[data-style=fragments-motion]").click()');
+    await choose("combo-open-mode", "preserve");
+    await choose("combo-close", "frost-vanish");
+    await choose("combo-resize-mode", "off");
+    await choose("native-fragment-preset", "gentle");
+    await choose("native-fragment-preset", "tear");
+    await click("undo");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "gentle");
+    assert.deepEqual(
+      await evaluate("effectDocument().actions.movement"),
+      await evaluate("catalog.connection.native.fragment_choices.gentle.effect"),
+    );
+    await click("redo");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "tear");
+    await choose("native-fragment-preset", "");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "");
+    await click("undo");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "tear");
+    await click("redo");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "");
+    await choose("native-fragment-preset", "cascade");
+    assert.deepEqual(
+      await evaluate("effectDocument().actions.movement"),
+      await evaluate("catalog.connection.native.fragment_choices.cascade.effect"),
+    );
+    await choose("combo-movement-mode", "off");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "");
+    await choose("native-fragment-preset", "tear");
+    await choose("combo-name", "Studio Trial");
+    const document = await evaluate("effectDocument()");
+    await click("store-profile");
+    assert.match(
+      await evaluate("byId('profile-dialog-help').textContent"),
+      /exclude continuous fragment response/,
+    );
+    await click("profile-confirm");
+    await wait("!byId('profile-dialog').open&&!byId('store-profile').disabled");
+    assert.equal(selection().selected, fixture.base);
+    const beforeReview = files(fixture.root);
+    await click("review-selection");
+    await settle();
+    assert.equal(await evaluate("byId('apply-review').hidden"), false);
+    assert.equal(await evaluate("byId('apply-selection').textContent"), "Select for next login");
+    assert.deepEqual(files(fixture.root), beforeReview);
+    if (process.env.NIRIFX_NATIVE_STUDIO_SCREENSHOT) {
+      const layout = await browser.rpc("Page.getLayoutMetrics");
+      const shot = await browser.rpc("Page.captureScreenshot", {
+        format: "png",
+        captureBeyondViewport: true,
+        clip: {
+          x: 0,
+          y: 0,
+          width: 1440,
+          height: Math.ceil(layout.cssContentSize.height),
+          scale: 1,
+        },
+      });
+      writeFileSync(process.env.NIRIFX_NATIVE_STUDIO_SCREENSHOT, Buffer.from(shot.data, "base64"));
+    }
+    await click("cancel-review");
+    assert.equal(await evaluate("byId('apply-review').hidden"), true);
+    assert.deepEqual(files(fixture.root), beforeReview);
+    await click("review-selection");
+    await settle();
+    await click("apply-selection");
+    await settle();
+    assert.equal(await evaluate("byId('error').textContent"), "");
+    const applied = selection().selected;
+    assert.notEqual(applied, fixture.base);
+    assert.equal(selection().previous, fixture.base);
+    const retained = files(join(fixture.native, "bundles"));
+    for (const [path, bytes] of Object.entries(originalBundles))
+      assert.equal(retained[path], bytes);
+    await choose("combo-close-mode", "off");
+    await click("native-reopen");
+    assert.deepEqual(await evaluate("effectDocument()"), document);
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "tear");
+    const beforeRollback = files(fixture.root);
+    await click("restore-selection");
+    await settle();
+    assert.equal(await evaluate("byId('apply-review').hidden"), false);
+    assert.deepEqual(files(fixture.root), beforeRollback);
+    await click("cancel-review");
+    assert.deepEqual(files(fixture.root), beforeRollback);
+    await click("restore-selection");
+    await settle();
+    await click("apply-selection");
+    await settle();
+    assert.equal(selection().selected, fixture.base);
+    assert.equal(selection().previous, applied);
+    assert.deepEqual(files(join(fixture.native, "bundles")), retained);
+    await click("review-selection");
+    await settle();
+    writeFileSync(
+      selector,
+      JSON.stringify({ schema: 1, selected: null, previous: fixture.base }) + "\n",
+    );
+    const stale = files(fixture.root);
+    await click("apply-selection");
+    await settle();
+    assert.match(await evaluate("byId('error').textContent"), /plan changed/i);
+    assert.equal(await evaluate("byId('apply-review').hidden"), true);
+    assert.deepEqual(files(fixture.root), stale);
+    // Reviewed rollback can explicitly return to stock/no-selection.
+    writeFileSync(
+      selector,
+      JSON.stringify({ schema: 1, selected: fixture.base, previous: null }) + "\n",
+    );
+    await click("restore-selection");
+    await settle();
+    await click("apply-selection");
+    await settle();
+    assert.equal(selection().selected, null);
+    assert.match(await evaluate("byId('status').textContent"), /Choose stock Niri/);
+    assert.equal(await evaluate("byId('error').textContent"), "");
+  } finally {
+    if (browser) await browser.close();
+    if (child.exitCode === null) {
+      const stopped = new Promise((resolve) => child.once("exit", resolve));
+      child.kill("SIGTERM");
+      await stopped;
+    }
+  }
+});

@@ -1,4 +1,4 @@
-"""Local effect editor. Only validated named presets can be saved to iNiR."""
+"""Local Library and Studio with launch-scoped targets and reviewed changes."""
 
 import json
 import os
@@ -85,6 +85,37 @@ def make_server(arguments, effect):
     if not hasattr(arguments, "state"):
         arguments.state = preferences_path.parent
     library = Library(arguments, target)
+    native_document = getattr(arguments, "native_document", False) or bool(
+        getattr(arguments, "custom", None) or getattr(arguments, "profile", None)
+    )
+
+    def connection():
+        value = {
+            "origin": server.origin,
+            "token": token,
+            "target": target,
+            "view": "editor" if getattr(arguments, "edit", False) else "library",
+        }
+        if target == "native":
+            from .native_customization import fragment_choices
+
+            value["native"] = {
+                "base_bundle": library.native_base["bundle_id"],
+                "variant": library.native_base["variant"],
+                "recipe": library.native_base.get("customization") if not native_document else None,
+                "fragment_choices": fragment_choices(),
+            }
+        else:
+            value["pointer"] = pointer_capability(
+                getattr(arguments, "movement_binary", None),
+                socket_path=os.environ.get("NIRI_SOCKET"),
+            ) | {
+                "target_supported": target == "standalone",
+                "target_detail": "Pointer Apply is available after verifying this standalone session."
+                if target == "standalone"
+                else "Pointer settings can be saved and exported here. Apply currently requires a verified standalone session.",
+            }
+        return value
 
     def valid_favorite(name):
         return isinstance(name, str) and (
@@ -135,7 +166,17 @@ def make_server(arguments, effect):
                     self.respond(400, {"error": str(error)})
                 return
             selected, name = effect, getattr(arguments, "custom_name", arguments.preset)
-            if getattr(arguments, "active", False):
+            page_connection = connection()
+            if target == "native" and not native_document:
+                from .documents import parse_document
+                from .profiles import Profile
+
+                recipe = page_connection["native"]["recipe"]
+                if recipe:
+                    name, _, selected = parse_document(recipe["document"])
+                else:
+                    selected, name = Profile(), "NiriFX session"
+            elif getattr(arguments, "active", False):
                 try:
                     document = library.listing()["active"]
                     if document:
@@ -149,22 +190,7 @@ def make_server(arguments, effect):
                 preview_document(
                     selected,
                     name,
-                    {
-                        "origin": self.server.origin,
-                        "token": token,
-                        "target": target,
-                        "pointer": pointer_capability(
-                            getattr(arguments, "movement_binary", None),
-                            socket_path=os.environ.get("NIRI_SOCKET"),
-                        )
-                        | {
-                            "target_supported": target == "standalone",
-                            "target_detail": "Pointer Apply is available after verifying this standalone session."
-                            if target == "standalone"
-                            else "Pointer settings can be saved and exported here. Apply currently requires a verified standalone session.",
-                        },
-                        "view": "editor" if getattr(arguments, "edit", False) else "library",
-                    },
+                    page_connection,
                     read_preferences(),
                 ),
                 "text/html",
@@ -179,6 +205,8 @@ def make_server(arguments, effect):
                 "/review",
                 "/apply",
                 "/restore",
+                "/rollback-review",
+                "/rollback-apply",
             ) or not valid_save_request(self.headers, self.server.origin, token):
                 self.respond(403, {"error": "Save request must come from this editor session."})
                 return
@@ -190,7 +218,15 @@ def make_server(arguments, effect):
                         f"Preset request must be between 1 and {MAX_DOCUMENT_BYTES} bytes"
                     )
                 data = json.loads(self.rfile.read(length))
-                if self.path in ("/store", "/profiles", "/review", "/apply", "/restore"):
+                if self.path in (
+                    "/store",
+                    "/profiles",
+                    "/review",
+                    "/apply",
+                    "/restore",
+                    "/rollback-review",
+                    "/rollback-apply",
+                ):
                     if self.path == "/restore" and data != {}:
                         raise ValueError("Restore accepts no client-selected paths or transaction")
                     action = {
@@ -199,6 +235,8 @@ def make_server(arguments, effect):
                         "/review": library.review,
                         "/apply": library.apply,
                         "/restore": lambda _: library.undo(),
+                        "/rollback-review": library.rollback_review,
+                        "/rollback-apply": library.rollback_apply,
                     }[self.path]
                     self.respond(200, action(data))
                     return
@@ -219,6 +257,10 @@ def make_server(arguments, effect):
                     )
                     self.respond(200, {"ok": True})
                     return
+                if target == "native":
+                    raise ValueError(
+                        "Use Save to My profiles or Select for next login for managed sessions"
+                    )
                 registry = read_shell_presets(arguments.inir_root)
                 preset = make_custom_preset(registry, data, arguments.base)
                 result = update_registry(arguments.registry, [preset])
@@ -252,7 +294,9 @@ def serve(arguments, effect):
     with make_server(arguments, effect) as server:
         print(f"NiriFX Studio: {server.session_url}", flush=True)
         print(
-            "Choose a look in Library or customize it in Studio. Review & apply activates effects. Ctrl+C stops the app.",
+            "Choose a look, review it, then Select for next login. Your current session stays unchanged. Ctrl+C stops the app."
+            if server.save_target == "native"
+            else "Choose a look in Library or customize it in Studio. Review & apply activates effects. Ctrl+C stops the app.",
             flush=True,
         )
         if not arguments.no_browser:

@@ -181,6 +181,11 @@ aside small {
 small {
     color: #98a6bb;
 }
+#native-session small {
+    display: block;
+    overflow-wrap: anywhere;
+    margin: 6px 0;
+}
 #caption {
     font-size: 14px;
 }

@@ -9,6 +9,18 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Studio's NiriFX session target prepares reviewed effect changes for the next
+  login. It retains the previous binary/configuration pair, reopens saved recipes
+  and reviews rollback separately. Independent action choices and Gentle, Tear
+  and Cascade continuous-fragment presets use the retained build. Session and
+  file details are collapsed behind the main preset controls.
+- `native install --candidate DIR --config FILE` prepares the full desktop build,
+  configuration snapshot, NiriFX login entry and next-login selection in one
+  reviewed transaction. Display-manager registration remains an administrator
+  step until distribution packages provide it. Shell sources and the running
+  session stay unchanged.
+- `native configure` exposes the same immutable preset editing through the CLI
+  and agent discovery, with exact review fingerprints and retained rollback.
 - One `build-nirifx-session.py` command builds all compositor features with
   desktop support, release optimization and focused regressions. A pinned native
   compatibility matrix and isolated patch/build checks separate
@@ -24,7 +36,7 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   Review covers every source, including absent optional files. Login entries
   support custom names, and `doctor` reports continuous-fragment capability
   separately from timed movement.
-- Experimental `native stage`, `status`, `select`, `rollback` and `session-entry`
+- `native stage`, `status`, `select`, `rollback` and `session-entry`
   commands prepare retained desktop binary/configuration pairs and reviewed
   next-login selection. The per-user systemd launcher preserves the stock Niri
   service lifecycle, pins one pair per login and falls back to stock for expired
@@ -40,7 +52,7 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - Native build identity records the ordered patch stack, locked dependencies,
   toolchain, target and features. A read-only inspector checks artifact identity
   and desktop build prerequisites without starting or installing a compositor.
-- Experimental continuous square-fragment motion for pointer dragging, timed
+- Continuous square-fragment motion for pointer dragging, timed
   movement and column reordering. Distant pieces initially lag behind the grabbed
   region, then catch up with per-piece delay and response variation. Pressing can
   expand the material before moving; held pauses keep that spread, and release
@@ -49,7 +61,7 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   screen-position retention, independently delayed pieces, queued reversals,
   long floating and tiled drags, stable endpoints and client input. Physical
   desktop acceptance remains separate.
-- Gentle, Tear and Cascade presets for the continuous fragment experiment, with
+- Gentle, Tear and Cascade presets for continuous fragment motion, with
   a local comparison window, preset buttons and keyboard shortcuts. Validated
   native controls share one canonical definition. Settings and grid changes wait
   until the active motion has settled; Off takes effect immediately. Unsupported
@@ -60,13 +72,13 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   dense input history and hardware GPU mesh workloads. CPU measurements expose
   remaining recovery spikes after short pauses; particle defaults and limits
   are unchanged.
-- Experimental resize-to-close continuation retains the current material,
+- NiriFX session resize-to-close continuation retains the current material,
   deformation phase and size paths while fading out. Borders and shadows follow
   the changing geometry; each capture target owns a separate frozen material.
 - Installed upgrade checks accept the published 0.19 package, including active
   Preserve/Off choices. CLI and Library Restore must retain their recovery history
   and refuse external edits before recovering the original files exactly.
-- Experimental resize effects retain their deformation phase, piece layout and
+- NiriFX session resize effects retain their deformation phase, piece layout and
   current material across repeated size changes. Client content updates on a
   separate clock; shader replacements take effect on the next resize episode.
   Output and capture targets keep separate material caches and respond to

@@ -2,7 +2,7 @@
 
 ## What works today
 
-Niri 26.04 (`8ed0da4`) supports custom open, close, and resize shaders.
+Stock Niri 26.04 (`8ed0da4`) supports custom open, close, and resize shaders.
 `window-movement` accepts animation timing, not a shader. A temporary config
 with `custom-shader` inside that block fails `niri validate` with
 `unexpected node custom-shader`. No live config was used for that probe.
@@ -11,21 +11,32 @@ This agrees with the [official animation documentation](https://niri-wm.github.i
 and the installed revision's [animation configuration](https://github.com/niri-wm/niri/blob/8ed0da4/niri-config/src/lib.rs).
 Changing iRiS settings alone cannot add a compositor rendering hook.
 
-Studio's **Movement (experimental shader)** tab renders the same GLSL used by the
+The [NiriFX session](native-session.md) includes movement and swap effects,
+pointer wobble, continuous fragments and interruption improvements in one build.
+After preparing a session, open `niri-fx studio --target native`, choose a combo
+and set **Move / swap** to **Preserve**, **NiriFX Style** or **Off**. Move and swap
+share one effect. Review **Select for next login** to save the selection; this
+does not change the running desktop or edit a shell checkout. The managed
+workflow is available in the current source checkout; distribution packages and
+broader physical-session acceptance remain pending.
+
+Studio's **Movement (shader preview)** tab renders the same GLSL used by the
 pinned compositor, with a synthetic texture and a simple directional path. Niri
 owns actual window positions, timing handoffs and interruptions. The older
 **Move concept** and **Swap concept** tabs remain Canvas design prototypes. Each fragment keeps
 its own source image coordinates. The two color streams overlap in the middle,
 then reconstruct their original contents in opposite columns. No window contents
-are captured: both images are synthetic. Saving a style exports supported open/close and enabled resize shaders.
-The [isolated native prototype](../experimental/README.md) demonstrates
+are captured: both images are synthetic. Portable profile JSON retains movement
+and pointer choices. **Export stock Niri config** omits those nodes;
+**Export NiriFX session config** includes them for a matching NiriFX build.
+The [isolated native demos](../experimental/README.md) demonstrate
 fragment, elastic, slice, pixel and distortion column swaps in a separate compositor.
 
 ![Two synthetic windows sharing a particle stream](swap.png)
 
 ## Continuous interruptions
 
-The experimental build preserves the current deformation and seed when another
+The NiriFX build preserves the current deformation and seed when another
 move retargets the same window. Deformation phase and direction impulses retain
 their sampled speed through cubic transitions, instead of restarting their easing
 curve. A repeated reversal carries the direction's current speed as well as its value.
@@ -45,16 +56,21 @@ moving the original way before turning. Initial moves keep Niri's configured
 easing or spring; closing follows the actual remaining position path independently
 of shader phase.
 
-These handoffs preserve first derivatives, not acceleration. Camera scrolling
-and shared particle physics remain separate work. Direct dragging uses the
-optional [pointer-wobble prototype](pointer-wobble.md), with its own spring state. The
-windows still render as separate elements. The pinned patch is required; a stock
+These timed-shader handoffs preserve first derivatives, not acceleration. Camera
+scrolling and shared particle physics remain separate work. Direct dragging can
+use [pointer wobble](pointer-wobble.md) or [continuous fragments](fragment-drag.md),
+both included in the NiriFX session. Continuous fragments have their own retained
+motion state and closing limitations; the handoffs above describe timed shaders.
+Windows still render as separate elements. The NiriFX build is required; a stock
 Niri install or a shell event listener cannot provide the same state handoff.
 
 ## Prototype and longer-term compositor design
 
-The appropriate implementation belongs in Niri, developed separately from the
-installed compositor. At the inspected revision,
+The rendering work belongs in the compositor. The NiriFX session already includes
+the first movement hook, configuration decoding, shader compilation and hot
+reload, expanded offscreen drawing and isolated demos. The design below explains
+those foundations and the remaining work on shared transactions and particles.
+At the inspected upstream revision,
 [`Tile::animate_move_x_from_with_config` and its Y counterpart](https://github.com/niri-wm/niri/blob/8ed0da4/src/layout/tile.rs#L575)
 track an offset and timing. `Tile::render_inner` already has an offscreen texture
 path for resize, which is a useful implementation reference, not a drop-in fix.
@@ -80,19 +96,15 @@ not cover every kind of horizontal movement.
 5. Preserve interactive semantics: retarget/reverse from the current visual
    state on repeated movement; handle close/resize/fullscreen during transit;
    disable or simplify during dragging, gestures, and reduced-motion mode.
-6. Validate in a separate nested Niri session first. The packaged compositor and
-   normal login session remain the return path until visual, input, capture and
+6. Validate in a separate nested Niri session first. The stock compositor and
+   stock login session remain the return path until visual, input, capture and
    frame-time checks pass.
 
-Only after that capability exists should iRiS expose movement-specific controls.
-The first shell integration can offer a capability-gated enable switch, duration,
-and style, with Studio for detailed tuning. Opening a Studio app is a small
-upstream shell change; embedding its renderer directly in QML is a separate
-integration and dependency decision.
-
-The project now includes the first movement rendering hook, config decoder,
-shader compilation/hot reload, expanded offscreen drawing, and a nested demo.
-The full transaction and particle renderer above remains future work.
+Use Studio for preset selection and detailed tuning regardless of the shell.
+Opening it through a launcher does not require modifying shell source. Embedding
+its renderer directly in QML would be a separate integration and dependency
+decision. Shared swap transactions and particle-level ordering between windows
+remain future work; continuous fragments currently retain state per window.
 A screenshot overlay or keybinding wrapper cannot faithfully replace layout rendering: it misses other
 movement triggers and leaves input, z-order and cancellation out of sync.
 
@@ -141,9 +153,9 @@ The movement hook covers tile and column animation paths, including vertical
 reordering and consuming/expelling windows. The harness checks final layout,
 client identity, resize during movement, insertion/removal, repeated reversals
 and complete close cleanup. These checks establish coverage and endpoints; they
-do not prove continuous velocity for every overlap. Pointer dragging has a
-[separate optional prototype](pointer-wobble.md); workspace transitions and camera
-scrolling remain distinct roadmap epics.
+do not prove continuous velocity for every overlap. The same session includes
+[pointer wobble](pointer-wobble.md) and [continuous fragments](fragment-drag.md);
+workspace transitions and camera scrolling remain distinct roadmap epics.
 
 ## Additional overlap coverage
 
@@ -162,5 +174,7 @@ changes and broader pointer-drag acceptance remain on the [roadmap](../ROADMAP.m
 
 For coordinated stock workspace, camera and overview motion, use the
 [desktop motion packs](desktop-motion.md). These change spring timing and do not
-apply fragment shaders to workspaces. Live experimental movement is a separate,
-[explicitly verified setup option](setup.md#activate-experimental-movement).
+apply fragment shaders to workspaces. To change effects in an already running
+NiriFX session, use the
+[verified live setup workflow](setup.md#activate-movement-in-a-running-session).
+Managed Studio selections instead take effect at the next login.

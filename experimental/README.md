@@ -1,8 +1,14 @@
-# Experimental Niri movement hook
+# NiriFX compositor source and developer checks
+
+For the complete NiriFX session, use **`python3 scripts/build-nirifx-session.py`**
+and follow [session setup](../docs/native-session.md). It includes all patches,
+desktop features and regression tests in one optimized build. Choose effects
+through Library or the CLI; individual patch variants below are for development
+and regression comparisons.
 
 This directory contains a patch for Niri **8ed0da44d974c32c6877d2f4630c314da0717ecb**
-(26.04). It is an isolated prototype, not an upstream Niri API or an installed
-compositor replacement. The patch is **GPL-3.0-or-later**, matching Niri;
+(26.04). These rendering interfaces are maintained by NiriFX, not upstream Niri.
+The patches are **GPL-3.0-or-later**, matching Niri;
 see [COPYING-NIRI](COPYING-NIRI). NiriFX's original Python/GLSL code remains MIT.
 Niri's original source and copyright notices remain in the patched checkout.
 
@@ -196,7 +202,7 @@ niri msg -j niri-fx-frame-timings
 Capabilities report schema 1, movement shader contract 2, whether a probe compiled
 in the running renderer, whether movement is configured and whether frame feedback
 is available. The isolated probe is destroyed after compilation; it does not
-replace the active movement shader. NiriFX's [setup workflow](../docs/setup.md#activate-experimental-movement)
+replace the active movement shader. NiriFX's [setup workflow](../docs/setup.md#activate-movement-in-a-running-session)
 also compares executable identity before allowing explicit standalone activation.
 Older experimental builds lack this handshake and must be rebuilt.
 

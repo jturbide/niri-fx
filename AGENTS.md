@@ -10,7 +10,7 @@ or `python3 -m niri_fx agent-info`.
   validation/export behavior must agree; use the shared document fixtures and
   export parity tests when changing schemas or controls.
 - Resize, timed movement and pointer deformation remain explicit choices.
-  Stock exports omit experimental nodes. Live experimental activation requires
+  Stock exports omit nodes that require the NiriFX compositor. Live activation requires
   the matching executable and verified running renderer contract.
 - Reuse setup/Library transactions, plan fingerprints and conflict-aware Restore.
   Keep saving, registration, preview and activation distinct. Do not introduce

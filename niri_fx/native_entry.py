@@ -19,7 +19,8 @@ def _exec_argument(value):
     return '"' + value.replace("\\", "\\\\") + '"'
 
 
-def entry_plan(root, name="NiriFX (experimental)"):
+def entry_files(root, name="NiriFX"):
+    """Review launcher bytes without requiring a bundle to exist on disk yet."""
     if (
         not isinstance(name, str)
         or not name.strip()
@@ -28,14 +29,6 @@ def entry_plan(root, name="NiriFX (experimental)"):
     ):
         raise ValueError("Session name must contain 1 to 80 characters without control characters")
     root = _path(root)
-    selector = root / "selection.json"
-    selected_bytes = _read(selector, MAX_METADATA_BYTES, mode=0o600)
-    selected = load_selection(root)
-    if json.loads(selected_bytes) != selected:
-        raise ValueError("Native selection changed while preparing the login entry")
-    if not selected.get("selected"):
-        raise ValueError("Select a staged native bundle before preparing its login entry")
-    bundle = inspect_bundle(root, selected["selected"])
     directory = _path(root / "session")
     launcher = _path(directory / "launch.py")
     entry = _path(directory / "niri-fx.desktop")
@@ -52,7 +45,7 @@ def entry_plan(root, name="NiriFX (experimental)"):
     desktop = (
         "[Desktop Entry]\n"
         f"Name={escaped_name}\n"
-        "Comment=Niri with separately selected experimental window effects\n"
+        "Comment=Niri with configurable NiriFX window effects\n"
         f"Exec={_exec_argument(python)} {_exec_argument(str(launcher))}\n"
         "Type=Application\nDesktopNames=niri\n"
     ).encode()
@@ -62,11 +55,7 @@ def entry_plan(root, name="NiriFX (experimental)"):
             if _read(path, MAX_METADATA_BYTES, mode=0o600) != data:
                 raise ValueError(f"Existing login entry differs; preserving it for review: {path}")
         changes.append(change(path, data))
-    observed = (
-        [change(selector, selected_bytes, expected_before=selected_bytes)]
-        + bundle["observed"]
-        + changes
-    )
+    observed = list(changes)
     for item in observed:
         item["regular_only"] = True
         if item["before"] is not None:
@@ -86,3 +75,21 @@ def entry_plan(root, name="NiriFX (experimental)"):
         "validation_config": None,
         "validation_binary": None,
     }
+
+
+def entry_plan(root, name="NiriFX"):
+    root = _path(root)
+    selector = root / "selection.json"
+    selected_bytes = _read(selector, MAX_METADATA_BYTES, mode=0o600)
+    selected = load_selection(root)
+    if json.loads(selected_bytes) != selected:
+        raise ValueError("Native selection changed while preparing the login entry")
+    if not selected.get("selected"):
+        raise ValueError("Select a staged native bundle before preparing its login entry")
+    bundle = inspect_bundle(root, selected["selected"])
+    plan = entry_files(root, name)
+    observed = change(selector, selected_bytes, expected_before=selected_bytes)
+    observed["regular_only"] = True
+    observed["expected_mode"] = 0o600
+    plan["observed"] = [observed, *bundle["observed"], *plan["observed"]]
+    return plan

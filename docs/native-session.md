@@ -1,10 +1,16 @@
-# Experimental NiriFX login sessions
+# The NiriFX session
 
-Prepare a patched Niri binary and a separate configuration, then select that
-pair for the next login. Stock Niri stays installed and available. These commands
-never restart the running compositor or modify a shell checkout.
+The NiriFX session includes the complete compositor feature set: movement and
+swaps, pointer wobble, continuous fragments and interruption improvements,
+alongside opening, closing and resize effects. Pick the effects you want in
+Library; individual patches are a development detail.
 
-This is an experimental **single-user, systemd-based** workflow. It requires the
+Prepare the full build and a separate configuration, then select that pair for
+the next login. Stock Niri stays installed and available. These commands never
+restart the running compositor or modify a shell checkout.
+
+The current source installation is a **single-user, systemd-based** workflow.
+Distribution packages are not published yet. It requires the
 stock `/usr/bin/niri`, `/usr/bin/niri-session`, `niri.service` and
 `niri-shutdown.target`, plus the distribution's Niri portal configuration and
 runtime dependencies. Dinit, NixOS integration and multi-user distribution
@@ -13,23 +19,61 @@ Keep using the nested preview if you do not want a separate login session.
 
 ## Prepare a version
 
-Install NiriFX in a persistent Python environment and retain that installation.
-Commands below also work as `python3 -m niri_fx` from a source checkout, but its
-location and Python interpreter must remain available to the login launcher.
+The session commands below are available in the current source checkout; they
+are newer than the published 0.19 package. Install that checkout in a persistent
+Python environment and retain it, for example:
+
+```sh
+python3 -m venv ~/.local/share/niri-fx/session-tools
+~/.local/share/niri-fx/session-tools/bin/pip install .
+```
+
+Use `~/.local/share/niri-fx/session-tools/bin/niri-fx` in place of `niri-fx` below.
+Commands also work as `python3 -m niri_fx` from the checkout, but its location and
+Python interpreter must remain available to the login launcher. Keep the
+installation used by an existing launcher until you have reviewed its replacement.
 
 Build a desktop candidate from the NiriFX checkout:
 
 ```sh
-python3 scripts/build-niri-movement.py --fragment-drag --release --desktop
+python3 scripts/build-nirifx-session.py
 ```
 
-Use the exact candidate directory printed by the builder. Minimal nested-test
-builds cannot be staged as desktop sessions. Run the candidate's
+This command includes all patches, desktop features, release optimization and
+focused regression tests. Use the exact candidate directory printed by the
+builder. Reduced-feature builds exist only as developer regression controls and
+cannot be staged as full desktop sessions. Run the candidate's
 [native acceptance checks](fragment-drag.md) before deciding to use it.
+
+Install that full candidate using your existing Niri configuration as the
+baseline:
+
+```sh
+niri-fx native install --candidate /path/to/candidate \
+  --config ~/.config/niri/config.kdl
+niri-fx native install --candidate /path/to/candidate \
+  --config ~/.config/niri/config.kdl --apply --expect-plan REVIEWED_SHA256
+```
+
+The first command reviews all files without writing or running the candidate.
+Use its `plan_sha256` in the second command. Apply copies the executable and
+include tree, prepares the **NiriFX** entry and selects the pair for the next
+login in one transaction. It reads frozen patch evidence from that candidate,
+not another mutable checkout. Incomplete, reduced-feature and debug builds are
+refused. A handled validation failure restores the transaction's owned changes.
+
+Use `--root /path/to/native-storage` for a separate test installation and
+`--name "NiriFX (test)"` for a distinct chooser label; repeat the same arguments
+when applying. Your source configuration, shell checkout and running desktop are
+unchanged. Continue with [choosing effects](#choose-effects-in-studio) and
+[registering the login entry](#add-the-login-entry). The configuration must
+already contain the terminal, shell startup and exit bindings you want to use.
+
+### Advanced: stage without selecting
 
 Create and review a **self-contained** candidate configuration. You can start
 with the pinned Niri source's `resources/default-config.kdl` and add your desired
-effects using the [experimental guide](../experimental/README.md). Configure your
+effects using Studio after staging. Configure your
 terminal, shell startup and exit binding before logging in. Active `include`
 nodes are refused by default: copying a config that still includes mutable stock
 files would not preserve a binary/configuration pair. The source config is never
@@ -52,8 +96,9 @@ Failed validation rolls back files still owned by that transaction.
 Bundles live under `$XDG_DATA_HOME/niri-fx/native`, or
 `~/.local/share/niri-fx/native` by default. Every bundle retains its executable,
 configuration, build manifest, lockfile and patch evidence. Preparing another
-version does not overwrite an earlier one. Edit the source candidate config and
-stage it again to create a new pair; do not edit the stored bundle.
+version does not overwrite an earlier one. Use [Studio](#choose-effects-in-studio)
+to change effects, or edit the source candidate config and stage it again for
+other desktop settings. Do not edit a stored bundle.
 
 All commands accept `--root /path/to/native-storage` for a separate installation
 or temporary testing. Use that same root throughout the workflow.
@@ -86,10 +131,93 @@ are refused. Niri still validates the copied result before selection.
 Only Niri configuration includes are copied. Applications, startup scripts,
 wallpapers and other paths referenced inside ordinary settings remain external
 dependencies. In particular, a frozen bundle does not redirect iRiS's config
-writer: iRiS continues editing its usual stock Niri files. For this experimental
-workflow, edit the source configuration and stage a new pair to change persistent
-settings in the NiriFX session. Do not redirect global `XDG_CONFIG_HOME` to work
-around this boundary.
+writer: iRiS continues editing its usual stock Niri files. For this source-based
+workflow, use Studio's native target for effects; edit the source configuration
+and stage a new pair for other desktop settings. Do not redirect global
+`XDG_CONFIG_HOME` to work around this boundary.
+
+Following live shell settings beneath a separate NiriFX effect layer is on the
+[integration checklist](../ROADMAP.md#one-integrated-product). Until that lands,
+changing a shell's ordinary desktop settings requires importing a new baseline
+to see those changes in the managed session.
+
+## Choose effects in Studio
+
+After staging a desktop bundle, open the installed Studio with an explicit native
+target. This target works independently of iNiR, DMS, Noctalia or another shell:
+
+```sh
+niri-fx studio --target native
+# Use the same storage root if you prepared a separate test installation:
+niri-fx studio --target native --native-root /path/to/native-storage
+```
+
+Studio captures the selected bundle when it opens. To start from another retained
+bundle, add `--native-base BUNDLE_ID`. The storage root and base are fixed for that
+Studio session; imported JSON cannot select filesystem paths or executables.
+
+Choose a combo and set **Preserve / NiriFX Style / Off** for each action. Preserve
+inherits the chosen baseline, including its existing user settings and effects.
+When reopening a previously customized bundle, Preserve returns to its original
+baseline for that action. It does not retain an override you are removing.
+
+For a fragment-capable build, the continuous-fragment selector offers **Gentle**,
+**Tear** and **Cascade**. Selecting one explicitly sets its matching movement
+material and native controls. **Use profile movement** uses the profile's normal
+movement choice. The continuous settings belong to the managed bundle's recipe;
+portable profile JSON alone does not contain those extra native controls.
+The browser preview is still a timed movement preview, not a simulation of the
+continuous fragment renderer.
+
+Review the proposed files and next-login selection, then choose **Select for next
+login**. Apply copies the retained executable, generates a separate configuration
+and writes the selector last, then validates the copied configuration with that
+executable. A handled failure restores files still owned by the transaction.
+The launcher also validates the selected pair before starting it. The previous bundle remains
+available for rollback. This does not reload settings into the running desktop.
+
+Reopen the selected recipe to continue editing. Repeated edits replace the effect
+overlay relative to the same original baseline; they do not stack includes or
+require older bundles to supply configuration files. The status distinguishes
+the advertised running session, next login and rollback. Rollback has its own
+review and confirmation, and also takes effect at the next login.
+
+Only the installed local Studio can manage bundles. The online Studio remains
+a place to preview effects and export portable JSON. You can import that JSON
+locally and review it against your selected build. Live standalone activation
+continues to require a verified running renderer; preparing a native next-login
+configuration validates the retained build instead and makes no claim about the
+current session.
+
+Choose prefabs from the CLI without writing JSON:
+
+```sh
+niri-fx list --profiles --text
+niri-fx native presets --text
+niri-fx native configure BASE_BUNDLE_ID --profile fragments-motion --fragment-preset tear
+```
+
+Use `--preset balanced` for a single opening/closing style, or `--document` for
+your saved combo. An explicit `--fragment-preset` replaces only its movement
+choice with the matching continuous material and response. Other actions retain
+the selected profile's choices. Applying still requires the reviewed fingerprint:
+
+```sh
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json \
+  --apply --expect-plan REVIEWED_SHA256
+```
+
+Use the same selection arguments and `--root` on review and Apply. The available
+continuous presets are `gentle`, `tear` and `cascade`. Baseline global
+animation Off/slowdown settings remain in force and can suppress or alter the
+chosen effects.
+
+Customized bundles use a newer receipt format. Upgrade the NiriFX Python
+installation recorded in the login launcher before selecting one. A launcher
+pinned to an older, separate installation will not gain support merely because
+a newer CLI or Studio creates the bundle. Keep the original installation and
+stock session available while reviewing a launcher migration.
 
 ## Select the next login
 
@@ -165,7 +293,8 @@ with mode `0644` into a supported directory. Check for an existing entry before
 registration and preserve it if it belongs to another installation. NiriFX does
 not perform this privileged step or change the default login selection.
 
-Once registered, log out when convenient and choose **NiriFX (experimental)**.
+Once registered, log out when convenient and choose **NiriFX**, or the custom
+name you supplied.
 For recovery, choose the ordinary **Niri** entry instead. A TTY session can use
 the prepared launcher with its recorded Python interpreter after the graphical
 session has stopped; running it inside an active Niri session is refused.

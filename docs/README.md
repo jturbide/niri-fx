@@ -25,7 +25,7 @@ a versioned package and its matching documentation.
 | Diagnose setup or undo a change | [Setup and restore](setup.md), [troubleshooting](troubleshooting.md) |
 | Update an installation | [Updating NiriFX](upgrading.md) |
 | Update Niri or a desktop shell | [Desktop updates and native build lifecycle](desktop-updates.md) |
-| Prepare a separate experimental compositor login | [Native sessions and rollback](native-session.md) |
+| Install the complete NiriFX compositor session | [Session setup and rollback](native-session.md) |
 | Choose a version or understand release downloads | [Releases](releases.md) |
 
 ## Choose and customize effects
@@ -46,15 +46,15 @@ a versioned package and its matching documentation.
 | Combine different opening and closing effects | [Profiles](profiles.md) |
 | Import a ready-made custom style | [Examples](../examples/README.md) |
 | Browse presets by look | [Preset collections](collections.md) |
-| Try experimental movement and swaps | [Experimental build](../experimental/README.md) |
-| Try a window that bends while dragging | [Pointer-wobble prototype](pointer-wobble.md) |
-| Try pieces that spread on press and follow a drag with individual delays | [Continuous fragment prototype](fragment-drag.md) |
+| Use movement and swaps | [NiriFX session](native-session.md) |
+| Make a window bend while dragging | [Pointer wobble](pointer-wobble.md) |
+| Make pieces spread on press and follow a drag with individual delays | [Continuous fragments](fragment-drag.md) |
 | Check support, performance and known limits | [Compatibility](compatibility.md), [performance measurements](performance.md), [validation and known limits](validation.md) |
 | See planned improvements and the path to 1.0 | [Project roadmap](../ROADMAP.md), [stability and compatibility policy](stability.md) |
 
 Opening and closing use stock Niri shaders. Fragments, Elastic, Slices and
-Distortion also provide resize effects. Native movement requires the experimental
-compositor patch. Studio previews the actual
+Distortion also provide resize effects. Movement, pointer wobble and continuous
+fragments are included in the NiriFX session. Studio previews the actual
 movement shader on a synthetic path; its older Move/Swap sketches are labelled
 concepts. Previewing does not activate effects.
 
@@ -68,7 +68,8 @@ maintenance. Start with [Contributing](../CONTRIBUTING.md) when proposing a chan
 | Understand implementation boundaries | [Architecture](architecture.md), [development design notes](next-phases.md) |
 | Add an effect or control | [Adding effects](adding-effects.md) |
 | Build or embed a shell adapter | [Shell integration design](roadmap.md), [iNiR integration contract](integration.md) |
-| Work on experimental compositor behavior | [Movement design](movement.md), [experimental build](../experimental/README.md) |
+| Work on compositor behavior | [Movement design](movement.md), [developer builds](../experimental/README.md) |
+| Check upstream builds and prepare native packages | [Native compatibility and distribution gates](native-compatibility.md) |
 | Understand future compatibility commitments | [Stability and compatibility policy](stability.md) |
 | Reproduce results or contribute hardware evidence | [Validation record](validation.md), [performance methodology](performance.md), [recording guide](gifs/README.md) |
 | Maintain a release | [Maintainer release process](releasing.md), [changelog](../CHANGELOG.md) |

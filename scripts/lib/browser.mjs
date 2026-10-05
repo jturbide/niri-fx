@@ -49,6 +49,8 @@ export async function launchBrowser({
       "--headless=new",
       "--no-sandbox",
       "--disable-dev-shm-usage",
+      // Synthetic throwaway profiles must not wait on the desktop keyring.
+      "--password-store=basic",
       ...(software
         ? ["--use-angle=swiftshader", "--enable-unsafe-swiftshader"]
         : ["--use-gl=angle", "--use-angle=gl", "--enable-webgl"]),

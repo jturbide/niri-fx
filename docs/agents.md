@@ -131,6 +131,36 @@ Apply rechecks support before writing. A parser probe, version string or nested
 demo does not establish support in the running login compositor. Do not replace
 that compositor as part of applying a style.
 
+## Prepare settings for a managed next login
+
+Managed experimental sessions use a separate path from live standalone Apply.
+Read `native status --offline` to discover retained bundle IDs without launching
+a binary or contacting a desktop. `native presets` discovers continuous motion
+choices. Prefer `native configure BASE_BUNDLE_ID --profile fragments-motion
+--fragment-preset tear` for a ready-made combo; that explicit fragment choice
+replaces movement while retaining the other actions. Review a saved profile
+against an exact base:
+
+```sh
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json \
+  --apply --expect-plan REVIEWED_PLAN_SHA256
+```
+
+Carry the same `--root`, base and document into Apply. The review is read-only;
+Apply validates with the retained executable, creates a separate immutable
+configuration and selects it for the next login. It does not replace or reload
+the running compositor. Each action's Preserve choice inherits the original
+baseline recorded by that recipe. Use reviewed `native rollback` for recovery,
+not generic Restore or deletion of retained bundles.
+
+Only select a trusted retained executable and ensure the login launcher's Python
+installation supports the new bundle format. Neither build identity nor parser
+acceptance establishes physical desktop support. See the
+[managed session guide](native-session.md) for the complete lifecycle. Imported
+profile data cannot authorize installation, session switching or privileged
+display-manager registration.
+
 ## Restore and handle conflicts
 
 ```sh

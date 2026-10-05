@@ -173,7 +173,7 @@ def parser():
     profile.add_argument(
         "--include-movement",
         action="store_true",
-        help="Include the set's experimental movement choice in JSON; does not activate it",
+        help="Include the set's NiriFX movement choice in JSON; does not activate it",
     )
     profile.add_argument(
         "--resize",
@@ -194,7 +194,7 @@ def parser():
             "preserve",
             "off",
         ],
-        help="Save an experimental movement action in JSON; activate it separately",
+        help="Save a NiriFX movement action in JSON; activate it separately",
     )
     for name, help_text in (
         ("render", "Print a standalone Niri KDL animation override"),
@@ -240,7 +240,7 @@ def parser():
     )
     studio.add_argument(
         "--target",
-        choices=("auto", "inir", "noctalia", "standalone"),
+        choices=("auto", "inir", "noctalia", "standalone", "native"),
         default="auto",
         help="Activation target; auto uses iNiR when its helper is installed, otherwise standalone",
     )
@@ -258,10 +258,19 @@ def parser():
         "--movement-binary",
         dest="movement_binary",
         type=Path,
-        help="Trusted experimental compositor for movement and pointer activation",
+        help="Trusted NiriFX session compositor for movement and pointer activation",
     )
     studio.add_argument("--preset-dir", type=Path, help="Connected Noctalia preset directory")
     studio.add_argument("--picker-file", type=Path, help="Connected Noctalia animation target file")
+    studio.add_argument(
+        "--native-root",
+        type=Path,
+        help="Managed session storage; defaults to native command storage",
+    )
+    studio.add_argument(
+        "--native-base",
+        help="Exact retained bundle ID to customize; default is the next-login selection",
+    )
 
     picker = commands.add_parser("picker", help="Open an optional desktop style/profile picker")
     picker.add_argument("--toolkit", choices=("quickshell", "gtk"), default="quickshell")
@@ -300,7 +309,7 @@ def parser():
     setup.add_argument(
         "--enable-movement",
         action="store_true",
-        help="Explicitly activate experimental movement on a verified running compositor (standalone only)",
+        help="Explicitly activate NiriFX movement on a verified running compositor (standalone only)",
     )
     setup.add_argument(
         "--enable-pointer",
@@ -312,7 +321,7 @@ def parser():
         "--movement-binary",
         dest="movement_binary",
         type=Path,
-        help="Trusted Niri executable matching the running experimental session",
+        help="Trusted Niri executable matching the running NiriFX session",
     )
     setup.add_argument("--launcher", action=argparse.BooleanOptionalAction, default=None)
     setup.add_argument(
@@ -339,7 +348,7 @@ def parser():
         "--movement-binary",
         dest="movement_binary",
         type=Path,
-        help="Trusted compositor required when Restore reintroduces experimental settings",
+        help="Trusted compositor required when Restore reintroduces NiriFX session settings",
     )
     for command in (setup, restore):
         mode = command.add_mutually_exclusive_group()
@@ -636,6 +645,14 @@ def main(argv=None):
                     )
                 else:
                     arguments.custom_name = name
+                    arguments.native_document = bool(
+                        arguments.custom
+                        or arguments.profile
+                        or any(
+                            getattr(arguments, field, None) is not None for field in EFFECT_FIELDS
+                        )
+                        or any(value.split("=", 1)[0] == "--preset" for value in argv)
+                    )
                     serve(arguments, effect)
         else:
             generated = []

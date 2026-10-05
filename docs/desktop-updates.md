@@ -2,7 +2,7 @@
 
 NiriFX should not make your shell or compositor checkout harder to update.
 Use external user configuration and supported shell interfaces for stock
-effects. Experimental compositor builds have a separate maintenance lifecycle.
+effects. The NiriFX compositor has its own maintained build and update lifecycle.
 
 ## Stock Niri and desktop shells
 
@@ -65,7 +65,7 @@ Restore correctly refuses; use the reviewed `--remove` migration instead.
 Other personal changes in iNiR can still require reconciliation. Automatic
 stashing is not the NiriFX integration model.
 
-## Experimental patched Niri
+## The full NiriFX compositor
 
 The native patches are tied to an exact Niri revision and ordered patch stack.
 They are not plugins that an arbitrary newer Niri executable can load. A newer
@@ -80,9 +80,9 @@ with separate source, build output and a copied executable. Failed attempts
 cannot overwrite an earlier working build. Testing requires choosing that
 candidate's manifest explicitly; no build updates a launcher or login selection.
 
-Start with a pinned build and an isolated nested preview. The experimental
-[native-session commands](native-session.md) can then prepare a separate desktop
-bundle and select it for the next login. Building alone never installs or selects
+Start with `python3 scripts/build-nirifx-session.py` and an isolated nested preview.
+The [session installer](native-session.md) prepares the full desktop bundle,
+login entry and next-login selection in one reviewed operation. Building alone never installs or selects
 a compositor. Preserve your stock session; do not apply the patch inside a
 distribution's package source or replace its installed executable manually.
 
@@ -95,10 +95,12 @@ capture acceptance.
 
 ### Available commands and planned distribution packages
 
-The CLI now supports reviewed local bundles, next-login selection, rollback and
-a staged per-user systemd login entry. Registering that entry with a display
-manager remains an administrator step. Studio controls, dependency-aware
-distribution packages and signed compositor downloads are still planned:
+The CLI supports reviewed local bundles, next-login selection, rollback and
+a staged per-user systemd login entry. [Studio's native target](native-session.md#choose-effects-in-studio)
+adds reviewed effect changes and rollback using the same retained bundles.
+Registering the entry with a display manager remains an administrator step.
+Dependency-aware distribution packages and signed compositor downloads are still
+planned:
 
 1. Install a separately named NiriFX compositor package/session alongside stock
    Niri. Keep stock configuration free of unsupported native nodes.
@@ -118,9 +120,10 @@ must express those dependencies, and unsupported builds need a clear return to
 stock rather than a system-wide update hold.
 
 The maintainer flow is: select an upstream revision, port the patch stack, run
-native and package acceptance, then publish a versioned candidate. Upstream
-compatibility checks should report a failed port without altering any user's
-installation. Narrow upstream contributions may eventually reduce the patch
+native and package acceptance, then publish a versioned candidate. The
+[upstream compatibility checks](native-compatibility.md) test declared build
+combinations without altering any user's installation. Narrow upstream
+contributions may eventually reduce the patch
 burden, but their acceptance cannot be assumed.
 
 The [update lifecycle checklist](../ROADMAP.md#updates-and-native-build-lifecycle)

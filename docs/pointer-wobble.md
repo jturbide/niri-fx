@@ -1,17 +1,18 @@
 # Pointer-driven wobble
 
-The pointer prototype bends a window around the point where you grab it. The
+Pointer wobble bends a window around the point where you grab it. The
 rest of the surface lags behind your hand, responds when you change direction,
 and settles after release. Its spring responds to actual drag events.
 
-This is a **native experiment** requiring the separate pointer extension
-for the pinned Niri build. Build it from the 0.18 source archive or a current
-checkout. The 0.18 wheel includes portable profiles, interactive browser previews
+Pointer wobble is included in the full **NiriFX session**. After
+[session setup](native-session.md), open `niri-fx studio --target native`, choose
+a **Pointer drag** preset and review **Select for next login**. It does not
+require a separate pointer build. The 0.18 wheel includes portable profiles, interactive browser previews
 and Studio controls, with reviewed standalone Apply/Restore when the running
 renderer verifies support. Browser previews use synthetic window content and
 work without the extension; they do not establish native support.
 
-## Try it
+## Isolated developer preview
 
 From a checkout with Niri's build dependencies, a Rust toolchain and Quickshell:
 
@@ -78,7 +79,7 @@ display latency. Use the isolated native demo above to check compositor behavior
 
 Save the result to **My profiles**, share it or export JSON. These paths work
 online, offline and in every local shell integration. **Export stock Niri config**
-omits pointer and experimental movement. **Export experimental config** includes
+omits pointer and movement. **Export NiriFX session config** includes
 the selected native settings, combining pointer and timed movement in one block
 when both are chosen. It does not activate them.
 
@@ -97,7 +98,7 @@ springs alongside `pointer`. It can be imported back into Studio.
 
 ## Reviewed activation
 
-Live activation requires a session already running the matching experimental
+Live activation requires a session already running the matching NiriFX
 compositor. Test its support and open standalone Studio with that executable:
 
 ```sh
@@ -105,7 +106,7 @@ python3 -m niri_fx doctor --niri-binary /path/to/patched/niri
 python3 -m niri_fx studio --target standalone --niri-binary /path/to/patched/niri
 ```
 
-After choosing a pointer profile, **Apply experimental pointer drag** is offered
+After choosing a pointer profile, **Apply pointer drag** is offered
 only when the running renderer and executable match. **Review & apply** describes
 the changes; Apply verifies support again before writing. **Restore previous**
 restores the saved files unless later edits conflict. See [setup](setup.md) for
