@@ -7,6 +7,7 @@ recursive-include docs *.json
 recursive-include docs *.kdl
 recursive-include examples *.md *.json *.kdl
 recursive-include experimental *.md *.patch
+include experimental/native-compatibility.json
 include experimental/COPYING-NIRI
 recursive-include scripts *.py
 recursive-include scripts *.mjs

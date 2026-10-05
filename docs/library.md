@@ -130,6 +130,13 @@ the pointer phase. Previewing is available without a patched compositor.
 - **Restore previous** restores this app's most recent change for the same setup and config. Later file edits
   cause a conflict rather than being overwritten.
 
+Saved profiles, JSON and share links carry portable action choices and
+pointer-wobble settings. Neither these documents nor config downloads include
+the **Gentle / Tear / Cascade continuous-fragment response** selected in a managed NiriFX session.
+That response stays in the managed session recipe when you Apply or select it
+for the next login. A profile export alone cannot recreate that complete session
+choice; see [continuous fragments](fragment-drag.md#native-settings).
+
 The **NiriFX session** (`native`) target offers live Apply when the running
 compositor matches the selected build and verifies the required renderer contracts.
 Otherwise, it uses **Select for next login**. Each selection retains a separate

@@ -149,6 +149,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Source archives include the native compatibility matrix required by their
+  bundled checker. Package checks exercise the checker from an extracted archive.
 - Library save and desktop Apply checks use reduced-motion previews to avoid
   software-GPU backlogs during repeated selections and reloads. Full animation
   rendering remains covered separately, with existing test deadlines unchanged.

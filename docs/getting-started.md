@@ -10,6 +10,11 @@ Its source installer prepares all compositor features together; published
 distribution packages are still being prepared. Both paths use the same Library
 and leave shell source code untouched.
 
+This page follows `main`. The published 0.19 wheel has the earlier Library layout;
+the managed-session tools and separate Swap choice require the current source
+version. Use the [source instructions](#get-the-source-and-preview) for those
+features, or follow the guide included with your [tagged release](releases.md).
+
 ## Requirements
 
 - Linux and Python 3.10 or newer. NiriFX has no Python runtime dependencies.
@@ -39,7 +44,8 @@ activate the environment with `source .venv/bin/activate`.
 
 ## Choose your first combo
 
-1. In **Library → Recommended**, choose **Fragment Flow**. Try **Soft Landing**
+1. In Library, choose **Combos → Recommended** (**Recommended** in version 0.19),
+   then **Fragment Flow**. Try **Soft Landing**
    for a quieter frosted exit, **Ribbon Current** for strips, **Playful Motion**
    for a spring and bubbles, or **Geometric Flow** for triangles and hexagons.
 2. Press **Preview combo** to see the opening and closing sequence. The recommended

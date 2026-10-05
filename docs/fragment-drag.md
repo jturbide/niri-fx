@@ -17,9 +17,15 @@ between windows during a swap.
 
 Open `niri-fx studio --target native` after [session setup](native-session.md).
 Choose **Gentle**, **Tear** or **Cascade** under continuous fragments, keep or
-change your other action presets, then review **Select for next login**. There
-is no separate fragment build to install. The detailed controls and developer
-checks below explain the current renderer's limits.
+change your other action presets, then review your changes. Studio offers
+**Apply to desktop** on a matching running session or **Select for next login**
+otherwise. There is no separate fragment build to install. The detailed controls
+and developer checks below explain the current renderer's limits.
+
+**Save to My profiles**, **Download JSON**, **Share settings** and config downloads
+keep the portable styles but omit these native response controls. Applying or
+selecting for the next login retains the continuous preset in the managed session
+recipe; reopen that recipe in local Studio to continue editing it.
 
 ## Supported fragment material
 

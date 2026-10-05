@@ -32,7 +32,11 @@ releases just to fill the list.
 3. Build with `python3 -m build`. Inspect the wheel and source archive, including
    shader/editor resources, docs/media, the source patch and license texts.
    Install the wheel in a clean virtual environment and run `render` and `preview`
-   from outside the checkout. The source archive must also build a wheel.
+   from outside the checkout. The source archive must also build a wheel. From
+   the extracted archive, run `python3 scripts/check-native-compatibility.py matrix`
+   and `python3 scripts/build-nirifx-session.py --help`; verify every declared
+   patch and the upstream license are present. These source-tool checks need no
+   compositor build or network access.
 4. For rendering changes, run the browser checks and relevant native checks.
    Record hardware/scale and limitations when claiming desktop acceptance.
    Do not present the debug movement build as a performance benchmark.

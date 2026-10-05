@@ -10,8 +10,8 @@ vulnerability details, credentials or sensitive logs. Do not disclose an exploit
 in a public issue while arranging private contact.
 
 Include the affected version/commit, a minimal reproduction, expected impact and
-whether the issue involves Studio, registry handling or the experimental Niri
-patch. Remove personal data and live session tokens. This is a volunteer prototype;
+whether the issue involves Studio, configuration handling or the NiriFX
+compositor. Remove personal data and live session tokens. This is a volunteer project;
 there is no guaranteed response time. Fixes target the current development branch
 and latest release; older prototype versions have no separate maintenance branches.
 
@@ -28,10 +28,14 @@ Hosted/offline Studio has no local activation endpoints. The editor
 does not fetch external page resources. Treat its session URL as a local secret;
 do not forward its port or embed it on an untrusted site.
 
-The compositor patch is experimental code with access to rendered window content.
-Keep it in the supplied nested demo until its capture, damage, scaling and
-interruption behavior has broader validation. The supported stock effects do not
-require that patch, a privileged service or an always-running daemon.
+The NiriFX compositor has access to rendered window content. Its
+[managed session](docs/native-session.md) keeps a separate compositor and
+configuration, with reviewed selection and rollback. Live Apply in that session
+requires a verified matching renderer; build identity alone does not
+establish capture privacy. Physical capture, mixed-output and recovery acceptance
+remain incomplete; see the [native validation limits](docs/validation.md).
+Keep stock Niri available as a recovery path. Stock effects do not require the
+NiriFX compositor, a privileged service or an always-running daemon.
 
 These controls and automated checks are not a formal security audit. For ordinary
 rendering bugs, use the bug template and [troubleshooting guide](docs/troubleshooting.md).

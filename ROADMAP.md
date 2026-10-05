@@ -12,16 +12,22 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Deliver one complete NiriFX installation.** Include the full compositor
-   feature set, a NiriFX session and Library in the supported package path.
-2. **Make choosing effects simple.** Lead with finished combos and per-action
-   presets, reveal advanced controls when requested, and keep shell sources untouched.
-3. **Finish native capture reliability.** Resolve the remaining stale-output
-   probe and expand popup, blur and PipeWire acceptance.
-4. **Keep contributor feedback fast and useful.** Track the longest rendering
-   stages and verify failed-job diagnostics while retaining complete coverage.
-5. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
-   retaining room to improve the 0.x design.
+1. **Keep desktop settings current without losing effects.** Add a reviewed
+   refresh from the user's normal Niri configuration, preserving the selected
+   combo and continuous-fragment response. Start with next-login selection and
+   rollback before following live shell changes automatically.
+2. **Make the complete look portable.** Save continuous-fragment response with
+   the action styles, so local and online Studio can exchange the same recipe.
+   Keep simple preset choices first and make preview limitations explicit.
+3. **Prove everyday session reliability.** Prioritize mixed monitors, capture
+   privacy, suspend/resume and recovery. Resolve the remaining stale-output probe
+   and verify real PipeWire capture before expanding desktop support claims.
+4. **Deliver one supported installation and update path.** Package the app,
+   full compositor and login entry for an initial declared distribution and
+   architecture; verify clean install, upgrade, rollback and return to stock Niri.
+5. **Ship the next 0.x release, then complete the 1.0 contract.** Bring
+   packages, guides and Studio features into agreement, publish the tested limits,
+   and extend compatibility fixtures before freezing the stable interface.
 
 New presets should demonstrate a distinct useful look, with importable settings
 and a faithful showcase. More shells, workspace shaders and compositor ports
@@ -85,9 +91,15 @@ are developer regression controls, not separate consumer editions.
       per-action preset choices with immediate previews.
 - [x] Apply reviewed effects and same-build rollback directly to the running
       managed session, with configuration-load confirmation and next-login storage.
-- [ ] Load normal user/shell settings beneath a NiriFX-owned effect overlay and
-      follow their updates, retaining a validated full snapshot for recovery.
-      The current frozen baseline requires a new import for other desktop changes.
+- [ ] Add **Refresh desktop settings** in Studio and the CLI: review an explicitly
+      selected source configuration and its includes, retain the same compositor
+      and known effect recipe, validate the result, and select it for the next login.
+      Refuse changed sources after review; Cancel and failed validation must leave
+      the current selection intact, and rollback must recover the previous pair.
+- [ ] Follow normal user/shell settings beneath a NiriFX-owned effect overlay,
+      retaining a validated full snapshot for recovery. Define how external edits,
+      invalid configurations and Preserve interact before enabling live updates.
+      The current frozen baseline still requires a new import for desktop changes.
 - [x] Present recommended combos and per-action presets first; keep configuration
       paths, compositor build identities and technical controls in advanced details.
 - [x] Identify the loaded Studio version and UI build in local, web and offline
@@ -98,6 +110,10 @@ are developer regression controls, not separate consumer editions.
 - [ ] Version a portable session recipe that also carries continuous fragment
       controls, with import/export in local and online Studio. Current portable
       profiles retain the action styles; native response choices stay with the bundle.
+      Round trips must retain response values and action modes; older documents
+      must keep their meaning and unsupported builds must refuse activation.
+- [ ] Make Download JSON, Share settings and My profiles retain the same complete
+      recipe, or explicitly identify omitted native response settings before saving.
 - [x] Verify independent Move and Swap choices through explicit compositor action
       routing, portable profiles, Studio previews, reviewed Apply and old-build refusal.
 - [ ] Extend independent Swap to additional exchange gestures only when their
@@ -208,6 +224,9 @@ configuration underneath NiriFX, including existing user or shell customizations
       profiles, with examples and complete workflow coverage.
 - [x] Verify a clean installation through Library selection, per-action choices,
       reviewed Apply and Restore, and make this path consistent across setup guides.
+- [ ] Clarify pointer controls in Studio: Off disables whole-window wobble, while
+      continuous fragments follow Move. Explain this relationship beside the
+      controls and show how to disable the currently active drag effect.
 
 ## Faster feedback for contributors
 
@@ -396,7 +415,10 @@ requires additional compositor support and starts in the isolated experiment.
 - [ ] Verify Output/Screencast privacy and actual PipeWire capture.
 - [ ] Test the fragment path on a physical desktop, including capture restrictions,
       mixed outputs and input behavior before expanding its supported configurations.
-- [ ] Add portable profile and Studio controls with clear independent action choices.
+- [x] Select Gentle, Tear and Cascade in local Studio's native target and retain
+      the choice in managed bundles, with reviewed Apply and rollback.
+- [ ] Carry continuous response in portable recipes and expose its bounded controls
+      in Studio, with independent action choices and faithful drag previews.
 - [ ] Tune per-piece motion through manual testing, including grab distance,
       travel direction, variation, tilt and acceleration toward the released
       window's resting position.
