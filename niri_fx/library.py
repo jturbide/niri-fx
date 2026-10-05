@@ -544,38 +544,16 @@ class Library:
         """Bind direct desktop activation to the same review as retained selection."""
         from . import native_live
 
-        plan["activation"] = "next-login"
-        if base_bundle is None:
-            return plan
-        live = native_live.context(self.native_root, base_bundle, socket_path=self.native_socket)
-        if live["ready"]:
-            plan["native_live"] = live["identity"]
-            plan["activation"] = "live-and-next-login"
-            plan["notes"] = [
-                "Applies these effects to the verified running NiriFX session and the next login.",
-                "The previous selection and all retained configurations remain available.",
-                "Preserve inherits the original saved baseline, including its existing styles.",
-            ]
-        else:
-            plan["notes"].append(live["detail"])
-        return plan
+        return native_live.activation_plan(
+            plan, self.native_root, base_bundle, socket_path=self.native_socket
+        )
 
     def native_activation_result(self, plan, result, base_bundle):
         from . import native_live
 
-        result["activation"] = "next-login"
-        if plan.get("native_live"):
-            live = native_live.apply(
-                self.native_root,
-                base_bundle,
-                plan["selection"]["selected"],
-                socket_path=self.native_socket,
-                expected_identity=plan["native_live"],
-            )
-            result["live"] = live
-            if live["status"] == "applied":
-                result["activation"] = "live-and-next-login"
-        return result
+        return native_live.activation_result(
+            plan, result, self.native_root, base_bundle, socket_path=self.native_socket
+        )
 
     def apply(self, request):
         if (

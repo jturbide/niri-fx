@@ -26,6 +26,51 @@ MAX_EVENTS = 1024
 RECEIPT = "live-session.json"
 
 
+def activation_plan(plan, root, base_bundle, *, socket_path=None, require_live=False):
+    """Bind desktop reload intent and session identity into the shared review.
+
+    Studio can offer next-login saving when no managed desktop is available.
+    An explicit CLI live request must instead fail before the selection writer.
+    """
+    plan["activation"] = "next-login"
+    if base_bundle is None:
+        if require_live:
+            raise ValueError(
+                "Live Apply requires a retained bundle; no live rollback target exists"
+            )
+        return plan
+    live = context(root, base_bundle, socket_path=socket_path)
+    if live["ready"]:
+        plan["native_live"] = live["identity"]
+        plan["activation"] = "live-and-next-login"
+        plan["notes"] = [
+            "Applies these effects to the verified running NiriFX session and the next login.",
+            *plan["notes"],
+        ]
+    elif require_live:
+        raise ValueError(f"Live Apply is unavailable: {live['detail']}")
+    else:
+        plan["notes"].append(live["detail"])
+    return plan
+
+
+def activation_result(plan, result, root, base_bundle, *, socket_path=None):
+    """Report retained selection separately from a confirmed desktop reload."""
+    result["activation"] = "next-login"
+    if plan.get("native_live"):
+        live = apply(
+            root,
+            base_bundle,
+            plan["selection"]["selected"],
+            socket_path=socket_path,
+            expected_identity=plan["native_live"],
+        )
+        result["live"] = live
+        if live["status"] == "applied":
+            result["activation"] = "live-and-next-login"
+    return result
+
+
 def _baseline(bundle):
     return bundle.get("customization", {}).get("baseline_bundle", bundle["bundle_id"])
 

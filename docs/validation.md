@@ -51,6 +51,12 @@ or unconfirmed reloads are reported separately from persisted selection. The
 IPC event carries no request ID, so this confirmation does not resolve races
 with unrelated clients loading configurations simultaneously.
 
+The installed CLI package passed the same two-change and rollback sequence in an
+owned nested session. Focused regressions cover read-only review, stale session
+refusal, required fingerprints, unavailable rollback targets and nonzero exit
+status for failed or unconfirmed reloads. Ordinary next-login commands do not
+probe or reload the running session.
+
 The fragment texture-reuse regression reproduces a held window shrinking while
 its offscreen allocation remains larger. The old renderer compressed the source
 content; the corrected renderer preserves it. The full candidate passed

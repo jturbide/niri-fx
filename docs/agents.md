@@ -131,9 +131,9 @@ Apply rechecks support before writing. A parser probe, version string or nested
 demo does not establish support in the running login compositor. Do not replace
 that compositor as part of applying a style.
 
-## Prepare settings for a managed next login
+## Apply settings to a managed NiriFX session
 
-Managed experimental sessions use a separate path from live standalone Apply.
+Managed NiriFX sessions use retained bundles with their own Apply and rollback.
 Read `native status --offline` to discover retained bundle IDs without launching
 a binary or contacting a desktop. `native presets` discovers continuous motion
 choices. Prefer `native configure BASE_BUNDLE_ID --profile fragments-motion
@@ -153,6 +153,29 @@ configuration and selects it for the next login. It does not replace or reload
 the running compositor. Each action's Preserve choice inherits the original
 baseline recorded by that recipe. Use reviewed `native rollback` for recovery,
 not generic Restore or deletion of retained bundles.
+
+When the user requests a change on their running managed desktop, add `--live`
+to both commands:
+
+```sh
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json --live
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json --live \
+  --apply --expect-plan REVIEWED_PLAN_SHA256
+```
+
+Live Apply verifies the advertised `NIRI_SOCKET` peer, matching build, baseline
+and process-bound reload receipt. Missing or incompatible sessions are refused
+before staging. A changed identity invalidates the fingerprint; review again
+instead of dropping `--live` or `--expect-plan`. Do not switch to a different
+socket without checking that it is the user's intended session.
+
+Read the JSON even on exit status 1: a failed or unconfirmed reload can leave a
+saved next-login selection. Report that distinction rather than claiming the
+effects are active. `activation: "live-and-next-login"` with
+`live.status: "applied"` confirms success. Same-build recovery uses
+`native rollback --live`, followed by the same command with `--apply --expect-plan`
+and its reviewed fingerprint. Avoid simultaneous reloads from another tool;
+Niri's configuration-load event has no request identifier.
 
 Only select a trusted retained executable and ensure the login launcher's Python
 installation supports the new bundle format. Neither build identity nor parser

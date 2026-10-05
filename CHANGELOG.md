@@ -23,6 +23,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   session stay unchanged.
 - `native configure` exposes the same immutable preset editing through the CLI
   and agent discovery, with exact review fingerprints and retained rollback.
+- `native configure --live` and `native rollback --live` share Studio's verified
+  desktop Apply flow. They require a live review fingerprint, refuse unavailable
+  sessions before staging, and report failed or unconfirmed reloads separately
+  from a saved next-login selection.
 - One `build-nirifx-session.py` command builds all compositor features with
   desktop support, release optimization and focused regressions. A pinned native
   compatibility matrix and isolated patch/build checks separate

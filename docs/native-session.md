@@ -232,6 +232,40 @@ continuous presets are `gentle`, `tear` and `cascade`. Baseline global
 animation Off/slowdown settings remain in force and can suppress or alter the
 chosen effects.
 
+### Apply from the terminal
+
+Add `--live` to both review and Apply to update the running managed session:
+
+```sh
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json --live
+niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json --live \
+  --apply --expect-plan REVIEWED_SHA256
+```
+
+The command verifies the session advertised by `NIRI_SOCKET`, requires the same
+compositor build and original baseline, and waits for configuration-load
+confirmation. A missing or incompatible session is refused before saving a new
+selection. A changed session or receipt invalidates the review. Without `--live`,
+`native configure` continues to select settings only for the next login.
+
+The JSON result separates `activation` from `live.status`. Only
+`live.status: "applied"` confirms the reload. A rejected or unconfirmed reload
+returns exit status 1; its saved next-login selection remains available. Review
+the reported state before retrying. Avoid concurrent configuration reloads from
+other tools, as described in the Studio flow above.
+
+To recover the previous same-build selection on the current desktop:
+
+```sh
+niri-fx native rollback --live
+niri-fx native rollback --live --apply --expect-plan REVIEWED_SHA256
+```
+
+Live rollback requires a retained compatible target. Use ordinary
+`native rollback` to prepare a different build for the next login.
+
+### Keep the login runtime compatible
+
 Customized bundles use a newer receipt format. Upgrade the NiriFX Python
 installation recorded in the login launcher before selecting one. A launcher
 pinned to an older, separate installation will not gain support merely because

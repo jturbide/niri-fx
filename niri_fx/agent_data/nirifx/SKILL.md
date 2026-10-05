@@ -89,11 +89,24 @@ physical desktop acceptance remain separate work.
   `native presets` lists continuous fragment choices; an explicit
   `--fragment-preset tear` replaces movement with its matching material and response.
   Use `--document FILE` for a portable combo. Review, then apply the same arguments
-  with `--apply --expect-plan REVIEWED_PLAN_SHA256`.
+  with `--apply --expect-plan REVIEWED_PLAN_SHA256`. Without `--live`, this selects
+  settings for the next login and leaves the running desktop unchanged.
+- For authorized changes to the running managed desktop, add `--live` to the
+  configure review, then repeat the same arguments with
+  `--apply --expect-plan REVIEWED_PLAN_SHA256`. This flag requires the verified
+  same-build NiriFX session and retained baseline. Unavailable support refuses
+  before writing; a next-login review cannot authorize a live Apply. If the
+  session changes, inspect and review again instead of reusing the fingerprint.
+  Apply reports JSON and exits 1 if the reload fails or cannot be confirmed;
+  inspect `activation` and `live.status` because the next-login selection may
+  already be saved. A saved selection does not prove live activation.
 - `studio --target native` exposes the same choices and reviewed rollback.
-  These changes affect the next login, not the running desktop. Preserve uses the
-  original frozen baseline; later shell settings require a fresh import.
-- Use reviewed `native rollback` for this target. Retain older bundles and the
+  Its review shows whether changes apply to the desktop and next login or only
+  the next login. Preserve uses the original frozen baseline; later shell
+  settings require a fresh import.
+- Use reviewed `native rollback` for this target. Add `--live` during both review
+  and Apply to reload a compatible retained previous selection too; an empty
+  rollback target cannot be loaded live. Retain older bundles and the
   launcher's compatible Python installation. Do not use generic Restore to remove
   a bundle. Continuous response settings belong to the saved bundle recipe;
   portable profile JSON alone retains only its action styles.

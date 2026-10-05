@@ -91,6 +91,8 @@ are developer regression controls, not separate consumer editions.
 - [x] Present recommended combos and per-action presets first; keep configuration
       paths, build identities and technical controls in advanced details.
 - [x] Offer the same preset/action choices through CLI and agent discovery.
+- [x] Share verified live Apply and rollback between Studio, CLI and agents,
+      binding each desktop reload to its reviewed session and configuration.
 - [ ] Version a portable session recipe that also carries continuous fragment
       controls, with import/export in local and online Studio. Current portable
       profiles retain the action styles; native response choices stay with the bundle.
@@ -154,6 +156,24 @@ are developer regression controls, not separate consumer editions.
       rollback and return to stock on supported physical desktops.
 - [ ] Publish signed artifacts and source/patch provenance for declared
       distributions and architectures without holding normal system updates.
+
+### Coherent tool upgrades
+
+Goal: update CLI, Studio and the login launcher together, retaining a working
+version for recovery. Independently pinned runtimes currently require a reviewed
+launcher migration when their supported bundle formats differ.
+
+- [ ] Review installed tool versions, launcher ownership and supported bundle
+      formats in one update plan.
+- [ ] Stage a persistent replacement runtime and validate selected and rollback
+      bundles before changing any launcher references.
+- [ ] Update owned CLI, Studio and login references through one recoverable
+      transaction; refuse stale plans and externally changed entries.
+- [ ] Retain the previous runtime and provide reviewed rollback, including
+      recovery from interrupted display-manager registration.
+- [ ] Verify clean installation, runtime upgrades, incompatible receipts,
+      interrupted registration and rollback while preserving the running
+      compositor, stock Niri and shell sources.
 
 The [desktop update guide](docs/desktop-updates.md) separates current tools
 from this planned package/session workflow. Build identity is not runtime or
