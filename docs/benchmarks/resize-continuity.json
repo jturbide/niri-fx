@@ -21,7 +21,7 @@
     "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
     "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
     "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-    "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
+    "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
   },
   "scope": "Native resize geometry with identical passthrough shaders; no assertion of shader-phase, close, minimum-size-clamp or config-reload continuity.",
   "clips": [
@@ -39,14 +39,14 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000688709958922,
-          "ack_s": 0.7063523819961119
+          "request_s": 0.7000760600203648,
+          "ack_s": 0.7068385610182304
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.3064222910034005,
-          "ack_s": 1.3144277630053693
+          "request_s": 1.3069091160141397,
+          "ack_s": 1.3133214480185416
         }
       ],
       "final_size": [
@@ -54,8 +54,8 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "7e7b271c48fad98462988d05b12c8def6ab0c1e43c041d682e196f9fa3f313c7",
-      "gif_sha256": "d2ccd5022705018815af801a5f1b3cdcca359e19118197826c5eeead6d2478fe",
+      "video_sha256": "9fcbf45f77a32af89ab0998882fe0975795cdb56bac7c3e0120f493bc4bf0b97",
+      "gif_sha256": "98a4f907412c02dbb444b0c6df26e0fa6a968efd41e7dd6a0f5a2b78b1aa81b6",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
@@ -79,14 +79,14 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000723219971405,
-          "ack_s": 0.706441972986795
+          "request_s": 0.7000696429749951,
+          "ack_s": 0.7074556109728292
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3065103229891974,
-          "ack_s": 1.31567627498589
+          "request_s": 1.3075248329841997,
+          "ack_s": 1.3139836359769106
         }
       ],
       "final_size": [
@@ -94,8 +94,8 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "4a1992320e1360b73647cf80a19fb4b8bd64b61da3faba170f8333a5223fd937",
-      "gif_sha256": "f0c5585f669f235c1e624d23fe76f35c27a7214d97b437d0e3c0192e6852a054",
+      "video_sha256": "c4e13ed02f74b21e2d0dc08d97d8295473cb88d40d54959217feb2ff3f3ff7f5",
+      "gif_sha256": "4a620e7132f637b8fd2bfb58cea96a5d89bbc0c614f89e740339add0f8f94249",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
@@ -119,14 +119,14 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000810519966763,
-          "ack_s": 0.7068236630002502
+          "request_s": 0.7000721939839423,
+          "ack_s": 0.7065148759866133
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.3068906439875718,
-          "ack_s": 1.3177338659879752
+          "request_s": 1.3065844629891217,
+          "ack_s": 1.3150551769940648
         }
       ],
       "final_size": [
@@ -134,15 +134,15 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "1954f47cbd9badbc7e12be338e47df0f7825cd566c52df9e3c13d6ef42cbd117",
-      "gif_sha256": "ce3f9c6c074eac2748dc8f97139f95c5e1ef72b60df53e619c711640d8930f3e",
+      "video_sha256": "087f64b5b81a876577fcdb8c06511afdd0f6fb3273d3b696a2c063548e3fae9e",
+      "gif_sha256": "1539e7cb60143b81255ace863a16fbb7a89a71d8cfc1e34f581f68800fc1da39",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
         "min_gap_px": 17,
         "max_gap_px": 18,
         "codec_edge_tolerance_px": 4,
-        "max_far_edge_px": 952
+        "max_far_edge_px": 951
       }
     },
     {
@@ -159,14 +159,14 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.700066732999403,
-          "ack_s": 0.7076255839929217
+          "request_s": 0.700068784004543,
+          "ack_s": 0.7099811130028684
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.307697244992596,
-          "ack_s": 1.3163421469944296
+          "request_s": 1.3100501839944627,
+          "ack_s": 1.3187140180089045
         }
       ],
       "final_size": [
@@ -174,13 +174,13 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "810a2bcab2127529071743df9584f8b6e5dd254a70cbe6af8e842a3298b7ffe6",
-      "gif_sha256": "885468f0b052f222dce7b81619605fdf0fdc2f21136c497060da206f583fc72a",
+      "video_sha256": "f5b87a96a117894c76cf5fb185892a47c6587a7c9f4e8a31f216f6dc7486fd98",
+      "gif_sha256": "2faf1084c9f7084d9d521062ce9828ace6fee126f5c23b3d38f4e9c0eec0a1ea",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
         "min_gap_px": 16,
-        "max_gap_px": 18,
+        "max_gap_px": 20,
         "codec_edge_tolerance_px": 4,
         "max_far_edge_px": 884
       }
@@ -189,11 +189,11 @@
   "comparisons": [
     {
       "file": "docs/gifs/native-resize-width-comparison.gif",
-      "gif_sha256": "cb6ddf55ef2e180fdbea1298efb5266a5621e99915c82f977838bb75ba5dc959"
+      "gif_sha256": "94ad537679e2507026e8ede16087de328429577429bf98d5e8836e5281e6499d"
     },
     {
       "file": "docs/gifs/native-resize-height-comparison.gif",
-      "gif_sha256": "8916cba91dfc2f4103b50fecf12028984b351a36f5cb5aa254dbe19b8e44e938"
+      "gif_sha256": "58e6426674b4ed3dfb656a40441b2c664932e57fa17a73bae55cd0379c69f923"
     }
   ]
 }

@@ -6,6 +6,7 @@ import importlib.util
 import io
 import json
 import os
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -39,7 +40,7 @@ def artifact(binary, features=FEATURES):
 
 class NativeBuildTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory()
+        self.temporary = tempfile.TemporaryDirectory(prefix="native build tests ")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.source = self.root / "source"
@@ -240,78 +241,154 @@ class NativeBuildTests(unittest.TestCase):
             self.assertEqual(self.path.read_bytes(), before)
             self.assertFalse(self.sentinel.exists())
 
+    def fake_command(self, candidate, *args, failure=False, **kwargs):
+        if args[0] == "git":
+            if args[1] == "checkout":
+                (candidate.source / "Cargo.lock").write_bytes(
+                    (self.source / "Cargo.lock").read_bytes()
+                )
+                compiler = candidate.source / "fixture-rustc"
+                compiler.write_text("synthetic compiler; tests supply command results\n")
+                compiler.chmod(0o755)
+            return subprocess.CompletedProcess(args, 0, stdout="")
+        compiler = candidate.source / "fixture-rustc"
+        self.assertEqual(kwargs["env"]["RUSTC"], str(compiler))
+        if args[0] == str(compiler):
+            return subprocess.CompletedProcess(
+                args, 0, stdout=RUSTC if args[1] == "--version" else VERBOSE
+            )
+        self.assertEqual(args[0:2], ("cargo", "build"))
+        if failure:
+            message = json.dumps(
+                {"reason": "compiler-message", "message": {"rendered": "specific compile error\n"}}
+            )
+            return subprocess.CompletedProcess(args, 101, stdout=message)
+        self.assertEqual(
+            args,
+            ("cargo", "build", "--locked", "--release", "--message-format=json-render-diagnostics"),
+        )
+        self.assertEqual(kwargs["env"]["CARGO_TARGET_DIR"], str(candidate.target))
+        self.assertEqual(kwargs["env"]["CARGO_BUILD_TARGET_DIR"], str(candidate.target))
+        self.assertEqual(kwargs["env"]["CARGO_BUILD_BUILD_DIR"], str(candidate.target))
+        binary = candidate.target / "release/niri"
+        binary.parent.mkdir()
+        binary.write_bytes(self.binary.read_bytes())
+        return subprocess.CompletedProcess(args, 0, stdout=artifact(binary))
+
     def test_builder_records_fake_cargo_results_without_running_candidate(self):
-        # Exercise production manifest publication using command results, without
-        # compiling, executing the candidate, or touching accepted artifact paths.
+        # Actual attempts, snapshots and publication; only external commands are
+        # simulated. Accepted artifact paths must remain byte-for-byte unchanged.
         artifacts = self.root / "artifacts"
         artifacts.mkdir()
-        destination = artifacts / "niri-movement-build.json"
-        destination.write_text("prior evidence\n")
+        legacy = artifacts / "niri-movement-build.json"
+        legacy.write_text("prior evidence\n")
         check_calls = []
-        compiler = self.source / "fixture-rustc"
-        compiler.write_text("synthetic compiler; tests supply command results\n")
-        compiler.chmod(0o755)
-
-        def tool_output(args, **kwargs):
-            self.assertEqual(args[0], str(compiler))
-            self.assertEqual(kwargs["env"]["RUSTC"], str(compiler))
-            self.assertEqual(kwargs["cwd"], self.source)
-            return RUSTC if args[1] == "--version" else VERBOSE
-
-        def fake_build(args, **kwargs):
-            self.assertEqual(kwargs["env"]["RUSTC"], str(compiler))
-            self.assertEqual(
-                args,
-                [
-                    "cargo",
-                    "build",
-                    "--locked",
-                    "--release",
-                    "--message-format=json-render-diagnostics",
-                ],
-            )
-            return subprocess.CompletedProcess(args, 0, stdout=artifact(self.binary))
-
         with (
             patch.dict(os.environ, {"RUSTC": "./fixture-rustc"}),
             patch.object(build, "ROOT", self.root),
-            patch.object(build, "SOURCE", self.source),
             patch.object(build, "PATCH", self.root / "experimental/niri-movement.patch"),
             patch.object(
-                build, "apply_patches", side_effect=lambda *a, **kw: check_calls.append(kw)
+                build, "apply_patches", side_effect=lambda *a, **kw: check_calls.append((a, kw))
             ),
-            patch.object(build.subprocess, "check_output", side_effect=tool_output),
-            patch.object(build.subprocess, "run", side_effect=fake_build),
+            patch.object(build.Candidate, "command", autospec=True, side_effect=self.fake_command),
             patch.object(sys, "argv", ["build", "--release", "--desktop"]),
-            contextlib.redirect_stdout(io.StringIO()),
+            contextlib.redirect_stdout(io.StringIO()) as output,
         ):
             build.main()
+            build.main()
+        self.assertEqual(legacy.read_text(), "prior evidence\n")
+        destinations = list((artifacts / "native-builds").glob("*/manifest.json"))
+        self.assertEqual(len(destinations), 2)
+        destination = destinations[0]
         self.manifest = json.loads(destination.read_text())
-        self.assertEqual(check_calls, [{}, {"verify_only": True}])
+        self.assertEqual([kw for _, kw in check_calls], [{}, {"verify_only": True}] * 2)
+        self.assertEqual(
+            {args[2][0].parent.parent for args, _ in check_calls},
+            {path.parent for path in destinations},
+        )
+        self.assertEqual(
+            self.manifest["native_build"]["build_id"],
+            json.loads(destinations[1].read_text())["native_build"]["build_id"],
+        )
+        self.assertEqual(self.manifest["source"], "source")
+        self.assertEqual(self.manifest["binary"], str(destination.parent / "bin/niri"))
         self.assertEqual(self.manifest["native_build"]["inputs"]["enabled_features"], FEATURES)
-        self.assertEqual(self.inspect(desktop=True)["status"], "metadata-match")
-        self.assertEqual(list(artifacts.iterdir()), [destination])
+        self.assertEqual(
+            native.inspect(
+                destination,
+                source=destination.parent / self.manifest["source"],
+                repository=self.root,
+                desktop=True,
+            )["status"],
+            "metadata-match",
+        )
+        self.assertIn("NIRIFX_MOVEMENT_MANIFEST=", output.getvalue())
+        invocations = [
+            shlex.split(line.removeprefix("Try: "))[0]
+            for line in output.getvalue().splitlines()
+            if line.startswith("Try: ")
+        ]
+        self.assertEqual(
+            set(invocations), {f"NIRIFX_MOVEMENT_MANIFEST={path}" for path in destinations}
+        )
+        self.assertFalse(self.sentinel.exists())
+
+    def test_post_compile_input_drift_never_publishes_a_candidate(self):
+        current = self.root / "experimental/niri-movement.patch"
+        original = current.read_bytes()
+        for changed in ("current-patch", "frozen-patch", "lock", "source-tree"):
+
+            def command(candidate, *args, changed=changed, **kwargs):
+                result = self.fake_command(candidate, *args, **kwargs)
+                if args[0:2] == ("cargo", "build"):
+                    paths = {
+                        "current-patch": current,
+                        "frozen-patch": candidate.inputs / current.name,
+                        "lock": candidate.source / "Cargo.lock",
+                    }
+                    if changed in paths:
+                        paths[changed].write_bytes(b"changed while building")
+                return result
+
+            def verify(*args, changed=changed, **kwargs):
+                if changed == "source-tree" and kwargs.get("verify_only"):
+                    raise SystemExit("source reset after compilation")
+
+            with (
+                patch.dict(os.environ, {"RUSTC": "./fixture-rustc"}),
+                patch.object(build, "ROOT", self.root),
+                patch.object(build, "PATCH", current),
+                patch.object(build, "apply_patches", side_effect=verify),
+                patch.object(build.Candidate, "command", autospec=True, side_effect=command),
+                patch.object(sys, "argv", ["build", "--release", "--desktop"]),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                with self.assertRaises(SystemExit):
+                    build.main()
+            current.write_bytes(original)
+        attempts = list((self.root / "artifacts/native-builds").iterdir())
+        self.assertEqual(len(attempts), 4)
+        for attempt in attempts:
+            self.assertTrue((attempt / "target/release/niri").exists())
+            self.assertFalse((attempt / "manifest.json").exists())
+            self.assertEqual(json.loads((attempt / "attempt.json").read_text())["status"], "failed")
 
     def test_failed_cargo_diagnostics_preserve_previous_manifest(self):
         artifacts = self.root / "artifacts"
         artifacts.mkdir()
         destination = artifacts / "niri-movement-build.json"
         destination.write_text("prior evidence\n")
-        message = json.dumps(
-            {"reason": "compiler-message", "message": {"rendered": "specific compile error\n"}}
-        )
         stderr = io.StringIO()
         with (
+            patch.dict(os.environ, {"RUSTC": "./fixture-rustc"}),
             patch.object(build, "ROOT", self.root),
-            patch.object(build, "SOURCE", self.source),
             patch.object(build, "PATCH", self.root / "experimental/niri-movement.patch"),
             patch.object(build, "apply_patches"),
-            patch.object(build.shutil, "which", return_value="/fixture/rustc"),
-            patch.object(build.subprocess, "check_output", side_effect=[RUSTC, VERBOSE]),
             patch.object(
-                build.subprocess,
-                "run",
-                return_value=subprocess.CompletedProcess(["cargo"], 101, stdout=message),
+                build.Candidate,
+                "command",
+                autospec=True,
+                side_effect=lambda *a, **kw: self.fake_command(*a, failure=True, **kw),
             ),
             patch.object(sys, "argv", ["build"]),
             contextlib.redirect_stdout(io.StringIO()),
@@ -321,3 +398,7 @@ class NativeBuildTests(unittest.TestCase):
                 build.main()
         self.assertIn("specific compile error", stderr.getvalue())
         self.assertEqual(destination.read_text(), "prior evidence\n")
+        attempts = list((artifacts / "native-builds").iterdir())
+        self.assertEqual(len(attempts), 1)
+        self.assertFalse((attempts[0] / "manifest.json").exists())
+        self.assertEqual(json.loads((attempts[0] / "attempt.json").read_text())["status"], "failed")

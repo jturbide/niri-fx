@@ -780,44 +780,44 @@
     "poster": "9c850763383ffc426bc030660e3c381c655cc1f29d0531de58a0d250add2d776"
   },
   "native-resize-close-comparison": {
-    "source": "a9ca2082016164e1e827f62c60ea417f074668559f17c0cb426393cfcc67c04e",
-    "poster": "531e650a7c41cf660198af87c061e2de8614b5ab184cf737d907d1aa81c8b93a"
+    "source": "9f051b380bc37f90f6909c41a1bace486e60faa3b13eb942f355cc1367825d78",
+    "poster": "9028e85414cc4425edd43ef62f1cac936c570cd635ecd32d3ce84878a9593e3a"
   },
   "native-resize-height-comparison": {
-    "source": "8916cba91dfc2f4103b50fecf12028984b351a36f5cb5aa254dbe19b8e44e938",
-    "poster": "59842cc25c72936ae9dc84b60f4c9e30b76a050c8b73243e3a59c7edd8b08a2a"
+    "source": "58e6426674b4ed3dfb656a40441b2c664932e57fa17a73bae55cd0379c69f923",
+    "poster": "3df5fa5c914326c656004adcc3cee8278db42ba04cca0b1e851c36d3c178f8ba"
   },
   "native-resize-material-fragments-comparison": {
-    "source": "f37aa31f7de0390700d13944c540c5fbcfb63a6ddf17bc6a48b93cad83471b4b",
-    "poster": "7f26db4f6ac8502c169559ed324d5293d11056acef7fce37e8408a06be356168"
+    "source": "27196c16691ed2271a4107112539ab80ed090c347c0c16dcbec2c6fb2ce4517f",
+    "poster": "b0524851252875f9adb523b0f473c27a08a0416341da2bf3354cb86d4b4bb4e3"
   },
   "native-resize-material-triangles-comparison": {
-    "source": "ce808a2034c0b119712ac13511e35c4d3a74a86b5ca4f5b8ee658aebe33389a3",
-    "poster": "21724705fb3b656608a30032b08203be9982c4643cdf918773ea5cd7b7fc5c5e"
+    "source": "3aebb9a79f55c68c51011c0db2b1b66b1ade19de3c727771b5d3a5a7eb42e78b",
+    "poster": "f76f3e9f4a368c097f865ca5b4561e2e4fdc192b91df9c9011afc26a3c0ed747"
   },
   "native-resize-minimum-height-comparison": {
-    "source": "7eadd3187a4a118954128ae77f3a433f7ebec56f10c335eccf20ce15228126ff",
-    "poster": "4ec81c80f3afa9199c48b3ad93000b5375a08e2f05b9ae8782dcc277549a3ee4"
+    "source": "2dd39832511b0e16c0cd2b81465dabdc0e80a266a0372eb6432bfcd8a342c8bb",
+    "poster": "44980c6ed20e0d28efbd6448fb55fd0f6666c2f3f9a635385ccd4ee536948f4e"
   },
   "native-resize-minimum-width-comparison": {
-    "source": "4d61bd0044a959fe0e58fa74749d767d7142828e3ce48e319336d9601074b960",
-    "poster": "46cc86144dbce414b798e6fa9e0bc86fdbf0da1517bf39278536ef4cca2d319f"
+    "source": "d043f7894d9793cb299b138d695e684a78a8b97c2f2d1c20d799fd76b2246c08",
+    "poster": "33e30105be7e8c6dc04edff8f856a5880ea781be6d9628e4d91fefac63e7b5ee"
   },
   "native-resize-orthogonal-height-comparison": {
-    "source": "d66437d0590a44359cdb0d348b2c130f3207098d766953a78c6d90045cbdcd24",
-    "poster": "ba79969a6fbe1afd1cd884d8576f77ed9bfc77b4bdd3e4cad294f8d560b3bf53"
+    "source": "c0383abe227beb34094d820e57a60092349d89a20a9ed976ab18892b25bccc27",
+    "poster": "042bd4e8dd70e3f687031a50d8fab2576b36cde834c87f01c8343e1ab581d4bb"
   },
   "native-resize-orthogonal-width-comparison": {
-    "source": "50cf13760925e1babb5c0ca409960c4bdd4f56e2b5164f544882727d92974fbf",
-    "poster": "9b6d6cdfcc696fab8b6b1b68f73f8b13267eaba60d52cc76f3ff9d782fda4a0b"
+    "source": "5c9ac0849efaf54c0e64a990d1feabd3fe0c067da841e08ea87383b5588094df",
+    "poster": "13dcabd4fa34daff76a425215a0dd17f5fdce17bdc1c2684c213844631502b6a"
   },
   "native-resize-timing-reload-height-comparison": {
-    "source": "753b1fcc76ea9ba1e5fbb3d5ff798a8326ad880f935a3190a8fd528b9c2e8129",
-    "poster": "30f7a86b64a0a4eeaeb36112874f1528f8fc6c89cb1ed529894ab768444b7786"
+    "source": "8047fdf454ad36b0e838a9d50112751cf5fa383c7065ac7c272b75f1b03a0b29",
+    "poster": "732a7e361bb3a68efa74323b749df3c7fbc6d51cac00f13e4db0175460e94d84"
   },
   "native-resize-width-comparison": {
-    "source": "cb6ddf55ef2e180fdbea1298efb5266a5621e99915c82f977838bb75ba5dc959",
-    "poster": "145efdcaa5774c8b2a7e57181fa27d9c449d2c1a1a976db2a8d2523d8d4725e0"
+    "source": "94ad537679e2507026e8ede16087de328429577429bf98d5e8836e5281e6499d",
+    "poster": "412f6fd276d88395f577f5ffe6ba0a577270c29906695bc874670505577ee778"
   },
   "workflow-action-choices": {
     "source": "3bbb35dc9966b6d17a0d1b85cf26a527f350e6ec480013770ffae2f36f91899b",

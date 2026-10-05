@@ -33,7 +33,7 @@
     "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
     "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
     "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-    "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
+    "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
   },
   "clips": [
     {
@@ -50,26 +50,26 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000680039927829,
-          "ack_s": 0.7059701849939302
+          "request_s": 0.700185531983152,
+          "ack_s": 0.7088111479824875
         },
         {
           "axis": "height",
           "extent": 600,
-          "request_s": 1.0060412409948185,
-          "ack_s": 1.0151497129991185
+          "request_s": 1.008883648988558,
+          "ack_s": 1.017734233988449
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.3152241490024608,
-          "ack_s": 1.3212323999905493
+          "request_s": 1.3178130360029172,
+          "ack_s": 1.3243088799936231
         },
         {
           "axis": "height",
           "extent": 868,
-          "request_s": 1.6213061859889422,
-          "ack_s": 1.6323019179981202
+          "request_s": 1.6243830909952521,
+          "ack_s": 1.6324809090001509
         }
       ],
       "final_size": [
@@ -77,8 +77,8 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "72e6f7b2bedc0ed498b0a27c23c3eec284f37f164562a17abbe9c9d4c7297f7c",
-      "gif_sha256": "690b44afcaa1375c21fa4260c479c28ba37e7a3904c9b26669f8d8944a65722e",
+      "video_sha256": "7315740f0f1894a6313f67d0988389609a5760848aff0128d607fe63b3bd75ef",
+      "gif_sha256": "3583a583b51dbee0f012ebd9bd7a4ad67086ea546bd3e3fc1afc8b500bf990bc",
       "edges": {
         "decoded_frames": 158,
         "nominal_gap_px": 16,
@@ -102,26 +102,26 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000677440082654,
-          "ack_s": 0.7059391560032964
+          "request_s": 0.7000674340233672,
+          "ack_s": 0.7072995760245249
         },
         {
           "axis": "height",
           "extent": 600,
-          "request_s": 1.0060090720071457,
-          "ack_s": 1.0199110450048465
+          "request_s": 1.007350314001087,
+          "ack_s": 1.0139758280129172
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.319978561004973,
-          "ack_s": 1.328678623001906
+          "request_s": 1.3140470270009246,
+          "ack_s": 1.3206254110264126
         },
         {
           "axis": "height",
           "extent": 868,
-          "request_s": 1.628747299007955,
-          "ack_s": 1.636760111010517
+          "request_s": 1.620693201024551,
+          "ack_s": 1.6270667260105256
         }
       ],
       "final_size": [
@@ -129,15 +129,15 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "91dac9a5bfbb7f736a1ec11d4286abcbb168222b95cc4bcfba3f71e8e6e8e1f1",
-      "gif_sha256": "dd2bc93368739d49da6630a4077c95ea8ecb6398e81b172df0976630e59f0981",
+      "video_sha256": "65c6a3a8c3363c8893fcd580dbe546f04ef2860cfe109aa00f60b46cdaa2805f",
+      "gif_sha256": "789d37629136a58a852ee578ec52be8ac092ccb4b4e5c3cd1cb3fb36b0087b56",
       "edges": {
-        "decoded_frames": 158,
+        "decoded_frames": 157,
         "nominal_gap_px": 16,
         "min_gap_px": 17,
         "max_gap_px": 18,
         "codec_edge_tolerance_px": 4,
-        "max_far_edge_px": 954
+        "max_far_edge_px": 952
       }
     },
     {
@@ -154,26 +154,26 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.700070125007187,
-          "ack_s": 0.7071324069984257
+          "request_s": 0.7000683690130245,
+          "ack_s": 0.707583870011149
         },
         {
           "axis": "width",
           "extent": 800,
-          "request_s": 1.0072015230107354,
-          "ack_s": 1.0161025749985129
+          "request_s": 1.0076517580018844,
+          "ack_s": 1.014594472013414
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3161737120099133,
-          "ack_s": 1.3221440330089536
+          "request_s": 1.3146665090171155,
+          "ack_s": 1.3225091490021441
         },
         {
           "axis": "width",
           "extent": 650,
-          "request_s": 1.6222117099969182,
-          "ack_s": 1.631578811997315
+          "request_s": 1.6225831090123393,
+          "ack_s": 1.628213707008399
         }
       ],
       "final_size": [
@@ -181,8 +181,8 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "0f0f9818864136253593f2664861c4a902a037dc30f99f3d2e63b4e259f56cac",
-      "gif_sha256": "ad51e9f36608267be76c71437216bc591933d2bd6f072cc8a314abbf24ffb005",
+      "video_sha256": "fc92aa8c7b9cd83a0afc6df75ae485733a2a980ed42bdd35eb88a467db9b7246",
+      "gif_sha256": "afc6a9e40fb8889f6387f3eb91e9c34474a52c51ece2c7c22ec7a5eeb37950f1",
       "edges": {
         "decoded_frames": 157,
         "nominal_gap_px": 16,
@@ -206,26 +206,26 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000688059924869,
-          "ack_s": 0.7063306279887911
+          "request_s": 0.7000676180177834,
+          "ack_s": 0.7061002550181001
         },
         {
           "axis": "width",
           "extent": 800,
-          "request_s": 1.0064032549998956,
-          "ack_s": 1.0137108560011256
+          "request_s": 1.006168299994897,
+          "ack_s": 1.0126850749948062
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.313783172998228,
-          "ack_s": 1.3219197650032584
+          "request_s": 1.3127554900129326,
+          "ack_s": 1.324791124992771
         },
         {
           "axis": "width",
           "extent": 650,
-          "request_s": 1.6219882619916461,
-          "ack_s": 1.633087604001048
+          "request_s": 1.6248342700127978,
+          "ack_s": 1.631844904011814
         }
       ],
       "final_size": [
@@ -233,8 +233,8 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "8df47fb5da67027d91bf5645f5b2a7bbe1bd4d68121c3875c49d42f1e97c68f7",
-      "gif_sha256": "7d41e2bbb1197abf6f0e3447ad9ba842e78b8de04e1e1f5151fb9b50a60d843c",
+      "video_sha256": "74d1bec5dd989d356344c10025d918b74e19645bf3859adfee25a35edcc365a7",
+      "gif_sha256": "d2a088fefc06f6bda940a26ca796d04a87386500c7d0ed4f41fd702cc2ff1861",
       "edges": {
         "decoded_frames": 158,
         "nominal_gap_px": 16,
@@ -258,20 +258,20 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000673970032949,
-          "ack_s": 0.7077786390000256
+          "request_s": 0.7000836209917907,
+          "ack_s": 0.7078709519992117
         },
         {
           "reload_duration_ms": 350,
-          "request_s": 1.0078451560111716,
-          "reload_complete_s": 1.2203680830134545,
+          "request_s": 1.007950183993671,
+          "reload_complete_s": 1.2219087480043527,
           "includes_settle_ms": 200
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.320435986010125,
-          "ack_s": 1.32744647700747
+          "request_s": 1.321979435015237,
+          "ack_s": 1.3294697880046442
         }
       ],
       "final_size": [
@@ -279,8 +279,8 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "f7e1c7acb08f391eb631ed8616b5b5aa9abfba4a9db33dc2de6c9137e50b90fd",
-      "gif_sha256": "660d9089f62a64e5683220ed8fa02b7c7dab946c5934eb9255d9b8063751e34d",
+      "video_sha256": "8fa9265ac9135ffc720607f383e7638cabf74afd3d33515c32adffa5c870f77a",
+      "gif_sha256": "e016f6373ddb79930f752f27e9a5554c3c5a1cc016bd72173de44e154bac7d2e",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
@@ -304,20 +304,20 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.700065087992698,
-          "ack_s": 0.7073666189971846
+          "request_s": 0.7000791759928688,
+          "ack_s": 0.7074217890040018
         },
         {
           "reload_duration_ms": 350,
-          "request_s": 1.0074359069985803,
-          "reload_complete_s": 1.2219739650026895,
+          "request_s": 1.0074932769930456,
+          "reload_complete_s": 1.2212621319922619,
           "includes_settle_ms": 200
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3220435480034212,
-          "ack_s": 1.331607920001261
+          "request_s": 1.3213308549893554,
+          "ack_s": 1.3287489879876375
         }
       ],
       "final_size": [
@@ -325,13 +325,13 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "f919ced901505f845fe0e42b9d49e743dce2ccf1dc0ed63ea83bfa9e03879e84",
-      "gif_sha256": "987bec7589a0a84f01ff02cf20b22f5a277e9e32bd9709bcdc80b00f55a94f70",
+      "video_sha256": "3c0dccde308bb842ddae60355a74d81b3aa3c22e4349ce7fcd864e60aba43380",
+      "gif_sha256": "cf8b953d5e495b27c499e531e37b4a19868c028f3508329f8a364a9f927f6b32",
       "edges": {
-        "decoded_frames": 143,
+        "decoded_frames": 142,
         "nominal_gap_px": 16,
         "min_gap_px": 16,
-        "max_gap_px": 20,
+        "max_gap_px": 19,
         "codec_edge_tolerance_px": 4,
         "max_far_edge_px": 884
       }
@@ -341,17 +341,17 @@
     {
       "file": "docs/gifs/native-resize-orthogonal-width-comparison.gif",
       "width": 1200,
-      "gif_sha256": "50cf13760925e1babb5c0ca409960c4bdd4f56e2b5164f544882727d92974fbf"
+      "gif_sha256": "5c9ac0849efaf54c0e64a990d1feabd3fe0c067da841e08ea87383b5588094df"
     },
     {
       "file": "docs/gifs/native-resize-orthogonal-height-comparison.gif",
       "width": 1000,
-      "gif_sha256": "d66437d0590a44359cdb0d348b2c130f3207098d766953a78c6d90045cbdcd24"
+      "gif_sha256": "c0383abe227beb34094d820e57a60092349d89a20a9ed976ab18892b25bccc27"
     },
     {
       "file": "docs/gifs/native-resize-timing-reload-height-comparison.gif",
       "width": 750,
-      "gif_sha256": "753b1fcc76ea9ba1e5fbb3d5ff798a8326ad880f935a3190a8fd528b9c2e8129"
+      "gif_sha256": "8047fdf454ad36b0e838a9d50112751cf5fa383c7065ac7c272b75f1b03a0b29"
     }
   ]
 }

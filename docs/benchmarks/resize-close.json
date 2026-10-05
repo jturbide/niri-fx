@@ -34,7 +34,7 @@
     "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
     "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
     "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-    "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8",
+    "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732",
     "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
     "scripts/fixtures/resize-close.qml": "1732fa6fa45dbb11bdebe48a3aa7aa62b383c9b9a9075c3bdd203165db9209c6",
     "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",
@@ -89,7 +89,7 @@
               }
             },
             "pixels_sha256": {
-              "screen_capture": "1b11d9882f3d28c7be75a942732ff723a27e97effb2e88e33c0bb2649ff2fe50"
+              "screen_capture": "ff0012f31bfc86951bc4b4274825063c7bdacc3db0414d2f3a0e364b16eb8804"
             },
             "elapsed_s": 0.0
           },
@@ -97,9 +97,9 @@
             "step": "retarget-reload-before-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.23725490196078436,
+                "phase": 0.22156862745098038,
                 "alpha": 1.0,
-                "phase_pixels": 65543,
+                "phase_pixels": 64768,
                 "from": [
                   400,
                   360
@@ -111,27 +111,27 @@
                 "bounds": [
                   40,
                   120,
-                  510,
-                  489
+                  505,
+                  488
                 ],
                 "size": [
-                  470,
-                  369
+                  465,
+                  368
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "51958c992d1483507925f9c64171375fdd8639a194c5dca476284558c9d2032b"
+              "screen_capture": "c28556a4e570074fe4273daa6dc945c200398069f4112ee2aaa4452fd7f9b5a4"
             },
-            "elapsed_s": 0.4109
+            "elapsed_s": 0.3544
           },
           {
             "step": "early-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.3170409982174688,
-                "alpha": 0.9865470852017937,
-                "phase_pixels": 70494,
+                "phase": 0.290204950758584,
+                "alpha": 0.9910313901345291,
+                "phase_pixels": 68625,
                 "from": [
                   400,
                   360
@@ -143,27 +143,27 @@
                 "bounds": [
                   40,
                   120,
-                  530,
-                  499
+                  524,
+                  495
                 ],
                 "size": [
-                  490,
-                  379
+                  484,
+                  375
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "76ac8abdc5f15a7ae6f24f4f2298884b7504e882530d437428abc6fe6983fe97"
+              "screen_capture": "6063605530cdad526a964377a4c444343024dbd1edb712ea6d87074f0b19cfcc"
             },
-            "elapsed_s": 0.6475
+            "elapsed_s": 0.5727
           },
           {
             "step": "continuing-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.42913725490196075,
-                "alpha": 0.8968609865470852,
-                "phase_pixels": 76440,
+                "phase": 0.4039409823335275,
+                "alpha": 0.905829596412556,
+                "phase_pixels": 74884,
                 "from": [
                   400,
                   360
@@ -175,27 +175,27 @@
                 "bounds": [
                   40,
                   120,
-                  557,
-                  510
+                  552,
+                  506
                 ],
                 "size": [
-                  517,
-                  390
+                  512,
+                  386
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "f0c961834c9815bd9b357f945612fdc63142379368fa4d5083f82d6440434fd1"
+              "screen_capture": "0f3c3f7c83a0528f0e2f3013365f81bea99199b1f711c3acabb1043ddbd81861"
             },
-            "elapsed_s": 0.9818
+            "elapsed_s": 0.9027
           },
           {
             "step": "removed-shader-during-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.523552894211577,
-                "alpha": 0.7488789237668162,
-                "phase_pixels": 82000,
+                "phase": 0.5078431372549019,
+                "alpha": 0.7623318385650224,
+                "phase_pixels": 80388,
                 "from": [
                   400,
                   360
@@ -207,19 +207,19 @@
                 "bounds": [
                   40,
                   120,
-                  581,
-                  520
+                  576,
+                  516
                 ],
                 "size": [
-                  541,
-                  400
+                  536,
+                  396
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "e41651bfcf3ba51adb1aa3c299f2f51619fda1a7b19d009507ef340d0be195ca"
+              "screen_capture": "b4146cf65772186e9eafd3cf7485ca1f21ccc8e9675369c66964986f34281ec7"
             },
-            "elapsed_s": 1.2772
+            "elapsed_s": 1.1955
           }
         ],
         "status": "passed"
@@ -233,7 +233,7 @@
               "screen_capture": {
                 "phase": 0.10392156862745094,
                 "alpha": 1.0,
-                "phase_pixels": 58320,
+                "phase_pixels": 58680,
                 "from": [
                   400,
                   360
@@ -255,7 +255,7 @@
               }
             },
             "pixels_sha256": {
-              "screen_capture": "d783e264e0017bcb973bdd8afc2a2e52bdd697443d9f1073307c7474a3ee36b0"
+              "screen_capture": "7407f532365f1a6e91fbe74cbabf6679691dc6a84b26bfa83f7702ab415b817c"
             },
             "elapsed_s": 0.0
           },
@@ -263,9 +263,9 @@
             "step": "retarget-reload-before-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.23725490196078436,
+                "phase": 0.21372549019607845,
                 "alpha": 1.0,
-                "phase_pixels": 64944,
+                "phase_pixels": 64768,
                 "from": [
                   400,
                   360
@@ -277,27 +277,27 @@
                 "bounds": [
                   40,
                   120,
-                  509,
-                  489
+                  505,
+                  488
                 ],
                 "size": [
-                  469,
-                  369
+                  465,
+                  368
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "cdb53b74313e5e739143994204d4a20290d5e2d1fe16db7deb2d3f11ac27bebc"
+              "screen_capture": "b720e05adbc3586a58a104650c5e84266e892a936e472cf70acd1d21325ab666"
             },
-            "elapsed_s": 0.4004
+            "elapsed_s": 0.3392
           },
           {
             "step": "early-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.3249910873440285,
-                "alpha": 0.9865470852017937,
-                "phase_pixels": 69357,
+                "phase": 0.290204950758584,
+                "alpha": 0.9910313901345291,
+                "phase_pixels": 68625,
                 "from": [
                   400,
                   360
@@ -309,27 +309,27 @@
                 "bounds": [
                   40,
                   120,
-                  527,
-                  499
+                  524,
+                  495
                 ],
                 "size": [
-                  487,
-                  379
+                  484,
+                  375
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "c0e8f3e350d28eda6a17fad6c512bff321ce9ce08424a09cb65103f27e868799"
+              "screen_capture": "5cf61c15cc8f4c84d60c42543e36421b18ea08751836df67602b93c5003b4e41"
             },
-            "elapsed_s": 0.637
+            "elapsed_s": 0.5624
           },
           {
             "step": "continuing-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.43313626958321017,
-                "alpha": 0.8923766816143498,
-                "phase_pixels": 75270,
+                "phase": 0.4077748512340259,
+                "alpha": 0.9013452914798207,
+                "phase_pixels": 75272,
                 "from": [
                   400,
                   360
@@ -341,27 +341,27 @@
                 "bounds": [
                   40,
                   120,
-                  555,
-                  510
+                  552,
+                  508
                 ],
                 "size": [
-                  515,
-                  390
+                  512,
+                  388
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "196e24f015bf1a4cbf1d5346cecfa92504e57008477e6079f202178d97ed8e03"
+              "screen_capture": "78788d14861e1721741657e1489d7e317fcda922bb358fca59c1b08bc511cb1d"
             },
-            "elapsed_s": 0.9748
+            "elapsed_s": 0.8959
           },
           {
             "step": "removed-shader-during-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.523552894211577,
-                "alpha": 0.7488789237668162,
-                "phase_pixels": 80800,
+                "phase": 0.49755478662053054,
+                "alpha": 0.7623318385650224,
+                "phase_pixels": 80388,
                 "from": [
                   400,
                   360
@@ -373,19 +373,19 @@
                 "bounds": [
                   40,
                   120,
-                  578,
-                  520
+                  576,
+                  516
                 ],
                 "size": [
-                  538,
-                  400
+                  536,
+                  396
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "ae1b68cee5cc249d1ff037ebdc77da76e1ce5c098d52ce3af9a077994b4d223f"
+              "screen_capture": "989b3437aaa9dacaabd253be17f8e71c3acefd987841112f1acfc7773fa4f7dd"
             },
-            "elapsed_s": 1.2703
+            "elapsed_s": 1.1916
           }
         ],
         "status": "passed"
@@ -421,7 +421,7 @@
               }
             },
             "pixels_sha256": {
-              "screen_capture": "a01581491c893c3212435b384bfe59e82f7c956e66a3a4250be933995af7aa9a"
+              "screen_capture": "2f16298cecb82b4cfb2634df6f8dd0e8b55e967e9ac60336164ecd1023559c6e"
             },
             "elapsed_s": 0.0
           },
@@ -429,9 +429,9 @@
             "step": "retarget-reload-before-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.2450980392156863,
+                "phase": 0.22156862745098038,
                 "alpha": 1.0,
-                "phase_pixels": 65860,
+                "phase_pixels": 64768,
                 "from": [
                   400,
                   360
@@ -441,29 +441,29 @@
                   360
                 ],
                 "bounds": [
-                  41,
+                  40,
                   120,
-                  512,
-                  490
+                  506,
+                  488
                 ],
                 "size": [
-                  471,
-                  370
+                  466,
+                  368
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "123298f4d403ad69461a5af4fb77960dc89d3e36ce3da9a0abe8a93093385ade"
+              "screen_capture": "78c7e4ca15c62a40e926c476ebf9daeadf3ad748847b36c21e2a790e313c529a"
             },
-            "elapsed_s": 0.4285
+            "elapsed_s": 0.3523
           },
           {
             "step": "early-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.3329411764705883,
-                "alpha": 0.9865470852017937,
-                "phase_pixels": 71247,
+                "phase": 0.290204950758584,
+                "alpha": 0.9910313901345291,
+                "phase_pixels": 68625,
                 "from": [
                   400,
                   360
@@ -473,29 +473,29 @@
                   360
                 ],
                 "bounds": [
-                  48,
-                  123,
-                  541,
-                  504
+                  46,
+                  122,
+                  530,
+                  497
                 ],
                 "size": [
-                  493,
-                  381
+                  484,
+                  375
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "a1056ac176d7b666efa6b7aa6b1c87b056f170540fb5b54fec2fa362aa2d7e50"
+              "screen_capture": "88ba8e7672a90740076fbba31757dec996cab44f7a91d36308842e9219d6ec3f"
             },
-            "elapsed_s": 0.6835
+            "elapsed_s": 0.57
           },
           {
             "step": "continuing-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.4378823529411765,
-                "alpha": 0.8968609865470852,
-                "phase_pixels": 77224,
+                "phase": 0.4077748512340259,
+                "alpha": 0.9013452914798207,
+                "phase_pixels": 75272,
                 "from": [
                   400,
                   360
@@ -505,29 +505,29 @@
                   360
                 ],
                 "bounds": [
-                  58,
-                  127,
-                  578,
-                  519
+                  56,
+                  126,
+                  568,
+                  514
                 ],
                 "size": [
-                  520,
-                  392
+                  512,
+                  388
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "2eefd0374c639958213c152cbd04a4ab292fef534316bd27a0444472ce0cbe3d"
+              "screen_capture": "7b3adc4d66b7bd5411783a986d5db8e806163ceb862c394956314f6d8811e28c"
             },
-            "elapsed_s": 1.0161
+            "elapsed_s": 0.9039
           },
           {
             "step": "removed-shader-during-close",
             "targets": {
               "screen_capture": {
-                "phase": 0.5390756302521009,
-                "alpha": 0.7533632286995515,
-                "phase_pixels": 82410,
+                "phase": 0.49755478662053054,
+                "alpha": 0.7623318385650224,
+                "phase_pixels": 80388,
                 "from": [
                   400,
                   360
@@ -537,21 +537,21 @@
                   360
                 ],
                 "bounds": [
-                  68,
-                  131,
-                  611,
-                  533
+                  67,
+                  130,
+                  603,
+                  526
                 ],
                 "size": [
-                  543,
-                  402
+                  536,
+                  396
                 ]
               }
             },
             "pixels_sha256": {
-              "screen_capture": "aa060f7fd3265fea9f90af280b8ecc91da2c9a03a3c6ad1a38a0af0abd66c7e0"
+              "screen_capture": "e2fab2a771e501abd68cf625552e49a844259bf30cb6211e8783b386a8aaf63e"
             },
-            "elapsed_s": 1.3076
+            "elapsed_s": 1.198
           }
         ],
         "status": "passed"
@@ -561,9 +561,9 @@
         "checks": [
           {
             "step": "before-disable",
-            "phase": 0.09607843137254901,
+            "phase": 0.08823529411764708,
             "alpha": 1.0,
-            "phase_pixels": 57960,
+            "phase_pixels": 57600,
             "from": [
               400,
               360
@@ -575,11 +575,11 @@
             "bounds": [
               40,
               120,
-              469,
+              467,
               480
             ],
             "size": [
-              429,
+              427,
               360
             ]
           },
@@ -587,7 +587,7 @@
             "step": "after-disable",
             "counts": {
               "protected": 0,
-              "public": 105229,
+              "public": 105227,
               "redaction": 0
             }
           }
@@ -599,9 +599,9 @@
         "checks": [
           {
             "step": "before-disable",
-            "phase": 0.09607843137254901,
+            "phase": 0.08823529411764708,
             "alpha": 1.0,
-            "phase_pixels": 57960,
+            "phase_pixels": 57600,
             "from": [
               400,
               360
@@ -613,11 +613,11 @@
             "bounds": [
               40,
               120,
-              469,
+              467,
               480
             ],
             "size": [
-              429,
+              427,
               360
             ]
           },
@@ -637,9 +637,9 @@
         "checks": [
           {
             "step": "before-disable",
-            "phase": 0.09607843137254901,
+            "phase": 0.08823529411764708,
             "alpha": 1.0,
-            "phase_pixels": 57960,
+            "phase_pixels": 57600,
             "from": [
               400,
               360
@@ -651,11 +651,11 @@
             "bounds": [
               40,
               120,
-              469,
+              467,
               480
             ],
             "size": [
-              429,
+              427,
               360
             ]
           },
@@ -663,7 +663,7 @@
             "step": "after-disable",
             "counts": {
               "protected": 0,
-              "public": 105227,
+              "public": 105228,
               "redaction": 0
             }
           }
@@ -683,29 +683,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 36242,
-              "public": 105229,
+              "protected": 37610,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "e0509bd6939024a5727f26610e319b51d6bf8d338a5246d34cba38a8a5810327"
+            "pixels_sha256": "e5574ec8dd2ea46bbd42e5df92a83053d2c26fdbe07df80b2632103365f99bd5"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 36242,
-              "public": 105229,
+              "protected": 37609,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "a6c6873dd2c9576c3395542dc597b228b594dfd6cc743650679e0ecfcf31331d"
+            "pixels_sha256": "bd8a1a55a033fee3a52092f06605f9ae814ecf867edb79237226247349a97f9a"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 15951,
-              "public": 105229,
+              "protected": 15738,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "2b2ea2b1bdc76655d9c5600d3ed2e7c1f15f558d7fa0586876b9c1bafd86d716"
+            "pixels_sha256": "eb6189ae2fe86c448103dd7dbd52e3f498241008306ae756643902566085f0f5"
           }
         ],
         "status": "passed",
@@ -721,13 +721,32 @@
           "accepted": true
         },
         "unmap_boundary": {
-          "changed_pixels_over_one_channel_step": 0,
-          "maximum_channel_difference": 1,
+          "changed_pixels_over_one_channel_step": 1,
+          "maximum_channel_difference": 8,
           "stationary_exact": false,
           "allowed_silhouette_exceptions": 4,
-          "exceptional_pixel_count": 0,
+          "exceptional_pixel_count": 1,
           "interior_exception_count": 0,
-          "exceptional_pixels": [],
+          "exceptional_pixels": [
+            {
+              "coordinate": [
+                454,
+                404
+              ],
+              "before": [
+                17,
+                24,
+                39
+              ],
+              "after": [
+                21,
+                32,
+                46
+              ],
+              "maximum_channel_difference": 8,
+              "silhouette_boundary_in_both_frames": true
+            }
+          ],
           "accepted": true
         }
       },
@@ -744,29 +763,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 75352,
+              "protected": 75366,
               "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "cc540ccac2208b7e68f8c35cba755af38bb9c73f324949af4cfff881589283c0"
+            "pixels_sha256": "77740597bfee8b523ace365a759f9854212bcdf85b39558d220774353c26f751"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 75352,
+              "protected": 75366,
               "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "531e12c2715de417bf6e888d4c9e276d0ebf6117554587532e7796089e00367d"
+            "pixels_sha256": "77740597bfee8b523ace365a759f9854212bcdf85b39558d220774353c26f751"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 94023,
+              "protected": 94024,
               "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "12d76037588f27a311ff8c1141bda191239faf960aeb4a194dc02529071df7ca"
+            "pixels_sha256": "cfc2e837e03e0428b7737ca9c9b661230db9b9b0fe611dc91bdcf716452cee5b"
           }
         ],
         "status": "passed",
@@ -783,7 +802,7 @@
         },
         "unmap_boundary": {
           "changed_pixels_over_one_channel_step": 0,
-          "maximum_channel_difference": 1,
+          "maximum_channel_difference": 0,
           "stationary_exact": false,
           "allowed_silhouette_exceptions": 4,
           "exceptional_pixel_count": 0,
@@ -805,29 +824,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 75561,
-              "public": 105226,
+              "protected": 75638,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "ccd49e468c0a8de7bc5768e19d6e9c757cf34da37c634f262330e15ea5fa8ea6"
+            "pixels_sha256": "81bc9c919a19f4c759d9c177e993f082328b0d70f1f9dd5a6e3108a226ba4549"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 75561,
-              "public": 105226,
+              "protected": 75638,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "ccd49e468c0a8de7bc5768e19d6e9c757cf34da37c634f262330e15ea5fa8ea6"
+            "pixels_sha256": "1c1e02016aa9f755f0b9fed7120cc315d4fd9aac30ede3e444236edad3f22e47"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 93899,
-              "public": 105226,
+              "protected": 93672,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "316241b06d247d9d640d23641505d28f3e40dc26da41057508b0e33656c4df6f"
+            "pixels_sha256": "e9356de6f75c83581e1740e6d241bc9e3be8e7e39131f5026689cd7df4ca532f"
           }
         ],
         "status": "passed",
@@ -844,7 +863,7 @@
         },
         "unmap_boundary": {
           "changed_pixels_over_one_channel_step": 0,
-          "maximum_channel_difference": 0,
+          "maximum_channel_difference": 1,
           "stationary_exact": false,
           "allowed_silhouette_exceptions": 4,
           "exceptional_pixel_count": 0,
@@ -866,29 +885,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 69083,
-              "public": 105227,
+              "protected": 70752,
+              "public": 105228,
               "redaction": 0
             },
-            "pixels_sha256": "cb1b5d024efdd83106ca422e9b423ef91e639069f867785b8f88716645f424ef"
+            "pixels_sha256": "ea6e82dca587b6999e435e62782a0a9e3f00f7d1b3ae7144927a6aacaa85a589"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 69083,
-              "public": 105227,
+              "protected": 70753,
+              "public": 105228,
               "redaction": 0
             },
-            "pixels_sha256": "ac322d2ef1493621c913ac70ec006e009ebb2ac7682356cbc01beed4573d5aef"
+            "pixels_sha256": "76a5a0d1f967b4212b4e18583164c91e3bdb26e37e503980e888bb615dcb0296"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 29364,
-              "public": 105227,
+              "protected": 29304,
+              "public": 105228,
               "redaction": 0
             },
-            "pixels_sha256": "6b5537d03f3deb8d1521fdb17d8e3078bf22196c635f3f2d24aab67f8921608e"
+            "pixels_sha256": "bb8930bac339c011f6079143640f537264e4501cbfde0548a09bd0bbf1ec3dc4"
           }
         ],
         "status": "passed",
@@ -904,17 +923,17 @@
           "accepted": true
         },
         "unmap_boundary": {
-          "changed_pixels_over_one_channel_step": 1,
+          "changed_pixels_over_one_channel_step": 2,
           "maximum_channel_difference": 121,
           "stationary_exact": false,
           "allowed_silhouette_exceptions": 4,
-          "exceptional_pixel_count": 1,
+          "exceptional_pixel_count": 2,
           "interior_exception_count": 0,
           "exceptional_pixels": [
             {
               "coordinate": [
-                447,
-                190
+                250,
+                182
               ],
               "before": [
                 17,
@@ -923,8 +942,26 @@
               ],
               "after": [
                 138,
-                114,
-                138
+                81,
+                122
+              ],
+              "maximum_channel_difference": 121,
+              "silhouette_boundary_in_both_frames": true
+            },
+            {
+              "coordinate": [
+                311,
+                425
+              ],
+              "before": [
+                138,
+                81,
+                122
+              ],
+              "after": [
+                17,
+                24,
+                39
               ],
               "maximum_channel_difference": 121,
               "silhouette_boundary_in_both_frames": true
@@ -950,7 +987,7 @@
               "public": 105228,
               "redaction": 0
             },
-            "pixels_sha256": "c8bcb35f1ca6c8844b362e2c6f43bd9ce17e7d1b104e9b0a8384d02c33c759a8"
+            "pixels_sha256": "b794b382ee443042a68e31628fe09904d0c668aff19af56b787c7c4a6f48feb0"
           },
           {
             "step": "early",
@@ -959,16 +996,16 @@
               "public": 105228,
               "redaction": 0
             },
-            "pixels_sha256": "c8bcb35f1ca6c8844b362e2c6f43bd9ce17e7d1b104e9b0a8384d02c33c759a8"
+            "pixels_sha256": "a7c10b9529d485dfea42ab0bae13209ae7881bbfdd0a5d436c84f1358ec8ff44"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 173282,
+              "protected": 172947,
               "public": 105228,
               "redaction": 0
             },
-            "pixels_sha256": "1abf2afc83c9e491b38e266027b152b70b2d28a6cf4547795c8de4bb38301620"
+            "pixels_sha256": "72027d19750e880cf2f60c4c6ec08011caeb85c775c5a5152c9b55f6dcab4606"
           }
         ],
         "status": "passed",
@@ -985,7 +1022,7 @@
         },
         "unmap_boundary": {
           "changed_pixels_over_one_channel_step": 0,
-          "maximum_channel_difference": 0,
+          "maximum_channel_difference": 1,
           "stationary_exact": false,
           "allowed_silhouette_exceptions": 4,
           "exceptional_pixel_count": 0,
@@ -1007,29 +1044,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 137371,
-              "public": 105228,
+              "protected": 137056,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "aa47030526f7502bbaf17c1652718f80f3a316ca797f955623251dee986cdbd6"
+            "pixels_sha256": "8101b884e0834787098fbe52836e20dee6195bead13e1168f634c131a735c30c"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 137371,
-              "public": 105228,
+              "protected": 137056,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "aa47030526f7502bbaf17c1652718f80f3a316ca797f955623251dee986cdbd6"
+            "pixels_sha256": "8101b884e0834787098fbe52836e20dee6195bead13e1168f634c131a735c30c"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 173275,
-              "public": 105228,
+              "protected": 172941,
+              "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "9d5e7a4de3ae5884198b8343076e85a5323278ff4c0704ed259bacd2eeaee986"
+            "pixels_sha256": "6ec8d0d87926eadd5fc870b43eb5fd427df98b76ef48435c9045f9cdde9df170"
           }
         ],
         "status": "passed",
@@ -1068,29 +1105,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 69439,
-              "public": 105226,
+              "protected": 71594,
+              "public": 105229,
               "redaction": 0
             },
-            "pixels_sha256": "a252442c43dec6a3d4bd199c447f477579b7aed5ffa4eee679fa28f344596ada"
+            "pixels_sha256": "c368f61f112164c8cd57497b071a059a32f7409c060064d9c6a46cf42a131554"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 69438,
-              "public": 105226,
+              "protected": 71595,
+              "public": 105229,
               "redaction": 0
             },
-            "pixels_sha256": "b786eef199ebff9e63aff3cc04cb8aacec87afbf7aaa501dd367325e10e44e21"
+            "pixels_sha256": "024ced85fbdd83085fc2eab75f6dfc0583d233a63d5baf8a10f64420d2d89431"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 28600,
-              "public": 105226,
+              "protected": 28518,
+              "public": 105229,
               "redaction": 0
             },
-            "pixels_sha256": "eb6652cd9f1f1ccd10cf0a685f246c910877a10fa397a94f23e6b1797ee917c2"
+            "pixels_sha256": "6561fedd3c13925a4109bbc63fa65f3a73c60add655e9d392af5f4f682428545"
           }
         ],
         "status": "passed",
@@ -1129,29 +1166,29 @@
           {
             "step": "before",
             "counts": {
-              "protected": 38233,
+              "protected": 37859,
               "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "3f99857fe0a068719eca4c59d187c43c1bfd9c8cf8f31891a8070f0e19282b05"
+            "pixels_sha256": "2c05989a4b7f5a749c8fc3fe9f140c5f593d7263e23eb5d2d1559efb9b68c1b9"
           },
           {
             "step": "early",
             "counts": {
-              "protected": 38232,
+              "protected": 37859,
               "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "78652f0b5756c315cf050e21f203842151e4bead1819a2cb6e228e683bb500b2"
+            "pixels_sha256": "25f790e7012f111ba13be0d2932b432e1ffdae4236e103453ca87684e9ab70ad"
           },
           {
             "step": "later",
             "counts": {
-              "protected": 15717,
+              "protected": 15719,
               "public": 105227,
               "redaction": 0
             },
-            "pixels_sha256": "970642feb075929f6ad753bb23b5614e9616e1aed7b5116d25bd7ed72afb3733"
+            "pixels_sha256": "ef2b65b6a6224df4f384be8caeb90da4982839e60073a3ac3c4107560b076a36"
           }
         ],
         "status": "passed",
@@ -1186,8 +1223,8 @@
             "step": "visible-retarget",
             "counts": {
               "screen_capture": {
-                "protected": 70761,
-                "public": 105228,
+                "protected": 70169,
+                "public": 105227,
                 "redaction": 0
               }
             }
@@ -1197,8 +1234,8 @@
             "counts": {
               "screen_capture": {
                 "protected": 0,
-                "public": 105228,
-                "redaction": 173118
+                "public": 105227,
+                "redaction": 172020
               }
             }
           },
@@ -1207,8 +1244,8 @@
             "counts": {
               "screen_capture": {
                 "protected": 0,
-                "public": 105228,
-                "redaction": 182532
+                "public": 105227,
+                "redaction": 180190
               }
             }
           },
@@ -1217,8 +1254,8 @@
             "counts": {
               "screen_capture": {
                 "protected": 0,
-                "public": 105228,
-                "redaction": 190500
+                "public": 105227,
+                "redaction": 187748
               }
             }
           }
@@ -1234,8 +1271,8 @@
             "step": "visible-retarget",
             "counts": {
               "screen_capture": {
-                "protected": 70762,
-                "public": 105227,
+                "protected": 70169,
+                "public": 105229,
                 "redaction": 0
               }
             }
@@ -1244,8 +1281,8 @@
             "step": "blocked-before-close",
             "counts": {
               "screen_capture": {
-                "protected": 76222,
-                "public": 105227,
+                "protected": 75150,
+                "public": 105229,
                 "redaction": 0
               }
             }
@@ -1254,8 +1291,8 @@
             "step": "protected-close-0",
             "counts": {
               "screen_capture": {
-                "protected": 79944,
-                "public": 105227,
+                "protected": 78587,
+                "public": 105229,
                 "redaction": 0
               }
             }
@@ -1264,8 +1301,8 @@
             "step": "protected-close-1",
             "counts": {
               "screen_capture": {
-                "protected": 83441,
-                "public": 105227,
+                "protected": 82664,
+                "public": 105229,
                 "redaction": 0
               }
             }
@@ -1292,8 +1329,8 @@
               587
             ],
             "counts": {
-              "protected": 109187,
-              "public": 158157,
+              "protected": 109186,
+              "public": 158158,
               "redaction": 0
             }
           }
@@ -1334,7 +1371,7 @@
             "step": "initial-resize",
             "targets": {
               "output": {
-                "phase": 0.09607843137254901,
+                "phase": 0.10392156862745094,
                 "alpha": 1.0,
                 "phase_pixels": 57960,
                 "from": [
@@ -1357,9 +1394,9 @@
                 ]
               },
               "screen_capture": {
-                "phase": 0.11960784313725492,
+                "phase": 0.11176470588235299,
                 "alpha": 1.0,
-                "phase_pixels": 59400,
+                "phase_pixels": 58680,
                 "from": [
                   400,
                   360
@@ -1371,18 +1408,18 @@
                 "bounds": [
                   40,
                   120,
-                  478,
+                  474,
                   480
                 ],
                 "size": [
-                  438,
+                  434,
                   360
                 ]
               }
             },
             "pixels_sha256": {
-              "output": "fb1e21a7c0dab3ebbe3c82098c08bd7cabde4af3b300529aa9d14fdd47dfa1c0",
-              "screen_capture": "2545b34cbd7f72644f59e0e56547ee8772accfafda1424e8f2b98eaab8af8398"
+              "output": "25b7f5198264fcdffa1ef95a421b8be27d6d64487e1ca8d07d56bda4e8513b05",
+              "screen_capture": "79b3a1f174abf9df90801bb0834f61fb0e809d7382a4c1673cb96a7c11a08588"
             },
             "elapsed_s": 0.0
           },
@@ -1390,9 +1427,9 @@
             "step": "retarget-reload-before-close",
             "targets": {
               "output": {
-                "phase": 0.2686274509803922,
+                "phase": 0.2529411764705882,
                 "alpha": 1.0,
-                "phase_pixels": 66051,
+                "phase_pixels": 65136,
                 "from": [
                   400,
                   360
@@ -1404,18 +1441,18 @@
                 "bounds": [
                   114,
                   168,
-                  592,
-                  537
+                  586,
+                  536
                 ],
                 "size": [
-                  478,
-                  369
+                  472,
+                  368
                 ]
               },
               "screen_capture": {
-                "phase": 0.30000000000000004,
+                "phase": 0.26078431372549016,
                 "alpha": 1.0,
-                "phase_pixels": 68124,
+                "phase_pixels": 65682,
                 "from": [
                   400,
                   360
@@ -1427,28 +1464,28 @@
                 "bounds": [
                   40,
                   120,
-                  526,
-                  491
+                  515,
+                  489
                 ],
                 "size": [
-                  486,
-                  371
+                  475,
+                  369
                 ]
               }
             },
             "pixels_sha256": {
-              "output": "0e3282a33d0c9d0a0a8794726cef0fa56cd5d600ca0b2d80e6ee00a36a467fc9",
-              "screen_capture": "2d9dcfa4cf896cf57ebcc0aefbe9cd592a56f2f27c5eacb8f89a2d9ad94f6f60"
+              "output": "5d25285b0fa44cf78d66973d84ce751fab691dfccc0f0577f526990a978b7631",
+              "screen_capture": "6b3bb5480a4608a897c4a4a16f140bd361176da1cd1e3ab21ebb0c6efdf4fba8"
             },
-            "elapsed_s": 0.5304
+            "elapsed_s": 0.4528
           },
           {
             "step": "early-close",
             "targets": {
               "output": {
-                "phase": 0.4044919786096257,
-                "alpha": 0.9865470852017937,
-                "phase_pixels": 72390,
+                "phase": 0.3535178777393311,
+                "alpha": 0.9910313901345291,
+                "phase_pixels": 70873,
                 "from": [
                   400,
                   360
@@ -1460,18 +1497,18 @@
                 "bounds": [
                   114,
                   168,
-                  622,
-                  549
+                  612,
+                  547
                 ],
                 "size": [
-                  508,
-                  381
+                  498,
+                  379
                 ]
               },
               "screen_capture": {
-                "phase": 0.4195898542903399,
-                "alpha": 0.9775784753363229,
-                "phase_pixels": 74880,
+                "phase": 0.3647415329768272,
+                "alpha": 0.9865470852017937,
+                "phase_pixels": 72580,
                 "from": [
                   400,
                   360
@@ -1483,28 +1520,28 @@
                 "bounds": [
                   40,
                   120,
-                  556,
-                  504
+                  543,
+                  502
                 ],
                 "size": [
-                  516,
-                  384
+                  503,
+                  382
                 ]
               }
             },
             "pixels_sha256": {
-              "output": "bb5211921722811293d8d03b6a4c5efe79633e1aa1c8e1d306507de92de97829",
-              "screen_capture": "9f48abf53869b425b3d0026ae1bf8c7fa0cd39db475054a3ad0c2b1a3e2ea3db"
+              "output": "792142b3788795ec6e62bd0dd1e848c85c17b33672bc813dc45409305523b6f1",
+              "screen_capture": "9f7dabc8a389e5c962c2609662211de63971d41973843e91c3d633abc8817f70"
             },
-            "elapsed_s": 0.9002
+            "elapsed_s": 0.7687
           },
           {
             "step": "continuing-close",
             "targets": {
               "output": {
-                "phase": 0.5592848904267589,
-                "alpha": 0.8385650224215246,
-                "phase_pixels": 80988,
+                "phase": 0.503264551894056,
+                "alpha": 0.8565022421524664,
+                "phase_pixels": 78600,
                 "from": [
                   400,
                   360
@@ -1516,18 +1553,18 @@
                 "bounds": [
                   114,
                   168,
-                  658,
-                  565
+                  647,
+                  561
                 ],
                 "size": [
-                  544,
-                  397
+                  533,
+                  393
                 ]
               },
               "screen_capture": {
-                "phase": 0.5655031243266537,
-                "alpha": 0.8161434977578476,
-                "phase_pixels": 82784,
+                "phase": 0.5171464330413016,
+                "alpha": 0.8430493273542601,
+                "phase_pixels": 80388,
                 "from": [
                   400,
                   360
@@ -1539,27 +1576,50 @@
                 "bounds": [
                   40,
                   120,
-                  590,
-                  518
+                  577,
+                  516
                 ],
                 "size": [
-                  550,
-                  398
+                  537,
+                  396
                 ]
               }
             },
             "pixels_sha256": {
-              "output": "b8cbb8484b00a05f0adfd9be6c20c0d9a96b33e5d29d8286c69f5d7ebdd82123",
-              "screen_capture": "9b8c42ae92e1ac4b3a26ca4300aa596ec0633d18019073de597e6a4b1c64ce15"
+              "output": "4c8b984241b93b774fea0a7a28b19106d1bae4a1d48cdf7e152d2278885fea87",
+              "screen_capture": "542d054a7f3c3832eb002f6cdcfa3ed4a5a8af180cb32ef26ff30381b2d8695f"
             },
-            "elapsed_s": 1.3555
+            "elapsed_s": 1.2037
           },
           {
             "step": "removed-shader-during-close",
             "targets": {
               "output": {
-                "phase": 0.6979539641943733,
-                "alpha": 0.6188340807174888,
+                "phase": 0.6414488017429194,
+                "alpha": 0.6457399103139013,
+                "phase_pixels": 85666,
+                "from": [
+                  400,
+                  360
+                ],
+                "reference": [
+                  700,
+                  360
+                ],
+                "bounds": [
+                  114,
+                  168,
+                  677,
+                  574
+                ],
+                "size": [
+                  563,
+                  406
+                ]
+              },
+              "screen_capture": {
+                "phase": 0.6399633234588797,
+                "alpha": 0.6233183856502242,
                 "phase_pixels": 87740,
                 "from": [
                   400,
@@ -1570,45 +1630,22 @@
                   360
                 ],
                 "bounds": [
-                  114,
-                  168,
-                  686,
-                  578
-                ],
-                "size": [
-                  572,
-                  410
-                ]
-              },
-              "screen_capture": {
-                "phase": 0.7014369106421194,
-                "alpha": 0.5874439461883408,
-                "phase_pixels": 90228,
-                "from": [
-                  400,
-                  360
-                ],
-                "reference": [
-                  700,
-                  360
-                ],
-                "bounds": [
                   40,
                   120,
-                  618,
-                  532
+                  607,
+                  530
                 ],
                 "size": [
-                  578,
-                  412
+                  567,
+                  410
                 ]
               }
             },
             "pixels_sha256": {
-              "output": "3de4849da3983976b96ad8d7ad42594079d10ec707d14908cc06235d2013b433",
-              "screen_capture": "c0f71e570641735f8ca6dd94fdacbf63d6f6b3e776a9794855fd0d9b248a0029"
+              "output": "190af617e46c3b80dcbb0be058b2c6d98d10186a6fbe365758c9f43715bc6b31",
+              "screen_capture": "728409059ce9899e1ca01d029208b6fdab40661df8a4ee1dd9d61b1097c8be1e"
             },
-            "elapsed_s": 1.7623
+            "elapsed_s": 1.6024
           }
         ],
         "status": "passed"
@@ -1622,13 +1659,13 @@
             "step": "visible-retarget",
             "counts": {
               "output": {
-                "protected": 71861,
-                "public": 105227,
+                "protected": 71745,
+                "public": 105226,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 71478,
-                "public": 105227,
+                "protected": 70970,
+                "public": 105226,
                 "redaction": 0
               }
             }
@@ -1637,14 +1674,14 @@
             "step": "blocked-before-close",
             "counts": {
               "output": {
-                "protected": 78356,
-                "public": 105227,
+                "protected": 77561,
+                "public": 105226,
                 "redaction": 52
               },
               "screen_capture": {
                 "protected": 0,
-                "public": 105227,
-                "redaction": 179334
+                "public": 105226,
+                "redaction": 175059
               }
             }
           },
@@ -1652,14 +1689,14 @@
             "step": "protected-close-0",
             "counts": {
               "output": {
-                "protected": 84816,
-                "public": 105227,
+                "protected": 81462,
+                "public": 105226,
                 "redaction": 52
               },
               "screen_capture": {
                 "protected": 0,
-                "public": 105227,
-                "redaction": 192512
+                "public": 105226,
+                "redaction": 185256
               }
             }
           },
@@ -1667,14 +1704,14 @@
             "step": "protected-close-1",
             "counts": {
               "output": {
-                "protected": 89551,
-                "public": 105227,
+                "protected": 86418,
+                "public": 105226,
                 "redaction": 52
               },
               "screen_capture": {
                 "protected": 0,
-                "public": 105227,
-                "redaction": 204905
+                "public": 105226,
+                "redaction": 195426
               }
             }
           }
@@ -1690,13 +1727,13 @@
             "step": "visible-retarget",
             "counts": {
               "output": {
-                "protected": 71856,
-                "public": 105229,
+                "protected": 71746,
+                "public": 105226,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 71929,
-                "public": 105229,
+                "protected": 70969,
+                "public": 105226,
                 "redaction": 0
               }
             }
@@ -1706,13 +1743,13 @@
             "counts": {
               "output": {
                 "protected": 0,
-                "public": 105229,
-                "redaction": 175412
+                "public": 105226,
+                "redaction": 173536
               },
               "screen_capture": {
                 "protected": 0,
-                "public": 105229,
-                "redaction": 179334
+                "public": 105226,
+                "redaction": 176640
               }
             }
           },
@@ -1721,13 +1758,13 @@
             "counts": {
               "output": {
                 "protected": 0,
-                "public": 105229,
-                "redaction": 188788
+                "public": 105226,
+                "redaction": 184936
               },
               "screen_capture": {
                 "protected": 0,
-                "public": 105229,
-                "redaction": 192512
+                "public": 105226,
+                "redaction": 186873
               }
             }
           },
@@ -1736,13 +1773,13 @@
             "counts": {
               "output": {
                 "protected": 0,
-                "public": 105229,
-                "redaction": 200309
+                "public": 105226,
+                "redaction": 195478
               },
               "screen_capture": {
                 "protected": 0,
-                "public": 105229,
-                "redaction": 202842
+                "public": 105226,
+                "redaction": 197080
               }
             }
           }
@@ -1758,13 +1795,13 @@
             "step": "visible-retarget",
             "counts": {
               "output": {
-                "protected": 71861,
-                "public": 105229,
+                "protected": 71656,
+                "public": 105227,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 71929,
-                "public": 105229,
+                "protected": 70970,
+                "public": 105227,
                 "redaction": 0
               }
             }
@@ -1773,13 +1810,13 @@
             "step": "blocked-before-close",
             "counts": {
               "output": {
-                "protected": 78356,
-                "public": 105229,
+                "protected": 77539,
+                "public": 105227,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 78418,
-                "public": 105229,
+                "protected": 76061,
+                "public": 105227,
                 "redaction": 0
               }
             }
@@ -1788,13 +1825,13 @@
             "step": "protected-close-0",
             "counts": {
               "output": {
-                "protected": 84817,
-                "public": 105229,
+                "protected": 82062,
+                "public": 105227,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 84262,
-                "public": 105229,
+                "protected": 81375,
+                "public": 105227,
                 "redaction": 0
               }
             }
@@ -1803,13 +1840,13 @@
             "step": "protected-close-1",
             "counts": {
               "output": {
-                "protected": 89433,
-                "public": 105229,
+                "protected": 86406,
+                "public": 105227,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 87398,
-                "public": 105229,
+                "protected": 84588,
+                "public": 105227,
                 "redaction": 0
               }
             }
@@ -1826,12 +1863,12 @@
             "step": "visible-retarget",
             "counts": {
               "output": {
-                "protected": 71861,
+                "protected": 71746,
                 "public": 105227,
                 "redaction": 52
               },
               "screen_capture": {
-                "protected": 71478,
+                "protected": 71103,
                 "public": 105227,
                 "redaction": 0
               }
@@ -1843,10 +1880,10 @@
               "output": {
                 "protected": 0,
                 "public": 105227,
-                "redaction": 175412
+                "redaction": 173170
               },
               "screen_capture": {
-                "protected": 78446,
+                "protected": 76070,
                 "public": 105227,
                 "redaction": 0
               }
@@ -1858,10 +1895,10 @@
               "output": {
                 "protected": 0,
                 "public": 105227,
-                "redaction": 188788
+                "redaction": 183326
               },
               "screen_capture": {
-                "protected": 83659,
+                "protected": 81357,
                 "public": 105227,
                 "redaction": 0
               }
@@ -1873,10 +1910,10 @@
               "output": {
                 "protected": 0,
                 "public": 105227,
-                "redaction": 200690
+                "redaction": 193830
               },
               "screen_capture": {
-                "protected": 87476,
+                "protected": 84531,
                 "public": 105227,
                 "redaction": 0
               }
@@ -1903,8 +1940,8 @@
       "scripts/test-resize-close.py": "cf3ed29a1838cd2bbdc57f8243fecaca1f725541649cc70a7cdb747aee8c94ff",
       "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
       "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
-      "scripts/test-native-baseline.py": "9da89f0faed57ae9605b3a6c8d559cb7c12b64e323e105a9463cec1434f28c24",
-      "scripts/build-niri-movement.py": "836004ec7cb22ad7a968bed6a536c426757db5c8605116c85863b8599a24cbdd",
+      "scripts/test-native-baseline.py": "208cef088bd285e819ee9dfe58ec2391375ebbec968a2f776c823bbf084c325d",
+      "scripts/build-niri-movement.py": "81f76f46e2b3009e67d3a97c1c60e1954e7450b251c045c11cc6b6b03819a9fb",
       "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
       "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
       "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
@@ -1930,25 +1967,25 @@
       "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
       "shader_sha256": "41a880d40b71543201628325b782a7286bc6dc5f2d77bf61de76a7956f90ba99",
       "config_sha256": "182b8d324e2bf6acf57a3f9a321a37da037d7820a92b33345201afb5fd986390",
-      "video_sha256": "f2ea1a7c6e41b8e451ea740229a943b75419fbcd0489eaafaee0de5b98fbb251",
+      "video_sha256": "659d4508eb1821730be7a0ae080701e6e3ced37697d0c54bb0f634f62194e071",
       "actions": [
         {
           "action": "width",
           "extent": 680,
-          "request_s": 0.6005,
-          "complete_s": 0.6158
+          "request_s": 0.6001,
+          "complete_s": 0.6161
         },
         {
           "action": "height",
           "extent": 440,
           "request_s": 0.9001,
-          "complete_s": 0.9183
+          "complete_s": 0.917
         },
         {
           "action": "close",
           "extent": null,
           "request_s": 1.3001,
-          "complete_s": 1.3292
+          "complete_s": 1.3132
         }
       ],
       "fps": 50,
@@ -1957,7 +1994,7 @@
         800
       ],
       "closing_counts": {
-        "protected": 49070,
+        "protected": 49078,
         "public": 123243,
         "redaction": 0
       },
@@ -1972,25 +2009,25 @@
       "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "41a880d40b71543201628325b782a7286bc6dc5f2d77bf61de76a7956f90ba99",
       "config_sha256": "182b8d324e2bf6acf57a3f9a321a37da037d7820a92b33345201afb5fd986390",
-      "video_sha256": "08b1dabce1968d7f398fde8695d13a990051fabdc2611ba1b5a29bab68fcdf62",
+      "video_sha256": "2bab3e671441cc8ffe729fc1ae23f3669295171eb83385fdc3ea956d6e5de091",
       "actions": [
         {
           "action": "width",
           "extent": 680,
           "request_s": 0.6001,
-          "complete_s": 0.6169
+          "complete_s": 0.6156
         },
         {
           "action": "height",
           "extent": 440,
-          "request_s": 0.9001,
-          "complete_s": 0.9158
+          "request_s": 0.9002,
+          "complete_s": 0.9221
         },
         {
           "action": "close",
           "extent": null,
-          "request_s": 1.3005,
-          "complete_s": 1.3354
+          "request_s": 1.3001,
+          "complete_s": 1.3168
         }
       ],
       "fps": 50,
@@ -1999,7 +2036,7 @@
         800
       ],
       "closing_counts": {
-        "protected": 67521,
+        "protected": 67378,
         "public": 123243,
         "redaction": 0
       },
@@ -2012,6 +2049,6 @@
   ],
   "comparison": {
     "file": "docs/gifs/native-resize-close-comparison.gif",
-    "gif_sha256": "a9ca2082016164e1e827f62c60ea417f074668559f17c0cb426393cfcc67c04e"
+    "gif_sha256": "9f051b380bc37f90f6909c41a1bace486e60faa3b13eb942f355cc1367825d78"
   }
 }

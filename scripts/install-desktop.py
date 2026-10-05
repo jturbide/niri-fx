@@ -15,7 +15,10 @@ parser.add_argument(
 )
 args = parser.parse_args()
 if args.movement_demo and not (root / "artifacts/niri-movement-build.json").exists():
-    parser.error("Build the experiment first: python3 scripts/build-niri-movement.py")
+    parser.error(
+        "No legacy movement build is selected. New builds use isolated candidates; "
+        "run the preview command printed by scripts/build-niri-movement.py."
+    )
 data = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local/share"))
 target = data / (
     "applications/niri-fx-movement-demo.desktop"

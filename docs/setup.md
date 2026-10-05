@@ -40,7 +40,7 @@ newer and the separate native extension for live deformation.
 ```sh
 python3 -m niri_fx doctor --text
 # Inspect a trusted experimental build without installing or starting it:
-python3 -m niri_fx doctor --text --niri-binary artifacts/niri-pointer-src/target/release/niri
+python3 -m niri_fx doctor --text --niri-binary /path/to/candidate/bin/niri
 ```
 
 `--niri-binary PATH` selects the trusted executable for version reporting, existing

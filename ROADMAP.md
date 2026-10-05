@@ -85,7 +85,7 @@ compositor build with an explicit upgrade path.
 
 - [x] Record versioned build identity, ordered patch hashes, locked dependencies,
       toolchain, target, profile and enabled features; inspect artifacts read-only.
-- [ ] Build changed patch stacks into fresh candidate directories without
+- [x] Build changed patch stacks into fresh candidate directories without
       overwriting the working or previous build.
 - [ ] Maintain a tested upstream revision/feature matrix and CI that checks
       clean patch application, compilation and native regressions on candidates.
@@ -104,6 +104,8 @@ compositor build with an explicit upgrade path.
       nodes out of the stock-session configuration.
 - [ ] Select updates for the next login; retain the previous binary/config pair
       and never restart a running compositor from a background updater.
+- [ ] Show candidate disk usage and provide reviewed cleanup that preserves
+      running, selected and rollback versions.
 - [ ] Verify failed install, interrupted update, changed shared dependencies,
       rollback and return to stock on supported physical desktops.
 - [ ] Publish signed artifacts and source/patch provenance for declared

@@ -17,8 +17,14 @@ From a checkout with Niri's build dependencies, a Rust toolchain and Quickshell:
 
 ```sh
 python3 scripts/build-niri-movement.py --pointer-wobble --release --test
+export NIRIFX_POINTER_MANIFEST=/path/to/candidate/manifest.json
 python3 scripts/nested-demo.py --pointer-wobble gentle
 ```
+
+Replace the manifest path with the one printed by the builder. Keep it set for
+the other pointer checks in this terminal, then `unset NIRIFX_POINTER_MANIFEST`.
+Each build gets a [separate candidate directory](../experimental/README.md#isolated-build-candidates)
+and leaves earlier builds untouched.
 
 The demo opens a separate Niri window containing two floating synthetic app cards. Drag a
 card by its title bar, reverse direction, then let go. No modifier key is needed.

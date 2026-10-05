@@ -11,6 +11,11 @@ Users of the earlier compact iRiS source integration should follow its reviewed
 removal path before updating the shell. Normal preset registration remains
 available without modifying iNiR's checkout.
 
+Current source builds use [isolated native candidates](../experimental/README.md#isolated-build-candidates).
+Use the manifest selection printed after building; newer attempts no longer
+replace the fixed manifests used by older releases and launchers. The versioned
+upgrade notes below describe their original release workflows.
+
 ## From 0.18 to 0.19
 
 Install the verified wheel in the same environment and reopen Studio:

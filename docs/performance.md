@@ -236,6 +236,13 @@ node scripts/benchmark-gpu.mjs --output=/tmp/nirifx-vortex.json \
 
 ## Native capture-delivery diagnostic
 
+Native measurements require an explicitly selected
+[candidate build](../experimental/README.md#isolated-build-candidates).
+Set the matching manifest variable in the test terminal before running native
+harnesses. Direct Cargo benchmarks use that candidate's `source` directory;
+replace `/path/to/candidate` below with its actual path. Recompiling benchmark
+code leaves the published `bin/niri` copy unchanged.
+
 ```sh
 python3 scripts/build-niri-movement.py --release --test
 python3 scripts/measure-native-movement.py --timing-source capture --output /tmp/nirifx-capture.json
@@ -515,10 +522,12 @@ The [complete samples and measurement scope](benchmarks/fragment-motion-cpu.json
 include both run pairs, 120 Hz input and sample-allocation costs.
 
 After building the fragment experiment, use a working Rust toolchain and the
-same native build dependencies to reproduce the current CPU benchmark:
+same native build dependencies to reproduce the current CPU benchmark. Set
+Cargo's output directories to reuse this candidate's compilation cache:
 
 ```sh
-cd artifacts/niri-fragment-drag-src
+cd /path/to/candidate/source
+export CARGO_TARGET_DIR=../target CARGO_BUILD_BUILD_DIR=../target
 NIRIFX_FRAGMENT_BENCHMARK=/tmp/nirifx-fragment-cpu.json \
     cargo test --release --locked --lib fragment_motion_benchmark -- --ignored --nocapture
 ```
@@ -560,7 +569,8 @@ controls, raw samples and source fingerprints. To reproduce after building the
 fragment experiment:
 
 ```sh
-cd artifacts/niri-fragment-drag-src
+cd /path/to/candidate/source
+export CARGO_TARGET_DIR=../target CARGO_BUILD_BUILD_DIR=../target
 NIRIFX_FRAGMENT_DENSE_BENCHMARK=/tmp/nirifx-fragment-dense-cpu.json \
     cargo test --release --locked --lib fragment_motion_dense_benchmark -- --ignored --nocapture
 ```
@@ -613,13 +623,14 @@ then run the hardware probe from the repository root:
 
 ```sh
 (
-    cd artifacts/niri-fragment-drag-src
+    cd /path/to/candidate/source
+    export CARGO_TARGET_DIR=../target CARGO_BUILD_BUILD_DIR=../target
     NIRIFX_FRAGMENT_MESH_BENCH_FIXTURE=/tmp/nirifx-fragment-meshes.json \
         cargo test --release --locked --lib fragment_mesh_emit_benchmark_fixture -- --ignored --nocapture
 )
 node scripts/benchmark-fragment-gpu.mjs \
     --fixture /tmp/nirifx-fragment-meshes.json \
-    --native-source artifacts/niri-fragment-drag-src \
+    --native-source /path/to/candidate/source \
     --output /tmp/nirifx-fragment-gpu.json
 ```
 

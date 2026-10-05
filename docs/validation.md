@@ -1,12 +1,40 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-04**, including 0.19.0 action choices,
+Evidence updated on **2026-10-05**, including native candidate isolation, 0.19.0 action choices,
 installed upgrade/Restore checks, experimental resize continuation and device-owned
 pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 For setup instructions, use the [documentation index](README.md); check
 [Compatibility](compatibility.md) for supported features and requirements.
+
+For current native reproduction commands, first select the matching
+[candidate manifest](../experimental/README.md#isolated-build-candidates) in the
+test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
+`NIRIFX_FRAGMENT_MANIFEST` for the corresponding experiment, and
+`NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
+manifests remain explicit inputs to comparison recorders.
+
+## Native candidate isolation
+
+Temporary-directory regressions cover concurrent and repeated attempts, retained
+failure/interruption logs, independent patch and executable copies, publication
+refusal and input drift. Previous fixed manifests and binaries remain unchanged.
+Candidate selection checks each variant separately, refuses invalid overrides
+without fallback, and validates metadata and file hashes without executing a
+program. Baseline source verification remains read-only.
+
+A fresh minimal fragment release build with Rust 1.99.0 passed manifest
+inspection and the continuous-fragment acceptance harness in an owned nested
+session. The published executable had a separate inode from Cargo's output.
+Existing manifests, executables and desktop configuration retained their bytes
+and modification times. The ten affected resize comparisons were regenerated
+with their unchanged renderers; material acceptance and all 23 resize-to-close
+cases passed before publication.
+
+These checks establish build/selection ownership, not physical desktop, capture
+or dependency compatibility. The [native lifecycle roadmap](../ROADMAP.md#updates-and-native-build-lifecycle)
+keeps installation, session selection and rollback as separate release gates.
 
 ## Public catalog checks
 
@@ -293,8 +321,8 @@ limited to one step out of 255. At most four pixels may exceed that only when
 each crosses a foreground/background silhouette with stable foreground and
 background neighbors within one pixel in **both** images. Interior exceptions
 are forbidden; the report includes every exceptional coordinate and difference.
-All eight stationary controls matched exactly. Fragments required at most one
-silhouette exception per frame, with a maximum channel difference of 121;
+All eight stationary controls matched exactly. Fragments required at most two
+silhouette exceptions per frame in the latest run, with a maximum channel difference of 121;
 Slices and Elastic stayed within one channel step everywhere.
 
 This narrow allowance follows GPU probes with identical phase, geometry and UV

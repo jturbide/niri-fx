@@ -9,6 +9,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Isolated native build candidates preserve earlier source trees, Cargo outputs
+  and executables. Successful attempts publish their own manifest and copied
+  binary; explicit per-variant selection lets native tests use a candidate
+  without changing the login session or legacy demo selection.
 - A reviewed migration removes the earlier compact iRiS source integration
   without discarding newer upstream changes. Customized or ambiguous files are
   preserved for manual review.

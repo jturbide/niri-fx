@@ -2377,396 +2377,6 @@
       ]
     },
     {
-      "name": "native-resize-width-comparison",
-      "file": "docs/gifs/native-resize-width-comparison.gif",
-      "title": "Interrupted width resize: baseline and updated",
-      "mode": "resize",
-      "bytes": 3089929,
-      "fps": 50,
-      "width": 1200,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "tag": "v0.18.0",
-        "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-        "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
-        "build_metadata": {},
-        "metadata_not_comparable": [
-          "build_profile",
-          "build_flags",
-          "rustc"
-        ]
-      },
-      "sources": {
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified build identities",
-        "bounded interruption timing",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation"
-      ]
-    },
-    {
-      "name": "native-resize-height-comparison",
-      "file": "docs/gifs/native-resize-height-comparison.gif",
-      "title": "Interrupted height resize: baseline and updated",
-      "mode": "resize",
-      "bytes": 2478875,
-      "fps": 50,
-      "width": 750,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "tag": "v0.18.0",
-        "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
-        "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
-        "build_metadata": {},
-        "metadata_not_comparable": [
-          "build_profile",
-          "build_flags",
-          "rustc"
-        ]
-      },
-      "sources": {
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified build identities",
-        "bounded interruption timing",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation"
-      ]
-    },
-    {
-      "name": "native-resize-orthogonal-width-comparison",
-      "file": "docs/gifs/native-resize-orthogonal-width-comparison.gif",
-      "title": "Orthogonal resize: width comparison",
-      "mode": "resize",
-      "bytes": 3638787,
-      "fps": 50,
-      "width": 1200,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "source_revision": "3f68522",
-        "commit": "3f68522a6f21beeab38d34020d59ef1076f4da8f",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
-        "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified executable and source identities",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation"
-      ]
-    },
-    {
-      "name": "native-resize-orthogonal-height-comparison",
-      "file": "docs/gifs/native-resize-orthogonal-height-comparison.gif",
-      "title": "Orthogonal resize: height comparison",
-      "mode": "resize",
-      "bytes": 3559638,
-      "fps": 50,
-      "width": 1000,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "source_revision": "3f68522",
-        "commit": "3f68522a6f21beeab38d34020d59ef1076f4da8f",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
-        "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified executable and source identities",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation"
-      ]
-    },
-    {
-      "name": "native-resize-timing-reload-height-comparison",
-      "file": "docs/gifs/native-resize-timing-reload-height-comparison.gif",
-      "title": "Timing Reload resize: height comparison",
-      "mode": "resize",
-      "bytes": 2447589,
-      "fps": 50,
-      "width": 750,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "source_revision": "3f68522",
-        "commit": "3f68522a6f21beeab38d34020d59ef1076f4da8f",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
-        "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified executable and source identities",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation"
-      ]
-    },
-    {
-      "name": "native-resize-minimum-width-comparison",
-      "file": "docs/gifs/native-resize-minimum-width-comparison.gif",
-      "title": "Minimum resize: width comparison",
-      "mode": "resize",
-      "bytes": 2307292,
-      "fps": 50,
-      "width": 1200,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "tag": "v0.19.0",
-        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
-        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-minimum.py": "f8fbf6618aa41726aa90670e38c987b4d29fe8da02985c68faf1a326ce70aa33",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified executable and source identities",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation and separately identified floor frames"
-      ]
-    },
-    {
-      "name": "native-resize-minimum-height-comparison",
-      "file": "docs/gifs/native-resize-minimum-height-comparison.gif",
-      "title": "Minimum resize: height comparison",
-      "mode": "resize",
-      "bytes": 505919,
-      "fps": 50,
-      "width": 1200,
-      "colors": 128,
-      "duration_ms": 1200,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "tag": "v0.19.0",
-        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
-        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-minimum.py": "f8fbf6618aa41726aa90670e38c987b4d29fe8da02985c68faf1a326ce70aa33",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-      },
-      "checks": [
-        "verified executable and source identities",
-        "same window IDs and settled dimensions",
-        "decoded native edge separation and separately identified floor frames"
-      ]
-    },
-    {
-      "name": "native-resize-material-fragments-comparison",
-      "file": "docs/gifs/native-resize-material-fragments-comparison.gif",
-      "title": "Retained fragments resize after two retargets",
-      "mode": "resize",
-      "bytes": 6916031,
-      "fps": 50,
-      "width": 900,
-      "colors": 48,
-      "duration_ms": 1500,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "tag": "v0.19.0",
-        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
-        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-material.py": "f58801c49baeb8caea5ddc1be604bad93efde30aa525701ad0dda3ddd1488adc",
-        "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8",
-        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
-        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
-        "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",
-        "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
-        "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
-        "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
-        "niri_fx/shaders/resize-shaped.glsl": "f0b16b24d92d43ccf20203d9a087f99b4f6b6d1af579b906c6e09a1979005d53"
-      },
-      "checks": [
-        "verified tagged baseline and current build identities",
-        "identical generated shader and configured duration",
-        "two bounded IPC retargets at actual speed",
-        "visible breakup and intact settled content"
-      ]
-    },
-    {
-      "name": "native-resize-material-triangles-comparison",
-      "file": "docs/gifs/native-resize-material-triangles-comparison.gif",
-      "title": "Retained triangle resize after two retargets",
-      "mode": "resize",
-      "bytes": 6314112,
-      "fps": 50,
-      "width": 900,
-      "colors": 48,
-      "duration_ms": 1500,
-      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
-      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
-      "baseline": {
-        "tag": "v0.19.0",
-        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
-        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
-        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
-        "build_metadata": {
-          "build_profile": "release",
-          "build_flags": [
-            "--locked",
-            "--no-default-features"
-          ],
-          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
-        },
-        "metadata_not_comparable": []
-      },
-      "sources": {
-        "scripts/record-resize-material.py": "f58801c49baeb8caea5ddc1be604bad93efde30aa525701ad0dda3ddd1488adc",
-        "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
-        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-        "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
-        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8",
-        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
-        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
-        "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",
-        "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
-        "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
-        "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
-        "niri_fx/shaders/resize-shaped.glsl": "f0b16b24d92d43ccf20203d9a087f99b4f6b6d1af579b906c6e09a1979005d53"
-      },
-      "checks": [
-        "verified tagged baseline and current build identities",
-        "identical generated shader and configured duration",
-        "two bounded IPC retargets at actual speed",
-        "visible breakup and intact settled content"
-      ]
-    },
-    {
       "name": "native-pointer-gentle",
       "file": "docs/gifs/native-pointer-gentle.gif",
       "title": "Gentle pointer drag",
@@ -2905,11 +2515,401 @@
       ]
     },
     {
+      "name": "native-resize-width-comparison",
+      "file": "docs/gifs/native-resize-width-comparison.gif",
+      "title": "Interrupted width resize: baseline and updated",
+      "mode": "resize",
+      "bytes": 3131641,
+      "fps": 50,
+      "width": 1200,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "tag": "v0.18.0",
+        "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+        "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+        "build_metadata": {},
+        "metadata_not_comparable": [
+          "build_profile",
+          "build_flags",
+          "rustc"
+        ]
+      },
+      "sources": {
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified build identities",
+        "bounded interruption timing",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
+    },
+    {
+      "name": "native-resize-height-comparison",
+      "file": "docs/gifs/native-resize-height-comparison.gif",
+      "title": "Interrupted height resize: baseline and updated",
+      "mode": "resize",
+      "bytes": 2456096,
+      "fps": 50,
+      "width": 750,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "tag": "v0.18.0",
+        "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "651796af15b54a6f28f42d9f61db61e407a631201dc6b8c807a7b54ad95d1901",
+        "binary_sha256": "55d9edca2b6b21b2805a3ab4fc9ba2803fcac568fc86120d656dad1d0bd71a9e",
+        "build_metadata": {},
+        "metadata_not_comparable": [
+          "build_profile",
+          "build_flags",
+          "rustc"
+        ]
+      },
+      "sources": {
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified build identities",
+        "bounded interruption timing",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
+    },
+    {
+      "name": "native-resize-orthogonal-width-comparison",
+      "file": "docs/gifs/native-resize-orthogonal-width-comparison.gif",
+      "title": "Orthogonal resize: width comparison",
+      "mode": "resize",
+      "bytes": 3661687,
+      "fps": 50,
+      "width": 1200,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "source_revision": "3f68522",
+        "commit": "3f68522a6f21beeab38d34020d59ef1076f4da8f",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+        "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified executable and source identities",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
+    },
+    {
+      "name": "native-resize-orthogonal-height-comparison",
+      "file": "docs/gifs/native-resize-orthogonal-height-comparison.gif",
+      "title": "Orthogonal resize: height comparison",
+      "mode": "resize",
+      "bytes": 3616272,
+      "fps": 50,
+      "width": 1000,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "source_revision": "3f68522",
+        "commit": "3f68522a6f21beeab38d34020d59ef1076f4da8f",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+        "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified executable and source identities",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
+    },
+    {
+      "name": "native-resize-timing-reload-height-comparison",
+      "file": "docs/gifs/native-resize-timing-reload-height-comparison.gif",
+      "title": "Timing Reload resize: height comparison",
+      "mode": "resize",
+      "bytes": 2441052,
+      "fps": 50,
+      "width": 750,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "source_revision": "3f68522",
+        "commit": "3f68522a6f21beeab38d34020d59ef1076f4da8f",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "6f326b370273378e60529fc3f9266165af40c45808c78114aa654175e3d3730f",
+        "binary_sha256": "1388bc69baf4c4e31bd7157b52d667bb5c3900255d120e1f3ef1d65413d1a5ce",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified executable and source identities",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation"
+      ]
+    },
+    {
+      "name": "native-resize-minimum-width-comparison",
+      "file": "docs/gifs/native-resize-minimum-width-comparison.gif",
+      "title": "Minimum resize: width comparison",
+      "mode": "resize",
+      "bytes": 2339026,
+      "fps": 50,
+      "width": 1200,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "tag": "v0.19.0",
+        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-minimum.py": "f8fbf6618aa41726aa90670e38c987b4d29fe8da02985c68faf1a326ce70aa33",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified executable and source identities",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation and separately identified floor frames"
+      ]
+    },
+    {
+      "name": "native-resize-minimum-height-comparison",
+      "file": "docs/gifs/native-resize-minimum-height-comparison.gif",
+      "title": "Minimum resize: height comparison",
+      "mode": "resize",
+      "bytes": 496766,
+      "fps": 50,
+      "width": 1200,
+      "colors": 128,
+      "duration_ms": 1200,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "tag": "v0.19.0",
+        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-minimum.py": "f8fbf6618aa41726aa90670e38c987b4d29fe8da02985c68faf1a326ce70aa33",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732"
+      },
+      "checks": [
+        "verified executable and source identities",
+        "same window IDs and settled dimensions",
+        "decoded native edge separation and separately identified floor frames"
+      ]
+    },
+    {
+      "name": "native-resize-material-fragments-comparison",
+      "file": "docs/gifs/native-resize-material-fragments-comparison.gif",
+      "title": "Retained fragments resize after two retargets",
+      "mode": "resize",
+      "bytes": 6869131,
+      "fps": 50,
+      "width": 900,
+      "colors": 48,
+      "duration_ms": 1500,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "tag": "v0.19.0",
+        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-material.py": "f58801c49baeb8caea5ddc1be604bad93efde30aa525701ad0dda3ddd1488adc",
+        "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732",
+        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",
+        "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
+        "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
+        "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
+        "niri_fx/shaders/resize-shaped.glsl": "f0b16b24d92d43ccf20203d9a087f99b4f6b6d1af579b906c6e09a1979005d53"
+      },
+      "checks": [
+        "verified tagged baseline and current build identities",
+        "identical generated shader and configured duration",
+        "two bounded IPC retargets at actual speed",
+        "visible breakup and intact settled content"
+      ]
+    },
+    {
+      "name": "native-resize-material-triangles-comparison",
+      "file": "docs/gifs/native-resize-material-triangles-comparison.gif",
+      "title": "Retained triangle resize after two retargets",
+      "mode": "resize",
+      "bytes": 6355472,
+      "fps": 50,
+      "width": 900,
+      "colors": 48,
+      "duration_ms": 1500,
+      "backend": "pinned patched Niri nested winit; synthetic clients; sequential native captures shown side by side",
+      "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+      "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+      "baseline": {
+        "tag": "v0.19.0",
+        "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef",
+        "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+        "build_metadata": {
+          "build_profile": "release",
+          "build_flags": [
+            "--locked",
+            "--no-default-features"
+          ],
+          "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)"
+        },
+        "metadata_not_comparable": []
+      },
+      "sources": {
+        "scripts/record-resize-material.py": "f58801c49baeb8caea5ddc1be604bad93efde30aa525701ad0dda3ddd1488adc",
+        "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
+        "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
+        "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
+        "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732",
+        "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+        "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
+        "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",
+        "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
+        "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
+        "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
+        "niri_fx/shaders/resize-shaped.glsl": "f0b16b24d92d43ccf20203d9a087f99b4f6b6d1af579b906c6e09a1979005d53"
+      },
+      "checks": [
+        "verified tagged baseline and current build identities",
+        "identical generated shader and configured duration",
+        "two bounded IPC retargets at actual speed",
+        "visible breakup and intact settled content"
+      ]
+    },
+    {
       "name": "native-resize-close-comparison",
       "file": "docs/gifs/native-resize-close-comparison.gif",
       "title": "Resize continues through close",
       "mode": "resize",
-      "bytes": 4881827,
+      "bytes": 4921736,
       "fps": 50,
       "width": 900,
       "colors": 64,
@@ -2939,7 +2939,7 @@
         "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
         "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
         "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-        "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8",
+        "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732",
         "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
         "scripts/fixtures/resize-close.qml": "1732fa6fa45dbb11bdebe48a3aa7aa62b383c9b9a9075c3bdd203165db9209c6",
         "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",

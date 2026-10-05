@@ -89,9 +89,11 @@ For a quick comparison, the isolated demo provides three starting points:
 | Tear | 800 | A visible spread on press with individually delayed following. |
 | Cascade | 1200 | Wider separation, longer waiting and more pronounced rotation and tilt. |
 
-After building the fragment experiment, launch it from the checkout:
+After building the fragment experiment, select its printed manifest path in
+the test terminal, then launch it from the checkout:
 
 ```sh
+export NIRIFX_FRAGMENT_MANIFEST=/path/to/candidate/manifest.json
 python3 scripts/fragment-demo.py
 # Start with another choice, or list choices without opening a window:
 python3 scripts/fragment-demo.py --preset cascade
@@ -175,15 +177,20 @@ Wayland development tools, `grim` and Pillow:
 
 ```sh
 python3 scripts/build-niri-movement.py --fragment-drag --release --test
+export NIRIFX_FRAGMENT_MANIFEST=/path/to/candidate/manifest.json
 python3 scripts/test-fragment-drag.py
 python3 scripts/test-fragment-presets.py
 python3 scripts/test-fragment-privacy.py
 python3 scripts/test-fragment-fallback.py
 python3 scripts/test-fragment-concurrency.py
+unset NIRIFX_FRAGMENT_MANIFEST
 ```
 
-The build adds the fragment extension after the movement and pointer patches in
-a separate build directory. These commands do not replace the login compositor.
+Replace the example path with the one printed after a successful build. Each
+attempt adds the fragment extension after the movement and pointer patches in
+a fresh candidate directory. Earlier builds are preserved. See
+[candidate selection](../experimental/README.md#isolated-build-candidates).
+These commands do not replace the login compositor.
 The default build is minimal for nested tests. Add `--desktop` when preparing a
 candidate for a later real desktop session; that retains upstream D-Bus,
 portal and PipeWire features. Building it does not install or activate it.

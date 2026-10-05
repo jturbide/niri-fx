@@ -251,8 +251,14 @@ check from a working graphical session:
 
 ```sh
 python3 scripts/build-niri-movement.py --pointer-wobble --test
-python3 scripts/test-pointer-integration.py
+NIRIFX_POINTER_MANIFEST=/path/to/candidate/manifest.json \
+  python3 scripts/test-pointer-integration.py
 ```
+
+Use the candidate manifest printed by the builder. Each attempt has its own
+source, target and published executable; it never replaces an earlier build.
+See [candidate selection](experimental/README.md#isolated-build-candidates) for
+movement, fragment and baseline checks.
 
 The integration check starts a separate nested compositor and temporary Studio
 server. It verifies the selected executable, live pointer contract, authenticated
