@@ -180,11 +180,14 @@ animations {
     def test_parent_traversal_cannot_turn_missing_or_nondirectory_paths_into_existing_files(self):
         self.write("present.kdl", "prefer-no-csd\n")
         self.write("regular-file", "contents\n")
-        for prefix in ("missing", "regular-file"):
+        (self.root / "directory").mkdir()
+        for prefix in ("missing", "regular-file", "directory/../regular-file"):
             for optional in ("", " optional=true"):
                 with self.subTest(prefix=prefix, optional=optional):
                     with self.assertRaisesRegex(ValueError, "parent traversal"):
                         self.snapshot(f'include "{prefix}/../present.kdl"{optional}\n')
+        result = self.snapshot('include "directory/../present.kdl"\n')
+        self.assertEqual(result["files"]["config/0001.kdl"], b"prefer-no-csd\n")
 
     def test_trailing_directory_components_cannot_turn_failed_file_reads_into_includes(self):
         self.write("present.kdl", "prefer-no-csd\n")

@@ -251,9 +251,12 @@ def _safe_path(path):
             raise ValueError(f"Config snapshot paths must not be symlinks: {part}")
     if ".." in path.parts:
         # Resolving lexically would turn "missing/../existing" into an existing
-        # file even though the original OS lookup fails. Preserve that failure.
+        # file even though the original OS lookup fails. Inspect every original
+        # prefix: older pathlib.resolve() also collapses regular-file/.. .
         try:
-            path.parent.resolve(strict=True)
+            for parent in path.parents:
+                if not stat.S_ISDIR(parent.stat().st_mode):
+                    raise ValueError("Config parent traversal requires existing directories")
         except (FileNotFoundError, NotADirectoryError) as error:
             raise ValueError("Config parent traversal requires existing directories") from error
     return Path(os.path.abspath(path))
