@@ -1,0 +1,1028 @@
+{
+  "schema": 1,
+  "date": "2026-10-05",
+  "scope": "Release-mode CPU state advance and sample allocation; not rendering or presentation latency",
+  "cpu": "AMD Ryzen 9 7950X 16-Core Processor",
+  "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+  "baseline_patch_sha256": "bca7f0bcf7c5cbee4711b93dd3bfaaa76c1c485342bd939c5f263da23b5fc2c4",
+  "baseline_benchmark_source_sha256": "c55a45a098d31b57ee2dc47c56e03d40d76395ce56ed5b41cca0b321c9d7044c",
+  "benchmark": "fragment_motion_benchmark",
+  "workload": "Default native controls with 600, 800, 1200 or 4096 actual cells; deterministic 60/120 Hz motion. Separate idle cases use a single 100 by 20 logical-pixel target step, then a simulated 24-hour held idle from active and settled states.",
+  "limits": [
+    "CPU costs use std::time::Instant; input timestamps are simulated, so no physical suspend/resume is tested.",
+    "Same shared host and release-mode test binaries, without CPU-affinity or frequency isolation; two pairs of runs do not establish performance on other hardware.",
+    "Ordinary 60 Hz update medians were about 3 percent higher in the paired rerun; this change only claims faster long-idle recovery.",
+    "No GPU drawing, desktop input latency, physical scanout or mixed-output measurement.",
+    "Idle cases contain two history events, not a full delayed-input history; they do not establish worst-case recovery latency."
+  ],
+  "runs": {
+    "before": {
+      "cases": [
+        {
+          "actual_cells": 600,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 15428.557,
+                "median_us": 15291.177,
+                "p95_us": 15428.557,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 15409.447,
+                "median_us": 15384.847,
+                "p95_us": 15409.447,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            700.0,
+            672.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 309.68899999999996,
+                "median_us": 174.579,
+                "p95_us": 203.879,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 38.510000000000005,
+                "median_us": 14.790000000000001,
+                "p95_us": 14.98,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 109.21000000000001,
+                "median_us": 98.829,
+                "p95_us": 103.99,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 20.81,
+                "median_us": 14.709999999999999,
+                "p95_us": 14.85,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 800,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 20531.889000000003,
+                "median_us": 20439.578999999998,
+                "p95_us": 20531.889000000003,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 20506.050000000003,
+                "median_us": 20504.43,
+                "p95_us": 20506.050000000003,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            896.0,
+            700.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 283.799,
+                "median_us": 233.069,
+                "p95_us": 271.529,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 33.059999999999995,
+                "median_us": 20.84,
+                "p95_us": 21.03,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 147.539,
+                "median_us": 131.649,
+                "p95_us": 137.08,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 36.03,
+                "median_us": 20.809,
+                "p95_us": 21.02,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 1200,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 30599.524999999998,
+                "median_us": 30584.565000000002,
+                "p95_us": 30599.524999999998,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 30972.104,
+                "median_us": 30704.825,
+                "p95_us": 30972.104,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1120.0,
+            840.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 426.059,
+                "median_us": 352.318,
+                "p95_us": 412.41900000000004,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 44.04,
+                "median_us": 30.65,
+                "p95_us": 31.29,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 213.26,
+                "median_us": 197.55,
+                "p95_us": 206.139,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 37.72,
+                "median_us": 30.589999999999996,
+                "p95_us": 31.139999999999997,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 4096,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 107777.583,
+                "median_us": 107623.323,
+                "p95_us": 107777.583,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 110541.884,
+                "median_us": 107649.633,
+                "p95_us": 110541.884,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1792.0,
+            1792.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 1593.614,
+                "median_us": 1263.795,
+                "p95_us": 1452.465,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 289.40900000000005,
+                "median_us": 193.079,
+                "p95_us": 214.169,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 793.418,
+                "median_us": 708.1070000000001,
+                "p95_us": 749.668,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 215.91000000000003,
+                "median_us": 180.769,
+                "p95_us": 195.279,
+                "samples": 1080
+              }
+            }
+          ]
+        }
+      ],
+      "history_quantum_ms": 4,
+      "maximum_recent_replay_ms": 2000,
+      "ordinary_measured_frames_per_repeat": 360,
+      "ordinary_repeats": 3,
+      "ordinary_warmup_frames": 120,
+      "release_profile": true,
+      "schema": 1,
+      "scope": "CPU state advance and sample allocation only; no renderer or presentation timing"
+    },
+    "after": {
+      "cases": [
+        {
+          "actual_cells": 600,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 64.21,
+                "median_us": 60.949999999999996,
+                "p95_us": 64.21,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 52.03,
+                "median_us": 51.0,
+                "p95_us": 52.03,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            700.0,
+            672.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 223.189,
+                "median_us": 182.64,
+                "p95_us": 211.12,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 19.65,
+                "median_us": 14.67,
+                "p95_us": 14.780000000000001,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 121.72,
+                "median_us": 105.95,
+                "p95_us": 110.89,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 18.98,
+                "median_us": 14.63,
+                "p95_us": 14.719999999999999,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 800,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 82.18,
+                "median_us": 79.77000000000001,
+                "p95_us": 82.18,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 89.05,
+                "median_us": 68.68,
+                "p95_us": 89.05,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            896.0,
+            700.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 296.629,
+                "median_us": 244.54000000000002,
+                "p95_us": 282.90999999999997,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 34.050000000000004,
+                "median_us": 20.79,
+                "p95_us": 20.970000000000002,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 151.699,
+                "median_us": 139.41,
+                "p95_us": 145.25,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 31.26,
+                "median_us": 20.78,
+                "p95_us": 20.970000000000002,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 1200,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 140.4,
+                "median_us": 120.63,
+                "p95_us": 140.4,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 110.309,
+                "median_us": 102.599,
+                "p95_us": 110.309,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1120.0,
+            840.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 501.239,
+                "median_us": 378.46,
+                "p95_us": 442.78900000000004,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 85.92,
+                "median_us": 30.450000000000003,
+                "p95_us": 36.99,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 291.09,
+                "median_us": 213.549,
+                "p95_us": 229.389,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 138.20999999999998,
+                "median_us": 30.73,
+                "p95_us": 35.98,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 4096,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 452.469,
+                "median_us": 427.24899999999997,
+                "p95_us": 452.469,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 370.529,
+                "median_us": 362.74899999999997,
+                "p95_us": 370.529,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1792.0,
+            1792.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 1584.747,
+                "median_us": 1312.458,
+                "p95_us": 1511.456,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 231.09,
+                "median_us": 187.23000000000002,
+                "p95_us": 203.61,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 820.6080000000001,
+                "median_us": 740.808,
+                "p95_us": 779.209,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 214.489,
+                "median_us": 179.08,
+                "p95_us": 192.309,
+                "samples": 1080
+              }
+            }
+          ]
+        }
+      ],
+      "history_quantum_ms": 4,
+      "maximum_recent_replay_ms": 2000,
+      "ordinary_measured_frames_per_repeat": 360,
+      "ordinary_repeats": 3,
+      "ordinary_warmup_frames": 120,
+      "release_profile": true,
+      "schema": 1,
+      "scope": "CPU state advance and sample allocation only; no renderer or presentation timing"
+    },
+    "before_repeat": {
+      "cases": [
+        {
+          "actual_cells": 600,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 15538.601,
+                "median_us": 15466.112000000001,
+                "p95_us": 15538.601,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 15566.131000000001,
+                "median_us": 15477.292,
+                "p95_us": 15566.131000000001,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            700.0,
+            672.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 237.81,
+                "median_us": 175.78900000000002,
+                "p95_us": 208.45999999999998,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 43.53,
+                "median_us": 14.54,
+                "p95_us": 15.26,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 161.01,
+                "median_us": 98.249,
+                "p95_us": 118.54,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 40.99,
+                "median_us": 14.559999999999999,
+                "p95_us": 14.74,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 800,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 20396.103,
+                "median_us": 20373.493,
+                "p95_us": 20396.103,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 20382.742,
+                "median_us": 20364.574,
+                "p95_us": 20382.742,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            896.0,
+            700.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 317.22,
+                "median_us": 236.929,
+                "p95_us": 277.819,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 64.65,
+                "median_us": 20.71,
+                "p95_us": 24.33,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 155.25,
+                "median_us": 132.139,
+                "p95_us": 142.09,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 31.59,
+                "median_us": 20.81,
+                "p95_us": 24.36,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 1200,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 31046.204,
+                "median_us": 30987.744000000002,
+                "p95_us": 31046.204,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 30979.174000000003,
+                "median_us": 30906.724,
+                "p95_us": 30979.174000000003,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1120.0,
+            840.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 467.069,
+                "median_us": 358.849,
+                "p95_us": 422.75899999999996,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 62.849999999999994,
+                "median_us": 30.5,
+                "p95_us": 35.05,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 259.42,
+                "median_us": 197.07000000000002,
+                "p95_us": 226.089,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 81.35900000000001,
+                "median_us": 30.23,
+                "p95_us": 34.12,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 4096,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 108710.073,
+                "median_us": 108520.893,
+                "p95_us": 108710.073,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 110048.69,
+                "median_us": 109679.652,
+                "p95_us": 110048.69,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1792.0,
+            1792.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 1468.777,
+                "median_us": 1245.3880000000001,
+                "p95_us": 1434.1670000000001,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 225.51,
+                "median_us": 186.91000000000003,
+                "p95_us": 199.579,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 787.749,
+                "median_us": 695.8290000000001,
+                "p95_us": 740.548,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 230.119,
+                "median_us": 173.749,
+                "p95_us": 191.309,
+                "samples": 1080
+              }
+            }
+          ]
+        }
+      ],
+      "history_quantum_ms": 4,
+      "maximum_recent_replay_ms": 2000,
+      "ordinary_measured_frames_per_repeat": 360,
+      "ordinary_repeats": 3,
+      "ordinary_warmup_frames": 120,
+      "release_profile": true,
+      "schema": 1,
+      "scope": "CPU state advance and sample allocation only; no renderer or presentation timing"
+    },
+    "after_repeat": {
+      "cases": [
+        {
+          "actual_cells": 600,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 63.87,
+                "median_us": 60.56,
+                "p95_us": 63.87,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 52.44,
+                "median_us": 51.399,
+                "p95_us": 52.44,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            700.0,
+            672.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 221.259,
+                "median_us": 181.5,
+                "p95_us": 209.59,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 23.43,
+                "median_us": 14.7,
+                "p95_us": 14.8,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 115.06,
+                "median_us": 105.59,
+                "p95_us": 110.53999999999999,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 19.150000000000002,
+                "median_us": 14.65,
+                "p95_us": 14.74,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 800,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 82.189,
+                "median_us": 81.14,
+                "p95_us": 82.189,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 75.16000000000001,
+                "median_us": 65.78,
+                "p95_us": 75.16000000000001,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            896.0,
+            700.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 295.1,
+                "median_us": 243.91899999999998,
+                "p95_us": 281.81,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 36.909,
+                "median_us": 20.69,
+                "p95_us": 20.83,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 150.14,
+                "median_us": 139.19,
+                "p95_us": 144.27,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 28.36,
+                "median_us": 20.7,
+                "p95_us": 20.8,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 1200,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 133.01,
+                "median_us": 119.519,
+                "p95_us": 133.01,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 114.95,
+                "median_us": 102.41000000000001,
+                "p95_us": 114.95,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1120.0,
+            840.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 444.259,
+                "median_us": 369.28900000000004,
+                "p95_us": 430.669,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 40.79,
+                "median_us": 30.53,
+                "p95_us": 31.16,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 226.69000000000003,
+                "median_us": 209.66,
+                "p95_us": 217.8,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 37.73,
+                "median_us": 30.41,
+                "p95_us": 31.15,
+                "samples": 1080
+              }
+            }
+          ]
+        },
+        {
+          "actual_cells": 4096,
+          "idle_24h": [
+            {
+              "initially_settled": false,
+              "recovery": {
+                "max_us": 434.009,
+                "median_us": 424.76,
+                "p95_us": 434.009,
+                "samples": 7
+              }
+            },
+            {
+              "initially_settled": true,
+              "recovery": {
+                "max_us": 393.339,
+                "median_us": 374.699,
+                "p95_us": 393.339,
+                "samples": 7
+              }
+            }
+          ],
+          "logical_size": [
+            1792.0,
+            1792.0
+          ],
+          "ordinary": [
+            {
+              "input_hz": 60,
+              "push_and_advance": {
+                "max_us": 1522.2169999999999,
+                "median_us": 1291.058,
+                "p95_us": 1490.487,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 206.82,
+                "median_us": 158.22000000000003,
+                "p95_us": 186.49,
+                "samples": 1080
+              }
+            },
+            {
+              "input_hz": 120,
+              "push_and_advance": {
+                "max_us": 781.189,
+                "median_us": 728.459,
+                "p95_us": 758.908,
+                "samples": 1080
+              },
+              "sample_and_drop": {
+                "max_us": 177.35,
+                "median_us": 135.12,
+                "p95_us": 169.45,
+                "samples": 1080
+              }
+            }
+          ]
+        }
+      ],
+      "history_quantum_ms": 4,
+      "maximum_recent_replay_ms": 2000,
+      "ordinary_measured_frames_per_repeat": 360,
+      "ordinary_repeats": 3,
+      "ordinary_warmup_frames": 120,
+      "release_profile": true,
+      "schema": 1,
+      "scope": "CPU state advance and sample allocation only; no renderer or presentation timing"
+    }
+  },
+  "after_core_sha256": "b5992891d35968f55749bbf3cf20959915e626d7a17c869f52438fa4341bc2fd",
+  "before_test_binary_sha256": "1505d4658719dbf181563253af0c947f6d5506e5a9cac95f99f8a8f97e0feb70",
+  "after_test_binary_sha256": "4c70c0076690d878b0027803c3546cc5ef4ae7998b31fd98ff46d34019fe6f3f",
+  "final_fragment_patch_sha256": "c10d817b71fac866873598719d6764509fd417f4ed70e8aaf16ba3b227ddde24",
+  "differential_exact_cases": 66,
+  "default_fixture_sha256": "68fcbb6776773d8b4386059c72d6f6de0bf161455f722ae8eac9b7184c900f5d",
+  "idle_workload": {
+    "target_step_logical_px": [
+      100,
+      20
+    ],
+    "history_events": 2,
+    "active_start_ms": 0,
+    "settled_start_ms": 3000,
+    "recovery_clock_ms": 86400000
+  }
+}

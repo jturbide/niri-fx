@@ -11,13 +11,14 @@ references in [the research notes](docs/related-projects.md).
 ## Experimental Niri patches
 
 `experimental/niri-movement.patch` and its optional
-`experimental/niri-pointer-wobble.patch` extension contain modifications and context derived
+`experimental/niri-pointer-wobble.patch` and `experimental/niri-fragment-drag.patch`
+extensions contain modifications and context derived
 from [Niri](https://github.com/niri-wm/niri) at commit
 [`8ed0da44d974c32c6877d2f4630c314da0717ecb`](https://github.com/niri-wm/niri/tree/8ed0da44d974c32c6877d2f4630c314da0717ecb).
-Both patches are **GPL-3.0-or-later**, matching the pinned upstream project's license.
+These patches are **GPL-3.0-or-later**, matching the pinned upstream project's license.
 The full license text is included in [experimental/COPYING-NIRI](experimental/COPYING-NIRI).
 Upstream copyright notices remain in the source fetched by the build helper.
-The patches add an optional movement shader hook, pointer-driven deformation,
+The patches add an optional movement shader hook, pointer-driven deformation, continuous fragments,
 rendering integration and associated configuration/testing changes; see
 [the experiment](experimental/README.md).
 

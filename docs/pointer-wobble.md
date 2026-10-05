@@ -141,7 +141,8 @@ animations {
   Lower values feel looser; higher values feel firmer.
 
 Omitting the node leaves pointer wobble disabled. Global `animations { off; }`
-and `window-movement { off; }` also disable it. The built-in shader needs no
+disables it; timed movement Off preserves an explicitly selected pointer style
+on the current contract-2 build. The built-in shader needs no
 `custom-shader` entry. Do not put this node in a stock Niri configuration.
 
 ## How it behaves

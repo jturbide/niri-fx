@@ -46,6 +46,7 @@ a versioned package and its matching documentation.
 | Browse presets by look | [Preset collections](collections.md) |
 | Try experimental movement and swaps | [Experimental build](../experimental/README.md) |
 | Try a window that bends while dragging | [Pointer-wobble prototype](pointer-wobble.md) |
+| Try pieces that spread on press and follow a drag with individual delays | [Continuous fragment prototype](fragment-drag.md) |
 | Check support, performance and known limits | [Compatibility](compatibility.md), [performance measurements](performance.md), [validation and known limits](validation.md) |
 | See planned improvements and the path to 1.0 | [Project roadmap](../ROADMAP.md), [stability and compatibility policy](stability.md) |
 

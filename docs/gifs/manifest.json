@@ -13630,7 +13630,7 @@
       "sources": {
         "examples/profiles/fragment-flow.json": "4682b9ce7120031d653243da9505f6c190a8d9d412ac37310e7492581e6c6bf5",
         "niri_fx/library.js": "0724e44b8683e039da43ab0c9e45d7af8cb713d1ba2ad4b27bfd3de8dba7c950",
-        "niri_fx/effect-core.js": "f31ae3b3ea0c39c5e5685ccb3b0de02f662e0923374d29fe7d702277329bd109",
+        "niri_fx/effect-core.js": "3c56ab48e06db99325c26d1e982a60e791b9f00cadf7708d70f1707360477423",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "b2ff94c7a5d77ecbbc54eb3d6e9b9edc57060562de88d871a71e3acb7d343061",
         "niri_fx/combo-preview.js": "5a6ebaf54e040354186f6af43c13942a32a2fdd7c838dc6450b06009c90e55ec",
@@ -18956,7 +18956,7 @@
       "sources": {
         "examples/profiles/geometric-flow.json": "664664c83b401b10b41378e340be01bf416e21fcbb02c70f8d905282388c9b00",
         "niri_fx/library.js": "0724e44b8683e039da43ab0c9e45d7af8cb713d1ba2ad4b27bfd3de8dba7c950",
-        "niri_fx/effect-core.js": "f31ae3b3ea0c39c5e5685ccb3b0de02f662e0923374d29fe7d702277329bd109",
+        "niri_fx/effect-core.js": "3c56ab48e06db99325c26d1e982a60e791b9f00cadf7708d70f1707360477423",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "b2ff94c7a5d77ecbbc54eb3d6e9b9edc57060562de88d871a71e3acb7d343061",
         "niri_fx/combo-preview.js": "5a6ebaf54e040354186f6af43c13942a32a2fdd7c838dc6450b06009c90e55ec",
@@ -19502,7 +19502,7 @@
       "sources": {
         "examples/profiles/ribbon-current.json": "8f48fff1b88db8ec3d0faf4d105a257568b836cf8d177d7c9b4e0dfd80e37208",
         "niri_fx/library.js": "0724e44b8683e039da43ab0c9e45d7af8cb713d1ba2ad4b27bfd3de8dba7c950",
-        "niri_fx/effect-core.js": "f31ae3b3ea0c39c5e5685ccb3b0de02f662e0923374d29fe7d702277329bd109",
+        "niri_fx/effect-core.js": "3c56ab48e06db99325c26d1e982a60e791b9f00cadf7708d70f1707360477423",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "b2ff94c7a5d77ecbbc54eb3d6e9b9edc57060562de88d871a71e3acb7d343061",
         "niri_fx/combo-preview.js": "5a6ebaf54e040354186f6af43c13942a32a2fdd7c838dc6450b06009c90e55ec",
@@ -20047,7 +20047,7 @@
       "sources": {
         "examples/profiles/soft-landing.json": "f3d93b054f586066ad083f8b1144750c8d050ed8a82d8c6e10df7b8d4ece6196",
         "niri_fx/library.js": "0724e44b8683e039da43ab0c9e45d7af8cb713d1ba2ad4b27bfd3de8dba7c950",
-        "niri_fx/effect-core.js": "f31ae3b3ea0c39c5e5685ccb3b0de02f662e0923374d29fe7d702277329bd109",
+        "niri_fx/effect-core.js": "3c56ab48e06db99325c26d1e982a60e791b9f00cadf7708d70f1707360477423",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "b2ff94c7a5d77ecbbc54eb3d6e9b9edc57060562de88d871a71e3acb7d343061",
         "niri_fx/combo-preview.js": "5a6ebaf54e040354186f6af43c13942a32a2fdd7c838dc6450b06009c90e55ec",
@@ -21345,7 +21345,7 @@
       "sources": {
         "examples/profiles/playful-motion.json": "7ca0a7c40231e9eac8b73d51bb31c38520c38a199642337888c41aa2192bf878",
         "niri_fx/library.js": "0724e44b8683e039da43ab0c9e45d7af8cb713d1ba2ad4b27bfd3de8dba7c950",
-        "niri_fx/effect-core.js": "f31ae3b3ea0c39c5e5685ccb3b0de02f662e0923374d29fe7d702277329bd109",
+        "niri_fx/effect-core.js": "3c56ab48e06db99325c26d1e982a60e791b9f00cadf7708d70f1707360477423",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "b2ff94c7a5d77ecbbc54eb3d6e9b9edc57060562de88d871a71e3acb7d343061",
         "niri_fx/combo-preview.js": "5a6ebaf54e040354186f6af43c13942a32a2fdd7c838dc6450b06009c90e55ec",

@@ -1,0 +1,4316 @@
+diff --git a/niri-config/src/animations.rs b/niri-config/src/animations.rs
+index 24527698d492ed573297643663728328f08abe58..9d3682a85e9cd7f48e8d16b92405ff10bb332cda 100644
+--- a/niri-config/src/animations.rs
++++ b/niri-config/src/animations.rs
+@@ -89,6 +89,7 @@ impl MergeWith<AnimationsPart> for Animations {
+             if value.preserve_movement {
+                 value.anim = self.window_movement.anim;
+                 value.custom_shader = self.window_movement.custom_shader.clone();
++                value.fragment_motion = self.window_movement.fragment_motion;
+             }
+             if value.preserve_pointer {
+                 value.pointer_wobble = self.window_movement.pointer_wobble;
+@@ -227,6 +228,7 @@ pub struct WindowMovementAnim {
+     pub anim: Animation,
+     pub custom_shader: Option<String>,
+     pub pointer_wobble: Option<PointerWobble>,
++    pub fragment_motion: Option<FragmentMotion>,
+     pub preserve_movement: bool,
+     pub preserve_pointer: bool,
+ }
+@@ -244,12 +246,104 @@ impl Default for WindowMovementAnim {
+             },
+             custom_shader: None,
+             pointer_wobble: None,
++            fragment_motion: None,
+             preserve_movement: false,
+             preserve_pointer: false,
+         }
+     }
+ }
+ 
++#[derive(knuffel::DecodeScalar, Debug, Default, Clone, Copy, PartialEq, Eq)]
++pub enum FragmentRotation {
++    #[default]
++    Movement,
++    Random,
++    None,
++}
++
++/// Bounded per-cell motion for the marked native square-fragment material.
++#[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
++pub struct FragmentMotion {
++    #[knuffel(child, unwrap(argument), default = 64)]
++    pub batches: u32,
++    #[knuffel(child, unwrap(argument), default = 0)]
++    pub delay_near_ms: u32,
++    #[knuffel(child, unwrap(argument), default = 360)]
++    pub delay_far_ms: u32,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(0.25))]
++    pub delay_jitter: FloatOrInt<0, 1>,
++    #[knuffel(child, unwrap(argument), default = 120)]
++    pub response_near_ms: u32,
++    #[knuffel(child, unwrap(argument), default = 360)]
++    pub response_far_ms: u32,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(0.30))]
++    pub response_jitter: FloatOrInt<0, 1>,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(1.2))]
++    pub distance_exponent: FloatOrInt<0, 4>,
++    #[knuffel(child, unwrap(argument), default = 768)]
++    pub max_lag: u32,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(24.))]
++    pub pin_radius: FloatOrInt<0, 256>,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(20.))]
++    pub press_spread: FloatOrInt<0, 128>,
++    #[knuffel(child, unwrap(argument), default = 140)]
++    pub press_response_ms: u32,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(20.))]
++    pub rotation_degrees: FloatOrInt<0, 60>,
++    #[knuffel(child, unwrap(argument), default)]
++    pub rotation_mode: FragmentRotation,
++    #[knuffel(child, unwrap(argument), default = 180)]
++    pub rotation_response_ms: u32,
++    #[knuffel(child, unwrap(argument), default = 1000)]
++    pub rotation_speed: u32,
++    #[knuffel(child, unwrap(argument), default = FloatOrInt(0.55))]
++    pub tilt: FloatOrInt<0, 2>,
++    #[knuffel(child, unwrap(argument), default = 1800)]
++    pub release_ms: u32,
++}
++
++impl Default for FragmentMotion {
++    fn default() -> Self {
++        Self {
++            batches: 64,
++            delay_near_ms: 0,
++            delay_far_ms: 360,
++            delay_jitter: FloatOrInt(0.25),
++            response_near_ms: 120,
++            response_far_ms: 360,
++            response_jitter: FloatOrInt(0.30),
++            distance_exponent: FloatOrInt(1.2),
++            max_lag: 768,
++            pin_radius: FloatOrInt(24.),
++            press_spread: FloatOrInt(20.),
++            press_response_ms: 140,
++            rotation_degrees: FloatOrInt(20.),
++            rotation_mode: FragmentRotation::Movement,
++            rotation_response_ms: 180,
++            rotation_speed: 1000,
++            tilt: FloatOrInt(0.55),
++            release_ms: 1800,
++        }
++    }
++}
++
++impl FragmentMotion {
++    fn valid(&self) -> bool {
++        (1..=4096).contains(&self.batches)
++            && self.delay_near_ms <= self.delay_far_ms
++            && self.delay_far_ms <= 600
++            && (20..=800).contains(&self.response_near_ms)
++            && (self.response_near_ms..=800).contains(&self.response_far_ms)
++            && self.distance_exponent.0 > 0.
++            && (1..=1024).contains(&self.max_lag)
++            && (20..=800).contains(&self.press_response_ms)
++            && (20..=800).contains(&self.rotation_response_ms)
++            && (1..=5000).contains(&self.rotation_speed)
++            && self.tilt.0 <= 1.1
++            && (200..=2000).contains(&self.release_ms)
++    }
++}
++
+ /// Pointer deformation is opt-in and independent of a timed movement shader.
+ /// Damping is a percentage of critical damping, frequency is measured in Hz.
+ #[derive(knuffel::Decode, Debug, Clone, Copy, PartialEq)]
+@@ -286,6 +380,51 @@ mod movement_shader_tests {
+         Ok(config)
+     }
+ 
++    #[test]
++    fn fragment_motion_settings_are_bounded_and_preserved_with_movement() {
++        let base = "animations { window-movement { fragment-motion {}; }; }";
++        let config = parse_layers(base).unwrap();
++        assert_eq!(
++            config.animations.window_movement.fragment_motion,
++            Some(FragmentMotion::default())
++        );
++        let kept = parse_layers(&format!("{base}\nanimations {{ window-movement {{ preserve-movement; pointer-wobble {{}}; }}; }}")).unwrap();
++        assert_eq!(
++            kept.animations.window_movement.fragment_motion,
++            Some(FragmentMotion::default())
++        );
++        for invalid in [
++            "batches 0",
++            "batches 4097",
++            "delay-far-ms 601",
++            "delay-near-ms 400; delay-far-ms 200",
++            "response-near-ms 0",
++            "response-far-ms 900",
++            "max-lag 1025",
++            "tilt 1.2",
++            "press-spread 129",
++            "press-response-ms 0",
++            "rotation-mode \"invalid\"",
++            "release-ms 2001",
++        ] {
++            assert!(
++                parse_layers(&format!(
++                    "animations {{ window-movement {{ fragment-motion {{ {invalid}; }}; }}; }}"
++                ))
++                .is_err(),
++                "{invalid}"
++            );
++        }
++        assert!(parse_layers(
++            "animations { window-movement { fragment-motion {}; fragment-motion {}; }; }"
++        )
++        .is_err());
++        assert!(parse_layers(
++            "animations { window-movement { preserve-movement; fragment-motion {}; }; }"
++        )
++        .is_err());
++    }
++
+     #[test]
+     fn movement_pointer_merge_directives_preserve_only_the_selected_action() {
+         let base = r#"animations { window-movement {
+@@ -607,6 +746,7 @@ where
+         let default = Self::default().anim;
+         let mut custom_shader = None;
+         let mut pointer_wobble = None;
++        let mut fragment_motion = None;
+         let mut preserve_movement = false;
+         let mut preserve_pointer = false;
+         let anim = Animation::decode_node(node, ctx, default, |child, ctx| {
+@@ -629,6 +769,23 @@ where
+                 }
+                 *flag = true;
+                 Ok(true)
++            } else if &**child.node_name == "fragment-motion" {
++                if fragment_motion.is_some() {
++                    ctx.emit_error(DecodeError::unexpected(
++                        child,
++                        "node",
++                        "duplicate fragment-motion",
++                    ));
++                }
++                let value = FragmentMotion::decode_node(child, ctx)?;
++                if !value.valid() {
++                    ctx.emit_error(DecodeError::conversion(
++                        child,
++                        "fragment-motion settings exceed supported bounds",
++                    ));
++                }
++                fragment_motion = Some(value);
++                Ok(true)
+             } else if &**child.node_name == "pointer-wobble" {
+                 if pointer_wobble.is_some() {
+                     ctx.emit_error(DecodeError::unexpected(
+@@ -655,7 +812,12 @@ where
+             && node.children().any(|child| {
+                 matches!(
+                     &**child.node_name,
+-                    "off" | "duration-ms" | "curve" | "spring" | "custom-shader"
++                    "off"
++                        | "duration-ms"
++                        | "curve"
++                        | "spring"
++                        | "custom-shader"
++                        | "fragment-motion"
+                 )
+             })
+         {
+@@ -674,6 +836,7 @@ where
+             anim,
+             custom_shader,
+             pointer_wobble,
++            fragment_motion,
+             preserve_movement,
+             preserve_pointer,
+         })
+diff --git a/niri-config/src/lib.rs b/niri-config/src/lib.rs
+index 2120b4879a149f3b05ed843cde94bf7c7acc05d1..a0a488d08a2fd487e6706b38c429e21c47a2e583 100644
+--- a/niri-config/src/lib.rs
++++ b/niri-config/src/lib.rs
+@@ -1564,6 +1564,7 @@ mod tests {
+                     },
+                     custom_shader: None,
+                     pointer_wobble: None,
++                    fragment_motion: None,
+                     preserve_movement: false,
+                     preserve_pointer: false,
+                 },
+diff --git a/niri-ipc/src/lib.rs b/niri-ipc/src/lib.rs
+index a75e3ac913847c22178edabcd36eef0668d741f6..3600c7e4f18e4e04831102252b298fa0ffc410a1 100644
+--- a/niri-ipc/src/lib.rs
++++ b/niri-ipc/src/lib.rs
+@@ -71,6 +71,8 @@ pub enum Request {
+     NiriFxCapabilities,
+     /// Query the independent opt-in pointer deformation experiment.
+     NiriFxPointerCapabilities,
++    /// Query the continuous square-fragment movement interface.
++    NiriFxFragmentCapabilities,
+     /// Read the bounded native presentation/submission timing history.
+     NiriFxFrameTimings,
+     /// Request information about connected outputs.
+@@ -149,6 +151,8 @@ pub enum Response {
+     NiriFxCapabilities(NiriFxCapabilities),
+     /// Pointer support is independent of the existing movement contract.
+     NiriFxPointerCapabilities(NiriFxPointerCapabilities),
++    /// Continuous square-fragment movement support in the current renderer.
++    NiriFxFragmentCapabilities(NiriFxFragmentCapabilities),
+     /// The latest native output timing samples (at most 512).
+     NiriFxFrameTimings(Vec<NiriFxFrameTiming>),
+     /// Information about connected outputs.
+@@ -215,6 +219,26 @@ pub struct NiriFxPointerCapabilities {
+     pub max_release_ms: u32,
+ }
+ 
++/// Additive capability; existing movement and pointer contracts are unchanged.
++#[derive(Serialize, Deserialize, Debug, Clone)]
++#[cfg_attr(feature = "json-schema", derive(schemars::JsonSchema))]
++pub struct NiriFxFragmentCapabilities {
++    /// Response schema version.
++    pub schema: u32,
++    /// Continuous square-fragment interface version.
++    pub fragment_motion: u32,
++    /// The forward mesh program compiled and linked successfully.
++    pub renderer_verified: bool,
++    /// An eligible marked movement shader is selected and compiled.
++    pub fragment_configured: bool,
++    /// Effective movement and global animation settings permit the driver.
++    pub fragment_enabled: bool,
++    /// Maximum supported configured logical-pixel lag radius.
++    pub max_deformation: u32,
++    /// Maximum settling ownership after release, in milliseconds.
++    pub max_release_ms: u32,
++}
++
+ /// One native output frame. DRM samples use presentation feedback; winit samples
+ /// use estimated submission time and must never be described as physical scanout.
+ #[derive(Serialize, Deserialize, Debug, Clone)]
+diff --git a/src/animation/fragment_motion.rs b/src/animation/fragment_motion.rs
+new file mode 100644
+index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501de1cb686
+--- /dev/null
++++ b/src/animation/fragment_motion.rs
+@@ -0,0 +1,1686 @@
++//! Bounded world-space followers for the native square-fragment material.
++use std::cell::RefCell;
++use std::collections::BTreeMap;
++use std::rc::Rc;
++use std::time::Duration;
++
++use niri_config::animations::{FragmentMotion as Config, FragmentRotation};
++use smithay::utils::{Logical, Point, Rectangle, Size};
++
++pub const MARKER: &str = "// nirifx-fragment-motion: 3";
++const GRID_MARKER: &str = "// nirifx-fragment-grid: ";
++pub const MAX_LAG: f64 = 1024.;
++pub const MAX_CELLS: usize = 4096;
++const HISTORY_QUANTUM: Duration = Duration::from_millis(4);
++const HISTORY_LIMIT: usize = 256;
++const HISTORY_RETENTION: Duration = Duration::from_millis(608);
++const MAX_RELEASE: Duration = Duration::from_millis(2000);
++type Vector = Point<f64, Logical>;
++
++#[derive(Debug, Clone, Copy, PartialEq)]
++pub struct FragmentGrid {
++    pub particles: u32,
++    pub tile: f64,
++}
++
++impl Default for FragmentGrid {
++    fn default() -> Self {
++        Self {
++            particles: 800,
++            tile: 28.,
++        }
++    }
++}
++
++pub fn grid(source: &str) -> Option<FragmentGrid> {
++    if !source.lines().any(|line| line.trim() == MARKER) {
++        return None;
++    }
++    let mut matches = source
++        .lines()
++        .filter_map(|line| line.trim().strip_prefix(GRID_MARKER));
++    let mut words = matches.next()?.split_whitespace();
++    let particles: f64 = words.next()?.parse().ok()?;
++    let tile: f64 = words.next()?.parse().ok()?;
++    if words.next().is_some()
++        || matches.next().is_some()
++        || !particles.is_finite()
++        || particles.fract() != 0.
++        || !(0. ..=4096.).contains(&particles)
++        || !tile.is_finite()
++        || !(8. ..=128.).contains(&tile)
++    {
++        return None;
++    }
++    Some(FragmentGrid {
++        particles: particles as u32,
++        tile,
++    })
++}
++
++pub fn supported(source: &str) -> bool {
++    grid(source).is_some()
++}
++pub fn selected(compiled: Option<&str>, configured: Option<&str>) -> bool {
++    compiled.is_some_and(supported) && compiled == configured
++}
++
++#[derive(Debug, Clone, Copy)]
++pub struct FragmentCell {
++    pub center: [f32; 2],
++    pub half_extent: [f32; 2],
++    pub translation: [f32; 2],
++    pub rotation: f32,
++    /// Orthographic X/Y tilt angles, in radians.
++    pub tilt: [f32; 2],
++    pub edge_blend: f32,
++    pub pin_weight: f32,
++}
++#[derive(Debug, Clone)]
++pub struct FragmentSample {
++    pub cells: Rc<[FragmentCell]>,
++    pub max_lag: f64,
++}
++#[derive(Debug, Clone)]
++pub struct FragmentRenderState {
++    pub motion: Rc<RefCell<FragmentMotion>>,
++    pub at: Duration,
++}
++impl FragmentRenderState {
++    pub fn sample(
++        &self,
++        geo_size: Size<f64, Logical>,
++        texture_rect: Rectangle<f64, Logical>,
++    ) -> Result<FragmentSample, &'static str> {
++        self.motion
++            .borrow_mut()
++            .sample(self.at, geo_size, texture_rect)
++    }
++}
++#[derive(Debug, Clone, Copy)]
++pub struct FragmentLayout {
++    pub remaining: Vector,
++    pub velocity: Vector,
++    pub delta: Vector,
++    pub end: Duration,
++}
++#[derive(Debug, Clone)]
++struct LayoutSample {
++    remaining: Vector,
++    delta: Vector,
++    end: Duration,
++    at: Duration,
++}
++#[derive(Debug, Clone, Copy)]
++struct Target {
++    at: Duration,
++    position: Vector,
++}
++
++#[derive(Debug, Clone, Copy, Default)]
++struct Spring {
++    value: Vector,
++    velocity: Vector,
++}
++impl Spring {
++    fn advance(&mut self, target: Vector, seconds: f64, response_ms: f64) {
++        let omega = 3.889720169867429 / (response_ms / 1000.);
++        let lag = self.value - target;
++        let b = self.velocity + lag.upscale(omega);
++        let decay = (-omega * seconds).exp();
++        self.value = target + (lag + b.upscale(seconds)).upscale(decay);
++        self.velocity = (self.velocity - b.upscale(omega * seconds)).upscale(decay);
++        if norm(self.value - target) < 0.0001 && norm(self.velocity) < 0.001 {
++            self.value = target;
++            self.velocity = (0., 0.).into();
++        }
++    }
++    fn finish(&mut self, target: Vector) {
++        self.value = target;
++        self.velocity = (0., 0.).into();
++    }
++}
++fn norm(v: Vector) -> f64 {
++    v.x.hypot(v.y)
++}
++fn limited(v: Vector, bound: f64) -> Vector {
++    v.upscale((bound / norm(v).max(bound)).min(1.))
++}
++fn hash(id: (i32, i32), salt: u64) -> f64 {
++    let mut x = ((id.0 as u32 as u64) << 32) ^ id.1 as u32 as u64 ^ salt;
++    x ^= x >> 30;
++    x = x.wrapping_mul(0xbf58476d1ce4e5b9);
++    x ^= x >> 27;
++    x = x.wrapping_mul(0x94d049bb133111eb);
++    x ^= x >> 31;
++    (x >> 11) as f64 / ((1u64 << 53) as f64)
++}
++fn target_at(history: &[Target], at: Duration) -> Vector {
++    let index = history
++        .partition_point(|event| event.at <= at)
++        .saturating_sub(1);
++    history[index].position
++}
++
++#[derive(Debug, Clone)]
++struct Particle {
++    id: (i32, i32),
++    center: Vector,
++    half: f64,
++    position: Spring,
++    spread: Spring,
++    rotation: Spring,
++    tilt: Spring,
++    pin: Spring,
++    pin_target: bool,
++    radial: Vector,
++    delay: Duration,
++    response_ms: f64,
++}
++impl Particle {
++    fn configure(&mut self, anchor: Vector, size: Size<f64, Logical>, config: Config, fresh: bool) {
++        let offset = self.center - anchor;
++        let distance = norm(offset);
++        let corner = anchor
++            .x
++            .max(size.w - anchor.x)
++            .hypot(anchor.y.max(size.h - anchor.y))
++            .max(1.);
++        let radius = ((distance - config.pin_radius.0).max(0.) / corner)
++            .clamp(0., 1.)
++            .powf(config.distance_exponent.0);
++        let bins = f64::from(config.batches.max(1));
++        let wave = ((radius * bins).floor() / bins).clamp(0., 1.);
++        let jitter = (hash(self.id, 1) * 2. - 1.) * config.delay_jitter.0;
++        let delay = (f64::from(config.delay_near_ms)
++            + f64::from(config.delay_far_ms - config.delay_near_ms) * wave)
++            * (1. + jitter);
++        self.delay = Duration::from_secs_f64(delay.clamp(0., 600.) / 1000.);
++        let response = f64::from(config.response_near_ms)
++            + f64::from(config.response_far_ms - config.response_near_ms) * radius;
++        self.response_ms = (response
++            * (1. + (hash(self.id, 2) * 2. - 1.) * config.response_jitter.0))
++            .clamp(20., 800.);
++        // Cell rectangle distance guarantees the actual grabbed cell stays pinned.
++        let cell_distance = (offset.x.abs() - self.half)
++            .max(0.)
++            .hypot((offset.y.abs() - self.half).max(0.));
++        self.pin_target = cell_distance <= config.pin_radius.0;
++        self.radial = offset.downscale(distance.max(1.)).upscale(radius.sqrt());
++        if fresh {
++            self.pin
++                .finish((if self.pin_target { 1. } else { 0. }, 0.).into());
++        }
++    }
++    fn advance_linear_history(
++        &mut self,
++        target: Vector,
++        history: &[Target],
++        start: Duration,
++        end: Duration,
++        held: bool,
++        config: Config,
++    ) {
++        let mut cursor = start;
++        let mut goal = start
++            .checked_sub(self.delay)
++            .map_or(history[0].position, |at| target_at(history, at));
++        for event in history {
++            let due = event.at + self.delay;
++            if due <= start || due >= end {
++                continue;
++            }
++            self.position
++                .advance(goal, (due - cursor).as_secs_f64(), self.response_ms);
++            cursor = due;
++            goal = event.position;
++        }
++        self.position
++            .advance(goal, (end - cursor).as_secs_f64(), self.response_ms);
++        let dt = (end - start).as_secs_f64();
++        if self.pin.value.x == 1. && self.pin_target {
++            self.position.finish(target);
++        }
++        self.pin
++            .advance((if self.pin_target { 1. } else { 0. }, 0.).into(), dt, 80.);
++        self.spread.advance(
++            self.radial
++                .upscale(if held { config.press_spread.0 } else { 0. }),
++            dt,
++            f64::from(config.press_response_ms),
++        );
++        // Older angular forcing is outside the retained simulation horizon.
++        // Two seconds of following integration below suppresses its bounded
++        // residual while linear world position and velocity remain analytic.
++        self.rotation
++            .advance((0., 0.).into(), dt, f64::from(config.rotation_response_ms));
++        self.tilt
++            .advance((0., 0.).into(), dt, f64::from(config.rotation_response_ms));
++    }
++
++    fn advance(
++        &mut self,
++        target: Vector,
++        history: &[Target],
++        at: Duration,
++        dt: f64,
++        held: bool,
++        config: Config,
++    ) {
++        let delayed = at
++            .checked_sub(self.delay)
++            .map_or(history[0].position, |at| target_at(history, at));
++        self.position.advance(delayed, dt, self.response_ms);
++        if self.pin.value.x == 1. && self.pin_target {
++            self.position.finish(target);
++        }
++        self.pin
++            .advance((if self.pin_target { 1. } else { 0. }, 0.).into(), dt, 80.);
++        let spread = self
++            .radial
++            .upscale(if held { config.press_spread.0 } else { 0. });
++        self.spread
++            .advance(spread, dt, f64::from(config.press_response_ms));
++        let velocity = self.position.velocity + self.spread.velocity;
++        let speed = norm(velocity);
++        let reference = f64::from(config.rotation_speed);
++        let axis: Vector = match config.rotation_mode {
++            FragmentRotation::Movement => (-self.radial.y, self.radial.x).into(),
++            FragmentRotation::Random => {
++                let angle = hash(self.id, 3) * std::f64::consts::TAU;
++                (angle.cos(), angle.sin()).into()
++            }
++            FragmentRotation::None => (0., 0.).into(),
++        };
++        let signed = (velocity.x * axis.x + velocity.y * axis.y)
++            / (speed * speed + reference * reference).sqrt();
++        let angle = signed * config.rotation_degrees.0.to_radians();
++        self.rotation.advance(
++            (angle, 0.).into(),
++            dt,
++            f64::from(config.rotation_response_ms),
++        );
++        let tilt = Vector::from((-velocity.y, velocity.x))
++            .upscale(config.tilt.0 / (speed * speed + reference * reference).sqrt());
++        self.tilt
++            .advance(tilt, dt, f64::from(config.rotation_response_ms));
++    }
++}
++
++#[derive(Debug, Clone)]
++pub struct FragmentMotion {
++    config: Config,
++    grid: FragmentGrid,
++    pending_config: Option<(Config, FragmentGrid)>,
++    failed: bool,
++    sampled_at: Duration,
++    held: bool,
++    layout: Option<LayoutSample>,
++    released_at: Option<Duration>,
++    target: Vector,
++    history: Vec<Target>,
++    anchor: Vector,
++    geometry: Option<(Size<f64, Logical>, f64, Vector)>,
++    cells: BTreeMap<(i32, i32), Particle>,
++}
++impl FragmentMotion {
++    pub fn new(now: Duration) -> Self {
++        Self::with_anchor((0.5, 0.5).into(), now)
++    }
++    pub fn with_anchor(anchor: Vector, now: Duration) -> Self {
++        Self {
++            config: Config::default(),
++            grid: FragmentGrid::default(),
++            pending_config: None,
++            failed: false,
++            sampled_at: now,
++            held: false,
++            layout: None,
++            released_at: None,
++            target: (0., 0.).into(),
++            history: vec![Target {
++                at: now,
++                position: (0., 0.).into(),
++            }],
++            anchor,
++            geometry: None,
++            cells: BTreeMap::new(),
++        }
++    }
++    pub fn configure(&mut self, config: Config, grid: FragmentGrid) {
++        if self.config == config && self.grid == grid {
++            self.pending_config = None;
++            return;
++        }
++        // A release envelope and its lag clamp are part of the displayed pose.
++        // Replacing either mid-episode would jump or re-expand that pose. Keep
++        // the latest request for the next fully settled episode, including grid
++        // density, rather than reinterpret existing particles with new controls.
++        self.pending_config = Some((config, grid));
++        self.apply_pending_if_settled(self.sampled_at);
++    }
++    fn apply_pending_if_settled(&mut self, now: Duration) {
++        if self.active(now) {
++            return;
++        }
++        if self.pending_config.is_none() && !self.failed {
++            return;
++        }
++        if let Some((config, grid)) = self.pending_config.take() {
++            self.config = config;
++            self.grid = grid;
++        }
++        self.geometry = None;
++        self.cells.clear();
++        self.target = (0., 0.).into();
++        self.history.clear();
++        self.history.push(Target {
++            at: now,
++            position: self.target,
++        });
++        self.released_at = None;
++        self.layout = None;
++        self.failed = false;
++    }
++    /// Stop a failed preparation once while preserving grab/layout ownership.
++    /// The caller renders its current target through the ordinary protected path.
++    pub fn fail(&mut self) {
++        self.failed = true;
++        self.cells.clear();
++        self.geometry = None;
++        self.history.truncate(1);
++    }
++    pub fn failed(&self) -> bool {
++        self.failed
++    }
++    fn envelope(&self, now: Duration) -> (f64, f64) {
++        let Some(start) = self.released_at else {
++            return (1., 0.);
++        };
++        let duration = f64::from(self.config.release_ms) / 1000.;
++        let taper = duration.min(0.4);
++        let t =
++            ((now.saturating_sub(start).as_secs_f64() - (duration - taper)) / taper).clamp(0., 1.);
++        (
++            1. - t.powi(3) * (10. - 15. * t + 6. * t * t),
++            -30. * t * t * (1. - t) * (1. - t) / taper,
++        )
++    }
++    fn resume(&mut self, now: Duration) {
++        if self.released_at.is_none() {
++            return;
++        }
++        let (e, d) = self.envelope(now);
++        for cell in self.cells.values_mut() {
++            let lag = limited(
++                cell.position.value - self.target,
++                f64::from(self.config.max_lag),
++            );
++            cell.position.value = self.target + lag.upscale(e);
++            cell.position.velocity = cell.position.velocity.upscale(e) + lag.upscale(d);
++            for spring in [&mut cell.spread, &mut cell.rotation, &mut cell.tilt] {
++                spring.velocity = spring.velocity.upscale(e) + spring.value.upscale(d);
++                spring.value = spring.value.upscale(e);
++            }
++        }
++        self.released_at = None;
++    }
++    pub fn grab(&mut self, anchor: Vector, now: Duration) {
++        self.advance(now);
++        self.apply_pending_if_settled(now);
++        self.resume(now);
++        self.held = true;
++        self.layout = None;
++        self.anchor = anchor;
++        if let Some((size, _, _)) = self.geometry {
++            let anchor = (anchor.x * size.w, anchor.y * size.h).into();
++            let fresh = !self.moving();
++            for cell in self.cells.values_mut() {
++                cell.configure(anchor, size, self.config, fresh);
++            }
++        }
++    }
++    pub fn push(&mut self, delta: Vector, now: Duration) {
++        if self.failed {
++            return;
++        }
++        if !delta.x.is_finite() || !delta.y.is_finite() {
++            return;
++        }
++        self.advance(now);
++        if delta == (0., 0.).into() {
++            return;
++        }
++        self.resume(now);
++        self.target += (delta.x.clamp(-1e6, 1e6), delta.y.clamp(-1e6, 1e6)).into();
++        let event = Target {
++            at: now,
++            position: self.target,
++        };
++        // Keep the initial rest sample. Coalesce only subsequent events within
++        // a 4ms bucket, bounding high-rate devices to 256 history entries.
++        if self.history.len() > 1
++            && self.history.last().unwrap().at.as_millis() / 4 == now.as_millis() / 4
++        {
++            self.history.last_mut().unwrap().position = self.target;
++        } else {
++            self.history.push(event);
++        }
++        let cutoff = now.saturating_sub(HISTORY_RETENTION);
++        let keep = self
++            .history
++            .partition_point(|event| event.at < cutoff)
++            .saturating_sub(1);
++        if keep > 0 {
++            self.history.drain(..keep);
++        }
++        if self.history.len() > HISTORY_LIMIT {
++            self.history.drain(..self.history.len() - HISTORY_LIMIT);
++        }
++    }
++    pub fn release(&mut self, now: Duration) {
++        self.advance(now);
++        self.held = false;
++        self.layout = None;
++        self.settle(now);
++    }
++    fn settle(&mut self, now: Duration) {
++        self.released_at.get_or_insert(now);
++    }
++    pub fn held(&self) -> bool {
++        self.held
++    }
++    pub fn layout(&mut self, sample: Option<FragmentLayout>, now: Duration) {
++        if self.held {
++            return;
++        }
++        if let Some(FragmentLayout {
++            remaining,
++            velocity,
++            delta,
++            end,
++        }) = sample
++        {
++            if let Some(previous) = &self.layout {
++                if now <= previous.at {
++                    return;
++                }
++                let travel = if previous.end == end && previous.delta == delta {
++                    previous.remaining - remaining
++                } else {
++                    velocity.upscale(now.saturating_sub(previous.at).as_secs_f64().min(0.05))
++                };
++                self.push(travel, now);
++            } else {
++                self.advance(now);
++                self.apply_pending_if_settled(now);
++                self.resume(now);
++            }
++            self.layout = Some(LayoutSample {
++                remaining,
++                delta,
++                end,
++                at: now,
++            });
++        } else if self.layout.take().is_some() {
++            self.settle(now);
++        }
++    }
++    pub fn advance(&mut self, now: Duration) {
++        if now <= self.sampled_at {
++            return;
++        }
++        if self.failed {
++            self.sampled_at = now;
++            return;
++        }
++        if !self.held && self.layout.as_ref().is_some_and(|sample| now >= sample.end) {
++            self.settle(self.layout.as_ref().unwrap().end);
++        }
++        let done = self.released_at.is_some_and(|at| {
++            now.saturating_sub(at)
++                >= Duration::from_millis(u64::from(self.config.release_ms)).min(MAX_RELEASE)
++        });
++        if done {
++            for cell in self.cells.values_mut() {
++                cell.position.finish(self.target);
++                cell.spread.finish((0., 0.).into());
++                cell.rotation.finish((0., 0.).into());
++                cell.tilt.finish((0., 0.).into());
++            }
++        } else {
++            let mut cursor = self.sampled_at;
++            if now.saturating_sub(cursor) > MAX_RELEASE {
++                let recent = now - MAX_RELEASE;
++                for cell in self.cells.values_mut() {
++                    cell.advance_linear_history(
++                        self.target,
++                        &self.history,
++                        cursor,
++                        recent,
++                        self.held,
++                        self.config,
++                    );
++                }
++                cursor = recent;
++                // After a long idle, the analytic prefix often reaches exact
++                // spring rest. With no delayed target left, every remaining
++                // slice would reproduce these same values and zero velocities.
++                // Do not use moving()'s visual thresholds here: even tiny angular
++                // residue or a still-queued out-and-back pulse must be replayed.
++                if self.exactly_stationary(cursor) {
++                    self.sampled_at = now;
++                    return;
++                }
++            }
++            // Bounded integration slices also make changing velocity-driven tilt
++            // stable at ordinary display rates. Capture passes share this clock.
++            while cursor < now {
++                let next = (cursor + HISTORY_QUANTUM).min(now);
++                let dt = (next - cursor).as_secs_f64();
++                for cell in self.cells.values_mut() {
++                    cell.advance(
++                        self.target,
++                        &self.history,
++                        cursor,
++                        dt,
++                        self.held,
++                        self.config,
++                    );
++                }
++                cursor = next;
++            }
++        }
++        self.sampled_at = now;
++    }
++    pub fn moving(&self) -> bool {
++        if self.failed {
++            return false;
++        }
++        if self.released_at.is_some_and(|at| {
++            self.sampled_at.saturating_sub(at)
++                >= Duration::from_millis(u64::from(self.config.release_ms))
++        }) {
++            return false;
++        }
++        // A brief out-and-back target pulse can leave every visible position
++        // at rest while distant cells still owe their delayed response.
++        if self.has_pending_target(self.sampled_at) {
++            return true;
++        }
++        if self.cells.is_empty() {
++            return self.held;
++        }
++        self.cells.values().any(|cell| {
++            norm(cell.position.value - self.target) > 0.001
++                || norm(cell.position.velocity) > 0.01
++                || norm(
++                    cell.spread.value
++                        - cell.radial.upscale(if self.held {
++                            self.config.press_spread.0
++                        } else {
++                            0.
++                        }),
++                ) > 0.001
++                || norm(cell.spread.velocity) > 0.01
++                || norm(cell.rotation.value) > 0.0001
++                || norm(cell.rotation.velocity) > 0.001
++                || norm(cell.tilt.value) > 0.0001
++                || norm(cell.tilt.velocity) > 0.001
++        })
++    }
++    pub fn active(&self, now: Duration) -> bool {
++        self.held || self.moving() || self.layout.as_ref().is_some_and(|s| now < s.end)
++    }
++    fn has_pending_target(&self, at: Duration) -> bool {
++        let max_delay =
++            (f64::from(self.config.delay_far_ms) * (1. + self.config.delay_jitter.0)).min(600.);
++        self.history.len() > 1
++            && at < self.history.last().unwrap().at + Duration::from_secs_f64(max_delay / 1000.)
++    }
++    fn exactly_stationary(&self, at: Duration) -> bool {
++        let zero = (0., 0.).into();
++        !self.cells.is_empty()
++            && !self.has_pending_target(at)
++            && self.cells.values().all(|cell| {
++                cell.position.value == self.target
++                    && cell.position.velocity == zero
++                    && cell.spread.value
++                        == cell.radial.upscale(if self.held {
++                            self.config.press_spread.0
++                        } else {
++                            0.
++                        })
++                    && cell.spread.velocity == zero
++                    && cell.rotation.value == zero
++                    && cell.rotation.velocity == zero
++                    && cell.tilt.value == zero
++                    && cell.tilt.velocity == zero
++                    && cell.pin.value == (if cell.pin_target { 1. } else { 0. }, 0.).into()
++                    && cell.pin.velocity == zero
++            })
++    }
++    fn ensure_grid(
++        &mut self,
++        size: Size<f64, Logical>,
++        rect: Rectangle<f64, Logical>,
++    ) -> Result<(), &'static str> {
++        if ![
++            size.w,
++            size.h,
++            rect.loc.x,
++            rect.loc.y,
++            rect.size.w,
++            rect.size.h,
++        ]
++        .into_iter()
++        .all(f64::is_finite)
++            || size.w <= 0.
++            || size.h <= 0.
++            || rect.size.w <= 0.
++            || rect.size.h <= 0.
++        {
++            return Err("invalid fragment geometry");
++        }
++        let (size, tile, origin) = *self.geometry.get_or_insert_with(|| {
++            let tile = if self.grid.particles > 0 {
++                (size.w * size.h / f64::from(self.grid.particles))
++                    .sqrt()
++                    .max(4.)
++            } else {
++                self.grid.tile
++            };
++            let origin = (
++                (size.w - (size.w / tile).ceil() * tile) * 0.5,
++                (size.h - (size.h / tile).ceil() * tile) * 0.5,
++            )
++                .into();
++            (size, tile, origin)
++        });
++        let x0 = ((rect.loc.x - origin.x) / tile).floor() as i64;
++        let y0 = ((rect.loc.y - origin.y) / tile).floor() as i64;
++        let x1 = ((rect.loc.x + rect.size.w - origin.x) / tile).ceil() as i64;
++        let y1 = ((rect.loc.y + rect.size.h - origin.y) / tile).ceil() as i64;
++        let count = (x1 - x0)
++            .checked_mul(y1 - y0)
++            .ok_or("fragment grid overflow")?;
++        if count < 1
++            || count > MAX_CELLS as i64
++            || [x0, y0, x1, y1]
++                .into_iter()
++                .any(|v| v < i32::MIN as i64 || v > i32::MAX as i64)
++        {
++            return Err("fragment grid exceeds cell limit");
++        }
++        let mut additions = Vec::new();
++        additions
++            .try_reserve(count as usize)
++            .map_err(|_| "fragment allocation failed")?;
++        for y in y0..y1 {
++            for x in x0..x1 {
++                let id = (x as i32, y as i32);
++                if !self.cells.contains_key(&id) {
++                    additions.push(id);
++                }
++            }
++        }
++        if self.cells.len() + additions.len() > MAX_CELLS {
++            return Err("retained fragment grid exceeds cell limit");
++        }
++        let anchor = (self.anchor.x * size.w, self.anchor.y * size.h).into();
++        let first_grid = self.cells.is_empty();
++        for id in additions {
++            let center = origin
++                + Vector::from((
++                    (f64::from(id.0) + 0.5) * tile,
++                    (f64::from(id.1) + 0.5) * tile,
++                ));
++            let mut cell = Particle {
++                id,
++                center,
++                half: tile * 0.5,
++                position: Spring::default(),
++                spread: Spring::default(),
++                rotation: Spring::default(),
++                tilt: Spring::default(),
++                pin: Spring::default(),
++                pin_target: false,
++                radial: (0., 0.).into(),
++                delay: Duration::ZERO,
++                response_ms: 120.,
++            };
++            cell.configure(anchor, size, self.config, true);
++            cell.position.finish(if first_grid {
++                self.history[0].position
++            } else {
++                target_at(&self.history, self.sampled_at.saturating_sub(cell.delay))
++            });
++            if cell.pin_target {
++                cell.position.finish(self.target);
++            }
++            self.cells.insert(id, cell);
++        }
++        Ok(())
++    }
++    pub fn sample(
++        &mut self,
++        now: Duration,
++        size: Size<f64, Logical>,
++        rect: Rectangle<f64, Logical>,
++    ) -> Result<FragmentSample, &'static str> {
++        if self.failed {
++            return Err("fragment episode preparation previously failed");
++        }
++        self.ensure_grid(size, rect)?;
++        self.advance(now);
++        let (e, _) = self.envelope(now);
++        let mut cells = Vec::new();
++        cells
++            .try_reserve(self.cells.len())
++            .map_err(|_| "fragment allocation failed")?;
++        for cell in self.cells.values() {
++            let pin = cell.pin.value.x.clamp(0., 1.);
++            let translation = (limited(
++                cell.position.value - self.target,
++                f64::from(self.config.max_lag),
++            ) + cell.spread.value)
++                .upscale((1. - pin) * e);
++            let angle = cell.rotation.value.x * (1. - pin) * e;
++            let tilt = cell.tilt.value.upscale((1. - pin) * e);
++            let speed = norm(cell.position.velocity + cell.spread.velocity)
++                + norm(cell.rotation.velocity) * cell.half;
++            cells.push(FragmentCell {
++                center: [cell.center.x as f32, cell.center.y as f32],
++                half_extent: [cell.half as f32; 2],
++                translation: [translation.x as f32, translation.y as f32],
++                rotation: angle as f32,
++                tilt: [tilt.x as f32, tilt.y as f32],
++                edge_blend: (speed / 48.).clamp(0., 1.) as f32,
++                pin_weight: pin as f32,
++            });
++        }
++        Ok(FragmentSample {
++            cells: cells.into(),
++            max_lag: f64::from(self.config.max_lag),
++        })
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    fn at(ms: u64) -> Duration {
++        Duration::from_millis(ms)
++    }
++    fn sample(state: &mut FragmentMotion, ms: u64) -> FragmentSample {
++        state
++            .sample(
++                at(ms),
++                (500., 500.).into(),
++                Rectangle::from_size((500., 500.).into()),
++            )
++            .unwrap()
++    }
++    fn prepared() -> FragmentMotion {
++        let mut state = FragmentMotion::with_anchor((0.5, 0.104).into(), at(0));
++        let config = Config {
++            press_spread: niri_config::FloatOrInt(0.),
++            ..Default::default()
++        };
++        state.configure(config, FragmentGrid::default());
++        state.grab((0.5, 0.104).into(), at(0));
++        sample(&mut state, 0);
++        state
++    }
++    #[test]
++    fn marker_and_grid_are_strict_and_failed_reload_does_not_verify() {
++        let good = "// nirifx-fragment-motion: 3\n// nirifx-fragment-grid: 800 28\n";
++        assert!(supported(good));
++        assert!(!supported(MARKER));
++        for value in [
++            "800 nan",
++            "-1 28",
++            "4097 28",
++            "800.5 28",
++            "800 7",
++            "800 129",
++            "800 28 extra",
++        ] {
++            assert!(
++                !supported(&format!("{MARKER}\n{GRID_MARKER}{value}")),
++                "{value}"
++            );
++        }
++        assert!(selected(Some(good), Some(good)));
++        assert!(!selected(Some(good), Some(&format!("{good}different"))));
++    }
++    #[test]
++    fn delayed_target_holds_far_world_positions_then_independently_catches_up() {
++        let mut state = prepared();
++        state.push((40., 0.).into(), at(0));
++        let onset = sample(&mut state, 0);
++        for cell in onset.cells.iter().filter(|cell| cell.pin_weight == 0.) {
++            assert!((cell.translation[0] + 40.).abs() < 1e-6);
++        }
++        let early = sample(&mut state, 100);
++        let mut delays = std::collections::BTreeSet::new();
++        for (particle, cell) in state.cells.values().zip(early.cells.iter()) {
++            if particle.center.y > 390. {
++                assert!(particle.delay > at(100));
++                assert!((40. + cell.translation[0]).abs() < 0.001);
++                delays.insert(particle.delay.as_millis());
++            }
++        }
++        assert!(delays.len() > 16, "far pieces must not share a sheet");
++        let later = sample(&mut state, 600);
++        let histories: std::collections::BTreeSet<_> = later
++            .cells
++            .iter()
++            .filter(|c| c.center[1] > 390.)
++            .map(|c| (c.translation[0] * 1000.) as i32)
++            .collect();
++        assert!(histories.len() > 16);
++        let rest = sample(&mut state, 2200);
++        assert!(rest
++            .cells
++            .iter()
++            .all(|cell| cell.translation[0].abs() < 0.01));
++    }
++    #[test]
++    fn queued_reversal_keeps_world_pose_velocity_and_delayed_forward_motion() {
++        let mut state = prepared();
++        state.push((40., 0.).into(), at(0));
++        sample(&mut state, 80);
++        let before = state.clone();
++        state.push((-40., 0.).into(), at(80));
++        for (a, b) in state.cells.values().zip(before.cells.values()) {
++            assert_eq!(a.position.value, b.position.value);
++            assert_eq!(a.position.velocity, b.position.velocity);
++            assert_eq!(a.rotation.value, b.rotation.value);
++        }
++        let queued = sample(&mut state, 360);
++        assert!(queued
++            .cells
++            .iter()
++            .filter(|c| c.center[1] > 390.)
++            .any(|cell| cell.translation[0] > 0.5));
++        state.release(at(360));
++        let rest = sample(&mut state, 2360);
++        assert!(rest.cells.iter().all(|cell| cell.translation == [0., 0.]));
++        assert!(!state.active(at(2360)));
++    }
++    #[test]
++    fn accepted_press_spreads_without_target_motion_and_release_restores() {
++        let mut state = FragmentMotion::with_anchor((0.5, 0.104).into(), at(0));
++        state.grab((0.5, 0.104).into(), at(0));
++        sample(&mut state, 0);
++        let spread = sample(&mut state, 1000);
++        assert_eq!(state.target, (0., 0.).into());
++        assert!(spread
++            .cells
++            .iter()
++            .any(|cell| cell.translation[0].hypot(cell.translation[1]) > 10.));
++        assert!(spread
++            .cells
++            .iter()
++            .filter(|c| c.pin_weight == 1.)
++            .all(|cell| cell.translation == [0., 0.]));
++        let again = sample(&mut state, 1000);
++        assert_eq!(spread.cells[0].translation, again.cells[0].translation);
++        state.release(at(1000));
++        let rest = sample(&mut state, 3000);
++        assert!(rest.cells.iter().all(|cell| cell.translation == [0., 0.]));
++        assert!(!state.active(at(3000)));
++    }
++    #[test]
++    fn regrab_preserves_existing_pose_and_velocity_and_retargets_goals() {
++        let mut state = prepared();
++        state.push((120., -30.).into(), at(0));
++        sample(&mut state, 220);
++        state.release(at(220));
++        let before = state.clone();
++        state.grab((0.8, 0.8).into(), at(220));
++        for (a, b) in state.cells.values().zip(before.cells.values()) {
++            assert_eq!(a.position.value, b.position.value);
++            assert_eq!(a.position.velocity, b.position.velocity);
++            assert_eq!(a.pin.value, b.pin.value);
++            assert_eq!(a.rotation.value, b.rotation.value);
++        }
++        sample(&mut state, 236);
++        let before = state.clone();
++        state.grab((0.1, 0.2).into(), at(236));
++        for (a, b) in state.cells.values().zip(before.cells.values()) {
++            assert_eq!(a.pin.value, b.pin.value);
++            assert_eq!(a.pin.velocity, b.pin.velocity);
++        }
++    }
++    #[test]
++    fn source_target_extent_growth_keeps_existing_ids_and_poses() {
++        let mut state = prepared();
++        state.push((40., 20.).into(), at(0));
++        sample(&mut state, 160);
++        let before = state.clone();
++        state
++            .sample(
++                at(160),
++                (500., 500.).into(),
++                Rectangle::new((-25., -30.).into(), (550., 560.).into()),
++            )
++            .unwrap();
++        for (id, old) in &before.cells {
++            let new = &state.cells[id];
++            assert_eq!(old.position.value, new.position.value);
++            assert_eq!(old.position.velocity, new.position.velocity);
++            assert_eq!(old.center, new.center);
++        }
++        assert!(state.cells.len() > before.cells.len());
++        assert!(state
++            .sample(
++                at(160),
++                (500., 500.).into(),
++                Rectangle::from_size((100000., 100000.).into())
++            )
++            .is_err());
++        for (id, old) in &before.cells {
++            assert_eq!(old.position.value, state.cells[id].position.value);
++        }
++    }
++    #[test]
++    fn dense_input_history_and_large_travel_stay_bounded() {
++        let mut state = prepared();
++        for n in 1..=12000 {
++            state.push((2., 0.).into(), Duration::from_micros(n * 100));
++        }
++        assert!(state.history.len() <= HISTORY_LIMIT);
++        let frame = sample(&mut state, 1200);
++        assert!(frame.cells.iter().all(|cell| f64::from(cell.translation[0])
++            .hypot(f64::from(cell.translation[1]))
++            <= f64::from(state.config.max_lag) + 0.01));
++        state.push((f64::NAN, 0.).into(), at(1200));
++        state.release(at(1200));
++        sample(&mut state, 3200);
++        assert!(!state.active(at(3200)));
++    }
++    #[test]
++    fn quiet_returned_target_retains_unconsumed_delayed_pulse() {
++        let mut state = FragmentMotion::with_anchor((0.5, 0.104).into(), at(0));
++        let config = Config {
++            delay_near_ms: 400,
++            delay_far_ms: 400,
++            delay_jitter: niri_config::FloatOrInt(0.),
++            response_near_ms: 20,
++            response_far_ms: 20,
++            response_jitter: niri_config::FloatOrInt(0.),
++            press_spread: niri_config::FloatOrInt(0.),
++            ..Default::default()
++        };
++        state.configure(config, FragmentGrid::default());
++        state.grab((0.5, 0.104).into(), at(0));
++        sample(&mut state, 0);
++        state.push((40., 0.).into(), at(0));
++        state.push((-40., 0.).into(), at(40));
++        state.release(at(40));
++        let quiet = sample(&mut state, 140);
++        assert!(quiet.cells.iter().all(|cell| cell.translation == [0., 0.]));
++        assert!(
++            state.active(at(140)),
++            "delayed target history still owns a response"
++        );
++        let wave = sample(&mut state, 440);
++        assert!(wave
++            .cells
++            .iter()
++            .filter(|cell| cell.pin_weight == 0.)
++            .any(|cell| cell.translation[0] > 5.));
++        sample(&mut state, 2040);
++        assert!(!state.active(at(2040)));
++    }
++
++    #[test]
++    fn long_held_idle_uses_bounded_history_work_and_reaches_press_rest() {
++        let mut state = FragmentMotion::with_anchor((0.5, 0.104).into(), at(0));
++        state.grab((0.5, 0.104).into(), at(0));
++        sample(&mut state, 0);
++        state.push((100., 20.).into(), at(0));
++        let frame = sample(&mut state, 24 * 60 * 60 * 1000);
++        assert!(frame
++            .cells
++            .iter()
++            .all(|cell| cell.translation.iter().all(|v| v.is_finite())));
++        for cell in state.cells.values() {
++            assert_eq!(cell.position.value, state.target);
++            assert_eq!(cell.position.velocity, (0., 0.).into());
++            assert_eq!(
++                cell.spread.value,
++                cell.radial.upscale(state.config.press_spread.0)
++            );
++        }
++        assert!(!state.moving());
++        assert!(state.active(at(24 * 60 * 60 * 1000)));
++    }
++
++    #[test]
++    fn same_clock_layout_passes_do_not_double_consume_target_history() {
++        let mut state = prepared();
++        state.release(at(0));
++        let path = |remaining, delta| {
++            Some(FragmentLayout {
++                remaining: (remaining, 0.).into(),
++                velocity: (200., 0.).into(),
++                delta: (delta, 0.).into(),
++                end: at(500),
++            })
++        };
++        state.layout(path(100., 100.), at(0));
++        state.layout(path(80., 100.), at(100));
++        let once = state.clone();
++        state.layout(path(-1000., -1000.), at(100));
++        assert_eq!(state.target, once.target);
++        state.layout(path(-1000., -1000.), at(110));
++        assert!((state.target.x - once.target.x - 2.).abs() < 1e-9);
++    }
++
++    fn assert_same_pose(a: &FragmentSample, b: &FragmentSample) {
++        assert_eq!(a.cells.len(), b.cells.len());
++        for (a, b) in a.cells.iter().zip(b.cells.iter()) {
++            assert_eq!(a.center, b.center);
++            assert_eq!(a.translation, b.translation);
++            assert_eq!(a.rotation, b.rotation);
++            assert_eq!(a.tilt, b.tilt);
++            assert_eq!(a.edge_blend, b.edge_blend);
++            assert_eq!(a.pin_weight, b.pin_weight);
++        }
++    }
++
++    #[test]
++    fn hot_reload_latches_controls_grid_and_release_until_a_settled_episode() {
++        let mut state = prepared();
++        state.push((300., 0.).into(), at(0));
++        let held = sample(&mut state, 80);
++        let original = state.clone();
++        let requested = Config {
++            max_lag: 32,
++            release_ms: 200,
++            press_spread: niri_config::FloatOrInt(40.),
++            ..state.config
++        };
++        let grid = FragmentGrid {
++            particles: 400,
++            tile: 28.,
++        };
++        state.configure(requested, grid);
++        assert_eq!(state.config, original.config);
++        assert_same_pose(&held, &sample(&mut state, 80));
++        for (before, after) in original.cells.values().zip(state.cells.values()) {
++            assert_eq!(before.position.velocity, after.position.velocity);
++            assert_eq!(before.rotation.velocity, after.rotation.velocity);
++        }
++        state.release(at(80));
++        let mut control = original;
++        control.release(at(80));
++        assert_same_pose(&sample(&mut control, 400), &sample(&mut state, 400));
++        // An early regrab preserves the old episode, including its lag bound.
++        state.grab((0.8, 0.8).into(), at(400));
++        assert_eq!(state.config.max_lag, 768);
++        assert_eq!(state.grid.particles, 800);
++        state.release(at(400));
++        sample(&mut state, 2400);
++        state.grab((0.5, 0.104).into(), at(2400));
++        assert_eq!(state.config, requested);
++        assert_eq!(state.grid, grid);
++        assert!(state.geometry.is_none());
++        assert!(sample(&mut state, 2400).cells.len() < 800);
++    }
++
++    #[test]
++    fn extending_release_during_its_taper_cannot_reexpand_the_pose() {
++        let mut state = FragmentMotion::new(at(0));
++        state.configure(
++            Config {
++                release_ms: 200,
++                press_spread: niri_config::FloatOrInt(0.),
++                ..Default::default()
++            },
++            FragmentGrid::default(),
++        );
++        state.grab((0.5, 0.104).into(), at(0));
++        sample(&mut state, 0);
++        state.push((300., 0.).into(), at(0));
++        state.release(at(0));
++        let before = sample(&mut state, 150);
++        assert!(before
++            .cells
++            .iter()
++            .any(|cell| cell.translation[0].abs() > 10.));
++        let next = Config {
++            release_ms: 1800,
++            max_lag: 32,
++            ..state.config
++        };
++        state.configure(next, FragmentGrid::default());
++        assert_same_pose(&before, &sample(&mut state, 150));
++        let finished = sample(&mut state, 200);
++        assert!(finished
++            .cells
++            .iter()
++            .all(|cell| cell.translation == [0., 0.]));
++        assert!(!state.active(at(200)));
++        state.grab((0.5, 0.104).into(), at(200));
++        assert_eq!(state.config, next);
++    }
++
++    #[test]
++    fn unsupported_grid_retires_without_ticks_and_next_episode_retries() {
++        let mut state = FragmentMotion::new(at(0));
++        state.configure(
++            Config::default(),
++            FragmentGrid {
++                particles: 4096,
++                tile: 28.,
++            },
++        );
++        state.grab((0.5, 0.1).into(), at(0));
++        let size = (500., 400.).into();
++        let rect = Rectangle::from_size(size);
++        assert_eq!(
++            state.sample(at(0), size, rect).unwrap_err(),
++            "fragment grid exceeds cell limit"
++        );
++        state.fail();
++        assert!(!state.moving());
++        assert!(state.active(at(0)), "retain ownership, not animation work");
++        state.push((300., 0.).into(), at(100));
++        state.advance(at(60_000));
++        assert!(state.cells.is_empty());
++        assert_eq!(state.history.len(), 1);
++        assert!(!state.moving());
++        assert_eq!(
++            state.sample(at(60_000), size, rect).unwrap_err(),
++            "fragment episode preparation previously failed"
++        );
++        state.configure(Config::default(), FragmentGrid::default());
++        assert!(
++            state.failed(),
++            "reload must not retry the failed held episode"
++        );
++        state.release(at(60_000));
++        assert!(!state.active(at(60_000)));
++        state.grab((0.5, 0.1).into(), at(60_001));
++        assert!(!state.failed());
++        assert!(state.sample(at(60_001), size, rect).is_ok());
++    }
++
++    #[test]
++    fn idle_shortcut_matches_original_replay_at_cutoffs_and_extreme_controls() {
++        // Retain the old bounded replay as an independent differential oracle.
++        // It deliberately does not call exactly_stationary() or the new shortcut.
++        fn original_advance(state: &mut FragmentMotion, now: Duration) {
++            let done = state.released_at.is_some_and(|at| {
++                now.saturating_sub(at)
++                    >= Duration::from_millis(u64::from(state.config.release_ms)).min(MAX_RELEASE)
++            });
++            if done {
++                for cell in state.cells.values_mut() {
++                    cell.position.finish(state.target);
++                    cell.spread.finish((0., 0.).into());
++                    cell.rotation.finish((0., 0.).into());
++                    cell.tilt.finish((0., 0.).into());
++                }
++            } else {
++                let mut cursor = state.sampled_at;
++                if now.saturating_sub(cursor) > MAX_RELEASE {
++                    let recent = now - MAX_RELEASE;
++                    for cell in state.cells.values_mut() {
++                        cell.advance_linear_history(
++                            state.target,
++                            &state.history,
++                            cursor,
++                            recent,
++                            state.held,
++                            state.config,
++                        );
++                    }
++                    cursor = recent;
++                }
++                while cursor < now {
++                    let next = (cursor + HISTORY_QUANTUM).min(now);
++                    for cell in state.cells.values_mut() {
++                        cell.advance(
++                            state.target,
++                            &state.history,
++                            cursor,
++                            (next - cursor).as_secs_f64(),
++                            state.held,
++                            state.config,
++                        );
++                    }
++                    cursor = next;
++                }
++            }
++            state.sampled_at = now;
++        }
++        let extreme = Config {
++            delay_near_ms: 600,
++            delay_far_ms: 600,
++            delay_jitter: niri_config::FloatOrInt(0.),
++            response_near_ms: 800,
++            response_far_ms: 800,
++            response_jitter: niri_config::FloatOrInt(0.),
++            press_response_ms: 800,
++            rotation_response_ms: 800,
++            rotation_degrees: niri_config::FloatOrInt(60.),
++            tilt: niri_config::FloatOrInt(1.1),
++            max_lag: 1024,
++            release_ms: 2000,
++            ..Default::default()
++        };
++        let size = (252., 224.).into();
++        let rect = Rectangle::from_size(size);
++        for config in [Config::default(), extreme] {
++            for phase in ["active-held", "settled-held", "active-release"] {
++                let mut initial = FragmentMotion::new(at(0));
++                initial.configure(
++                    config,
++                    FragmentGrid {
++                        particles: 0,
++                        tile: 28.,
++                    },
++                );
++                initial.grab((0.5, 0.1).into(), at(0));
++                initial.sample(at(0), size, rect).unwrap();
++                initial.push((100., -20.).into(), at(0));
++                initial.push((-20., 80.).into(), at(100));
++                initial.advance(at(160));
++                if phase == "settled-held" {
++                    original_advance(&mut initial, at(12_000));
++                    assert!(initial.exactly_stationary(at(12_000)));
++                } else if phase == "active-release" {
++                    initial.release(at(160));
++                }
++                for gap in [
++                    1,
++                    1999,
++                    2000,
++                    2001,
++                    2399,
++                    2400,
++                    2600,
++                    3000,
++                    4000,
++                    8000,
++                    24 * 60 * 60 * 1000,
++                ] {
++                    let now = initial.sampled_at + at(gap);
++                    let mut old = initial.clone();
++                    let mut new = initial.clone();
++                    original_advance(&mut old, now);
++                    new.advance(now);
++                    assert_same_pose(
++                        &old.sample(now, size, rect).unwrap(),
++                        &new.sample(now, size, rect).unwrap(),
++                    );
++                    for (a, b) in old.cells.values().zip(new.cells.values()) {
++                        for (a, b) in [
++                            (a.position, b.position),
++                            (a.spread, b.spread),
++                            (a.rotation, b.rotation),
++                            (a.tilt, b.tilt),
++                            (a.pin, b.pin),
++                        ] {
++                            assert_eq!(a.value, b.value, "{phase}, gap {gap}");
++                            assert_eq!(a.velocity, b.velocity, "{phase}, gap {gap}");
++                        }
++                    }
++                    assert_eq!(old.active(now), new.active(now));
++                }
++            }
++        }
++    }
++
++    #[test]
++    fn idle_shortcut_requires_exact_rest_and_no_queued_target_debt() {
++        let mut state = FragmentMotion::new(at(0));
++        state.configure(
++            Config {
++                delay_near_ms: 600,
++                delay_far_ms: 600,
++                delay_jitter: niri_config::FloatOrInt(0.),
++                press_spread: niri_config::FloatOrInt(0.),
++                ..Default::default()
++            },
++            FragmentGrid::default(),
++        );
++        state.grab((0.5, 0.1).into(), at(0));
++        sample(&mut state, 0);
++        state.push((40., 0.).into(), at(0));
++        state.push((-40., 0.).into(), at(40));
++        state.advance(at(80));
++        assert!(state
++            .cells
++            .values()
++            .all(|cell| cell.position.value == state.target));
++        assert!(
++            !state.exactly_stationary(at(80)),
++            "queued pulse still changes future targets"
++        );
++        state.advance(at(8000));
++        assert!(state.exactly_stationary(at(8000)));
++        state.cells.values_mut().next().unwrap().tilt.value.x = 0.00001;
++        assert!(
++            !state.moving(),
++            "residue is below visual retirement threshold"
++        );
++        assert!(
++            !state.exactly_stationary(at(8000)),
++            "shortcut must not snap even tiny residue"
++        );
++    }
++
++    /// CPU-only benchmark using the real state and counted source cells.
++    /// Run: NIRIFX_FRAGMENT_BENCHMARK=/absolute/report.json cargo test --release
++    /// --locked --lib fragment_motion_benchmark -- --ignored --nocapture
++    #[test]
++    #[ignore = "release-only CPU benchmark; requires NIRIFX_FRAGMENT_BENCHMARK"]
++    fn fragment_motion_benchmark() {
++        use std::hint::black_box;
++        use std::time::Instant;
++
++        assert!(!cfg!(debug_assertions), "run this benchmark with --release");
++        let output = std::env::var("NIRIFX_FRAGMENT_BENCHMARK")
++            .expect("NIRIFX_FRAGMENT_BENCHMARK must name an output JSON file");
++        let stats = |mut values: Vec<f64>| {
++            values.sort_by(f64::total_cmp);
++            serde_json::json!({
++                "samples": values.len(),
++                "median_us": values[values.len() / 2],
++                "p95_us": values[((values.len() - 1) as f64 * 0.95).ceil() as usize],
++                "max_us": values[values.len() - 1],
++            })
++        };
++        let mut cases = Vec::new();
++        for (columns, rows) in [(25, 24), (32, 25), (40, 30), (64, 64)] {
++            let size = Size::from((f64::from(columns * 28), f64::from(rows * 28)));
++            let rect = Rectangle::from_size(size);
++            let prepare = || {
++                let mut state = FragmentMotion::with_anchor((0.5, 0.1).into(), at(0));
++                state.configure(
++                    Config::default(),
++                    FragmentGrid {
++                        particles: 0,
++                        tile: 28.,
++                    },
++                );
++                state.grab((0.5, 0.1).into(), at(0));
++                let sample = state.sample(at(0), size, rect).unwrap();
++                assert_eq!(sample.cells.len(), (columns * rows) as usize);
++                state
++            };
++            let mut ordinary = Vec::new();
++            for hz in [60_u64, 120] {
++                let mut push_us = Vec::new();
++                let mut sample_us = Vec::new();
++                for _ in 0..3 {
++                    let mut state = prepare();
++                    for frame in 1..=480 {
++                        let now = Duration::from_nanos(frame * 1_000_000_000 / hz);
++                        let delta = if frame % 120 < 60 { 2. } else { -2. };
++                        let start = Instant::now();
++                        state.push(black_box((delta, 0.5 * delta).into()), now);
++                        let push = start.elapsed().as_secs_f64() * 1e6;
++                        let start = Instant::now();
++                        let sample = state.sample(now, size, rect).unwrap();
++                        black_box(&sample);
++                        drop(sample);
++                        let sample = start.elapsed().as_secs_f64() * 1e6;
++                        // Exclude startup/warm-up, retain three identical traces.
++                        if frame > 120 {
++                            push_us.push(push);
++                            sample_us.push(sample);
++                        }
++                    }
++                }
++                ordinary.push(serde_json::json!({
++                    "input_hz": hz,
++                    "push_and_advance": stats(push_us),
++                    "sample_and_drop": stats(sample_us),
++                }));
++            }
++            let mut idle = Vec::new();
++            for settled in [false, true] {
++                let mut recovery_us = Vec::new();
++                for _ in 0..7 {
++                    let mut state = prepare();
++                    state.push((100., 20.).into(), at(0));
++                    if settled {
++                        state.advance(at(3000));
++                        assert!(!state.moving());
++                    }
++                    let start = Instant::now();
++                    state.advance(at(24 * 60 * 60 * 1000));
++                    black_box(&state);
++                    recovery_us.push(start.elapsed().as_secs_f64() * 1e6);
++                    assert!(!state.moving());
++                    assert!(state.held());
++                }
++                idle.push(serde_json::json!({
++                    "initially_settled": settled,
++                    "recovery": stats(recovery_us),
++                }));
++            }
++            cases.push(serde_json::json!({
++                "actual_cells": columns * rows,
++                "logical_size": [size.w, size.h],
++                "ordinary": ordinary,
++                "idle_24h": idle,
++            }));
++        }
++        let report = serde_json::json!({
++            "schema": 1,
++            "release_profile": true,
++            "scope": "CPU state advance and sample allocation only; no renderer or presentation timing",
++            "history_quantum_ms": HISTORY_QUANTUM.as_millis(),
++            "maximum_recent_replay_ms": MAX_RELEASE.as_millis(),
++            "ordinary_warmup_frames": 120,
++            "ordinary_measured_frames_per_repeat": 360,
++            "ordinary_repeats": 3,
++            "cases": cases,
++        });
++        std::fs::write(output, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
++        println!("{report}");
++    }
++
++    /// The capacity stress restores discarded old entries from the same real
++    /// push trace. It exceeds production retention, not the allocation bound;
++    /// positions, velocities, target, timestamp and event quantization stay real.
++    fn dense_history_state(
++        config: Config,
++        size: Size<f64, Logical>,
++    ) -> (FragmentMotion, Vec<Target>, Vec<f64>) {
++        use std::time::Instant;
++        let mut state = FragmentMotion::with_anchor((0.5, 0.1).into(), at(0));
++        state.configure(
++            config,
++            FragmentGrid {
++                particles: 0,
++                tile: 28.,
++            },
++        );
++        state.grab((0.5, 0.1).into(), at(0));
++        state
++            .sample(at(0), size, Rectangle::from_size(size))
++            .unwrap();
++        let mut complete = state.history.clone();
++        let mut push_us = Vec::new();
++        for event in 1..HISTORY_LIMIT {
++            let delta = if event % 64 < 32 { 3. } else { -3. };
++            let start = Instant::now();
++            state.push((delta, -0.5 * delta).into(), at(event as u64 * 4));
++            push_us.push(start.elapsed().as_secs_f64() * 1e6);
++            complete.push(Target {
++                at: state.sampled_at,
++                position: state.target,
++            });
++        }
++        assert_eq!(state.history.len(), 154);
++        assert_eq!(complete.len(), HISTORY_LIMIT);
++        assert_eq!(complete.last().unwrap().position, state.target);
++        assert!(state.has_pending_target(state.sampled_at));
++        (state, complete, push_us)
++    }
++
++    #[test]
++    fn dense_history_retention_and_capacity_replay_preserve_the_same_pose() {
++        let size = (252., 224.).into();
++        let rect = Rectangle::from_size(size);
++        let (initial, complete, _) = dense_history_state(Config::default(), size);
++        assert_eq!(initial.history.first().unwrap().at, at(408));
++        assert_eq!(initial.history.last().unwrap().at, at(1020));
++        for gap in [1, 599, 600, 2001, 4000, 24 * 60 * 60 * 1000] {
++            let mut reachable = initial.clone();
++            let mut capacity = initial.clone();
++            capacity.history = complete.clone();
++            let now = initial.sampled_at + at(gap);
++            reachable.advance(now);
++            capacity.advance(now);
++            assert_same_pose(
++                &reachable.sample(now, size, rect).unwrap(),
++                &capacity.sample(now, size, rect).unwrap(),
++            );
++            for (a, b) in reachable.cells.values().zip(capacity.cells.values()) {
++                for (a, b) in [
++                    (a.position, b.position),
++                    (a.spread, b.spread),
++                    (a.rotation, b.rotation),
++                    (a.tilt, b.tilt),
++                    (a.pin, b.pin),
++                ] {
++                    assert_eq!(a.value, b.value, "gap {gap}");
++                    assert_eq!(a.velocity, b.velocity, "gap {gap}");
++                }
++            }
++            assert_eq!(reachable.active(now), capacity.active(now));
++        }
++    }
++
++    /// Dense-history extension; does not replace the earlier single-step report.
++    /// Run: NIRIFX_FRAGMENT_DENSE_BENCHMARK=/absolute/report.json cargo test
++    /// --release --locked --lib fragment_motion_dense_benchmark -- --ignored --nocapture
++    #[test]
++    #[ignore = "release-only dense CPU benchmark; requires NIRIFX_FRAGMENT_DENSE_BENCHMARK"]
++    fn fragment_motion_dense_benchmark() {
++        use std::hint::black_box;
++        use std::time::Instant;
++        assert!(!cfg!(debug_assertions), "run this benchmark with --release");
++        let path = std::env::var("NIRIFX_FRAGMENT_DENSE_BENCHMARK")
++            .expect("set an absolute private artifact output path");
++        assert!(std::path::Path::new(&path).is_absolute());
++        let stats = |values: Vec<f64>| {
++            let mut sorted = values.clone();
++            sorted.sort_by(f64::total_cmp);
++            serde_json::json!({
++                "samples_us": values,
++                "median_us": sorted[sorted.len() / 2],
++                "p95_us": sorted[((sorted.len() - 1) as f64 * 0.95).ceil() as usize],
++                "max_us": sorted[sorted.len() - 1],
++            })
++        };
++        let extreme = Config {
++            delay_near_ms: 600,
++            delay_far_ms: 600,
++            delay_jitter: niri_config::FloatOrInt(0.),
++            response_near_ms: 800,
++            response_far_ms: 800,
++            response_jitter: niri_config::FloatOrInt(0.),
++            press_response_ms: 800,
++            rotation_response_ms: 800,
++            rotation_degrees: niri_config::FloatOrInt(60.),
++            tilt: niri_config::FloatOrInt(1.1),
++            max_lag: 1024,
++            release_ms: 2000,
++            ..Default::default()
++        };
++        let mut cases = Vec::new();
++        for (columns, rows) in [(25, 24), (32, 25), (40, 30), (64, 64)] {
++            let size = Size::from((f64::from(columns * 28), f64::from(rows * 28)));
++            let rect = Rectangle::from_size(size);
++            for (config_name, config) in [("default", Config::default()), ("extreme", extreme)] {
++                let (initial, complete, push_us) = dense_history_state(config, size);
++                assert_eq!(initial.cells.len(), (columns * rows) as usize);
++                let mut recoveries = Vec::new();
++                for capacity in [false, true] {
++                    let mut initial = initial.clone();
++                    if capacity {
++                        initial.history = complete.clone();
++                    }
++                    for gap in [2001, 4000, 24 * 60 * 60 * 1000] {
++                        let now = initial.sampled_at + at(gap);
++                        let mut recovery_us = Vec::new();
++                        let mut moving = false;
++                        let mut exact_rest = false;
++                        for _ in 0..7 {
++                            // Allocation/copy and material export are outside the
++                            // recovery timing; advance is the measured workload.
++                            let mut state = initial.clone();
++                            let start = Instant::now();
++                            state.advance(black_box(now));
++                            black_box(&state);
++                            recovery_us.push(start.elapsed().as_secs_f64() * 1e6);
++                            moving = state.moving();
++                            exact_rest = state.exactly_stationary(now);
++                            assert!(state.held());
++                            let sample = state.sample(now, size, rect).unwrap();
++                            assert_eq!(sample.cells.len(), (columns * rows) as usize);
++                            for cell in sample.cells.iter() {
++                                assert!(cell
++                                    .translation
++                                    .iter()
++                                    .chain(cell.tilt.iter())
++                                    .all(|v| v.is_finite()));
++                                assert!(cell.rotation.is_finite());
++                            }
++                            if gap == 24 * 60 * 60 * 1000 {
++                                assert!(exact_rest);
++                            }
++                        }
++                        recoveries.push(serde_json::json!({
++                            "history_kind": if capacity { "synthetic_capacity" } else { "reachable_dense_input" },
++                            "retained_events": initial.history.len(),
++                            "oldest_event_ms": initial.history.first().unwrap().at.as_millis(),
++                            "latest_event_ms": initial.history.last().unwrap().at.as_millis(),
++                            "sampled_at_before_ms": initial.sampled_at.as_millis(),
++                            "gap_ms": gap, "moving_after": moving, "exact_rest_after": exact_rest,
++                            "advance": stats(recovery_us),
++                        }));
++                    }
++                }
++                cases.push(serde_json::json!({
++                    "actual_cells": columns * rows, "logical_size": [size.w, size.h],
++                    "config": config_name, "reachable_input_push_and_advance": stats(push_us),
++                    "recoveries": recoveries,
++                }));
++            }
++        }
++        let report = serde_json::json!({
++            "schema": 1, "release_profile": true,
++            "scope": "CPU-only state advance; no renderer, presentation, physical suspend or real-time latency claim",
++            "history_quantum_ms": HISTORY_QUANTUM.as_millis(),
++            "history_retention_ms": HISTORY_RETENTION.as_millis(), "history_limit": HISTORY_LIMIT,
++            "maximum_recent_replay_ms": MAX_RELEASE.as_millis(),
++            "input": {"hz": 250, "events": 255, "initial_rest_events": 1, "duration_ms": 1020,
++                "delta": [3., -1.5], "direction": "sign alternates each 32-event block"},
++            "capacity_stress": "Restores all 256 chronological entries of the same input trace, including entries production retention discarded; no state, target or event cadence changes. This is not a reachable steady-state input history.",
++            "controls": {"default": "native Config::default()",
++                "extreme": {"delay_near_ms": 600, "delay_far_ms": 600, "delay_jitter": 0,
++                    "response_near_ms": 800, "response_far_ms": 800, "response_jitter": 0,
++                    "press_response_ms": 800, "rotation_response_ms": 800, "rotation_degrees": 60,
++                    "tilt": 1.1, "max_lag": 1024, "release_ms": 2000,
++                    "other_fields": "native Config::default()"}},
++            "recovery_repeats": 7, "cases": cases,
++        });
++        std::fs::write(path, serde_json::to_vec_pretty(&report).unwrap()).unwrap();
++        println!(
++            "dense benchmark: {} cases, 48 recovery combinations",
++            cases.len()
++        );
++    }
++}
+diff --git a/src/animation/mod.rs b/src/animation/mod.rs
+index 731cd4554614076326172ce0157aa17cb3938912..e7cdb3dfe49be27e4f3d577fc0fef1ced79b7272 100644
+--- a/src/animation/mod.rs
++++ b/src/animation/mod.rs
+@@ -3,8 +3,9 @@ use std::time::Duration;
+ use keyframe::functions::{EaseOutCubic, EaseOutQuad};
+ use keyframe::EasingFunction;
+ 
+-pub(crate) mod pointer_wobble;
++pub(crate) mod fragment_motion;
+ mod movement;
++pub(crate) mod pointer_wobble;
+ pub(crate) use movement::MoveAnimation;
+ 
+ mod size;
+diff --git a/src/cli.rs b/src/cli.rs
+index 2b1cbd6bac7300d52a7b9c8550c47af85f9931bc..e9ed81c3095e710bdbbf12a13cc41ea413801a09 100644
+--- a/src/cli.rs
++++ b/src/cli.rs
+@@ -65,6 +65,8 @@ pub enum Msg {
+     NiriFxCapabilities,
+     /// Query the independent opt-in pointer deformation experiment.
+     NiriFxPointerCapabilities,
++    /// Verify the additive continuous fragment movement interface.
++    NiriFxFragmentCapabilities,
+     /// Print bounded native frame timing samples with their measurement source.
+     NiriFxFrameTimings,
+     /// List connected outputs.
+diff --git a/src/input/move_grab.rs b/src/input/move_grab.rs
+index 8834b10087974aa246ccdb2b1d7a6d9abf4b2b9d..309d9555cbc913c043821b87b12471f6316e1fc1 100644
+--- a/src/input/move_grab.rs
++++ b/src/input/move_grab.rs
+@@ -21,6 +21,7 @@ use crate::niri::State;
+ use crate::utils::get_monotonic_time;
+ 
+ pub struct MoveGrab {
++    fragment_press: bool,
+     start_data: PointerOrTouchStartData<State>,
+     start_output: Output,
+     start_pos_within_output: Point<f64, Logical>,
+@@ -53,8 +54,18 @@ impl MoveGrab {
+     ) -> Option<Self> {
+         let location = start_data.location();
+         let (output, pos_within_output) = state.niri.output_under(location)?;
++        let output = output.clone();
++        let fragment_press =
++            state
++                .niri
++                .layout
++                .fragment_move_press(&window, &output, pos_within_output);
++        if fragment_press {
++            state.niri.queue_redraw_all();
++        }
+ 
+         Some(Self {
++            fragment_press,
+             last_location: location,
+             start_data,
+             start_output: output.clone(),
+@@ -80,6 +91,10 @@ impl MoveGrab {
+ 
+     fn on_ungrab(&mut self, data: &mut State) {
+         let layout = &mut data.niri.layout;
++        if self.fragment_press {
++            layout.fragment_move_release(&self.window);
++            self.fragment_press = false;
++        }
+         match self.gesture {
+             GestureState::Recognizing => {
+                 // Activate the window on release. This is most prominent in the overview where
+@@ -138,6 +153,10 @@ impl MoveGrab {
+ 
+     fn begin_view_offset(&mut self, data: &mut State) -> bool {
+         let layout = &mut data.niri.layout;
++        if self.fragment_press {
++            layout.fragment_move_release(&self.window);
++            self.fragment_press = false;
++        }
+         let Some(ws_idx) = layout.workspaces().find_map(|(mon, ws_idx, ws)| {
+             let ws_idx = ws
+                 .windows()
+diff --git a/src/ipc/client.rs b/src/ipc/client.rs
+index 8a8beb2c12d1edc288d0324591738cbdc586bbf5..4810d247aa5bb8adefc0642b179157a786d27c82 100644
+--- a/src/ipc/client.rs
++++ b/src/ipc/client.rs
+@@ -32,6 +32,7 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+     let request = match &msg {
+         Msg::NiriFxCapabilities => Request::NiriFxCapabilities,
+         Msg::NiriFxPointerCapabilities => Request::NiriFxPointerCapabilities,
++        Msg::NiriFxFragmentCapabilities => Request::NiriFxFragmentCapabilities,
+         Msg::NiriFxFrameTimings => Request::NiriFxFrameTimings,
+         Msg::Version => Request::Version,
+         Msg::Outputs => Request::Outputs,
+@@ -114,7 +115,10 @@ pub fn handle_msg(mut msg: Msg, json: bool) -> anyhow::Result<()> {
+     let response = reply.map_err(|err_msg| anyhow!(err_msg).context("niri returned an error"))?;
+ 
+     match msg {
+-        Msg::NiriFxCapabilities | Msg::NiriFxPointerCapabilities | Msg::NiriFxFrameTimings => {
++        Msg::NiriFxCapabilities
++        | Msg::NiriFxPointerCapabilities
++        | Msg::NiriFxFragmentCapabilities
++        | Msg::NiriFxFrameTimings => {
+             // Experimental diagnostics have one unambiguous JSON representation.
+             println!("{}", serde_json::to_string(&response)?);
+         }
+diff --git a/src/ipc/server.rs b/src/ipc/server.rs
+index c265d53381ce010258aff3cd794dedcc848133b4..3cbc92aa6ee43d49ac4f7d8fc0d5459eb71e5f66 100644
+--- a/src/ipc/server.rs
++++ b/src/ipc/server.rs
+@@ -335,6 +335,52 @@ async fn process(ctx: &ClientCtx, request: Request) -> Reply {
+                     .map_err(|_| String::from("error verifying pointer renderer"))?,
+             )
+         }
++        Request::NiriFxFragmentCapabilities => {
++            let (tx, rx) = async_channel::bounded(1);
++            ctx.event_loop.insert_idle(move |state| {
++                let selected_source = state
++                    .niri
++                    .config
++                    .borrow()
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .clone();
++                let (renderer_verified, compiled) = state
++                    .backend
++                    .with_primary_renderer(|renderer| {
++                        let verified =
++                            crate::render_helpers::shaders::verify_fragment_contract(renderer);
++                        let compiled = crate::render_helpers::shaders::Shaders::get(renderer)
++                            .fragment_configured(selected_source.as_deref());
++                        (verified, compiled)
++                    })
++                    .unwrap_or((false, false));
++                let config = state.niri.config.borrow();
++                let movement = &config.animations.window_movement;
++                let fragment_configured = compiled
++                    && movement
++                        .custom_shader
++                        .as_deref()
++                        .is_some_and(crate::animation::fragment_motion::supported);
++                let _ = tx.send_blocking(niri_ipc::NiriFxFragmentCapabilities {
++                    schema: 1,
++                    fragment_motion: 3,
++                    renderer_verified,
++                    fragment_configured,
++                    fragment_enabled: fragment_configured
++                        && !config.animations.off
++                        && !movement.anim.off,
++                    max_deformation: crate::animation::fragment_motion::MAX_LAG as u32,
++                    max_release_ms: 2000,
++                });
++            });
++            Response::NiriFxFragmentCapabilities(
++                rx.recv()
++                    .await
++                    .map_err(|_| String::from("error verifying fragment renderer"))?,
++            )
++        }
+         Request::NiriFxFrameTimings => {
+             let (tx, rx) = async_channel::bounded(1);
+             ctx.event_loop.insert_idle(move |state| {
+diff --git a/src/layout/mod.rs b/src/layout/mod.rs
+index 91f171dc7c1399a33192d68eadb7ec7cab199b0d..b8f87786ff7107a2581d9c6dcfca1a59898c5da7 100644
+--- a/src/layout/mod.rs
++++ b/src/layout/mod.rs
+@@ -76,12 +76,12 @@ use crate::utils::{
+ use crate::window::ResolvedWindowRules;
+ 
+ pub mod closing_window;
+-pub mod resize_close;
+ pub mod floating;
+ pub mod focus_ring;
+ pub mod insert_hint_element;
+ pub mod monitor;
+ pub mod opening_window;
++pub mod resize_close;
+ pub mod scrolling;
+ pub mod shadow;
+ pub mod tab_indicator;
+@@ -3791,6 +3791,69 @@ impl<W: LayoutElement> Layout<W> {
+         true
+     }
+ 
++    /// Start only the selected fragment material, before gesture recognition.
++    /// Input ownership and scrolling/tiling geometry remain unchanged.
++    pub fn fragment_move_press(
++        &mut self,
++        window_id: &W::Id,
++        output: &Output,
++        start_pos: Point<f64, Logical>,
++    ) -> bool {
++        let Some((mon, (ws, ws_geo))) = self.monitors().find_map(|mon| {
++            mon.workspaces_with_render_geo()
++                .find(|(ws, _)| ws.has_window(window_id))
++                .map(|value| (mon, value))
++        }) else {
++            return false;
++        };
++        if mon.output() != output {
++            return false;
++        }
++        let zoom = mon.overview_zoom();
++        let (tile, offset, _) = ws
++            .tiles_with_render_positions()
++            .find(|(tile, _, _)| tile.window().id() == window_id)
++            .unwrap();
++        if !tile.fragment_motion_enabled() {
++            return false;
++        }
++        let offset = start_pos - ws_geo.loc - (offset + tile.window_loc()).upscale(zoom);
++        let size = tile.window_size().upscale(zoom);
++        let ratio = (
++            (offset.x / size.w.max(1.)).clamp(0., 1.),
++            (offset.y / size.h.max(1.)).clamp(0., 1.),
++        );
++        let tile = self
++            .workspaces_mut()
++            .find(|ws| ws.has_window(window_id))
++            .unwrap()
++            .tiles_mut()
++            .find(|tile| tile.window().id() == window_id)
++            .unwrap();
++        tile.begin_pointer_wobble(ratio);
++        true
++    }
++
++    pub fn fragment_move_release(&mut self, window_id: &W::Id) {
++        if let Some(move_) = self
++            .interactive_move
++            .as_mut()
++            .and_then(InteractiveMoveState::moving_mut)
++        {
++            if move_.tile.window().id() == window_id {
++                move_.tile.release_pointer_wobble();
++                return;
++            }
++        }
++        if let Some(tile) = self
++            .workspaces_mut()
++            .flat_map(|ws| ws.tiles_mut())
++            .find(|tile| tile.window().id() == window_id)
++        {
++            tile.release_pointer_wobble();
++        }
++    }
++
+     pub fn interactive_move_begin(
+         &mut self,
+         window_id: W::Id,
+@@ -3906,7 +3969,10 @@ impl<W: LayoutElement> Layout<W> {
+                         )
+                     })
+                     .unwrap();
+-                tile.interactive_move_offset = pointer_delta.upscale(factor);
++                let fragment_motion = tile.fragment_motion_enabled();
++                if !fragment_motion {
++                    tile.interactive_move_offset = pointer_delta.upscale(factor);
++                }
+ 
+                 // Put it back to be able to easily return.
+                 self.interactive_move = Some(InteractiveMoveState::Starting {
+@@ -3915,7 +3981,7 @@ impl<W: LayoutElement> Layout<W> {
+                     pointer_ratio_within_window,
+                 });
+ 
+-                if !is_floating && sq_dist < INTERACTIVE_MOVE_START_THRESHOLD {
++                if !is_floating && !fragment_motion && sq_dist < INTERACTIVE_MOVE_START_THRESHOLD {
+                     return true;
+                 }
+ 
+@@ -3944,6 +4010,8 @@ impl<W: LayoutElement> Layout<W> {
+                             .unwrap();
+ 
+                         let zoom = mon.overview_zoom();
++                        // Continuous grabs have not changed the interactive offset:
++                        // this is the exact prior visible base, including rounding.
+                         tile_pos = Some((ws_geo.loc + tile_offset.upscale(zoom), zoom));
+                     }
+                 }
+@@ -3984,7 +4052,9 @@ impl<W: LayoutElement> Layout<W> {
+                     .adjusted_for_scale(scale);
+                 tile.update_config(view_size, scale, Rc::new(options));
+                 tile.begin_pointer_wobble(pointer_ratio_within_window);
+-                tile.push_pointer_wobble(delta);
++                if !tile.fragment_motion_enabled() {
++                    tile.push_pointer_wobble(delta);
++                }
+ 
+                 if is_floating {
+                     // Unlock the view in case we locked it moving a fullscreen window that is
+@@ -4016,8 +4086,18 @@ impl<W: LayoutElement> Layout<W> {
+ 
+                 if let Some((tile_pos, zoom)) = tile_pos {
+                     let new_tile_pos = data.tile_render_location(zoom);
+-                    data.tile
+-                        .animate_move_from((tile_pos - new_tile_pos).downscale(zoom));
++                    if data.tile.fragment_motion_enabled() {
++                        // The grab cell follows the cursor immediately. Rebase the
++                        // followers by actual visible travel, including any removed
++                        // placement offset, so their world positions do not jump.
++                        data.tile
++                            .push_pointer_wobble((new_tile_pos - tile_pos).downscale(zoom));
++                    } else {
++                        data.tile
++                            .animate_move_from((tile_pos - new_tile_pos).downscale(zoom));
++                    }
++                } else if data.tile.fragment_motion_enabled() {
++                    data.tile.push_pointer_wobble(delta);
+                 }
+ 
+                 self.interactive_move = Some(InteractiveMoveState::Moving(data));
+@@ -4028,6 +4108,8 @@ impl<W: LayoutElement> Layout<W> {
+                     return false;
+                 }
+ 
++                let previous_base = move_.tile_render_location(self.overview_zoom());
++                let same_output = move_.output == output;
+                 let mut ws_id = None;
+                 if let Some(mon) = self.monitor_for_output(&output) {
+                     let (insert_ws, _) = mon.insert_position(move_.pointer_pos_within_output);
+@@ -4072,10 +4154,15 @@ impl<W: LayoutElement> Layout<W> {
+                     move_.tile.update_config(view_size, scale, Rc::new(options));
+                 }
+ 
++                move_.pointer_pos_within_output = pointer_pos_within_output;
++                let travel = if same_output && move_.tile.fragment_motion_enabled() {
++                    move_.tile_render_location(self.overview_zoom()) - previous_base
++                } else {
++                    delta
++                };
+                 move_
+                     .tile
+-                    .push_pointer_wobble(delta.downscale(self.overview_zoom()));
+-                move_.pointer_pos_within_output = pointer_pos_within_output;
++                    .push_pointer_wobble(travel.downscale(self.overview_zoom()));
+ 
+                 self.interactive_move = Some(InteractiveMoveState::Moving(move_));
+             }
+diff --git a/src/layout/tests.rs b/src/layout/tests.rs
+index 31265dd9dfbc37c0c063808d45cf3f316b777d10..ff43c992f03251d36560fd3119d10dbfcd3484ba 100644
+--- a/src/layout/tests.rs
++++ b/src/layout/tests.rs
+@@ -3929,3 +3929,138 @@ proptest! {
+         check_ops_with_options(options, ops);
+     }
+ }
++
++#[test]
++fn fragment_motion_marker_arbitrates_pointer_and_off_retires_state() {
++    let mut clock = Clock::with_time(Duration::ZERO);
++    let mut options = Options::default();
++    options.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 800 28",
++        crate::animation::fragment_motion::MARKER
++    ));
++    options.animations.window_movement.pointer_wobble = Some(Default::default());
++    let mut tile = Tile::new(
++        TestWindow::new(TestWindowParams::new(1)),
++        (1000., 800.).into(),
++        1.,
++        clock.clone(),
++        Rc::new(options.clone()),
++    );
++    tile.record_fragment_renderer(crate::render_helpers::RenderTarget::Output, true);
++    tile.begin_pointer_wobble((0.2, 0.4));
++    assert!(
++        tile.pointer_wobble.is_none(),
++        "whole-sheet driver must not mask fragments"
++    );
++    tile.push_pointer_wobble((30., 10.).into());
++    assert!(tile.are_transitions_ongoing());
++    tile.release_pointer_wobble();
++    clock.set_unadjusted(Duration::from_millis(16));
++    tile.advance_animations();
++    assert!(tile.are_transitions_ongoing());
++    options.animations.window_movement.anim.off = true;
++    tile.update_config((1000., 800.).into(), 1., Rc::new(options.clone()));
++    assert!(!tile.are_transitions_ongoing());
++    tile.begin_pointer_wobble((0.2, 0.4));
++    assert!(
++        tile.pointer_wobble.is_some(),
++        "timed Off retains independent pointer style"
++    );
++    options.animations.off = true;
++    tile.update_config((1000., 800.).into(), 1., Rc::new(options));
++    assert!(tile.pointer_wobble.is_none());
++    assert!(!tile.are_transitions_ongoing());
++}
++
++#[test]
++fn fragment_motion_failed_preparation_keeps_grab_without_redraw_debt() {
++    let mut clock = Clock::with_time(Duration::ZERO);
++    let mut options = Options::default();
++    options.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 4096 28",
++        crate::animation::fragment_motion::MARKER
++    ));
++    let mut tile = Tile::new(
++        TestWindow::new(TestWindowParams::new(1)),
++        (1000., 800.).into(),
++        1.,
++        clock.clone(),
++        Rc::new(options.clone()),
++    );
++    tile.record_fragment_renderer(crate::render_helpers::RenderTarget::Output, true);
++    tile.begin_pointer_wobble((0.5, 0.1));
++    {
++        let state = tile.fragment_motion.borrow();
++        let mut state = state.as_ref().unwrap().borrow_mut();
++        assert!(state
++            .sample(
++                Duration::ZERO,
++                (500., 400.).into(),
++                Rectangle::from_size((500., 400.).into())
++            )
++            .is_err());
++        state.fail();
++    }
++    assert!(!tile.are_transitions_ongoing());
++    clock.set_unadjusted(Duration::from_secs(60));
++    tile.advance_animations();
++    tile.push_pointer_wobble((300., 0.).into());
++    assert!(!tile.are_transitions_ongoing());
++    assert!(tile
++        .fragment_motion
++        .borrow()
++        .as_ref()
++        .unwrap()
++        .borrow()
++        .held());
++    tile.release_pointer_wobble();
++    tile.advance_animations();
++    assert!(tile.fragment_motion.borrow().is_none());
++    options.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 800 28",
++        crate::animation::fragment_motion::MARKER
++    ));
++    tile.update_config((1000., 800.).into(), 1., Rc::new(options));
++    tile.record_fragment_renderer(crate::render_helpers::RenderTarget::Output, true);
++    tile.begin_pointer_wobble((0.5, 0.1));
++    assert!(tile
++        .fragment_motion
++        .borrow()
++        .as_ref()
++        .unwrap()
++        .borrow_mut()
++        .sample(
++            clock.now(),
++            (500., 400.).into(),
++            Rectangle::from_size((500., 400.).into())
++        )
++        .is_ok());
++}
++
++#[test]
++fn fragment_motion_unmarked_shader_and_removal_keep_stock_lifecycle() {
++    let mut options = Options::default();
++    options.animations.window_movement.custom_shader = Some("// ordinary shader".into());
++    let mut tile = Tile::new(
++        TestWindow::new(TestWindowParams::new(1)),
++        (1000., 800.).into(),
++        1.,
++        Clock::with_time(Duration::ZERO),
++        Rc::new(options.clone()),
++    );
++    tile.begin_pointer_wobble((0.5, 0.5));
++    tile.push_pointer_wobble((40., 0.).into());
++    assert!(!tile.are_transitions_ongoing());
++    options.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 800 28",
++        crate::animation::fragment_motion::MARKER
++    ));
++    tile.update_config((1000., 800.).into(), 1., Rc::new(options.clone()));
++    tile.record_fragment_renderer(crate::render_helpers::RenderTarget::Output, true);
++    tile.begin_pointer_wobble((0.5, 0.5));
++    tile.push_pointer_wobble((40., 0.).into());
++    assert!(tile.are_transitions_ongoing());
++    options.animations.window_movement.custom_shader = None;
++    tile.update_config((1000., 800.).into(), 1., Rc::new(options));
++    assert!(!tile.are_transitions_ongoing());
++}
+diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
+index af830730fb9f33d6e17786dd886733a9b0d19892..c2f79689d04000a3921dbb8ab320229f4ff1d09b 100644
+--- a/src/layout/tests/animations.rs
++++ b/src/layout/tests/animations.rs
+@@ -2155,3 +2155,338 @@ fn resize_handoff_off_after_focus_reassignment_settles_shared_size_without_new_g
+         }
+     }
+ }
++
++#[test]
++fn fragment_motion_first_step_preserves_world_followers_and_pins_cursor() {
++    for floating in [false, true] {
++        let mut options = make_options();
++        options.animations.window_movement.custom_shader = Some(format!(
++            "{}\n// nirifx-fragment-grid: 800 28",
++            crate::animation::fragment_motion::MARKER
++        ));
++        let mut layout = check_ops_with_options(
++            options,
++            [
++                Op::AddOutput(1),
++                Op::AddWindow {
++                    params: TestWindowParams::new(1),
++                },
++                Op::Communicate(1),
++                Op::CompleteAnimations,
++            ],
++        );
++        if floating {
++            Op::ToggleWindowFloating { id: Some(1) }.apply(&mut layout);
++        }
++        Op::CompleteAnimations.apply(&mut layout);
++        let (before, pointer) = layout
++            .monitors()
++            .find_map(|mon| {
++                mon.workspaces_with_render_geo().find_map(|(ws, geo)| {
++                    ws.tiles_with_render_positions()
++                        .find(|(tile, _, _)| *tile.window().id() == 1)
++                        .map(|(tile, pos, _)| {
++                            tile.record_fragment_renderer(
++                                crate::render_helpers::RenderTarget::Output,
++                                true,
++                            );
++                            let base = geo.loc + pos;
++                            (
++                                base,
++                                base + tile.window_loc()
++                                    + tile.window_size().to_point().downscale(2.),
++                            )
++                        })
++                })
++            })
++            .unwrap();
++        Op::InteractiveMoveBegin {
++            window: 1,
++            output_idx: 1,
++            px: pointer.x,
++            py: pointer.y,
++        }
++        .apply(&mut layout);
++        Op::InteractiveMoveUpdate {
++            window: 1,
++            dx: 5.,
++            dy: 0.,
++            output_idx: 1,
++            px: pointer.x + 5.,
++            py: pointer.y,
++        }
++        .apply(&mut layout);
++        let move_ = layout
++            .interactive_move
++            .as_ref()
++            .unwrap()
++            .moving()
++            .expect("marked fragments detach on the first small motion");
++        let base = move_.tile_render_location(1.);
++        assert!((base.x - before.x - 5.).abs() < 1e-8);
++        assert!((base.y - before.y).abs() < 1e-8);
++        assert_eq!(move_.tile.render_offset(), (0., 0.).into());
++        let state = move_.tile.fragment_motion.borrow();
++        let sample = state
++            .as_ref()
++            .unwrap()
++            .borrow_mut()
++            .sample(
++                layout.clock.now(),
++                move_.tile.animated_tile_size(),
++                Rectangle::from_size(move_.tile.animated_tile_size()),
++            )
++            .unwrap();
++        for cell in sample.cells.iter().filter(|cell| cell.pin_weight == 0.) {
++            assert!((base.x + f64::from(cell.translation[0]) - before.x).abs() < 1e-8);
++            assert_eq!(cell.translation[1], 0.);
++        }
++        drop(state);
++        Op::InteractiveMoveEnd { window: 1 }.apply(&mut layout);
++        Op::AdvanceAnimations { msec_delta: 2100 }.apply(&mut layout);
++        assert!(layout.interactive_move.is_none());
++    }
++}
++
++#[test]
++fn fragment_motion_press_and_cancel_leave_layout_ownership_unchanged() {
++    let mut options = make_options();
++    options.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 800 28",
++        crate::animation::fragment_motion::MARKER
++    ));
++    let mut layout = check_ops_with_options(
++        options,
++        [
++            Op::AddOutput(1),
++            Op::AddWindow {
++                params: TestWindowParams::new(1),
++            },
++            Op::Communicate(1),
++            Op::CompleteAnimations,
++        ],
++    );
++    let (output, pointer) = layout
++        .monitors()
++        .find_map(|mon| {
++            mon.workspaces_with_render_geo().find_map(|(ws, geo)| {
++                ws.tiles_with_render_positions()
++                    .find(|(tile, _, _)| *tile.window().id() == 1)
++                    .map(|(tile, pos, _)| {
++                        tile.record_fragment_renderer(
++                            crate::render_helpers::RenderTarget::Output,
++                            true,
++                        );
++                        (
++                            mon.output().clone(),
++                            geo.loc
++                                + pos
++                                + tile.window_loc()
++                                + tile.window_size().to_point().downscale(2.),
++                        )
++                    })
++            })
++        })
++        .unwrap();
++    let before = format_tiles(&layout);
++    assert!(layout.fragment_move_press(&1, &output, pointer));
++    assert!(layout.interactive_move.is_none());
++    let snapshot = |layout: &Layout<TestWindow>| {
++        let tile = layout
++            .workspaces()
++            .flat_map(|(_, _, ws)| ws.tiles())
++            .find(|tile| *tile.window().id() == 1)
++            .unwrap();
++        tile.fragment_motion
++            .borrow()
++            .as_ref()
++            .unwrap()
++            .borrow_mut()
++            .sample(
++                layout.clock.now(),
++                tile.animated_tile_size(),
++                Rectangle::from_size(tile.animated_tile_size()),
++            )
++            .unwrap()
++    };
++    snapshot(&layout);
++    Op::AdvanceAnimations { msec_delta: 500 }.apply(&mut layout);
++    let pressed = snapshot(&layout);
++    assert!(pressed
++        .cells
++        .iter()
++        .any(|cell| cell.translation[0].hypot(cell.translation[1]) > 5.));
++    assert_eq!(format_tiles(&layout), before);
++    assert!(layout.interactive_move.is_none());
++    layout.fragment_move_release(&1);
++    Op::AdvanceAnimations { msec_delta: 2100 }.apply(&mut layout);
++    assert_eq!(format_tiles(&layout), before);
++    assert!(layout.interactive_move.is_none());
++    assert!(layout
++        .workspaces()
++        .flat_map(|(_, _, ws)| ws.tiles())
++        .all(|tile| tile.fragment_motion.borrow().is_none()));
++}
++
++fn fragment_input_layout() -> Layout<TestWindow> {
++    let mut options = make_options();
++    options.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 800 28",
++        crate::animation::fragment_motion::MARKER
++    ));
++    check_ops_with_options(
++        options,
++        [
++            Op::AddOutput(1),
++            Op::AddWindow {
++                params: TestWindowParams::new(1),
++            },
++            Op::Communicate(1),
++            Op::CompleteAnimations,
++        ],
++    )
++}
++
++fn fragment_input_tile(layout: &Layout<TestWindow>) -> &Tile<TestWindow> {
++    layout
++        .workspaces()
++        .flat_map(|(_, _, ws)| ws.tiles())
++        .find(|tile| *tile.window().id() == 1)
++        .unwrap()
++}
++
++fn fragment_input_pointer(
++    layout: &Layout<TestWindow>,
++) -> (smithay::output::Output, Point<f64, Logical>) {
++    layout
++        .monitors()
++        .find_map(|mon| {
++            mon.workspaces_with_render_geo().find_map(|(ws, geo)| {
++                ws.tiles_with_render_positions()
++                    .find(|(tile, _, _)| *tile.window().id() == 1)
++                    .map(|(tile, pos, _)| {
++                        (
++                            mon.output().clone(),
++                            geo.loc
++                                + pos
++                                + tile.window_loc()
++                                + tile.window_size().to_point().downscale(2.),
++                        )
++                    })
++            })
++        })
++        .unwrap()
++}
++
++#[test]
++fn fragment_motion_input_requires_display_renderer_verification() {
++    use crate::render_helpers::RenderTarget;
++    for verification in [
++        None,
++        Some((RenderTarget::ScreenCapture, true)),
++        Some((RenderTarget::Screencast, true)),
++        Some((RenderTarget::Output, false)),
++        Some((RenderTarget::Output, true)),
++    ] {
++        let mut layout = fragment_input_layout();
++        if let Some((target, ready)) = verification {
++            fragment_input_tile(&layout).record_fragment_renderer(target, ready);
++        }
++        let expected = verification == Some((RenderTarget::Output, true));
++        let (output, pointer) = fragment_input_pointer(&layout);
++        assert_eq!(layout.fragment_move_press(&1, &output, pointer), expected);
++        assert_eq!(
++            fragment_input_tile(&layout)
++                .fragment_motion
++                .borrow()
++                .is_some(),
++            expected
++        );
++        Op::InteractiveMoveBegin {
++            window: 1,
++            output_idx: 1,
++            px: pointer.x,
++            py: pointer.y,
++        }
++        .apply(&mut layout);
++        Op::InteractiveMoveUpdate {
++            window: 1,
++            dx: 9.,
++            dy: 0.,
++            output_idx: 1,
++            px: pointer.x + 9.,
++            py: pointer.y,
++        }
++        .apply(&mut layout);
++        assert_eq!(
++            layout.interactive_move.as_ref().unwrap().moving().is_some(),
++            expected,
++            "only display-verified fragments may bypass the native drag threshold"
++        );
++        Op::InteractiveMoveEnd { window: 1 }.apply(&mut layout);
++        Op::AdvanceAnimations { msec_delta: 2100 }.apply(&mut layout);
++        assert!(layout.interactive_move.is_none());
++    }
++}
++
++#[test]
++fn fragment_motion_renderer_reload_defers_verdict_and_retires_failed_episode() {
++    use crate::render_helpers::RenderTarget;
++    let mut layout = fragment_input_layout();
++    fragment_input_tile(&layout).record_fragment_renderer(RenderTarget::Output, true);
++    let (output, pointer) = fragment_input_pointer(&layout);
++    assert!(layout.fragment_move_press(&1, &output, pointer));
++    let original = fragment_input_tile(&layout)
++        .fragment_motion
++        .borrow()
++        .clone()
++        .unwrap();
++    fragment_input_tile(&layout).record_fragment_renderer(RenderTarget::ScreenCapture, false);
++    assert!(fragment_input_tile(&layout).fragment_motion_enabled());
++    assert!(fragment_input_tile(&layout)
++        .fragment_motion
++        .borrow()
++        .is_some());
++
++    let mut config = niri_config::Config::default();
++    config.animations.window_movement.custom_shader = Some(format!(
++        "{}\n// nirifx-fragment-grid: 800 28\n// new selected source",
++        crate::animation::fragment_motion::MARKER
++    ));
++    layout.update_config(&config);
++    assert!(!fragment_input_tile(&layout).fragment_motion_enabled());
++    Op::AdvanceAnimations { msec_delta: 5 }.apply(&mut layout);
++    assert!(std::rc::Rc::ptr_eq(
++        fragment_input_tile(&layout)
++            .fragment_motion
++            .borrow()
++            .as_ref()
++            .unwrap(),
++        &original
++    ));
++    fragment_input_tile(&layout).record_fragment_renderer(RenderTarget::Output, true);
++    assert!(fragment_input_tile(&layout).fragment_motion_enabled());
++    layout.update_shaders();
++    assert!(!fragment_input_tile(&layout).fragment_motion_enabled());
++    assert!(fragment_input_tile(&layout)
++        .fragment_motion
++        .borrow()
++        .is_some());
++    fragment_input_tile(&layout).record_fragment_renderer(RenderTarget::Output, false);
++    assert!(fragment_input_tile(&layout)
++        .fragment_motion
++        .borrow()
++        .is_none());
++    fragment_input_tile(&layout).record_fragment_renderer(RenderTarget::Screencast, true);
++    assert!(!layout.fragment_move_press(&1, &output, pointer));
++
++    fragment_input_tile(&layout).record_fragment_renderer(RenderTarget::Output, true);
++    assert!(layout.fragment_move_press(&1, &output, pointer));
++    config.animations.window_movement.anim.off = true;
++    layout.update_config(&config);
++    assert!(!fragment_input_tile(&layout).fragment_motion_enabled());
++    assert!(fragment_input_tile(&layout)
++        .fragment_motion
++        .borrow()
++        .is_none());
++}
+diff --git a/src/layout/tile.rs b/src/layout/tile.rs
+index f4b37c727d6aeb3d98aef7d464462a0c75bcd40a..214c579d78d96c42a47d7e5cde5ac6724322cca2 100644
+--- a/src/layout/tile.rs
++++ b/src/layout/tile.rs
+@@ -16,6 +16,10 @@ use super::{
+     HitType, LayoutElement, LayoutElementRenderElement, LayoutElementRenderSnapshot, Options,
+     SizeFrac, RESIZE_ANIMATION_THRESHOLD,
+ };
++use crate::animation::fragment_motion::{
++    grid as fragment_grid, supported as supports_fragment_motion, FragmentMotion,
++    FragmentRenderState,
++};
+ use crate::animation::pointer_wobble::PointerWobble;
+ use crate::animation::{Animation, Clock, MoveAnimation, ResizePath, SizeAnimation};
+ use crate::layout::SizingMode;
+@@ -103,6 +107,10 @@ pub struct Tile<W: LayoutElement> {
+ 
+     /// Lazily allocated only while a movement shader is active.
+     movement_effect: RefCell<Option<MovementEffect>>,
++    pub(super) fragment_motion: RefCell<Option<Rc<RefCell<FragmentMotion>>>>,
++    /// Input can change its drag threshold only after the display renderer has
++    /// verified this tile's selected material. Capture passes never grant it.
++    fragment_renderer_ready: Cell<bool>,
+ 
+     /// Input owns the grab; this only deforms its texture and settles after release.
+     pub(super) pointer_wobble: Option<PointerWobble>,
+@@ -235,6 +243,8 @@ impl<W: LayoutElement> Tile<W> {
+             move_x_animation: None,
+             move_y_animation: None,
+             movement_effect: RefCell::new(None),
++            fragment_motion: RefCell::new(None),
++            fragment_renderer_ready: Cell::new(false),
+             pointer_wobble: None,
+             pointer_wobble_effect: RefCell::new(None),
+             pointer_parent_end: Cell::new(None),
+@@ -275,7 +285,15 @@ impl<W: LayoutElement> Tile<W> {
+             self.pointer_wobble_effect.borrow_mut().take();
+             self.pointer_parent_end.set(None);
+         }
++        if self.options.animations.window_movement.custom_shader
++            != options.animations.window_movement.custom_shader
++        {
++            self.fragment_renderer_ready.set(false);
++        }
+         self.options = options;
++        if !self.fragment_motion_requested() {
++            self.fragment_motion.get_mut().take();
++        }
+         // Off is an explicit immediate choice, not a shader-reload handoff.
+         if self.options.animations.off || self.options.animations.window_resize.anim.off {
+             if let Some(geometry) = self
+@@ -312,6 +330,7 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     pub fn update_shaders(&mut self) {
++        self.fragment_renderer_ready.set(false);
+         self.border.update_shaders();
+         self.focus_ring.update_shaders();
+         self.shadow.update_shaders();
+@@ -570,6 +589,36 @@ impl<W: LayoutElement> Tile<W> {
+         self.rounded_corner_damage.set_corner_radius(radius);
+     }
+ 
++    fn fragment_motion_requested(&self) -> bool {
++        !self.options.animations.off
++            && !self.options.animations.window_movement.anim.off
++            && !self.clock.should_complete_instantly()
++            && self
++                .options
++                .animations
++                .window_movement
++                .custom_shader
++                .as_deref()
++                .is_some_and(supports_fragment_motion)
++    }
++
++    pub(super) fn fragment_motion_enabled(&self) -> bool {
++        self.fragment_motion_requested() && self.fragment_renderer_ready.get()
++    }
++
++    /// Config selection alone is not renderer verification: a correctly marked
++    /// shader can still fail to compile. Keep that failure out of input routing,
++    /// without letting screenshot/screencast renderers authorize a desktop drag.
++    pub(super) fn record_fragment_renderer(&self, target: RenderTarget, ready: bool) {
++        if target != RenderTarget::Output {
++            return;
++        }
++        self.fragment_renderer_ready.set(ready);
++        if !ready && self.fragment_motion.borrow_mut().take().is_some() {
++            self.movement_effect.borrow_mut().take();
++        }
++    }
++
+     fn pointer_wobble_enabled(&self) -> bool {
+         !self.options.animations.off
+             && !self.clock.should_complete_instantly()
+@@ -582,6 +631,47 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     pub(super) fn begin_pointer_wobble(&mut self, ratio: (f64, f64)) {
++        if self.fragment_motion_enabled() {
++            let size = self.window_size();
++            let tile_size = self.animated_tile_size();
++            let loc = self.window_loc();
++            let anchor = Point::from((
++                (loc.x + size.w * ratio.0) / tile_size.w.max(1.),
++                (loc.y + size.h * ratio.1) / tile_size.h.max(1.),
++            ));
++            let now = self.clock.now();
++            let config = self
++                .options
++                .animations
++                .window_movement
++                .fragment_motion
++                .unwrap_or_default();
++            let grid = fragment_grid(
++                self.options
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .as_deref()
++                    .unwrap(),
++            )
++            .unwrap();
++            let state = self.fragment_motion.get_mut().get_or_insert_with(|| {
++                Rc::new(RefCell::new(FragmentMotion::with_anchor(anchor, now)))
++            });
++            let mut state = state.borrow_mut();
++            state.configure(config, grid);
++            // A recognized drag has already initialized anticipation at its
++            // accepted move request. Do not restart that material or anchor.
++            if !state.held() {
++                state.grab(anchor, now);
++            }
++            if let Some(effect) = self.movement_effect.get_mut() {
++                effect.start_fragment();
++            }
++            self.pointer_wobble = None;
++            self.pointer_wobble_effect.get_mut().take();
++            return;
++        }
+         if !self.pointer_wobble_enabled() {
+             return;
+         }
+@@ -608,18 +698,37 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     pub(super) fn push_pointer_wobble(&mut self, delta: Point<f64, Logical>) {
++        if let Some(state) = self.fragment_motion.get_mut() {
++            state.borrow_mut().push(delta, self.clock.now());
++        }
+         if let Some(state) = &mut self.pointer_wobble {
+             state.push(delta, self.clock.now());
+         }
+     }
+ 
+     pub(super) fn release_pointer_wobble(&mut self) {
++        if let Some(state) = self.fragment_motion.get_mut() {
++            state.borrow_mut().release(self.clock.now());
++        }
+         if let Some(state) = &mut self.pointer_wobble {
+             state.release(self.clock.now());
+         }
+     }
+ 
+     pub fn advance_animations(&mut self) {
++        if !self.fragment_motion_requested() {
++            self.fragment_motion.get_mut().take();
++        } else if let Some(state) = self.fragment_motion.get_mut() {
++            let finished = {
++                let mut state = state.borrow_mut();
++                state.advance(self.clock.now());
++                !state.active(self.clock.now())
++            };
++            if finished {
++                self.fragment_motion.get_mut().take();
++                self.movement_effect.get_mut().take();
++            }
++        }
+         if let Some(open) = &mut self.open_animation {
+             if open.is_done() {
+                 self.open_animation = None;
+@@ -688,6 +797,11 @@ impl<W: LayoutElement> Tile<W> {
+ 
+     pub fn are_transitions_ongoing(&self) -> bool {
+         self.open_animation.is_some()
++            || self
++                .fragment_motion
++                .borrow()
++                .as_ref()
++                .is_some_and(|state| state.borrow().moving())
+             || self
+                 .pointer_wobble
+                 .as_ref()
+@@ -1743,22 +1857,82 @@ impl<W: LayoutElement> Tile<W> {
+                 motion = Some(motion.map_or(own, |state| state.combined(own)));
+             }
+         }
++        let fragment_compiled = self.fragment_motion_requested()
++            && Shaders::get(ctx.renderer).fragment_configured(
++                self.options
++                    .animations
++                    .window_movement
++                    .custom_shader
++                    .as_deref(),
++            );
++        self.record_fragment_renderer(ctx.target, fragment_compiled);
++        let fragment_enabled = self.fragment_motion_enabled() && fragment_compiled;
+         let motion = motion.filter(|m| {
+-            m.progress >= 0.
+-                && m.progress < 1.
+-                && (m.delta.x.abs() + m.delta.y.abs()) > 0.01
++            let active = if fragment_enabled {
++                m.fragment_path_active(self.clock.now())
++            } else {
++                m.progress >= 0. && m.progress < 1. && (m.delta.x.abs() + m.delta.y.abs()) > 0.01
++            };
++            active
+                 && Shaders::get(ctx.renderer)
+                     .program(ProgramType::Move)
+                     .is_some()
+         });
++        let fragment = if fragment_enabled {
++            let now = self.clock.now();
++            let mut slot = self.fragment_motion.borrow_mut();
++            if motion.is_some() && slot.is_none() {
++                *slot = Some(Rc::new(RefCell::new(FragmentMotion::new(now))));
++            }
++            slot.as_ref().and_then(|handle| {
++                let mut state = handle.borrow_mut();
++                let config = self
++                    .options
++                    .animations
++                    .window_movement
++                    .fragment_motion
++                    .unwrap_or_default();
++                let grid = fragment_grid(
++                    self.options
++                        .animations
++                        .window_movement
++                        .custom_shader
++                        .as_deref()
++                        .unwrap(),
++                )
++                .unwrap();
++                state.configure(config, grid);
++                state.advance(now);
++                state.layout(motion.map(|motion| motion.fragment_layout()), now);
++                (state.active(now) && !state.failed()).then(|| FragmentRenderState {
++                    motion: handle.clone(),
++                    at: now,
++                })
++            })
++        } else {
++            None
++        };
++        // A failed mesh is terminal for this episode. Do not restart the timed
++        // fragment shader or retry preparation on every frame of the same grab.
++        let fragment_failed = fragment_enabled
++            && self
++                .fragment_motion
++                .borrow()
++                .as_ref()
++                .is_some_and(|state| state.borrow().failed());
++        let motion = motion.filter(|_| !fragment_failed);
+         let pointer = self.pointer_wobble.as_ref().filter(|_| {
+-            self.pointer_wobble_enabled()
++            !fragment_enabled
++                && self.pointer_wobble_enabled()
+                 && Shaders::get(ctx.renderer)
+                     .program(ProgramType::PointerWobble)
+                     .is_some()
+         });
+         // Opening has priority; live resize can be drawn into the movement texture.
+-        if motion.is_none() || self.open_animation.is_some() || pointer.is_some() {
++        if (motion.is_none() && fragment.is_none())
++            || self.open_animation.is_some()
++            || pointer.is_some()
++        {
+             self.movement_effect.borrow_mut().take();
+         }
+ 
+@@ -1818,7 +1992,7 @@ impl<W: LayoutElement> Tile<W> {
+                 }
+                 Err(err) => warn!("error rendering pointer wobble: {err:?}"),
+             }
+-        } else if let Some(motion) = motion {
++        } else if motion.is_some() || fragment.is_some() {
+             let mut ctx = ctx.as_gles();
+             let mut elements = Vec::new();
+             self.render_inner(
+@@ -1828,23 +2002,35 @@ impl<W: LayoutElement> Tile<W> {
+                 focus_ring,
+                 &mut |elem| elements.push(elem),
+             );
+-            let mut effect = self.movement_effect.borrow_mut();
+-            let effect = effect.get_or_insert_with(|| MovementEffect::new(self.clock.clone()));
+-            match effect.render(
+-                ctx.renderer,
+-                &elements,
+-                self.animated_tile_size(),
+-                location,
+-                scale,
+-                tile_alpha,
+-                motion,
+-            ) {
++            let result = {
++                let mut effect = self.movement_effect.borrow_mut();
++                let effect = effect.get_or_insert_with(|| MovementEffect::new(self.clock.clone()));
++                effect.render(
++                    ctx.renderer,
++                    &elements,
++                    self.animated_tile_size(),
++                    location,
++                    scale,
++                    tile_alpha,
++                    motion,
++                    fragment,
++                )
++            };
++            match result {
+                 Ok((elem, data)) => {
+                     self.window().set_offscreen_data(Some(data));
+                     push(elem.into());
+                     pushed = true;
+                 }
+-                Err(err) => warn!("error rendering movement shader: {err:?}"),
++                Err(err) => {
++                    warn!("error rendering movement shader: {err:?}");
++                    if fragment_enabled {
++                        if let Some(state) = self.fragment_motion.borrow().as_ref() {
++                            state.borrow_mut().fail();
++                        }
++                        self.movement_effect.borrow_mut().take();
++                    }
++                }
+             }
+         } else if let Some(alpha) = &self.alpha_animation {
+             let mut ctx = ctx.as_gles();
+diff --git a/src/render_helpers/movement.rs b/src/render_helpers/movement.rs
+index fddf12b49ee8c844a75b48c14f7157507e5ef246..3d175296611c3fdb8010d99ee433a0d0d63a84fa 100644
+--- a/src/render_helpers/movement.rs
++++ b/src/render_helpers/movement.rs
+@@ -8,11 +8,12 @@ use smithay::backend::renderer::element::{Element, Kind, RenderElement};
+ use smithay::backend::renderer::gles::{GlesRenderer, Uniform};
+ use smithay::backend::renderer::Texture;
+ use smithay::utils::{Logical, Point, Rectangle, Scale, Size};
+-use std::cell::RefCell;
++use std::cell::{Cell, RefCell};
+ use std::collections::HashMap;
+ use std::rc::Rc;
+ use std::time::Duration;
+ 
++use crate::animation::fragment_motion::{FragmentLayout, FragmentRenderState, FragmentSample};
+ use crate::animation::{Animation, Clock};
+ 
+ /// Layout samples use the compositor clock, so slow-motion and repeated render
+@@ -29,6 +30,22 @@ pub struct MovementState {
+ }
+ 
+ impl MovementState {
++    pub fn fragment_layout(&self) -> FragmentLayout {
++        FragmentLayout {
++            remaining: self.remaining,
++            velocity: self.travel_velocity,
++            delta: self.delta,
++            end: self.end,
++        }
++    }
++
++    pub fn fragment_path_active(&self, at: Duration) -> bool {
++        at < self.end
++            && (self.delta.x.abs() + self.delta.y.abs() > 0.01
++                || self.remaining.x.abs() + self.remaining.y.abs() > 0.01
++                || self.travel_velocity.x.abs() + self.travel_velocity.y.abs() > 0.1)
++    }
++
+     pub fn end_time(&self) -> Duration {
+         self.end
+     }
+@@ -245,6 +262,7 @@ pub struct MovementEffect {
+     clock: Clock,
+     buffer: OffscreenBuffer,
+     continuity: RefCell<MotionContinuity>,
++    fragment_active: Cell<bool>,
+ }
+ 
+ impl MovementEffect {
+@@ -254,10 +272,20 @@ impl MovementEffect {
+             clock,
+             buffer: OffscreenBuffer::default(),
+             continuity: RefCell::new(MotionContinuity::default()),
++            fragment_active: Cell::new(false),
+         }
+     }
+ 
++    pub fn start_fragment(&self) {
++        self.fragment_active.set(true);
++    }
++
+     pub fn continuation(&self) -> Option<crate::layout::closing_window::AnimationContinuation> {
++        // The timed close continuation has no fragment spring ABI. Freeze the
++        // existing target-protected rendered snapshot instead of re-fragmenting it.
++        if self.fragment_active.get() {
++            return None;
++        }
+         let state = self.continuity.borrow();
+         let motion = state.previous?;
+         let at = self.clock.now();
+@@ -307,9 +335,17 @@ impl MovementEffect {
+         location: Point<f64, Logical>,
+         scale: Scale<f64>,
+         alpha: f32,
+-        motion: MovementState,
++        motion: Option<MovementState>,
++        fragment: Option<FragmentRenderState>,
+     ) -> anyhow::Result<(ShaderRenderElement, OffscreenData)> {
+-        let (progress, impulse) = self.continuity.borrow_mut().sample(motion);
++        self.fragment_active.set(fragment.is_some());
++        let (progress, impulse) = if fragment.is_some() {
++            (1., [0., 0.])
++        } else {
++            self.continuity
++                .borrow_mut()
++                .sample(motion.expect("timed movement driver"))
++        };
+         let clamped_progress = progress.clamp(0., 1.);
+         let (elem, _sync_point, mut data) = self
+             .buffer
+@@ -321,14 +357,35 @@ impl MovementEffect {
+         let texture = elem.texture();
+         let texture_size = elem.logical_size();
+ 
++        if let Some(fragment) = fragment {
++            // Snapshot only after this target's protected source texture exists.
++            // Sampling may grow the logical grid but must preserve existing IDs
++            // and must not advance physics twice for simultaneous capture passes.
++            let texture_rect = Rectangle::new(offset, texture_size);
++            let sample = fragment
++                .sample(geo_size, texture_rect)
++                .map_err(anyhow::Error::msg)?;
++            let (vertices, bounds) = fragment_mesh_vertices(&sample, texture_rect, scale)?;
++            let elem = ShaderRenderElement::new(
++                ProgramType::FragmentMesh,
++                bounds.size,
++                None,
++                scale.x as f32,
++                alpha,
++                Rc::new([]),
++                HashMap::from([(String::from("niri_tex"), texture.clone())]),
++                Kind::Unspecified,
++            )
++            .with_mesh(vertices)
++            .with_location(location + bounds.loc);
++            data.id = elem.id().clone();
++            return Ok((elem, data));
++        }
++
+         let mut area = Rectangle::new(location + offset, texture_size);
+ 
+-        // Expand the area a bit to allow for more varied effects.
+-        let mut target_size = area.size.upscale(1.5);
+-        target_size.w = f64::max(area.size.w + 1000., target_size.w);
+-        target_size.h = f64::max(area.size.h + 1000., target_size.h);
+-        let diff = (target_size.to_point() - area.size.to_point()).downscale(2.);
+-        let diff = diff.to_physical_precise_round(scale).to_logical(scale);
++        // Legacy timed shaders retain their established explosion bounds.
++        let diff = movement_padding(area.size, scale);
+         area.loc -= diff;
+         area.size += diff.upscale(2.).to_size();
+ 
+@@ -364,7 +421,9 @@ impl MovementEffect {
+                 Uniform::new("niri_move_impulse", impulse),
+                 Uniform::new(
+                     "niri_move_delta",
+-                    [motion.delta.x as f32, motion.delta.y as f32],
++                    motion.map_or([0., 0.], |motion| {
++                        [motion.delta.x as f32, motion.delta.y as f32]
++                    }),
+                 ),
+             ]),
+             HashMap::from([(String::from("niri_tex"), texture.clone())]),
+@@ -379,9 +438,363 @@ impl MovementEffect {
+     }
+ }
+ 
++/// Forward-transform source cells once, then let rasterization cover their pixels.
++/// Positions are normalized within the returned area, matching ShaderRenderElement
++/// source cropping. Original UVs/local cell coordinates remain untransformed.
++fn fragment_mesh_vertices(
++    sample: &FragmentSample,
++    texture_rect: Rectangle<f64, Logical>,
++    scale: Scale<f64>,
++) -> anyhow::Result<(Rc<[[f32; 9]]>, Rectangle<f64, Logical>)> {
++    anyhow::ensure!(
++        [
++            texture_rect.loc.x,
++            texture_rect.loc.y,
++            texture_rect.size.w,
++            texture_rect.size.h,
++            scale.x,
++            scale.y
++        ]
++        .into_iter()
++        .all(f64::is_finite)
++            && sample.cells.len() <= crate::animation::fragment_motion::MAX_CELLS,
++        "invalid fragment geometry"
++    );
++    anyhow::ensure!(
++        texture_rect.size.w > 0. && texture_rect.size.h > 0. && scale.x > 0. && scale.y > 0.,
++        "invalid fragment texture dimensions"
++    );
++    if !sample.cells.is_empty()
++        && sample.cells.iter().all(|cell| {
++            cell.center
++                .iter()
++                .chain(cell.half_extent.iter())
++                .all(|value| value.is_finite())
++                && cell.half_extent.iter().all(|value| *value > 0.)
++                && cell.translation == [0., 0.]
++                && cell.rotation == 0.
++                && cell.tilt == [0., 0.]
++                && cell.edge_blend == 0.
++        })
++    {
++        // Rasterizers snap triangle edges to their subpixel grid. Even an
++        // undeformed cell mesh can therefore interpolate LINEAR-filtered UVs
++        // slightly differently from the original full texture. Use its exact
++        // quad at rest: no cell seams, no sampling drift, and only six vertices.
++        let half = [
++            texture_rect.size.w as f32 * 0.5,
++            texture_rect.size.h as f32 * 0.5,
++        ];
++        let vertices = [[0., 0.], [1., 0.], [0., 1.], [0., 1.], [1., 0.], [1., 1.]].map(|[x, y]| {
++            [
++                x,
++                y,
++                x,
++                y,
++                (x * 2. - 1.) * half[0],
++                (y * 2. - 1.) * half[1],
++                half[0],
++                half[1],
++                0.,
++            ]
++        });
++        return Ok((vertices.to_vec().into(), texture_rect));
++    }
++    let mut cells = sample.cells.iter().collect::<Vec<_>>();
++    // Stable sorting retains source-cell order for equally pinned pieces.
++    cells.sort_by(|a, b| a.pin_weight.total_cmp(&b.pin_weight));
++    let mut vertices = Vec::new();
++    vertices
++        .try_reserve_exact(cells.len() * 6)
++        .context("allocating continuous fragment vertices")?;
++    let mut lower = texture_rect.loc;
++    let mut upper = texture_rect.loc + texture_rect.size.to_point();
++    for cell in cells {
++        let center = Vec2::from_array(cell.center);
++        let half = Vec2::from_array(cell.half_extent);
++        anyhow::ensure!(
++            center.is_finite() && half.is_finite() && half.x > 0. && half.y > 0.,
++            "invalid fragment source cell"
++        );
++        if center.x + half.x <= texture_rect.loc.x as f32
++            || center.y + half.y <= texture_rect.loc.y as f32
++            || center.x - half.x >= (texture_rect.loc.x + texture_rect.size.w) as f32
++            || center.y - half.y >= (texture_rect.loc.y + texture_rect.size.h) as f32
++        {
++            continue;
++        }
++        let (sin, cos) = cell.rotation.sin_cos();
++        let (tilt_x_sin, tilt_x_cos) = cell.tilt[0].sin_cos();
++        let (tilt_y_sin, tilt_y_cos) = cell.tilt[1].sin_cos();
++        for corner in [
++            [-1., -1.],
++            [1., -1.],
++            [-1., 1.],
++            [-1., 1.],
++            [1., -1.],
++            [1., 1.],
++        ] {
++            let local = Vec2::from_array(corner) * half;
++            let source = center + local;
++            // Orthographic Rx/Ry tilt, then in-plane rotation. This is a planar
++            // affine projection, not a perspective or general 3D scene.
++            let tilted = Vec2::new(
++                tilt_y_cos * local.x + tilt_x_sin * tilt_y_sin * local.y,
++                tilt_x_cos * local.y,
++            );
++            let rotated = Vec2::new(
++                cos * tilted.x - sin * tilted.y,
++                sin * tilted.x + cos * tilted.y,
++            );
++            let position = center + Vec2::from_array(cell.translation) + rotated;
++            let uv = Vec2::new(
++                (source.x - texture_rect.loc.x as f32) / texture_rect.size.w as f32,
++                (source.y - texture_rect.loc.y as f32) / texture_rect.size.h as f32,
++            );
++            anyhow::ensure!(
++                position.is_finite() && uv.is_finite() && cell.edge_blend.is_finite(),
++                "invalid fragment destination pose"
++            );
++            lower.x = lower.x.min(f64::from(position.x));
++            lower.y = lower.y.min(f64::from(position.y));
++            upper.x = upper.x.max(f64::from(position.x));
++            upper.y = upper.y.max(f64::from(position.y));
++            vertices.push([
++                position.x,
++                position.y,
++                uv.x,
++                uv.y,
++                local.x,
++                local.y,
++                half.x,
++                half.y,
++                cell.edge_blend.clamp(0., 1.),
++            ]);
++        }
++    }
++    anyhow::ensure!(
++        !vertices.is_empty(),
++        "fragment source grid does not cover texture"
++    );
++    // Round bounds outwards at output scale; fractional output scaling must not
++    // clip an extreme vertex or reinterpret texture coordinates.
++    lower.x = (lower.x * scale.x).floor() / scale.x;
++    lower.y = (lower.y * scale.y).floor() / scale.y;
++    upper.x = (upper.x * scale.x).ceil() / scale.x;
++    upper.y = (upper.y * scale.y).ceil() / scale.y;
++    let bounds = Rectangle::from_extremities(lower, upper);
++    for vertex in &mut vertices {
++        vertex[0] = ((f64::from(vertex[0]) - bounds.loc.x) / bounds.size.w) as f32;
++        vertex[1] = ((f64::from(vertex[1]) - bounds.loc.y) / bounds.size.h) as f32;
++    }
++    Ok((vertices.into(), bounds))
++}
++
++fn movement_padding(size: Size<f64, Logical>, scale: Scale<f64>) -> Point<f64, Logical> {
++    let mut target = size.upscale(1.5);
++    target.w = f64::max(size.w + 1000., target.w);
++    target.h = f64::max(size.h + 1000., target.h);
++    let diff = (target.to_point() - size.to_point()).downscale(2.);
++    diff.to_physical_precise_round(scale).to_logical(scale)
++}
++
+ #[cfg(test)]
+ mod tests {
+     use super::*;
++    use crate::animation::fragment_motion::{FragmentCell, FragmentMotion};
++
++    #[test]
++    fn fragment_mesh_corners_cover_source_and_round_bounds_outwards() {
++        let rect = Rectangle::new((-12., -8.).into(), (120., 96.).into());
++        let sample = FragmentSample {
++            cells: vec![FragmentCell {
++                center: [48., 40.],
++                half_extent: [60., 48.],
++                translation: [-768., 90.],
++                rotation: 0.6,
++                tilt: [0.4, -0.5],
++                edge_blend: 1.,
++                pin_weight: 0.,
++            }]
++            .into(),
++            max_lag: 768.,
++        };
++        let (vertices, area) = fragment_mesh_vertices(&sample, rect, Scale::from(1.25)).unwrap();
++        assert_eq!(vertices.len(), 6);
++        for vertex in vertices.iter() {
++            assert!(vertex.iter().all(|v| v.is_finite()));
++            assert!((0. ..=1.).contains(&vertex[0]) && (0. ..=1.).contains(&vertex[1]));
++            assert!((0. ..=1.).contains(&vertex[2]) && (0. ..=1.).contains(&vertex[3]));
++        }
++        assert!(area.loc.x < -700.);
++        assert!((area.loc.x * 1.25).fract().abs() < 1e-9);
++        assert!(((area.loc.x + area.size.w) * 1.25).fract().abs() < 1e-9);
++        let bad = Rectangle::new((f64::NAN, 0.).into(), (120., 96.).into());
++        assert!(fragment_mesh_vertices(&sample, bad, Scale::from(1.)).is_err());
++    }
++
++    #[test]
++    fn fragment_mesh_rest_keeps_protected_uv_and_capture_does_not_reseed() {
++        let mut motion = FragmentMotion::new(Duration::ZERO);
++        let size = Size::from((500., 500.));
++        let rect = Rectangle::new((-12., -8.).into(), (524., 516.).into());
++        let sample = motion.sample(Duration::ZERO, size, rect).unwrap();
++        let (vertices, area) = fragment_mesh_vertices(&sample, rect, Scale::from(1.)).unwrap();
++        assert_eq!(
++            vertices.len(),
++            6,
++            "rest uses the exact protected texture quad"
++        );
++        assert_eq!(area, rect);
++        for vertex in vertices.iter() {
++            let source = [
++                rect.loc.x + f64::from(vertex[2]) * rect.size.w,
++                rect.loc.y + f64::from(vertex[3]) * rect.size.h,
++            ];
++            let destination = [
++                area.loc.x + f64::from(vertex[0]) * area.size.w,
++                area.loc.y + f64::from(vertex[1]) * area.size.h,
++            ];
++            assert!((source[0] - destination[0]).abs() < 0.0001);
++            assert!((source[1] - destination[1]).abs() < 0.0001);
++            assert_eq!(vertex[8], 0.);
++        }
++        let expanded = Rectangle::new((-30., -30.).into(), (560., 560.).into());
++        let capture = motion.sample(Duration::ZERO, size, expanded).unwrap();
++        for cell in sample.cells.iter() {
++            let same = capture
++                .cells
++                .iter()
++                .find(|other| other.center == cell.center)
++                .unwrap();
++            assert_eq!(same.translation, cell.translation);
++            assert_eq!(same.rotation, cell.rotation);
++        }
++    }
++
++    /// Export the real state and vertex builder for the software GPU oracle.
++    #[test]
++    #[ignore = "requires NIRIFX_FRAGMENT_MESH_FIXTURE; run explicitly with --ignored"]
++    fn fragment_mesh_emit_fixture() {
++        let path = std::env::var("NIRIFX_FRAGMENT_MESH_FIXTURE")
++            .expect("set an absolute private artifact output path");
++        assert!(std::path::Path::new(&path).is_absolute());
++        let mut motion = FragmentMotion::new(Duration::ZERO);
++        let size = Size::from((500., 500.));
++        let rect = Rectangle::new((-12., -8.).into(), (524., 516.).into());
++        let mut frames = Vec::new();
++        let mut capture = |motion: &mut FragmentMotion, name: &str, ms: u64, target: [f64; 2]| {
++            let sample = motion
++                .sample(Duration::from_millis(ms), size, rect)
++                .unwrap();
++            let (vertices, area) = fragment_mesh_vertices(&sample, rect, Scale::from(1.)).unwrap();
++            frames.push(serde_json::json!({
++                "name": name, "ms": ms, "target": target,
++                "area": [area.loc.x, area.loc.y, area.size.w, area.size.h],
++                "vertices": vertices.as_ref(),
++                "cells": sample.cells.iter().map(|cell| serde_json::json!({
++                    "center": cell.center, "translation": cell.translation,
++                    "rotation": cell.rotation, "tilt": cell.tilt, "pin": cell.pin_weight,
++                })).collect::<Vec<_>>(),
++            }));
++        };
++        capture(&mut motion, "rest", 0, [0., 0.]);
++        motion.grab((0.5, 0.104).into(), Duration::ZERO);
++        capture(&mut motion, "press", 180, [0., 0.]);
++        capture(&mut motion, "held", 400, [0., 0.]);
++        motion.push((40., 0.).into(), Duration::from_millis(400));
++        capture(&mut motion, "onset", 400, [40., 0.]);
++        for ms in [440, 480, 540, 620, 760, 1000] {
++            capture(&mut motion, &format!("step-{ms}"), ms, [40., 0.]);
++        }
++        capture(&mut motion, "reverse-before", 1000, [40., 0.]);
++        motion.push((-40., 15.).into(), Duration::from_millis(1000));
++        capture(&mut motion, "reverse-after", 1000, [0., 15.]);
++        capture(&mut motion, "release-before", 1100, [0., 15.]);
++        motion.release(Duration::from_millis(1100));
++        capture(&mut motion, "release-after", 1100, [0., 15.]);
++        capture(&mut motion, "regrab-before", 1180, [0., 15.]);
++        motion.grab((0.85, 0.85).into(), Duration::from_millis(1180));
++        capture(&mut motion, "regrab-after", 1180, [0., 15.]);
++        motion.release(Duration::from_millis(1400));
++        capture(&mut motion, "settled", 3500, [0., 15.]);
++        std::fs::write(
++            path,
++            serde_json::to_vec(&serde_json::json!({
++                "contract": 3, "producer": "FragmentMotion::sample + fragment_mesh_vertices",
++                "texture_rect": [rect.loc.x, rect.loc.y, rect.size.w, rect.size.h],
++                "geometry": [size.w, size.h], "frames": frames,
++            }))
++            .unwrap(),
++        )
++        .unwrap();
++    }
++
++    /// Counted native meshes for GPU cost measurement; no browser physics.
++    #[test]
++    #[ignore = "requires NIRIFX_FRAGMENT_MESH_BENCH_FIXTURE; run explicitly with --ignored"]
++    fn fragment_mesh_emit_benchmark_fixture() {
++        use crate::animation::fragment_motion::FragmentGrid;
++        let path = std::env::var("NIRIFX_FRAGMENT_MESH_BENCH_FIXTURE")
++            .expect("set an absolute private artifact output path");
++        assert!(std::path::Path::new(&path).is_absolute());
++        let mut cases = Vec::new();
++        for (columns, rows) in [(25, 24), (32, 25), (40, 30), (64, 64)] {
++            let count = (columns * rows) as usize;
++            let size = Size::from((f64::from(columns * 28), f64::from(rows * 28)));
++            let rect = Rectangle::from_size(size);
++            let mut motion = FragmentMotion::new(Duration::ZERO);
++            motion.configure(
++                niri_config::animations::FragmentMotion::default(),
++                FragmentGrid {
++                    particles: 0,
++                    tile: 28.,
++                },
++            );
++            let mut states = Vec::new();
++            let mut capture =
++                |motion: &mut FragmentMotion, name: &str, ms: u64, target: [f64; 2]| {
++                    let sample = motion
++                        .sample(Duration::from_millis(ms), size, rect)
++                        .unwrap();
++                    assert_eq!(sample.cells.len(), count);
++                    let (vertices, area) =
++                        fragment_mesh_vertices(&sample, rect, Scale::from(1.)).unwrap();
++                    let identity = name == "rest" || name == "settled";
++                    assert_eq!(vertices.len(), if identity { 6 } else { count * 6 });
++                    assert!(vertices.iter().flatten().all(|value| value.is_finite()));
++                    states.push(serde_json::json!({
++                    "name": name, "ms": ms, "target": target, "actual_cells": sample.cells.len(),
++                    "area": [area.loc.x, area.loc.y, area.size.w, area.size.h],
++                    "vertices": vertices.as_ref(),
++                }));
++                };
++            capture(&mut motion, "rest", 0, [0., 0.]);
++            motion.grab((0.5, 0.1).into(), Duration::ZERO);
++            capture(&mut motion, "held", 400, [0., 0.]);
++            motion.push((100., 20.).into(), Duration::from_millis(400));
++            capture(&mut motion, "moving", 480, [100., 20.]);
++            motion.release(Duration::from_millis(900));
++            capture(&mut motion, "settled", 3000, [100., 20.]);
++            cases.push(serde_json::json!({
++                "requested_cells": count, "actual_cells": count,
++                "texture": {"width": columns * 28, "height": rows * 28},
++                "texture_rect": [0, 0, columns * 28, rows * 28],
++                "geometry": [size.w, size.h], "grid": {"particles": 0, "tile": 28},
++                "native_config": {"defaults": true}, "states": states,
++            }));
++        }
++        std::fs::write(
++            path,
++            serde_json::to_vec(&serde_json::json!({
++                "contract": 3, "producer": "FragmentMotion::sample + fragment_mesh_vertices",
++                "purpose": "actual-count GPU benchmark fixture; renderer measurements are separate",
++                "cases": cases,
++            }))
++            .unwrap(),
++        )
++        .unwrap();
++    }
+ 
+     fn state(progress: f64, x: f64, seconds: f64, end: f64) -> MovementState {
+         MovementState {
+@@ -395,6 +808,29 @@ mod tests {
+         }
+     }
+ 
++    #[test]
++    fn fragment_motion_opposed_total_deltas_keep_real_combined_travel() {
++        let parent = state(0.3, 500., 0.3, 1.3).with_layout((100., 0.).into(), (500., 0.).into());
++        let tile = state(0.6, -500., 0.3, 0.8).with_layout((-40., 0.).into(), (-100., 0.).into());
++        let combined = parent.combined(tile);
++        assert_eq!(combined.delta, (0., 0.).into());
++        assert_eq!(combined.fragment_layout().remaining, (60., 0.).into());
++        assert!(combined.fragment_path_active(Duration::from_millis(300)));
++        assert!(!combined.fragment_path_active(Duration::from_secs(2)));
++    }
++
++    #[test]
++    fn fragment_motion_close_uses_protected_snapshot_fallback() {
++        let effect = MovementEffect::new(Clock::with_time(Duration::ZERO));
++        effect
++            .continuity
++            .borrow_mut()
++            .sample(state(0.4, 500., 0., 1.));
++        assert!(effect.continuation().is_some());
++        effect.start_fragment();
++        assert!(effect.continuation().is_none());
++    }
++
+     #[test]
+     fn uninterrupted_phase_matches_layout() {
+         let mut motion = MotionContinuity::default();
+diff --git a/src/render_helpers/shader_element.rs b/src/render_helpers/shader_element.rs
+index 7309e62d00b111adcf90b65d584fa028f7f58f6f..6ac71b3a12af9755cc456eb398d8730d325ab0fb 100644
+--- a/src/render_helpers/shader_element.rs
++++ b/src/render_helpers/shader_element.rs
+@@ -32,6 +32,9 @@ pub struct ShaderRenderElement {
+     alpha: f32,
+     additional_uniforms: Rc<[Uniform<'static>]>,
+     textures: HashMap<String, GlesTexture>,
++    // Forward-rendered triangles: normalized destination, texture UV, local
++    // piece coordinates, half extent and continuous edge coverage.
++    mesh: Option<Rc<[[f32; 9]]>>,
+     kind: Kind,
+ }
+ 
+@@ -55,6 +58,7 @@ struct ShaderProgramInternal {
+     uniform_alpha: ffi::types::GLint,
+     attrib_vert: ffi::types::GLint,
+     attrib_vert_position: ffi::types::GLint,
++    attrib_vert_extra: ffi::types::GLint,
+     additional_uniforms: HashMap<String, UniformDesc>,
+     texture_uniforms: HashMap<String, ffi::types::GLint>,
+ }
+@@ -67,19 +71,20 @@ impl PartialEq for ShaderProgram {
+ 
+ unsafe fn compile_program(
+     gl: &ffi::Gles2,
++    vertex: &str,
+     src: &str,
+     additional_uniforms: &[UniformName<'_>],
+     texture_uniforms: &[&str],
+     // destruction_callback_sender: Sender<CleanupResource>,
+ ) -> Result<ShaderProgram, GlesError> {
+     let shader = format!("#version 100\n{src}");
+-    let program = unsafe { link_program(gl, include_str!("shaders/texture.vert"), &shader)? };
++    let program = unsafe { link_program(gl, vertex, &shader)? };
+     let debug_shader = format!("#version 100\n#define DEBUG_FLAGS\n{src}");
+-    let debug_program =
+-        unsafe { link_program(gl, include_str!("shaders/texture.vert"), &debug_shader)? };
++    let debug_program = unsafe { link_program(gl, vertex, &debug_shader)? };
+ 
+     let vert = c"vert";
+     let vert_position = c"vert_position";
++    let vert_extra = c"vert_extra";
+     let matrix = c"matrix";
+     let tex_matrix = c"tex_matrix";
+     let size = c"niri_size";
+@@ -97,6 +102,7 @@ unsafe fn compile_program(
+             uniform_alpha: gl.GetUniformLocation(program, alpha.as_ptr()),
+             attrib_vert: gl.GetAttribLocation(program, vert.as_ptr()),
+             attrib_vert_position: gl.GetAttribLocation(program, vert_position.as_ptr()),
++            attrib_vert_extra: gl.GetAttribLocation(program, vert_extra.as_ptr()),
+             additional_uniforms: additional_uniforms
+                 .iter()
+                 .map(|uniform| {
+@@ -130,6 +136,7 @@ unsafe fn compile_program(
+             uniform_alpha: gl.GetUniformLocation(debug_program, alpha.as_ptr()),
+             attrib_vert: gl.GetAttribLocation(debug_program, vert.as_ptr()),
+             attrib_vert_position: gl.GetAttribLocation(debug_program, vert_position.as_ptr()),
++            attrib_vert_extra: gl.GetAttribLocation(debug_program, vert_extra.as_ptr()),
+             additional_uniforms: additional_uniforms
+                 .iter()
+                 .map(|uniform| {
+@@ -164,9 +171,25 @@ impl ShaderProgram {
+         src: &str,
+         additional_uniforms: &[UniformName<'_>],
+         texture_uniforms: &[&str],
++    ) -> Result<Self, GlesError> {
++        Self::compile_with_vertex(
++            renderer,
++            include_str!("shaders/texture.vert"),
++            src,
++            additional_uniforms,
++            texture_uniforms,
++        )
++    }
++
++    pub fn compile_with_vertex(
++        renderer: &mut GlesRenderer,
++        vertex: &str,
++        src: &str,
++        additional_uniforms: &[UniformName<'_>],
++        texture_uniforms: &[&str],
+     ) -> Result<Self, GlesError> {
+         renderer.with_context(move |gl| unsafe {
+-            compile_program(gl, src, additional_uniforms, texture_uniforms)
++            compile_program(gl, vertex, src, additional_uniforms, texture_uniforms)
+         })?
+     }
+ 
+@@ -206,6 +229,7 @@ impl ShaderRenderElement {
+             alpha,
+             additional_uniforms,
+             textures,
++            mesh: None,
+             kind,
+         }
+     }
+@@ -222,6 +246,7 @@ impl ShaderRenderElement {
+             alpha: 1.,
+             additional_uniforms: Rc::new([]),
+             textures: HashMap::new(),
++            mesh: None,
+             kind,
+         }
+     }
+@@ -231,6 +256,13 @@ impl ShaderRenderElement {
+         self
+     }
+ 
++    /// Destination coordinates are normalized to this element's area. Keeping
++    /// them independent of output pixels preserves scaled/cropped render passes.
++    pub fn with_mesh(mut self, mesh: Rc<[[f32; 9]]>) -> Self {
++        self.mesh = Some(mesh);
++        self
++    }
++
+     pub fn damage_all(&mut self) {
+         self.commit_counter.increment();
+     }
+@@ -250,6 +282,7 @@ impl ShaderRenderElement {
+         self.alpha = alpha;
+         self.additional_uniforms = uniforms;
+         self.textures = textures;
++        self.mesh = None;
+ 
+         self.commit_counter.increment();
+     }
+@@ -298,6 +331,221 @@ impl Element for ShaderRenderElement {
+     }
+ }
+ 
++impl ShaderRenderElement {
++    /// Upload a bounded forward mesh once, then restrict each draw to the
++    /// compositor's damage rectangles. Drawing outside damage would blend the
++    /// same translucent pieces into pixels which were not cleared this frame.
++    #[allow(clippy::too_many_arguments)]
++    fn draw_mesh(
++        &self,
++        frame: &mut GlesFrame<'_, '_>,
++        shader: &ShaderProgram,
++        vbo: ffi::types::GLuint,
++        mesh: &[[f32; 9]],
++        src: Rectangle<f64, Buffer>,
++        dest: Rectangle<i32, Physical>,
++        damage: &[Rectangle<i32, Physical>],
++    ) -> Result<(), GlesError> {
++        if mesh.is_empty() || damage.is_empty() || dest.size.is_empty() {
++            return Ok(());
++        }
++        debug_assert_eq!(mesh.len() % 3, 0);
++        debug_assert!(mesh.iter().flatten().all(|value| value.is_finite()));
++        let projection = Mat3::from_cols_array(frame.projection());
++        let tex_scale = src.size.to_f64() / dest.size.to_f64();
++        let tex_matrix = Mat3::from_translation(Vec2::new(src.loc.x as f32, src.loc.y as f32))
++            * Mat3::from_scale(Vec2::new(tex_scale.x as f32, tex_scale.y as f32));
++        let matrix = mesh_projection(projection, tex_matrix, dest);
++        let supports_instancing = frame.capabilities().contains(&Capability::Instancing);
++        let has_debug = !frame.debug_flags().is_empty();
++        let has_tint = frame.debug_flags().contains(DebugFlags::TINT);
++        let span_loc = smithay::gpu_span_location!("draw fragment mesh");
++        frame.with_profiled_context(span_loc, move |gl| -> Result<(), GlesError> {
++            let program = if has_debug {
++                &shader.0.debug
++            } else {
++                &shader.0.normal
++            };
++            unsafe {
++                for (i, texture) in self.textures.values().enumerate() {
++                    gl.ActiveTexture(ffi::TEXTURE0 + i as u32);
++                    gl.BindTexture(ffi::TEXTURE_2D, texture.tex_id());
++                    gl.TexParameteri(ffi::TEXTURE_2D, ffi::TEXTURE_MIN_FILTER, ffi::LINEAR as i32);
++                    gl.TexParameteri(ffi::TEXTURE_2D, ffi::TEXTURE_MAG_FILTER, ffi::LINEAR as i32);
++                    gl.TexParameteri(
++                        ffi::TEXTURE_2D,
++                        ffi::TEXTURE_WRAP_S,
++                        ffi::CLAMP_TO_BORDER as i32,
++                    );
++                    gl.TexParameteri(
++                        ffi::TEXTURE_2D,
++                        ffi::TEXTURE_WRAP_T,
++                        ffi::CLAMP_TO_BORDER as i32,
++                    );
++                }
++                gl.UseProgram(program.program);
++                for (i, name) in self.textures.keys().enumerate() {
++                    gl.Uniform1i(program.texture_uniforms[name], i as i32);
++                }
++                gl.UniformMatrix3fv(
++                    program.uniform_matrix,
++                    1,
++                    ffi::FALSE,
++                    matrix.as_ref().as_ptr(),
++                );
++                gl.UniformMatrix3fv(
++                    program.uniform_tex_matrix,
++                    1,
++                    ffi::FALSE,
++                    tex_matrix.as_ref().as_ptr(),
++                );
++                gl.Uniform2f(program.uniform_size, dest.size.w as f32, dest.size.h as f32);
++                gl.Uniform1f(program.uniform_scale, self.scale);
++                gl.Uniform1f(program.uniform_alpha, self.alpha);
++                if has_debug {
++                    gl.Uniform1f(shader.0.uniform_tint, if has_tint { 1. } else { 0. });
++                }
++                // Resolve uniforms before changing buffer/scissor state so an
++                // unknown binding cannot leave those states half configured.
++                for uniform in &*self.additional_uniforms {
++                    let desc =
++                        program
++                            .additional_uniforms
++                            .get(&*uniform.name)
++                            .ok_or_else(|| {
++                                GlesError::UnknownUniform(uniform.name.clone().into_owned())
++                            })?;
++                    uniform.value.set(gl, desc)?;
++                }
++                gl.BindBuffer(ffi::ARRAY_BUFFER, vbo);
++                gl.BufferData(
++                    ffi::ARRAY_BUFFER,
++                    std::mem::size_of_val(mesh) as isize,
++                    mesh.as_ptr() as *const _,
++                    ffi::STREAM_DRAW,
++                );
++                let attributes = [
++                    (program.attrib_vert, 2, 0usize),
++                    (program.attrib_vert_position, 4, 2usize),
++                    (program.attrib_vert_extra, 3, 6usize),
++                ];
++                for (location, components, offset) in attributes {
++                    if location < 0 {
++                        continue;
++                    }
++                    gl.EnableVertexAttribArray(location as u32);
++                    gl.VertexAttribPointer(
++                        location as u32,
++                        components,
++                        ffi::FLOAT,
++                        ffi::FALSE,
++                        std::mem::size_of::<[f32; 9]>() as i32,
++                        (offset * std::mem::size_of::<f32>()) as *const _,
++                    );
++                    if supports_instancing {
++                        gl.VertexAttribDivisor(location as u32, 0);
++                    }
++                }
++                let mut viewport = [0i32; 4];
++                let mut previous_scissor = [0i32; 4];
++                gl.GetIntegerv(ffi::VIEWPORT, viewport.as_mut_ptr());
++                gl.GetIntegerv(ffi::SCISSOR_BOX, previous_scissor.as_mut_ptr());
++                let scissor_enabled = gl.IsEnabled(ffi::SCISSOR_TEST) != ffi::FALSE;
++                gl.Enable(ffi::SCISSOR_TEST);
++                for rect in damage {
++                    let Some(mut clip) = mesh_damage_scissor(projection, viewport, dest, *rect)
++                    else {
++                        continue;
++                    };
++                    if scissor_enabled {
++                        let Some(intersection) = intersect_scissors(clip, previous_scissor) else {
++                            continue;
++                        };
++                        clip = intersection;
++                    }
++                    gl.Scissor(clip[0], clip[1], clip[2], clip[3]);
++                    gl.DrawArrays(ffi::TRIANGLES, 0, mesh.len() as i32);
++                }
++                gl.Scissor(
++                    previous_scissor[0],
++                    previous_scissor[1],
++                    previous_scissor[2],
++                    previous_scissor[3],
++                );
++                if !scissor_enabled {
++                    gl.Disable(ffi::SCISSOR_TEST);
++                }
++                gl.BindBuffer(ffi::ARRAY_BUFFER, 0);
++                for i in 0..self.textures.len() {
++                    gl.ActiveTexture(ffi::TEXTURE0 + i as u32);
++                    gl.BindTexture(ffi::TEXTURE_2D, 0);
++                }
++                gl.ActiveTexture(ffi::TEXTURE0);
++                for (location, _, _) in attributes {
++                    if location >= 0 {
++                        gl.DisableVertexAttribArray(location as u32);
++                    }
++                }
++            }
++            Ok(())
++        })??;
++        Ok(())
++    }
++}
++
++fn intersect_scissors(a: [i32; 4], b: [i32; 4]) -> Option<[i32; 4]> {
++    let x = a[0].max(b[0]);
++    let y = a[1].max(b[1]);
++    let right = (a[0] + a[2]).min(b[0] + b[2]);
++    let top = (a[1] + a[3]).min(b[1] + b[3]);
++    (right > x && top > y).then_some([x, y, right - x, top - y])
++}
++
++fn mesh_projection(projection: Mat3, texture: Mat3, destination: Rectangle<i32, Physical>) -> Mat3 {
++    projection
++        * Mat3::from_translation(Vec2::new(
++            destination.loc.x as f32,
++            destination.loc.y as f32,
++        ))
++        * texture.inverse()
++}
++
++/// Niri's output transforms rotate/reflect axis-aligned damage. Project every
++/// corner into the GL viewport so damage remains correct on rotated outputs.
++fn mesh_damage_scissor(
++    projection: Mat3,
++    viewport: [i32; 4],
++    dest: Rectangle<i32, Physical>,
++    damage: Rectangle<i32, Physical>,
++) -> Option<[i32; 4]> {
++    let damage = damage.intersection(Rectangle::from_size(dest.size))?;
++    let mut low = Vec2::splat(f32::INFINITY);
++    let mut high = Vec2::splat(f32::NEG_INFINITY);
++    for x in [damage.loc.x, damage.loc.x + damage.size.w] {
++        for y in [damage.loc.y, damage.loc.y + damage.size.h] {
++            let ndc = projection
++                .transform_point2(Vec2::new((dest.loc.x + x) as f32, (dest.loc.y + y) as f32));
++            let pixel = Vec2::new(viewport[0] as f32, viewport[1] as f32)
++                + (ndc + Vec2::ONE) * 0.5 * Vec2::new(viewport[2] as f32, viewport[3] as f32);
++            low = low.min(pixel);
++            high = high.max(pixel);
++        }
++    }
++    // Projection roundoff must not expand neighboring damage rectangles onto
++    // the same pixel, which would apply premultiplied alpha twice at their seam.
++    let low = low.round();
++    let high = high.round();
++    intersect_scissors(
++        [
++            low.x as i32,
++            low.y as i32,
++            (high.x - low.x) as i32,
++            (high.y - low.y) as i32,
++        ],
++        viewport,
++    )
++}
++
+ impl RenderElement<GlesRenderer> for ShaderRenderElement {
+     fn draw(
+         &self,
+@@ -325,6 +573,10 @@ impl RenderElement<GlesRenderer> for ShaderRenderElement {
+         };
+         let mut resources = resources.borrow_mut();
+ 
++        if let Some(mesh) = &self.mesh {
++            return self.draw_mesh(frame, &shader, resources.vbos[1], mesh, src, dest, damage);
++        }
++
+         let supports_instancing = frame.capabilities().contains(&Capability::Instancing);
+ 
+         // prepare the vertices
+@@ -563,3 +815,74 @@ impl<'render> RenderElement<TtyRenderer<'render>> for ShaderRenderElement {
+         None
+     }
+ }
++
++#[cfg(test)]
++mod fragment_mesh_tests {
++    use super::*;
++
++    #[test]
++    fn fragment_mesh_projection_preserves_cropped_source_and_output_scale() {
++        let dest = Rectangle::new((50, 80).into(), (400, 200).into());
++        let texture = Mat3::from_translation(Vec2::new(0.25, 0.1))
++            * Mat3::from_scale(Vec2::new(0.5 / 400., 0.4 / 200.));
++        let matrix = mesh_projection(Mat3::IDENTITY, texture, dest);
++        for (source, expected) in [
++            (Vec2::new(0.25, 0.1), Vec2::new(50., 80.)),
++            (Vec2::new(0.75, 0.5), Vec2::new(450., 280.)),
++            (Vec2::new(0.5, 0.3), Vec2::new(250., 180.)),
++        ] {
++            assert!((matrix.transform_point2(source) - expected).length() < 0.001);
++        }
++    }
++
++    #[test]
++    fn fragment_mesh_damage_is_clipped_and_adjacent_regions_do_not_overlap() {
++        let projection =
++            Mat3::from_cols_array(&[2. / 800., 0., 0., 0., -2. / 600., 0., -1., 1., 1.]);
++        let dest = Rectangle::new((100, 120).into(), (200, 160).into());
++        let a = mesh_damage_scissor(
++            projection,
++            [0, 0, 800, 600],
++            dest,
++            Rectangle::new((-20, -30).into(), (120, 110).into()),
++        )
++        .unwrap();
++        let b = mesh_damage_scissor(
++            projection,
++            [0, 0, 800, 600],
++            dest,
++            Rectangle::new((100, 0).into(), (100, 80).into()),
++        )
++        .unwrap();
++        assert_eq!(a, [100, 400, 100, 80]);
++        assert_eq!(b, [200, 400, 100, 80]);
++        assert_eq!(intersect_scissors(a, b), None);
++        assert_eq!(
++            intersect_scissors(a, [150, 410, 40, 30]),
++            Some([150, 410, 40, 30])
++        );
++    }
++
++    #[test]
++    fn fragment_mesh_scissor_tracks_rotated_viewport_and_offscreen_bounds() {
++        let projection =
++            Mat3::from_cols_array(&[0., 2. / 800., 0., 2. / 600., 0., 0., -1., -1., 1.]);
++        let dest = Rectangle::new((100, 120).into(), (200, 160).into());
++        let clip = mesh_damage_scissor(
++            projection,
++            [10, 20, 600, 800],
++            dest,
++            Rectangle::new((0, 0).into(), (100, 80).into()),
++        );
++        assert_eq!(clip, Some([130, 120, 80, 100]));
++        assert_eq!(
++            mesh_damage_scissor(
++                projection,
++                [0, 0, 600, 800],
++                dest,
++                Rectangle::new((300, 0).into(), (100, 80).into()),
++            ),
++            None
++        );
++    }
++}
+diff --git a/src/render_helpers/shaders/fragment_mesh.vert b/src/render_helpers/shaders/fragment_mesh.vert
+new file mode 100644
+index 0000000000000000000000000000000000000000..fe3e23ce0ca127f60248830de9ef2fe737d6ec3c
+--- /dev/null
++++ b/src/render_helpers/shaders/fragment_mesh.vert
+@@ -0,0 +1,16 @@
++#version 100
++uniform mat3 matrix;
++attribute vec2 vert;
++attribute vec4 vert_position;
++attribute vec3 vert_extra;
++varying vec2 niri_mesh_source_uv;
++varying vec2 niri_mesh_local;
++varying vec2 niri_mesh_half_extent;
++varying float niri_mesh_edge_blend;
++void main() {
++    niri_mesh_source_uv = vert_position.xy;
++    niri_mesh_local = vert_position.zw;
++    niri_mesh_half_extent = vert_extra.xy;
++    niri_mesh_edge_blend = vert_extra.z;
++    gl_Position = vec4(matrix * vec3(vert, 1.0), 1.0);
++}
+diff --git a/src/render_helpers/shaders/fragment_mesh_epilogue.frag b/src/render_helpers/shaders/fragment_mesh_epilogue.frag
+new file mode 100644
+index 0000000000000000000000000000000000000000..bf1de79edd38c0108e56a23d63cb669adf0b4e95
+--- /dev/null
++++ b/src/render_helpers/shaders/fragment_mesh_epilogue.frag
+@@ -0,0 +1,13 @@
++varying vec2 niri_mesh_source_uv;
++varying vec2 niri_mesh_local;
++varying vec2 niri_mesh_half_extent;
++varying float niri_mesh_edge_blend;
++void main() {
++    vec4 color = fragment_motion_mesh_color(niri_mesh_source_uv, niri_mesh_local,
++        niri_mesh_half_extent, niri_mesh_edge_blend) * niri_alpha;
++#if defined(DEBUG_FLAGS)
++    if (niri_tint == 1.0)
++        color = vec4(0.0, 0.2, 0.0, 0.2) + color * 0.8;
++#endif
++    gl_FragColor = color;
++}
+diff --git a/src/render_helpers/shaders/mod.rs b/src/render_helpers/shaders/mod.rs
+index 558d1a02fe6d71c0f3c2052333d0b95cd93af777..309f224c231a68ebe194926278a287452ffe831a 100644
+--- a/src/render_helpers/shaders/mod.rs
++++ b/src/render_helpers/shaders/mod.rs
+@@ -23,6 +23,8 @@ pub struct Shaders {
+     retired_resize: RefCell<Vec<ShaderProgram>>,
+     pub custom_close: RefCell<Option<ShaderProgram>>,
+     pub custom_move: RefCell<Option<ShaderProgram>>,
++    fragment_mesh: RefCell<Option<ShaderProgram>>,
++    fragment_source: RefCell<Option<String>>,
+     pub pointer_wobble: Option<ShaderProgram>,
+     pub custom_open: RefCell<Option<ShaderProgram>>,
+ }
+@@ -36,10 +38,20 @@ pub enum ProgramType {
+     Close,
+     Open,
+     Move,
++    FragmentMesh,
+     PointerWobble,
+ }
+ 
+ impl Shaders {
++    /// Compare the effective source with the successfully compiled program.
++    /// Failed reloads retain the previous shader and must not verify new settings.
++    pub fn fragment_configured(&self, source: Option<&str>) -> bool {
++        crate::animation::fragment_motion::selected(
++            self.fragment_source.borrow().as_deref(),
++            source,
++        )
++    }
++
+     fn compile(renderer: &mut GlesRenderer) -> Self {
+         let _span = tracy_client::span!("Shaders::compile");
+ 
+@@ -188,6 +200,8 @@ impl Shaders {
+             custom_close: RefCell::new(None),
+             custom_open: RefCell::new(None),
+             custom_move: RefCell::new(None),
++            fragment_mesh: RefCell::new(None),
++            fragment_source: RefCell::new(None),
+             pointer_wobble,
+         }
+     }
+@@ -263,6 +277,7 @@ impl Shaders {
+             ProgramType::Close => self.custom_close.borrow().clone(),
+             ProgramType::Open => self.custom_open.borrow().clone(),
+             ProgramType::Move => self.custom_move.borrow().clone(),
++            ProgramType::FragmentMesh => self.fragment_mesh.borrow().clone(),
+             ProgramType::PointerWobble => self.pointer_wobble.clone(),
+         }
+     }
+@@ -442,6 +457,16 @@ fn compile_move_program(
+             UniformName::new("niri_random_seed", UniformType::_1f),
+             UniformName::new("niri_move_delta", UniformType::_2f),
+             UniformName::new("niri_move_impulse", UniformType::_2f),
++            UniformName::new("niri_fragment_anchor", UniformType::_2f),
++            UniformName::new("niri_fragment_anchor_next", UniformType::_2f),
++            UniformName::new("niri_fragment_anchor_mix", UniformType::_1f),
++            UniformName::new("niri_fragment_velocity0", UniformType::_2f),
++            UniformName::new("niri_fragment_velocity1", UniformType::_2f),
++            UniformName::new("niri_fragment_velocity2", UniformType::_2f),
++            UniformName::new("niri_fragment_lag0", UniformType::_2f),
++            UniformName::new("niri_fragment_lag1", UniformType::_2f),
++            UniformName::new("niri_fragment_lag2", UniformType::_2f),
++            UniformName::new("niri_fragment_active", UniformType::_1f),
+         ],
+         &["niri_tex"],
+     )
+@@ -464,22 +489,78 @@ pub fn verify_move_contract(renderer: &mut GlesRenderer) -> bool {
+     }
+ }
+ 
++/// Compile the forward mesh separately from the legacy timed movement entry.
++fn compile_fragment_mesh_program(
++    renderer: &mut GlesRenderer,
++    src: &str,
++) -> Result<ShaderProgram, GlesError> {
++    let mut program = include_str!("move_prelude.frag").to_string();
++    program.push_str("\n#define NIRIFX_FRAGMENT_MESH 1\n");
++    program.push_str(src);
++    program.push_str(include_str!("fragment_mesh_epilogue.frag"));
++    ShaderProgram::compile_with_vertex(
++        renderer,
++        include_str!("fragment_mesh.vert"),
++        &program,
++        &[],
++        &["niri_tex"],
++    )
++}
++
++/// Verify the actual mesh vertex/material interface without replacing selection.
++pub fn verify_fragment_contract(renderer: &mut GlesRenderer) -> bool {
++    let source = r#"
++#ifndef NIRIFX_FRAGMENT_MESH
++#error Missing forward fragment mesh interface
++#endif
++vec4 fragment_motion_mesh_color(vec2 uv, vec2 local, vec2 half_extent, float edge_blend) {
++    float probe = dot(local, half_extent) + edge_blend + niri_scale;
++    return texture2D(niri_tex, uv) * (0.5 + probe * 0.000001);
++}
++"#;
++    match compile_fragment_mesh_program(renderer, source) {
++        Ok(program) => program.destroy(renderer).is_ok(),
++        Err(_) => false,
++    }
++}
++
+ pub fn set_custom_move_program(renderer: &mut GlesRenderer, src: Option<&str>) {
+-    let program = if let Some(src) = src {
+-        match compile_move_program(renderer, src) {
+-            Ok(program) => Some(program),
++    // Selection is transactional across both programs. Failed mesh compilation
++    // must retain the old matched pair and must not verify the new source.
++    let (program, mesh) = if let Some(src) = src {
++        let program = match compile_move_program(renderer, src) {
++            Ok(program) => program,
+             Err(err) => {
+                 warn!("error compiling custom move shader: {err:?}");
+                 return;
+             }
+-        }
++        };
++        let mesh = if crate::animation::fragment_motion::supported(src) {
++            match compile_fragment_mesh_program(renderer, src) {
++                Ok(mesh) => Some(mesh),
++                Err(err) => {
++                    warn!("error compiling continuous fragment mesh: {err:?}");
++                    if let Err(err) = program.destroy(renderer) {
++                        warn!("error destroying unused movement shader: {err:?}");
++                    }
++                    return;
++                }
++            }
++        } else {
++            None
++        };
++        (Some(program), mesh)
+     } else {
+-        None
++        (None, None)
+     };
+ 
+-    if let Some(prev) = Shaders::get(renderer).replace_custom_move_program(program) {
+-        if let Err(err) = prev.destroy(renderer) {
+-            warn!("error destroying previous custom move shader: {err:?}");
++    *Shaders::get(renderer).fragment_source.borrow_mut() =
++        src.filter(|_| mesh.is_some()).map(str::to_owned);
++    let old_move = Shaders::get(renderer).replace_custom_move_program(program);
++    let old_mesh = Shaders::get(renderer).fragment_mesh.replace(mesh);
++    for old in [old_move, old_mesh].into_iter().flatten() {
++        if let Err(err) = old.destroy(renderer) {
++            warn!("error destroying previous movement program: {err:?}");
+         }
+     }
+ }

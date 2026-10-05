@@ -112,6 +112,24 @@ writing profile settings. Absent and zero-strength pointer choices cannot start
 the preview and add no combo stage. Reduced motion removes spring deformation
 and settling from interactive input and omits scripted pointer playback.
 
+## Experimental continuous fragments
+
+[`fragment_motion.py`](../niri_fx/fragment_motion.py) owns validated native control
+metadata and the Gentle, Tear and Cascade starting points. It performs no I/O
+and does not extend portable profiles or the browser catalog yet. The source
+checkout's `fragment-demo.py` and acceptance harness share one temporary config
+generator. Synthetic cards emit allowlisted selection names; only their owning
+demo process writes its temporary configuration.
+
+The native extension retains one motion state per source cell and draws a forward
+textured mesh. Settings and grid identity remain fixed through an active gesture,
+release and regrab; the next fresh episode adopts pending settings. A failed or
+oversized mesh uses protected fallback for the rest of that episode instead of
+retrying preparation every frame. Off clears native fragment motion immediately.
+The full texture is drawn as one quad when all cells return to their original
+pose, preserving filtered pixels at rest. This persistent native state is separate
+from the stateless, timed shaders used in portable previews.
+
 ## Agent consumers
 
 `agent-info` exposes a versioned operation map and command argument arrays;

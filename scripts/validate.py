@@ -15,6 +15,7 @@ from niri_fx.effects import (
     FAMILIES,
     PRESETS,
     RESIZE_MODES,
+    fragment_motion_eligible,
     movement_shader,
     render_kdl,
     resize_shader,
@@ -46,6 +47,10 @@ uniform float niri_resize_retained;
 uniform vec2 niri_resize_reference_size;
 uniform vec2 niri_resize_reference_from_size;
 uniform vec2 niri_resize_reference_to_size;
+"""
+
+FRAGMENT_MOTION = """#define NIRIFX_FRAGMENT_MESH 1
+uniform float niri_scale;
 """
 
 
@@ -95,6 +100,15 @@ def main():
                         + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n"
                     )
                     subprocess.run([validator, "-S", "frag", str(frag)], check=True)
+                    if entry == "move_color" and fragment_motion_eligible(effect):
+                        frag.write_text(
+                            HEADER
+                            + FRAGMENT_MOTION
+                            + source
+                            + "\nvoid main() { gl_FragColor = fragment_motion_mesh_color("
+                            "vec2(0.5), vec2(0.0), vec2(10.0), 1.0); }\n"
+                        )
+                        subprocess.run([validator, "-S", "frag", str(frag)], check=True)
                     if entry == "resize_color":
                         frag.write_text(
                             frag.read_text().replace(HEADER, HEADER + RETAINED_RESIZE, 1)

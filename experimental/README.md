@@ -31,9 +31,22 @@ export the native config. `nested-demo.py --custom PATH.json` accepts a pointer
 profile with or without a timed movement shader. See the
 [profile and activation guide](../docs/pointer-wobble.md#choose-it-in-studio).
 
+For [continuous square fragments](../docs/fragment-drag.md), build with
+`--fragment-drag --release --test`, then run `python3 scripts/test-fragment-drag.py`.
+This adds `niri-fragment-drag.patch` after both existing patches in a separate
+checkout. Eligible square movement shaders use persistent springs for dragging
+and timed moves; earlier builds retain their timed shader behavior. The extension
+has its own renderer capability query and remains a local prototype.
+Run `python3 scripts/fragment-demo.py` to compare Gentle, Tear and Cascade in
+the same owned preview using buttons or `Alt+1/2/3`; `Alt+0` turns movement effects
+off there. See the [fragment guide](../docs/fragment-drag.md#native-settings) for
+controls and the difference between a preset reload and an active drag.
+
 Build dependencies are documented in the pinned source's `docs/wiki/Getting-Started.md` (Building section).
 The script fetches the exact upstream commit, applies the patch, builds with
-`--locked --no-default-features`, and records the patch/binary hashes. Source and
+`--locked --no-default-features` by default, and records the patch/binary hashes.
+Add `--desktop` to retain upstream desktop features such as D-Bus, portals and
+PipeWire when preparing a build for a desktop session. Source and
 build output stay below `artifacts/`; Cargo uses the selected toolchain's cache.
 It refuses unrelated source changes. `--release` builds
 an optimized binary; the default debug build is for development, not benchmarking.

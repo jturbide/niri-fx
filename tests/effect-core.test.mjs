@@ -126,6 +126,49 @@ test("movement shader previews match the native exports and reject unsupported f
   }
 });
 
+test("continuous square movement eligibility matches Python without replacing unsupported materials", () => {
+  const changes = [
+    {},
+    { movement_strength: 0 },
+    { fragment_shape: "triangle" },
+    { fragment_secondary: "circle", fragment_mix: 0.5 },
+    { fragment_shape: "circle", fragment_secondary: "square", fragment_mix: 1 },
+    { fragment_orientation: 12 },
+    { fragment_roundness: 0.2 },
+    { fragment_shrink: 0.2 },
+    { size_variation: 0.2 },
+    { direction_variation: 0.2 },
+    { wave_strength: 0.2 },
+    { rotation: "gravity" },
+    { rotation: "none" },
+    { release: "left" },
+    { fragment_aspect: 4 },
+  ];
+  const references = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `
+import json, sys
+from dataclasses import replace
+from niri_fx.effects import PRESETS, movement_shader
+print(json.dumps([movement_shader(replace(PRESETS['balanced'], **p)) for p in json.load(sys.stdin)]))
+`,
+      ],
+      { cwd: projectRoot, input: JSON.stringify(changes), encoding: "utf8" },
+    ),
+  );
+  changes.forEach((change, index) => {
+    const effect = { ...catalog.presets.balanced, ...change };
+    assert.equal(
+      core.shaderFor(effect, false, false, true),
+      references[index],
+      JSON.stringify(change),
+    );
+  });
+});
+
 test("shaped lookup bounds and shaders match Python at extreme controls", () => {
   const shapes = catalog.specifications.fragment_shape.choices;
   const effects = shapes.flatMap((shape) =>
