@@ -198,16 +198,16 @@ signing and publishing a version.
 
 ## Verify an upgrade
 
-Maintainers can exercise the real 0.18 release wheel and a candidate wheel with
+Maintainers can exercise a published release wheel and a candidate wheel with
 `scripts/test-upgrade.py`. Download the old wheel and its `SHA256SUMS` from
-[v0.18.0](https://github.com/jturbide/niri-fx/releases/tag/v0.18.0), build the new
-wheel, then run from the checkout:
+[v0.19.0](https://github.com/jturbide/niri-fx/releases/tag/v0.19.0), build the new
+wheel, then run from the checkout, replacing `X.Y.Z` with the candidate version:
 
 ```sh
 python3 scripts/test-upgrade.py \
-  --from-wheel artifacts/upgrade-v018/niri_fx-0.18.0-py3-none-any.whl \
-  --checksums artifacts/upgrade-v018/SHA256SUMS \
-  --to-wheel dist/niri_fx-0.19.0-py3-none-any.whl \
+  --from-wheel artifacts/upgrade-v019/niri_fx-0.19.0-py3-none-any.whl \
+  --checksums artifacts/upgrade-v019/SHA256SUMS \
+  --to-wheel dist/niri_fx-X.Y.Z-py3-none-any.whl \
   --browser
 ```
 
@@ -215,7 +215,11 @@ This requires stock Niri, Python's venv/pip support, Node 22 or newer and
 Chromium/Chrome. Omit `--browser` for the CLI/HTTP checks. The script creates its
 own virtual environment, configuration, shell registry and state; it verifies
 old JSON, favorites, named Library profiles and active files survive installation,
-and restores existing CLI and Library snapshots exactly. It also checks new
+and restores existing CLI and Library snapshots exactly. Both Restore paths must
+refuse external edits without changing the files or consuming recovery history.
+The 0.19 source also creates an active mixture of Preserve and Off before upgrading;
+0.17 and 0.18 wheels remain supported for legacy schema migration checks.
+It also checks new
 pointer documents without activating the native extension. Its synthetic shell
 base tests registry preservation; the
 [adapter checks](validation.md) cover real shell serializers separately. No login

@@ -195,26 +195,36 @@ is a negative control for ScreenCapture, not a test of the Screencast render
 target or PipeWire. See the [validation scope and known limits](validation.md#pointer-driven-wobble)
 and [sanitized results](benchmarks/pointer-hardening.json).
 
-Two limitations remain open: disconnecting a virtual pointer with its button held
-retains the grab with pointer deformation both enabled and omitted; a replacement
-press/release recovers input. Both failures also reproduce in
-[unmodified pinned Niri](benchmarks/native-baseline.json), using the same build
-settings and GPU. The optional
-`python3 scripts/test-pointer-hardening.py --output-targets` probe also fails on
-the tested GPU because the parent compositor retains a stale child image. It
-keeps strict assertions and does not establish Output/Screencast privacy.
-The baseline rules out the FX patches being necessary to reproduce the failures;
-it does not isolate their compositor, driver or nested-test cause. Device ownership
-and presentation recovery remain open work.
+The development compositor tracks presses and consumed bindings per device.
+Removing an idle pointer leaves another pointer's grab alone. Removing the held
+owner releases its buttons; when two devices hold the same button, the logical
+seat press remains until the final owner releases. This fixes the virtual-device
+failure reproduced in [unmodified pinned Niri](benchmarks/native-baseline.json).
+Physical unplug/replug still needs hardware acceptance.
+
+The separate stale-output limitation remains: the optional
+`python3 scripts/test-pointer-hardening.py --output-targets` probe fails on
+the tested GPU because the parent compositor retains a stale child image after
+closing. It keeps strict assertions and does not establish Output/Screencast
+privacy. The unmodified baseline reproduces this too; compositor, driver and
+nested-test causes remain unisolated.
 
 `python3 scripts/test-native-baseline.py --probe overlap` compares two virtual
 pointers on the same owned seat. Removing an idle device preserves the other
 device's active grab, including after ownership has changed. Removing the held
-owner still leaves a stale grab in all three baseline variants. Paired same-button
+owner leaves a stale grab in the preserved baseline variants. Paired same-button
 presses also expose shared-seat release behavior, so a global button reset would
-not establish correct device ownership. See the [scenario results and source
-audit](validation.md#pointer-driven-wobble); these controls diagnose the failure
-and do not claim that disconnect cleanup is fixed.
+not establish correct device ownership. The current acceptance command requires
+correct removal, overlap, binding suppression and subsequent client clicks:
+
+```sh
+python3 scripts/test-pointer-ownership.py
+python3 scripts/test-pointer-ownership.py --pointer-wobble
+```
+
+See the [scenario results and source audit](validation.md#pointer-driven-wobble)
+and [current ownership report](benchmarks/pointer-ownership.json) for the
+distinction between the preserved failure and current acceptance.
 
 In addition to the demo requirements, the harness uses a C compiler,
 `wayland-scanner`, `pkg-config`, Wayland client development files, the wlr virtual

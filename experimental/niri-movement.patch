@@ -330,7 +330,7 @@ index 73a79c5e435f7f29d96f5ea7aea1bfd41d88df39..a31ed5182a43f0b1c4127d8cf30dfdfa
  
 diff --git a/src/animation/movement.rs b/src/animation/movement.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..166e97c818f3fdbe4542dff3cca24d6bb9d0e768
+index 0000000000000000000000000000000000000000..f27f87ecf3f1c949ef1d503b068389b1cb07016b
 --- /dev/null
 +++ b/src/animation/movement.rs
 @@ -0,0 +1,477 @@
@@ -344,7 +344,7 @@ index 0000000000000000000000000000000000000000..166e97c818f3fdbe4542dff3cca24d6b
 +
 +use super::{Animation, ResizePath};
 +
-+#[derive(Debug)]
++#[derive(Debug, Clone)]
 +pub(crate) struct MoveAnimation {
 +    pub anim: Animation,
 +    pub from: f64,
@@ -355,7 +355,7 @@ index 0000000000000000000000000000000000000000..166e97c818f3fdbe4542dff3cca24d6b
 +    corrections: Vec<MoveAnimation>,
 +}
 +
-+#[derive(Debug)]
++#[derive(Debug, Clone)]
 +struct Handoff {
 +    position: f64,
 +    velocity: f64,
@@ -813,10 +813,10 @@ index 0000000000000000000000000000000000000000..166e97c818f3fdbe4542dff3cca24d6b
 +}
 diff --git a/src/animation/size.rs b/src/animation/size.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..fd8517a887c86f5d0798c485ccde442f8b533b74
+index 0000000000000000000000000000000000000000..838361adf491503df4289a0e83d0431b4ce216ed
 --- /dev/null
 +++ b/src/animation/size.rs
-@@ -0,0 +1,587 @@
+@@ -0,0 +1,646 @@
 +//! Shared per-axis resize geometry and neighboring layout displacement.
 +use std::cell::RefCell;
 +use std::rc::Rc;
@@ -904,6 +904,24 @@ index 0000000000000000000000000000000000000000..fd8517a887c86f5d0798c485ccde442f
 +            })
 +            .unwrap_or_else(|| axis.movement.anim.clone())
 +    }
++    /// Closing owns a detached trajectory: layout removal and future retargets
++    /// must not settle or alter a surface that is still fading out.
++    fn detached(&self) -> Self {
++        let axis = self.0.borrow();
++        Self(Rc::new(RefCell::new(ResizeAxis {
++            target: axis.target,
++            movement: axis.movement.clone(),
++            maximum: axis.maximum.as_ref().map(|members| {
++                members
++                    .iter()
++                    .map(|(path, size)| (path.as_ref().map(Self::detached), *size))
++                    .collect()
++            }),
++            extra: axis.extra,
++            finished: axis.finished,
++        })))
++    }
++
 +    pub fn same_source(&self, other: &Self) -> bool {
 +        Rc::ptr_eq(&self.0, &other.0)
 +    }
@@ -1004,6 +1022,13 @@ index 0000000000000000000000000000000000000000..fd8517a887c86f5d0798c485ccde442f
 +        }
 +    }
 +
++    pub fn detached(&self) -> Self {
++        Self {
++            width: self.width.detached(),
++            height: self.height.detached(),
++        }
++    }
++
 +    pub fn value(&self) -> Size<f64, Logical> {
 +        Size::new(self.width.value(), self.height.value())
 +    }
@@ -1037,6 +1062,40 @@ index 0000000000000000000000000000000000000000..fd8517a887c86f5d0798c485ccde442f
 +
 +    fn near(actual: f64, expected: f64) {
 +        assert!((actual - expected).abs() < 1e-6, "{actual} != {expected}");
++    }
++
++    #[test]
++    fn closing_trajectory_detaches_without_restarting_or_following_source_removal() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let mut mapped = SizeAnimation::new(
++            &phase(&clock),
++            Size::new(500., 300.),
++            Size::new(30., 600.),
++            None,
++        );
++        clock.set_unadjusted(Duration::from_millis(200));
++        mapped.update_target(Size::new(700., 40.), &phase(&clock));
++        clock.set_unadjusted(Duration::from_millis(340));
++        let closed = mapped.detached();
++        near(closed.value().w, mapped.value().w);
++        near(closed.value().h, mapped.value().h);
++        near(closed.width.velocity(), mapped.width.velocity());
++        near(closed.height.velocity(), mapped.height.velocity());
++        assert!(!closed.width.same_source(&mapped.width));
++        let expected = mapped.detached();
++        mapped.update_target(Size::new(5., 5.), &phase(&clock));
++        mapped.finish();
++        for millis in [341, 450, 700, 1000, 1300] {
++            clock.set_unadjusted(Duration::from_millis(millis));
++            near(closed.value().w, expected.value().w);
++            near(closed.value().h, expected.value().h);
++            near(closed.width.velocity(), expected.width.velocity());
++            near(closed.height.velocity(), expected.height.velocity());
++            assert!(closed.value().w >= 1. && closed.value().h >= 1.);
++        }
++        near(closed.value().w, 700.);
++        near(closed.value().h, 40.);
++        assert!(closed.is_done());
 +    }
 +
 +    #[test]
@@ -1484,6 +1543,382 @@ index 308b3127b797263c27cc9d74b775bb17e9e7a8d4..0dbb22c02c40a01e05679de3415075f7
      /// List connected outputs.
      Outputs,
      /// List workspaces.
+diff --git a/src/handlers/mod.rs b/src/handlers/mod.rs
+index 3532078b6ad797e5eb53bfe33a2eb9e55108d01b..649c832fc1772ff95db33f12d2c2eea466d39612 100644
+--- a/src/handlers/mod.rs
++++ b/src/handlers/mod.rs
+@@ -85,7 +85,7 @@ use crate::protocols::mutter_x11_interop::MutterX11InteropHandler;
+ use crate::protocols::output_management::{OutputManagementHandler, OutputManagementManagerState};
+ use crate::protocols::screencopy::{Screencopy, ScreencopyHandler, ScreencopyManagerState};
+ use crate::protocols::virtual_pointer::{
+-    VirtualPointerAxisEvent, VirtualPointerButtonEvent, VirtualPointerHandler,
++    VirtualPointer, VirtualPointerAxisEvent, VirtualPointerButtonEvent, VirtualPointerHandler,
+     VirtualPointerInputBackend, VirtualPointerManagerState, VirtualPointerMotionAbsoluteEvent,
+     VirtualPointerMotionEvent,
+ };
+@@ -668,6 +668,11 @@ impl VirtualPointerHandler for State {
+         &mut self.niri.virtual_pointer_state
+     }
+ 
++    fn destroy_virtual_pointer(&mut self, pointer: VirtualPointer) {
++        use crate::input::backend_ext::NiriInputDevice as _;
++        self.remove_pointer_device(&pointer.pointer_id());
++    }
++
+     fn on_virtual_pointer_motion(&mut self, event: VirtualPointerMotionEvent) {
+         self.process_input_event(InputEvent::<VirtualPointerInputBackend>::PointerMotion { event });
+     }
+diff --git a/src/input/backend_ext.rs b/src/input/backend_ext.rs
+index 99f4a904f8b65e877b5007f9599842fb9817fce2..32e23812eff8ec94521eb086a2c8bf1ec8223971 100644
+--- a/src/input/backend_ext.rs
++++ b/src/input/backend_ext.rs
+@@ -16,7 +16,17 @@ where
+     type NiriDevice = Self::Device;
+ }
+ 
++/// Backend-tagged lifetime identity, never a reusable device name or protocol ID.
++#[derive(Debug, Clone, PartialEq, Eq, Hash)]
++pub enum PointerDeviceId {
++    Libinput(libinput::Device),
++    Winit,
++    Virtual(VirtualPointer),
++}
++
+ pub trait NiriInputDevice: input::Device {
++    fn pointer_id(&self) -> PointerDeviceId;
++
+     // FIXME: this should maybe be per-event, not per-device,
+     // but it's not clear that this matters in practice?
+     // it might be more obvious once we implement it for libinput
+@@ -24,6 +34,10 @@ pub trait NiriInputDevice: input::Device {
+ }
+ 
+ impl NiriInputDevice for libinput::Device {
++    fn pointer_id(&self) -> PointerDeviceId {
++        PointerDeviceId::Libinput(self.clone())
++    }
++
+     fn output(&self, _state: &State) -> Option<Output> {
+         // FIXME: Allow specifying the output per-device?
+         None
+@@ -31,6 +45,10 @@ impl NiriInputDevice for libinput::Device {
+ }
+ 
+ impl NiriInputDevice for WinitVirtualDevice {
++    fn pointer_id(&self) -> PointerDeviceId {
++        PointerDeviceId::Winit
++    }
++
+     fn output(&self, _state: &State) -> Option<Output> {
+         // FIXME: we should be returning the single output that the winit backend creates,
+         // but for now, that will cause issues because the output is normally upside down,
+@@ -45,6 +63,10 @@ impl NiriInputDevice for WinitVirtualDevice {
+ }
+ 
+ impl NiriInputDevice for VirtualPointer {
++    fn pointer_id(&self) -> PointerDeviceId {
++        PointerDeviceId::Virtual(self.clone())
++    }
++
+     fn output(&self, _: &State) -> Option<Output> {
+         self.output().cloned()
+     }
+diff --git a/src/input/mod.rs b/src/input/mod.rs
+index f1ad49320f0c69650fe3e10ae38e8f223442759e..90e9b33e2a87944ae9a9b151aa0680b2b293ea66 100644
+--- a/src/input/mod.rs
++++ b/src/input/mod.rs
+@@ -22,7 +22,7 @@ use smithay::backend::libinput::LibinputInputBackend;
+ use smithay::input::dnd::DnDGrab;
+ use smithay::input::keyboard::{keysyms, FilterResult, Keysym, Layout, ModifiersState};
+ use smithay::input::pointer::{
+-    AxisFrame, ButtonEvent, CursorIcon, CursorImageStatus, Focus, GestureHoldBeginEvent,
++    AxisFrame, ButtonEvent, ClickGrab, CursorIcon, CursorImageStatus, Focus, GestureHoldBeginEvent,
+     GestureHoldEndEvent, GesturePinchBeginEvent, GesturePinchEndEvent, GesturePinchUpdateEvent,
+     GestureSwipeBeginEvent, GestureSwipeEndEvent, GestureSwipeUpdateEvent,
+     GrabStartData as PointerGrabStartData, MotionEvent, PointerGrab, RelativeMotionEvent,
+@@ -34,7 +34,7 @@ use smithay::input::SeatHandler;
+ use smithay::output::Output;
+ use smithay::reexports::wayland_server::protocol::wl_data_source::WlDataSource;
+ use smithay::reexports::wayland_server::protocol::wl_surface::WlSurface;
+-use smithay::utils::{Logical, Point, Rectangle, Transform, SERIAL_COUNTER};
++use smithay::utils::{Logical, Point, Rectangle, Serial, Transform, SERIAL_COUNTER};
+ use smithay::wayland::keyboard_shortcuts_inhibit::KeyboardShortcutsInhibitor;
+ use smithay::wayland::pointer_constraints::{with_pointer_constraint, PointerConstraint};
+ use smithay::wayland::tablet_manager::{TabletDescriptor, TabletSeatTrait};
+@@ -59,6 +59,7 @@ pub mod backend_ext;
+ pub mod move_grab;
+ pub mod pick_color_grab;
+ pub mod pick_window_grab;
++pub mod pointer_buttons;
+ pub mod resize_grab;
+ pub mod scroll_swipe_gesture;
+ pub mod scroll_tracker;
+@@ -67,7 +68,7 @@ pub mod swipe_tracker;
+ pub mod touch_overview_grab;
+ pub mod touch_resize_grab;
+ 
+-use backend_ext::{NiriInputBackend as InputBackend, NiriInputDevice as _};
++use backend_ext::{NiriInputBackend as InputBackend, NiriInputDevice, PointerDeviceId};
+ 
+ pub const DOUBLE_CLICK_TIME: Duration = Duration::from_millis(400);
+ 
+@@ -253,7 +254,8 @@ impl State {
+         }
+     }
+ 
+-    fn on_device_removed(&mut self, device: impl Device) {
++    fn on_device_removed(&mut self, device: impl NiriInputDevice) {
++        self.remove_pointer_device(&device.pointer_id());
+         if device.has_capability(DeviceCapability::TabletTool) {
+             let tablet_seat = self.niri.seat.tablet_seat();
+ 
+@@ -270,6 +272,55 @@ impl State {
+         }
+     }
+ 
++    /// Drop only this device's presses. A surviving owner of the same button
++    /// keeps its seat press and grab; other devices' suppressions are untouched.
++    pub(crate) fn remove_pointer_device(&mut self, device: &PointerDeviceId) {
++        let released = self.niri.pointer_buttons.remove_device(device);
++        if released.is_empty() {
++            return;
++        }
++        let pointer = self.niri.seat.get_pointer().unwrap();
++        let time = get_monotonic_time().as_millis() as u32;
++        for button in released {
++            let serial = SERIAL_COUNTER.next_serial();
++            if button.button == 0x110 {
++                // End only a pointer selection, leaving touch drags intact.
++                // Deliberately ignore the capture request: unplugging a device
++                // must never confirm or save a screenshot.
++                let _ = self.niri.screenshot_ui.pointer_up(None);
++            }
++            if button.sent {
++                pointer.button(
++                    self,
++                    &ButtonEvent {
++                        button: button.button,
++                        state: ButtonState::Released,
++                        serial,
++                        time,
++                    },
++                );
++            }
++            self.cancel_removed_pointer_grab(button.serial, serial, time);
++        }
++        pointer.frame(self);
++        self.update_pointer_contents();
++        self.niri.queue_redraw_all();
++    }
++
++    fn cancel_removed_pointer_grab(&mut self, owner: Serial, serial: Serial, time: u32) {
++        let pointer = self.niri.seat.get_pointer().unwrap();
++        let cancel = pointer
++            .with_grab(|grab_serial, grab| {
++                // An implicit client grab spans all seat buttons, not just the
++                // initiating device. Its ordinary release handling owns its end.
++                grab_serial == owner && !grab.as_any().is::<ClickGrab<Self>>()
++            })
++            .unwrap_or(false);
++        if cancel {
++            pointer.unset_grab(self, serial, time);
++        }
++    }
++
+     /// Computes the rectangle that covers all outputs in global space.
+     fn global_bounding_rectangle(&self) -> Option<Rectangle<i32, Logical>> {
+         self.niri.global_space.outputs().fold(
+@@ -2746,9 +2797,20 @@ impl State {
+ 
+         let mod_key = self.backend.mod_key(&self.niri.config.borrow());
+ 
+-        // Ignore release events for mouse clicks that triggered a bind.
+-        if self.niri.suppressed_buttons.remove(&button_code) {
+-            return;
++        let device = event.device().pointer_id();
++        if button_state == ButtonState::Pressed {
++            if !self.niri.pointer_buttons.press(device.clone(), button_code) {
++                return;
++            }
++        } else {
++            let Some(released) = self.niri.pointer_buttons.release(&device, button_code) else {
++                return;
++            };
++            if !released.sent {
++                self.cancel_removed_pointer_grab(released.serial, serial, event.time_msec());
++                pointer.frame(self);
++                return;
++            }
+         }
+ 
+         if ButtonState::Pressed == button_state {
+@@ -2772,7 +2834,6 @@ impl State {
+                         self.niri.cancel_mru();
+                     }
+ 
+-                    self.niri.suppressed_buttons.insert(button_code);
+                     return;
+                 }
+             }
+@@ -2792,12 +2853,41 @@ impl State {
+                         make_binds_iter(&config, &mut self.niri.window_mru_ui, modifiers);
+                     find_configured_bind(bindings, mod_key, trigger, mods)
+                 }) {
+-                    self.niri.suppressed_buttons.insert(button_code);
+                     self.handle_bind(bind.clone());
+                     return;
+                 };
+             }
+ 
++            // Pickers consume a device-local press without creating an
++            // unmatched seat press or suppressing another device's release.
++            let picker = pointer.with_grab(|_, grab| {
++                (
++                    grab.as_any().is::<PickWindowGrab>(),
++                    grab.as_any().is::<PickColorGrab>(),
++                )
++            });
++            if let Some((window, color)) = picker {
++                if window || color {
++                    let location = pointer.current_location();
++                    if window {
++                        PickWindowGrab::complete(self, location);
++                    } else {
++                        PickColorGrab::complete(self, location);
++                    }
++                    pointer.unset_grab(self, serial, event.time_msec());
++                    pointer.frame(self);
++                    return;
++                }
++            }
++
++            if !self
++                .niri
++                .pointer_buttons
++                .forward(&device, button_code, serial)
++            {
++                return;
++            }
++
+             // We received an event for the regular pointer, so show it now.
+             self.niri.pointer_visibility = PointerVisibility::Visible;
+             self.niri.tablet_cursor_location = None;
+@@ -3043,6 +3133,9 @@ impl State {
+             }
+         }
+ 
++        if button_state == ButtonState::Pressed {
++            self.niri.pointer_buttons.sent(button_code);
++        }
+         pointer.button(
+             self,
+             &ButtonEvent {
+diff --git a/src/input/pick_color_grab.rs b/src/input/pick_color_grab.rs
+index 32132358c7d588b050ccc129730fcb8de16c0de0..d4d5e0524402abd864ff53c22a40559357b47802 100644
+--- a/src/input/pick_color_grab.rs
++++ b/src/input/pick_color_grab.rs
+@@ -1,6 +1,5 @@
+ use niri_ipc::PickedColor;
+ use smithay::backend::allocator::Fourcc;
+-use smithay::backend::input::ButtonState;
+ use smithay::backend::renderer::element::utils::{Relocate, RelocateRenderElement};
+ use smithay::backend::renderer::ExportMem as _;
+ use smithay::input::pointer::{
+@@ -24,6 +23,13 @@ impl PickColorGrab {
+         Self { start_data }
+     }
+ 
++    pub fn complete(data: &mut State, location: Point<f64, Logical>) {
++        if let Some(tx) = data.niri.pick_color.take() {
++            let color = Self::pick_color_at_point(location, data);
++            let _ = tx.send_blocking(color);
++        }
++    }
++
+     fn on_ungrab(&mut self, state: &mut State) {
+         if let Some(tx) = state.niri.pick_color.take() {
+             let _ = tx.send_blocking(None);
+@@ -118,23 +124,11 @@ impl PointerGrab<State> for PickColorGrab {
+ 
+     fn button(
+         &mut self,
+-        data: &mut State,
+-        handle: &mut PointerInnerHandle<'_, State>,
+-        event: &ButtonEvent,
++        _data: &mut State,
++        _handle: &mut PointerInnerHandle<'_, State>,
++        _event: &ButtonEvent,
+     ) {
+-        if event.state != ButtonState::Pressed {
+-            return;
+-        }
+-
+-        // We're handling this press, don't send the release to the window.
+-        data.niri.suppressed_buttons.insert(event.button);
+-
+-        if let Some(tx) = data.niri.pick_color.take() {
+-            let color = Self::pick_color_at_point(handle.current_location(), data);
+-            let _ = tx.send_blocking(color);
+-        }
+-
+-        handle.unset_grab(self, data, event.serial, event.time, true);
++        // Presses are consumed by State before updating the seat button state.
+     }
+ 
+     fn axis(
+diff --git a/src/input/pick_window_grab.rs b/src/input/pick_window_grab.rs
+index 9c2615b4742e5ec26f11d21dc6c029ef341de602..e30758e0e39afa7f6efa736e7dedfbb7b13d106d 100644
+--- a/src/input/pick_window_grab.rs
++++ b/src/input/pick_window_grab.rs
+@@ -1,4 +1,3 @@
+-use smithay::backend::input::ButtonState;
+ use smithay::input::pointer::{
+     AxisFrame, ButtonEvent, CursorImageStatus, GestureHoldBeginEvent, GestureHoldEndEvent,
+     GesturePinchBeginEvent, GesturePinchEndEvent, GesturePinchUpdateEvent, GestureSwipeBeginEvent,
+@@ -20,6 +19,12 @@ impl PickWindowGrab {
+         Self { start_data }
+     }
+ 
++    pub fn complete(data: &mut State, location: Point<f64, Logical>) {
++        if let Some(tx) = data.niri.pick_window.take() {
++            let _ = tx.send_blocking(data.niri.window_under(location).map(Mapped::id));
++        }
++    }
++
+     fn on_ungrab(&mut self, state: &mut State) {
+         if let Some(tx) = state.niri.pick_window.take() {
+             let _ = tx.send_blocking(None);
+@@ -56,26 +61,11 @@ impl PointerGrab<State> for PickWindowGrab {
+ 
+     fn button(
+         &mut self,
+-        data: &mut State,
+-        handle: &mut PointerInnerHandle<'_, State>,
+-        event: &ButtonEvent,
++        _data: &mut State,
++        _handle: &mut PointerInnerHandle<'_, State>,
++        _event: &ButtonEvent,
+     ) {
+-        if event.state != ButtonState::Pressed {
+-            return;
+-        }
+-
+-        // We're handling this press, don't send the release to the window.
+-        data.niri.suppressed_buttons.insert(event.button);
+-
+-        if let Some(tx) = data.niri.pick_window.take() {
+-            let _ = tx.send_blocking(
+-                data.niri
+-                    .window_under(handle.current_location())
+-                    .map(Mapped::id),
+-            );
+-        }
+-
+-        handle.unset_grab(self, data, event.serial, event.time, true);
++        // Presses are consumed by State before updating the seat button state.
+     }
+ 
+     fn axis(
 diff --git a/src/ipc/client.rs b/src/ipc/client.rs
 index 40a58efa19974cd65b9c8d55ae0281daf363d871..02929c75d4f6ddfa0db8f39a11050063345f0f12 100644
 --- a/src/ipc/client.rs
@@ -1560,16 +1995,39 @@ index db71da6dbdc27ba1fc474a57090a76ffff8ca8c7..1762b7c50a2ce9a4905ea865b3cc9f35
              let ipc_outputs = ctx.ipc_outputs.lock().unwrap().clone();
              let outputs = ipc_outputs.values().cloned().map(|o| (o.name.clone(), o));
 diff --git a/src/layout/closing_window.rs b/src/layout/closing_window.rs
-index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742004027e7 100644
+index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..55e8f3135445141713cca008cfbaaaef9090c933 100644
 --- a/src/layout/closing_window.rs
 +++ b/src/layout/closing_window.rs
-@@ -24,6 +24,21 @@ use crate::render_helpers::texture::{TextureBuffer, TextureRenderElement};
+@@ -1,3 +1,4 @@
++use std::cell::{Cell, RefCell};
+ use std::collections::HashMap;
+ use std::rc::Rc;
+ 
+@@ -10,7 +11,7 @@ use smithay::backend::renderer::element::utils::{
+ };
+ use smithay::backend::renderer::element::{Kind, RenderElement};
+ use smithay::backend::renderer::gles::{GlesRenderer, GlesTexture, Uniform};
+-use smithay::backend::renderer::Texture;
++use smithay::backend::renderer::{ContextId, Renderer as _, Texture};
+ use smithay::utils::{Logical, Point, Rectangle, Scale, Size, Transform};
+ use smithay::wayland::compositor::{Blocker, BlockerState};
+ 
+@@ -24,19 +25,25 @@ use crate::render_helpers::texture::{TextureBuffer, TextureRenderElement};
  use crate::render_helpers::{render_to_encompassing_texture, RenderCtx, RenderTarget};
  use crate::utils::transaction::TransactionBlocker;
  
 +/// Interrupted effects continue their existing path while opacity falls. In
 +/// particular an opening implosion must not suddenly become a new explosion.
-+#[derive(Debug)]
+ #[derive(Debug)]
+-pub struct ClosingWindow {
+-    /// Contents of the window.
+-    buffer: TextureBuffer<GlesTexture>,
+-
+-    /// Contents that are not blocked out, but the background is blocked out.
+-    ///
+-    /// If `None` then the background doesn't have any blocked-out surfaces, and normal `buffer`
+-    /// can be used instead.
+-    buffer_with_blocked_out_bg: Option<TextureBuffer<GlesTexture>>,
 +pub enum AnimationContinuation {
 +    Opening {
 +        animation: Animation,
@@ -1581,19 +2039,67 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742
 +        delta: Point<f64, Logical>,
 +    },
 +}
-+
- #[derive(Debug)]
- pub struct ClosingWindow {
-     /// Contents of the window.
-@@ -61,6 +76,7 @@ pub struct ClosingWindow {
+ 
+-    /// Blocked-out contents of the window.
+-    blocked_out_buffer: TextureBuffer<GlesTexture>,
++#[derive(Debug)]
++pub struct ClosingWindow {
++    /// Dropped immediately on renderer loss; no old GL texture or program survives.
++    resources: RefCell<Option<ClosingResources>>,
+ 
+     /// Where the window should be blocked out from.
+     block_out_from: Option<BlockOutFrom>,
+@@ -61,6 +68,27 @@ pub struct ClosingWindow {
  
      /// Random seed for the shader.
      random_seed: f32,
 +    continuation: Option<AnimationContinuation>,
++    continuation_alpha: f32,
++    context: ContextId<GlesTexture>,
++    renderer_lost: Cell<bool>,
++}
++
++#[derive(Debug)]
++struct ClosingResources {
++    /// Contents of the window.
++    buffer: TextureBuffer<GlesTexture>,
++
++    /// Contents that are not blocked out, but the background is blocked out.
++    ///
++    /// If `None` then the background doesn't have any blocked-out surfaces, and normal `buffer`
++    /// can be used instead.
++    buffer_with_blocked_out_bg: Option<TextureBuffer<GlesTexture>>,
++
++    /// Blocked-out contents of the window.
++    blocked_out_buffer: TextureBuffer<GlesTexture>,
++
++    resize: Option<super::resize_close::ResizeClosing>,
  }
  
  niri_render_elements! {
-@@ -94,6 +110,7 @@ impl AnimationState {
+@@ -81,6 +109,21 @@ enum AnimationState {
+ }
+ 
+ impl AnimationState {
++    fn advance(&mut self) {
++        if let Self::Waiting { blocker, anim } = self {
++            if blocker.state() != BlockerState::Pending {
++                *self = Self::Animating(anim.restarted(0., 1., 0.));
++            }
++        }
++    }
++
++    fn progress(&self) -> f64 {
++        match self {
++            Self::Waiting { .. } => 0.,
++            Self::Animating(anim) => anim.clamped_value().clamp(0., 1.),
++        }
++    }
++
+     pub fn new(blocker: TransactionBlocker, anim: Animation) -> Self {
+         if blocker.state() == BlockerState::Pending {
+             Self::Waiting { blocker, anim }
+@@ -94,6 +137,7 @@ impl AnimationState {
  }
  
  impl ClosingWindow {
@@ -1601,46 +2107,189 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742
      pub fn new<E: RenderElement<GlesRenderer>>(
          renderer: &mut GlesRenderer,
          snapshot: RenderSnapshot<E, E>,
-@@ -102,6 +119,7 @@ impl ClosingWindow {
+@@ -102,18 +146,23 @@ impl ClosingWindow {
          pos: Point<f64, Logical>,
          blocker: TransactionBlocker,
          anim: Animation,
 +        continuation: Option<AnimationContinuation>,
++        resize: Option<super::resize_close::ResizeClosing>,
      ) -> anyhow::Result<Self> {
          let _span = tracy_client::span!("ClosingWindow::new");
  
-@@ -154,6 +172,7 @@ impl ClosingWindow {
+         let mut render_to_texture = |elements: Vec<E>| -> anyhow::Result<_> {
+-            let (texture, _sync_point, geo) = render_to_encompassing_texture(
++            let result = render_to_encompassing_texture(
+                 renderer,
+                 scale,
+                 Transform::Normal,
+                 Fourcc::Abgr8888,
+                 &elements,
+-            )
+-            .context("error rendering to texture")?;
++            );
++            renderer.with_context(|gl| unsafe {
++                gl.BindFramebuffer(smithay::backend::renderer::gles::ffi::FRAMEBUFFER, 0);
++            })?;
++            let (texture, _sync_point, geo) = result.context("error rendering to texture")?;
+ 
+             let buffer = TextureBuffer::from_texture(
+                 renderer,
+@@ -142,10 +191,14 @@ impl ClosingWindow {
+             render_to_texture(snapshot.blocked_out_contents)
+                 .context("error rendering blocked-out contents")?;
+ 
++        let continuation_alpha = resize.as_ref().map_or(1., |resize| resize.alpha);
+         Ok(Self {
+-            buffer,
+-            buffer_with_blocked_out_bg,
+-            blocked_out_buffer,
++            resources: RefCell::new(Some(ClosingResources {
++                buffer,
++                buffer_with_blocked_out_bg,
++                blocked_out_buffer,
++                resize,
++            })),
+             block_out_from: snapshot.block_out_from,
+             geo_size,
+             pos,
+@@ -154,22 +207,32 @@ impl ClosingWindow {
              blocked_out_buffer_offset,
              anim_state: AnimationState::new(blocker, anim),
              random_seed: fastrand::f32(),
 +            continuation,
++            continuation_alpha,
++            context: renderer.context_id(),
++            renderer_lost: Cell::new(false),
          })
      }
  
-@@ -194,6 +213,7 @@ impl ClosingWindow {
++    pub fn enabled(&self, animations: &niri_config::Animations) -> bool {
++        !animations.off
++            && !animations.window_close.anim.off
++            && !(self
++                .resources
++                .borrow()
++                .as_ref()
++                .is_some_and(|resources| resources.resize.is_some())
++                && animations.window_resize.anim.off)
++    }
++
+     pub fn advance_animations(&mut self) {
+-        match &mut self.anim_state {
+-            AnimationState::Waiting { blocker, anim } => {
+-                if blocker.state() != BlockerState::Pending {
+-                    let anim = anim.restarted(0., 1., 0.);
+-                    self.anim_state = AnimationState::Animating(anim);
+-                }
+-            }
+-            AnimationState::Animating(_anim) => (),
+-        }
++        self.anim_state.advance();
+     }
+ 
+     pub fn are_animations_ongoing(&self) -> bool {
++        if self.renderer_lost.get() {
++            return false;
++        }
+         match &self.anim_state {
+             AnimationState::Waiting { .. } => true,
+             AnimationState::Animating(anim) => !anim.is_done(),
+@@ -181,19 +244,68 @@ impl ClosingWindow {
+         ctx: RenderCtx<GlesRenderer>,
+         view_rect: Rectangle<f64, Logical>,
+         scale: Scale<f64>,
+-    ) -> ClosingWindowRenderElement {
++    ) -> Option<ClosingWindowRenderElement> {
++        // A frozen closing surface cannot be rebuilt after renderer loss. Never
++        // reinterpret a texture or pinned program from the previous GL context.
++        let mut resources = self.resources.borrow_mut();
++        if self.context != ctx.renderer.context_id() {
++            resources.take();
++            self.renderer_lost.set(true);
++            return None;
++        }
++        Shaders::collect_retired_resize(ctx.renderer);
++        let resources = resources.as_mut()?;
++        if resources
++            .resize
++            .as_ref()
++            .is_some_and(|resize| !resize.matches_scale(scale))
++        {
++            // Frozen material rectangles are in capture-scale physical pixels.
++            // Until that source scale is independently represented by the resize
++            // shader ABI, retire the continuation rather than reinterpret its UVs.
++            // The ordinary target-specific TextureBuffer snapshot preserves scale.
++            resources.resize.take();
++        }
++        let resized = match resources
++            .resize
++            .as_ref()
++            .map(|resize| resize.render(ctx.renderer, ctx.target, scale))
++        {
++            Some(Ok(frame)) => Some(frame),
++            Some(Err(err)) => {
++                warn!("error continuing closing resize: {err:?}");
++                // A failed continuation is terminal. Keep the independently
++                // protected snapshots and never jump back to deformation later.
++                resources.resize.take();
++                None
++            }
++            None => None,
++        };
+         let (buffer, offset) = if ctx.target.should_block_out(self.block_out_from) {
+-            (&self.blocked_out_buffer, self.blocked_out_buffer_offset)
+-        } else if ctx.target != RenderTarget::Output && self.buffer_with_blocked_out_bg.is_some() {
+             (
+-                self.buffer_with_blocked_out_bg.as_ref().unwrap(),
++                &resources.blocked_out_buffer,
++                self.blocked_out_buffer_offset,
++            )
++        } else if ctx.target != RenderTarget::Output
++            && resources.buffer_with_blocked_out_bg.is_some()
++        {
++            (
++                resources.buffer_with_blocked_out_bg.as_ref().unwrap(),
+                 self.buffer_with_blocked_out_bg_offset,
+             )
+         } else {
+-            (&self.buffer, self.buffer_offset)
++            (&resources.buffer, self.buffer_offset)
          };
  
++        let (buffer, offset, geo_size) = resized
++            .as_ref()
++            .map(|(buffer, offset, size)| (buffer, *offset, *size))
++            .unwrap_or((buffer, offset, self.geo_size));
++        let resizing = resized.is_some();
++        let continuation_alpha = self.continuation_alpha;
++
          let anim = match &self.anim_state {
-+            AnimationState::Waiting { anim, .. } if self.continuation.is_some() => anim,
++            AnimationState::Waiting { anim, .. } if self.continuation.is_some() || resizing => anim,
              AnimationState::Waiting { .. } => {
                  let elem = TextureRenderElement::from_texture_buffer(
                      buffer.clone(),
-@@ -220,19 +240,55 @@ impl ClosingWindow {
+@@ -215,66 +327,119 @@ impl ClosingWindow {
+                     Relocate::Relative,
+                 );
+ 
+-                return elem.into();
++                return Some(elem.into());
+             }
              AnimationState::Animating(anim) => anim,
          };
  
 -        let progress = anim.value();
 -        let clamped_progress = anim.clamped_value().clamp(0., 1.);
-+        let closing = if matches!(self.anim_state, AnimationState::Waiting { .. }) {
-+            0.
-+        } else {
-+            anim.clamped_value().clamp(0., 1.)
-+        };
++        let closing = self.anim_state.progress();
 +        let fade = closing * closing * (3. - 2. * closing);
 +        let mut program = ProgramType::Close;
 +        let mut progress = anim.value();
 +        let mut random_seed = self.random_seed;
-+        let mut alpha = 1.;
++        let mut alpha = if resizing {
++            (1. - fade) as f32 * continuation_alpha
++        } else {
++            1.
++        };
 +        let mut position = self.pos;
 +        let mut impulse = [1., 1.];
 +        let mut delta = Point::from((0., 0.));
@@ -1669,15 +2318,16 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742
 +                    position += displacement;
 +                }
 +            }
-+            alpha = (1. - fade) as f32;
++            alpha = (1. - fade) as f32 * continuation_alpha;
 +        }
 +        let clamped_progress = progress.clamp(0., 1.);
  
 -        if Shaders::get(ctx.renderer)
 -            .program(ProgramType::Close)
 -            .is_some()
--        {
-+        if Shaders::get(ctx.renderer).program(program).is_some() {
++        if (!resizing || self.continuation.is_some())
++            && Shaders::get(ctx.renderer).program(program).is_some()
+         {
              let area_loc = Vec2::new(view_rect.loc.x as f32, view_rect.loc.y as f32);
              let area_size = Vec2::new(view_rect.size.w as f32, view_rect.size.h as f32);
  
@@ -1688,10 +2338,42 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742
              let pos = view_rect.loc + relative.to_physical_precise_round(scale).to_logical(scale);
  
              let geo_loc = Vec2::new(pos.x as f32, pos.y as f32);
-@@ -250,20 +306,29 @@ impl ClosingWindow {
+-            let geo_size = Vec2::new(self.geo_size.w as f32, self.geo_size.h as f32);
++            let geo_size = Vec2::new(geo_size.w as f32, geo_size.h as f32);
+ 
+             let input_to_geo = Mat3::from_scale(area_size / geo_size)
+                 * Mat3::from_translation((area_loc - geo_loc) / area_size);
+ 
+-            let tex_scale = self.buffer.texture_scale();
++            let tex_scale = buffer.texture_scale();
+             let tex_scale = Vec2::new(tex_scale.x as f32, tex_scale.y as f32);
+             let tex_loc = Vec2::new(offset.x as f32, offset.y as f32);
+-            let tex_size = self.buffer.texture().size();
++            let tex_size = buffer.texture().size();
+             let tex_size = Vec2::new(tex_size.w as f32, tex_size.h as f32) / tex_scale;
+ 
              let geo_to_tex =
                  Mat3::from_translation(-tex_loc / tex_size) * Mat3::from_scale(geo_size / tex_size);
  
+-            return ShaderRenderElement::new(
+-                ProgramType::Close,
+-                view_rect.size,
+-                None,
+-                scale.x as f32,
+-                1.,
+-                Rc::new([
+-                    mat3_uniform("niri_input_to_geo", input_to_geo),
+-                    Uniform::new("niri_geo_size", geo_size.to_array()),
+-                    mat3_uniform("niri_geo_to_tex", geo_to_tex),
+-                    Uniform::new("niri_progress", progress as f32),
+-                    Uniform::new("niri_clamped_progress", clamped_progress as f32),
+-                    Uniform::new("niri_random_seed", self.random_seed),
+-                ]),
+-                HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
+-                Kind::Unspecified,
+-            )
+-            .with_location(Point::from((0., 0.)))
+-            .into();
 +            let mut uniforms = vec![
 +                mat3_uniform("niri_input_to_geo", input_to_geo),
 +                Uniform::new("niri_geo_size", geo_size.to_array()),
@@ -1708,57 +2390,230 @@ index ca28f5982fd9fecdd2d6a87194e948579dacc8ed..388b05f41ff3f6b6b61a2fa02aa16742
 +                    [delta.x as f32, delta.y as f32],
 +                ));
 +            }
-             return ShaderRenderElement::new(
--                ProgramType::Close,
-+                program,
-                 view_rect.size,
-                 None,
-                 scale.x as f32,
--                1.,
--                Rc::new([
--                    mat3_uniform("niri_input_to_geo", input_to_geo),
--                    Uniform::new("niri_geo_size", geo_size.to_array()),
--                    mat3_uniform("niri_geo_to_tex", geo_to_tex),
--                    Uniform::new("niri_progress", progress as f32),
--                    Uniform::new("niri_clamped_progress", clamped_progress as f32),
--                    Uniform::new("niri_random_seed", self.random_seed),
--                ]),
-+                alpha,
-+                Rc::from(uniforms),
-                 HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
-                 Kind::Unspecified,
-             )
-@@ -274,7 +339,11 @@ impl ClosingWindow {
++            return Some(
++                ShaderRenderElement::new(
++                    program,
++                    view_rect.size,
++                    None,
++                    scale.x as f32,
++                    alpha,
++                    Rc::from(uniforms),
++                    HashMap::from([(String::from("niri_tex"), buffer.texture().clone())]),
++                    Kind::Unspecified,
++                )
++                .with_location(Point::from((0., 0.)))
++                .into(),
++            );
+         }
+ 
          let elem = TextureRenderElement::from_texture_buffer(
              buffer.clone(),
              Point::from((0., 0.)),
 -            1. - clamped_progress as f32,
-+            if self.continuation.is_some() {
-+                1. - fade as f32
++            if self.continuation.is_some() || resizing {
++                (1. - fade as f32) * continuation_alpha
 +            } else {
 +                1. - clamped_progress as f32
 +            },
              None,
              None,
              Kind::Unspecified,
+@@ -282,14 +447,18 @@ impl ClosingWindow {
+ 
+         let elem = PrimaryGpuTextureRenderElement(elem);
+ 
+-        let center = self.geo_size.to_point().downscale(2.);
++        let center = geo_size.to_point().downscale(2.);
+         let elem = RescaleRenderElement::from_element(
+             elem,
+             (center - offset).to_physical_precise_round(scale),
+-            ((1. - clamped_progress) / 5. + 0.8).max(0.),
++            if resizing {
++                1.
++            } else {
++                ((1. - clamped_progress) / 5. + 0.8).max(0.)
++            },
+         );
+ 
+-        let mut location = self.pos + offset;
++        let mut location = position + offset;
+         location.x -= view_rect.loc.x;
+         let elem = RelocateRenderElement::from_element(
+             elem,
+@@ -297,6 +466,33 @@ impl ClosingWindow {
+             Relocate::Relative,
+         );
+ 
+-        elem.into()
++        Some(elem.into())
++    }
++}
++
++#[cfg(test)]
++mod resize_close_tests {
++    use super::*;
++    use crate::animation::{Clock, Curve};
++    use crate::utils::transaction::Transaction;
++    use std::time::Duration;
++
++    #[test]
++    fn waiting_close_keeps_fade_zero_without_restarting_retained_phase() {
++        let mut clock = Clock::with_time(Duration::ZERO);
++        let phase = Animation::ease(clock.clone(), 0., 1., 0., 1000, Curve::Linear);
++        let transaction = Transaction::new();
++        let mut close = AnimationState::new(transaction.blocker(), phase.clone());
++        clock.set_unadjusted(Duration::from_millis(250));
++        close.advance();
++        assert_eq!(close.progress(), 0.);
++        assert_eq!(phase.clamped_value(), 0.25);
++        drop(transaction);
++        close.advance();
++        assert_eq!(close.progress(), 0.);
++        assert_eq!(phase.clamped_value(), 0.25);
++        clock.set_unadjusted(Duration::from_millis(500));
++        assert_eq!(close.progress(), 0.25);
++        assert_eq!(phase.clamped_value(), 0.5);
+     }
+ }
 diff --git a/src/layout/floating.rs b/src/layout/floating.rs
-index d102f40d2a98c26f406548e57ba310ff01b0cc6f..ec8f54767109e941e738be1ed17c311c0b1b7cc0 100644
+index d102f40d2a98c26f406548e57ba310ff01b0cc6f..a5faf396f95a9ae73d26f6d9056228a69b4b2010 100644
 --- a/src/layout/floating.rs
 +++ b/src/layout/floating.rs
-@@ -615,7 +615,7 @@ impl<W: LayoutElement> FloatingSpace<W> {
+@@ -237,6 +237,8 @@ impl<W: LayoutElement> FloatingSpace<W> {
+         self.view_size = view_size;
+         self.working_area = working_area;
+         self.scale = scale;
++        self.closing_windows
++            .retain(|closing| closing.enabled(&options.animations));
+         self.options = options;
+     }
+ 
+@@ -615,7 +617,15 @@ impl<W: LayoutElement> FloatingSpace<W> {
  
          let scale = Scale::from(self.scale);
          let res = ClosingWindow::new(
 -            renderer, snapshot, scale, tile_size, tile_pos, blocker, anim,
-+            renderer, snapshot.render, scale, tile_size, tile_pos, blocker, anim, snapshot.continuation,
++            renderer,
++            snapshot.render,
++            scale,
++            tile_size,
++            tile_pos,
++            blocker,
++            anim,
++            snapshot.continuation,
++            snapshot.resize,
          );
          match res {
              Ok(closing) => {
+@@ -1069,8 +1079,9 @@ impl<W: LayoutElement> FloatingSpace<W> {
+         //
+         // FIXME: I guess this should rather preserve the stacking order when the window is closed.
+         for closing in self.closing_windows.iter().rev() {
+-            let elem = closing.render(ctx.as_gles(), view_rect, scale);
+-            push(elem.into());
++            if let Some(elem) = closing.render(ctx.as_gles(), view_rect, scale) {
++                push(elem.into());
++            }
+         }
+ 
+         let active = self.active_window_id.clone();
+diff --git a/src/layout/focus_ring.rs b/src/layout/focus_ring.rs
+index b53a5df8b99dde400a3c9adee1f78856444ce15b..07c8eeae16cb8ca24943ce274c474a1c911828ea 100644
+--- a/src/layout/focus_ring.rs
++++ b/src/layout/focus_ring.rs
+@@ -9,7 +9,7 @@ use crate::render_helpers::border::BorderRenderElement;
+ use crate::render_helpers::renderer::NiriRenderer;
+ use crate::render_helpers::solid_color::{SolidColorBuffer, SolidColorRenderElement};
+ 
+-#[derive(Debug)]
++#[derive(Debug, Clone)]
+ pub struct FocusRing {
+     buffers: [SolidColorBuffer; 8],
+     locations: [Point<f64, Logical>; 8],
+@@ -20,6 +20,7 @@ pub struct FocusRing {
+     use_border_shader: bool,
+     config: niri_config::FocusRing,
+     thicken_corners: bool,
++    frozen_inputs: Option<(bool, bool, bool, Rectangle<f64, Logical>, CornerRadius, f32)>,
+ }
+ 
+ niri_render_elements! {
+@@ -41,6 +42,13 @@ impl FocusRing {
+             use_border_shader: false,
+             config,
+             thicken_corners: true,
++            frozen_inputs: None,
++        }
++    }
++
++    pub fn resize_frozen(&mut self, size: Size<f64, Logical>, scale: f64) {
++        if let Some((active, border, urgent, view, radius, alpha)) = self.frozen_inputs {
++            self.update_render_elements(size, active, border, urgent, view, radius, scale, alpha);
+         }
+     }
+ 
+@@ -66,6 +74,7 @@ impl FocusRing {
+         scale: f64,
+         alpha: f32,
+     ) {
++        self.frozen_inputs = Some((is_active, is_border, is_urgent, view_rect, radius, alpha));
+         let width = self.config.width;
+         self.full_size = win_size + Size::from((width, width)).upscale(2.);
+         self.is_border = is_border;
+@@ -274,3 +283,40 @@ impl FocusRing {
+         &self.config
+     }
+ }
++
++#[cfg(test)]
++mod resize_close_tests {
++    use super::*;
++    #[test]
++    fn retained_border_rebuilds_edges_without_stretching_width() {
++        let mut config = niri_config::FocusRing::default();
++        config.width = 6.;
++        let mut original = FocusRing::new(config);
++        original.update_render_elements(
++            Size::new(400., 300.),
++            true,
++            true,
++            false,
++            Rectangle::from_size(Size::new(1280., 720.)),
++            CornerRadius::default(),
++            1.,
++            0.7,
++        );
++        let mut retained = original.clone();
++        for size in [
++            Size::new(120., 500.),
++            Size::new(750., 100.),
++            Size::new(400., 300.),
++        ] {
++            retained.resize_frozen(size, 1.);
++            assert_eq!(retained.sizes[0].h, 6.);
++            assert_eq!(retained.sizes[1].h, 6.);
++            assert_eq!(retained.sizes[2].w, 6.);
++            assert_eq!(retained.sizes[3].w, 6.);
++            assert_eq!(retained.full_size, size + Size::new(12., 12.));
++        }
++        assert_eq!(retained.locations, original.locations);
++        assert_eq!(retained.sizes, original.sizes);
++        assert_eq!(retained.frozen_inputs, original.frozen_inputs);
++    }
++}
 diff --git a/src/layout/mod.rs b/src/layout/mod.rs
-index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a181212880420f79f510 100644
+index 5c4dd639e416e169469c223a078c942f828f3aec..fe8510114958a11c795f34cb35326e1504c33eb1 100644
 --- a/src/layout/mod.rs
 +++ b/src/layout/mod.rs
-@@ -3155,7 +3155,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -76,6 +76,7 @@ use crate::utils::{
+ use crate::window::ResolvedWindowRules;
+ 
+ pub mod closing_window;
++pub mod resize_close;
+ pub mod floating;
+ pub mod focus_ring;
+ pub mod insert_hint_element;
+@@ -3155,7 +3156,7 @@ impl<W: LayoutElement> Layout<W> {
                      move_.tile.animate_alpha(
                          INTERACTIVE_MOVE_ALPHA,
                          1.,
@@ -1767,7 +2622,7 @@ index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a18121288042
                      );
  
                      // Unlock the view on the workspaces.
-@@ -3167,7 +3167,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -3167,7 +3168,7 @@ impl<W: LayoutElement> Layout<W> {
                      move_.tile.animate_alpha(
                          1.,
                          INTERACTIVE_MOVE_ALPHA,
@@ -1776,7 +2631,7 @@ index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a18121288042
                      );
                      move_.tile.hold_alpha_animation_after_done();
                  }
-@@ -3994,7 +3994,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -3994,7 +3995,7 @@ impl<W: LayoutElement> Layout<W> {
                      tile.animate_alpha(
                          1.,
                          INTERACTIVE_MOVE_ALPHA,
@@ -1785,7 +2640,7 @@ index 5c4dd639e416e169469c223a078c942f828f3aec..4eb294900ef874e3edf5a18121288042
                      );
                      tile.hold_alpha_animation_after_done();
                  }
-@@ -4146,7 +4146,7 @@ impl<W: LayoutElement> Layout<W> {
+@@ -4146,7 +4147,7 @@ impl<W: LayoutElement> Layout<W> {
              move_.tile.animate_alpha(
                  INTERACTIVE_MOVE_ALPHA,
                  1.,
@@ -1813,7 +2668,7 @@ index 5ba97a3598ec7dcb7e5797d5e764298be28ec4d7..6877db315a48a588eb3b14f1d3c1f9d2
          self.anim.is_done()
      }
 diff --git a/src/layout/scrolling.rs b/src/layout/scrolling.rs
-index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c118499a6b4882 100644
+index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..01c493132f4aa6e373085fb2af4e31813c3640e3 100644
 --- a/src/layout/scrolling.rs
 +++ b/src/layout/scrolling.rs
 @@ -16,7 +16,7 @@ use super::tab_indicator::{TabIndicator, TabIndicatorRenderElement, TabInfo};
@@ -1848,7 +2703,16 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
  impl<W: LayoutElement> ScrollingSpace<W> {
      pub fn new(
          view_size: Size<f64, Logical>,
-@@ -920,11 +917,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -328,6 +325,8 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+         self.working_area = working_area;
+         self.parent_area = parent_area;
+         self.scale = scale;
++        self.closing_windows
++            .retain(|closing| closing.enabled(&options.animations));
+         self.options = options;
+ 
+         // Apply always-center and such right away.
+@@ -920,11 +919,11 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              if target_column.active_tile_idx == tile_idx {
                  // Fade out the previously active tile.
                  let tile = &mut target_column.tiles[prev_active_tile_idx];
@@ -1862,7 +2726,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              }
          }
  
-@@ -993,7 +990,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -993,7 +992,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          // Animate movement of other columns.
          let offset = self.column_x(idx + 1) - self.column_x(idx);
@@ -1871,7 +2735,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
          if self.active_column_idx <= idx {
              for col in &mut self.columns[idx + 1..] {
                  col.animate_move_from_with_config(-offset, config);
-@@ -1070,7 +1067,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1070,7 +1069,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
          let column = &mut self.columns[column_idx];
          let prev_width = self.data[column_idx].width;
  
@@ -1880,7 +2744,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
  
          // Animate movement of other tiles.
          // FIXME: tiles can move by X too, in a centered or resizing layout with one window smaller
-@@ -1165,7 +1162,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1165,7 +1164,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
          anim_config: Option<niri_config::Animation>,
      ) -> Column<W> {
          // Animate movement of the other columns.
@@ -1889,7 +2753,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
          let offset = self.column_x(column_idx + 1) - self.column_x(column_idx);
          if self.active_column_idx <= column_idx {
              for col in &mut self.columns[column_idx + 1..] {
-@@ -1279,7 +1276,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1279,7 +1278,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          // Move other columns in tandem with resizing.
          let ongoing_resize_anim = column.tiles[tile_idx].resize_animation().is_some();
@@ -1915,7 +2779,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              if self.active_column_idx <= col_idx {
                  for col in &mut self.columns[col_idx + 1..] {
                      // If there's a resize animation on the tile (that may have just started in
-@@ -1530,7 +1544,14 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1530,7 +1546,15 @@ impl<W: LayoutElement> ScrollingSpace<W> {
  
          let scale = Scale::from(self.scale);
          let res = ClosingWindow::new(
@@ -1928,10 +2792,11 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
 +            blocker,
 +            anim,
 +            snapshot.continuation,
++            snapshot.resize,
          );
          match res {
              Ok(closing) => {
-@@ -1711,7 +1732,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1711,7 +1735,10 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              }
          }
  
@@ -1943,7 +2808,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
      }
  
      pub fn move_left(&mut self) -> bool {
-@@ -1825,7 +1849,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1825,7 +1852,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -1952,7 +2817,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1851,7 +1875,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1851,7 +1878,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -1961,7 +2826,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              );
  
              if source_tile_was_active {
-@@ -1921,7 +1945,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1921,7 +1948,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_col_idx,
                  0,
                  Transaction::new(),
@@ -1970,7 +2835,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              );
              self.add_tile_to_column(target_column_idx, None, tile, source_tile_was_active);
  
-@@ -1945,7 +1969,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -1945,7 +1972,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  source_tile_was_active,
                  removed.width,
                  removed.is_full_width,
@@ -1979,7 +2844,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              );
  
              offset.x += if self.active_column_idx <= target_column_idx {
-@@ -2019,7 +2043,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2019,7 +2046,7 @@ impl<W: LayoutElement> ScrollingSpace<W> {
              false,
              removed.width,
              removed.is_full_width,
@@ -1988,7 +2853,19 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
          );
  
          offset.x += cur_x - self.column_x(target_col_idx);
-@@ -2957,9 +2981,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+@@ -2910,8 +2937,9 @@ impl<W: LayoutElement> ScrollingSpace<W> {
+         // Draw the closing windows on top of the other windows.
+         let view_rect = Rectangle::new(Point::from((self.view_pos(), 0.)), self.view_size);
+         for closing in self.closing_windows.iter().rev() {
+-            let elem = closing.render(ctx.as_gles(), view_rect, scale);
+-            push(elem.into());
++            if let Some(elem) = closing.render(ctx.as_gles(), view_rect, scale) {
++                push(elem.into());
++            }
+         }
+ 
+         if self.columns.is_empty() {
+@@ -2957,9 +2985,24 @@ impl<W: LayoutElement> ScrollingSpace<W> {
                  }
  
                  let xray_pos = xray_pos.offset(tile_pos);
@@ -2016,7 +2893,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              }
          }
      }
-@@ -3971,6 +4010,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -3971,6 +4014,7 @@ impl<W: LayoutElement> Column<W> {
              display_mode,
              tab_indicator: TabIndicator::new(options.layout.tab_indicator),
              move_animation: None,
@@ -2024,7 +2901,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              view_size,
              working_area,
              parent_area,
-@@ -3997,7 +4037,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -3997,7 +4041,7 @@ impl<W: LayoutElement> Column<W> {
              // Usually new columns are created together with window movement actions. For new
              // windows, we handle that in start_open_animation().
              rv.tab_indicator
@@ -2033,7 +2910,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
          }
  
          rv
-@@ -4073,7 +4113,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4073,7 +4117,7 @@ impl<W: LayoutElement> Column<W> {
  
      pub fn advance_animations(&mut self) {
          if let Some(move_) = &mut self.move_animation {
@@ -2042,7 +2919,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
                  self.move_animation = None;
              }
          }
-@@ -4157,16 +4197,20 @@ impl<W: LayoutElement> Column<W> {
+@@ -4157,16 +4201,20 @@ impl<W: LayoutElement> Column<W> {
          let mut offset = Point::from((0., 0.));
  
          if let Some(move_) = &self.move_animation {
@@ -2065,7 +2942,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
          );
      }
  
-@@ -4178,23 +4222,43 @@ impl<W: LayoutElement> Column<W> {
+@@ -4178,23 +4226,43 @@ impl<W: LayoutElement> Column<W> {
          let current_offset = self
              .move_animation
              .as_ref()
@@ -2121,7 +2998,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
          }
      }
  
-@@ -4339,6 +4403,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -4339,6 +4407,7 @@ impl<W: LayoutElement> Column<W> {
          let offset = prev_height - self.data[tile_idx].size.h;
  
          let is_tabbed = self.display_mode == ColumnDisplay::Tabbed;
@@ -2129,7 +3006,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
  
          // Move windows below in tandem with resizing.
          //
-@@ -4347,7 +4412,11 @@ impl<W: LayoutElement> Column<W> {
+@@ -4347,7 +4416,11 @@ impl<W: LayoutElement> Column<W> {
          // animated vs. non-animated resizes? For example, an animated +20 resize followed by two
          // non-animated -10 resizes.
          if !is_tabbed && offset != 0. {
@@ -2142,7 +3019,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
                  // If there's a resize animation (that may have just started in
                  // tile.update_window()), then the apparent size change is smooth with no sudden
                  // jumps. This corresponds to adding an Y animation to tiles below.
-@@ -4709,6 +4778,24 @@ impl<W: LayoutElement> Column<W> {
+@@ -4709,6 +4782,24 @@ impl<W: LayoutElement> Column<W> {
          }
      }
  
@@ -2167,7 +3044,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
      fn width(&self) -> f64 {
          let mut tiles_width = self
              .data
-@@ -5149,7 +5236,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5149,7 +5240,7 @@ impl<W: LayoutElement> Column<W> {
                  } else {
                      (0., 1.)
                  };
@@ -2176,7 +3053,7 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              }
          }
  
-@@ -5157,7 +5244,7 @@ impl<W: LayoutElement> Column<W> {
+@@ -5157,7 +5248,7 @@ impl<W: LayoutElement> Column<W> {
          if display == ColumnDisplay::Tabbed {
              self.tab_indicator.start_open_animation(
                  self.clock.clone(),
@@ -2185,6 +3062,78 @@ index 007bcaf5a8eef18dc13ce1672ba3a263275b673d..9f4dfd3d34bc8a3fec5d82d115c11849
              );
          }
  
+diff --git a/src/layout/shadow.rs b/src/layout/shadow.rs
+index 509ad728ccde2fa6059af0c33a91a2747d9519e6..b531c83fdb4e9be5f7c96b2deb8d5e282bfa172f 100644
+--- a/src/layout/shadow.rs
++++ b/src/layout/shadow.rs
+@@ -6,11 +6,12 @@ use smithay::utils::{Logical, Point, Rectangle, Size};
+ use crate::render_helpers::renderer::NiriRenderer;
+ use crate::render_helpers::shadow::ShadowRenderElement;
+ 
+-#[derive(Debug)]
++#[derive(Debug, Clone)]
+ pub struct Shadow {
+     shader_rects: Vec<Rectangle<f64, Logical>>,
+     shaders: Vec<ShadowRenderElement>,
+     config: niri_config::Shadow,
++    frozen_inputs: Option<(bool, CornerRadius, f32)>,
+ }
+ 
+ impl Shadow {
+@@ -19,6 +20,13 @@ impl Shadow {
+             shader_rects: Vec::new(),
+             shaders: Vec::new(),
+             config,
++            frozen_inputs: None,
++        }
++    }
++
++    pub fn resize_frozen(&mut self, size: Size<f64, Logical>, scale: f64) {
++        if let Some((active, radius, alpha)) = self.frozen_inputs {
++            self.update_render_elements(size, active, radius, scale, alpha);
+         }
+     }
+ 
+@@ -40,6 +48,7 @@ impl Shadow {
+         scale: f64,
+         alpha: f32,
+     ) {
++        self.frozen_inputs = Some((is_active, radius, alpha));
+         let ceil = |logical: f64| (logical * scale).ceil() / scale;
+ 
+         // All of this stuff should end up aligned to physical pixels because:
+@@ -182,3 +191,31 @@ impl Shadow {
+         }
+     }
+ }
++
++#[cfg(test)]
++mod resize_close_tests {
++    use super::*;
++    #[test]
++    fn retained_shadow_keeps_outer_spread_when_window_size_changes() {
++        let mut shadow = Shadow::new(niri_config::Shadow::default());
++        let original_size = Size::new(400., 300.);
++        shadow.update_render_elements(original_size, true, CornerRadius::default(), 1., 0.7);
++        let bounds = |shadow: &Shadow| {
++            shadow
++                .shader_rects
++                .iter()
++                .copied()
++                .reduce(Rectangle::merge)
++                .unwrap()
++        };
++        let initial = bounds(&shadow);
++        let mut retained = shadow.clone();
++        for size in [Size::new(150., 500.), Size::new(750., 100.), original_size] {
++            retained.resize_frozen(size, 1.);
++            let current = bounds(&retained);
++            assert_eq!(current.loc, initial.loc);
++            assert_eq!(current.size.w - size.w, initial.size.w - original_size.w);
++            assert_eq!(current.size.h - size.h, initial.size.h - original_size.h);
++        }
++    }
++}
 diff --git a/src/layout/tests/animations.rs b/src/layout/tests/animations.rs
 index 85df548c10d78083c7bb0094fdc9421fd67e0047..5ab2291337eb9c000bcd0eff2f6124e4d679db0a 100644
 --- a/src/layout/tests/animations.rs
@@ -3000,7 +3949,7 @@ index 85df548c10d78083c7bb0094fdc9421fd67e0047..5ab2291337eb9c000bcd0eff2f6124e4
 +    }
 +}
 diff --git a/src/layout/tile.rs b/src/layout/tile.rs
-index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d04530408 100644
+index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..5ba21e504171606238ea17949a08c1212c64109e 100644
 --- a/src/layout/tile.rs
 +++ b/src/layout/tile.rs
 @@ -1,4 +1,5 @@
@@ -3043,15 +3992,16 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
      /// The animation of the tile's opacity.
      pub(super) alpha_animation: Option<AlphaAnimation>,
  
-@@ -127,6 +136,7 @@ niri_render_elements! {
+@@ -127,6 +136,8 @@ niri_render_elements! {
          SolidColor = SolidColorRenderElement,
          Opening = OpeningWindowRenderElement,
          Resize = ResizeRenderElement,
++        FrozenTexture = crate::render_helpers::primary_gpu_texture::PrimaryGpuTextureRenderElement,
 +        Movement = ShaderRenderElement,
          Border = BorderRenderElement,
          Shadow = ShadowRenderElement,
          ClippedSurface = ClippedSurfaceRenderElement<R>,
-@@ -136,11 +146,16 @@ niri_render_elements! {
+@@ -136,11 +147,17 @@ niri_render_elements! {
      }
  }
  
@@ -3059,6 +4009,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
 -    RenderSnapshot<TileRenderElement<GlesRenderer>, TileRenderElement<GlesRenderer>>;
 +#[derive(Debug)]
 +pub struct TileRenderSnapshot {
++    pub resize: Option<super::resize_close::ResizeClosing>,
 +    pub render: RenderSnapshot<TileRenderElement<GlesRenderer>, TileRenderElement<GlesRenderer>>,
 +    pub continuation: Option<super::closing_window::AnimationContinuation>,
 +}
@@ -3070,7 +4021,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
      anim: Animation,
      size_from: Size<f64, Logical>,
      snapshot: LayoutElementRenderSnapshot,
-@@ -154,12 +169,18 @@ struct ResizeAnimation {
+@@ -154,12 +171,18 @@ struct ResizeAnimation {
      fullscreen_progress: Option<Animation>,
      // Similar to above but for fullscreen-or-maximized.
      expanded_progress: Option<Animation>,
@@ -3092,7 +4043,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
  }
  
  #[derive(Debug)]
-@@ -204,6 +225,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -204,6 +227,7 @@ impl<W: LayoutElement> Tile<W> {
              resize_animation: None,
              move_x_animation: None,
              move_y_animation: None,
@@ -3100,7 +4051,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
              alpha_animation: None,
              interactive_move_offset: Point::from((0., 0.)),
              unmap_snapshot: None,
-@@ -232,6 +254,18 @@ impl<W: LayoutElement> Tile<W> {
+@@ -232,6 +256,18 @@ impl<W: LayoutElement> Tile<W> {
          self.view_size = view_size;
          self.scale = scale;
          self.options = options;
@@ -3119,7 +4070,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
  
          let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
  
-@@ -265,7 +299,30 @@ impl<W: LayoutElement> Tile<W> {
+@@ -265,7 +301,30 @@ impl<W: LayoutElement> Tile<W> {
          let prev_sizing_mode = self.sizing_mode;
          self.sizing_mode = self.window.sizing_mode();
  
@@ -3151,7 +4102,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
              let params = if let Some(resize) = self.resize_animation.take() {
                  // Compute like in animated_window_size(), but using the snapshot geometry (since
                  // the current one is already overwritten).
-@@ -277,6 +334,9 @@ impl<W: LayoutElement> Tile<W> {
+@@ -277,6 +336,9 @@ impl<W: LayoutElement> Tile<W> {
  
                  size.w = size_from.w + (size.w - size_from.w) * val;
                  size.h = size_from.h + (size.h - size_from.h) * val;
@@ -3161,7 +4112,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
  
                  let mut tile_size = animate_from.size;
                  if prev_sizing_mode.is_fullscreen() {
-@@ -290,6 +350,9 @@ impl<W: LayoutElement> Tile<W> {
+@@ -290,6 +352,9 @@ impl<W: LayoutElement> Tile<W> {
  
                  tile_size.w = tile_size_from.w + (tile_size.w - tile_size_from.w) * val;
                  tile_size.h = tile_size_from.h + (tile_size.h - tile_size_from.h) * val;
@@ -3171,7 +4122,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
  
                  let fullscreen_from = resize
                      .fullscreen_progress
-@@ -312,6 +375,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -312,6 +377,8 @@ impl<W: LayoutElement> Tile<W> {
                      fullscreen_from,
                      expanded_from,
                      resize.offscreen,
@@ -3180,7 +4131,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
                  )
              } else {
                  let size = animate_from.size;
-@@ -341,16 +406,33 @@ impl<W: LayoutElement> Tile<W> {
+@@ -341,16 +408,33 @@ impl<W: LayoutElement> Tile<W> {
                      fullscreen_from,
                      expanded_from,
                      OffscreenBuffer::default(),
@@ -3216,7 +4167,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
                  let anim = Animation::new(
                      self.clock.clone(),
                      0.,
-@@ -370,6 +452,25 @@ impl<W: LayoutElement> Tile<W> {
+@@ -370,6 +454,25 @@ impl<W: LayoutElement> Tile<W> {
                  let expanded_progress = (expanded_from != expanded_to)
                      .then(|| anim.restarted(expanded_from, expanded_to, 0.));
  
@@ -3242,7 +4193,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
                  self.resize_animation = Some(ResizeAnimation {
                      anim,
                      size_from,
-@@ -378,12 +479,49 @@ impl<W: LayoutElement> Tile<W> {
+@@ -378,12 +481,49 @@ impl<W: LayoutElement> Tile<W> {
                      tile_size_from,
                      fullscreen_progress,
                      expanded_progress,
@@ -3292,7 +4243,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
          let round_max1 = |logical| round_logical_in_physical_max1(self.scale, logical);
  
          let rules = self.window.rules();
-@@ -418,18 +556,27 @@ impl<W: LayoutElement> Tile<W> {
+@@ -418,18 +558,27 @@ impl<W: LayoutElement> Tile<W> {
          }
  
          if let Some(resize) = &mut self.resize_animation {
@@ -3323,7 +4274,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
                  self.move_y_animation = None;
              }
          }
-@@ -547,10 +694,10 @@ impl<W: LayoutElement> Tile<W> {
+@@ -547,10 +696,10 @@ impl<W: LayoutElement> Tile<W> {
          let mut offset = Point::from((0., 0.));
  
          if let Some(move_) = &self.move_x_animation {
@@ -3336,7 +4287,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
          }
  
          offset += self.interactive_move_offset;
-@@ -572,57 +719,93 @@ impl<W: LayoutElement> Tile<W> {
+@@ -572,57 +721,93 @@ impl<W: LayoutElement> Tile<W> {
          self.resize_animation.as_ref().map(|resize| &resize.anim)
      }
  
@@ -3448,7 +4399,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
          }
      }
  
-@@ -826,6 +1009,11 @@ impl<W: LayoutElement> Tile<W> {
+@@ -826,6 +1011,11 @@ impl<W: LayoutElement> Tile<W> {
  
              size.w = f64::max(1., size_from.w + (size.w - size_from.w) * val);
              size.h = f64::max(1., size_from.h + (size.h - size_from.h) * val);
@@ -3460,7 +4411,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
              size = size
                  .to_physical_precise_round(self.scale)
                  .to_logical(self.scale);
-@@ -843,6 +1031,11 @@ impl<W: LayoutElement> Tile<W> {
+@@ -843,6 +1033,11 @@ impl<W: LayoutElement> Tile<W> {
  
              size.w = f64::max(1., size_from.w + (size.w - size_from.w) * val);
              size.h = f64::max(1., size_from.h + (size.h - size_from.h) * val);
@@ -3472,7 +4423,27 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
              size = size
                  .to_physical_precise_round(self.scale)
                  .to_logical(self.scale);
-@@ -1030,6 +1223,7 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1022,14 +1217,27 @@ impl<W: LayoutElement> Tile<W> {
+     }
+ 
+     fn render_inner<R: NiriRenderer>(
++        &self,
++        ctx: RenderCtx<R>,
++        location: Point<f64, Logical>,
++        xray_pos: XrayPos,
++        focus_ring: bool,
++        push: &mut dyn FnMut(TileRenderElement<R>),
++    ) {
++        self.render_inner_parts(ctx, location, xray_pos, focus_ring, true, push);
++    }
++
++    fn render_inner_parts<R: NiriRenderer>(
+         &self,
+         mut ctx: RenderCtx<R>,
+         location: Point<f64, Logical>,
+         mut xray_pos: XrayPos,
+         focus_ring: bool,
++        decorations: bool,
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render_inner");
@@ -3480,7 +4451,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
  
          let scale = Scale::from(self.scale);
          let fullscreen_progress = self.fullscreen_progress();
-@@ -1124,19 +1318,71 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1124,19 +1332,73 @@ impl<W: LayoutElement> Tile<W> {
                          // inside the geometry() call gives us the same physical result back.
                          let texture_current_geo = elem_current.geometry(scale);
  
@@ -3532,6 +4503,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
 +                        let phase = material_state
 +                            .map(|material| &material.phase)
 +                            .unwrap_or(&resize.anim);
++                        let reference = material_state.map(ResizeMaterial::reference);
 +                        let mut elem = ResizeRenderElement::new(
                              area,
                              scale,
@@ -3551,7 +4523,8 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
                              clip_to_geometry,
                              win_alpha,
 +                            ProgramType::Resize,
-+                            material_state,
++                            reference.as_ref(),
++                            !decorations,
                          );
 +                        if let Some(program) = material_program {
 +                            elem = elem.with_pinned_program(program);
@@ -3559,7 +4532,25 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
  
                          // We're drawing the resize shader, not the offscreen directly.
                          data.id = elem.id().clone();
-@@ -1315,11 +1561,25 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1279,7 +1541,7 @@ impl<W: LayoutElement> Tile<W> {
+             }
+         }
+ 
+-        if let Some(width) = self.visual_border_width() {
++        if let Some(width) = self.visual_border_width().filter(|_| decorations) {
+             self.border.render(
+                 ctx.renderer,
+                 location + Point::from((width, width)),
+@@ -1296,7 +1558,7 @@ impl<W: LayoutElement> Tile<W> {
+                 .render(ctx.renderer, location, &mut |elem| push(elem.into()));
+         }
+ 
+-        if expanded_progress < 1. {
++        if decorations && expanded_progress < 1. {
+             self.shadow
+                 .render(ctx.renderer, location, &mut |elem| push(elem.into()));
+         }
+@@ -1315,11 +1577,25 @@ impl<W: LayoutElement> Tile<W> {
      }
  
      pub fn render<R: NiriRenderer>(
@@ -3585,7 +4576,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
          push: &mut dyn FnMut(TileRenderElement<R>),
      ) {
          let _span = tracy_client::span!("Tile::render");
-@@ -1334,6 +1594,49 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1334,6 +1610,49 @@ impl<W: LayoutElement> Tile<W> {
          let mut pushed = false;
          self.window().set_offscreen_data(None);
  
@@ -3635,7 +4626,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
          if let Some(open) = &self.open_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1361,6 +1664,34 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1361,6 +1680,34 @@ impl<W: LayoutElement> Tile<W> {
                      warn!("error rendering window opening animation: {err:?}");
                  }
              }
@@ -3670,10 +4661,21 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
          } else if let Some(alpha) = &self.alpha_animation {
              let mut ctx = ctx.as_gles();
              let mut elements = Vec::new();
-@@ -1415,8 +1746,28 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1415,8 +1762,39 @@ impl<W: LayoutElement> Tile<W> {
      ) -> TileRenderSnapshot {
          let _span = tracy_client::span!("Tile::render_snapshot");
  
++        let resize = self
++            .freeze_resize_for_close(
++                renderer,
++                xray.as_deref_mut(),
++                xray_has_blocked_out_layers,
++                xray_pos,
++            )
++            .map_err(|err| warn!("cannot retain resize during close: {err:?}"))
++            .ok()
++            .flatten();
++
 +        // Capture raw content when we can carry the current shader forward.
 +        // Baking it and starting a second shader would re-fragment already
 +        // rotated pieces and lose their original seed, orientation and path.
@@ -3700,7 +4702,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
              RenderCtx {
                  target: RenderTarget::Output,
                  renderer,
-@@ -1467,7 +1818,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1467,7 +1845,8 @@ impl<W: LayoutElement> Tile<W> {
                  xray.backdrop[output_idx] = screencast_backdrop.clone().unwrap();
  
                  let mut contents = Vec::new();
@@ -3710,7 +4712,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
                      RenderCtx {
                          target: RenderTarget::Output,
                          renderer,
-@@ -1487,7 +1839,8 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1487,7 +1866,8 @@ impl<W: LayoutElement> Tile<W> {
  
          // A bit of a hack to render blocked out as for screencast, but I think it's fine here.
          let mut blocked_out_contents = Vec::new();
@@ -3720,7 +4722,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
              RenderCtx {
                  target: RenderTarget::Screencast,
                  renderer,
-@@ -1510,15 +1863,18 @@ impl<W: LayoutElement> Tile<W> {
+@@ -1510,16 +1890,100 @@ impl<W: LayoutElement> Tile<W> {
              }
          }
  
@@ -3734,6 +4736,7 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
 -            texture_with_blocked_out_bg: Default::default(),
 -            blocked_out_texture: Default::default(),
 +        TileRenderSnapshot {
++            resize,
 +            continuation,
 +            render: RenderSnapshot {
 +                contents,
@@ -3745,11 +4748,92 @@ index 86c7ebadb120ad9fa023a43e3f6cf403351ebbd3..16526b765a84e444b2d47dea4b57802d
 +                texture_with_blocked_out_bg: Default::default(),
 +                blocked_out_texture: Default::default(),
 +            },
++        }
++    }
++
++    fn freeze_resize_for_close(
++        &self,
++        renderer: &mut GlesRenderer,
++        mut xray: Option<&mut Xray>,
++        xray_has_blocked_out_layers: bool,
++        xray_pos: XrayPos,
++    ) -> anyhow::Result<Option<super::resize_close::ResizeClosing>> {
++        use super::resize_close::{capture_targets, ResizeClosing, ResizeClosingTarget};
++        // Fullscreen transitions change backdrop opacity and corner geometry on a
++        // separate path. Keep their existing assembled-snapshot fallback until that
++        // additional state can be retained as well.
++        if self.fullscreen_progress() > 0. {
++            return Ok(None);
          }
++        let Some(resize) = self
++            .resize_animation
++            .as_ref()
++            .filter(|resize| resize.material.is_some())
++        else {
++            return Ok(None);
++        };
++        let Some(geometry) = &resize.geometry else {
++            return Ok(None);
++        };
++        let scale = Scale::from(self.scale);
++        let targets = capture_targets(|target| {
++            // Capture backgrounds conservatively. The prepared Screencast Xray excludes
++            // every protected surface; normal window material still uses the actual target.
++            let saved = xray.as_mut().map(|xray| {
++                let index = target as usize;
++                let old = (xray.background[index].clone(), xray.backdrop[index].clone());
++                if target != RenderTarget::Output {
++                    let source = if xray_has_blocked_out_layers {
++                        RenderTarget::Screencast
++                    } else {
++                        RenderTarget::Output
++                    } as usize;
++                    xray.background[index] = xray.background[source].clone();
++                    xray.backdrop[index] = xray.backdrop[source].clone();
++                }
++                old
++            });
++            let mut elements = Vec::new();
++            self.render_inner_parts(
++                RenderCtx {
++                    target,
++                    renderer,
++                    xray: xray.as_deref(),
++                },
++                Point::new(0., 0.),
++                xray_pos,
++                false,
++                false,
++                &mut |element| elements.push(element),
++            );
++            if let (Some(xray), Some((background, backdrop))) = (xray.as_mut(), saved) {
++                xray.background[target as usize] = background;
++                xray.backdrop[target as usize] = backdrop;
++            }
++            ResizeClosingTarget::capture(renderer, scale, elements)
++        })?;
++        Ok(Some(ResizeClosing::new(
++            renderer,
++            targets,
++            scale,
++            geometry.window.detached(),
++            geometry.tile.detached(),
++            self.animated_tile_size(),
++            self.window_loc(),
++            self.border.clone(),
++            self.shadow.clone(),
++            self.visual_border_width(),
++            self.expanded_progress() < 1.,
++            self.bob_offset(),
++            self.alpha_animation
++                .as_ref()
++                .map_or(1., |alpha| alpha.anim.clamped_value()) as f32,
++        )))
      }
  
+     pub fn take_unmap_snapshot(&mut self) -> Option<TileRenderSnapshot> {
 diff --git a/src/niri.rs b/src/niri.rs
-index ec40e01c140b02847fb3337df29d98b7dcc68014..042c9690904a5400535e487b28b16aa42530e2ec 100644
+index ec40e01c140b02847fb3337df29d98b7dcc68014..974d340228a0c076bcaa4072e174f355886bc64a 100644
 --- a/src/niri.rs
 +++ b/src/niri.rs
 @@ -1,5 +1,5 @@
@@ -3759,7 +4843,17 @@ index ec40e01c140b02847fb3337df29d98b7dcc68014..042c9690904a5400535e487b28b16aa4
  use std::ffi::OsString;
  use std::os::unix::net::UnixStream;
  use std::path::PathBuf;
-@@ -260,6 +260,9 @@ pub struct Niri {
+@@ -128,7 +128,9 @@ use crate::dbus::gnome_shell_introspect::{self, IntrospectToNiri, NiriToIntrospe
+ use crate::dbus::gnome_shell_screenshot::{NiriToScreenshot, ScreenshotToNiri};
+ use crate::frame_clock::FrameClock;
+ use crate::handlers::{configure_lock_surface, XDG_ACTIVATION_TOKEN_TIMEOUT};
++use crate::input::backend_ext::PointerDeviceId;
+ use crate::input::pick_color_grab::PickColorGrab;
++use crate::input::pointer_buttons::PointerButtons;
+ use crate::input::scroll_swipe_gesture::ScrollSwipeGesture;
+ use crate::input::scroll_tracker::ScrollTracker;
+ use crate::input::{
+@@ -260,6 +262,9 @@ pub struct Niri {
      // When false, we're idling with monitors powered off.
      pub monitors_active: bool,
  
@@ -3769,7 +4863,18 @@ index ec40e01c140b02847fb3337df29d98b7dcc68014..042c9690904a5400535e487b28b16aa4
      /// Whether the laptop lid is closed.
      ///
      /// Libinput guarantees that the lid switch starts in open state, and if it was closed during
-@@ -1574,6 +1577,15 @@ impl State {
+@@ -324,8 +329,8 @@ pub struct Niri {
+     pub seat: Seat<State>,
+     /// Scancodes of the keys to suppress.
+     pub suppressed_keys: HashSet<Keycode>,
+-    /// Button codes of the mouse buttons to suppress.
+-    pub suppressed_buttons: HashSet<u32>,
++    /// Per-device button owners, including compositor-consumed presses.
++    pub pointer_buttons: PointerButtons<PointerDeviceId>,
+     pub bind_cooldown_timers: HashMap<Key, RegistrationToken>,
+     pub bind_repeat_timer: Option<RegistrationToken>,
+     pub keyboard_focus: KeyboardFocus,
+@@ -1574,6 +1579,15 @@ impl State {
              });
              shaders_changed = true;
          }
@@ -3785,7 +4890,7 @@ index ec40e01c140b02847fb3337df29d98b7dcc68014..042c9690904a5400535e487b28b16aa4
  
          if config.cursor.hide_after_inactive_ms != old_config.cursor.hide_after_inactive_ms {
              cursor_inactivity_timeout_changed = true;
-@@ -2509,6 +2521,7 @@ impl Niri {
+@@ -2509,6 +2523,7 @@ impl Niri {
              blocker_cleared_tx,
              blocker_cleared_rx,
              monitors_active: true,
@@ -3793,6 +4898,15 @@ index ec40e01c140b02847fb3337df29d98b7dcc68014..042c9690904a5400535e487b28b16aa4
              is_lid_closed: false,
  
              devices: HashSet::new(),
+@@ -2551,7 +2566,7 @@ impl Niri {
+             popups: PopupManager::default(),
+             popup_grab: None,
+             suppressed_keys: HashSet::new(),
+-            suppressed_buttons: HashSet::new(),
++            pointer_buttons: PointerButtons::default(),
+             bind_cooldown_timers: HashMap::new(),
+             bind_repeat_timer: Option::default(),
+             presentation_state,
 diff --git a/src/render_helpers/mod.rs b/src/render_helpers/mod.rs
 index 474437af4511b5d34de9aec66c2a0451949ef8b7..fe6157cd893d9d8e9414b8c3a08134fc3fc3bc3e 100644
 --- a/src/render_helpers/mod.rs
@@ -4331,7 +5445,7 @@ index 0000000000000000000000000000000000000000..1712d7e9bcc763358027ed917a822ab5
 +    }
 +}
 diff --git a/src/render_helpers/resize.rs b/src/render_helpers/resize.rs
-index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff62966a9f 100644
+index 79b26dbf341a59a3be83b5b6478df0651c8e9438..7abb1db299d5c64af3791cd97434cb581744e7ad 100644
 --- a/src/render_helpers/resize.rs
 +++ b/src/render_helpers/resize.rs
 @@ -1,3 +1,4 @@
@@ -4339,7 +5453,7 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
  use std::collections::HashMap;
  use std::rc::Rc;
  
-@@ -6,16 +7,196 @@ use niri_config::CornerRadius;
+@@ -6,18 +7,262 @@ use niri_config::CornerRadius;
  use smithay::backend::renderer::element::{Element, Id, Kind, RenderElement, UnderlyingStorage};
  use smithay::backend::renderer::gles::{GlesError, GlesFrame, GlesRenderer, GlesTexture, Uniform};
  use smithay::backend::renderer::utils::{CommitCounter, DamageSet, OpaqueRegions};
@@ -4384,7 +5498,8 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
 +/// One phase/reference and at most two retained material textures per capture
 +/// target. Retargeting promotes a flat undeformed composite, never a chain of
 +/// snapshots or an image that already contains the custom deformation.
-+#[derive(Debug)]
+ #[derive(Debug)]
+-pub struct ResizeRenderElement(ShaderRenderElement);
 +pub struct ResizeMaterial {
 +    pub phase: Animation,
 +    pub reference_size: Size<f64, Logical>,
@@ -4397,7 +5512,25 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
 +    ignore_snapshot: Cell<bool>,
 +}
 +
++/// Geometry and phase identity retained independently of per-target GPU caches.
++#[derive(Debug, Clone)]
++pub struct ResizeReference {
++    pub phase: Animation,
++    pub reference_size: Size<f64, Logical>,
++    pub reference_from_size: Size<f64, Logical>,
++    pub reference_to_size: Size<f64, Logical>,
++}
++
 +impl ResizeMaterial {
++    pub fn reference(&self) -> ResizeReference {
++        ResizeReference {
++            phase: self.phase.clone(),
++            reference_size: self.reference_size,
++            reference_from_size: self.reference_from_size,
++            reference_to_size: self.reference_to_size,
++        }
++    }
++
 +    pub fn new(phase: Animation, from: Size<f64, Logical>, to: Size<f64, Logical>) -> Self {
 +        Self {
 +            phase,
@@ -4517,6 +5650,7 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
 +            1.,
 +            ProgramType::ResizeContent,
 +            None,
++            false,
 +        );
 +        let composite = cache.composite.render(renderer, scale, &[element]);
 +        // Restore the default framebuffer before EGL rebinds a window surface.
@@ -4536,19 +5670,79 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
 +    }
 +}
 +
- #[derive(Debug)]
- pub struct ResizeRenderElement(ShaderRenderElement);
++#[derive(Debug)]
++pub struct ResizeRenderElement(ShaderRenderElement, Option<FrozenResizeMaterial>);
++
++/// A single flat, target-specific texture captured at the unmap content clock.
++/// It contains no resize deformation, popup, blur or decoration pixels.
++#[derive(Debug)]
++pub struct FrozenResizeMaterial {
++    texture: (GlesTexture, Rectangle<i32, Physical>),
++    size: Size<f64, Logical>,
++    reference: ResizeReference,
++    program: Option<ShaderProgram>,
++    radius: CornerRadius,
++    clip: bool,
++    alpha: f32,
++}
++
++impl FrozenResizeMaterial {
++    pub fn render(
++        &self,
++        size: Size<f64, Logical>,
++        location: Point<f64, Logical>,
++        scale: Scale<f64>,
++    ) -> ResizeRenderElement {
++        let phase = &self.reference.phase;
++        let elem = ResizeRenderElement::new(
++            Rectangle::new(location, size),
++            scale,
++            self.texture.clone(),
++            self.size,
++            self.texture.clone(),
++            self.size,
++            phase.value() as f32,
++            phase.clamped_value().clamp(0., 1.) as f32,
++            self.radius,
++            self.clip,
++            self.alpha,
++            ProgramType::Resize,
++            Some(&self.reference),
++            false,
++        );
++        elem.with_pinned_program(
++            self.program
++                .clone()
++                .expect("frozen resize has a pinned program"),
++        )
++    }
++}
  
-@@ -33,6 +214,8 @@ impl ResizeRenderElement {
+ impl ResizeRenderElement {
+     #[allow(clippy::too_many_arguments)]
+@@ -33,7 +278,21 @@ impl ResizeRenderElement {
          corner_radius: CornerRadius,
          clip_to_geometry: bool,
          result_alpha: f32,
 +        program: ProgramType,
-+        material: Option<&ResizeMaterial>,
++        material: Option<&ResizeReference>,
++        freeze_material: bool,
      ) -> Self {
++        let frozen = material
++            .filter(|_| freeze_material)
++            .map(|reference| FrozenResizeMaterial {
++                texture: texture_next.clone(),
++                size: size_next,
++                reference: reference.clone(),
++                program: None,
++                radius: corner_radius,
++                clip: clip_to_geometry,
++                alpha: result_alpha,
++            });
          let curr_geo = area;
  
-@@ -88,7 +271,7 @@ impl ResizeRenderElement {
+         let (texture_prev, tex_prev_geo) = texture_prev;
+@@ -88,7 +347,7 @@ impl ResizeRenderElement {
          // Create the shader.
          Self(
              ShaderRenderElement::new(
@@ -4557,7 +5751,7 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
                  area.size,
                  None,
                  scale.x,
-@@ -104,6 +287,33 @@ impl ResizeRenderElement {
+@@ -104,6 +363,33 @@ impl ResizeRenderElement {
                      Uniform::new("niri_clamped_progress", clamped_progress),
                      Uniform::new("niri_corner_radius", <[f32; 4]>::from(corner_radius)),
                      Uniform::new("niri_clip_to_geometry", clip_to_geometry),
@@ -4591,13 +5785,24 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
                  ]),
                  HashMap::from([
                      (String::from("niri_tex_prev"), texture_prev),
-@@ -115,7 +325,13 @@ impl ResizeRenderElement {
+@@ -112,10 +398,24 @@ impl ResizeRenderElement {
+                 Kind::Unspecified,
+             )
+             .with_location(area.loc),
++            frozen,
          )
      }
  
 +    pub fn with_pinned_program(mut self, program: ShaderProgram) -> Self {
++        if let Some(frozen) = &mut self.1 {
++            frozen.program = Some(program.clone());
++        }
 +        self.0 = self.0.with_pinned_program(program);
 +        self
++    }
++
++    pub fn into_frozen(self) -> Option<FrozenResizeMaterial> {
++        self.1.filter(|material| material.program.is_some())
 +    }
 +
      pub fn has_shader(renderer: &mut impl NiriRenderer) -> bool {
@@ -4605,7 +5810,7 @@ index 79b26dbf341a59a3be83b5b6478df0651c8e9438..96757019f4594ca5d85b3c090c7ea5ff
          Shaders::get(renderer)
              .program(ProgramType::Resize)
              .is_some()
-@@ -215,3 +431,51 @@ impl<'render> RenderElement<TtyRenderer<'render>> for ResizeRenderElement {
+@@ -215,3 +515,51 @@ impl<'render> RenderElement<TtyRenderer<'render>> for ResizeRenderElement {
          self.0.underlying_storage(renderer)
      }
  }
@@ -5035,6 +6240,18 @@ index 51c57f7380c47a5e51cfac0a92ff0d76c324ef62..c2cd6f5cfe51d14e6a5bba2da818e1d6
  
      let mut f = Fixture::with_config(config);
      f.niri_state().backend.headless().add_renderer().unwrap();
+diff --git a/src/tests/mod.rs b/src/tests/mod.rs
+index 92a40569fd715dfb9fecd0e7cf01fd78f3cb2af9..fe5de9677de64ffd34949309e52798ed6ba1a015 100644
+--- a/src/tests/mod.rs
++++ b/src/tests/mod.rs
+@@ -8,6 +8,7 @@ mod animations;
+ mod floating;
+ mod fullscreen;
+ mod layer_shell;
++mod pointer_ownership;
+ mod remove_output;
+ mod transactions;
+ mod window_opening;
 diff --git a/src/ui/mru.rs b/src/ui/mru.rs
 index d8ec6de16e9f9995f6038e817415005127ff48a0..2f84334027389f47a3d9f3a69ce9b5c92b228955 100644
 --- a/src/ui/mru.rs
@@ -5066,3 +6283,845 @@ index d8ec6de16e9f9995f6038e817415005127ff48a0..2f84334027389f47a3d9f3a69ce9b5c9
  
          let mut delta = 0.;
          for t in &mut self.wmru.thumbnails[idx + 1..] {
+diff --git a/src/input/pointer_buttons.rs b/src/input/pointer_buttons.rs
+new file mode 100644
+--- /dev/null
++++ b/src/input/pointer_buttons.rs
+@@ -0,0 +1,202 @@
++use std::collections::{HashMap, HashSet};
++use std::hash::Hash;
++
++use smithay::utils::Serial;
++
++/// A seat press may have several device owners, but Smithay receives one press
++/// and one final release. None identifies a consumed bind/picker press.
++#[derive(Debug)]
++pub struct PointerButtons<D> {
++    presses: HashMap<(D, u32), Option<Serial>>,
++    sent: HashSet<u32>,
++}
++
++#[derive(Debug, PartialEq, Eq)]
++pub struct ReleasedButton {
++    pub button: u32,
++    pub serial: Serial,
++    pub sent: bool,
++}
++
++impl<D> Default for PointerButtons<D> {
++    fn default() -> Self {
++        Self {
++            presses: HashMap::new(),
++            sent: HashSet::new(),
++        }
++    }
++}
++
++impl<D: Clone + Eq + Hash> PointerButtons<D> {
++    /// Reserve a physical press before evaluating compositor bindings. Duplicate
++    /// presses do not retrigger actions. A consumed press stays device-local.
++    pub fn press(&mut self, device: D, button: u32) -> bool {
++        if self.presses.contains_key(&(device.clone(), button)) {
++            return false;
++        }
++        self.presses.insert((device, button), None);
++        true
++    }
++
++    /// Join the current seat press or start one with this serial. Keeping the
++    /// original serial ties client-requested and compositor grabs to the same
++    /// live owner set, even after the first device releases or disappears.
++    pub fn forward(&mut self, device: &D, button: u32, serial: Serial) -> bool {
++        let existing = self
++            .presses
++            .iter()
++            .find_map(|((_, code), serial)| (*code == button).then_some(*serial).flatten());
++        *self.presses.get_mut(&(device.clone(), button)).unwrap() =
++            Some(existing.unwrap_or(serial));
++        existing.is_none()
++    }
++
++    pub fn sent(&mut self, button: u32) {
++        self.sent.insert(button);
++    }
++
++    pub fn release(&mut self, device: &D, button: u32) -> Option<ReleasedButton> {
++        let serial = self.presses.remove(&(device.clone(), button))??;
++        if self
++            .presses
++            .iter()
++            .any(|((_, code), press)| *code == button && press.is_some())
++        {
++            return None;
++        }
++        Some(ReleasedButton {
++            button,
++            serial,
++            sent: self.sent.remove(&button),
++        })
++    }
++
++    pub fn remove_device(&mut self, device: &D) -> Vec<ReleasedButton> {
++        let mut buttons: Vec<_> = self
++            .presses
++            .keys()
++            .filter_map(|(owner, code)| (owner == device).then_some(*code))
++            .collect();
++        buttons.sort_unstable();
++        buttons
++            .into_iter()
++            .filter_map(|button| self.release(device, button))
++            .collect()
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    const LEFT: u32 = 0x110;
++    const RIGHT: u32 = 0x111;
++
++    fn forwarded(ledger: &mut PointerButtons<u64>, device: u64, button: u32, serial: u32) {
++        assert!(ledger.press(device, button));
++        if ledger.forward(&device, button, Serial::from(serial)) {
++            ledger.sent(button);
++        }
++    }
++
++    #[test]
++    fn overlapping_same_button_has_one_press_and_one_final_release() {
++        let mut ledger = PointerButtons::default();
++        forwarded(&mut ledger, 1, LEFT, 10);
++        assert!(ledger.press(2, LEFT));
++        assert!(!ledger.forward(&2, LEFT, Serial::from(20)));
++        assert_eq!(ledger.release(&1, LEFT), None);
++        assert!(ledger.remove_device(&1).is_empty());
++        assert_eq!(
++            ledger.release(&2, LEFT),
++            Some(ReleasedButton {
++                button: LEFT,
++                serial: 10.into(),
++                sent: true
++            })
++        );
++        assert_eq!(ledger.release(&2, LEFT), None);
++    }
++
++    #[test]
++    fn removal_releases_only_buttons_without_surviving_owners() {
++        let mut ledger = PointerButtons::default();
++        forwarded(&mut ledger, 1, LEFT, 10);
++        forwarded(&mut ledger, 1, RIGHT, 11);
++        forwarded(&mut ledger, 2, RIGHT, 20);
++        assert!(ledger.remove_device(&3).is_empty());
++        assert_eq!(
++            ledger.remove_device(&1),
++            vec![ReleasedButton {
++                button: LEFT,
++                serial: 10.into(),
++                sent: true
++            }]
++        );
++        assert_eq!(
++            ledger.release(&2, RIGHT),
++            Some(ReleasedButton {
++                button: RIGHT,
++                serial: 11.into(),
++                sent: true
++            })
++        );
++    }
++
++    #[test]
++    fn suppressed_bind_is_not_an_owner_of_another_devices_press() {
++        let mut ledger = PointerButtons::default();
++        assert!(ledger.press(1, LEFT));
++        forwarded(&mut ledger, 2, LEFT, 20);
++        assert!(!ledger.press(1, LEFT));
++        assert_eq!(ledger.release(&1, LEFT), None);
++        assert_eq!(
++            ledger.release(&2, LEFT),
++            Some(ReleasedButton {
++                button: LEFT,
++                serial: 20.into(),
++                sent: true
++            })
++        );
++        assert!(ledger.press(1, LEFT));
++        assert!(ledger.remove_device(&1).is_empty());
++        forwarded(&mut ledger, 1, LEFT, 30);
++        assert_eq!(ledger.release(&1, LEFT).unwrap().serial, Serial::from(30));
++    }
++
++    #[test]
++    fn no_client_release_for_consumed_or_never_delivered_press() {
++        let mut ledger = PointerButtons::default();
++        assert!(ledger.press(1, LEFT));
++        assert_eq!(ledger.release(&2, LEFT), None);
++        assert_eq!(ledger.release(&1, LEFT), None);
++        assert!(ledger.press(1, RIGHT));
++        assert!(ledger.forward(&1, RIGHT, Serial::from(10)));
++        assert_eq!(
++            ledger.remove_device(&1),
++            vec![ReleasedButton {
++                button: RIGHT,
++                serial: 10.into(),
++                sent: false
++            }]
++        );
++    }
++
++    #[test]
++    fn recreated_resource_does_not_inherit_old_suppression_or_ownership() {
++        // Distinct resource generations may reuse the same advertised name or
++        // Wayland protocol object number. The key is the full resource identity.
++        let old = ("pointer", 1);
++        let fresh = ("pointer", 2);
++        let mut ledger = PointerButtons::default();
++        assert!(ledger.press(old, LEFT));
++        assert!(ledger.press(fresh, LEFT));
++        assert!(ledger.forward(&fresh, LEFT, Serial::from(20)));
++        ledger.sent(LEFT);
++        assert!(ledger.remove_device(&old).is_empty());
++        assert_eq!(
++            ledger.release(&fresh, LEFT).unwrap().serial,
++            Serial::from(20)
++        );
++    }
++}
+diff --git a/src/layout/resize_close.rs b/src/layout/resize_close.rs
+new file mode 100644
+--- /dev/null
++++ b/src/layout/resize_close.rs
+@@ -0,0 +1,334 @@
++//! Frozen, target-separated material for resize-to-close handoff.
++use std::cell::RefCell;
++
++use anyhow::Context as _;
++use smithay::backend::allocator::Fourcc;
++use smithay::backend::renderer::element::{Element as _, Kind};
++use smithay::backend::renderer::gles::{GlesRenderer, GlesTexture};
++use smithay::backend::renderer::{ContextId, Renderer as _};
++use smithay::utils::{Logical, Point, Rectangle, Scale, Size, Transform};
++
++use super::focus_ring::FocusRing;
++use super::shadow::Shadow;
++use super::tile::TileRenderElement;
++use crate::animation::SizeAnimation;
++use crate::render_helpers::offscreen::OffscreenBuffer;
++use crate::render_helpers::resize::FrozenResizeMaterial;
++use crate::render_helpers::texture::{TextureBuffer, TextureRenderElement};
++use crate::render_helpers::{render_to_encompassing_texture, RenderTarget};
++
++/// Commit only a complete target set. On any allocation/render error, Rust drops
++/// every earlier target and the caller keeps its separately protected snapshot.
++pub(super) fn capture_targets<T, E>(
++    mut capture: impl FnMut(RenderTarget) -> Result<T, E>,
++) -> Result<[T; 3], E> {
++    Ok([
++        capture(RenderTarget::Output)?,
++        capture(RenderTarget::Screencast)?,
++        capture(RenderTarget::ScreenCapture)?,
++    ])
++}
++
++#[derive(Debug)]
++struct Plane {
++    buffer: TextureBuffer<GlesTexture>,
++    offset: Point<f64, Logical>,
++}
++
++impl Plane {
++    fn capture(
++        renderer: &mut GlesRenderer,
++        scale: Scale<f64>,
++        elements: Vec<TileRenderElement<GlesRenderer>>,
++    ) -> anyhow::Result<Option<Self>> {
++        if elements.is_empty() {
++            return Ok(None);
++        }
++        let result = render_to_encompassing_texture(
++            renderer,
++            scale,
++            Transform::Normal,
++            Fourcc::Abgr8888,
++            &elements,
++        );
++        // Neutralize offscreen binding before the caller rebinds its EGL surface,
++        // including the allocation/render failure path.
++        renderer.with_context(|gl| unsafe {
++            gl.BindFramebuffer(smithay::backend::renderer::gles::ffi::FRAMEBUFFER, 0);
++        })?;
++        let (texture, _, geo) = result.context("freezing resize decoration plane")?;
++        Ok(Some(Self {
++            buffer: TextureBuffer::from_texture(
++                renderer,
++                texture,
++                scale,
++                Transform::Normal,
++                Vec::new(),
++            ),
++            offset: geo.loc.to_f64().to_logical(scale),
++        }))
++    }
++
++    fn render(
++        &self,
++        offset: Point<f64, Logical>,
++        ratio: Size<f64, Logical>,
++    ) -> TextureRenderElement<GlesTexture> {
++        let location = Point::new(self.offset.x * ratio.w, self.offset.y * ratio.h) + offset;
++        let size = self.buffer.logical_size();
++        TextureRenderElement::from_texture_buffer(
++            self.buffer.clone(),
++            location,
++            1.,
++            Some(Rectangle::from_size(size)),
++            Some(Size::new(size.w * ratio.w, size.h * ratio.h)),
++            Kind::Unspecified,
++        )
++    }
++}
++
++#[derive(Debug)]
++pub struct ResizeClosingTarget {
++    material: FrozenResizeMaterial,
++    front: Option<Plane>,
++    back: Option<Plane>,
++    composite: OffscreenBuffer,
++}
++
++impl ResizeClosingTarget {
++    pub fn capture(
++        renderer: &mut GlesRenderer,
++        scale: Scale<f64>,
++        elements: Vec<TileRenderElement<GlesRenderer>>,
++    ) -> anyhow::Result<Self> {
++        let mut front = Vec::new();
++        let mut back = Vec::new();
++        let mut material = None;
++        for element in elements {
++            match element {
++                TileRenderElement::Resize(element) => {
++                    anyhow::ensure!(material.is_none(), "multiple resize materials in tile");
++                    material = element.into_frozen();
++                    anyhow::ensure!(
++                        material.is_some(),
++                        "resize material has no retained program"
++                    );
++                }
++                element if material.is_none() => front.push(element),
++                element => back.push(element),
++            }
++        }
++        let material = material.context("resize material unavailable")?;
++        Ok(Self {
++            material,
++            front: Plane::capture(renderer, scale, front)?,
++            back: Plane::capture(renderer, scale, back)?,
++            composite: OffscreenBuffer::default(),
++        })
++    }
++}
++
++/// All three targets must freeze successfully before this continuation is used.
++/// Failure retains the ordinary protected snapshot; targets never borrow Output.
++#[derive(Debug)]
++pub struct ResizeClosing {
++    targets: [ResizeClosingTarget; 3],
++    context: ContextId<GlesTexture>,
++    capture_scale: Scale<f64>,
++    window: SizeAnimation,
++    tile: SizeAnimation,
++    original_tile_size: Size<f64, Logical>,
++    original_window_location: Point<f64, Logical>,
++    border: RefCell<FocusRing>,
++    shadow: RefCell<Shadow>,
++    border_width: Option<f64>,
++    shadow_visible: bool,
++    bob_offset: Point<f64, Logical>,
++    pub alpha: f32,
++}
++
++impl ResizeClosing {
++    #[allow(clippy::too_many_arguments)]
++    pub(crate) fn new(
++        renderer: &mut GlesRenderer,
++        targets: [ResizeClosingTarget; 3],
++        capture_scale: Scale<f64>,
++        window: SizeAnimation,
++        tile: SizeAnimation,
++        original_tile_size: Size<f64, Logical>,
++        original_window_location: Point<f64, Logical>,
++        border: FocusRing,
++        shadow: Shadow,
++        border_width: Option<f64>,
++        shadow_visible: bool,
++        bob_offset: Point<f64, Logical>,
++        alpha: f32,
++    ) -> Self {
++        Self {
++            targets,
++            context: renderer.context_id(),
++            capture_scale,
++            window,
++            tile,
++            original_tile_size,
++            original_window_location,
++            border: RefCell::new(border),
++            shadow: RefCell::new(shadow),
++            border_width,
++            shadow_visible,
++            bob_offset,
++            alpha,
++        }
++    }
++
++    pub fn matches_scale(&self, scale: Scale<f64>) -> bool {
++        self.capture_scale == scale
++    }
++
++    pub fn render(
++        &self,
++        renderer: &mut GlesRenderer,
++        target: RenderTarget,
++        scale: Scale<f64>,
++    ) -> anyhow::Result<(
++        TextureBuffer<GlesTexture>,
++        Point<f64, Logical>,
++        Size<f64, Logical>,
++    )> {
++        anyhow::ensure!(
++            self.context == renderer.context_id(),
++            "resize closing renderer was replaced"
++        );
++        let target = &self.targets[target as usize];
++        let window_size = self
++            .window
++            .value()
++            .to_physical_precise_round(scale)
++            .to_logical(scale);
++        let tile_size = self
++            .tile
++            .value()
++            .to_physical_precise_round(scale)
++            .to_logical(scale);
++        let window_location = Point::new(
++            (tile_size.w - window_size.w) / 2.,
++            (tile_size.h - window_size.h) / 2.,
++        )
++        .to_physical_precise_round(scale)
++        .to_logical(scale);
++        let mut elements: Vec<TileRenderElement<GlesRenderer>> = Vec::new();
++        if let Some(front) = &target.front {
++            elements.push(
++                crate::render_helpers::primary_gpu_texture::PrimaryGpuTextureRenderElement(
++                    front.render(
++                        window_location - self.original_window_location,
++                        Size::new(1., 1.),
++                    ),
++                )
++                .into(),
++            );
++        }
++        let material =
++            target
++                .material
++                .render(window_size, window_location + self.bob_offset, scale);
++        elements.push(material.into());
++        if let Some(width) = self.border_width {
++            let mut border = self.border.borrow_mut();
++            border.resize_frozen(
++                Size::new(
++                    (tile_size.w - 2. * width).max(0.),
++                    (tile_size.h - 2. * width).max(0.),
++                ),
++                scale.x,
++            );
++            border.render(
++                renderer,
++                self.bob_offset + Point::new(width, width),
++                &mut |elem| elements.push(elem.into()),
++            );
++        }
++        if self.shadow_visible {
++            let mut shadow = self.shadow.borrow_mut();
++            shadow.resize_frozen(tile_size, scale.x);
++            shadow.render(renderer, self.bob_offset, &mut |elem| {
++                elements.push(elem.into())
++            });
++        }
++        if let Some(back) = &target.back {
++            let ratio = Size::new(
++                tile_size.w / self.original_tile_size.w,
++                tile_size.h / self.original_tile_size.h,
++            );
++            elements.push(
++                crate::render_helpers::primary_gpu_texture::PrimaryGpuTextureRenderElement(
++                    back.render(Point::new(0., 0.), ratio),
++                )
++                .into(),
++            );
++        }
++        let result = target.composite.render(renderer, scale, &elements);
++        renderer.with_context(|gl| unsafe {
++            gl.BindFramebuffer(smithay::backend::renderer::gles::ffi::FRAMEBUFFER, 0);
++        })?;
++        let (element, _, _) = result?;
++        let offset = element.geometry(scale).loc.to_f64().to_logical(scale);
++        let texture = TextureBuffer::from_texture(
++            renderer,
++            element.texture().clone(),
++            scale,
++            Transform::Normal,
++            Vec::new(),
++        );
++        Ok((texture, offset, tile_size))
++    }
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++    use std::cell::Cell;
++    use std::rc::Rc;
++
++    #[test]
++    fn freezing_is_atomic_for_each_target_failure() {
++        struct Allocation(Rc<Cell<usize>>);
++        impl Drop for Allocation {
++            fn drop(&mut self) {
++                self.0.set(self.0.get() - 1);
++            }
++        }
++        for failure in 0..3 {
++            let live = Rc::new(Cell::new(0));
++            let mut visited = Vec::new();
++            let result = capture_targets(|target| {
++                visited.push(target);
++                if target as usize == failure {
++                    return Err(());
++                }
++                live.set(live.get() + 1);
++                Ok(Allocation(live.clone()))
++            });
++            assert!(result.is_err());
++            assert_eq!(live.get(), 0, "partial GPU ownership must be released");
++            assert_eq!(
++                visited.len(),
++                failure + 1,
++                "never substitute a different target"
++            );
++        }
++    }
++
++    #[test]
++    fn freezing_keeps_three_independent_target_slots() {
++        let targets: [RenderTarget; 3] = capture_targets(|target| Ok::<_, ()>(target)).unwrap();
++        assert_eq!(
++            targets,
++            [
++                RenderTarget::Output,
++                RenderTarget::Screencast,
++                RenderTarget::ScreenCapture
++            ]
++        );
++    }
++}
+diff --git a/src/tests/pointer_ownership.rs b/src/tests/pointer_ownership.rs
+new file mode 100644
+--- /dev/null
++++ b/src/tests/pointer_ownership.rs
+@@ -0,0 +1,291 @@
++//! Exercise real virtual resource identity and destruction through the server.
++use smithay::input::pointer::{Focus, GrabStartData};
++use smithay::reexports::wayland_protocols_wlr::virtual_pointer::v1::client::{
++    zwlr_virtual_pointer_manager_v1::ZwlrVirtualPointerManagerV1,
++    zwlr_virtual_pointer_v1::ZwlrVirtualPointerV1,
++};
++use smithay::utils::SERIAL_COUNTER;
++use wayland_client::protocol::wl_pointer::ButtonState;
++use wayland_client::{delegate_noop, Proxy as _};
++
++use super::client::{ClientId, State as ClientState};
++use super::Fixture;
++use crate::input::pick_window_grab::PickWindowGrab;
++use crate::input::spatial_movement_grab::SpatialMovementGrab;
++
++const LEFT: u32 = 0x110;
++const RIGHT: u32 = 0x111;
++
++delegate_noop!(ClientState: ZwlrVirtualPointerManagerV1);
++delegate_noop!(ClientState: ZwlrVirtualPointerV1);
++
++fn virtual_pointer(f: &mut Fixture) -> (ClientId, ZwlrVirtualPointerV1) {
++    let id = f.add_client();
++    let client = f.client(id);
++    let global = client
++        .state
++        .globals
++        .iter()
++        .find(|g| g.interface == ZwlrVirtualPointerManagerV1::interface().name)
++        .unwrap();
++    let registry = client.display.get_registry(&client.qh, ());
++    let manager: ZwlrVirtualPointerManagerV1 = registry.bind(global.name, 1, &client.qh, ());
++    let pointer = manager.create_virtual_pointer(None, &client.qh, ());
++    f.roundtrip(id);
++    (id, pointer)
++}
++
++fn button(
++    f: &mut Fixture,
++    id: ClientId,
++    pointer: &ZwlrVirtualPointerV1,
++    code: u32,
++    state: ButtonState,
++) {
++    pointer.button(1, code, state);
++    pointer.frame();
++    f.roundtrip(id);
++}
++
++#[test]
++fn same_protocol_ids_in_different_clients_share_only_the_logical_seat_press() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let (b, pb) = virtual_pointer(&mut f);
++    assert_eq!(pa.id().protocol_id(), pb.id().protocol_id());
++    let seat = f.niri().seat.get_pointer().unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    let serial = seat.with_grab(|serial, _| serial).unwrap();
++    button(&mut f, b, &pb, LEFT, ButtonState::Pressed);
++    button(&mut f, a, &pa, LEFT, ButtonState::Released);
++    assert!(seat.has_grab(serial));
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(seat.has_grab(serial));
++    button(&mut f, b, &pb, LEFT, ButtonState::Released);
++    assert!(!seat.is_grabbed());
++}
++
++#[test]
++fn owner_destroy_releases_but_idle_destroy_does_not_cancel() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let (b, pb) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    let serial = seat.with_grab(|serial, _| serial).unwrap();
++    pb.destroy();
++    f.roundtrip(b);
++    assert!(seat.has_grab(serial));
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(!seat.is_grabbed());
++}
++
++#[test]
++fn destroying_one_same_button_owner_preserves_the_remaining_owner() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let (b, pb) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    button(&mut f, b, &pb, LEFT, ButtonState::Pressed);
++    let serial = seat.with_grab(|serial, _| serial).unwrap();
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(seat.has_grab(serial));
++    pb.destroy();
++    f.roundtrip(b);
++    assert!(!seat.is_grabbed());
++}
++
++#[test]
++fn consumed_picker_press_cannot_suppress_or_own_another_clients_press() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let (b, pb) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    let start = GrabStartData {
++        focus: None,
++        button: 0,
++        location: (0., 0.).into(),
++    };
++    seat.set_grab(
++        f.niri_state(),
++        PickWindowGrab::new(start),
++        SERIAL_COUNTER.next_serial(),
++        Focus::Clear,
++    );
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    assert!(!seat.is_grabbed());
++    button(&mut f, b, &pb, LEFT, ButtonState::Pressed);
++    let serial = seat.with_grab(|serial, _| serial).unwrap();
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(seat.has_grab(serial));
++    button(&mut f, b, &pb, LEFT, ButtonState::Released);
++    assert!(!seat.is_grabbed());
++}
++
++#[test]
++fn device_removal_preserves_a_new_keyboard_started_picker_grab() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    let start = GrabStartData {
++        focus: None,
++        button: 0,
++        location: (0., 0.).into(),
++    };
++    let picker_serial = SERIAL_COUNTER.next_serial();
++    seat.set_grab(
++        f.niri_state(),
++        PickWindowGrab::new(start),
++        picker_serial,
++        Focus::Clear,
++    );
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(seat.has_grab(picker_serial));
++}
++
++#[test]
++fn explicit_owner_removal_ends_spatial_grab_without_releasing_other_button() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let (b, pb) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    let serial = seat.with_grab(|serial, _| serial).unwrap();
++    let start = seat.grab_start_data().unwrap();
++    let output = f.niri_output(1);
++    let ws = f.niri().layout.active_workspace().unwrap().id();
++    let grab = SpatialMovementGrab::new(start, output, ws, false);
++    seat.set_grab(f.niri_state(), grab, serial, Focus::Clear);
++    button(&mut f, b, &pb, RIGHT, ButtonState::Pressed);
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(!seat.has_grab(serial));
++    // B is still held. A fresh left press must not end its implicit grab until
++    // B's right release, proving removal did not reset the seat globally.
++    let (c, pc) = virtual_pointer(&mut f);
++    button(&mut f, c, &pc, LEFT, ButtonState::Pressed);
++    button(&mut f, c, &pc, LEFT, ButtonState::Released);
++    assert!(seat.is_grabbed());
++    button(&mut f, b, &pb, RIGHT, ButtonState::Released);
++    assert!(!seat.is_grabbed());
++}
++
++#[test]
++fn consumed_binding_is_device_local_across_configuration_change() {
++    let config =
++        niri_config::Config::parse_mem("binds { MouseLeft { toggle-overview; }; }").unwrap();
++    let mut f = Fixture::with_config(config);
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let (b, pb) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    assert!(f.niri().layout.is_overview_open());
++    button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++    assert!(
++        f.niri().layout.is_overview_open(),
++        "duplicate press retriggered bind"
++    );
++    assert!(!seat.is_grabbed());
++    f.niri().config.borrow_mut().binds.0.clear();
++    f.niri().mods_with_mouse_binds.clear();
++    f.niri().layout.close_overview();
++    button(&mut f, b, &pb, LEFT, ButtonState::Pressed);
++    let serial = seat.with_grab(|serial, _| serial).unwrap();
++    button(&mut f, a, &pa, LEFT, ButtonState::Released);
++    assert!(seat.has_grab(serial));
++    pb.destroy();
++    f.roundtrip(b);
++    assert!(!seat.is_grabbed());
++}
++
++#[test]
++fn early_return_spatial_press_has_owned_cleanup_without_a_seat_press() {
++    let mut f = Fixture::new();
++    f.add_output(1, (1280, 800));
++    let (a, pa) = virtual_pointer(&mut f);
++    let seat = f.niri().seat.get_pointer().unwrap();
++    f.niri().layout.open_overview();
++    f.niri_complete_animations();
++    pa.motion_absolute(1, 640, 400, 1280, 800);
++    pa.frame();
++    f.roundtrip(a);
++    button(&mut f, a, &pa, RIGHT, ButtonState::Pressed);
++    assert!(seat
++        .with_grab(|_, grab| grab.as_any().is::<SpatialMovementGrab>())
++        .unwrap_or(false));
++    pa.destroy();
++    f.roundtrip(a);
++    assert!(!seat.is_grabbed());
++    f.niri().layout.close_overview();
++    let (b, pb) = virtual_pointer(&mut f);
++    button(&mut f, b, &pb, LEFT, ButtonState::Pressed);
++    button(&mut f, b, &pb, LEFT, ButtonState::Released);
++    assert!(
++        !seat.is_grabbed(),
++        "removed spatial press left stale seat state"
++    );
++}
++
++#[test]
++fn disconnect_ends_pointer_screenshot_drag_but_preserves_touch_selection() {
++    use std::collections::HashMap;
++
++    use smithay::backend::input::TouchSlot;
++
++    use crate::animation::Animation;
++    use crate::ui::screenshot_ui::{Button, ScreenshotUi};
++
++    for touch_slot in [None, Some(TouchSlot::from(Some(1)))] {
++        let mut f = Fixture::new();
++        f.add_output(1, (1280, 800));
++        let (a, pa) = virtual_pointer(&mut f);
++        button(&mut f, a, &pa, LEFT, ButtonState::Pressed);
++        let output = f.niri_output(1);
++        let clock = f.niri().clock.clone();
++        let config = f.niri().config.clone();
++        let open_anim = Animation::new(
++            clock.clone(),
++            0.,
++            1.,
++            0.,
++            config.borrow().animations.screenshot_ui_open.0,
++        );
++        // Input-only fixture: no screenshot textures or file path are needed to
++        // prove the selection's modal state and touch ownership survive cleanup.
++        f.niri().screenshot_ui = ScreenshotUi::Open {
++            selection: (output.clone(), (10, 10).into(), (100, 100).into()),
++            output_data: HashMap::new(),
++            button: Button::Down {
++                touch_slot,
++                on_capture_button: false,
++                last_pos: (output, (100, 100).into()),
++                move_state: None,
++            },
++            show_pointer: false,
++            open_anim,
++            clock,
++            config,
++            path: None,
++        };
++        pa.destroy();
++        f.roundtrip(a);
++        let ScreenshotUi::Open { button, .. } = &f.niri().screenshot_ui else {
++            panic!("disconnect confirmed or closed the screenshot UI");
++        };
++        assert_eq!(matches!(button, Button::Down { .. }), touch_slot.is_some());
++    }
++}

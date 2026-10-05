@@ -9,6 +9,7 @@ import {
   readFileSync,
   readdirSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -17,11 +18,26 @@ import { setTimeout as delay } from "node:timers/promises";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 
 const args = process.argv.slice(2);
-if (args.length && (args.length !== 2 || args[0] !== "--wheel"))
-  throw new Error("Usage: node scripts/test-first-use.mjs [--wheel candidate.whl]");
-const wheel = args.length ? resolve(args[1]) : null;
+let wheel = null,
+  inirRoot = null;
+while (args.length) {
+  const option = args.shift();
+  const value = args.shift();
+  if (!value || !["--wheel", "--inir-root"].includes(option))
+    throw new Error(
+      "Usage: node scripts/test-first-use.mjs [--wheel candidate.whl] [--inir-root installed-shell]",
+    );
+  if (option === "--wheel") wheel = resolve(value);
+  else inirRoot = resolve(value);
+}
+const target = inirRoot ? "inir" : "standalone";
 const root = mkdtempSync(join(tmpdir(), "nirifx-first-use-"));
-const environment = { ...process.env, PYTHONNOUSERSITE: "1", PIP_DISABLE_PIP_VERSION_CHECK: "1" };
+const environment = {
+  ...process.env,
+  PYTHONNOUSERSITE: "1",
+  PYTHONDONTWRITEBYTECODE: "1",
+  PIP_DISABLE_PIP_VERSION_CHECK: "1",
+};
 for (const key of [
   "NIRI_SOCKET",
   "WAYLAND_DISPLAY",
@@ -144,15 +160,17 @@ async function choose(id, value) {
     [id, value],
   );
 }
-async function ready(target = "standalone") {
+async function ready(expectedTarget = target) {
   await waitFor("byId('active-look').textContent.startsWith('Active: ')");
   assert.equal(await browser.evaluate("document.documentElement.dataset.workspace"), "library");
-  assert.equal(await browser.evaluate("catalog.connection.target"), target);
+  assert.equal(await browser.evaluate("catalog.connection.target"), expectedTarget);
 }
 try {
   const config = join(appEnv.XDG_CONFIG_HOME, "niri/config.kdl");
   const include = join(appEnv.XDG_CONFIG_HOME, "niri/nirifx/animations.kdl");
-  const original = `// Existing desktop choices survive the first NiriFX session.
+  const animation = join(appEnv.XDG_CONFIG_HOME, "niri/config.d/60-animations.kdl");
+  const registry = join(appEnv.XDG_CONFIG_HOME, "inir/niri-animation-presets.json");
+  let original = `// Existing desktop choices survive the first NiriFX session.
 hotkey-overlay { skip-at-startup; }
 animations {
     window-open { duration-ms 210; curve "ease-out-cubic"; }
@@ -162,6 +180,32 @@ animations {
 `;
   mkdirSync(join(appEnv.XDG_CONFIG_HOME, "niri"));
   writeFileSync(config, original);
+  let shellBaseline;
+  if (inirRoot) {
+    // Read the installed helper/defaults in place; all helper writes are routed
+    // through the child's isolated XDG_CONFIG_HOME, with no desktop socket.
+    symlinkSync(inirRoot, join(appEnv.XDG_DATA_HOME, "inir"), "dir");
+    mkdirSync(join(appEnv.XDG_CONFIG_HOME, "niri/config.d"));
+    writeFileSync(
+      config,
+      'hotkey-overlay { skip-at-startup; }\ninclude "config.d/60-animations.kdl"\n',
+    );
+    writeFileSync(animation, "// Synthetic shell settings\nanimations {\n slowdown 1.25\n}\n");
+    const applied = JSON.parse(
+      run([
+        "python3",
+        join(inirRoot, "scripts/niri-config.py"),
+        "apply-animation-preset",
+        "snappy",
+      ]),
+    );
+    assert.equal(applied.success, true);
+    shellBaseline = JSON.parse(
+      run(["python3", join(inirRoot, "scripts/niri-config.py"), "get-animation-presets"]),
+    );
+    assert.equal(shellBaseline.active, "snappy");
+    original = readFileSync(config, "utf8");
+  }
   const baseline = files(appEnv.XDG_CONFIG_HOME);
   let command = ["python3", "-m", "niri_fx"],
     cwd = projectRoot;
@@ -182,7 +226,9 @@ animations {
   assert.equal(await browser.evaluate("byId('restore-selection').disabled"), true);
   assert.equal(
     await browser.evaluate("byId('active-look').textContent"),
-    "Active: Current Niri settings",
+    inirRoot
+      ? `Active: ${shellBaseline.presets.find((preset) => preset.id === "snappy").name}`
+      : "Active: Current Niri settings",
   );
   await browser.evaluate("document.querySelector('[data-style=fragment-flow]').click()");
   const combo = await browser.evaluate("effectDocument()");
@@ -250,19 +296,36 @@ animations {
     "!byId('restore-selection').disabled && byId('status').textContent.startsWith('Applied.')",
   );
   assert(readFileSync(config, "utf8").startsWith(original));
-  const override = readFileSync(include, "utf8");
-  assert.match(override, /window-close/);
-  assert.match(override, /window-resize\s*\{\s*off/);
-  assert.doesNotMatch(override, /window-open|window-movement|pointer-wobble/);
+  if (inirRoot) {
+    const active = JSON.parse(
+      run(["python3", join(inirRoot, "scripts/niri-config.py"), "get-animation-presets"]),
+    );
+    assert.equal(active.active, "niri-fx-custom-first-combo");
+    const applied = active.presets.find((preset) => preset.id === active.active);
+    const base = shellBaseline.presets.find((preset) => preset.id === "snappy");
+    assert.deepEqual(applied.profile, document);
+    assert.deepEqual(applied.types["window-resize"], { "duration-ms": 0, curve: "linear" });
+    assert.deepEqual(applied.types["window-open"], base.types["window-open"]);
+    assert.deepEqual(applied.types["window-movement"], base.types["window-movement"]);
+    assert.match(readFileSync(animation, "utf8"), /slowdown 1\.25/);
+    assert.equal(existsSync(include), false);
+    assert.equal(existsSync(registry), true);
+  } else {
+    const override = readFileSync(include, "utf8");
+    assert.match(override, /window-close/);
+    assert.match(override, /window-resize\s*\{\s*off/);
+    assert.doesNotMatch(override, /window-open|window-movement|pointer-wobble/);
+  }
   run(["niri", "validate", "-c", config]);
-  assert.equal(await browser.evaluate("byId('active-look').textContent"), "Active: First Combo");
+  const activeLabel = inirRoot ? "Active: NiriFX · First Combo" : "Active: First Combo";
+  assert.equal(await browser.evaluate("byId('active-look').textContent"), activeLabel);
 
   // A new process sees the saved profile and owns the same Restore history.
   await stopServer();
   url = await startServer(command, cwd);
   await browser.navigate(url);
   await ready();
-  assert.equal(await browser.evaluate("byId('active-look').textContent"), "Active: First Combo");
+  assert.equal(await browser.evaluate("byId('active-look').textContent"), activeLabel);
   await choose("library-collection", "customs");
   await browser.evaluate("document.querySelector('[data-style=custom-first-combo]').click()");
   assert.deepEqual(await browser.evaluate("effectDocument()"), document);
@@ -283,12 +346,14 @@ animations {
   // Auto-detection is based on the helper's presence, not the login session.
   // A synthetic read-only helper proves the launch route without shell mutation.
   await stopServer();
-  const helperFolder = join(appEnv.XDG_DATA_HOME, "inir/scripts");
-  mkdirSync(helperFolder, { recursive: true });
-  writeFileSync(
-    join(helperFolder, "niri-config.py"),
-    'import json\nprint(json.dumps({"active": "base", "presets": [{"id": "base", "name": "Existing shell style", "types": {}}]}))\n',
-  );
+  if (!inirRoot) {
+    const helperFolder = join(appEnv.XDG_DATA_HOME, "inir/scripts");
+    mkdirSync(helperFolder, { recursive: true });
+    writeFileSync(
+      join(helperFolder, "niri-config.py"),
+      'import json\nprint(json.dumps({"active": "base", "presets": [{"id": "base", "name": "Existing shell style", "types": {}}]}))\n',
+    );
+  }
   url = await startServer(command, cwd);
   await browser.navigate(url);
   await ready("inir");
@@ -297,11 +362,11 @@ animations {
   await stopServer();
   url = await startServer(command, cwd, ["--target", "standalone"]);
   await browser.navigate(url);
-  await ready();
+  await ready("standalone");
   assert.equal(await browser.evaluate("byId('error').textContent"), "");
   assert.deepEqual(files(appEnv.XDG_CONFIG_HOME), baseline);
   console.log(
-    `PASS clean-account ${wheel ? "installed wheel" : "source"} ${version}: recommended combo, all five independent mode controls, saved profile, cancel/review/apply, restart and exact Restore, auto iNiR routing and explicit standalone; stock Niri validates. No desktop session connected.`,
+    `PASS clean-account ${wheel ? "installed wheel" : "source"} ${version} ${target}: recommended combo, all five independent mode controls, saved profile, cancel/review/apply, restart and exact Restore, auto iNiR routing and explicit standalone; stock Niri validates. ${inirRoot ? "Real installed iNiR serializer and active recognition verified. " : ""}No desktop session connected.`,
   );
 } finally {
   if (browser) await browser.close();

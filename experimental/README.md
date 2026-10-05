@@ -134,7 +134,7 @@ determines the remaining travel distance. Fading has its own closing clock.
 This interruption path takes precedence over the usual closing style, including
 when a profile has different opening and closing families.
 
-With a custom movement shader or an opted-in NiriFX resize shader configured,
+With a custom movement shader or a selected NiriFX resize shader configured,
 interrupted resizing also retains the displayed width and height and their
 sampled velocities. Each axis owns its curve: changing width leaves an ongoing
 height transition on its original deadline. Matching neighbor movement keeps
@@ -150,8 +150,12 @@ on the next episode. Stock Niri and unmarked shaders keep their existing interfa
 Build the experimental compositor from the same checkout to use this behavior;
 movement contract 2 alone does not establish retained resize support.
 
-Closing during resize still uses a snapshot rather than continuing the retained
-resize material. See the [retained resize guide](../docs/resize.md#retained-resize-appearance),
+Closing during a marked resize continues its frozen material, phase and size
+paths. Rendering applies resize, then any continuing opening or movement effect,
+then the closing fade. Borders and shadows follow the changing geometry.
+Fullscreen windows and transitions, changed output scale and unavailable material
+keep the protected snapshot fallback.
+See the [closing handoff](../docs/resize.md#closing-during-resize),
 [width and height comparisons](../docs/validation.md#resize-geometry-continuity)
 and their [reproduction guide](../docs/gifs/README.md#native-resize-geometry-comparisons).
 
@@ -178,6 +182,12 @@ retained phase/reference, shader reload/removal, and changing capture restrictio
 in owned nested Output, ScreenCapture and debug Screencast views. See the
 [material acceptance scope](../docs/validation.md#retained-material-acceptance-unreleased).
 
+The shared base patch also tracks pointer presses and consumed bindings per
+device. Virtual-device removal releases only presses without a surviving owner;
+another device's valid grab and suppression state are retained. The
+[ownership gate](../docs/validation.md#pointer-driven-wobble) covers the base and
+optional pointer builds. Physical unplug/replug remains untested.
+
 This is not the complete transaction/particle engine described in
 [the movement design](../docs/movement.md):
 
@@ -193,8 +203,9 @@ This is not the complete transaction/particle engine described in
 - Large excursions can clip at output/workspace boundaries. The expanded draw
   region and offscreen pass cost GPU work; there is no frame-time acceptance yet.
 - Sequential 1×/1.5×/2× scales and resize/fullscreen interruptions have a nested
-  stress harness. Real mixed outputs, blurred-background capture, PipeWire, popups,
-  retained resize-to-close and graphics-reset behavior need broader validation
+  stress harness. Resize-to-close has separate phase, privacy, margin and popup
+  checks. Real mixed outputs, blurred-background capture, PipeWire and
+  graphics-reset behavior need broader validation
   before replacing a login compositor. The TTY path compiles but was not activated.
 
 Stock configuration exports contain supported window actions and selected stock

@@ -499,6 +499,10 @@ interrupted resize requests:
 These native pairs use verified v0.19.0 and updated builds with the same settings.
 [Evidence and limits](validation.md#retained-material-acceptance-unreleased).
 
+[Resize continuing into close](gifs/native-resize-close-comparison.gif) compares
+the preserved snapshot behavior with the current experimental handoff at the same
+configured speed. [Requirements and limits](resize.md#closing-during-resize).
+
 ### Experimental movement and swaps
 
 **Native column swap — requires the patched Niri build.** Two real synthetic

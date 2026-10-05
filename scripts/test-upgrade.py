@@ -28,6 +28,10 @@ from urllib.parse import parse_qs, urlsplit
 from urllib.request import Request, urlopen
 
 ROOT = Path(__file__).resolve().parents[1]
+# Each source release must create its own real documents and restore snapshots.
+# Record its schema explicitly so a changed source artifact cannot silently turn
+# an upgrade check into a current-format round trip.
+SOURCE_SCHEMAS = {"0.17.0": 1, "0.18.0": 1, "0.19.0": 2}
 BASE = """// An existing user configuration; resize belongs to the user.
 hotkey-overlay { skip-at-startup; }
 animations { window-resize { duration-ms 170; curve "ease-out-cubic"; }; }
@@ -167,7 +171,7 @@ class Session:
         return json.loads(match[1])
 
     def rejected(self, path, value, message):
-        """A missing renderer must reject a reviewed activation, not silently downgrade it."""
+        """Require the intended guard, rather than accepting any failed request."""
         try:
             self.post(path, value)
         except HTTPError as error:
@@ -175,7 +179,7 @@ class Session:
                 body = json.load(error)
                 assert error.code == 400 and message in body.get("error", ""), body
         else:
-            raise AssertionError("An unverified native activation was accepted")
+            raise AssertionError("A request that should have been rejected was accepted")
 
     def post(self, path, value):
         request = Request(
@@ -268,13 +272,14 @@ try {
   assert.equal(await browser.evaluate('effectDocument().pointer ?? null'),null);
   await browser.evaluate(`byId('redo').click()`);
   assert.deepEqual(await browser.evaluate('effectDocument()'),modes);
-  console.log('PASS installed Library UI, saved schema1 JSON, retained favorites, combo preview and schema2 modes');
+  console.log('PASS installed Library UI, retained JSON and favorites, combo preview and schema2 modes');
 } finally { await browser.close(); }
 """
     print(run(["node", "--input-type=module", "-e", source], root=root, env=browser_env))
 
 
 def exercise(old_wheel, new_wheel, *, browser):
+    source_schema = SOURCE_SCHEMAS[wheel_version(old_wheel)]
     with tempfile.TemporaryDirectory(prefix="nirifx-upgrade-") as directory:
         root = Path(directory)
         env = isolated_environment(root)
@@ -323,7 +328,7 @@ def exercise(old_wheel, new_wheel, *, browser):
             "Saved Night",
             json_output=True,
         )
-        assert document["schema"] == 1, "Upgrade source must exercise a real legacy profile"
+        assert document["schema"] == source_schema, "Source release emitted an unexpected schema"
         custom = root / "saved-night.json"
         custom.write_text(json.dumps(document, indent=2) + "\n")
 
@@ -400,10 +405,19 @@ def exercise(old_wheel, new_wheel, *, browser):
         # the exact preceding bytes. Neither history can stand in for the other.
         library_document = dict(document, name="Saved Library Active")
         library_document["actions"] = dict(document["actions"], open=document["actions"]["close"])
+        if source_schema == 2:
+            # The old package must own the meaning of Preserve and Off too.
+            # Upgrade while these choices are active, then restore its snapshot.
+            library_document["actions"] = {
+                "open": None,
+                "close": "off",
+                "resize": "off",
+                "movement": None,
+            }
         with studio(executable, root=root, env=env) as session:
             selection = {
                 "document": library_document,
-                "allow_resize": False,
+                "allow_resize": source_schema == 2,
                 "allow_movement": False,
             }
             review = session.post("/review", selection)
@@ -432,9 +446,28 @@ def exercise(old_wheel, new_wheel, *, browser):
             assert listing["active"] == library_document and listing["restore"]
             assert listing["managed"]["custom-saved-night"]["document"] == document
             assert listing["managed"]["custom-saved-native-choice"]["document"] == staged
+            # An upgrade must retain conflict protection as well as a happy-path
+            # Restore. Refusal must leave the user's edit and snapshot usable.
+            applied_include = include.read_bytes()
+            include.write_bytes(applied_include + b"// External edit after upgrade\n")
+            conflict_files = snapshot_files(*protected)
+            session.rejected("/restore", {}, "File changed since the plan/snapshot")
+            assert snapshot_files(*protected) == conflict_files
+            include.write_bytes(applied_include)
             assert not session.post("/restore", {})["dry_run"]
             assert snapshot_files(config, include) == setup_files
             assert not json.loads(session.get("/library"))["restore"]
+        applied_include = include.read_bytes()
+        include.write_bytes(applied_include + b"// External edit before CLI Restore\n")
+        conflict_files = snapshot_files(*protected)
+        try:
+            cli("restore", "--transaction", old_setup["transaction"], "--apply", json_output=True)
+        except subprocess.CalledProcessError as error:
+            assert error.returncode == 2 and "File changed since the plan/snapshot" in error.stderr
+        else:
+            raise AssertionError("CLI Restore overwrote an external edit after upgrade")
+        assert snapshot_files(*protected) == conflict_files
+        include.write_bytes(applied_include)
         cli("restore", "--transaction", old_setup["transaction"], "--apply", json_output=True)
         assert config.read_text() == BASE and not include.exists()
         assert registry.read_bytes() == before[registry]
@@ -580,15 +613,15 @@ def exercise(old_wheel, new_wheel, *, browser):
         print(
             f"PASS {wheel_version(old_wheel)} -> {wheel_version(new_wheel)}: installed CLI/Studio, "
             "old JSON and shell registry, saved Library profiles and favorites, "
-            "exact CLI and Library snapshot Restore, native metadata and activation guards, "
-            "schema2 Preserve/Style/Off choices, user resize and schema1 files preserved"
+            "conflict-safe and exact CLI/Library Restore, native metadata and activation guards, "
+            f"schema2 Preserve/Style/Off choices, user resize and schema{source_schema} files preserved"
         )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--from-wheel", type=Path, required=True, help="Official v0.17.0 or v0.18.0 release wheel"
+        "--from-wheel", type=Path, required=True, help="Official v0.17.0, v0.18.0 or v0.19.0 wheel"
     )
     parser.add_argument("--to-wheel", type=Path, required=True, help="Newly built candidate wheel")
     parser.add_argument(
@@ -605,8 +638,8 @@ def main():
     if args.browser and not shutil.which("node"):
         parser.error("--browser requires Node 22 or newer and Chromium/Chrome")
     old_wheel, new_wheel = args.from_wheel.resolve(), args.to_wheel.resolve()
-    if wheel_version(old_wheel) not in ("0.17.0", "0.18.0"):
-        parser.error("--from-wheel must be an official 0.17.0 or 0.18.0 release wheel")
+    if wheel_version(old_wheel) not in SOURCE_SCHEMAS:
+        parser.error("--from-wheel must be an official 0.17.0, 0.18.0 or 0.19.0 release wheel")
     verify_checksum(old_wheel, args.checksums.resolve())
     exercise(old_wheel, new_wheel, browser=args.browser)
 

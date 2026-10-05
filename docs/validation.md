@@ -1,7 +1,8 @@
 # Validation and known limits
 
 Evidence updated on **2026-10-04**, including 0.19.0 action choices,
-installed upgrade/Restore checks and experimental resize timing fixes. These checks
+installed upgrade/Restore checks, experimental resize continuation and device-owned
+pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 For setup instructions, use the [documentation index](README.md); check
@@ -57,9 +58,13 @@ Restore returns the exact previous files. Shared styles retain Preserve/Off
 choices, and controls, Undo, JSON downloads and sharing agree across the editor.
 Quickshell and GTK/AGS checks exercise the same Library transactions.
 
-The installed upgrade harness verifies the checksum of the official 0.18 wheel,
+The installed upgrade harness verifies the checksum of the published source wheel,
 creates saved profiles, favorites, registrations and existing Restore history,
-then installs the candidate 0.19 wheel. Original user files remain byte-identical.
+then installs the candidate wheel. Original user files remain byte-identical.
+Checks from 0.18 cover legacy schema migration; checks from 0.19 also retain an
+active mixture of Preserve and Off. Both CLI and Library Restore reject external
+edits without changing files or consuming their snapshots, then recover exact
+original bytes when the conflict is resolved.
 Installed CLI, HTTP and browser paths accept schema 2 choices, enforce resize
 consent and restore exactly. Native activation is verified separately in owned
 contract-2 compositor sessions. [Reproduce an upgrade](releases.md#verify-an-upgrade).
@@ -69,9 +74,19 @@ in empty temporary accounts, with no desktop session connection. It selects
 Fragment Flow, checks all five action controls, saves a named profile, verifies
 that Review and Cancel leave config unchanged, applies, restarts Studio and
 restores the original files exactly while retaining the saved profile. Stock
-Niri validates the generated configuration. A synthetic helper also checks
-automatic iNiR selection and an explicit standalone override; that check does
-not certify activation through a real iNiR installation.
+Niri validates the generated configuration. A synthetic helper checks automatic
+iNiR selection and an explicit standalone override.
+
+With the **Unreleased adapter fix**, the same browser workflow also passes from
+source and an installed wheel using the real iNiR helper. The separate
+`scripts/test-library-adapters.py` check hosts the actual iRiS service and gallery
+in an owned nested session. Ten helper combinations cover individual, mixed and
+all-Off actions with global Off/slowdown, inherited Off, unrelated timings,
+active-style recognition, shell reselection and exact Restore. The service sees
+Apply and Restore through its file watcher. These checks used iNiR revision
+`c08bb928fe71c6a00bfede3e99ef26fb1825ebe2` and Quickshell 0.3.1, temporary config/state
+and unchanged installed helper source. They establish this adapter workflow;
+they do not replace a full login-shell acceptance check.
 
 The complete local Studio suite still runs every rendering matrix and save flow.
 CI splits browser workflows, three shape aspects, motion and Studio into six
@@ -174,18 +189,18 @@ duration to 350 ms before reversing.
 | Case | Baseline gap | Updated gap | Decoded frames, before / after | Recording |
 | --- | --- | --- | --- | --- |
 | Width reversal | 7–83 px | 17–18 px | 142 / 142 | [Comparison](gifs/native-resize-width-comparison.gif) |
-| Height reversal | 11–56 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-height-comparison.gif) |
+| Height reversal | 12–56 px | 16–18 px | 142 / 142 | [Comparison](gifs/native-resize-height-comparison.gif) |
 | Orthogonal width retarget | 17–18 px | 17–18 px | 158 / 158 | [Comparison](gifs/native-resize-orthogonal-width-comparison.gif) |
-| Orthogonal height retarget | 16–19 px | 16–20 px | 158 / 157 | [Comparison](gifs/native-resize-orthogonal-height-comparison.gif) |
-| Timing reload during height resize | 16–128 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-timing-reload-height-comparison.gif) |
-| Minimum width retarget | −26–18 px | 16–18 px | 182 / 182 | [Comparison](gifs/native-resize-minimum-width-comparison.gif) |
+| Orthogonal height retarget | 16–19 px | 16–19 px | 157 / 158 | [Comparison](gifs/native-resize-orthogonal-height-comparison.gif) |
+| Timing reload during height resize | 16–130 px | 16–20 px | 142 / 143 | [Comparison](gifs/native-resize-timing-reload-height-comparison.gif) |
+| Minimum width retarget | −24–18 px | 16–18 px | 182 / 182 | [Comparison](gifs/native-resize-minimum-width-comparison.gif) |
 | Minimum height retarget | −23–18 px | 16–18 px | 182 / 182 | [Comparison](gifs/native-resize-minimum-height-comparison.gif) |
 
 The [minimum-size report](benchmarks/resize-minimum.json) compares the preserved
 v0.19.0 build against the current renderer. Identical solid-color geometry masks
 remove stretched texture-edge filtering. The table measures frames with a visible
 source edge. Video conversion loses the one-pixel source in 13 baseline frames
-per axis and in seven updated width/six updated height frames. Those frames
+per axis and in eight updated width/six updated height frames. Those frames
 report neighbor clearance from the verified source origin plus the size floor:
 the baseline reaches −17 px, while the updated clearance stays at 17 px on both
 axes. They are excluded from the visible-edge gap ranges.
@@ -222,8 +237,8 @@ independent curve to cross it. The current shared paths address that failure.
 A retarget that would cross the floor brakes before it and preserves feasible
 incoming position and velocity; an outward velocity already at the floor must
 stop. This does not establish acceleration continuity or change every configured
-spring's equation. Closing during resize still uses a snapshot. Closing material
-continuation, camera movement and physical mixed outputs remain follow-on work;
+spring's equation. Closing material continuation has a separate acceptance gate
+below. Camera movement and physical mixed outputs remain follow-on work;
 see the [design notes](next-phases.md#rendering-and-interruptions).
 
 ### Retained material acceptance (Unreleased)
@@ -259,6 +274,57 @@ pass. Tests use owned nested compositors and synthetic clients with IPC resize
 requests. They do not establish closing continuation, blurred-background
 privacy, popup behavior, mixed-scale handoffs, graphics-reset recovery or
 PipeWire transport acceptance.
+
+### Resize-to-close acceptance (Unreleased)
+
+The [native comparison and acceptance report](benchmarks/resize-close.json) cover
+23 passing cases in the matching development compositor on RTX 4070 Ti/NVIDIA.
+A diagnostic shader
+separates retained material phase and reference dimensions from the closing fade;
+geometry must continue advancing after unmap and disappear when closing ends.
+Separate cases exercise opening/movement overlap and disabling resize, closing
+or all animations during the transition.
+
+Generated Fragments, Slices and Elastic cases compare the last mapped image with
+the first closing image at a fixed clock, including transparent geometry margins.
+Additional cases include an xdg popup and native borders/shadows. The stationary
+control must match exactly. Across unmap, ordinary channel differences are
+limited to one step out of 255. At most four pixels may exceed that only when
+each crosses a foreground/background silhouette with stable foreground and
+background neighbors within one pixel in **both** images. Interior exceptions
+are forbidden; the report includes every exceptional coordinate and difference.
+All eight stationary controls matched exactly. Fragments required at most two
+silhouette exceptions per frame, with a maximum channel difference of 117;
+Slices and Elastic stayed within one channel step everywhere.
+
+This narrow allowance follows GPU probes with identical phase, geometry and UV
+inputs: output-to-offscreen rasterization differed by at most `2^-24` in normalized
+X and `2^-23` in Y. A hard fragment boundary can amplify that tiny coordinate
+difference into a large color change. The four-pixel budget bounds this test;
+it is not a guarantee of identical rasterization across graphics drivers.
+Negative tests reject interior corruption, shifted edges and excess exceptions.
+
+Privacy cases keep a visible public companion while testing both capture policies
+through direct ScreenCapture, ordinary Output and debug Screencast. Output is
+observed through a separately verified, unmodified parent compositor. The scale
+change cases check snapshot bounds, privacy and eventual removal after changing
+from scale 1 to 1.25, with and without capture restrictions. They do not exercise
+a return to the original scale. The implementation permanently retires the
+continuation after a scale mismatch.
+
+```sh
+python3 scripts/test-resize-close.py --suite all --output-targets \
+  --report artifacts/resize-close-final.json
+```
+
+These are owned nested winit sessions with synthetic clients. Debug Screencast
+does not test PipeWire transport. Fullscreen windows and transitions use the snapshot fallback;
+protected blurred backgrounds, physical mixed-output handoffs, graphics resets
+and allocation failures still require separate runtime acceptance. Native tests
+cover detached trajectories, decoration rebuilding and atomic partial-target
+cleanup; they do not substitute for those hardware checks. See the
+[recording guide](gifs/README.md#native-resize-to-close-comparison)
+to reproduce the real-speed comparison.
 
 ## Pointer-driven wobble
 
@@ -304,11 +370,11 @@ Screencast render target, a portal or PipeWire transport.
 
 Abrupt termination with SIGKILL is covered for grabbed floating and detached
 tiled clients. A surviving client accepts actual clicks and a subsequent drag.
-Disconnecting a virtual pointer while its button is held exposes a known limit:
+In the preserved baseline, disconnecting a virtual pointer while its button is held exposes a failure:
 unpressed motion from a replacement pointer still moves the grabbed window.
 A replacement press/release recovers input. This occurs with deformation enabled
 and omitted in the patched executable, and in an unmodified build at the same
-pinned revision. Device-owned grab cleanup remains open.
+pinned revision. The development fix is checked separately below.
 
 The overlapping-device diagnostic adds two independent virtual-pointer clients
 on one owned seat. The unmodified baseline and the 0.19 patched binary, with
@@ -333,15 +399,42 @@ design. The pinned handler inherits a no-op virtual-pointer destruction callback
 Virtual-pointer IDs include their Wayland resource/client identity, while the
 seat's pressed-button list and Niri's suppressed-button set use button codes.
 Smithay removes every occurrence of a code on release, and the move grab checks
-that shared list. A proposed fix needs device-owned press/suppression records and
-grab ownership, including same-code overlap and device identity reuse; it must
-not cancel another device's grab. No disconnect-cleanup patch is implemented.
+that shared list. The development patch records presses and suppression by full
+device lifetime identity, forwards one seat press per button and sends the final
+release only after its last owner releases or disappears. An explicit grab is
+cancelled only when its originating press loses its owners; implicit client grabs
+retain the seat's normal multi-button lifetime.
+
+The current ownership gate requires the idle-device and surviving-owner cases to
+keep moving, the removed-owner case to stop immediately, and every final release
+to stop movement with a subsequent real client click. It also checks a consumed
+binding across reload, removal of that consumed device and fresh resource input.
+Nine native tests exercise actual virtual-pointer resources, including equal
+protocol IDs in separate clients, picker consumption, keyboard-started grabs and
+pointer-only screenshot-selection cleanup without confirming a screenshot or
+ending a touch selection. Five ledger tests cover button aggregation and duplicate
+or unmatched events. Physical unplug/replug, touch and tablet hardware remain
+separate acceptance work.
+
+The [current ownership report](benchmarks/pointer-ownership.json) records the
+combined optimized builds: all 15 overlap scenarios and three suppression/resource
+replacement runs pass across the base compositor and the pointer extension with
+deformation omitted or enabled. Raw session files remain outside the repository.
+
+```sh
+python3 scripts/test-pointer-ownership.py
+python3 scripts/test-pointer-ownership.py --pointer-wobble
+```
 
 The optional `--output-targets` probe uses a second owned compositor and retains
 strict assertions. It currently fails on the tested GPU: the child's direct
 capture clears after closing while the parent's image stays stale, even with
 pointer deformation and privacy rules omitted. Both compositors continue
-submitting frames. Output/Screencast privacy remains unverified. Actual PipeWire capture,
+submitting frames. A fresh run of the current pointer build reproduced the
+failure: direct capture had no protected pixels, while parent Output retained
+124,085; the public companion remained visible in both. This failed capture
+probe is separate from the passing device-ownership checks above.
+Output/Screencast privacy remains unverified for this pointer scenario. Actual PipeWire capture,
 popup and blurred-background combinations also remain untested.
 
 The [unmodified comparison](benchmarks/native-baseline.json) reproduces both
@@ -444,7 +537,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**213 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**214 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.
@@ -458,8 +551,9 @@ All content is synthetic. See [recording commands](gifs/README.md).
 
 - Physical presentation timing and responsiveness on integrated GPUs, larger windows,
   multiple outputs and mixed scaling; capture/encoder timing cannot substitute for it.
-- Broader transparency, decorations, fullscreen and output-edge clipping. Client-side
-  shadows outside the window geometry are omitted during breakup.
+- Broader transparency, decorations, fullscreen and output-edge clipping. Open/close
+  breakup omits client-side shadows outside the window geometry; resize has its
+  own material and margin checks above.
 - Acceleration continuity, camera transitions, direct dragging, broader application
   resize/close coverage, shared per-particle ordering and graphics-reset behavior.
 - Full iRiS, DMS and Noctalia desktop sessions across versions beyond the controlled
@@ -676,12 +770,10 @@ node --test tests/combo-preview-browser.test.mjs
 node scripts/record-combo-showcases.mjs
 ```
 
-The [release acceptance check](releases.md#verify-an-upgrade) installs the
-checksum-verified official 0.16 wheel, preserves old exported JSON, favorites,
-iNiR registry entries and an existing CLI Restore snapshot over an upgrade, then
-exercises installed Library Save/Review/Apply/Restore in disposable configurations.
-It also checks installed combo playback against an unchanged imported document.
-This synthetic registry test does not cover every downstream shell customization.
+The [release acceptance check](releases.md#verify-an-upgrade) also checks installed
+combo playback against an unchanged imported document. Its
+[upgrade and recovery checks](#independent-action-choices-and-upgrades) use disposable
+configurations; the synthetic registry does not cover downstream shell customizations.
 
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited

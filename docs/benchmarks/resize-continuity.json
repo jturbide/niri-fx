@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-  "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
-  "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
+  "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+  "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
   "baseline": {
     "tag": "v0.18.0",
     "commit": "a550dc704ff81fc559b104fa2dbddc75265166bc",
@@ -39,14 +39,14 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000694480084348,
-          "ack_s": 0.7063919990032446
+          "request_s": 0.7000688709958922,
+          "ack_s": 0.7063523819961119
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.306462343010935,
-          "ack_s": 1.312671424006112
+          "request_s": 1.3064222910034005,
+          "ack_s": 1.3144277630053693
         }
       ],
       "final_size": [
@@ -54,8 +54,8 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "84dafc8b1a9147a827928381da3c313d5994fad971d3a9d80d2a8897ffbaf233",
-      "gif_sha256": "5b0d3dd3a69e6f7ecd9d9d369d29ae816b2db68bd18d5b8b27721caa96e75423",
+      "video_sha256": "7e7b271c48fad98462988d05b12c8def6ab0c1e43c041d682e196f9fa3f313c7",
+      "gif_sha256": "d2ccd5022705018815af801a5f1b3cdcca359e19118197826c5eeead6d2478fe",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
@@ -79,14 +79,14 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000727940030629,
-          "ack_s": 0.7077746760041919
+          "request_s": 0.7000723219971405,
+          "ack_s": 0.706441972986795
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.307844908995321,
-          "ack_s": 1.3175565749988891
+          "request_s": 1.3065103229891974,
+          "ack_s": 1.31567627498589
         }
       ],
       "final_size": [
@@ -94,12 +94,12 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "bf9d42429bcab522f99929756bc9e24f8cfb9e1e88b7217d20ab0c0c4e0d0caf",
-      "gif_sha256": "7f57d4d06bfdf2266f50d3b703213d6847c1c166a3d2f65a4700f730ee3c0767",
+      "video_sha256": "4a1992320e1360b73647cf80a19fb4b8bd64b61da3faba170f8333a5223fd937",
+      "gif_sha256": "f0c5585f669f235c1e624d23fe76f35c27a7214d97b437d0e3c0192e6852a054",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
-        "min_gap_px": 11,
+        "min_gap_px": 12,
         "max_gap_px": 56,
         "codec_edge_tolerance_px": 4,
         "max_far_edge_px": 900
@@ -107,7 +107,7 @@
     },
     {
       "case": "after-width",
-      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
+      "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "version": "niri 26.04 (8ed0da4-modified)",
       "owned_output": "winit",
       "dimensions": [
@@ -119,14 +119,14 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000903699954506,
-          "ack_s": 0.7068908309884137
+          "request_s": 0.7000810519966763,
+          "ack_s": 0.7068236630002502
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.306961362992297,
-          "ack_s": 1.315965697998763
+          "request_s": 1.3068906439875718,
+          "ack_s": 1.3177338659879752
         }
       ],
       "final_size": [
@@ -134,20 +134,20 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "efb656736ae803160d4bfab405ba1a2ec9bfee300e4fb38b17611e7c7b056ff1",
-      "gif_sha256": "8370cdc03c8020f25246c5f7f27437204ebbd4820af5e97f817996e7de87685a",
+      "video_sha256": "1954f47cbd9badbc7e12be338e47df0f7825cd566c52df9e3c13d6ef42cbd117",
+      "gif_sha256": "ce3f9c6c074eac2748dc8f97139f95c5e1ef72b60df53e619c711640d8930f3e",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
         "min_gap_px": 17,
         "max_gap_px": 18,
         "codec_edge_tolerance_px": 4,
-        "max_far_edge_px": 951
+        "max_far_edge_px": 952
       }
     },
     {
       "case": "after-height",
-      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
+      "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "version": "niri 26.04 (8ed0da4-modified)",
       "owned_output": "winit",
       "dimensions": [
@@ -159,14 +159,14 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000376249925466,
-          "ack_s": 0.707869417994516
+          "request_s": 0.700066732999403,
+          "ack_s": 0.7076255839929217
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3079383400036022,
-          "ack_s": 1.3158994730038103
+          "request_s": 1.307697244992596,
+          "ack_s": 1.3163421469944296
         }
       ],
       "final_size": [
@@ -174,13 +174,13 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "f2832d34f79eba21c2c5ca5185e16d41560167bdd96f336188fbf749d7897f42",
-      "gif_sha256": "8d354c3eae47e792d638693551525b63635f983589a4d92d4b939060e6de0ae9",
+      "video_sha256": "810a2bcab2127529071743df9584f8b6e5dd254a70cbe6af8e842a3298b7ffe6",
+      "gif_sha256": "885468f0b052f222dce7b81619605fdf0fdc2f21136c497060da206f583fc72a",
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
         "min_gap_px": 16,
-        "max_gap_px": 19,
+        "max_gap_px": 18,
         "codec_edge_tolerance_px": 4,
         "max_far_edge_px": 884
       }
@@ -189,24 +189,11 @@
   "comparisons": [
     {
       "file": "docs/gifs/native-resize-width-comparison.gif",
-      "gif_sha256": "9dc7de13900ff0209a89d756c776e1213ca7c1a18c50c8c1b47e80fb832bb7ec"
+      "gif_sha256": "cb6ddf55ef2e180fdbea1298efb5266a5621e99915c82f977838bb75ba5dc959"
     },
     {
       "file": "docs/gifs/native-resize-height-comparison.gif",
-      "gif_sha256": "2a6e25420c50374d3c1e3fe294a72915d7657e54df8ccf032342aa69badc95ef"
+      "gif_sha256": "8916cba91dfc2f4103b50fecf12028984b351a36f5cb5aa254dbe19b8e44e938"
     }
-  ],
-  "capture_sources": {
-    "scripts/record-resize-comparison.py": "9da8b165a11736e1784edbdaa92023fc3f2afc30136c1a77b9b05e0a676f05ec",
-    "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
-    "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-    "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
-  },
-  "encoding": {
-    "raw_capture_reused": true,
-    "change": "Persistent headers composed using full-resolution chroma so odd panel widths retain their dimensions. Original native frames and capture timing are unchanged.",
-    "sources": {
-      "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975"
-    }
-  }
+  ]
 }

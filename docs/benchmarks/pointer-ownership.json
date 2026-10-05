@@ -1,0 +1,298 @@
+{
+  "schema": 1,
+  "date": "2026-10-04",
+  "scope": "Owned nested winit sessions; synthetic clients and virtual pointers only.",
+  "sources": {
+    "scripts/test-pointer-ownership.py": "07f25d6e4e230ebecd65b0adb52ed448e05afac26699dfc6130fb998250f7cea",
+    "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
+    "scripts/test-native-baseline.py": "9da89f0faed57ae9605b3a6c8d559cb7c12b64e323e105a9463cec1434f28c24",
+    "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
+    "scripts/lib/pointer.py": "109419de611b6aeb7095a98fcfb754d7afb9f9481b6ad8edca1bb03eb3723ea3",
+    "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
+    "scripts/lib/pointer_wobble.py": "4ed6fabed6d61d0cf3742b853428db6c6aa40183a75e895b1fa8ff7997761f27",
+    "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+    "scripts/fixtures/pointer.c": "997ce0cf1441b9ecb0a111bc670e193e1dc7cfab427bab3b514d3125792e5185",
+    "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e"
+  },
+  "limits": [
+    "No physical unplug, touch or tablet hardware acceptance.",
+    "Same-button owners share one logical seat press until the final owner releases.",
+    "Native unit tests separately cover distinct button state and keyboard-started grabs."
+  ],
+  "builds": [
+    {
+      "variant": "movement",
+      "build": {
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
+        "build_profile": "release",
+        "build_flags": [
+          "--locked",
+          "--no-default-features"
+        ],
+        "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+        "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3"
+      },
+      "overlap": [
+        {
+          "pointer_effect_enabled": false,
+          "scenarios": [
+            {
+              "scenario": "idle-b-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "expected_motion_moved_window": true,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "owner-a-destroyed",
+              "survivor_button_held": false,
+              "motion_moved_window": false,
+              "delta": [
+                0.0,
+                0.0
+              ],
+              "expected_motion_moved_window": false,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "former-owner-a-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                120,
+                60
+              ],
+              "expected_motion_moved_window": true,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "same-button-a-released",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "release_stopped_window": true,
+              "survivor_click_recovered": true,
+              "expected_motion_moved_window": true,
+              "passed": true
+            },
+            {
+              "scenario": "same-button-a-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "release_stopped_window": true,
+              "survivor_click_recovered": true,
+              "expected_motion_moved_window": true,
+              "passed": true
+            }
+          ],
+          "failed_controls": []
+        }
+      ],
+      "suppression": [
+        {
+          "pointer_effect_enabled": false,
+          "consumed_a_did_not_grab": true,
+          "b_same_button_grab_survived_a_removal": true,
+          "b_release_stopped_window": true,
+          "b_click_and_recreated_resource_click_recovered": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "variant": "pointer-wobble",
+      "build": {
+        "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+        "binary_sha256": "48e4211639bc4e720191f5b617823ca6254ead5d7a3236a447a40d9dfa8fd632",
+        "build_profile": "release",
+        "build_flags": [
+          "--locked",
+          "--no-default-features"
+        ],
+        "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+        "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+        "pointer_patch_sha256": "033d2b90a75ab608e6c8bfe223fa26d93fbb94b5ac403e5a6cf1bc475f5ac0c3"
+      },
+      "overlap": [
+        {
+          "pointer_effect_enabled": false,
+          "scenarios": [
+            {
+              "scenario": "idle-b-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "expected_motion_moved_window": true,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "owner-a-destroyed",
+              "survivor_button_held": false,
+              "motion_moved_window": false,
+              "delta": [
+                0.0,
+                0.0
+              ],
+              "expected_motion_moved_window": false,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "former-owner-a-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                120,
+                60
+              ],
+              "expected_motion_moved_window": true,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "same-button-a-released",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "release_stopped_window": true,
+              "survivor_click_recovered": true,
+              "expected_motion_moved_window": true,
+              "passed": true
+            },
+            {
+              "scenario": "same-button-a-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "release_stopped_window": true,
+              "survivor_click_recovered": true,
+              "expected_motion_moved_window": true,
+              "passed": true
+            }
+          ],
+          "failed_controls": []
+        },
+        {
+          "pointer_effect_enabled": true,
+          "scenarios": [
+            {
+              "scenario": "idle-b-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "expected_motion_moved_window": true,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "owner-a-destroyed",
+              "survivor_button_held": false,
+              "motion_moved_window": false,
+              "delta": [
+                0.0,
+                0.0
+              ],
+              "expected_motion_moved_window": false,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "former-owner-a-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                120,
+                60
+              ],
+              "expected_motion_moved_window": true,
+              "passed": true,
+              "release_stopped_window": true,
+              "survivor_click_recovered": true
+            },
+            {
+              "scenario": "same-button-a-released",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "release_stopped_window": true,
+              "survivor_click_recovered": true,
+              "expected_motion_moved_window": true,
+              "passed": true
+            },
+            {
+              "scenario": "same-button-a-destroyed",
+              "survivor_button_held": true,
+              "motion_moved_window": true,
+              "delta": [
+                80,
+                40
+              ],
+              "release_stopped_window": true,
+              "survivor_click_recovered": true,
+              "expected_motion_moved_window": true,
+              "passed": true
+            }
+          ],
+          "failed_controls": []
+        }
+      ],
+      "suppression": [
+        {
+          "pointer_effect_enabled": false,
+          "consumed_a_did_not_grab": true,
+          "b_same_button_grab_survived_a_removal": true,
+          "b_release_stopped_window": true,
+          "b_click_and_recreated_resource_click_recovered": true
+        },
+        {
+          "pointer_effect_enabled": true,
+          "consumed_a_did_not_grab": true,
+          "b_same_button_grab_survived_a_removal": true,
+          "b_release_stopped_window": true,
+          "b_click_and_recreated_resource_click_recovered": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "passed": true
+}

@@ -12,10 +12,10 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Continue resize into closing.** Carry retained material, geometry and
-   decorations through the closing fade, including capture restrictions.
-2. **Broaden desktop acceptance.** Resolve native input/capture failures and
-   collect physical presentation and additional GPU/output results.
+1. **Broaden desktop acceptance.** Verify physical input removal, capture and
+   presentation, and collect additional GPU/output results.
+2. **Finish native capture reliability.** Resolve the remaining stale-output
+   probe and expand popup, blur and PipeWire acceptance.
 3. **Keep contributor feedback fast and useful.** Track the longest rendering
    stages and verify failed-job diagnostics while retaining complete coverage.
 4. **Prepare a stable public contract.** Define and test the 1.0 boundaries while
@@ -47,14 +47,18 @@ acceptance boundary.
       size, including simultaneous resizes and source removal.
 - [x] Retain resize material, deformation phase and shader identity through
       retargeting and reloads, with independent content updates and capture targets.
-- [ ] Continue resize through closing with separate decoration and privacy
-      snapshots; verify the last mapped frame matches the first closing frame.
-- [ ] Resolve native device-disconnection and stale-output failures, retaining
+- [x] Continue resize through closing with separate decoration and privacy
+      snapshots; compare the first closing frame within the documented
+      [rasterization bounds](docs/validation.md#resize-to-close-acceptance-unreleased).
+- [x] Fix virtual-device disconnection and overlapping button ownership, retaining
       the unmodified pinned-Niri baseline comparison (Epic 4).
+- [ ] Resolve the remaining stale-output failure and verify physical device removal.
 - [ ] Collect physical capture/presentation and another GPU result before adding
       performance-driven quality choices (Epic 6).
 - [x] Verify the 0.18-to-0.19 installed upgrade, preserved user data and exact
       Restore, including partial and all-Off profiles.
+- [x] Verify upgrades from published 0.19 with active Preserve/Off choices,
+      conflict-aware Restore and first-use Library flows through iNiR/iRiS.
 
 ## Consistent action selection
 
@@ -159,7 +163,7 @@ Goal: retain visual direction and state when actions overlap.
 - [x] Coordinate minimum-size constraints across neighboring windows.
 - [x] Retain resize material, deformation phase and capture-target state through
       retargets, with a separate content-update clock.
-- [ ] Carry retained resize material and geometry through closing without applying
+- [x] Carry retained resize material and geometry through closing without applying
       deformation twice or stretching decorations; test opening/movement overlap.
 - [x] Test floating/tiled changes with resize/open/close overlap fixtures.
 - [ ] Test physical mixed outputs and output removal.
@@ -201,8 +205,11 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 - [x] Compare held-button virtual-pointer disconnection and stale output with unmodified pinned Niri.
 - [x] Compare overlapping virtual-pointer devices, ownership changes and same-button
       releases against unmodified Niri; distinguish surviving grabs from stale state.
-- [ ] Implement device-owned disconnect cleanup, retaining another device's valid
-      presses and grabs, and test physical removal and device identity reuse.
+- [x] Track button ownership per device so disconnect cleanup retains another
+      device's valid presses and grabs, including overlapping button codes.
+- [x] Verify virtual-device destruction, consumed bindings and reused device
+      identities through the native input path.
+- [ ] Verify physical device removal and reconnection during grabs.
 - [ ] Resolve stale parent output in the strict two-compositor capture probe, including the effects-disabled baseline.
 - [ ] Validate Output/Screencast privacy and actual PipeWire capture, including popups and blurred backgrounds.
 - [ ] Verify physical output hotplug, mixed monitors and graphics-reset recovery.
@@ -221,6 +228,12 @@ Goal: a coherent sense of motion across the desktop.
 - [x] Keep camera motion separate from individual window movement effects.
 - [ ] Design an experimental workspace rendering hook with gesture reversal.
 - [ ] Prototype a restrained depth slide, wave sweep and slice transition.
+- [ ] Explore directional window parallax: vary visual depth and follow-through
+      with window or camera movement, allowing brief visual overlap, delayed
+      motion and a wobble as windows settle into place.
+- [ ] Test parallax reversals and interruptions without jumps, preserving focus,
+      input, capture restrictions and final layout; provide bounded strength,
+      delay and settling presets.
 - [ ] Preserve clipping, capture restrictions, multiple outputs and input behavior.
 - [ ] Evaluate fullscreen and overview entry/exit as separate transition paths.
 - [x] Record native stock workspace, camera and overview demonstrations.

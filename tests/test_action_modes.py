@@ -64,10 +64,30 @@ class ActionModeTests(unittest.TestCase):
         profile = Profile(close="off", resize="off")
         saved = make_custom_preset(base, profile.document("Quiet exit"))
         self.assertEqual(saved["types"]["window-open"], original["window-open"])
-        self.assertEqual(saved["types"]["window-close"], {"off": True})
-        self.assertEqual(saved["types"]["window-resize"], {"off": True})
+        self.assertEqual(saved["types"]["window-close"], {"duration-ms": 0, "curve": "linear"})
+        self.assertEqual(saved["types"]["window-resize"], {"duration-ms": 0, "curve": "linear"})
+        self.assertEqual(parse_document(saved["profile"])[2], profile)
         self.assertEqual(base["presets"][0]["types"], original)
         self.assertNotIn("window-open", render_kdl(profile))
+
+    def test_shell_off_is_serializable_and_preserved_when_inherited(self):
+        base = shell_registry()
+        base["presets"][0]["types"]["window-open"] = {"duration-ms": 0, "curve": "linear"}
+        profile = Profile(close=Effect(), resize="off")
+        saved = make_custom_preset(base, profile.document("Shell choices"))
+        self.assertEqual(saved["types"]["window-open"], base["presets"][0]["types"]["window-open"])
+        # The installed shell serializes every non-spring spec using these two
+        # required keys. Its matcher uses the same representation after Apply.
+        for action, spec in saved["types"].items():
+            if "spring" not in spec:
+                self.assertIsInstance(spec["duration-ms"], int, action)
+                self.assertIsInstance(spec["curve"], str, action)
+        self.assertNotIn("custom-shader", saved["types"]["window-resize"])
+        self.assertEqual(
+            saved["types"]["workspace-switch"], base["presets"][0]["types"]["workspace-switch"]
+        )
+        self.assertEqual(parse_document(saved["profile"])[2], profile)
+        self.assertEqual(animation_types(profile)["window-resize"], {"off": True})
 
     def test_native_siblings_have_explicit_preservation_and_independent_off(self):
         for movement in (None, "off", Effect()):

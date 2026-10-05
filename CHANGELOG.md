@@ -9,6 +9,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Experimental resize-to-close continuation retains the current material,
+  deformation phase and size paths while fading out. Borders and shadows follow
+  the changing geometry; each capture target owns a separate frozen material.
+- Installed upgrade checks accept the published 0.19 package, including active
+  Preserve/Off choices. CLI and Library Restore must retain their recovery history
+  and refuse external edits before recovering the original files exactly.
 - Experimental resize effects retain their deformation phase, piece layout and
   current material across repeated size changes. Client content updates on a
   separate clock; shader replacements take effect on the next resize episode.
@@ -38,13 +44,22 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- Pointer presses and consumed bindings are tracked per device in the experimental
+  compositor. Removing a pointer releases only its presses and ends its owned grab;
+  another device holding the same button keeps its press until it releases.
+- iNiR/iRiS registration and Library Apply encode Off using the shell's supported
+  timing format, allowing mixed action choices to serialize and remain recognizable
+  by its active-style matcher. Portable profiles keep their explicit Off choices.
 - Minimum-size resize paths now share constrained displacement with neighboring
   windows, preventing the overlap caused by independent curves. Regressions cover
   simultaneous resizes, source removal, swaps and focus changes.
 - Turning resize or all animations off finishes the shared resize paths before
   removing their source, so neighboring windows settle with the resized window.
 
-Closing during resize still uses a snapshot.
+Resize-to-close continuation requires the matching development compositor and a
+marked NiriFX resize shader. Fullscreen windows and transitions, output-scale
+changes and unavailable frozen material use the existing protected closing snapshot. Physical
+device unplug/replug and graphics-reset acceptance remain separate validation work.
 
 ## 0.19.0 — 2026-10-04
 
