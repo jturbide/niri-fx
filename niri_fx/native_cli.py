@@ -18,8 +18,11 @@ def add_parser(commands):
     stage.add_argument(
         "--repository", type=Path, required=True, help="Checkout with the patch stack"
     )
+    stage.add_argument("--config", type=Path, required=True, help="Candidate KDL config")
     stage.add_argument(
-        "--config", type=Path, required=True, help="Self-contained candidate KDL config"
+        "--snapshot-includes",
+        action="store_true",
+        help="Review and copy the config's include tree into the isolated bundle",
     )
     select = actions.add_parser("select", help="Select a staged bundle for the next NiriFX login")
     select.add_argument("bundle", help="Exact bundle ID reported by stage/status")
@@ -27,6 +30,7 @@ def add_parser(commands):
     entry = actions.add_parser(
         "session-entry", help="Stage a login launcher and display-manager entry"
     )
+    entry.add_argument("--name", default="NiriFX (experimental)", help="Login chooser label")
     for command in (status, stage, select, rollback, entry):
         command.add_argument(
             "--root", type=Path, default=default_root(), help="Native session storage"
@@ -51,7 +55,12 @@ def run(args):
     else:
         if action == "stage":
             plan = native_session.stage_plan(
-                args.manifest, args.source, args.repository, args.config, root
+                args.manifest,
+                args.source,
+                args.repository,
+                args.config,
+                root,
+                snapshot_includes=args.snapshot_includes,
             )
             scope = "staging"
         elif action == "select":
@@ -63,7 +72,7 @@ def run(args):
         else:
             from .native_entry import entry_plan
 
-            plan = entry_plan(root)
+            plan = entry_plan(root, args.name)
             scope = "entry"
         result = (
             apply_plan(plan, root / "state" / scope, args.expect_plan)

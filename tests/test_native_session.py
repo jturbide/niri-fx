@@ -63,9 +63,14 @@ class NativeSessionTests(unittest.TestCase):
     def save_record(self):
         self.manifest_path.write_text(json.dumps(self.record))
 
-    def plan(self):
+    def plan(self, **kwargs):
         return native_session.stage_plan(
-            self.manifest_path, self.source, self.repository, self.config, self.destination
+            self.manifest_path,
+            self.source,
+            self.repository,
+            self.config,
+            self.destination,
+            **kwargs,
         )
 
     def stage(self):
@@ -155,7 +160,7 @@ class NativeSessionTests(unittest.TestCase):
             'animations { include "base.kdl"; }\n',
         ):
             self.config.write_text(text)
-            with self.assertRaisesRegex(ValueError, "no active include"):
+            with self.assertRaisesRegex(ValueError, "[Ii]nclude"):
                 self.plan()
         for text in (
             '// include "base.kdl"\nanimations {}\n',
@@ -396,6 +401,96 @@ class NativeSessionTests(unittest.TestCase):
         receipt_file.write_text(json.dumps(receipt))
         with self.assertRaisesRegex(ValueError, "identity is invalid"):
             native_session.inspect_bundle(self.destination, bundle_id)
+
+    def test_include_snapshot_stages_a_closed_tree_and_survives_source_removal(self):
+        included = self.root / "appearance.kdl"
+        included.write_text("animations {}\n")
+        self.config.write_text('include "appearance.kdl"\n')
+        with self.assertRaisesRegex(ValueError, "self-contained"):
+            self.plan()
+        plan = self.plan(snapshot_includes=True)
+        self.assertEqual(plan["selection"]["configuration"]["file_count"], 2)
+        self.assertEqual(len(plan["selection"]["configuration"]["sources"]), 2)
+        setup.apply_plan(plan, self.stage_state)
+        bundle = plan["selection"]["bundle_id"]
+        folder = self.destination / "bundles" / bundle
+        receipt = json.loads((folder / "bundle.json").read_text())
+        self.assertEqual(receipt["schema"], 2)
+        self.assertEqual(set(receipt["config_files"]), {"config.kdl", "config/0001.kdl"})
+        self.assertNotIn(str(self.root), (folder / "config.kdl").read_text())
+        self.assertEqual(included.read_text(), "animations {}\n")
+        self.config.unlink()
+        included.unlink()
+        report = native_session.inspect_bundle(self.destination, bundle)
+        self.assertEqual(report["config_file_count"], 2)
+        self.apply_selection(native_session.select_plan(self.destination, bundle))
+
+    def test_changed_include_or_new_optional_file_invalidates_apply(self):
+        included = self.root / "appearance.kdl"
+        included.write_text("animations {}\n")
+        self.config.write_text('include "appearance.kdl"\ninclude "later.kdl" optional=true\n')
+        plan = self.plan(snapshot_includes=True)
+        included.write_text("animations { off; }\n")
+        with self.assertRaisesRegex(ValueError, "changed"):
+            setup.apply_plan(plan, self.stage_state)
+        plan = self.plan(snapshot_includes=True)
+        (self.root / "later.kdl").write_text("animations {}\n")
+        with self.assertRaisesRegex(ValueError, "changed"):
+            setup.apply_plan(plan, self.stage_state)
+        self.assertFalse((self.destination / "bundles").exists())
+
+    def test_snapshot_rolls_back_to_legacy_pair_and_checks_every_file(self):
+        legacy = self.stage()
+        self.apply_selection(native_session.select_plan(self.destination, legacy))
+        included = self.root / "appearance.kdl"
+        included.write_text("animations {}\n")
+        self.config.write_text('include "appearance.kdl"\n')
+        plan = self.plan(snapshot_includes=True)
+        setup.apply_plan(plan, self.stage_state)
+        bundle = plan["selection"]["bundle_id"]
+        self.apply_selection(native_session.select_plan(self.destination, bundle))
+        self.apply_selection(native_session.rollback_plan(self.destination))
+        self.assertEqual(native_session.load_selection(self.destination)["selected"], legacy)
+        copied = self.destination / "bundles" / bundle / "config/0001.kdl"
+        copied.write_text("animations { off; }\n")
+        with self.assertRaisesRegex(ValueError, "included configuration changed"):
+            native_session.rollback_plan(self.destination)
+        self.assertEqual(native_session.load_selection(self.destination)["selected"], legacy)
+
+    def test_snapshot_map_rejects_escaping_paths(self):
+        self.config.write_text('include "appearance.kdl"\n')
+        (self.root / "appearance.kdl").write_text("animations {}\n")
+        plan = self.plan(snapshot_includes=True)
+        setup.apply_plan(plan, self.stage_state)
+        bundle = plan["selection"]["bundle_id"]
+        receipt_file = self.destination / "bundles" / bundle / "bundle.json"
+        receipt = json.loads(receipt_file.read_text())
+        receipt["config_files"]["../../outside.kdl"] = "a" * 64
+        receipt_file.write_text(json.dumps(receipt))
+        with self.assertRaisesRegex(ValueError, "configuration file map"):
+            native_session.inspect_bundle(self.destination, bundle)
+
+    def test_bom_cannot_hide_external_include_in_stage_or_legacy_inspection(self):
+        for node in ('include "outside.kdl"', '"include" "outside.kdl"'):
+            self.config.write_text("\ufeff" + node + "\n")
+            with self.subTest(node=node), self.assertRaisesRegex(ValueError, "self-contained"):
+                self.plan()
+        self.config.write_text("animations {}\n")
+        old_id = self.stage()
+        folder = self.destination / "bundles" / old_id
+        config = folder / "config.kdl"
+        config.write_text('\ufeffinclude "outside.kdl"\n')
+        receipt_path = folder / "bundle.json"
+        receipt = json.loads(receipt_path.read_text())
+        receipt["config_sha256"] = digest(config.read_bytes())
+        new_id = native_session._bundle_id(
+            receipt["binary_sha256"], receipt["config_sha256"], receipt["native_build"]
+        )
+        receipt["bundle_id"] = new_id
+        receipt_path.write_text(json.dumps(receipt))
+        folder.rename(folder.parent / new_id)
+        with self.assertRaisesRegex(ValueError, "self-contained"):
+            native_session.inspect_bundle(self.destination, new_id)
 
 
 if __name__ == "__main__":

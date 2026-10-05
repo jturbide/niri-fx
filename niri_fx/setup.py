@@ -717,7 +717,7 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
 
 
 def doctor(args):
-    from .capabilities import movement_capability, pointer_capability
+    from .capabilities import fragment_capability, movement_capability, pointer_capability
 
     checks = []
     selected = getattr(args, "movement_binary", None)
@@ -787,6 +787,9 @@ def doctor(args):
     pointer = pointer_capability(
         getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
     )
+    fragment = fragment_capability(
+        getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
+    )
     checks.extend(
         [
             {
@@ -810,6 +813,11 @@ def doctor(args):
                 "ok": None,
                 "detail": pointer["session"]["contract"]["detail"],
             },
+            {
+                "check": "fragment-renderer",
+                "ok": None,
+                "detail": fragment["session"]["contract"]["detail"],
+            },
         ]
     )
     from .picker import picker_checks
@@ -823,5 +831,6 @@ def doctor(args):
         "movement_capability": movement,
         "pointer": "Experimental pointer deformation requires standalone mode, a matching binary and a verified running renderer contract.",
         "pointer_capability": pointer,
+        "fragment_capability": fragment,
         "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
     }

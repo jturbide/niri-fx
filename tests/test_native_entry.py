@@ -66,6 +66,14 @@ class NativeEntryTests(unittest.TestCase):
             apply_plan(plan, self.root / "state")
         self.assertFalse((self.root / "session").exists())
 
+    def test_custom_session_name_is_reviewed_and_cannot_inject_keys(self):
+        plan = native_entry.entry_plan(self.root, "NiriFX (managed test)")
+        self.assertEqual(plan["selection"]["name"], "NiriFX (managed test)")
+        self.assertIn(b"Name=NiriFX (managed test)\n", plan["changes"][1]["after"])
+        for value in ("", "x" * 81, "Bad\nExec=bad", "Bad\tName"):
+            with self.subTest(value=value), self.assertRaisesRegex(ValueError, "Session name"):
+                native_entry.entry_plan(self.root, value)
+
     def test_cli_requires_apply_for_fingerprint_and_explains_no_selection(self):
         with contextlib.redirect_stderr(io.StringIO()) as errors:
             self.assertEqual(

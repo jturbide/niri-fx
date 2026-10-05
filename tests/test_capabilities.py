@@ -9,6 +9,7 @@ import threading
 import unittest
 from contextlib import contextmanager
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from niri_fx.capabilities import (
@@ -402,6 +403,45 @@ class FragmentCapabilityTests(unittest.TestCase):
         self.assertEqual(report["status"], "supported")
         self.assertEqual(report["session"]["contract"]["status"], "unknown")
         self.assertFalse(report["activation_ready"])
+
+
+class DoctorFragmentTests(unittest.TestCase):
+    def test_reports_continuous_motion_separately_without_requiring_it_on_stock(self):
+        from niri_fx.setup import doctor
+
+        report = {
+            "binary": "/example/niri",
+            "detail": "parser accepted",
+            "activation_ready": False,
+            "session": {
+                "detail": "matching process",
+                "contract": {"status": "unknown", "detail": "continuous motion unverified"},
+            },
+        }
+        with (
+            tempfile.TemporaryDirectory() as temporary,
+            patch("niri_fx.setup.shutil.which", return_value="/example/niri"),
+            patch("niri_fx.setup.subprocess.check_output", return_value="niri fixture"),
+            patch("niri_fx.setup.validate_config"),
+            patch("niri_fx.capabilities.movement_capability", return_value=report),
+            patch("niri_fx.capabilities.pointer_capability", return_value=report),
+            patch("niri_fx.capabilities.fragment_capability", return_value=report) as inspect,
+            patch("niri_fx.picker.picker_checks", return_value=[]),
+        ):
+            result = doctor(
+                SimpleNamespace(
+                    config=Path(temporary) / "config.kdl",
+                    inir_root=Path(temporary),
+                    movement_binary=Path("/example/niri"),
+                )
+            )
+        inspect.assert_called_once()
+        self.assertEqual(result["fragment_capability"], report)
+        self.assertTrue(result["healthy"])
+        self.assertIn(
+            {"check": "fragment-renderer", "ok": None, "detail": "continuous motion unverified"},
+            result["checks"],
+        )
 
 
 if __name__ == "__main__":

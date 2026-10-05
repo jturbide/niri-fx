@@ -12,7 +12,7 @@ import stat
 from pathlib import Path
 
 from . import native_build
-from .setup import _kdl_nodes, _kdl_string, change
+from .setup import change
 from .storage import digest
 
 SCHEMA = 1
@@ -69,22 +69,9 @@ def _object(data, label):
 
 
 def _self_contained(data):
-    def walk(nodes):
-        for name, _, children in nodes:
-            # The lightweight node scanner does not decode KDL type annotations.
-            # Niri accepts typed includes, so rejecting annotations closes that
-            # ambiguity without pretending this scanner is a complete parser.
-            if name.startswith("("):
-                raise ValueError(
-                    "Native session configs cannot use node type annotations; remove them before staging"
-                )
-            if _kdl_string(name) == "include":
-                raise ValueError(
-                    "Native session bundles require a self-contained config with no active include nodes"
-                )
-            walk(children)
+    from .native_config import require_self_contained
 
-    walk(_kdl_nodes(data))
+    require_self_contained(data)
 
 
 def _bundle_path(root, bundle_id):
@@ -93,10 +80,15 @@ def _bundle_path(root, bundle_id):
     return _path(_path(root) / "bundles" / bundle_id)
 
 
-def _bundle_id(binary_sha256, config_sha256, metadata):
-    return native_build.fingerprint(
-        {"binary_sha256": binary_sha256, "config_sha256": config_sha256, "native_build": metadata}
-    )
+def _bundle_id(binary_sha256, config_sha256, metadata, config_files=None):
+    identity = {
+        "binary_sha256": binary_sha256,
+        "config_sha256": config_sha256,
+        "native_build": metadata,
+    }
+    if config_files is not None:
+        identity["config_files"] = config_files
+    return native_build.fingerprint(identity)
 
 
 def _observed(path, data, mode):
@@ -123,10 +115,25 @@ def inspect_bundle(root, bundle_id):
         "native_build",
         "source_manifest_sha256",
     }
+    config_files = receipt.get("config_files")
+    if receipt.get("schema") == 2:
+        fields.add("config_files")
+        if (
+            not isinstance(config_files, dict)
+            or not 1 <= len(config_files) <= 128
+            or config_files.get("config.kdl") != receipt.get("config_sha256")
+            or any(
+                not re.fullmatch(r"config\.kdl|config/[0-9]{4}\.kdl", name)
+                or not isinstance(value, str)
+                or not _ID.fullmatch(value)
+                for name, value in config_files.items()
+            )
+        ):
+            raise ValueError("Invalid native session configuration file map")
     if (
         set(receipt) != fields
         or type(receipt["schema"]) is not int
-        or receipt["schema"] != SCHEMA
+        or receipt["schema"] not in (1, 2)
         or receipt["bundle_id"] != bundle_id
         or receipt["binary"] != "bin/niri"
         or receipt["config"] != "config.kdl"
@@ -134,7 +141,12 @@ def inspect_bundle(root, bundle_id):
             not isinstance(receipt[key], str) or not _ID.fullmatch(receipt[key])
             for key in ("binary_sha256", "config_sha256", "source_manifest_sha256")
         )
-        or _bundle_id(receipt["binary_sha256"], receipt["config_sha256"], receipt["native_build"])
+        or _bundle_id(
+            receipt["binary_sha256"],
+            receipt["config_sha256"],
+            receipt["native_build"],
+            config_files,
+        )
         != bundle_id
     ):
         raise ValueError("Native session bundle identity is invalid")
@@ -146,7 +158,24 @@ def inspect_bundle(root, bundle_id):
         or digest(config_data) != receipt["config_sha256"]
     ):
         raise ValueError("Native session bundle contents changed")
-    _self_contained(config_data)
+    config_evidence = [(config, config_data)]
+    if config_files is None:
+        _self_contained(config_data)
+    else:
+        from .native_config import inspect_snapshot
+
+        files = {"config.kdl": config_data}
+        remaining = 16 * 1024 * 1024 - len(config_data)
+        for name, expected in config_files.items():
+            if name == "config.kdl":
+                continue
+            data = _read(folder / name, min(MAX_CONFIG_BYTES, remaining), mode=0o600)
+            if digest(data) != expected:
+                raise ValueError("Native session included configuration changed")
+            files[name] = data
+            remaining -= len(data)
+            config_evidence.append((folder / name, data))
+        inspect_snapshot("config.kdl", files)
     provenance = folder / "provenance"
     manifest_data = _read(provenance / "manifest.json", MAX_METADATA_BYTES, mode=0o600)
     manifest = _object(manifest_data, "frozen native build manifest")
@@ -183,7 +212,8 @@ def inspect_bundle(root, bundle_id):
     if report["status"] != "metadata-match":
         raise ValueError("Native session bundle failed inspection: " + "; ".join(report["reasons"]))
     # Bind the second reader used by the shared inspector to the same evidence.
-    observed = [_observed(binary, binary_data, 0o755), _observed(config, config_data, 0o600)]
+    observed = [_observed(binary, binary_data, 0o755)]
+    observed.extend(_observed(path, data, 0o600) for path, data in config_evidence)
     observed.extend(_observed(path, data, 0o600) for path, data in evidence)
     observed.append(_observed(folder / "bundle.json", receipt_data, 0o600))
     return {
@@ -192,6 +222,7 @@ def inspect_bundle(root, bundle_id):
         "config": str(config),
         "binary_sha256": receipt["binary_sha256"],
         "config_sha256": receipt["config_sha256"],
+        "config_file_count": len(config_evidence),
         "build_id": report["build_id"],
         "variant": report["variant"],
         "desktop_prerequisites": report["desktop_prerequisites"],
@@ -215,8 +246,8 @@ def _plan(target, selection, changes, observed, *, config=None, binary=None, not
     }
 
 
-def stage_plan(manifest, source, repository, config, root):
-    """Review a full desktop build and copy its self-contained config on Apply."""
+def stage_plan(manifest, source, repository, config, root, *, snapshot_includes=False):
+    """Review a desktop build and copy a closed configuration on Apply."""
     manifest, source, repository, config, root = map(
         _path, (manifest, source, repository, config, root)
     )
@@ -229,8 +260,17 @@ def stage_plan(manifest, source, repository, config, root):
     binary_data = _read(binary, MAX_BINARY_BYTES)
     if not binary.stat().st_mode & 0o111:
         raise ValueError("Native candidate binary is not executable")
-    config_data = _read(config, MAX_CONFIG_BYTES)
-    _self_contained(config_data)
+    config_snapshot = None
+    if snapshot_includes:
+        from .native_config import snapshot
+
+        config_snapshot = snapshot(config)
+        config_outputs = config_snapshot["files"]
+        config_data = config_outputs["config.kdl"]
+    else:
+        config_data = _read(config, MAX_CONFIG_BYTES)
+        _self_contained(config_data)
+        config_outputs = {"config.kdl": config_data}
     provenance = [
         (source / "Cargo.lock", _read(source / "Cargo.lock", MAX_METADATA_BYTES), "Cargo.lock")
     ]
@@ -251,14 +291,32 @@ def stage_plan(manifest, source, repository, config, root):
     if digest(binary_data) != record["binary_sha256"]:
         raise ValueError("Candidate binary changed during review")
     config_sha = digest(config_data)
-    bundle_id = _bundle_id(record["binary_sha256"], config_sha, record["native_build"])
+    config_files = (
+        {name: digest(data) for name, data in config_outputs.items()} if config_snapshot else None
+    )
+    bundle_id = _bundle_id(
+        record["binary_sha256"], config_sha, record["native_build"], config_files
+    )
     folder = _bundle_path(root, bundle_id)
     source_observed = [
         _observed(path, data, stat.S_IMODE(path.stat().st_mode))
-        for path, data in [(manifest, raw_manifest), (binary, binary_data), (config, config_data)]
+        for path, data in [(manifest, raw_manifest), (binary, binary_data)]
+        + ([] if config_snapshot else [(config, config_data)])
         + [(path, data) for path, data, _ in provenance]
     ]
+    if config_snapshot:
+        source_observed.extend(config_snapshot["observed"])
     selection = {"bundle_id": bundle_id, "build_id": report["build_id"], "variant": variant}
+    if config_snapshot:
+        selection["configuration"] = {
+            "file_count": len(config_outputs),
+            "fingerprint": config_snapshot["fingerprint"],
+            "sources": [
+                {"path": item["logical"], "sha256": digest(item["before"])}
+                for item in config_snapshot["observed"]
+            ],
+            "missing_optional": config_snapshot["missing_optional"],
+        }
     notes = [
         "Stages a separate desktop bundle; does not change the next-login selection.",
         "Apply validates the copied config with this trusted candidate executable.",
@@ -280,7 +338,7 @@ def stage_plan(manifest, source, repository, config, root):
                     "Incomplete native session bundle exists; refusing to overwrite it"
                 )
     receipt = {
-        "schema": SCHEMA,
+        "schema": 2 if config_snapshot else SCHEMA,
         "bundle_id": bundle_id,
         "binary": "bin/niri",
         "config": "config.kdl",
@@ -289,10 +347,10 @@ def stage_plan(manifest, source, repository, config, root):
         "native_build": record["native_build"],
         "source_manifest_sha256": digest(raw_manifest),
     }
-    outputs = [
-        (folder / "bin/niri", binary_data, 0o755),
-        (folder / "config.kdl", config_data, 0o600),
-    ]
+    if config_files is not None:
+        receipt["config_files"] = config_files
+    outputs = [(folder / "bin/niri", binary_data, 0o755)]
+    outputs.extend((folder / name, data, 0o600) for name, data in config_outputs.items())
     outputs.extend(
         (folder / "provenance" / relative, data, 0o600) for _, data, relative in provenance
     )
