@@ -121,7 +121,8 @@ Both offline and app-style Studio support **Import preset**, JSON export and
 standalone KDL export. Import validates the entire file before replacing editor
 settings; it does not save or activate anything. Files are limited to 16 KiB and
 contain named parameters, never arbitrary shaders. Missing fields use defaults;
-documents without `resize` keep it off. An explicit `resize: true` is retained.
+single-effect documents without `resize` leave the underlying resize settings
+unchanged. An explicit `resize: true` is retained.
 
 Open the same file directly from the CLI:
 
@@ -188,7 +189,8 @@ Resize effects are available for **Fragments, Elastic, Slices and Distortion**.
 See the [resize guide](resize.md) for profiles, controls and supported Niri actions.
 
 Built-in presets and fresh Studio sessions add no resize override. Imported
-custom presets retain their explicit choice. Enable **Resize**, or pass `--resize`:
+custom presets retain their explicit choice. Set Resize to **NiriFX Style** in
+Library or Studio, then choose a supported preset; or pass `--resize`:
 
 ```sh
 python3 -m niri_fx register --name "Resize experiment" --preset balanced --resize
@@ -196,7 +198,7 @@ python3 -m niri_fx render --preset balanced --resize --resize-mode edge > /tmp/f
 ```
 
 `--no-resize` suppresses the override. With the iNiR adapter, the base preset's
-resize behavior is preserved when fragments are disabled. Standalone exports
+resize behavior is preserved when the resize override is omitted. Standalone exports
 omit `window-resize`, leaving your existing Niri settings in charge. Saved custom
 presets keep their explicit choices; JSON without `resize` opts out.
 

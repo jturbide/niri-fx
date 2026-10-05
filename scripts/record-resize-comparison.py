@@ -59,6 +59,16 @@ animations {
 """
 
 
+# Extreme shrink stretches a tiny next texture by tens of pixels per texel.
+# A solid mask exposes geometry independently of bilinear texture-edge filtering.
+MINIMUM_CONFIG = CONFIG.replace(
+    "return texture2D(niri_tex_next, (niri_geo_to_tex_next * coords_curr_geo).xy);",
+    """if (any(lessThan(coords_curr_geo.xy, vec2(0.0))) ||
+                any(greaterThanEqual(coords_curr_geo.xy, vec2(1.0)))) return vec4(0.0);
+            return texture2D(niri_tex_next, (niri_geo_to_tex_next * vec3(0.5, 0.95, 1.0)).xy);""",
+)
+
+
 def digest(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
@@ -66,7 +76,8 @@ def digest(path):
 def capture(binary, version, vertical, *, scenario="reversal"):
     axis = "height" if vertical else "width"
     name = f"{version}-{axis}" if scenario == "reversal" else f"{version}-{scenario}-{axis}"
-    with NestedSession(CONFIG, binary=binary, width=1280, height=900) as session:
+    config = MINIMUM_CONFIG if scenario == "minimum" else CONFIG
+    with NestedSession(config, binary=binary, width=1280, height=900) as session:
         for label, color in PALETTE.items():
             session.launch(
                 ["qs", "-p", str(FIXTURE)],
@@ -84,17 +95,38 @@ def capture(binary, version, vertical, *, scenario="reversal"):
         windows = session.windows()
         resizing = next(window for window in windows if window["title"].endswith("Resizing"))
         neighbor = next(window for window in windows if window["title"].endswith("Neighbor"))
+        session.focus()
         session.msg("action", "focus-window", "--id", str(resizing["id"]))
         if vertical:
             session.msg("action", "consume-window-into-column")
             session.msg("action", "set-window-width", "--id", str(resizing["id"]), "650")
             session.msg("action", "set-window-height", "--id", str(neighbor["id"]), "300")
             session.msg("action", "set-window-height", "--id", str(resizing["id"]), "300")
+        if scenario == "minimum":
+            if vertical:
+                session.msg("action", "set-window-height", "--id", str(neighbor["id"]), "180")
+            session.msg(
+                "action",
+                f"set-window-{axis}",
+                "--id",
+                str(resizing["id"]),
+                "650" if vertical else "700",
+            )
+        expected_extent = (
+            (650 if vertical else 700) if scenario == "minimum" else (300 if vertical else 360)
+        )
+
+        def initial_geometry():
+            size = next(w for w in session.windows() if w["id"] == resizing["id"])["layout"][
+                "window_size"
+            ]
+            return size if size[1 if vertical else 0] == expected_extent else None
+
+        # IPC acknowledges the request before the client commits its new size.
+        # Start the settling interval only after the exact setup geometry exists.
+        initial_size = wait_for(initial_geometry, "resize comparison initial geometry")
         time.sleep(1.5)
-        initial_size = next(w for w in session.windows() if w["id"] == resizing["id"])["layout"][
-            "window_size"
-        ]
-        assert initial_size[1 if vertical else 0] == (300 if vertical else 360), initial_size
+        assert initial_size[1 if vertical else 0] == expected_extent, initial_size
         start = session.capture("start")
         recorder, video = record(session, name, fps=50)
         origin = time.monotonic()
@@ -117,8 +149,13 @@ def capture(binary, version, vertical, *, scenario="reversal"):
             )
 
         time.sleep(0.7)
-        resize(500 if vertical else 700)
-        if scenario == "orthogonal":
+        resize(10 if scenario == "minimum" else (500 if vertical else 700))
+        if scenario == "minimum":
+            time.sleep(1.1)
+            resize(11)
+            time.sleep(0.3)
+            resize(expected_extent)
+        elif scenario == "orthogonal":
             time.sleep(0.3)
             resize(800 if vertical else 600, "width" if vertical else "height")
             time.sleep(0.3)
@@ -149,7 +186,7 @@ def capture(binary, version, vertical, *, scenario="reversal"):
         assert {w["id"] for w in settled} == {w["id"] for w in windows}
         dimension = 1 if vertical else 0
         final_size = next(w for w in settled if w["id"] == resizing["id"])["layout"]["window_size"]
-        assert final_size[dimension] == (300 if vertical else 360), final_size
+        assert final_size[dimension] == expected_extent, final_size
         if scenario == "orthogonal":
             assert final_size == initial_size, (initial_size, final_size)
         session.check_render_log()
@@ -176,13 +213,16 @@ def capture(binary, version, vertical, *, scenario="reversal"):
         return result
 
 
-def measure_video(source, vertical):
+def measure_video(source, vertical, *, allow_floor=False):
     """Measure solid synthetic edges before GIF scaling and palette reduction."""
     from PIL import Image, ImageChops
 
     expected = {name: tuple(bytes.fromhex(color[1:])) for name, color in PALETTE.items()}
     gaps, calibrated = [], None
     max_far_edge = 0
+    source_origin = None
+    collapsed_clearances = []
+    decoded_frames = 0
     # Decode with a bounded subprocess, then stream the temporary RGB file.
     # A pipe read could otherwise block before any timeout is reached.
     with tempfile.TemporaryDirectory(
@@ -210,6 +250,7 @@ def measure_video(source, vertical):
             while data := frames.read(1280 * 900 * 3):
                 if len(data) != 1280 * 900 * 3:
                     raise RuntimeError("Truncated decoded frame")
+                decoded_frames += 1
                 frame = Image.frombytes("RGB", (1280, 900), data)
                 if calibrated is None:
                     # Limited-range YUV conversion shifts colors. Calibrate from
@@ -245,14 +286,43 @@ def measure_video(source, vertical):
                     )
                     box = line.getbbox()
                     if box is None:
+                        if allow_floor and name == "Resizing" and source_origin is not None:
+                            continue
                         raise RuntimeError(f"Synthetic {name} population missing from capture")
                     bounds[name] = (box[1], box[3]) if vertical else (box[0], box[2])
-                gaps.append(bounds["Neighbor"][0] - bounds["Resizing"][1])
+                if "Resizing" in bounds:
+                    origin = bounds["Resizing"][0]
+                    if source_origin is None:
+                        source_origin = origin
+                    if allow_floor and abs(origin - source_origin) > 4:
+                        raise RuntimeError(
+                            "Minimum-size source origin moved; floor clearance is not measurable"
+                        )
+                    gaps.append(bounds["Neighbor"][0] - bounds["Resizing"][1])
+                else:
+                    # A one-pixel surface may disappear in YUV chroma subsampling.
+                    # Do not invent its far edge: report the neighbor's clearance
+                    # from the known stationary origin plus the one-pixel floor.
+                    collapsed_clearances.append(bounds["Neighbor"][0] - source_origin - 1)
                 max_far_edge = max(max_far_edge, *(bound[1] for bound in bounds.values()))
     if not gaps:
         raise RuntimeError("No video frames decoded")
     return {
-        "decoded_frames": len(gaps),
+        "decoded_frames": decoded_frames,
+        **(
+            {
+                "visible_gap_frames": len(gaps),
+                "collapsed_frames": len(collapsed_clearances),
+                "min_floor_clearance_px": min(collapsed_clearances)
+                if collapsed_clearances
+                else None,
+                "max_floor_clearance_px": max(collapsed_clearances)
+                if collapsed_clearances
+                else None,
+            }
+            if allow_floor
+            else {}
+        ),
         "nominal_gap_px": 16,
         "min_gap_px": min(gaps),
         "max_gap_px": max(gaps),
@@ -310,12 +380,24 @@ def compose(axis, *, scenario="reversal"):
     suffix = axis if scenario == "reversal" else f"{scenario}-{axis}"
     stem = DEST / f"native-resize-{suffix}-comparison"
     clip_suffix = axis if scenario == "reversal" else f"{scenario}-{axis}"
-    if axis == "height" and scenario == "orthogonal":
+    if scenario == "minimum":
+        scaling, width = "scale=600:-2", 1200
+    elif axis == "height" and scenario == "orthogonal":
         scaling, width = "crop=864:900:0:0,scale=500:-2", 1000
     elif axis == "height":
         scaling, width = "crop=682:900:0:0,scale=375:-2", 750
     else:
         scaling, width = "crop=1024:900:0:0,scale=600:-2", 1200
+    # Keep labels outside the window geometry: the minimum-size mask and the
+    # animation itself can hide text placed inside a synthetic client.
+    for version, label in (("before", BASELINE_LABEL), ("after", "Updated")):
+        (DEST / f"{version}-label.txt").write_text(label + "\n")
+    panels = [
+        f"[{index}:v]fps=50,{scaling}:flags=lanczos,"
+        "format=yuv444p,pad=iw:ih+52:0:52:color=0x111827,"
+        f"drawtext=textfile={version}-label.txt:fontcolor=white:fontsize=32:x=12:y=10[{version}]"
+        for index, version in enumerate(("before", "after"))
+    ]
     subprocess.run(
         [
             "ffmpeg",
@@ -327,7 +409,7 @@ def compose(axis, *, scenario="reversal"):
             "-i",
             str(DEST / f"after-{clip_suffix}.mkv"),
             "-filter_complex",
-            f"[0:v]fps=50,{scaling}:flags=lanczos[a];[1:v]fps=50,{scaling}:flags=lanczos[b];[a][b]hstack=shortest=1[v]",
+            ";".join(panels) + ";[before][after]hstack=shortest=1[v]",
             "-map",
             "[v]",
             "-c:v",
@@ -338,6 +420,7 @@ def compose(axis, *, scenario="reversal"):
         ],
         check=True,
         timeout=120,
+        cwd=DEST,
     )
     encode_gif(stem.with_suffix(".mkv"), stem.with_suffix(".gif"), width=width, fps=50, colors=128)
     return stem.with_suffix(".gif"), width

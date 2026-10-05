@@ -19,18 +19,18 @@
   },
   "updated": {
     "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-    "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+    "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
     "build_profile": "release",
     "build_flags": [
       "--locked",
       "--no-default-features"
     ],
     "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
-    "patch_sha256": "805d25650eeac30e14296770b7f11647a3bc714a69a86b655925d45aaead3fef"
+    "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143"
   },
   "sources": {
     "scripts/record-resize-retargets.py": "f2140f488b0cd6d9e96ca0002de2763e6b931850be58ddd938f3547fec887c95",
-    "scripts/record-resize-comparison.py": "b30d28bf2a5513a3be734843067999477605793386cb90c548dea38bebb4d42e",
+    "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
     "scripts/fixtures/resize.qml": "6b2accc1b2f244e85a512bc0f7b6ebea81f13b72866550eedceedcc7e41fad95",
     "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
     "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8"
@@ -50,26 +50,26 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000667370011797,
-          "ack_s": 0.7076090150076197
+          "request_s": 0.7000699519994669,
+          "ack_s": 0.7073278659954667
         },
         {
           "axis": "height",
           "extent": 600,
-          "request_s": 1.0076772370084655,
-          "ack_s": 1.0154909249977209
+          "request_s": 1.007403470997815,
+          "ack_s": 1.0175236259965459
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.3155614959978266,
-          "ack_s": 1.3237972439965233
+          "request_s": 1.3175935600011144,
+          "ack_s": 1.3235259639914148
         },
         {
           "axis": "height",
           "extent": 868,
-          "request_s": 1.6238716149964603,
-          "ack_s": 1.6321420530002797
+          "request_s": 1.6235958379984368,
+          "ack_s": 1.6330527329992037
         }
       ],
       "final_size": [
@@ -77,10 +77,11 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "3b45982299c5f2d9073a9322e35ab23299050ec89bc2af035a8e199c93cf92a5",
-      "gif_sha256": "756496a412dfa02d0706568bf44aabf062ef5aa7ebd3b9ee87e685dd18bad6c6",
+      "video_sha256": "a1b6a0b560d96f4677ffd0065177b52e742875a5e06799e1559c9e6094baa9d4",
+      "gif_sha256": "5869c8744fb2b96cb0c12c36e367807dadde0777c4ea5b06ecd81fddabe68cad",
+      "raw_capture_reused": true,
       "edges": {
-        "decoded_frames": 157,
+        "decoded_frames": 158,
         "nominal_gap_px": 16,
         "min_gap_px": 17,
         "max_gap_px": 18,
@@ -90,7 +91,7 @@
     },
     {
       "case": "after-orthogonal-width",
-      "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
       "version": "niri 26.04 (8ed0da4-modified)",
       "owned_output": "winit",
       "dimensions": [
@@ -102,26 +103,26 @@
         {
           "axis": "width",
           "extent": 700,
-          "request_s": 0.7000863980065333,
-          "ack_s": 0.7089585960056866
+          "request_s": 0.7000675699964631,
+          "ack_s": 0.7078127739951015
         },
         {
           "axis": "height",
           "extent": 600,
-          "request_s": 1.009032328001922,
-          "ack_s": 1.0166154760081554
+          "request_s": 1.0078836739994586,
+          "ack_s": 1.014953127989429
         },
         {
           "axis": "width",
           "extent": 360,
-          "request_s": 1.3166837870085146,
-          "ack_s": 1.3246927349973703
+          "request_s": 1.3150236469955416,
+          "ack_s": 1.3239369719958631
         },
         {
           "axis": "height",
           "extent": 868,
-          "request_s": 1.6247608870035037,
-          "ack_s": 1.6333961549971718
+          "request_s": 1.6240041309938533,
+          "ack_s": 1.6317473749950295
         }
       ],
       "final_size": [
@@ -129,15 +130,16 @@
         868
       ],
       "same_window_ids": true,
-      "video_sha256": "c5354faa084ef57feac1727126eef890a15213814ea348ac9faf7aa51f8da05b",
-      "gif_sha256": "c192383c870813c20996433fee4f10e657637528316fac7683c44e7bf16d761e",
+      "video_sha256": "4edd4c96b097017b7ce0a2eed216a59792a5a1b14121945d1085aea3b02d08f1",
+      "gif_sha256": "73498ce2950a4e1e2410c9c608fa69eeb49f81064c87d0bdcd8727e4477ef5b9",
+      "raw_capture_reused": true,
       "edges": {
-        "decoded_frames": 157,
+        "decoded_frames": 158,
         "nominal_gap_px": 16,
         "min_gap_px": 17,
         "max_gap_px": 18,
         "codec_edge_tolerance_px": 4,
-        "max_far_edge_px": 952
+        "max_far_edge_px": 953
       }
     },
     {
@@ -154,26 +156,26 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000743190001231,
-          "ack_s": 0.7074967869993998
+          "request_s": 0.7000691780121997,
+          "ack_s": 0.7064015089999884
         },
         {
           "axis": "width",
           "extent": 800,
-          "request_s": 1.0075656100088963,
-          "ack_s": 1.0154666879971046
+          "request_s": 1.0064745179988677,
+          "ack_s": 1.015887379006017
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3155327900021803,
-          "ack_s": 1.3235568679956486
+          "request_s": 1.3159554980084067,
+          "ack_s": 1.3239458489988465
         },
         {
           "axis": "width",
           "extent": 650,
-          "request_s": 1.6236217910045525,
-          "ack_s": 1.6306756789999781
+          "request_s": 1.6240073080116417,
+          "ack_s": 1.6336046479991637
         }
       ],
       "final_size": [
@@ -181,20 +183,21 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "f5f466c360c4cfc94276186fdd60a588c4024446962d1f534b8c2cc90d60b337",
-      "gif_sha256": "4da32b4e7ea22a0c5c910bbd523aac85a8aa7c99855ba0b849d8bc048179d106",
+      "video_sha256": "a5b18b74fe98b159e3d7b354e96a241a6043d72c3959fe43539de0b24aef30bf",
+      "gif_sha256": "276f6b74ce67366dd551fb25f6e8c5a75093982de00f802eaf9df8ba0f104038",
+      "raw_capture_reused": false,
       "edges": {
-        "decoded_frames": 157,
+        "decoded_frames": 158,
         "nominal_gap_px": 16,
         "min_gap_px": 16,
-        "max_gap_px": 20,
+        "max_gap_px": 19,
         "codec_edge_tolerance_px": 4,
         "max_far_edge_px": 884
       }
     },
     {
       "case": "after-orthogonal-height",
-      "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
       "version": "niri 26.04 (8ed0da4-modified)",
       "owned_output": "winit",
       "dimensions": [
@@ -206,26 +209,26 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000662500067847,
-          "ack_s": 0.7060902780067408
+          "request_s": 0.7000681210047333,
+          "ack_s": 0.7063845619995845
         },
         {
           "axis": "width",
           "extent": 800,
-          "request_s": 1.0061578910099342,
-          "ack_s": 1.0148780590097886
+          "request_s": 1.0064564080093987,
+          "ack_s": 1.0151184779970208
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.314946852013236,
-          "ack_s": 1.3229024400061462
+          "request_s": 1.3151895140035776,
+          "ack_s": 1.3224473250011215
         },
         {
           "axis": "width",
           "extent": 650,
-          "request_s": 1.6229669830063358,
-          "ack_s": 1.6323224700026913
+          "request_s": 1.6225085409969324,
+          "ack_s": 1.6303714210080216
         }
       ],
       "final_size": [
@@ -233,10 +236,11 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "51242a0d0f829cf9c5db56ac69ec2b4b80151ccaaf825a756630a24e433f5735",
-      "gif_sha256": "ea89de1d8ec263475ae165710c7dafb5166cc2631d5e8b13de433bf71fcca9f5",
+      "video_sha256": "cfec2efcecfd058dc9977230ffa7e75d872f59acdd4d99195c738920ec6c7d42",
+      "gif_sha256": "f343f037a0016bb8ee5a2b1dc35be41a562371bab766d95e2d2bb097633b8983",
+      "raw_capture_reused": false,
       "edges": {
-        "decoded_frames": 158,
+        "decoded_frames": 157,
         "nominal_gap_px": 16,
         "min_gap_px": 16,
         "max_gap_px": 20,
@@ -258,20 +262,20 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.70007351100503,
-          "ack_s": 0.7094801490020473
+          "request_s": 0.7000711239961674,
+          "ack_s": 0.706665723992046
         },
         {
           "reload_duration_ms": 350,
-          "request_s": 1.0095481720054522,
-          "reload_complete_s": 1.2218546680087456,
+          "request_s": 1.006733786998666,
+          "reload_complete_s": 1.219736892991932,
           "includes_settle_ms": 200
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3219224820059026,
-          "ack_s": 1.32892964000348
+          "request_s": 1.3198062909941655,
+          "ack_s": 1.3265303109947126
         }
       ],
       "final_size": [
@@ -279,8 +283,9 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "ed453ecaff979866d5f97bfc3fa2370d6bd810d73813670161ae510f6d6bef82",
-      "gif_sha256": "d1ad04e0a246702c33f1b0ebd80f7298835154d6b2649a1445bc9446f060a866",
+      "video_sha256": "97242768d4a8db0afd259fffdfaaf55a4b7970f1b98599f65aef676a76532f8d",
+      "gif_sha256": "331d439d75549704c0330a907c6a052fd8e3e3b7c3df27e38fd286b3af666e26",
+      "raw_capture_reused": false,
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
@@ -292,7 +297,7 @@
     },
     {
       "case": "after-timing-reload-height",
-      "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
+      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
       "version": "niri 26.04 (8ed0da4-modified)",
       "owned_output": "winit",
       "dimensions": [
@@ -304,20 +309,20 @@
         {
           "axis": "height",
           "extent": 500,
-          "request_s": 0.7000684020022163,
-          "ack_s": 0.706379430994275
+          "request_s": 0.700068456993904,
+          "ack_s": 0.7064918980031507
         },
         {
           "reload_duration_ms": 350,
-          "request_s": 1.0064483339956496,
-          "reload_complete_s": 1.2191560399951413,
+          "request_s": 1.0065600379894022,
+          "reload_complete_s": 1.2191296219971264,
           "includes_settle_ms": 200
         },
         {
           "axis": "height",
           "extent": 300,
-          "request_s": 1.3192254850000609,
-          "ack_s": 1.3263531629927456
+          "request_s": 1.3192441379942466,
+          "ack_s": 1.3263155789900338
         }
       ],
       "final_size": [
@@ -325,8 +330,9 @@
         300
       ],
       "same_window_ids": true,
-      "video_sha256": "e0a5a090d01aacf2bfab268aa1ac2f056723fcaa689c1ee67dc9f9c800aefcf7",
-      "gif_sha256": "c18e1c3aeb14aa1a4d7d3549f7ff1ad2211d9da741825d666420ec12815307e7",
+      "video_sha256": "e8fc830504d9f5071991ade15ca8a2d6e3f0be84ef6e2e38391b6f6be947cf45",
+      "gif_sha256": "a4bb1bcd898ec6e42407a0edef42e8a9a3a958ee4e834e32f042edf9ca80cf49",
+      "raw_capture_reused": false,
       "edges": {
         "decoded_frames": 142,
         "nominal_gap_px": 16,
@@ -341,17 +347,17 @@
     {
       "file": "docs/gifs/native-resize-orthogonal-width-comparison.gif",
       "width": 1200,
-      "gif_sha256": "065222ec8559e0cbf2a6b69a6aa457e3bc5b7e5f43f7247ae6312a221a57436f"
+      "gif_sha256": "4c0a2f84d458775b00e06bdad0950f0f8f530059e3db6cf02036198b3da5d4e2"
     },
     {
       "file": "docs/gifs/native-resize-orthogonal-height-comparison.gif",
       "width": 1000,
-      "gif_sha256": "1fff62d6db1caba8393329235da545ee2738fd98798101b63aa34d3ad5fb4510"
+      "gif_sha256": "9fa0fb586d8d7531a9c18607a49692028be335c1fc3d9ddbf3210a6387484436"
     },
     {
       "file": "docs/gifs/native-resize-timing-reload-height-comparison.gif",
       "width": 750,
-      "gif_sha256": "8d19f3c0e476cd3599d1d4e1f69121f06fb4f29242495ad813022b01a8cb6d9b"
+      "gif_sha256": "9696d4f2af7394b1843fe677f6e3c8be4096dd1f1c03d8b5a5793c823286f527"
     }
   ]
 }

@@ -489,6 +489,16 @@ activates it on the desktop.
 | Whole-window effect | Preserves the center | Gentler blend |
 | [Import JSON](../examples/resize-full.json) | [Import JSON](../examples/resize-edge.json) | [Import JSON](../examples/resize-soft.json) |
 
+The experimental renderer also keeps geometry and material state through
+interrupted resize requests:
+
+| Minimum width | Minimum height | Retained fragments | Retained triangles |
+| --- | --- | --- | --- |
+| [Baseline and updated](gifs/native-resize-minimum-width-comparison.gif) | [Baseline and updated](gifs/native-resize-minimum-height-comparison.gif) | [Baseline and updated](gifs/native-resize-material-fragments-comparison.gif) | [Baseline and updated](gifs/native-resize-material-triangles-comparison.gif) |
+
+These native pairs use verified v0.19.0 and updated builds with the same settings.
+[Evidence and limits](validation.md#retained-material-acceptance-unreleased).
+
 ### Experimental movement and swaps
 
 **Native column swap — requires the patched Niri build.** Two real synthetic

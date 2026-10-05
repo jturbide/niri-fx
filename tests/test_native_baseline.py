@@ -69,6 +69,23 @@ class BaselineComparisonTests(unittest.TestCase):
                 baseline.disconnect_probe(None, None, False)
         cleanup.assert_called_once_with(sessions[0], None, None, None)
 
+    def test_overlapping_scenarios_cannot_silently_change_renderer(self):
+        def overlapping(*_):
+            for _ in range(2):
+                session_type = baseline.hardening.NestedSession
+                session = session_type.__new__(session_type)
+                session.__exit__(None, None, None)
+            return {"scenarios": []}
+
+        with (
+            patch.object(baseline.hardening, "overlapping_pointers", side_effect=overlapping),
+            patch.object(baseline.ObservedSession, "renderer", side_effect=["first", "second"]),
+            patch.object(baseline.ObservedSession, "__exit__", autospec=True) as cleanup,
+        ):
+            with self.assertRaisesRegex(AssertionError, "changed renderer"):
+                baseline.disconnect_probe(None, None, False, overlapping=True)
+        self.assertEqual(cleanup.call_count, 2)
+
 
 if __name__ == "__main__":
     unittest.main()

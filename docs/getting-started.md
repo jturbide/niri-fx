@@ -1,190 +1,148 @@
 # Getting started
 
-**Use NiriFX on its own or with a shell integration.** Start with the
-[scenario guide](scenarios.md) or [standalone walkthrough](standalone.md) if you
-do not use an existing shell picker.
+Install NiriFX, choose a combo in **Library**, then review and apply it. You can
+return to your previous settings with **Restore previous**. Choosing a preview
+or saving a profile leaves the desktop unchanged.
 
 ## Requirements
 
-- Linux and Python 3.10 or newer. The application has no Python runtime dependencies.
+- Linux and Python 3.10 or newer. NiriFX has no Python runtime dependencies.
 - Niri with inline animation shaders. Tested with **26.04 (`8ed0da4`)**;
   older versions and other compositors are not validated.
-- A WebGL-capable browser for previews. Chromium is used for the app-style Studio;
-  without it, Studio falls back to the default browser.
-- Optional shell integration: iNiR with `NiriAnimationPresets` can use its installed
-  helper to save styles. Plain Niri needs no shell or Quickshell. DMS and Noctalia
-  have their own setup paths below. See the [integration contract](integration.md).
+- A WebGL-capable browser. Chromium opens Studio as an app; otherwise Studio
+  uses your default browser.
+- Niri animations enabled. Plain Niri needs no shell integration, Quickshell,
+  Rust toolchain or experimental compositor.
 
-Niri animations must be enabled. Standalone exports and offline previews do not
-need iNiR, a Rust toolchain or the experimental compositor.
+## Install and open Library
 
-## Pick a look first
+Download the wheel and `SHA256SUMS` from the same
+[release](releases.md), then run these commands in the download directory:
 
-Try [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter)
-or [finished open/close pairings](https://jturbide.github.io/niri-fx/gallery/?collection=profiles)
-in your browser. All previews start paused. Choose the same name locally after
-installation; customizing settings is optional. Start with **Balanced** for
-textured fragments, **Spring Wobble** for a playful bend, or **Pixel Wipe** for a
-pixel reveal. Built-ins preserve existing resize settings.
+```sh
+sha256sum --ignore-missing -c SHA256SUMS
+python3 -m venv .venv
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.19.0-py3-none-any.whl
+.venv/bin/niri-fx studio
+```
+
+Continue only after the checksum reports `OK` for your wheel. The source gallery
+and a checkout are optional. Installing the package does not activate effects.
+In the examples below, use `.venv/bin/niri-fx` wherever you see `niri-fx`, or
+activate the environment with `source .venv/bin/activate`.
+
+## Choose your first combo
+
+1. In **Library → Recommended**, choose **Fragment Flow**. Try **Soft Landing**
+   for a quieter frosted exit, **Ribbon Current** for strips, **Playful Motion**
+   for a spring and bubbles, or **Geometric Flow** for triangles and hexagons.
+2. Press **Preview combo** to see the opening and closing sequence. The recommended
+   combos preserve resize, movement and pointer drag.
+3. Choose each action's mode: **Preserve** keeps the underlying desktop or shell
+   configuration; **NiriFX Style** uses the preset you select; **Off** disables
+   that action. For example, keep Fragment Flow for Open, set Close to Off, and
+   leave Resize, Move / swap and Pointer drag on Preserve.
+4. Optionally use **Save to My profiles** and give the combo a name. This keeps
+   an editable copy; it does not apply it. **Export JSON** makes a portable backup.
+5. Press **Review & apply** and inspect the listed files. **Cancel** leaves them
+   unchanged. **Apply these changes** applies the reviewed selection and keeps
+   a restore snapshot.
+6. Open and close a test window. Use **Restore previous** to recover the settings
+   from before Apply. Your saved Library profile remains available.
+
+Keep the same target, config and `--state` when reopening the app to access its
+Restore history. Restore reports a conflict if those files changed afterward.
+[Library](library.md) covers mixing styles, tuning, saved profiles and previews.
+The [online gallery](https://jturbide.github.io/niri-fx/gallery/?collection=profiles)
+is also available before installation; it cannot apply desktop settings.
+
+Resize changes only when explicitly set to NiriFX Style or Off. Move / swap and
+Pointer drag can be previewed and saved, but live changes require the matching
+experimental compositor and separate activation choices. Leave them on Preserve
+for this first stock-Niri setup. See [compatibility](compatibility.md).
+
+## iNiR and iRiS
+
+If the installed iNiR helper is detected, `niri-fx studio` uses it automatically.
+To choose the owner explicitly and start from the recognized active look:
+
+```sh
+niri-fx studio --target inir --active
+```
+
+Use the same Library, action choices, **Review & apply** and **Restore previous**
+flow above. The iNiR helper serializes the animation block; NiriFX reviews and
+snapshots the resulting files. You do not need to register the full catalog or
+find each NiriFX entry in iRiS Settings first. Saving to My profiles remains
+separate from activation.
+
+NiriFX preserves the other settings from your recognized shell preset. An
+unrecognized custom animation block requires an explicit known base, for example
+`niri-fx studio --target inir --base bouncy`. That base supplies shell timings;
+it does not capture unknown custom timings. Review it before applying.
+
+Use normal iNiR paths. The registry defaults to
+`~/.config/inir/niri-animation-presets.json`, or the existing legacy
+`illogical-impulse` directory, honoring `XDG_CONFIG_HOME`. The helper normally
+lives under `~/.local/share/inir`, honoring `XDG_DATA_HOME`. `--registry` and
+`--inir-root` support other installations.
+
+Registering the entire built-in pack for selection through iRiS Settings is an
+optional [setup workflow](setup.md), not a prerequisite for Library. The optional
+[compact iRiS entry](library.md#compact-iris-entry) can launch the same app.
+
+## Standalone Niri
+
+For plain Niri, Waybar or a custom shell, launch:
+
+```sh
+niri-fx studio --target standalone
+```
+
+Use the first-combo flow above. Apply creates a managed `nirifx/animations.kdl`
+include beside the main config and adds its include after existing settings.
+Niri reloads it. **Restore previous** removes the first managed include and
+restores the original config, or steps back to the previous NiriFX change.
+For a different main config, add `--config /path/to/config.kdl` when launching.
+
+If another tool generates your configuration, use **Export stock Niri config**
+and put the result in that tool's source instead of applying to a generated
+file. Follow the [manual include instructions](standalone.md#nonstandard-or-generated-configs).
+A late standalone include overrides earlier animation settings, including a
+shell picker's choices; use the [connection matching your setup](library.md#one-interface-different-configuration-owners).
+See the connection guides for [DMS](dms.md) and [Noctalia](noctalia.md).
 
 ## Get the source and preview
 
-For preset selection without a graphical toolkit, run `python3 -m niri_fx` from
-the checkout, or `niri-fx` after installation. The [terminal guide](terminal.md)
-provides search, file review, Apply and Undo. Customize only when you want to;
-the finished presets use the same effects as Studio and the shell pickers.
+For development or running directly from a checkout:
 
 ```sh
 git clone --depth 1 https://github.com/jturbide/niri-fx.git
 cd niri-fx
-python3 -m niri_fx --version
-python3 -m niri_fx preview --output /tmp/fragments-preview.html
-xdg-open /tmp/fragments-preview.html
+python3 -m niri_fx studio
 ```
 
-Use a new output filename if that preview already exists. All `python3 -m`
-commands in these guides run from the checkout. To install the CLI in a virtual
-environment instead:
+Use `python3 -m niri_fx` in place of `niri-fx` in these guides while in the checkout.
+An offline preview is also available with
+`python3 -m niri_fx preview --output /tmp/fragments-preview.html`; choose a new
+filename and open it in your browser. Offline previews export without activation.
 
-```sh
-python3 -m venv .venv
-.venv/bin/python -m pip install .
-.venv/bin/niri-fx --help
-```
+For a text interface, run `niri-fx` after installation, or `python3 -m niri_fx`
+from the checkout. The [terminal guide](terminal.md) supports search, review,
+Apply and Undo through the same transaction backend.
 
-Use `.venv/bin/niri-fx` in place of `python3 -m niri_fx` when running
-the installed package. See [Releases and downloads](releases.md) for version choices and package contents.
+## Update or remove
 
-## iNiR and iRiS
+Follow [Updating NiriFX](upgrading.md) when replacing an installed version.
+Restart Studio afterward; installing a newer version does not change the active
+shader. Choose a look and review/apply again when you want updated settings.
 
-For a planned installation with diagnostics, launcher creation and exact-file
-restore snapshots, use [the setup workflow](setup.md). `setup` previews changes;
-`setup --apply` performs them. The manual registration workflow remains available:
+To undo a Library activation, reopen the same connection and use **Restore
+previous** before removing NiriFX. For changes made through `setup` or the terminal,
+use their printed Restore/Undo instructions. If you registered a pack for iRiS,
+select a non-NiriFX shell style before [unregistering it](integration.md).
 
-```sh
-python3 -m niri_fx register --dry-run
-python3 -m niri_fx register
-```
-
-Registration adds the built-in styles and keeps a backup of your preset file.
-Your other presets and named custom styles are preserved. Choose one in **iRiS Settings → Windows → Movement → Style**.
-Enable animations if the picker is hidden.
-
-Each NiriFX style keeps the other animation settings from your current recognized
-shell preset. Only opening and closing change; resize changes only when you
-explicitly enable a resize effect. If your current settings are custom, choose
-a built-in shell preset as the base:
-
-```sh
-python3 -m niri_fx register --base bouncy --dry-run
-python3 -m niri_fx register --base bouncy
-```
-
-An explicit base chooses those timings for the saved entries. It does not capture
-unrecognized custom timings. Later base changes are not inherited automatically.
-
-For visual editing and saving:
-
-```sh
-python3 -m niri_fx studio --target inir
-# Optional launcher, tied to this checkout's current path:
-python3 scripts/install-desktop.py
-```
-
-Save a named preset in Studio, then select it in iRiS. Registration and saving are
-separate from activation. Nothing is added to session startup.
-
-The default registry is `~/.config/inir/niri-animation-presets.json` (honoring
-`XDG_CONFIG_HOME`). If the legacy `illogical-impulse` config directory exists,
-its registry is used instead. The helper is normally under `~/.local/share/inir`
-(honoring `XDG_DATA_HOME`).
-`--registry` and `--inir-root` support other installations. Existing registry
-symlinks are preserved and backup paths are printed by the command.
-
-## Standalone Niri
-
-For a managed include and restore snapshot, use `setup --target standalone`,
-review the plan, then repeat with `--apply`. See [setup and restore](setup.md).
-The manual export workflow below is useful when another tool manages your config.
-
-This path also applies to Niri with DankMaterialShell or another shell. Keep the
-generated file outside shell-managed directories. First generate and validate:
-
-```sh
-python3 -m niri_fx render --preset explosion > /tmp/fragments.kdl
-niri validate -c /tmp/fragments.kdl
-```
-
-After validation succeeds, copy it into its own include. GNU `cp` keeps a numbered
-backup if the target already exists:
-
-```sh
-mkdir -p ~/.config/niri/nirifx
-cp --backup=numbered /tmp/fragments.kdl ~/.config/niri/nirifx/animations.kdl
-```
-
-Back up your main Niri config before editing it. Add the following **once**, after
-existing animation settings and shell-generated includes:
-
-```kdl
-include "nirifx/animations.kdl"
-```
-
-Run `niri validate` to check the full configuration. Use `-c` for a nonstandard
-config location. Niri watches included files and reloads changes. Adjust paths
-above if you use a nondefault `XDG_CONFIG_HOME`.
-
-To switch styles, repeat generation, validation and the backed-up copy. Studio's
-offline **Export Niri config** produces the same override. Resize is omitted
-unless you pass `--resize` or explicitly enable it in Studio.
-
-Use one owner for open/close animations: a late standalone include continues to
-override settings selected through a shell preset manager. See the
-[DMS guide](compatibility.md#niri--dankmaterialshell) and
-[Niri include rules](https://niri-wm.github.io/niri/Configuration:-Include.html).
-
-## Update
-
-Read [Updating NiriFX](upgrading.md) before updating an older installation.
-Early releases may change commands or preset formats.
-
-Review the [changelog](../CHANGELOG.md), then update a clean checkout:
-
-```sh
-git pull --ff-only
-```
-
-If installed in a virtual environment, reinstall with `.venv/bin/python -m pip
-install .`. For iNiR, re-register the built-in pack and **reselect the style in
-Settings**; updating registry entries does not replace a shader already embedded
-in the active config. If its old version is now reported as custom, specify the
-same known base you originally used. Custom styles keep their saved shaders until
-you explicitly save or import them again.
-
-For standalone Niri, regenerate, validate and replace your include. Restart
-Studio to pick up editor changes. Recreate the optional launcher if the checkout
-moves. Existing custom resize choices survive updates; new presets stay opted out.
-
-## Roll back or remove
-
-For iNiR, **first select your previous non-NiriFX style in Settings**, then:
-
-```sh
-python3 -m niri_fx unregister --dry-run
-python3 -m niri_fx unregister
-```
-
-This removes all NiriFX registry entries, including named custom styles; export
-any you want to keep first. Unregister does not rewrite the shader currently in
-Niri's config and retains registry backups. Restore a printed backup path if you
-need the previous registry; reselect a style afterward.
-
-For standalone Niri, remove the NiriFX include and run `niri validate`. Your
-underlying animation settings take over. Keep or remove the generated file and
-its backups as needed.
-
-Remove the optional `niri-fx-studio.desktop` entry from
-`~/.local/share/applications` (or your XDG data directory) to remove the launcher.
-The checkout, virtual environment and Studio profile can then be removed when
-no longer needed. The profile is under
-`~/.local/state/niri-fx/studio-profile` by default.
+Export any saved profiles you want to keep. You can then remove the virtual
+environment or checkout and any optional launcher. The app's library and history
+live under `~/.local/state/niri-fx` by default, honoring `XDG_STATE_HOME`; keep that
+directory while you still need its profiles or Restore snapshots.

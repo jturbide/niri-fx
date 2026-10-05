@@ -1,7 +1,14 @@
 # DankMaterialShell launcher adapter
 
-Use the `fx` launcher command to search built-in presets and open/close pairings, open **NiriFX Studio**
-and **Undo last NiriFX change**. This optional adapter works with DMS on **Niri**.
+Use the `fx` launcher command and choose **NiriFX Studio** to open the shared
+**Library**. Pick a recommended combo, choose **Preserve / NiriFX Style / Off**
+for each action, and use **Review & apply** before activating it.
+**Restore previous** returns to the previous app-managed settings.
+This optional adapter works with DMS on **Niri**.
+
+The launcher also searches built-in presets and open/close pairings for quick
+selection, with **Undo last NiriFX change** for those launcher actions. You can
+use [standalone Library](standalone.md) without installing the adapter.
 
 Install the current NiriFX checkout using [getting started](getting-started.md),
 and verify `niri-fx --version` works in your shell. Then copy the plugin:

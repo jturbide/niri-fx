@@ -14,6 +14,12 @@ from lib.pointer import VirtualPointer, owned_socket, path_samples, pointer_prot
 
 
 class PointerProtocolTests(unittest.TestCase):
+    def test_log_labels_cannot_escape_the_owned_session(self):
+        for label in ("", "../pointer", "/tmp/pointer", "pointer/name"):
+            with self.subTest(label=label):
+                with self.assertRaisesRegex(ValueError, "Pointer log label"):
+                    VirtualPointer(Mock(), Mock(), label=label)
+
     def test_normal_cargo_cache_is_discovered(self):
         with tempfile.TemporaryDirectory() as directory:
             base = Path(directory)

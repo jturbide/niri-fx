@@ -36,28 +36,49 @@ client commits that start a stationary axis. The
 orthogonal retargets and the timing-reload fix. Stock rendering and disabled
 resize keep their existing behavior.
 
-Further resize work must distinguish geometry from texture and deformation state.
-The shader couples two endpoint textures, geometry transforms and progress;
-retaining progress alone cannot prevent a jump when those other inputs change.
-A retained resize session needs stable deformation coordinates and a separate
-content-crossfade clock for newly committed buffers. Arbitrary custom shaders may
-require an explicit new contract rather than changed stock uniform semantics.
+Resize geometry and visual material have separate lifetimes. The development
+renderer retains the original phase, reference geometry and shader program for
+marked NiriFX resize shaders. It composites newly committed content on a separate
+clock and applies deformation once to that flat material. Retargeting promotes a
+flat composite, never a recursive snapshot or an already deformed image.
 
-Closing still uses a snapshot. Continuing resize through the close fade needs
-both retained endpoint textures and the resize state, with independent protected
-snapshots for Output, Screencast and ScreenCapture. Reusing the unredacted Output
-pair for another target would break capture restrictions. Cover transparent
-margins, popups, dynamic block-out rules and blocked-out backgrounds before
-claiming continuity.
+Each capture target owns its own bounded cache. A visibility-rule change starts
+with current content under the new rule, and renderer recreation discards old
+context resources. Unmarked custom shaders keep the stock interface; generated
+NiriFX shaders also fall back to stock behavior without the native extension.
+See [native material validation](validation.md#retained-material-acceptance-unreleased)
+for the tested boundaries.
 
-The size floor is applied before constructing a Smithay Size, preventing invalid
-negative dimensions in debug builds. It does not constrain neighboring movement:
-extreme retargets can still produce overlap. The next step is a shared constrained
-resize displacement per source and axis. Bounding a neighbor's total offset would
-also alter unrelated swaps or simultaneous resizes. Test two adjacent resizing
-sources, source removal and handoffs at the floor, sampling position and velocity
-on both sides. Add native before/after comparisons only once those regressions
-pass. An aligned edge alone does not establish a continuous effect.
+Closing still uses a snapshot of the assembled tile, including its resize
+deformation and decorations. Applying resize again to that snapshot would deform
+the surface twice. Passing only the undeformed window texture would instead lose
+borders, shadows, popups and protected-background handling.
+
+The next closing handoff needs a frozen, undeformed material for each capture
+variant, retained phase and size trajectories, and separate decoration state.
+Apply resize deformation before any continuing opening or movement transform,
+then apply the closing fade. Bound texture ownership to flat snapshots and release
+resources when closing ends, animations are disabled or the renderer is lost.
+
+Acceptance requires matching the last mapped frame to the first closing frame
+after repeated width and height retargets, including shader reloads and overlapping
+opening/movement. Check Output, Screencast and ScreenCapture independently, with
+transparent margins, popups and an unblocked window over a protected blurred
+background. Capture variants must never reuse unredacted Output textures. Verify
+bounded resources over repeated resize/close cycles and allocation failures before
+advertising resize-to-close continuity.
+
+The development renderer shares constrained resize displacement per source and
+axis. Its path brakes before the minimum size, and affected neighbors follow that
+same path. Independent resize contributions remain separate from ordinary swap
+offsets; stacked columns follow the maximum visible width. Turning resize off
+finishes the shared paths before discarding their source state.
+
+Regression tests cover simultaneous resizes, source removal, swaps, focus changes
+and handoffs at the floor, including position and velocity on both sides. Preserve
+those tests when changing geometry ownership or timing. Native before/after
+comparisons complement the mathematical checks; aligned edges alone do not prove
+texture or deformation continuity.
 
 Changes to this path should include deterministic state tests and native recordings
 of reversal, repeated retargets, close-during-open, close-during-move and shader

@@ -5,6 +5,13 @@
 vec2 resize_signed_change() {
     vec2 prev = vec2(niri_curr_geo_to_prev_geo[0][0], niri_curr_geo_to_prev_geo[1][1]);
     vec2 next = vec2(niri_curr_geo_to_next_geo[0][0], niri_curr_geo_to_next_geo[1][1]);
+#ifdef NIRIFX_RESIZE_CONTINUITY_V1
+    if (niri_resize_retained > 0.5) {
+        vec2 current = fx_resize_material_size(vec2(1.0));
+        prev = current / max(niri_resize_reference_from_size, vec2(1.0));
+        next = current / max(niri_resize_reference_to_size, vec2(1.0));
+    }
+#endif
     return clamp(log(max(prev, vec2(0.0001)) / max(next, vec2(0.0001))), -1.0, 1.0);
 }
 vec2 resize_sealed_offset(vec2 uv, vec2 offset) {
@@ -17,7 +24,7 @@ vec2 resize_sealed_offset(vec2 uv, vec2 offset) {
 }
 vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
     float p = niri_clamped_progress, blend = smoothstep(0.2, 0.8, p);
-    vec2 uv = coords_curr_geo.xy, size = max(size_curr_geo.xy, vec2(1.0));
+    vec2 uv = coords_curr_geo.xy, size = fx_resize_material_size(max(size_curr_geo.xy, vec2(1.0)));
     if (p <= 0.0 || p >= 1.0 || @RESIZE@ <= 0.0) return resize_sample(uv, blend);
     if (@DISTORTION_RESIZE_MODE@ != 0) {
         if (any(lessThan(uv, vec2(0.0))) || any(greaterThanEqual(uv, vec2(1.0)))) return resize_sample(uv, blend);

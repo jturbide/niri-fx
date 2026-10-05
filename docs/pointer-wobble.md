@@ -207,6 +207,15 @@ The baseline rules out the FX patches being necessary to reproduce the failures;
 it does not isolate their compositor, driver or nested-test cause. Device ownership
 and presentation recovery remain open work.
 
+`python3 scripts/test-native-baseline.py --probe overlap` compares two virtual
+pointers on the same owned seat. Removing an idle device preserves the other
+device's active grab, including after ownership has changed. Removing the held
+owner still leaves a stale grab in all three baseline variants. Paired same-button
+presses also expose shared-seat release behavior, so a global button reset would
+not establish correct device ownership. See the [scenario results and source
+audit](validation.md#pointer-driven-wobble); these controls diagnose the failure
+and do not claim that disconnect cleanup is fixed.
+
 In addition to the demo requirements, the harness uses a C compiler,
 `wayland-scanner`, `pkg-config`, Wayland client development files, the wlr virtual
 pointer protocol XML, Pillow, grim, wf-recorder and FFmpeg. It finds the XML in a

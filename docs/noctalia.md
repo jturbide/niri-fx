@@ -1,8 +1,13 @@
 # Noctalia and preset folders
 
-NiriFX can export a reversible folder of built-in presets and curated open/close pairings for the
-existing Noctalia **Niri Animations** picker. Export the pack, connect the picker
-and select a style. No additional daemon is required.
+Use the shared NiriFX **Library** to choose a combo, customize each action and
+review Apply while keeping Noctalia **Niri Animations** as the configuration owner.
+If its preset folder and target file are already connected, go straight to
+[opening Library](#shared-nirifx-library).
+
+For a first connection, follow the export and picker setup below. The exported
+pack also lets you select individual presets and pairings in the existing picker.
+No additional daemon is required.
 
 The [community plugin](https://noctalia.dev/plugins/community/niri-animations)
 reads `.kdl` files from `presets_dir` and writes a dedicated `target_file` containing
@@ -62,6 +67,18 @@ Once the Niri Animations folder and target file are connected, use the
 [shared library](library.md#one-interface-different-configuration-owners) to
 combine and directly apply named profiles. Its reviewed changes preserve the
 picker's off/slowdown controls and have their own Restore history.
+
+```sh
+niri-fx studio --target noctalia \
+  --preset-dir ~/.config/niri/nirifx-presets \
+  --picker-file ~/.config/niri/animations.kdl
+```
+
+Use your actual connected paths. Choose a recommended combo and its
+**Preserve / NiriFX Style / Off** action choices, then **Review & apply** and
+**Apply these changes**. **Restore previous** undoes Library's last Apply without
+removing saved profiles. The target file must already exist and be included
+directly by your main Niri config.
 
 An optional Noctalia 5 shortcut (plugin API 24+) lives in `integrations/noctalia/niriFX`.
 Copy it into your local Noctalia plugin directory, enable `jturbide/niri-fx`,

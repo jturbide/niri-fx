@@ -1,0 +1,399 @@
+{
+  "baseline": "0.19",
+  "status": "Starting compatibility corpus; not a 1.0 contract freeze",
+  "accepted_documents": [
+    {
+      "id": "style-defaults",
+      "meaning": "Omitted style parameters use documented defaults; resize remains unchanged by default.",
+      "document": { "schema": 3, "name": "Default style", "effect": {} },
+      "normalized": {
+        "schema": 3,
+        "effect": { "family": "fragments", "open_ms": 520, "close_ms": 480, "resize": false }
+      },
+      "absent": ["kind", "actions", "pointer"],
+      "stock_actions": {
+        "window-open": { "duration_ms": 520, "shader": true },
+        "window-close": { "duration_ms": 480, "shader": true }
+      }
+    },
+    {
+      "id": "style-boundaries",
+      "meaning": "Supported boundary values retain their units and values after import.",
+      "document": {
+        "schema": 3,
+        "name": "Boundary style",
+        "effect": {
+          "fragment_aspect": 0.25,
+          "fragment_roundness": 1,
+          "open_ms": 100,
+          "close_ms": 1500
+        }
+      },
+      "normalized": {
+        "schema": 3,
+        "effect": {
+          "fragment_aspect": 0.25,
+          "fragment_roundness": 1,
+          "open_ms": 100,
+          "close_ms": 1500
+        }
+      },
+      "absent": ["actions"],
+      "stock_actions": {
+        "window-open": { "duration_ms": 100, "shader": true },
+        "window-close": { "duration_ms": 1500, "shader": true }
+      }
+    },
+    {
+      "id": "legacy-profile",
+      "meaning": "Schema 1 imports normalize to schema 2 without changing selected styles or optional-action inheritance; null pointer normalizes to omission.",
+      "document": {
+        "kind": "profile",
+        "schema": 1,
+        "name": "Legacy pair",
+        "actions": {
+          "open": { "family": "elastic", "open_ms": 420 },
+          "close": { "family": "dissolve", "close_ms": 610 },
+          "resize": null,
+          "movement": null
+        },
+        "pointer": null
+      },
+      "normalized": {
+        "kind": "profile",
+        "schema": 2,
+        "actions": {
+          "open": { "family": "elastic", "open_ms": 420, "resize": false },
+          "close": { "family": "dissolve", "close_ms": 610, "resize": false },
+          "resize": null,
+          "movement": null
+        }
+      },
+      "absent": ["pointer", "motion"],
+      "stock_actions": {
+        "window-open": { "duration_ms": 420, "shader": true },
+        "window-close": { "duration_ms": 610, "shader": true }
+      }
+    },
+    {
+      "id": "preserve-all",
+      "meaning": "Explicit null actions preserve the underlying configuration by emitting no action overrides.",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Preserve all",
+        "actions": { "open": null, "close": null, "resize": null, "movement": null }
+      },
+      "normalized": {
+        "kind": "profile",
+        "schema": 2,
+        "actions": { "open": null, "close": null, "resize": null, "movement": null }
+      },
+      "absent": ["pointer", "motion"],
+      "stock_actions": {}
+    },
+    {
+      "id": "resize-style-movement-off",
+      "meaning": "Preserve, Off and Style are independent; movement Off and pointer Off remain portable data without stock activation.",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Resize choice",
+        "actions": {
+          "open": null,
+          "close": "off",
+          "resize": { "family": "elastic", "resize_ms": 360 },
+          "movement": "off"
+        },
+        "pointer": { "strength": 0, "damping": 65, "frequency": 8 }
+      },
+      "normalized": {
+        "schema": 2,
+        "actions": {
+          "open": null,
+          "close": "off",
+          "resize": { "family": "elastic", "resize_ms": 360, "resize": false },
+          "movement": "off"
+        },
+        "pointer": { "strength": 0, "damping": 65, "frequency": 8 }
+      },
+      "absent": ["motion"],
+      "stock_actions": {
+        "window-close": { "off": true },
+        "window-resize": { "duration_ms": 360, "shader": true }
+      }
+    },
+    {
+      "id": "opening-and-resize-off",
+      "meaning": "Off emits an explicit disabling node; a preserved movement or pointer contributes no stock node.",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Quiet opening",
+        "actions": {
+          "open": "off",
+          "close": { "family": "pixels", "close_ms": 450 },
+          "resize": "off",
+          "movement": null
+        },
+        "pointer": null
+      },
+      "normalized": {
+        "schema": 2,
+        "actions": {
+          "open": "off",
+          "close": { "family": "pixels", "close_ms": 450 },
+          "resize": "off",
+          "movement": null
+        }
+      },
+      "absent": ["pointer", "motion"],
+      "stock_actions": {
+        "window-open": { "off": true },
+        "window-close": { "duration_ms": 450, "shader": true },
+        "window-resize": { "off": true }
+      }
+    },
+    {
+      "id": "portable-native-style",
+      "meaning": "Movement and pointer styles survive import while a stock export omits both experimental settings.",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Portable motion",
+        "actions": {
+          "open": { "family": "fragments", "open_ms": 700 },
+          "close": null,
+          "resize": null,
+          "movement": { "family": "elastic", "movement_ms": 350 }
+        },
+        "pointer": { "strength": 0.4, "damping": 85, "frequency": 10 }
+      },
+      "normalized": {
+        "schema": 2,
+        "actions": {
+          "open": { "family": "fragments", "open_ms": 700 },
+          "close": null,
+          "resize": null,
+          "movement": { "family": "elastic", "movement_ms": 350 }
+        },
+        "pointer": { "strength": 0.4, "damping": 85, "frequency": 10 }
+      },
+      "absent": ["motion"],
+      "stock_actions": { "window-open": { "duration_ms": 700, "shader": true } }
+    }
+  ],
+  "rejected_documents": [
+    {
+      "id": "unsupported-style-schema",
+      "document": { "schema": 999, "name": "Future style", "effect": {} }
+    },
+    {
+      "id": "unsupported-profile-schema",
+      "document": {
+        "kind": "profile",
+        "schema": 999,
+        "name": "Future profile",
+        "actions": { "open": null, "close": null, "resize": null, "movement": null }
+      }
+    },
+    {
+      "id": "unknown-document-field",
+      "document": { "schema": 3, "name": "Unknown field", "effect": {}, "future": true }
+    },
+    {
+      "id": "unknown-effect-field",
+      "document": { "schema": 3, "name": "Unknown parameter", "effect": { "future": true } }
+    },
+    {
+      "id": "missing-action-is-not-preserve",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Missing action",
+        "actions": { "open": null, "close": null, "resize": null }
+      }
+    },
+    {
+      "id": "legacy-null-opening-is-invalid",
+      "document": {
+        "kind": "profile",
+        "schema": 1,
+        "name": "Invalid legacy",
+        "actions": { "open": null, "close": {}, "resize": null, "movement": null }
+      }
+    },
+    {
+      "id": "unknown-action-is-not-ignored",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Unknown action",
+        "actions": { "open": null, "close": null, "resize": null, "movement": null, "swap": "off" }
+      }
+    },
+    {
+      "id": "unknown-pointer-field",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Unknown pointer",
+        "actions": { "open": null, "close": null, "resize": null, "movement": null },
+        "pointer": { "strength": 0.4, "damping": 85, "frequency": 10, "future": true }
+      }
+    },
+    {
+      "id": "partial-pointer-is-not-defaulted",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Partial pointer",
+        "actions": { "open": null, "close": null, "resize": null, "movement": null },
+        "pointer": { "strength": 0 }
+      }
+    },
+    {
+      "id": "unsupported-resize-family",
+      "document": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "Unsupported resize",
+        "actions": {
+          "open": null,
+          "close": null,
+          "resize": { "family": "pixels" },
+          "movement": null
+        }
+      }
+    },
+    {
+      "id": "out-of-range-control",
+      "document": { "schema": 3, "name": "Too short", "effect": { "open_ms": 99 } }
+    },
+    {
+      "id": "boolean-is-not-a-number",
+      "document": { "schema": 3, "name": "Boolean timing", "effect": { "close_ms": true } }
+    }
+  ],
+  "catalog_documents": {
+    "balanced": { "schema": 3, "effect": { "family": "fragments", "resize": false } },
+    "spring-wobble": { "schema": 3, "effect": { "family": "elastic", "resize": false } },
+    "frost-vanish": { "schema": 3, "effect": { "family": "dissolve", "resize": false } },
+    "soft-landing": {
+      "kind": "profile",
+      "schema": 2,
+      "actions": {
+        "open": { "family": "elastic" },
+        "close": { "family": "dissolve" },
+        "resize": null,
+        "movement": null
+      }
+    }
+  },
+  "cli_json": [
+    {
+      "id": "discovery",
+      "argv": ["agent-info"],
+      "expected": {
+        "schema": 1,
+        "name": "NiriFX",
+        "transport": "cli",
+        "document_formats": {
+          "effect_schema": 3,
+          "profile_schema": 2,
+          "action_modes": { "preserve": null, "off": "off", "style": "effect object" },
+          "max_bytes": 16384
+        },
+        "operations": {
+          "catalog": { "output": "json", "effect": "read-only" },
+          "validate": { "argv": ["inspect", "--custom", "./my-combo.json"] }
+        },
+        "experimental_actions": {
+          "movement": { "consent_flag": "--enable-movement" },
+          "pointer": { "consent_flag": "--enable-pointer" }
+        }
+      }
+    },
+    {
+      "id": "parameter-units-and-limits",
+      "argv": ["agent-info", "--parameters"],
+      "expected": {
+        "schema": 1,
+        "effects": {
+          "open_ms": {
+            "type": "number",
+            "default": 520,
+            "limits": [100, 1500],
+            "integer": true,
+            "unit": " ms"
+          },
+          "fragment_aspect": { "default": 1, "limits": [0.25, 4] }
+        },
+        "pointer": { "limits": { "strength": [0, 2] } }
+      }
+    },
+    {
+      "id": "compose-action-choices-and-alias",
+      "argv": [
+        "profile",
+        "--name",
+        "CLI choices",
+        "--open",
+        "preserve",
+        "--close-preset",
+        "frost-vanish",
+        "--resize",
+        "off",
+        "--movement",
+        "off",
+        "--pointer",
+        "off"
+      ],
+      "expected": {
+        "kind": "profile",
+        "schema": 2,
+        "name": "CLI choices",
+        "actions": {
+          "open": null,
+          "close": { "family": "dissolve" },
+          "resize": "off",
+          "movement": "off"
+        },
+        "pointer": { "strength": 0 }
+      }
+    },
+    {
+      "id": "inspect-built-in-profile",
+      "argv": ["inspect", "--profile", "soft-landing"],
+      "expected": {
+        "kind": "profile",
+        "schema": 2,
+        "actions": {
+          "open": { "family": "elastic" },
+          "close": { "family": "dissolve" },
+          "resize": null,
+          "movement": null
+        }
+      }
+    },
+    {
+      "id": "compact-catalog",
+      "argv": ["list", "--summary", "--search", "spring-wobble"],
+      "expected": {
+        "spring-wobble": { "kind": "effect", "families": ["elastic"], "optional_actions": [] }
+      }
+    }
+  ],
+  "cli_errors": [
+    {
+      "id": "unknown-preset",
+      "argv": ["profile", "--open", "not-a-nirifx-preset"],
+      "exit_status": 2
+    },
+    {
+      "id": "incompatible-output-options",
+      "argv": ["list", "--summary", "--documents"],
+      "exit_status": 2
+    }
+  ]
+}

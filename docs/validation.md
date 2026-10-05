@@ -64,12 +64,31 @@ Installed CLI, HTTP and browser paths accept schema 2 choices, enforce resize
 consent and restore exactly. Native activation is verified separately in owned
 contract-2 compositor sessions. [Reproduce an upgrade](releases.md#verify-an-upgrade).
 
+`scripts/test-first-use.mjs` exercises the source app and the released 0.19 wheel
+in empty temporary accounts, with no desktop session connection. It selects
+Fragment Flow, checks all five action controls, saves a named profile, verifies
+that Review and Cancel leave config unchanged, applies, restarts Studio and
+restores the original files exactly while retaining the saved profile. Stock
+Niri validates the generated configuration. A synthetic helper also checks
+automatic iNiR selection and an explicit standalone override; that check does
+not certify activation through a real iNiR installation.
+
 The complete local Studio suite still runs every rendering matrix and save flow.
 CI splits browser workflows, three shape aspects, motion and Studio into six
 independent jobs; the required aggregate rejects missing, failed or canceled
 results. A frozen local workload took 127.8 seconds sequentially and 74.1 seconds
 in parallel. Those timings include software WebGL and are not a hosted-runner or
 GPU-performance claim.
+
+Hosted runs confirm that all six suites run independently. From workflow creation
+to the last completed job, [the 0.19 pull request](https://github.com/jturbide/niri-fx/actions/runs/37246790922)
+took 3 minutes 28 seconds, while [the Actions update on main](https://github.com/jturbide/niri-fx/actions/runs/37248014073)
+took 4 minutes 22 seconds. Studio rendering was the longest job in the latter
+run: 3 minutes 54 seconds, including setup. These are individual observations with
+different runner allocation and cache conditions, not a controlled speedup claim.
+The aggregate guards are exercised with successful, failed, canceled, skipped
+and missing results by `tests/test_ci_scope.py`; failed-shard diagnostics still
+need observation on an actual hosted rendering failure.
 
 ## Movement diagnostics
 
@@ -88,8 +107,9 @@ they do not certify the movement shader contract or rendering.
 
 The experimental patch applies to Niri revision
 `8ed0da44d974c32c6877d2f4630c314da0717ecb`. A release build passed 21 config tests,
-one config integration test, 21 layout-animation tests, seven shader-continuity tests,
-seven position-continuity tests and seven size-animation tests. These check repeated
+one config integration test, 34 layout-animation tests, seven shader-continuity tests,
+seven position-continuity tests, 11 size-animation tests and two retained-material
+state tests. These check repeated
 reversals, first derivatives, monotone phase handoffs, zero-distance momentum,
 spring input, slow/frozen clocks,
 disabled animation semantics and closing along the actual layout path.
@@ -102,7 +122,7 @@ commands must arrive within the bounded interruption window.
 All 30 existing native clips were refreshed for the updated patches: 21 swaps,
 four interruption scenarios, two overlap/floating scenarios and three pointer
 styles. The original settings and durations were retained; each GIF uses 20 ms
-frame delays. Five resize comparisons document geometry and timing reload below.
+frame delays. Seven resize comparisons document geometry and timing reload below.
 
 Retargets retain deformation phase, seed and sampled phase/direction speed. Cubic
 phase curves shorten when needed to stay monotone. Close movement retains those
@@ -122,24 +142,31 @@ and closure of moving windows. The current recordings are described in
 
 For the tested animated resize retargets, the experimental renderer retains
 width and height and their sampled velocities independently. An unchanged axis
-keeps its original curve and finish time. Active size and neighboring movement
-paths now also keep the same timing after a configuration reload; an axis that
-starts from rest uses the new timing. This applies when a custom movement shader
-is configured and resize animation is enabled. Stock rendering and explicitly
-disabled resize retain their existing behavior.
+keeps its original curve and finish time. Active paths retain their timing after
+a configuration reload; an axis that starts from rest uses the new timing. A
+shared displacement per source and axis keeps affected neighbors on the same
+constrained path at the one-pixel floor. Stacked columns follow the maximum of
+their sampled tile widths, including independently committing clients.
 
-The movement build passes 21 layout-animation tests and seven size-animation
-tests; the pointer build passes 25 and seven. Regressions cover repeated and
-orthogonal retargets, small changes, client-driven size changes, shorter/longer
-timing reloads, a client commit that starts a stationary axis during another
-active axis, disabled resize, original easing, and slow or frozen clocks. An
-extreme-shrink regression also verifies valid dimensions when a Hermite path
-crosses zero and is retargeted again.
+This applies with a custom movement shader or a marked NiriFX resize shader and
+resize animation enabled. Stock rendering keeps its existing path. Resize Off
+and global animations Off settle shared size handles immediately.
+
+The full layout suites pass 129 tests in the movement build and 133 in the pointer
+build. Their animation subsets pass 34 and 38; both pass 11 size-animation tests.
+Both also pass seven movement-math and two
+retained-material state tests. Regressions cover repeated and orthogonal retargets,
+small changes, client commits, timing reloads, original easing, slow/frozen clocks,
+minimum-size reversals, simultaneous sources and source removal. Immediate and
+delayed retargets after neighbor swaps preserve sampled position and velocity.
+Focus crossing, an orthogonal commit on the old width clock and Off after focus
+reassignment have dedicated regressions. Raw spacing is checked before independent
+pixel rounding; separately rounded positions and extents can differ by one pixel.
 
 The [reversal report](benchmarks/resize-continuity.json) compares the verified
 v0.18.0 movement build with the updated build at the same pinned Niri revision.
 The [retarget report](benchmarks/resize-retargets.json) uses development source
-`3f68522`, which already had the first geometry fix, as its baseline. All captures
+`3f68522`, which already had the first geometry fix, as its baseline. These captures
 use synthetic cards, identical passthrough shaders and a nominal 16-pixel gap.
 Initial resize timing is 1200 ms linear; the reload case changes the configured
 duration to 350 ms before reversing.
@@ -147,14 +174,27 @@ duration to 350 ms before reversing.
 | Case | Baseline gap | Updated gap | Decoded frames, before / after | Recording |
 | --- | --- | --- | --- | --- |
 | Width reversal | 7–83 px | 17–18 px | 142 / 142 | [Comparison](gifs/native-resize-width-comparison.gif) |
-| Height reversal | 10–56 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-height-comparison.gif) |
-| Orthogonal width retarget | 17–18 px | 17–18 px | 157 / 157 | [Comparison](gifs/native-resize-orthogonal-width-comparison.gif) |
-| Orthogonal height retarget | 16–20 px | 16–20 px | 157 / 158 | [Comparison](gifs/native-resize-orthogonal-height-comparison.gif) |
+| Height reversal | 11–56 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-height-comparison.gif) |
+| Orthogonal width retarget | 17–18 px | 17–18 px | 158 / 158 | [Comparison](gifs/native-resize-orthogonal-width-comparison.gif) |
+| Orthogonal height retarget | 16–19 px | 16–20 px | 158 / 157 | [Comparison](gifs/native-resize-orthogonal-height-comparison.gif) |
 | Timing reload during height resize | 16–128 px | 16–19 px | 142 / 142 | [Comparison](gifs/native-resize-timing-reload-height-comparison.gif) |
+| Minimum width retarget | −26–18 px | 16–18 px | 182 / 182 | [Comparison](gifs/native-resize-minimum-width-comparison.gif) |
+| Minimum height retarget | −23–18 px | 16–18 px | 182 / 182 | [Comparison](gifs/native-resize-minimum-height-comparison.gif) |
+
+The [minimum-size report](benchmarks/resize-minimum.json) compares the preserved
+v0.19.0 build against the current renderer. Identical solid-color geometry masks
+remove stretched texture-edge filtering. The table measures frames with a visible
+source edge. Video conversion loses the one-pixel source in 13 baseline frames
+per axis and in seven updated width/six updated height frames. Those frames
+report neighbor clearance from the verified source origin plus the size floor:
+the baseline reaches −17 px, while the updated clearance stays at 17 px on both
+axes. They are excluded from the visible-edge gap ranges.
 
 Measurements precede GIF scaling and palette reduction, with four pixels of
 video-conversion tolerance. Reports retain executable, patch, fixture and recorder
 hashes, unchanged window IDs, settled dimensions and bounded resize IPC timing.
+Reused raw captures and later encodes are identified separately, retaining the
+original capture timing and source hashes.
 Missing historical build metadata is explicitly unavailable. These are sequential
 native recordings at their actual configured timing; they do not measure GPU
 frame time or physical presentation.
@@ -170,26 +210,60 @@ python3 scripts/record-resize-comparison.py \
 python3 scripts/record-resize-retargets.py \
   --baseline-manifest /path/to/preserved-build.json \
   --baseline-revision 3f68522
+python3 scripts/record-resize-minimum.py \
+  --baseline-manifest /path/to/niri-fx-0.19/artifacts/niri-movement-build.json
 ```
 
 See the [recording guide](gifs/README.md#native-resize-geometry-comparisons) for
 baseline verification, dependencies and deliberate publication with `--publish`.
 
-The resize shader's texture/deformation phase still restarts, and closing during
-resize still uses a snapshot. The one-pixel floor now runs before constructing
-Smithay geometry, preventing negative-size debug panics; it does not constrain
-the neighbor's independent curve. An extreme 1000→10 shrink retargeted to 11 at
-950 ms still produces a source edge at 1 and a neighbor at -97 after another
-300 ms in the deterministic layout diagnostic. Shared clamp constraints, retained
-resize textures/phase, close continuation, acceleration, camera movement and
-physical mixed outputs remain outside the verified fix. The
-[design notes](next-phases.md#rendering-and-interruptions) describe the required
-state and acceptance tests.
+The 0.19 baseline clamped only the source geometry, allowing a neighbor's
+independent curve to cross it. The current shared paths address that failure.
+A retarget that would cross the floor brakes before it and preserves feasible
+incoming position and velocity; an outward velocity already at the floor must
+stop. This does not establish acceleration continuity or change every configured
+spring's equation. Closing during resize still uses a snapshot. Closing material
+continuation, camera movement and physical mixed outputs remain follow-on work;
+see the [design notes](next-phases.md#rendering-and-interruptions).
+
+### Retained material acceptance (Unreleased)
+
+The optimized experimental build passes the native retained-material diagnostic on
+both direct ScreenCapture and Output observed through an owned nested parent.
+Rendered phase and original/reference dimensions continue across width and
+height retargets. Shader reload and removal preserve the active episode's
+program; the next episode adopts the new configuration. Generated fragment and
+triangle shaders visibly break up the synthetic card interior and settle
+intact. These checks use actual Niri pixels, independent of the browser preview.
+
+Dynamic privacy passes both `screen-capture` and `screencast` policies during
+block, unblock and reblock retargets. Each policy is checked through ordinary
+Output and debug Screencast presentation, alongside direct ScreenCapture. A
+separate first-use check never captures ScreenCapture while blocked, then
+requires live content on its first capture after unblock and zero protected
+pixels after reblocking. A visible public companion is required throughout.
+Output hashes must advance on each transition, and the diagnostic's visible
+phase must advance on the parent as well as the child: a frozen frame cannot
+satisfy the acceptance gate.
+
+```sh
+python3 scripts/test-resize-material.py --suite all --output-targets \
+  --report artifacts/resize-material.json
+python3 scripts/test-resize-material.py --unmodified --suite privacy --output-targets \
+  --report artifacts/resize-material-baseline.json
+```
+
+The harness retains completed observations and decoded frame hashes on failure;
+delayed diagnostic samples never convert a failed immediate observation into a
+pass. Tests use owned nested compositors and synthetic clients with IPC resize
+requests. They do not establish closing continuation, blurred-background
+privacy, popup behavior, mixed-scale handoffs, graphics-reset recovery or
+PipeWire transport acceptance.
 
 ## Pointer-driven wobble
 
 The separate pointer build passed 24 configuration tests, the wiki parse check,
-25 layout-animation tests, seven position-continuity tests, seven size-animation
+38 layout-animation tests, seven position-continuity tests, 11 size-animation
 tests, seven movement-shader state tests and seven analytical spring tests. The
 base movement patch and binary remain separately usable.
 
@@ -211,6 +285,14 @@ Contract 2 keeps pointer deformation active when only timed movement is Off;
 its native check reloads Off during a grab and verifies visible release settling. Render logs were clean, and the three public recordings retain
 50 fps playback with synthetic content.
 
+The recorder uses raw PPM snapshots to shorten synchronous capture time.
+It focuses only its owned outer window and rejects a
+release sample beyond 200 ms, while retaining the pixel and input checks.
+The [current pointer report](benchmarks/pointer-wobble.json) contains only the
+three accepted runs. Each reported the NVIDIA renderer; the requested software
+override did not select software rendering. These are functional checks, not
+physical-presentation or GPU-performance acceptance.
+
 The additional [hardening checks](benchmarks/pointer-hardening.json) use direct
 `grim` ScreenCapture and two synthetic opaque cards. With `block-out-from
 "screen-capture"`, protected content stays hidden during real dragging, rule
@@ -227,6 +309,33 @@ unpressed motion from a replacement pointer still moves the grabbed window.
 A replacement press/release recovers input. This occurs with deformation enabled
 and omitted in the patched executable, and in an unmodified build at the same
 pinned revision. Device-owned grab cleanup remains open.
+
+The overlapping-device diagnostic adds two independent virtual-pointer clients
+on one owned seat. The unmodified baseline and the 0.19 patched binary, with
+deformation both omitted and enabled, show the same results:
+
+| Scenario | Observed result |
+| --- | --- |
+| Destroy idle B while A drags | A's held drag continues; its release stops movement and a real client click succeeds. Control passes. |
+| Destroy held owner A while B is idle | B's unpressed motion still moves A's window by 80 × 40 logical pixels. Owner-disconnect cleanup fails. |
+| A releases, B starts a new grab, then idle A is destroyed | B's legitimate grab continues and releases normally. This guards against globally resetting a surviving device's state. |
+| Both devices press the same left-button code, then A releases | The grab stops although B's helper has not sent a release. This records the shared-seat behavior, not successful independent ownership. |
+| Both devices press the same code, then A is destroyed | The grab continues until B releases. Continuation alone cannot distinguish retained legitimate state from the stale A grab. |
+
+Every completed scenario verifies that a surviving release stops subsequent
+unpressed motion and that the synthetic client's click counter responds. The
+button-held field records acknowledged helper commands, not a queried compositor
+ownership map. Raw session logs stay under `artifacts/`; no physical devices or
+personal desktop captures are involved.
+
+The source audit explains why a global release is not a sufficient cleanup
+design. The pinned handler inherits a no-op virtual-pointer destruction callback.
+Virtual-pointer IDs include their Wayland resource/client identity, while the
+seat's pressed-button list and Niri's suppressed-button set use button codes.
+Smithay removes every occurrence of a code on release, and the move grab checks
+that shared list. A proposed fix needs device-owned press/suppression records and
+grab ownership, including same-code overlap and device identity reuse; it must
+not cancel another device's grab. No disconnect-cleanup patch is implemented.
 
 The optional `--output-targets` probe uses a second owned compositor and retains
 strict assertions. It currently fails on the tested GPU: the child's direct
@@ -255,7 +364,10 @@ python3 scripts/test-native-baseline.py
 
 The diagnostic writes sanitized evidence under `artifacts/` and exits **1** when
 either failure reproduces. A completed baseline comparison is not a passing
-acceptance test. `--probe disconnect` or `--probe output` selects one investigation.
+acceptance test. `--probe disconnect`, `--probe overlap` or `--probe output` selects
+one investigation. The overlap mode preserves strict build/renderer comparisons,
+reports failed owner-disconnect controls and exits 1 while they reproduce; paired
+same-button observations are not promoted to passing ownership assertions.
 
 `test-pointer-integration.py` also passed against the owned pointer session.
 It served Studio through its actual HTTP backend, reviewed and applied a
@@ -332,7 +444,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**209 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
+**213 GIFs**, including all **75 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

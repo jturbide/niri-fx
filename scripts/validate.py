@@ -38,6 +38,16 @@ uniform mat3 niri_curr_geo_to_next_geo;
 uniform mat3 niri_curr_geo_to_prev_geo;
 """
 
+# The optional native prelude must compile as well as the stock interface. The
+# native acceptance suite verifies texture ownership and real retargets; this
+# inexpensive check catches broken generated GLSL in either compile-time branch.
+RETAINED_RESIZE = """#define NIRIFX_RESIZE_CONTINUITY_V1
+uniform float niri_resize_retained;
+uniform vec2 niri_resize_reference_size;
+uniform vec2 niri_resize_reference_from_size;
+uniform vec2 niri_resize_reference_to_size;
+"""
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -85,6 +95,11 @@ def main():
                         + f"\nvoid main() {{ gl_FragColor = {entry}(vec3(0.5, 0.5, 1.0), vec3(800.0, 600.0, 1.0)); }}\n"
                     )
                     subprocess.run([validator, "-S", "frag", str(frag)], check=True)
+                    if entry == "resize_color":
+                        frag.write_text(
+                            frag.read_text().replace(HEADER, HEADER + RETAINED_RESIZE, 1)
+                        )
+                        subprocess.run([validator, "-S", "frag", str(frag)], check=True)
             if niri:
                 config = root / f"{name}.kdl"
                 variants = [effect]

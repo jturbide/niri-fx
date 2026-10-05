@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Julien Turbide
 // Bounded fragmentation during resize. No per-frame simulation or random seed.
+@RESIZE_STATE@
 const float FR_TILE = @TILE@;
 const float FR_COUNT = @PARTICLES@;
 const float FR_STRENGTH = @RESIZE@;
@@ -37,7 +38,7 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
         return fr_sample(coords_curr_geo.xy, blend) * (1.0 - pulse);
     // Use final geometry for a stable grid count while the current size changes.
     vec2 next_scale = vec2(niri_curr_geo_to_next_geo[0][0], niri_curr_geo_to_next_geo[1][1]);
-    vec2 final_size = size / max(next_scale, vec2(0.0001));
+    vec2 final_size = fx_resize_reference_size(size / max(next_scale, vec2(0.0001)));
     float tile = FR_COUNT > 0.0 ? max(4.0, sqrt(final_size.x * final_size.y / FR_COUNT)) : FR_TILE;
     vec2 count = ceil(final_size / tile);
     vec2 cell_size = size / count;
@@ -67,7 +68,7 @@ vec4 resize_color(vec3 coords_curr_geo, vec3 size_curr_geo) {
         if (FR_MODE == 1) {
             // Concentrate breakup near the outer bands of changing dimensions.
             // This leaves the central content intact while the boundary rebuilds.
-            vec2 changing = step(vec2(0.0001), abs(next_scale - vec2(1.0)));
+            vec2 changing = step(vec2(0.0001), abs(fx_resize_reference_ratio(next_scale) - vec2(1.0)));
             vec2 edge_distance = abs(center / size - 0.5) * 2.0 * changing;
             local_pulse *= smoothstep(0.5, 0.95, max(edge_distance.x, edge_distance.y));
         }

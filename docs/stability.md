@@ -43,6 +43,42 @@ interface needs a versioned reference and executable compatibility checks.
 The [agent guide](agents.md) builds on CLI discovery and the same Apply/Restore
 contract. A future MCP adapter should reuse those operations.
 
+### Starting compatibility corpus: 0.19
+
+The first [versioned reference cases](../tests/fixtures/compatibility/v0.19/contract.json)
+record a small, executable baseline of current behavior. They begin the contract
+inventory; they do not freeze 0.19 interfaces or complete the 1.0 compatibility
+gate. The existing broader validation and export-parity suites remain required.
+
+| Recorded surface | Semantic expectation |
+| --- | --- |
+| Style schema 3 | Omitted parameters receive defaults; representative timing and shape bounds retain their values and units. Resize remains explicit. |
+| Profile schema 1 imports | Valid older profiles normalize to schema 2 without changing their selected styles or optional-action inheritance. Invalid legacy null opening/closing choices are rejected. |
+| Profile schema 2 action choices | All four action keys are required. `null` means Preserve, `"off"` means Off, and an effect object means NiriFX Style. Preserve omits the override; Off emits an explicit disabling node. |
+| Pointer retention and stock export | Absent or null pointer settings preserve underlying behavior; zero strength is Off, and positive strength retains the chosen settings. Stock export omits experimental movement and pointer settings, including explicit Off choices. |
+| Unsupported input | Unknown fields, schemas and actions, partial pointer settings, unsupported resize families, booleans used as numbers and out-of-range controls fail validation. CLI `inspect` returns status 2 with a diagnostic and no success JSON. Error sentences are not frozen. |
+| Representative catalog IDs | `balanced`, `spring-wobble`, `frost-vanish` and `soft-landing` remain discoverable with their recorded families and action intent. Catalog size, ordering, recommendations and shader bytes are not snapshotted. |
+| CLI JSON consumers | Discovery, parameter metadata, profile composition, normalized inspection and compact catalog examples retain the recorded fields, types and meanings. Additional response fields are allowed; this does not relax strict imported-document validation. |
+
+Python and the DOM-free browser core consume the same reference documents. They
+compare normalized values and stock action semantics, including omission and Off,
+without requiring identical KDL formatting or stored shader text. CLI cases run
+the actual module entry point, using temporary files for imports. These checks
+run through the existing Python and Node test commands; focused runs are:
+
+```sh
+python3 -m unittest discover -s tests -p 'test_compatibility.py' -v
+node --test tests/effect-core.test.mjs
+```
+
+Keep earlier reference cases reviewable when extending the corpus. An intentional
+0.x change needs an explicit migration decision and updated guidance, rather than
+silently replacing expected values to make a test pass. These examples do not yet
+cover released-package upgrades, saved favorites and Restore history, the complete
+CLI and adapter inventory, or a supported environment matrix. Native activation
+and renderer contract numbers remain experimental and are outside this starting
+baseline. All 1.0 gates below remain open.
+
 ### Compatibility has a direction
 
 Backward compatibility means a newer 1.x release can use a document or command from any

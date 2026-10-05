@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **209 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **213 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -302,6 +302,8 @@ compositor or prove seamless retargeting. [Acceptance scope](../validation.md#wo
 | [Orthogonal width](native-resize-orthogonal-width-comparison.gif) | Change height during width motion, then retarget both axes |
 | [Orthogonal height](native-resize-orthogonal-height-comparison.gif) | Change width during height motion, then retarget both axes |
 | [Timing reload](native-resize-timing-reload-height-comparison.gif) | Reload a 350 ms resize duration during a 1200 ms height resize, then reverse |
+| [Minimum width](native-resize-minimum-width-comparison.gif) | Shrink a column to 10 px, retarget to 11 px while moving, then restore it |
+| [Minimum height](native-resize-minimum-height-comparison.gif) | Repeat the floor retarget in the upper window of a stack |
 
 The first two comparisons use the v0.18.0 movement experiment on the left and the
 updated experiment on the right. These are sequential native captures with the same synthetic
@@ -331,7 +333,7 @@ Available build metadata must agree; fields absent from an older manifest remain
 explicitly unverified. Stock and pointer-extension baselines are rejected.
 
 Both axes must reproduce the original gap and keep updated edges within the
-four-pixel capture tolerance before publication. Ten unit tests cover these
+four-pixel capture tolerance before publication. Twelve unit tests cover these
 acceptance gates, tag/source identity and decoded-frame failures:
 
 ```sh
@@ -364,12 +366,59 @@ height pair is 1000 pixels wide so that horizontal growth stays visible. Reload
 completion timestamps include the harness's documented 200 ms settling wait;
 ordinary resize acknowledgements retain the 150 ms limit.
 
+The minimum-size comparisons use a preserved v0.19.0 release build. Both versions
+receive the same solid-color geometry masks, removing stretched texture-edge
+filtering near the one-pixel floor. Preserve that build and manifest, then run:
+
+```sh
+python3 scripts/record-resize-minimum.py \
+  --baseline-manifest /path/to/niri-fx-0.19/artifacts/niri-movement-build.json
+```
+
+This writes under `artifacts/resize-minimum/`. Add `--publish` to install both
+1200-pixel-wide comparisons, update `scenario-manifest.json` and save the
+[minimum-size report](../benchmarks/resize-minimum.json). The baseline must show
+overlap and the current build must preserve the gap. Frames where video conversion
+loses the one-pixel source are excluded from visible-edge measurements and report
+neighbor clearance from the verified stationary origin separately.
+
 Active geometry paths retain their original timing through a reload; newly moving
-axes use the new timing. Shader-phase restarts, resize-to-close snapshots and
-shared minimum-size constraints remain limitations. The existing size floor is
-applied before constructing geometry, preventing negative-size debug panics, but
-an independently moving neighbor can still pass that floor. See
-[validation scope](../validation.md#resize-geometry-continuity).
+axes use the new timing. Source and neighbor now sample shared constrained paths
+at the floor. Closing during resize still uses a snapshot. See the
+[validation scope](../validation.md#resize-geometry-continuity) for geometry and
+retained-appearance acceptance.
+
+## Native retained resize comparisons
+
+[Fragments](native-resize-material-fragments-comparison.gif) and
+[triangles](native-resize-material-triangles-comparison.gif) show a preserved
+v0.19.0 build on the left and the updated renderer on the right. Both receive
+identical generated shaders, a 1500 ms duration and strength 0.9. A 400×360 card
+grows to width 700, changes to height 460 after 450 ms, then changes to width 520
+after another 300 ms. The 50 fps clips play at actual configured speed.
+
+Use the same dependencies and preserved v0.19.0 release manifest as the minimum
+comparisons. Run the acceptance gate before recording:
+
+```sh
+python3 scripts/test-resize-material.py --suite all --output-targets \
+  --report artifacts/resize-material.json
+python3 scripts/record-resize-material.py \
+  --baseline-manifest /path/to/niri-fx-0.19/artifacts/niri-movement-build.json
+```
+
+The recorder uses the existing nested-session, video and baseline-verification
+helpers. It checks timed client commits, visible interior breakup, the public
+companion and intact settled content. Raw videos, stills and `checks.json` stay
+under `artifacts/resize-material-comparison/`. Add `--publish` to install both
+900-pixel-wide, 48-color GIFs, update `scenario-manifest.json` and save the
+[comparison report](../benchmarks/resize-material-continuity.json). Regenerate
+the gallery and run `python3 scripts/check-docs.py` afterward.
+
+The separate pixel diagnostic proves retained phase/reference dimensions,
+shader reload/removal behavior and dynamic privacy. These comparisons do not
+establish resize-to-close continuation.
+[Acceptance and remaining limits](../validation.md#retained-material-acceptance-unreleased).
 
 ## Expanded styles, resize and native continuity
 
