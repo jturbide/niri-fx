@@ -142,7 +142,7 @@ def parser():
 
     profile.add_argument(
         "--pointer",
-        choices=(*POINTER_PRESETS, "off"),
+        choices=(*POINTER_PRESETS, "preserve", "off"),
         help="Save optional pointer wobble settings in JSON; off saves an explicit zero strength",
     )
 
@@ -152,8 +152,20 @@ def parser():
         help="Include stock workspace, camera and overview timing",
     )
     profile.add_argument("--name")
-    profile.add_argument("--open-preset", choices=PRESETS)
-    profile.add_argument("--close-preset", choices=PRESETS)
+    profile.add_argument(
+        "--open",
+        "--open-preset",
+        dest="open_preset",
+        choices=(*PRESETS, "preserve", "off"),
+        help="Opening choice: a preset, preserve, or off",
+    )
+    profile.add_argument(
+        "--close",
+        "--close-preset",
+        dest="close_preset",
+        choices=(*PRESETS, "preserve", "off"),
+        help="Closing choice: a preset, preserve, or off",
+    )
     profile.add_argument("--action-set", choices=ACTION_SETS, help="Start with a coordinated look")
     profile.add_argument(
         "--include-resize", action="store_true", help="Include the set's matching resize effect"
@@ -164,11 +176,24 @@ def parser():
         help="Include the set's experimental movement choice in JSON; does not activate it",
     )
     profile.add_argument(
-        "--resize-preset", choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["resize"]]
+        "--resize",
+        "--resize-preset",
+        dest="resize_preset",
+        choices=[
+            *[k for k, e in PRESETS.items() if FAMILIES[e.family]["resize"]],
+            "preserve",
+            "off",
+        ],
     )
     profile.add_argument(
+        "--movement",
         "--movement-preset",
-        choices=[k for k, e in PRESETS.items() if FAMILIES[e.family]["movement"]],
+        dest="movement_preset",
+        choices=[
+            *[k for k, e in PRESETS.items() if FAMILIES[e.family]["movement"]],
+            "preserve",
+            "off",
+        ],
         help="Save an experimental movement action in JSON; activate it separately",
     )
     for name, help_text in (
@@ -450,13 +475,22 @@ def main(argv=None):
             else:
                 if arguments.include_resize or arguments.include_movement:
                     raise ValueError("--include-resize and --include-movement require --action-set")
+
+                def choose(value, default=None):
+                    value = value if value is not None else default
+                    return (
+                        None
+                        if value in (None, "preserve")
+                        else "off"
+                        if value == "off"
+                        else PRESETS[value]
+                    )
+
                 effect = Profile(
-                    open=PRESETS[arguments.open_preset or "spring-wobble"],
-                    close=PRESETS[arguments.close_preset or "core-detonation"],
-                    resize=PRESETS[arguments.resize_preset] if arguments.resize_preset else None,
-                    movement=PRESETS[arguments.movement_preset]
-                    if arguments.movement_preset
-                    else None,
+                    open=choose(arguments.open_preset, "spring-wobble"),
+                    close=choose(arguments.close_preset, "core-detonation"),
+                    resize=choose(arguments.resize_preset),
+                    movement=choose(arguments.movement_preset),
                     motion=MOTION_PACKS[arguments.desktop_motion]
                     if arguments.desktop_motion
                     else None,
@@ -465,7 +499,9 @@ def main(argv=None):
             if arguments.pointer:
                 effect = replace(
                     effect,
-                    pointer=PointerWobble(strength=0)
+                    pointer=None
+                    if arguments.pointer == "preserve"
+                    else PointerWobble(strength=0)
                     if arguments.pointer == "off"
                     else POINTER_PRESETS[arguments.pointer].wobble,
                 )

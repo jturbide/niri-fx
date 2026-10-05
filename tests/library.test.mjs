@@ -133,8 +133,8 @@ test("library combines supported actions, preserves edits and saves offline with
       'byId("combo-mode").value="same";byId("combo-mode").dispatchEvent(new Event("change"));byId("combo-same").value="frost-vanish";byId("combo-same").dispatchEvent(new Event("change"))',
     );
     const unsupported = await evaluate("effectDocument()");
-    assert.equal(unsupported.actions.resize, null);
-    assert.equal(unsupported.actions.movement, null);
+    assert.equal(unsupported.actions.resize.family, "fragments");
+    assert.equal(unsupported.actions.movement.family, "fragments");
     assert.deepEqual(unsupported.actions.open, unsupported.actions.close);
     await evaluate(
       'byId("combo-name").value="";byId("combo-name").dispatchEvent(new Event("change"))',
@@ -318,5 +318,106 @@ test("installed Library UI manages its JSON shelf through the authenticated serv
       await stopped;
     }
     rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("all action modes survive editing, shared styles, preview, Undo and saved JSON", async () => {
+  const html = execFileSync(
+    "python3",
+    [
+      "-c",
+      'from niri_fx.preview import preview_document; from niri_fx.presets import PRESETS; print(preview_document(PRESETS["balanced"], hosted=True))',
+    ],
+    { cwd: projectRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+  );
+  const server = createServer((_request, response) => {
+    response.writeHead(200, { "Content-Type": "text/html" });
+    response.end(html);
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  const browser = await launchBrowser();
+  const url = `http://127.0.0.1:${server.address().port}/?breakup=0`;
+  try {
+    await browser.navigate(url);
+    const evaluate = browser.evaluate;
+    const setMode = (action, mode) =>
+      evaluate(
+        `byId('combo-${action}-mode').value='${mode}';byId('combo-${action}-mode').dispatchEvent(new Event('change'))`,
+      );
+    for (const [action, mode] of Object.entries({
+      open: "off",
+      close: "preserve",
+      resize: "off",
+      movement: "preserve",
+      pointer: "off",
+    }))
+      await setMode(action, mode);
+    const original = await evaluate("effectDocument()");
+    assert.equal(original.schema, 2);
+    assert.deepEqual(original.actions, { open: "off", close: null, resize: "off", movement: null });
+    assert.equal(original.pointer.strength, 0);
+    assert.equal(await evaluate('byId("combo-open").disabled'), true);
+    assert.equal(await evaluate('byId("combo-open-tune").disabled'), true);
+    assert.deepEqual(
+      await evaluate("decodeShareDocument(encodeShareDocument(effectDocument()))"),
+      original,
+    );
+    await setMode("close", "style");
+    await evaluate(
+      'byId("combo-mode").value="same";byId("combo-mode").dispatchEvent(new Event("change"));byId("combo-same").value="spring-wobble";byId("combo-same").dispatchEvent(new Event("change"))',
+    );
+    const shared = await evaluate("effectDocument()");
+    assert.equal(shared.actions.open, "off");
+    assert.equal(shared.actions.close.family, "elastic");
+    assert.equal(shared.actions.resize, "off");
+    assert.equal(shared.actions.movement, null);
+    await evaluate(
+      'byId("show-editor").click();byId("action").value="close";byId("action").dispatchEvent(new Event("change"));byId("action-mode").value="preserve";byId("action-mode").dispatchEvent(new Event("change"))',
+    );
+    assert.equal(await evaluate("effectDocument().actions.close"), null);
+    assert.match(await evaluate('byId("caption").textContent'), /underlying desktop or shell/);
+    assert.equal(await evaluate('byId("family").disabled'), true);
+    await evaluate(
+      'byId("action-mode").value="style";byId("action-mode").dispatchEvent(new Event("change"))',
+    );
+    assert.deepEqual(await evaluate("effectDocument().actions.close"), shared.actions.close);
+    await evaluate('byId("undo").click()');
+    assert.equal(await evaluate('byId("action-mode").value'), "preserve");
+    await evaluate('byId("redo").click()');
+    assert.equal(await evaluate('byId("action-mode").value'), "style");
+    for (const mode of ["preserve", "off"]) {
+      for (const action of ["open", "close", "resize", "movement"]) await setMode(action, mode);
+      await evaluate(
+        'byId("preview-combo").click();niriFxComboPreview.seek(niriFxComboPreview.currentPlan.totalMs)',
+      );
+      assert.equal(await evaluate("document.documentElement.dataset.shaderStatus"), "ready");
+      assert.equal(await evaluate("comboPreviewFrame.visible"), mode === "preserve");
+      assert.equal(
+        await evaluate(
+          '(()=>{const gl=byId("stage").getContext("webgl"),p=new Uint8Array(4);gl.readPixels(600,380,1,1,gl.RGBA,gl.UNSIGNED_BYTE,p);return p[3]})()',
+        ),
+        mode === "preserve" ? 255 : 0,
+      );
+    }
+    await setMode("open", "preserve");
+    await evaluate(
+      'byId("combo-name").value="Mode choices";byId("combo-name").dispatchEvent(new Event("change"));byId("store-profile").click();byId("profile-confirm").click()',
+    );
+    await evaluate(
+      'new Promise((resolve,reject)=>{const start=Date.now();function check(){if(!byId("profile-dialog").open)resolve();else if(Date.now()-start>5000)reject(new Error(byId("profile-dialog-error").textContent||"Save timeout"));else setTimeout(check,30)}check()})',
+    );
+    const saved = await evaluate("effectDocument()");
+    await browser.navigate(url);
+    await evaluate(
+      'byId("library-collection").value="customs";byId("library-collection").dispatchEvent(new Event("change"));document.querySelector("[data-style=custom-mode-choices]").click()',
+    );
+    assert.deepEqual(await evaluate("effectDocument()"), saved);
+    assert.equal(await evaluate('byId("combo-open-mode").value'), "preserve");
+    assert.equal(await evaluate('byId("combo-close-mode").value'), "off");
+    assert.equal(await evaluate('byId("combo-pointer-mode").value'), "off");
+    assert.equal(await evaluate('byId("error").textContent'), "");
+  } finally {
+    await browser.close();
+    await new Promise((resolve) => server.close(resolve));
   }
 });

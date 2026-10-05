@@ -49,7 +49,7 @@ class ProfileTests(unittest.TestCase):
     def test_profile_validation_rejects_ambiguous_or_unsupported_actions(self):
         profile = Profile(Effect(), Effect())
         for changes in (
-            {"open": None},
+            {"open": False},
             {"close": []},
             {"resize": PRESETS["iris-bloom"]},
             {"movement": PRESETS["noise-dissolve"]},

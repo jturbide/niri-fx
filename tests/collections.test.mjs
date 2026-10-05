@@ -100,7 +100,7 @@ test("action companions require explicit opt-in and survive import and Undo", as
         assert.deepEqual(await browser.evaluate("parameters"), suggestions[action]);
         assert.equal(await browser.evaluate("byId('action-companion-note').hidden"), false);
         await browser.evaluate(
-          "byId('action-enabled').checked=true;byId('action-enabled').dispatchEvent(new Event('change'))",
+          "byId('action-mode').value='style';byId('action-mode').dispatchEvent(new Event('change'))",
         );
         assert.deepEqual(
           await browser.evaluate(`effectDocument().actions.${action}`),
@@ -116,7 +116,7 @@ test("action companions require explicit opt-in and survive import and Undo", as
           suggestions[action],
         );
         await browser.evaluate(
-          "byId('action-enabled').checked=false;byId('action-enabled').dispatchEvent(new Event('change'))",
+          "byId('action-mode').value='preserve';byId('action-mode').dispatchEvent(new Event('change'))",
         );
         assert.deepEqual(await browser.evaluate("effectDocument()"), before);
       }

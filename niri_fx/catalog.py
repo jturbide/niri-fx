@@ -11,7 +11,7 @@ from dataclasses import replace
 
 from .action_sets import ACTION_SETS
 from .documents import effect_document
-from .model import FAMILIES
+from .model import FAMILIES, Effect
 from .motion import MOTION_PACKS
 from .presets import PRESETS
 from .profiles import Profile
@@ -344,7 +344,7 @@ def families(style):
         if isinstance(style, Profile)
         else (style,)
     )
-    return tuple(dict.fromkeys(effect.family for effect in effects if effect is not None))
+    return tuple(dict.fromkeys(effect.family for effect in effects if isinstance(effect, Effect)))
 
 
 def documents(styles=STYLES):
@@ -377,8 +377,8 @@ def summaries(keys):
             "description": PROFILE_RECIPES[key][2]
             if profile
             else RECOMMENDED.get(key, FAMILIES[style.family]["label"]),
-            "open_ms": opening.open_ms,
-            "close_ms": closing.close_ms,
+            "open_ms": opening.open_ms if isinstance(opening, Effect) else None,
+            "close_ms": closing.close_ms if isinstance(closing, Effect) else None,
             "optional_actions": optional,
         }
     return result

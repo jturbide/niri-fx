@@ -295,8 +295,14 @@ test("pointer choices survive Library editing, JSON, sharing and stock-safe expo
     await choose("");
     assert.equal(await evaluate('Object.hasOwn(effectDocument(),"pointer")'), false);
     assert.equal(await evaluate('byId("pointer-kdl").hidden'), true);
-    await evaluate(
-      `(async()=>{const files=new DataTransfer();files.items.add(new File([${JSON.stringify(JSON.stringify(saved))}],"pointer.json",{type:"application/json"}));byId("import-file").files=files.files;await byId("import-file").onchange()})()`,
+    await browser.callFunction(
+      `async function(text) {
+        const files = new DataTransfer();
+        files.items.add(new File([text], "pointer.json", {type: "application/json"}));
+        byId("import-file").files = files.files;
+        await byId("import-file").onchange();
+      }`,
+      [JSON.stringify(saved)],
     );
     assert.deepEqual(await evaluate("effectDocument()"), saved);
     assert.equal(await evaluate('byId("combo-pointer").value'), "custom");

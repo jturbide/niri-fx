@@ -38,8 +38,35 @@ function createComboPreview({
     const stages = [];
     let totalMs = 0;
     function add(action, direction, fromOffset, toOffset, hold = true) {
-      const effect = actions[action],
-        mode = ["resize", "movement"].includes(action) ? action : "effect",
+      const effect = actions[action];
+      if (effect === null || effect === "off") {
+        const preserved = effect === null;
+        const label =
+          action === "movement" ? "Move / swap" : action[0].toUpperCase() + action.slice(1);
+        const stage = {
+          action,
+          mode: "idle",
+          effect: null,
+          direction,
+          fromOffset: toOffset,
+          toOffset,
+          size: action === "resize" && direction === "grow" ? [800, 440] : [600, 380],
+          visible: preserved || action !== "close",
+          label: label + (preserved ? " · Preserve" : " · Off"),
+          support: preserved
+            ? "Underlying desktop or shell animation cannot be previewed without its context"
+            : "Instant endpoint; animation disabled" +
+              (action === "movement" ? "; stock Niri exports omit movement" : ""),
+          actionDurationMs: 0,
+          phase: "hold",
+          startMs: totalMs,
+          durationMs: holdMs,
+        };
+        stages.push(stage);
+        totalMs += stage.durationMs;
+        return;
+      }
+      const mode = ["resize", "movement"].includes(action) ? action : "effect",
         family = families[effect.family];
       if (!family || (mode !== "effect" && !family[mode]))
         throw new Error("This family does not support " + action + ".");
@@ -115,7 +142,10 @@ function createComboPreview({
       totalMs += stage.durationMs;
     }
     add("close", null, [0, 0], [0, 0], false);
-    return freeze({ document: snapshot, stages, seed, reducedMotion, totalMs });
+    const preservedActions = Object.entries(actions)
+      .filter(([, value]) => value === null)
+      .map(([action]) => action);
+    return freeze({ document: snapshot, stages, seed, reducedMotion, totalMs, preservedActions });
   }
   function sample(plan, elapsedMs) {
     if (!Number.isFinite(elapsedMs)) throw new Error("Preview timestamp must be finite.");
@@ -146,6 +176,7 @@ function createComboPreview({
       action: stage.action,
       mode: stage.mode,
       effect: stage.effect,
+      ...(stage.mode === "idle" ? { visible: stage.visible, size: stage.size } : {}),
       direction: stage.direction,
       progress: stage.action === "open" ? 1 - fraction : fraction,
       offset:
@@ -155,7 +186,11 @@ function createComboPreview({
       seed: plan.seed,
       phase: pointer?.phase || stage.phase,
       label: stage.label,
-      support: stage.support,
+      support:
+        stage.support +
+        (plan.preservedActions?.length
+          ? " · Preserve: " + plan.preservedActions.join(", ") + "; desktop context required"
+          : ""),
       actionDurationMs: stage.actionDurationMs,
       elapsedMs,
       totalMs: plan.totalMs,

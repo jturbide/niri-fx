@@ -77,6 +77,34 @@ for (const [name, stiffness] of Object.entries({
   );
   check((await c.undo()) && read(options.configPath) === original, `${name} desktop motion Undo`);
 }
+const modesPath = `${profilePath}.modes`;
+for (const value of [null, "off"]) {
+  write(
+    modesPath,
+    JSON.stringify({
+      kind: "profile",
+      schema: 2,
+      name: "Quiet actions",
+      actions: { open: value, close: value, resize: value, movement: value },
+    }),
+  );
+  check(await c.loadFile(modesPath), c.error);
+  check(
+    c.items.find((row) => row.id === "custom").families.length === 0,
+    "Non-style family filtering",
+  );
+  check(await c.review(), c.error);
+  if (value === "off") {
+    check(!c.canApply && !(await c.apply()) && !exists(include), "Resize Off needs consent");
+    c.consentResize(true);
+  }
+  check(await c.apply(), c.error);
+  check(!read(include).includes("window-movement"), "Stock export omitted native Off");
+  check(
+    (await c.undo()) && read(options.configPath) === original && !exists(include),
+    "Mode profile Undo",
+  );
+}
 check(await c.loadFile(profilePath), c.error);
 check(!!c.actions.resize && !c.allowResize, "Profile consent defaults");
 await c.review();

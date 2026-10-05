@@ -26,6 +26,13 @@ def agent_info():
         "document_formats": {
             "effect_schema": PRESET_SCHEMA,
             "profile_schema": PROFILE_SCHEMA,
+            "accepted_profile_schemas": [1, PROFILE_SCHEMA],
+            "action_modes": {"preserve": None, "off": "off", "style": "effect object"},
+            "pointer_modes": {
+                "preserve": "absent or null",
+                "off": "strength: 0",
+                "style": "positive strength settings",
+            },
             "max_bytes": MAX_DOCUMENT_BYTES,
             "shader_actions": ["open", "close", "resize", "movement"],
             "optional_profile_settings": ["motion", "pointer"],

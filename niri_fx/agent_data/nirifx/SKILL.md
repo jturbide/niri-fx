@@ -74,3 +74,14 @@ without the experimental session. Do not bypass a refused native reactivation.
 
 For detailed examples and adapter limits, read the
 [agent guide](https://github.com/jturbide/niri-fx/blob/main/docs/agents.md).
+
+## Independent action choices
+
+Profiles use schema 2. Each shader action is an effect object (NiriFX Style),
+`null` (Preserve) or `"off"` (Off). Schema 1 inputs normalize without changing
+behavior. Preserve inherits the configuration underneath NiriFX; it does not
+reset to stock defaults or retain a previously applied NiriFX override.
+Use `profile --open preserve --close frost-vanish --resize off` to compose a
+partial profile. Pointer preserves when absent/null, disables with strength 0,
+and selects a style with positive strength. Stock exports omit movement and
+pointer overrides, including Off; native activation requires contract 2.

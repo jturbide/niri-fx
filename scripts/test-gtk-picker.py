@@ -177,6 +177,45 @@ def view_check(gjs, recording):
                 recorder = None
             session.capture("gtk-restored")
 
+            quiet = root / "Quiet actions.json"
+            for value in (None, "off"):
+                quiet.write_text(
+                    json.dumps(
+                        {
+                            "kind": "profile",
+                            "schema": 2,
+                            "name": "Quiet actions",
+                            "actions": dict.fromkeys(
+                                ("open", "close", "resize", "movement"), value
+                            ),
+                            "pointer": {"strength": 0, "damping": 50, "frequency": 6},
+                        }
+                    )
+                )
+                action("loadFile", str(quiet))
+                data = settled(
+                    lambda d, selected=value: (
+                        d["selected"] == "custom" and d["document"]["actions"]["resize"] == selected
+                    )
+                )
+                assert not data["error"] and not data["allowResize"]
+                action("review")
+                data = settled(
+                    lambda d: d["status"] == "Review ready. Apply activates this selection."
+                )
+                assert data["canApply"] == (value is None)
+                if value == "off":
+                    action("consentResize", True)
+                    settled(lambda d: d["canApply"])
+                action("apply")
+                settled(lambda d: bool(d["undo"]))
+                assert "window-movement" not in include.read_text()
+                action("undo")
+                settled(lambda d: not d["undo"])
+                assert config.read_bytes() == original and not include.exists()
+            action("select", "balanced")
+            settled(lambda d: d["selected"] == "balanced")
+
             # A close hides immediately but must let a pending transaction finish.
             action("review")
             settled(lambda d: d["canApply"])

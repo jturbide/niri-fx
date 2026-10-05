@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { PickerController } from "../niri_fx/gtk/controller.mjs";
+import { PickerController, actionDescription } from "../niri_fx/gtk/controller.mjs";
 
 const balanced = { family: "fragments", open_ms: 520, close_ms: 480, resize: false };
 const catalog = { balanced, shockwave: { ...balanced, family: "distortion" } };
@@ -277,4 +277,31 @@ test("profile review checks desktop timing independently of its window actions",
   assert.equal(await c.review(), false);
   assert.match(c.error, /changed since loading/);
   assert.equal(c.canApply, false);
+});
+
+test("Preserve and Off profiles stay browsable and resize Off requires consent", async () => {
+  const doc = {
+    kind: "profile",
+    schema: 2,
+    name: "Quiet",
+    actions: { open: null, close: "off", resize: "off", movement: null },
+  };
+  const { controller: c, calls } = harness((args) =>
+    args[0] === "inspect" ? doc : args[0] === "setup" ? plan(doc.actions) : {},
+  );
+  c.presets.quiet = doc;
+  assert(!c.families.includes(undefined));
+  c.select("quiet");
+  assert.deepEqual(c.items.find((row) => row.id === "quiet").families, []);
+  await c.loadFile("/quiet.json");
+  assert.deepEqual(c.items.find((row) => row.id === "custom").families, []);
+  assert(await c.review());
+  assert.equal(c.canApply, false);
+  assert.equal(await c.apply(), false);
+  assert(!calls.some((args) => args.includes("--apply")));
+  c.consentResize(true);
+  assert.equal(c.canApply, true);
+  assert.equal(actionDescription(null, "open"), "Preserve · desktop / shell");
+  assert.equal(actionDescription("off", "resize"), "Off");
+  assert.match(actionDescription(balanced, "open"), /NiriFX Style.*520 ms/);
 });

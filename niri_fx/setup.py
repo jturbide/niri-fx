@@ -154,8 +154,15 @@ def _native_requirements(path, overrides, seen=None):
         for raw_name, arguments, children in nodes:
             name = _kdl_string(raw_name)
             if parents[-2:] == ("animations", "window-movement"):
-                if name in ("pointer-wobble", "custom-shader"):
-                    kind = "pointer" if name == "pointer-wobble" else "movement"
+                if name in (
+                    "pointer-wobble",
+                    "custom-shader",
+                    "preserve-movement",
+                    "preserve-pointer",
+                ):
+                    kind = (
+                        "pointer" if name in ("pointer-wobble", "preserve-movement") else "movement"
+                    )
                     signature = digest(json.dumps((arguments, children)).encode())
                     requirements.add((kind, signature))
             if not parents and name == "include" and arguments:
@@ -377,7 +384,7 @@ def plan_setup(args, effect, custom=None):
             "The standalone include takes effect when Niri loads this configuration, including through its normal config reload when already active."
         )
         notes.append(
-            "The include comes last and overrides earlier open/close animations; keep one animation manager."
+            "The include comes last. Preserve inherits the underlying desktop settings; selected styles and Off override only their actions."
         )
     if args.launcher:
         launcher = launcher_change()

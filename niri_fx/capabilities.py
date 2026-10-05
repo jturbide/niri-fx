@@ -21,7 +21,7 @@ IPC_TIMEOUT = 2
 MAX_REPLY = 8192
 BASE_CONFIG = "animations { window-movement { duration-ms 200; %s }; }\n"
 SHADER_NODE = 'custom-shader "vec4 move_color(vec3 c, vec3 s) { return vec4(0.0); }";'
-MOVEMENT_CONTRACT = 1
+MOVEMENT_CONTRACT = 2
 POINTER_NODE = "pointer-wobble { strength 0.7; damping 65; frequency 8; };"
 
 
@@ -90,7 +90,7 @@ def _pointer_contract(connection):
     unknown = {"status": "unknown", "detail": "Running pointer wobble contract is unverified."}
     try:
         data = _reply(connection, "NiriFxPointerCapabilities")["Ok"]["NiriFxPointerCapabilities"]
-        integers = {"schema": 1, "pointer_wobble": 1, "max_deformation": 64, "max_release_ms": 2000}
+        integers = {"schema": 1, "pointer_wobble": 2, "max_deformation": 64, "max_release_ms": 2000}
         booleans = {"renderer_verified", "configured", "enabled"}
         if (
             not isinstance(data, dict)

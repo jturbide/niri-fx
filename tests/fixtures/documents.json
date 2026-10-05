@@ -798,5 +798,82 @@
         "frequency": 8.0
       }
     }
+  },
+  {
+    "name": "all preserved actions",
+    "document": {
+      "kind": "profile",
+      "schema": 2,
+      "name": "Action choices",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": null
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "all disabled actions",
+    "document": {
+      "kind": "profile",
+      "schema": 2,
+      "name": "Action choices",
+      "actions": {
+        "open": "off",
+        "close": "off",
+        "resize": "off",
+        "movement": "off"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "mixed action modes",
+    "document": {
+      "kind": "profile",
+      "schema": 2,
+      "name": "Action choices",
+      "actions": {
+        "open": null,
+        "close": {
+          "family": "wisps"
+        },
+        "resize": "off",
+        "movement": "off"
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "unrecognized action mode",
+    "document": {
+      "kind": "profile",
+      "schema": 2,
+      "name": "Action choices",
+      "actions": {
+        "open": "preserve",
+        "close": {},
+        "resize": null,
+        "movement": null
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "boolean action mode",
+    "document": {
+      "kind": "profile",
+      "schema": 2,
+      "name": "Action choices",
+      "actions": {
+        "open": false,
+        "close": {},
+        "resize": null,
+        "movement": null
+      }
+    },
+    "valid": false
   }
 ]
