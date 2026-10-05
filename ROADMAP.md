@@ -96,14 +96,19 @@ compositor build with an explicit upgrade path.
 
 ### Installation, selection and rollback
 
-- [ ] Present candidate status, review and rollback through the existing CLI and
-      Studio, with no additional background configuration manager.
+- [x] Present retained-bundle status, review and next-login rollback through the
+      existing CLI without a background configuration manager.
+- [ ] Add the same native-session review and rollback controls to Studio.
+- [x] Prepare a per-user systemd login launcher that pins a selected pair,
+      preserves the stock service lifecycle and handles stale leases.
 - [ ] Package a distinctly named compositor and NiriFX login session alongside
       stock Niri, including desktop features, portals and service lifecycle.
-- [ ] Review candidate configuration separately, keeping unsupported native
-      nodes out of the stock-session configuration.
-- [ ] Select updates for the next login; retain the previous binary/config pair
+- [x] Review self-contained candidate configuration separately, keeping unsupported
+      native nodes out of the stock-session configuration.
+- [x] Select updates for the next login; retain the previous binary/config pair
       and never restart a running compositor from a background updater.
+- [ ] Import existing include trees into an isolated candidate configuration
+      with a reviewable ownership boundary.
 - [ ] Show candidate disk usage and provide reviewed cleanup that preserves
       running, selected and rollback versions.
 - [ ] Verify failed install, interrupted update, changed shared dependencies,

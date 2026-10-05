@@ -364,6 +364,9 @@ def parser():
         command.add_argument(
             "--dry-run", action="store_true", help="Print the proposed registry; write nothing"
         )
+    from .native_cli import add_parser
+
+    add_parser(commands)
     return root
 
 
@@ -376,7 +379,11 @@ def main(argv=None):
         argv = ["setup", "--interactive"]
     arguments = parser().parse_args(argv)
     try:
-        if arguments.command == "families":
+        if arguments.command == "native":
+            from .native_cli import run
+
+            run(arguments)
+        elif arguments.command == "families":
             print(json.dumps(FAMILIES, indent=2))
         elif arguments.command == "agent-info":
             from .agent import agent_info, parameter_info, skill_text
