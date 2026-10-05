@@ -45,6 +45,8 @@ import-boundary test enforces that separation.
 | [picker.py](../niri_fx/picker.py), [qml/](../niri_fx/qml/), [gtk/](../niri_fx/gtk/) | Optional desktop launchers and reusable pickers. Toolkit views call the CLI through argument arrays; no shader renderer or configuration writer is duplicated in the UI. |
 | [setup.py](../niri_fx/setup.py), [pack.py](../niri_fx/pack.py) | Inspectable plans, apply/restore snapshots, standalone includes and picker folders. |
 | [storage.py](../niri_fx/storage.py) | Staged, flushed file writes and atomic replacement. Callers decide ownership, locking and symlink policy. |
+| [native_build.py](../niri_fx/native_build.py), [native_session.py](../niri_fx/native_session.py) | Read-only native build evidence, retained desktop bundles and selector-only next-login rollback. Reuses setup plans and transactions; never writes stock config. |
+| [native_cli.py](../niri_fx/native_cli.py), [native_entry.py](../niri_fx/native_entry.py), [native_login.py](../niri_fx/native_login.py) | Experimental CLI and staged per-user login entry. A process-bound runtime lease preserves upstream `niri.service` lifecycle; selection cannot restart a desktop. |
 | [scripts/lib/browser.mjs](../scripts/lib/browser.mjs) | Isolated Chromium lifecycle and bounded CDP requests for tests, recording and measurement. Not a runtime dependency. |
 
 ## One catalog, two execution environments

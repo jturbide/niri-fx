@@ -6,6 +6,7 @@ import os
 import re
 import shlex
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -471,6 +472,8 @@ def plan_fingerprint(plan):
         "changes": [
             {k: item[k] for k in ("logical", "target", "mode")}
             | {side: digest(item[side]) for side in ("before", "after")}
+            | ({"expected_mode": item["expected_mode"]} if "expected_mode" in item else {})
+            | ({"regular_only": True} if item.get("regular_only") else {})
             for item in plan.get("observed", plan["changes"])
         ],
     }
@@ -479,6 +482,21 @@ def plan_fingerprint(plan):
 
 def check_unchanged(item, expected):
     logical, target = Path(item["logical"]), Path(item["target"])
+    if item.get("regular_only"):
+        if any(path.is_symlink() for path in (logical, *logical.parents)):
+            raise ValueError(f"Native session path changed to a symlink: {logical}")
+        try:
+            info = target.lstat()
+        except FileNotFoundError:
+            info = None
+        if info is not None and not stat.S_ISREG(info.st_mode):
+            raise ValueError(f"Native session path is no longer a regular file: {logical}")
+    if (
+        item.get("expected_mode") is not None
+        and target.exists()
+        and stat.S_IMODE(target.stat().st_mode) != item["expected_mode"]
+    ):
+        raise ValueError(f"File permissions changed since the plan: {logical}")
     if logical.resolve() != target or read_bytes(target) != expected:
         raise ValueError(f"File changed since the plan/snapshot; leaving it untouched: {logical}")
 
@@ -623,6 +641,11 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
         if selected is None:
             raise ValueError("No applied setup snapshot remains to restore")
         path, data = selected
+        if data["target"].startswith("native-session-"):
+            raise ValueError(
+                "Native bundles are retained for running sessions and recovery. "
+                "Use native rollback to change the next-login selection; automatic bundle removal is unavailable."
+            )
         work = []
         for i, item in enumerate(data["files"]):
             before = read_bytes(path.parent / f"{i}.before")

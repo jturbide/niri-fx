@@ -121,8 +121,10 @@ fields; old artifacts are not rewritten to invent missing build inputs.
 `--desktop` checks recorded release mode and the full default desktop feature set.
 It does not establish renderer support, library/driver compatibility or physical
 desktop acceptance. Neither inspection mode executes a candidate, changes
-configuration or installs/selects a session. Versioned packages and next-login selection are separate
-[planned lifecycle work](../docs/desktop-updates.md#planned-user-workflow).
+configuration or installs/selects a session. Continue with the separate
+[native-session workflow](../docs/native-session.md) for next-login selection;
+[distribution packages](../docs/desktop-updates.md#available-commands-and-planned-distribution-packages)
+remain planned.
 
 ### Toolchain and isolated demo
 

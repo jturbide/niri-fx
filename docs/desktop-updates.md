@@ -80,11 +80,11 @@ with separate source, build output and a copied executable. Failed attempts
 cannot overwrite an earlier working build. Testing requires choosing that
 candidate's manifest explicitly; no build updates a launcher or login selection.
 
-Today, the supported developer workflow is a pinned build and an isolated
-nested preview. Building does not install a compositor or upgrade the login
-session. Use the [experimental guide](../experimental/README.md) and preserve
-your stock session. Do not apply the patch inside a distribution's package
-source or replace its installed executable manually.
+Start with a pinned build and an isolated nested preview. The experimental
+[native-session commands](native-session.md) can then prepare a separate desktop
+bundle and select it for the next login. Building alone never installs or selects
+a compositor. Preserve your stock session; do not apply the patch inside a
+distribution's package source or replace its installed executable manually.
 
 Desktop builds need the upstream desktop feature set, not just the minimal
 nested-test binary. Session wiring also covers D-Bus, portals and service
@@ -93,9 +93,12 @@ and [Getting started](https://niri-wm.github.io/niri/Getting-Started.html).
 Successful compilation or matching file hashes do not establish desktop or
 capture acceptance.
 
-### Planned user workflow
+### Available commands and planned distribution packages
 
-The following is the intended distribution design, **not an available installer**:
+The CLI now supports reviewed local bundles, next-login selection, rollback and
+a staged per-user systemd login entry. Registering that entry with a display
+manager remains an administrator step. Studio controls, dependency-aware
+distribution packages and signed compositor downloads are still planned:
 
 1. Install a separately named NiriFX compositor package/session alongside stock
    Niri. Keep stock configuration free of unsupported native nodes.

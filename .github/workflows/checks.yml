@@ -109,6 +109,9 @@ jobs:
           /tmp/niri-fx-package/bin/niri-fx preview --output fragments.html
           /tmp/niri-fx-package/bin/niri-fx render --preset diagonal-shear > slices.kdl
           /tmp/niri-fx-package/bin/python -m niri_fx --version
+          /tmp/niri-fx-package/bin/niri-fx native status --root /tmp/nirifx-native-empty > native-status.json
+          /tmp/niri-fx-package/bin/python -m niri_fx.native_login --help
+          /tmp/niri-fx-package/bin/python -c "from pathlib import Path; import json; assert json.loads(Path('native-status.json').read_text())['bundles'] == []; assert not Path('/tmp/nirifx-native-empty').exists()"
           /tmp/niri-fx-package/bin/niri-fx list --text --recommended
           /tmp/niri-fx-package/bin/niri-fx list --profiles --text
           /tmp/niri-fx-package/bin/niri-fx list --documents > catalog.json

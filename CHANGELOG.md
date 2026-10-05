@@ -9,6 +9,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Experimental `native stage`, `status`, `select`, `rollback` and `session-entry`
+  commands prepare retained desktop binary/configuration pairs and reviewed
+  next-login selection. The per-user systemd launcher preserves the stock Niri
+  service lifecycle, pins one pair per login and falls back to stock for expired
+  leases. Display-manager registration remains an administrator step; physical
+  desktop acceptance and distribution packages are still pending.
 - Isolated native build candidates preserve earlier source trees, Cargo outputs
   and executables. Successful attempts publish their own manifest and copied
   binary; explicit per-variant selection lets native tests use a candidate
