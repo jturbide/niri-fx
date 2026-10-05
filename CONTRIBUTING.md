@@ -50,10 +50,15 @@ temporary account and the candidate package:
 ```sh
 node scripts/test-first-use.mjs
 node scripts/test-first-use.mjs --wheel dist/niri_fx-X.Y.Z-py3-none-any.whl
+# Also exercise the installed iNiR serializer with temporary configuration:
+node scripts/test-first-use.mjs --inir-root /path/to/inir \
+  --wheel dist/niri_fx-X.Y.Z-py3-none-any.whl
 ```
 
 This checks selection, per-action choices, save/review/cancel, Apply, reopening
-Studio and exact Restore through the real UI. It needs Node 22+, Chromium and
+Studio and exact Restore through the real UI. `--inir-root` additionally checks
+the real shell helper's serialization and active-style recognition while reading
+its installed source without modifying it. It needs Node 22+, Chromium and
 stock Niri for config validation; it does not connect to a desktop session.
 
 Use a fresh output filename. `--save-test` is only for a Studio process explicitly

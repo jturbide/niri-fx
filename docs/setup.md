@@ -178,6 +178,11 @@ Existing launchers are preserved. Nothing starts at login.
 | iNiR | Merge built-in styles and profiles into the user registry; preserve other providers and named styles | Select a style in iRiS Settings → Windows → Movement → Style |
 | Standalone | Generate `nirifx/animations.kdl` beside the root config; append one marked include | Niri hot reloads the include when that config is loaded |
 
+This table describes CLI setup. In Library, **Review & apply** followed by
+**Apply** activates the chosen iNiR profile through the shell's existing helper.
+The shell recognizes that profile, including independent **Off** choices;
+**Preserve** keeps the base action's settings and unrelated animation timings.
+
 Built-ins preserve existing resize settings; built-in profiles leave movement
 and pointer choices unset. To save an iNiR custom style, use
 `--name`; custom options cannot silently modify the whole built-in pack.
@@ -214,8 +219,10 @@ python3 -m niri_fx restore --apply       # Restore it
 python3 -m niri_fx restore --transaction SNAPSHOT # Preview a specific snapshot
 ```
 
-For iNiR, select your previous non-NiriFX style **before restoring**. Registry
-restoration does not remove a shader already embedded in the active config.
+After CLI iNiR pack setup, select your previous non-NiriFX style **before restoring**.
+Registry restoration does not remove a shader already embedded in the active config.
+Library's **Restore previous** restores both its registry change and the previous
+active animation configuration, so that separate shell selection is unnecessary.
 Standalone restoration removes the managed include and restores the original
 root config. Files created by setup are removed only if they still match the
 recorded setup. Existing symlinks are preserved.

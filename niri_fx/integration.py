@@ -76,7 +76,16 @@ def make_preset(identifier, label, effect, chosen, base_types):
     """Overlay only requested actions onto a copy of the user's base settings."""
     family = "profile" if isinstance(effect, Profile) else effect.family
     types = deepcopy(base_types)
-    types.update(animation_types(effect))
+    # iNiR's registry serializer and active-preset matcher accept timing/spring
+    # specs, not Niri's `off` node. Zero duration has no animation under slowdown
+    # either; replacing the whole spec also removes any inherited shader. Keep
+    # the portable profile's explicit Off choice unchanged below.
+    types.update(
+        {
+            action: {"duration-ms": 0, "curve": "linear"} if spec == {"off": True} else spec
+            for action, spec in animation_types(effect).items()
+        }
+    )
     return {
         "id": identifier,
         "name": f"NiriFX · {label}",

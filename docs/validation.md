@@ -57,9 +57,13 @@ Restore returns the exact previous files. Shared styles retain Preserve/Off
 choices, and controls, Undo, JSON downloads and sharing agree across the editor.
 Quickshell and GTK/AGS checks exercise the same Library transactions.
 
-The installed upgrade harness verifies the checksum of the official 0.18 wheel,
+The installed upgrade harness verifies the checksum of the published source wheel,
 creates saved profiles, favorites, registrations and existing Restore history,
-then installs the candidate 0.19 wheel. Original user files remain byte-identical.
+then installs the candidate wheel. Original user files remain byte-identical.
+Checks from 0.18 cover legacy schema migration; checks from 0.19 also retain an
+active mixture of Preserve and Off. Both CLI and Library Restore reject external
+edits without changing files or consuming their snapshots, then recover exact
+original bytes when the conflict is resolved.
 Installed CLI, HTTP and browser paths accept schema 2 choices, enforce resize
 consent and restore exactly. Native activation is verified separately in owned
 contract-2 compositor sessions. [Reproduce an upgrade](releases.md#verify-an-upgrade).
@@ -69,9 +73,19 @@ in empty temporary accounts, with no desktop session connection. It selects
 Fragment Flow, checks all five action controls, saves a named profile, verifies
 that Review and Cancel leave config unchanged, applies, restarts Studio and
 restores the original files exactly while retaining the saved profile. Stock
-Niri validates the generated configuration. A synthetic helper also checks
-automatic iNiR selection and an explicit standalone override; that check does
-not certify activation through a real iNiR installation.
+Niri validates the generated configuration. A synthetic helper checks automatic
+iNiR selection and an explicit standalone override.
+
+With the **Unreleased adapter fix**, the same browser workflow also passes from
+source and an installed wheel using the real iNiR helper. The separate
+`scripts/test-library-adapters.py` check hosts the actual iRiS service and gallery
+in an owned nested session. Ten helper combinations cover individual, mixed and
+all-Off actions with global Off/slowdown, inherited Off, unrelated timings,
+active-style recognition, shell reselection and exact Restore. The service sees
+Apply and Restore through its file watcher. These checks used iNiR revision
+`c08bb928fe71c6a00bfede3e99ef26fb1825ebe2` and Quickshell 0.3.1, temporary config/state
+and unchanged installed helper source. They establish this adapter workflow;
+they do not replace a full login-shell acceptance check.
 
 The complete local Studio suite still runs every rendering matrix and save flow.
 CI splits browser workflows, three shape aspects, motion and Studio into six
@@ -676,12 +690,10 @@ node --test tests/combo-preview-browser.test.mjs
 node scripts/record-combo-showcases.mjs
 ```
 
-The [release acceptance check](releases.md#verify-an-upgrade) installs the
-checksum-verified official 0.16 wheel, preserves old exported JSON, favorites,
-iNiR registry entries and an existing CLI Restore snapshot over an upgrade, then
-exercises installed Library Save/Review/Apply/Restore in disposable configurations.
-It also checks installed combo playback against an unchanged imported document.
-This synthetic registry test does not cover every downstream shell customization.
+The [release acceptance check](releases.md#verify-an-upgrade) also checks installed
+combo playback against an unchanged imported document. Its
+[upgrade and recovery checks](#independent-action-choices-and-upgrades) use disposable
+configurations; the synthetic registry does not cover downstream shell customizations.
 
 The Library uses the existing Studio document and history. Browser checks cover
 independent actions, supported optional selectors, shared styles, Undo, edited

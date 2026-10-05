@@ -1,12 +1,14 @@
 # iNiR / iRiS integration contract
 
 Niri renders application windows. iNiR provides shared shell services; iRiS is
-one of its shell families. Fragments uses Niri GLSL and the existing external
+one of its shell families. NiriFX uses Niri GLSL and the existing external
 preset registry, without modifying installed QML or running an animation daemon.
+For choosing and applying effects, start with [Library](library.md). This page
+describes the adapter boundaries for contributors and shell integrators.
 
 ## Shell interfaces
 
-Checked against the installed iNiR source during development on 2026-10-02:
+The adapter uses these iNiR interfaces:
 
 - `services/NiriAnimationPresets.qml` loads and watches user presets.
 - `scripts/niri-config.py get-animation-presets` returns available entries and
@@ -17,9 +19,11 @@ Checked against the installed iNiR source during development on 2026-10-02:
 - Applying a preset replaces the shell-managed animations block while retaining
   global off/slowdown controls.
 
-This is an integration contract to recheck after shell updates, not a stable
-third-party plugin API. The native gallery thumbnail shows generic timing; it
+Recheck these interfaces after shell updates; iNiR does not provide a stable
+third-party plugin API for this adapter. The native gallery thumbnail shows generic timing; it
 cannot reproduce the fragment shader. Detailed controls remain in Studio.
+The [validation guide](validation.md#independent-action-choices-and-upgrades)
+records the tested helper and service workflows.
 
 ## Registry ownership and activation
 
@@ -27,19 +31,31 @@ Built-in IDs use `niri-fx-`; named custom IDs use
 `niri-fx-custom-`. Pack updates replace only incoming owned IDs and preserve
 named custom styles and other providers. Malformed JSON, duplicate IDs and foreign
 ownership collisions are rejected. Writes are atomic, back up the resolved target,
-and preserve symlinks. Unregister removes all Fragments entries, including customs.
+and preserve symlinks. Unregister removes all NiriFX entries, including customs.
 
 Each generated entry snapshots the recognized base preset's other animation
 settings. An unknown active style requires an explicit `--base`; timings are not
-approximated. Base changes are not inherited automatically. Since 0.4.1, base
-resize settings are preserved unless a resize effect is selected. Custom JSON
-without a resize field also preserves them; existing custom choices survive.
+approximated. Base changes are not inherited automatically. Each stock action
+can Preserve its base settings, use a NiriFX Style or be Off. Preserve follows the
+underlying shell preset, including a disabled action; it does not copy a previous
+NiriFX override.
 
-Registration and Studio saving do not activate effects. A shell preset selection
-performs activation. Re-registering does not replace the shader already embedded
-in Niri's config: reselect it afterward. Named customs keep their saved shader
-until explicitly saved again. Unregister also leaves the active config untouched;
-select a non-Fragments style first. See [update and rollback](getting-started.md).
+The shell's serializer and active-style matcher represent Off as `duration-ms 0`
+with a linear curve and no custom shader. The adapter uses that representation
+in registry `types`; the portable profile still stores `"off"`. Standalone KDL
+exports continue to emit Niri's `off` node. Global Off and slowdown controls and
+unselected animation types retain their existing values.
+
+Registration and saving a profile leave the active config unchanged. Selecting a
+registered style in the shell activates it. Library's **Review & apply** uses the
+installed serializer to prepare the registry and animation file together; its
+reviewed transaction validates the Niri config and saves a Restore snapshot.
+The shell service watches those files and recognizes the applied style.
+
+Re-registering alone does not replace a shader already embedded in Niri's config:
+reselect it afterward, or use Library Apply. Unregister also leaves active effects
+unchanged. Restore a Library transaction with **Restore previous**, or select a
+shell style before unregistering. See [update and rollback](getting-started.md).
 
 ## Studio
 
@@ -54,25 +70,21 @@ Chromium app mode uses a dedicated profile under
 `--no-browser` to launch nothing. The server exits after 15 minutes without a
 browser heartbeat, or immediately with Ctrl+C from its terminal.
 
-Movement shaders are never written to this registry or stock KDL exports. Studio
-Move/Swap tabs are design previews; the [native experiment](../experimental/README.md)
-has its own isolated build and config.
+Movement shaders and pointer deformation are excluded from this registry's
+animation types. Portable profiles retain those choices, and Studio can preview
+them. Live native activation uses the standalone target and a verified
+[experimental compositor](../experimental/README.md).
 
-## Future integrations
+## Other shells
 
-Possible iNiR contributions include a Studio launcher, optional effect metadata
-for native controls, and a shader-accurate gallery preview. They should be developed
-against upstream source and reviewed separately from installed shell files.
-See [compatibility](compatibility.md) for the proposed DMS adapter and compositor
-boundaries; none of these future integrations are implied by current registration.
+The [DMS adapter](dms.md), [Noctalia guide](noctalia.md) and standalone Library
+share the same effect model and transaction backend. They have different
+configuration owners; they do not use iNiR's registry. See
+[compatibility](compatibility.md) before adding an adapter or extending a shell UI.
 
 ## NiriFX identity
 
 The CLI, registry generator and ID prefix are `niri-fx`; the Python package is
-`niri_fx`. Single-effect documents use schema 3; independent action profiles use kind `profile`, schema 2, with schema 1 import support. Slices supports opening, closing, resizing and experimental movement;
-Fragments and Elastic movement requires patched niri. Registry paths remain
+`niri_fx`. Single-effect documents use schema 3; independent action profiles use
+kind `profile`, schema 2, with schema 1 import support. Registry paths remain
 those defined by iNiR's external-preset API, including its config-root selection.
-
-Profile registration replaces opening and closing independently, and only overrides
-base resize when its separate resize slot is present. Experimental movement is
-preserved in the source document but excluded from stock iRiS animation types.

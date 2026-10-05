@@ -6,6 +6,7 @@ iNiR serializer and active-preset recognition, not a mock or the login desktop.
 """
 
 import argparse
+import copy
 import json
 import os
 import shutil
@@ -14,8 +15,10 @@ from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
 
+sys.dont_write_bytecode = True
 ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(ROOT))
+if "--installed" not in sys.argv:
+    sys.path.insert(0, str(ROOT))
 from lib.nested import NestedSession, wait_for
 
 from niri_fx.documents import effect_document
@@ -25,11 +28,12 @@ from niri_fx.presets import PRESETS
 from niri_fx.profiles import Profile
 
 
-def exercise(source):
+def exercise(source, installed=False):
     import subprocess
 
     base = 'hotkey-overlay { skip-at-startup; }\ninclude "config.d/60-animations.kdl"\n'
     with NestedSession("hotkey-overlay { skip-at-startup; }\n") as session:
+        session.env["PYTHONDONTWRITEBYTECODE"] = "1"
         animation = session.config.parent / "config.d/60-animations.kdl"
         animation.parent.mkdir()
         animation.write_text("animations { slowdown 1.25; }\n")
@@ -46,6 +50,15 @@ def exercise(source):
             )
 
         assert shell("apply-animation-preset", "snappy")["success"]
+        # A pre-existing disabled action belongs to the shell base, so Preserve
+        # must retain it alongside unrelated spring/timing settings.
+        base_preset = copy.deepcopy(
+            next(p for p in shell("get-animation-presets")["presets"] if p["id"] == "snappy")
+        )
+        base_preset.update(id="existing-off", name="Existing shell choices")
+        base_preset["types"]["window-open"] = {"duration-ms": 0, "curve": "linear"}
+        registry.write_text(json.dumps({"presets": [base_preset]}) + "\n")
+        assert shell("apply-animation-preset", "existing-off")["success"]
         args = SimpleNamespace(
             config=session.config,
             registry=registry,
@@ -54,32 +67,36 @@ def exercise(source):
             base="auto",
         )
         original = animation.read_bytes()
+        registry_before = registry.read_bytes()
         root_before = session.config.read_bytes()
         selection = {
             "document": effect_document(
-                "Night Motion", Profile(PRESETS["zipper"], PRESETS["frost-vanish"])
+                "Night Motion", Profile(None, PRESETS["frost-vanish"], resize="off")
             ),
-            "allow_resize": False,
+            "allow_resize": True,
             "allow_movement": False,
         }
         with patch.dict(os.environ, session.env):
+            test_inir_modes(args, shell, animation)
             library = Library(args, "inir")
             plan = library.review(selection)
-            assert animation.read_bytes() == original and not registry.exists()
+            assert animation.read_bytes() == original and registry.read_bytes() == registry_before
             library.apply({"selection": selection, "expected": plan["plan_sha256"]})
             assert shell("get-animation-presets")["active"] == "niri-fx-custom-night-motion"
             assert "slowdown 1.25" in animation.read_text()
             active_shell = shell("get-animation-presets")
             active = next(p for p in active_shell["presets"] if p["id"] == active_shell["active"])
-            base_preset = next(p for p in active_shell["presets"] if p["id"] == "snappy")
+            base_preset = next(p for p in active_shell["presets"] if p["id"] == "existing-off")
             assert active["types"].get("window-movement") == base_preset["types"].get(
                 "window-movement"
             )
             library.store({"document": selection["document"], "expected": None})
             assert library.listing()["active"]["name"] == "Night Motion"
-            test_iris_entry(session, source)
-            assert animation.read_bytes() == original and not registry.exists()
-            assert shell("get-animation-presets")["active"] == "snappy"
+            assert active["types"]["window-open"] == {"duration-ms": 0, "curve": "linear"}
+            assert active["types"]["window-resize"] == {"duration-ms": 0, "curve": "linear"}
+            test_iris_entry(session, source, installed=installed)
+            assert animation.read_bytes() == original and registry.read_bytes() == registry_before
+            assert shell("get-animation-presets")["active"] == "existing-off"
             assert session.config.read_bytes() == root_before
             for target in ("standalone", "noctalia"):
                 if target == "noctalia":
@@ -100,11 +117,62 @@ def exercise(source):
                 library.undo()
                 assert session.config.read_bytes() == before
         print(
-            f"PASS: iNiR active recognition, globals, stock movement omission; standalone and Noctalia Apply/Restore. Evidence: {session.root}"
+            f"PASS: real iNiR mixed/individual/all Off, inherited Off, globals, active recognition/reselection, iRiS watcher/Restore; standalone and Noctalia Apply/Restore. Evidence: {session.root}"
         )
 
 
-def test_iris_entry(session, source):
+def test_inir_modes(args, shell, animation):
+    """Real helper serialization/matching, including globals and exact recovery."""
+    original = animation.read_bytes()
+    registry = args.registry.read_bytes()
+    base = shell("get-animation-presets")
+    base_types = next(p["types"] for p in base["presets"] if p["id"] == base["active"])
+    for global_off in (False, True):
+        before = original.replace(b"// off", b"off", 1) if global_off else original
+        animation.write_bytes(before)
+        for profile in (
+            Profile(open="off", close=PRESETS["frost-vanish"]),
+            Profile(close="off"),
+            Profile(resize="off"),
+            Profile(open="off", close="off", resize="off"),
+            Profile(None, PRESETS["frost-vanish"], resize="off"),
+        ):
+            selection = {
+                "document": profile.document("Action choices"),
+                "allow_resize": profile.resize is not None,
+                "allow_movement": False,
+            }
+            library = Library(args, "inir")
+            review = library.review(selection)
+            assert animation.read_bytes() == before and args.registry.read_bytes() == registry
+            library.apply({"selection": selection, "expected": review["plan_sha256"]})
+            current = shell("get-animation-presets")
+            assert current["active"] == "niri-fx-custom-action-choices"
+            applied = next(p for p in current["presets"] if p["id"] == current["active"])
+            assert applied["profile"] == selection["document"]
+            for action in ("open", "close", "resize"):
+                value = getattr(profile, action)
+                node = f"window-{action}"
+                if value == "off":
+                    assert applied["types"][node] == {"duration-ms": 0, "curve": "linear"}
+                elif value is None:
+                    assert applied["types"].get(node) == base_types.get(node)
+            for node, spec in base_types.items():
+                if node not in ("window-open", "window-close", "window-resize"):
+                    assert applied["types"][node] == spec
+            content = animation.read_bytes()
+            assert b"slowdown 1.25" in content
+            assert (b"\n    off\n" in content) == global_off
+            # The actual shell may reselect the entry after Library Apply.
+            assert shell("apply-animation-preset", current["active"])["success"]
+            assert animation.read_bytes() == content
+            assert shell("get-animation-presets")["active"] == current["active"]
+            library.undo()
+            assert animation.read_bytes() == before and args.registry.read_bytes() == registry
+    animation.write_bytes(original)
+
+
+def test_iris_entry(session, source, *, installed=False):
     import importlib.util
     import subprocess
 
@@ -142,7 +210,7 @@ def test_iris_entry(session, source):
     dispatch = session.root / "studio-dispatch.json"
     executable = bin_dir / "niri-fx"
     executable.write_text(
-        f"#!{sys.executable}\nimport os,sys,json\nos.chdir({str(ROOT)!r})\n"
+        f"#!{sys.executable}\nimport os,sys,json\nos.chdir({str(session.root if installed else ROOT)!r})\n"
         "if sys.argv[1] == 'studio' and '--restore' not in sys.argv and '--status' not in sys.argv:\n"
         f" with open({str(dispatch)!r},'w') as f: json.dump(sys.argv[1:],f)\n"
         "else:\n"
@@ -188,4 +256,14 @@ def test_iris_entry(session, source):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--inir-root", type=Path, default=default_inir_root())
-    exercise(parser.parse_args().inir_root.resolve())
+    parser.add_argument(
+        "--installed", action="store_true", help="Use this Python's installed NiriFX"
+    )
+    arguments = parser.parse_args()
+    if arguments.installed:
+        import niri_fx
+
+        imported = Path(niri_fx.__file__).resolve()
+        assert imported.parent != ROOT / "niri_fx"
+        assert imported.is_relative_to(Path(sys.prefix).resolve()), (imported, sys.prefix)
+    exercise(arguments.inir_root.resolve(), installed=arguments.installed)

@@ -9,6 +9,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Installed upgrade checks accept the published 0.19 package, including active
+  Preserve/Off choices. CLI and Library Restore must retain their recovery history
+  and refuse external edits before recovering the original files exactly.
 - Experimental resize effects retain their deformation phase, piece layout and
   current material across repeated size changes. Client content updates on a
   separate clock; shader replacements take effect on the next resize episode.
@@ -38,6 +41,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- iNiR/iRiS registration and Library Apply encode Off using the shell's supported
+  timing format, allowing mixed action choices to serialize and remain recognizable
+  by its active-style matcher. Portable profiles keep their explicit Off choices.
 - Minimum-size resize paths now share constrained displacement with neighboring
   windows, preventing the overlap caused by independent curves. Regressions cover
   simultaneous resizes, source removal, swaps and focus changes.

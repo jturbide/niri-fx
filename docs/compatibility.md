@@ -7,7 +7,7 @@ do not need iNiR installed.
 
 | Setup | Current path | Tested setup and limitations |
 | --- | --- | --- |
-| Niri + iNiR/iRiS | Native preset registration and Studio save | iNiR/iRiS c08bb92 gallery selection, apply and restore tested with Quickshell 0.3.1. |
+| Niri + iNiR/iRiS | Shared Library Apply/Restore and native preset registration | iNiR/iRiS c08bb92 helper and service tested with Quickshell 0.3.1; mixed Preserve/Style/Off requires the Unreleased adapter fix. |
 | Standalone Niri | Generated KDL include; Studio exports | Generated configs validated with Niri 26.04. |
 | Niri + DankMaterialShell | [Launcher adapter](dms.md) or KDL include | DMS 1.6.2 launcher selection, apply and undo tested in a component host. |
 | Niri + Noctalia 5 | [Exported KDL preset pack](noctalia.md) for its existing Niri Animations plugin | All 91 current style/profile includes validated; Noctalia 5.2.1 picker selected styles and returned to base in an isolated UI test. |
