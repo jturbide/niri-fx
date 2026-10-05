@@ -104,7 +104,13 @@ Previews start paused when someone opens the link.
 | Exported `preview` HTML | Yes, without a server | No |
 
 The hosted page is a static GitHub Pages site. It has no analytics or preset
-backend. For use without hosting, generate the self-contained editor:
+backend. Its footer shows the version and **UI build**, which identifies the
+editor and built-in catalog independently of your settings. Compare it with
+local Studio when checking whether both use the same UI. Reload the web page
+after an update; an exported HTML file needs to be regenerated. This identity
+does not describe or verify a running compositor.
+
+For use without hosting, generate the self-contained editor:
 
 ```sh
 python3 -m niri_fx preview --preset explosion --output /tmp/nirifx-studio.html

@@ -89,7 +89,9 @@ are developer regression controls, not separate consumer editions.
       follow their updates, retaining a validated full snapshot for recovery.
       The current frozen baseline requires a new import for other desktop changes.
 - [x] Present recommended combos and per-action presets first; keep configuration
-      paths, build identities and technical controls in advanced details.
+      paths, compositor build identities and technical controls in advanced details.
+- [x] Identify the loaded Studio version and UI build in local, web and offline
+      modes, with update guidance separate from compositor identity.
 - [x] Offer the same preset/action choices through CLI and agent discovery.
 - [x] Share verified live Apply and rollback between Studio, CLI and agents,
       binding each desktop reload to its reviewed session and configuration.

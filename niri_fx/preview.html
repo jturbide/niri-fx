@@ -399,6 +399,23 @@
         active until you select another style there.</small
       >
     </details>
+    <section class="studio-info" aria-label="Studio version and help">
+      <span id="studio-identity"
+        >Studio @STUDIO_VERSION@ · UI build <code id="studio-build">@STUDIO_BUILD@</code></span
+      >
+      <details id="studio-about">
+        <summary>About this Studio</summary>
+        <p id="studio-mode-help">@STUDIO_MODE_HELP@</p>
+        <p>
+          The UI build identifies these controls and built-in styles. Include it with the version
+          when reporting a Studio issue.
+        </p>
+        <p>
+          Compositor identity and support are separate. In a NiriFX session, open
+          <strong>Session details and saved recipe</strong> to inspect its build.
+        </p>
+      </details>
+    </section>
   </footer>
   <dialog
     id="profile-dialog"

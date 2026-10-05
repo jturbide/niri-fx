@@ -9,6 +9,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Studio's footer shows its version and UI build in local, web and offline modes,
+  making different editor builds recognizable even when they share a version.
+  About explains how to load updates and separates Studio from compositor identity.
 - Independent Swap styles for explicit left/right window swaps in updated NiriFX
   builds. Move continues to control ordinary movement and dragging. Preserve
   retains the underlying swap setting; older builds retain their shared behavior

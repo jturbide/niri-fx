@@ -8,6 +8,13 @@ profile, sharing and importing are secondary tools below it. Online Studio offer
 Download JSON as its primary finishing action. Detailed tuning stays available in
 the same app.
 
+The footer shows the Studio version and **UI build**. Use both when reporting
+an issue or comparing the installed app with Web Studio; development builds can
+share a version number. After updating the installed tools, close and reopen
+Studio. Existing windows keep the editor they loaded. **About this Studio**
+explains the current mode. The compositor has its own identity under
+**Session details and saved recipe** when using a NiriFX session.
+
 ![Choose a look, mix actions and export a profile](gifs/workflow-library.gif)
 
 ## First use: choose, review and restore

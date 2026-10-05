@@ -204,6 +204,17 @@ test("simple Studio previews one action while preserving the rest of the combo",
         Buffer.from(narrow.data, "base64"),
       );
     }
+    await evaluate('byId("studio-about").open=true');
+    assert.equal(await evaluate("document.documentElement.scrollWidth <= innerWidth"), true);
+    if (process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT) {
+      await evaluate('byId("studio-identity").scrollIntoView({block:"center"})');
+      const footer = await browser.rpc("Page.captureScreenshot", { format: "png" });
+      writeFileSync(
+        process.env.NIRIFX_SIMPLE_STUDIO_SCREENSHOT.replace(/\.png$/, "-about.png"),
+        Buffer.from(footer.data, "base64"),
+      );
+    }
+    await evaluate('byId("studio-about").open=false');
     await action("combo");
     await choose("fragment-flow");
     assert.equal(await evaluate("effectDocument().name"), "Fragment Flow");
@@ -708,6 +719,14 @@ finally:
         [id, value],
       );
     await wait("byId('active-look').textContent.startsWith('Next login: ')");
+    assert.equal(
+      await evaluate('byId("studio-build").textContent'),
+      await evaluate("catalog.studio.build"),
+    );
+    assert.match(
+      await evaluate('byId("studio-mode-help").textContent'),
+      /Local Studio.*Close and reopen Studio/s,
+    );
     assert.equal(await evaluate("byId('native-session').hidden"), false);
     assert.equal(await evaluate("byId('save-target').hidden"), true);
     assert.equal(await evaluate("effectDocument().effect.spin"), 50);
