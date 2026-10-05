@@ -225,8 +225,10 @@ expensive software-WebGL matrices.
       startup error when cleanup also fails.
 - [x] Keep Library save and Apply workflow checks free of unnecessary preview
       playback, while retaining full animation coverage in rendering checks.
-- [ ] Bind recording provenance to the loaded preview and reject source changes
-      during capture, so a clip cannot claim a later source revision.
+- [x] Bind Studio workflow, combo and pointer recordings to their original loaded
+      preview; reject changed inputs and retain existing media when verification fails.
+- [ ] Extend loaded-preview provenance binding to the generic shader-gallery
+      recorder while retaining current-source checks.
 
 ## Stable 1.0 acceptance
 

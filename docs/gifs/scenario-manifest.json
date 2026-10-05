@@ -759,8 +759,15 @@
       "source": "examples/profiles/pointer-preview-gentle.json",
       "frames": 125,
       "fps": 25,
-      "bytes": 1009378,
       "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ],
+      "bytes": 1009378,
       "sources": {
         "examples/profiles/pointer-preview-gentle.json": "2a9049652d7a170d7bfd40f0070c42eda0619adf3ed287c476aa338f31fd5d37",
         "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
@@ -773,15 +780,21 @@
         "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
         "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
         "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
-        "scripts/record-pointer-preview.mjs": "4a7f6633346b9b7f83400e9da99cc8a8155ea9760917e950c756e192444f83cd"
+        "scripts/record-pointer-preview.mjs": "28251dc221f45086eeaf04b56d6aefa119a8ca75c3fcb9f05aaa8e529d558b4d"
       },
-      "checks": [
-        "actual Preview combo button",
-        "deterministic drag, reverse and release",
-        "selected pointer controls",
-        "complete open and close cycle",
-        "document and Undo history unchanged"
-      ]
+      "capture": {
+        "schema": 1,
+        "preview_sha256": "10c9d8883b819dc3e8309927dfefd16fe03652fb46c8b383cf7821f5c64d5fe5",
+        "inputs_sha256": "15baab0334b8fac9230c7851e542ba467ec312383dd109b57b4168f1240a442c",
+        "studio": {
+          "version": "0.19.0",
+          "build": "e68d07c663bc"
+        },
+        "tool_sources": {
+          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
+        }
+      }
     },
     {
       "name": "pointer-preview-rubber-sheet",
@@ -790,8 +803,15 @@
       "source": "examples/profiles/pointer-preview-rubber-sheet.json",
       "frames": 125,
       "fps": 25,
-      "bytes": 1058952,
       "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ],
+      "bytes": 1058952,
       "sources": {
         "examples/profiles/pointer-preview-rubber-sheet.json": "bd4c24355ea56916cb1115cbdde491a543de600642812bebd27f9287a569d884",
         "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
@@ -804,15 +824,21 @@
         "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
         "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
         "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
-        "scripts/record-pointer-preview.mjs": "4a7f6633346b9b7f83400e9da99cc8a8155ea9760917e950c756e192444f83cd"
+        "scripts/record-pointer-preview.mjs": "28251dc221f45086eeaf04b56d6aefa119a8ca75c3fcb9f05aaa8e529d558b4d"
       },
-      "checks": [
-        "actual Preview combo button",
-        "deterministic drag, reverse and release",
-        "selected pointer controls",
-        "complete open and close cycle",
-        "document and Undo history unchanged"
-      ]
+      "capture": {
+        "schema": 1,
+        "preview_sha256": "2a178e9a49076b90ba6ccb990df699785f5c33444946af1c9af5d06e56379e58",
+        "inputs_sha256": "15baab0334b8fac9230c7851e542ba467ec312383dd109b57b4168f1240a442c",
+        "studio": {
+          "version": "0.19.0",
+          "build": "e68d07c663bc"
+        },
+        "tool_sources": {
+          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
+        }
+      }
     },
     {
       "name": "pointer-preview-release-settle",
@@ -821,8 +847,15 @@
       "source": "examples/profiles/pointer-preview-release-settle.json",
       "frames": 125,
       "fps": 25,
-      "bytes": 1024245,
       "backend": "Studio native-math pointer preview / synthetic input and texture",
+      "checks": [
+        "actual Preview combo button",
+        "deterministic drag, reverse and release",
+        "selected pointer controls",
+        "complete open and close cycle",
+        "document and Undo history unchanged"
+      ],
+      "bytes": 1024245,
       "sources": {
         "examples/profiles/pointer-preview-release-settle.json": "64a5bd84f733c4f5f4c4e25aa431644df9d75f847d048dfef111dbe5216f562b",
         "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
@@ -835,15 +868,21 @@
         "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
         "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a",
         "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
-        "scripts/record-pointer-preview.mjs": "4a7f6633346b9b7f83400e9da99cc8a8155ea9760917e950c756e192444f83cd"
+        "scripts/record-pointer-preview.mjs": "28251dc221f45086eeaf04b56d6aefa119a8ca75c3fcb9f05aaa8e529d558b4d"
       },
-      "checks": [
-        "actual Preview combo button",
-        "deterministic drag, reverse and release",
-        "selected pointer controls",
-        "complete open and close cycle",
-        "document and Undo history unchanged"
-      ]
+      "capture": {
+        "schema": 1,
+        "preview_sha256": "50fbe74ede19dc3f71eef36923a4c7cef6db30534f36e41b6e1ce286dd749c42",
+        "inputs_sha256": "15baab0334b8fac9230c7851e542ba467ec312383dd109b57b4168f1240a442c",
+        "studio": {
+          "version": "0.19.0",
+          "build": "e68d07c663bc"
+        },
+        "tool_sources": {
+          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
+        }
+      }
     },
     {
       "name": "workflow-terminal",
@@ -2863,19 +2902,9 @@
     {
       "name": "workflow-action-choices",
       "file": "docs/gifs/workflow-action-choices.gif",
-      "bytes": 323032,
       "backend": "actual offline Library UI / synthetic texture",
       "fps": 20,
       "frames": 340,
-      "sources": {
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/studio.js": "dc3c454b08f3a6e12fdb93124886f93e1760743be8215415c84d1200a756cb1a",
-        "niri_fx/preview.html": "6ff746f3963283d597120d36e47346238542b0c659c851c9f6b00d457f10d2e9",
-        "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
-        "scripts/record-action-choices.mjs": "e1c4ed3e9d7ec27149fcf5cad7a24f823cbbb6b5b4e6871d9def47ffe759222b"
-      },
       "checks": [
         "independent Preserve / NiriFX Style / Off",
         "Preserve retains underlying configuration",
@@ -2885,27 +2914,37 @@
         "all stock actions Off",
         "actual JSON/KDL downloads",
         "stock Niri validation"
-      ]
+      ],
+      "bytes": 311234,
+      "sources": {
+        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
+        "niri_fx/studio.js": "dc3c454b08f3a6e12fdb93124886f93e1760743be8215415c84d1200a756cb1a",
+        "niri_fx/preview.html": "6ff746f3963283d597120d36e47346238542b0c659c851c9f6b00d457f10d2e9",
+        "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
+        "scripts/record-action-choices.mjs": "1941fd75d93afd14c956928ea9db9ee3cd265d572591060c4b10d677185ed8ca"
+      },
+      "capture": {
+        "schema": 1,
+        "preview_sha256": "075a997a78bc8d6cb0920368a5792a24bfae795130d1f7dcebc3be11afef6716",
+        "inputs_sha256": "da59e284315bbc89531637fce64e629e041033cc953379172811ecebe3b9f117",
+        "studio": {
+          "version": "0.19.0",
+          "build": "e68d07c663bc"
+        },
+        "tool_sources": {
+          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
+        }
+      }
     },
     {
       "name": "workflow-library",
       "file": "docs/gifs/workflow-library.gif",
-      "bytes": 3759569,
       "backend": "actual offline library UI / synthetic WebGL texture",
       "fps": 20,
       "frames": 784,
-      "sources": {
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
-        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "dc3c454b08f3a6e12fdb93124886f93e1760743be8215415c84d1200a756cb1a",
-        "niri_fx/preview.html": "6ff746f3963283d597120d36e47346238542b0c659c851c9f6b00d457f10d2e9",
-        "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
-        "scripts/record-library-workflow.mjs": "45927893add14a7d6f9a57ef96d4d76ee687da728267b930899b588964e15732"
-      },
       "checks": [
         "recommended selection",
         "independent open/close",
@@ -2924,25 +2963,38 @@
         "remove Library copy only",
         "actual JSON and KDL downloads",
         "stock Niri validation"
-      ]
+      ],
+      "bytes": 3772059,
+      "sources": {
+        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
+        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
+        "niri_fx/studio.js": "dc3c454b08f3a6e12fdb93124886f93e1760743be8215415c84d1200a756cb1a",
+        "niri_fx/preview.html": "6ff746f3963283d597120d36e47346238542b0c659c851c9f6b00d457f10d2e9",
+        "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
+        "scripts/record-library-workflow.mjs": "e045fbc496d4dc48594f4a03dd0a7c07745e87ce9dd0c4f4b8faad3421b3f60f"
+      },
+      "capture": {
+        "schema": 1,
+        "preview_sha256": "075a997a78bc8d6cb0920368a5792a24bfae795130d1f7dcebc3be11afef6716",
+        "inputs_sha256": "782e6930daa23fa967bbee857eca19a34da3bd6b4e26acca2e315340e8e14dbf",
+        "studio": {
+          "version": "0.19.0",
+          "build": "e68d07c663bc"
+        },
+        "tool_sources": {
+          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
+        }
+      }
     },
     {
       "name": "workflow-studio-profile",
       "file": "docs/gifs/workflow-studio-profile.gif",
-      "bytes": 681035,
       "backend": "actual offline Studio UI / synthetic WebGL texture",
-      "sources": {
-        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
-        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
-        "niri_fx/studio.js": "dc3c454b08f3a6e12fdb93124886f93e1760743be8215415c84d1200a756cb1a",
-        "niri_fx/preview.html": "6ff746f3963283d597120d36e47346238542b0c659c851c9f6b00d457f10d2e9",
-        "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
-        "scripts/record-studio-workflow.mjs": "4ca05646fd5aa60c4780e24ed0b5a2cfbc1c46f4b8d6511da8596fbc200be7f5"
-      },
       "fps": 10,
       "frames": 140,
       "checks": [
@@ -2954,7 +3006,33 @@
         "actual JSON and KDL downloads",
         "stock Niri validation",
         "resize absent"
-      ]
+      ],
+      "bytes": 675685,
+      "sources": {
+        "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
+        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
+        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
+        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
+        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/studio.js": "dc3c454b08f3a6e12fdb93124886f93e1760743be8215415c84d1200a756cb1a",
+        "niri_fx/preview.html": "6ff746f3963283d597120d36e47346238542b0c659c851c9f6b00d457f10d2e9",
+        "niri_fx/studio.css": "f8c11f95c013b6e04da7ba0874464047b11f75e5ad934203cabf91289d3bf0c3",
+        "scripts/record-studio-workflow.mjs": "7f949ad61fa2a3f28c7d598f7e98175941652e44f66ad45c5fbe5c5592c4b9a5"
+      },
+      "capture": {
+        "schema": 1,
+        "preview_sha256": "075a997a78bc8d6cb0920368a5792a24bfae795130d1f7dcebc3be11afef6716",
+        "inputs_sha256": "6c3cca879314e373faefe5269c06778e673d8db8400fd37f82043de5743c66d3",
+        "studio": {
+          "version": "0.19.0",
+          "build": "e68d07c663bc"
+        },
+        "tool_sources": {
+          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
+        }
+      }
     }
   ]
 }

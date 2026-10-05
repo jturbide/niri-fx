@@ -2,18 +2,20 @@
 // The window and input are synthetic; this is not a compositor recording.
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { createHash } from "node:crypto";
-import { mkdirSync, mkdtempSync, readFileSync, statSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { pathToFileURL } from "node:url";
 import { launchBrowser, projectRoot } from "./lib/browser.mjs";
+import { recordingProvenance } from "./lib/recording-provenance.mjs";
 
 process.chdir(projectRoot);
-mkdirSync("artifacts", { recursive: true });
-const scratch = mkdtempSync(join(projectRoot, "artifacts/pointer-preview-"));
-const browser = await launchBrowser();
-const fps = 25;
+const capture = recordingProvenance("scripts/record-pointer-preview.mjs");
+let browser;
 try {
+  mkdirSync("artifacts", { recursive: true });
+  const scratch = mkdtempSync(join(projectRoot, "artifacts/pointer-preview-"));
+  browser = await launchBrowser();
+  const fps = 25;
+
   for (const id of ["gentle", "rubber-sheet", "release-settle"]) {
     const name = "pointer-preview-" + id,
       source = "examples/profiles/" + name + ".json",
@@ -21,8 +23,8 @@ try {
       directory = join(scratch, name),
       page = join(directory, "preview.html");
     mkdirSync(directory);
-    execFileSync("python3", ["-m", "niri_fx", "preview", "--custom", source, "--output", page]);
-    await browser.navigate(pathToFileURL(page).href, { width: 720, height: 616 });
+    capture.generate(page, ["--custom", source]);
+    await capture.navigate(browser, { width: 720, height: 616 });
     const { evaluate, rpc } = browser;
     await evaluate(`(() => {
       const style=document.createElement('style');
@@ -64,13 +66,13 @@ try {
         if(document.documentElement.dataset.shaderStatus!=='ready')throw new Error(byId('error').textContent||'Shader not ready');
         return state;
       })()`);
-      const capture = await rpc("Page.captureScreenshot", {
+      const screenshot = await rpc("Page.captureScreenshot", {
         format: "png",
         captureBeyondViewport: false,
       });
       writeFileSync(
         join(directory, String(frame).padStart(4, "0") + ".png"),
-        Buffer.from(capture.data, "base64"),
+        Buffer.from(screenshot.data, "base64"),
       );
     }
     assert.equal(final.action, "close");
@@ -84,6 +86,7 @@ try {
     );
     writeFileSync(join(directory, "timeline.json"), JSON.stringify(plan, null, 2) + "\n");
     const target = "docs/gifs/" + name + ".gif";
+    const encoded = join(directory, "rendered.gif");
     execFileSync("ffmpeg", [
       "-v",
       "error",
@@ -96,11 +99,22 @@ try {
       "scale=480:-1:flags=lanczos,split[a][b];[a]palettegen=max_colors=192:stats_mode=diff[p];[b][p]paletteuse=dither=bayer:bayer_scale=4:diff_mode=rectangle",
       "-loop",
       "0",
-      target,
+      encoded,
     ]);
-    assert(statSync(target).size > 1000);
-    const manifestPath = "docs/gifs/scenario-manifest.json",
-      manifest = JSON.parse(readFileSync(manifestPath));
+    const sources = [
+      source,
+      "niri_fx/library.js",
+      "niri_fx/effect-core.js",
+      "niri_fx/pointer-preview.js",
+      "niri_fx/preview.py",
+      "niri_fx/combo-preview.js",
+      "niri_fx/studio.js",
+      "niri_fx/preview.html",
+      "niri_fx/studio.css",
+      "niri_fx/shaders/gravity.glsl",
+      "niri_fx/shaders/gravity-entry.glsl",
+      "scripts/record-pointer-preview.mjs",
+    ];
     const entry = {
       name,
       file: target,
@@ -108,24 +122,7 @@ try {
       source,
       frames: count,
       fps,
-      bytes: statSync(target).size,
       backend: "Studio native-math pointer preview / synthetic input and texture",
-      sources: Object.fromEntries(
-        [
-          source,
-          "niri_fx/library.js",
-          "niri_fx/effect-core.js",
-          "niri_fx/pointer-preview.js",
-          "niri_fx/preview.py",
-          "niri_fx/combo-preview.js",
-          "niri_fx/studio.js",
-          "niri_fx/preview.html",
-          "niri_fx/studio.css",
-          "niri_fx/shaders/gravity.glsl",
-          "niri_fx/shaders/gravity-entry.glsl",
-          "scripts/record-pointer-preview.mjs",
-        ].map((path) => [path, createHash("sha256").update(readFileSync(path)).digest("hex")]),
-      ),
       checks: [
         "actual Preview combo button",
         "deterministic drag, reverse and release",
@@ -134,13 +131,20 @@ try {
         "document and Undo history unchanged",
       ],
     };
-    const index = manifest.clips.findIndex((clip) => clip.name === name);
-    if (index < 0) manifest.clips.push(entry);
-    else manifest.clips[index] = entry;
-    writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + "\n");
-    console.log(`Rendered ${name}: ${count} frames at ${fps} fps, ${entry.bytes} bytes`);
+    const published = await capture.publish({
+      sources,
+      encoded,
+      destination: target,
+      manifestPath: "docs/gifs/scenario-manifest.json",
+      entry,
+    });
+    console.log(`Rendered ${name}: ${count} frames at ${fps} fps, ${published.bytes} bytes`);
   }
   console.log("PASS: pointer combo recordings. Evidence: " + scratch);
 } finally {
-  await browser.close();
+  try {
+    await browser?.close();
+  } finally {
+    await capture.close();
+  }
 }

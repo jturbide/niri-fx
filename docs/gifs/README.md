@@ -45,6 +45,23 @@ frames with FFmpeg. Sources remain under ignored `artifacts/`; the browser
 profile is removed. `manifest.json` records the Studio clips' frame counts,
 modes and file sizes.
 
+The Studio workflow, action-choice, combo and pointer recorders snapshot their
+inputs before generating the preview. They serve an immutable offline document
+on loopback and verify its original response through Chromium before publishing.
+Their manifest entries retain the preview checksum, input fingerprint, Studio
+build and initial source hashes. Editing a source during capture, even if restored,
+or reloading the preview rejects the recording. Failed verification leaves the
+existing GIF and manifest unchanged; staged frames and output remain in
+`artifacts/` for inspection. Restart the recorder after changing any input.
+
+This guard covers `record-action-choices.mjs`, `record-library-workflow.mjs`,
+`record-studio-workflow.mjs`, `record-combo-showcases.mjs` and
+`record-pointer-preview.mjs`. Runtime, example and recorder hashes remain checked
+against the checkout, including changes to recorded actions and timing. Shared
+browser and provenance helper revisions are retained in `capture.tool_sources` as
+capture history. Editing either helper during a run still rejects that recording.
+The generic shader-gallery and native recorders keep their existing provenance checks.
+
 To render only the comparison, custom recipe and resize showcase clips:
 
 ```sh
