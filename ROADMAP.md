@@ -178,6 +178,9 @@ existing entries once, then switches their shared runtime selection.
       recovery from interrupted display-manager registration.
 - [x] Verify temporary-account adoption, installed runtime upgrades, incompatible
       receipts, interrupted registration and rollback without desktop activation.
+- [x] Show local Studio installation status and a save-and-reopen notice after
+      shared tool selection changes; cover same-version updates, rollback,
+      prepared migration, source installs and unavailable metadata without losing edits.
 - [ ] Include environment creation, shared tool setup and login registration in
       supported distribution packages and an accessible update UI.
 - [ ] Verify the migrated login entry on supported physical desktops, including

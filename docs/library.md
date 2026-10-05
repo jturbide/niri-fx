@@ -11,8 +11,15 @@ the same app.
 The footer shows the Studio version and **UI build**. Use both when reporting
 an issue or comparing the installed app with Web Studio; development builds can
 share a version number. After updating the installed tools, close and reopen
-Studio. Existing windows keep the editor they loaded. **About this Studio**
-explains the current mode. The compositor has its own identity under
+Studio. Existing windows keep the editor they loaded.
+
+Local Studio reports when
+its shared launcher selects a different installation, including builds with the
+same version. Save or export unsaved changes before reopening. **Check installation**
+in **About this Studio** refreshes the read-only check and explains the current
+installation. See
+[tool updates](tool-updates.md#check-an-open-studio) for unfinished migrations and
+source installations. The compositor has its own identity under
 **Session details and saved recipe** when using a NiriFX session.
 
 ![Choose a look, mix actions and export a profile](gifs/workflow-library.gif)
