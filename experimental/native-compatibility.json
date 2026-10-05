@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "upstream_revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
+  "cargo_lock_sha256": "e71d9d5b104d297bc1185cebb4d7eb203f374c668c5739e41927e15a0b1e668c",
+  "rust_toolchain": "1.99.0",
+  "target": "x86_64-unknown-linux-gnu",
+  "runner": "ubuntu-24.04",
+  "default_case": "nirifx-desktop",
+  "patch_variants": ["unmodified", "movement", "pointer", "fragment"],
+  "cases": [
+    {
+      "id": "movement-desktop",
+      "variant": "movement",
+      "default_features": true,
+      "profile": "debug"
+    },
+    { "id": "pointer-desktop", "variant": "pointer", "default_features": true, "profile": "debug" },
+    {
+      "id": "nirifx-desktop",
+      "variant": "fragment",
+      "default_features": true,
+      "profile": "debug"
+    },
+    {
+      "id": "fragment-minimal",
+      "variant": "fragment",
+      "default_features": false,
+      "profile": "debug"
+    }
+  ]
+}
