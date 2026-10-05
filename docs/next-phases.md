@@ -49,24 +49,26 @@ NiriFX shaders also fall back to stock behavior without the native extension.
 See [native material validation](validation.md#retained-material-acceptance-unreleased)
 for the tested boundaries.
 
-Closing still uses a snapshot of the assembled tile, including its resize
-deformation and decorations. Applying resize again to that snapshot would deform
-the surface twice. Passing only the undeformed window texture would instead lose
-borders, shadows, popups and protected-background handling.
+The closing handoff freezes undeformed material separately for each render target
+and detaches the current size trajectories from the mapped tile. Resize is applied
+once, before continuing opening or movement and the closing fade. Borders and
+shadows are rebuilt at the evolving size; popup/background planes retain their
+own placement. Applying resize to the ordinary assembled snapshot would deform
+the window twice, so it remains a fallback instead.
 
-The next closing handoff needs a frozen, undeformed material for each capture
-variant, retained phase and size trajectories, and separate decoration state.
-Apply resize deformation before any continuing opening or movement transform,
-then apply the closing fade. Bound texture ownership to flat snapshots and release
-resources when closing ends, animations are disabled or the renderer is lost.
+All three target captures must succeed before the handoff is enabled. Partial
+failure drops the new resources and retains Niri's protected snapshot path.
+Frozen textures and pinned programs are released when closing ends, an applicable
+animation is disabled or the renderer is replaced. Fullscreen windows and
+transitions, and changed output scale, keep the snapshot path until their own
+handoffs are defined.
 
-Acceptance requires matching the last mapped frame to the first closing frame
-after repeated width and height retargets, including shader reloads and overlapping
-opening/movement. Check Output, Screencast and ScreenCapture independently, with
-transparent margins, popups and an unblocked window over a protected blurred
-background. Capture variants must never reuse unredacted Output textures. Verify
-bounded resources over repeated resize/close cycles and allocation failures before
-advertising resize-to-close continuity.
+Acceptance compares the last mapped frame with the first closing frame at a fixed
+clock, then checks advancing geometry, phase and eventual removal after resuming.
+Keep separate Output, Screencast and ScreenCapture controls: capture targets must
+never borrow unredacted Output material. Transparent margins, popups, protected
+blurred backgrounds, repeated cycles and renderer/allocation failures each need
+their own evidence; success on ordinary cards does not establish those boundaries.
 
 The development renderer shares constrained resize displacement per source and
 axis. Its path brakes before the minimum size, and affected neighbors follow that

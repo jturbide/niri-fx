@@ -132,7 +132,7 @@ node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **213 GIFs**, including all **75 presets**. The earlier eight
+The gallery contains **214 GIFs**, including all **75 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -384,7 +384,7 @@ neighbor clearance from the verified stationary origin separately.
 
 Active geometry paths retain their original timing through a reload; newly moving
 axes use the new timing. Source and neighbor now sample shared constrained paths
-at the floor. Closing during resize still uses a snapshot. See the
+at the floor. Closing during resize has a separate comparison below. See the
 [validation scope](../validation.md#resize-geometry-continuity) for geometry and
 retained-appearance acceptance.
 
@@ -419,6 +419,41 @@ The separate pixel diagnostic proves retained phase/reference dimensions,
 shader reload/removal behavior and dynamic privacy. These comparisons do not
 establish resize-to-close continuation.
 [Acceptance and remaining limits](../validation.md#retained-material-acceptance-unreleased).
+
+## Native resize-to-close comparison
+
+[Resize continues through close](native-resize-close-comparison.gif) compares the
+preserved compositor from revision `83e7849` with the current development build.
+Both use Triangle Shatter at strength 0.75, a 1500 ms resize and a 1200 ms close.
+The synthetic card grows in width, then height, and closes while both axes are
+still moving. The left side freezes its resize; the right side continues it
+through the closing fade. Both halves play at configured speed, at 50 fps.
+
+Keep the earlier executable and its build manifest before rebuilding the current
+patch. Use the dependencies listed above and run the complete acceptance gate
+before recording:
+
+```sh
+python3 scripts/test-resize-close.py --suite all --output-targets \
+  --report artifacts/resize-close-final.json
+python3 scripts/record-resize-close.py \
+  --baseline-manifest /path/to/preserved-build/niri-movement-build.json \
+  --baseline-revision 83e7849e307123b91e76c588b0ebaf194689f469 \
+  --acceptance-report artifacts/resize-close-final.json
+```
+
+The recorder verifies both compositor identities and requires current acceptance
+evidence from the same executable, patch and test sources. It also checks equal
+shaders/configuration, bounded action timing, visible closing content, complete
+cleanup and the surviving companion. Raw captures remain under ignored
+`artifacts/resize-close-comparison/`. Add `--publish` to install the 900-pixel-wide,
+64-color GIF, its manifest entry and the [sanitized report](../benchmarks/resize-close.json).
+Then regenerate the gallery and run `python3 scripts/check-docs.py`.
+
+The comparison illustrates the transition; the separate pixel checks establish
+its tested state continuity and privacy behavior. See
+[acceptance and limits](../validation.md#resize-to-close-acceptance-unreleased)
+for the bounded raster comparison, capture targets and fallback cases.
 
 ## Expanded styles, resize and native continuity
 

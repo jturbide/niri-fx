@@ -374,7 +374,19 @@ new window content blends into that continuing animation.
 These are native recordings at their configured speed. Rebuild the experimental
 compositor and regenerate the resize shader from the same checkout to try it.
 Stock Niri keeps its existing resize behavior. Closing during resize still uses
-a snapshot. [Retained resize appearance and limits](docs/resize.md#retained-resize-appearance).
+a snapshot on older builds. [Retained resize appearance and limits](docs/resize.md#retained-resize-appearance).
+
+### Keep resizing while closing
+
+The **Unreleased experimental build** carries a running resize through closing.
+The current pieces keep their phase and size trajectory while fading out, with
+borders and shadows following the changing window.
+
+![Resize-to-close before and after the continuous handoff](docs/gifs/native-resize-close-comparison.gif)
+
+This native comparison uses the same triangle effect and timings on both sides.
+The handoff takes precedence over the ordinary close style during an active resize.
+[Requirements and tested limits](docs/resize.md#closing-during-resize).
 
 ### Shaped resize
 

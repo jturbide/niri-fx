@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "revision": "8ed0da44d974c32c6877d2f4630c314da0717ecb",
-  "patch_sha256": "a7ba27926da26d4eb7c441a150922f3f6a079a2f786ede686459aedf4d3a4143",
-  "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
+  "patch_sha256": "53e92291068cb02f7eeb3e9ea93e53c12a3e11840ff552c21c8c73763264cce3",
+  "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
   "baseline": {
     "tag": "v0.19.0",
     "commit": "1398f34bc8a0b517b69281f8382df74068f4a010",
@@ -44,7 +44,7 @@
       "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
       "shader_sha256": "2febfff457d8d6c7c1d0a6133bd4e5f7ed5af32a7e24a24c200d4e47fad1f414",
       "config_sha256": "e79d1fd00663626e0deef7ae3ab53bdec1b45c0c7fb9561e9792626af6bc0f88",
-      "video_sha256": "5f72cc7ae0e7c1d83c9548933a072ac59095bc5e0f68506d33dff982b269bf55",
+      "video_sha256": "09f2aad87658af7b770ae09d44e318f123f558b956a95e768ceb7909880ff2e8",
       "dimensions": [
         1280,
         800
@@ -55,19 +55,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6155
+          "committed_s": 0.6142
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0875
+          "committed_s": 1.0893
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3876
+          "committed_s": 1.3907
         }
       ],
       "final_size": [
@@ -76,7 +76,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 5574,
+        "after_two_retargets": 5430,
         "settled": 0
       }
     },
@@ -86,7 +86,7 @@
       "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
       "shader_sha256": "92f0f2e260685c8d526d7e1929a73c98f63943b1a692d20f3ed46c3882d08b15",
       "config_sha256": "7bf7b2d8fe8d9d8e30d06c5ef20c037502628d4116a9a16851a2a21074bc173d",
-      "video_sha256": "d0a0c792d4581ff8d6c06b9873d420ca997bb5a042c7ce08c229178df09f9244",
+      "video_sha256": "2694a24638e8eadc7abe4a4b06839212c6e15e19b3718dbad4956f3a5deee791",
       "dimensions": [
         1280,
         800
@@ -97,19 +97,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6148
+          "committed_s": 0.6145
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0821
+          "committed_s": 1.0804
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3835
+          "committed_s": 1.3824
         }
       ],
       "final_size": [
@@ -118,17 +118,17 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 6269,
+        "after_two_retargets": 6252,
         "settled": 0
       }
     },
     {
       "case": "after-balanced",
       "preset": "balanced",
-      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
+      "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "2febfff457d8d6c7c1d0a6133bd4e5f7ed5af32a7e24a24c200d4e47fad1f414",
       "config_sha256": "e79d1fd00663626e0deef7ae3ab53bdec1b45c0c7fb9561e9792626af6bc0f88",
-      "video_sha256": "0670a0960188089363c9ebba84416cecefbbfddb21e3156d83212cbe1022d06f",
+      "video_sha256": "e824c2d94f19d7865055adb4efdb3e013d5644c28a1e04a1ecb2675de29f5cdc",
       "dimensions": [
         1280,
         800
@@ -139,19 +139,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6164
+          "committed_s": 0.6176
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.082
+          "committed_s": 1.0811
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3817
+          "committed_s": 1.3644
         }
       ],
       "final_size": [
@@ -160,17 +160,17 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 42589,
+        "after_two_retargets": 42395,
         "settled": 0
       }
     },
     {
       "case": "after-triangle-shatter",
       "preset": "triangle-shatter",
-      "binary_sha256": "89f86b03f45b0b60ea000a0f3e6fbf8842d82dc480072a0614b11283a69f9fc0",
+      "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "92f0f2e260685c8d526d7e1929a73c98f63943b1a692d20f3ed46c3882d08b15",
       "config_sha256": "7bf7b2d8fe8d9d8e30d06c5ef20c037502628d4116a9a16851a2a21074bc173d",
-      "video_sha256": "0489d73734d67c5f8dc88494bc134a21fbc7bb73e1dafa3b2e67f40553ba4758",
+      "video_sha256": "cb6234f6f488fe5372bd5740243f095174d6bce19b9f13bbb422ac69de432575",
       "dimensions": [
         1280,
         800
@@ -181,19 +181,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6146
+          "committed_s": 0.6156
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0818
+          "committed_s": 1.0759
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3804
+          "committed_s": 1.3826
         }
       ],
       "final_size": [
@@ -202,7 +202,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 43964,
+        "after_two_retargets": 43849,
         "settled": 0
       }
     }
@@ -210,42 +210,11 @@
   "comparisons": [
     {
       "file": "docs/gifs/native-resize-material-fragments-comparison.gif",
-      "gif_sha256": "71897b617de898977a2f00627eb042403fd6fcba511e30850bd4fbd057e64ad0"
+      "gif_sha256": "ba672712eb47a28546d3c769b36b263d61025fe193e1ba951d580a955c06ae36"
     },
     {
       "file": "docs/gifs/native-resize-material-triangles-comparison.gif",
-      "gif_sha256": "5f0a211378faca769cf3e18f1387a2057c506d7c88ec52bc3f50c6a79b088005"
+      "gif_sha256": "5349fc79c1b9660f75a3c307013ce1610a053c192346827dc876e626c7bf0d33"
     }
-  ],
-  "capture_sources": {
-    "scripts/record-resize-material.py": "f58801c49baeb8caea5ddc1be604bad93efde30aa525701ad0dda3ddd1488adc",
-    "scripts/test-resize-material.py": "13c2150736ff387878ce8475eaf5cb47ff340c10375b9ded8a4a5a39fd4ee95f",
-    "scripts/record-resize-comparison.py": "9da8b165a11736e1784edbdaa92023fc3f2afc30136c1a77b9b05e0a676f05ec",
-    "scripts/test-pointer-hardening.py": "0db4f6cbbfac5034ae1a1daa48c46f98d3c821f2ebc88416373d9a36704bbbb7",
-    "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e",
-    "scripts/lib/movement.py": "68e7208a1a5388a05f63e1411f17b238663665cfc8220378508ff6d751817ed8",
-    "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
-    "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
-    "niri_fx/effects.py": "8c00ce983b3e45c12b67b4b081d3d72d9b7bf62e10db470b00360bae23c5b492",
-    "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
-    "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
-    "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
-    "niri_fx/shaders/resize-shaped.glsl": "f0b16b24d92d43ccf20203d9a087f99b4f6b6d1af579b906c6e09a1979005d53"
-  },
-  "capture_report_sha256": "c9ac594428d085f1eaf84bf2e1534bf39235f4b738ec67a8ffc583664a298d1a",
-  "encoding": {
-    "raw_capture_reused": true,
-    "change": "Verified raw native videos were re-encoded using the final retained recorder. The only imported-helper change since capture is the unrelated geometry compose() pixel format; the baseline verifier, capture/setup functions and retained composition are unchanged. Original native frames, action timings and capture source identities are preserved.",
-    "sources": {
-      "scripts/record-resize-material.py": "f58801c49baeb8caea5ddc1be604bad93efde30aa525701ad0dda3ddd1488adc",
-      "scripts/record-resize-comparison.py": "5a46e2df7d6dfa3b0955599ff07c49e9962b0db4fa49cc40361e2e234207a975",
-      "scripts/lib/nested.py": "c357b923bd4d11e31335cbc57a4c4c2ac4bd8e9af99108ea70dd77f890b7cd1e"
-    },
-    "raw_video_sha256": {
-      "before-balanced.mkv": "5f72cc7ae0e7c1d83c9548933a072ac59095bc5e0f68506d33dff982b269bf55",
-      "before-triangle-shatter.mkv": "d0a0c792d4581ff8d6c06b9873d420ca997bb5a042c7ce08c229178df09f9244",
-      "after-balanced.mkv": "0670a0960188089363c9ebba84416cecefbbfddb21e3156d83212cbe1022d06f",
-      "after-triangle-shatter.mkv": "0489d73734d67c5f8dc88494bc134a21fbc7bb73e1dafa3b2e67f40553ba4758"
-    }
-  }
+  ]
 }

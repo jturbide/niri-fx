@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **213 GIFs**, including all **75 built-in presets**. Use this
+The gallery has **214 GIFs**, including all **75 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 
@@ -75,6 +75,7 @@ Undo/Redo and pinned A/B comparisons.
 | Retarget near the minimum width | [Minimum width comparison](gifs/native-resize-minimum-width-comparison.gif) | Experimental renderer; shared constrained geometry keeps neighboring edges together |
 | Retarget near the minimum height | [Minimum height comparison](gifs/native-resize-minimum-height-comparison.gif) | Experimental renderer; synthetic masks isolate geometry from texture filtering |
 | Keep fragment appearance through two resize retargets | [Retained fragments](gifs/native-resize-material-fragments-comparison.gif) | Updated experimental renderer; [material acceptance](validation.md#retained-material-acceptance-unreleased) |
+| Close while a resize continues | [Resize-to-close comparison](gifs/native-resize-close-comparison.gif) | Updated experimental renderer; retained material, geometry and closing fade; [scope](resize.md#closing-during-resize) |
 | Keep triangle appearance through two resize retargets | [Retained triangles](gifs/native-resize-material-triangles-comparison.gif) | Updated experimental renderer; identical generated shaders and actual configured speed |
 | Real fragment swaps | [Original swap](gifs/native-swap.gif), [Crosswind](gifs/native-swap-crosswind.gif), [Orbital Ribbons](gifs/native-swap-orbital-ribbons.gif), [Bubble Burst](gifs/native-swap-bubble-burst.gif), [Core Detonation](gifs/native-swap-core-detonation.gif) | Separately built experimental Niri patch |
 | Real elastic swaps | [Spring Wobble](gifs/native-swap-spring-wobble.gif), [Twist Snap](gifs/native-swap-twist-snap.gif) | Separately built experimental Niri patch |

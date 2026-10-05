@@ -111,6 +111,17 @@ def main():
         if not args.unmodified:
             run("cargo", "test", *flags, "--lib", "animation::movement::tests", cwd=source, env=env)
             run("cargo", "test", *flags, "--lib", "animation::size::tests", cwd=source, env=env)
+            run("cargo", "test", *flags, "--lib", "resize_close", cwd=source, env=env)
+            run(
+                "cargo",
+                "test",
+                *flags,
+                "--lib",
+                "input::pointer_buttons::tests",
+                cwd=source,
+                env=env,
+            )
+            run("cargo", "test", *flags, "--lib", "tests::pointer_ownership", cwd=source, env=env)
             run(
                 "cargo",
                 "test",

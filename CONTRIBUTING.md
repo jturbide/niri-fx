@@ -269,14 +269,25 @@ separate from these nested checks.
 
 Run `python3 scripts/test-pointer-hardening.py` for direct ScreenCapture privacy,
 dynamic rules, closing snapshots, abrupt client exit and held-button device
-disconnection. The latter currently reports retained grabs with deformation both
-enabled and omitted in the same patched executable. The optional `--output-targets`
+disconnection. For the device-ownership fix, run
+`python3 scripts/test-pointer-ownership.py` and repeat with `--pointer-wobble`.
+Both builds must retain surviving presses/grabs and end removed-owner grabs;
+same-button overlap and binding suppression must also pass. Physical unplug/replug
+remains a separate hardware gate. The optional `--output-targets`
 probe remains strict and currently fails on stale parent output in the tested
-GPU setup. `scripts/test-native-baseline.py` also reproduces both failures on
+GPU setup. `scripts/test-native-baseline.py` preserves the earlier comparison of both failures on
 unmodified pinned Niri with identical build settings; its exit status remains
 nonzero while defects reproduce. Do not report Output,
 Screencast or PipeWire privacy as validated from the default run. See the
 [recorded scope and remaining work](docs/validation.md#pointer-driven-wobble).
+
+For resize-to-close changes, use
+`python3 scripts/test-resize-close.py --suite all --output-targets` with the
+matching base build. It checks material/geometry continuation, first-frame
+appearance, capture policies, transparent margins, a popup, native decorations,
+Off and output-scale fallback in owned nested sessions. The
+[recording guide](docs/gifs/README.md#native-resize-to-close-comparison) describes
+the separate comparison recording and its required acceptance report.
 
 For agent support, exercise the packaged `agent-info`, `--parameters` and `--skill`
 commands as a consumer. Discover a real preset, build and inspect its JSON, and

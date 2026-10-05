@@ -158,8 +158,28 @@ resize-continuity marker. A verified movement contract 2 alone does **not** prov
 retained resize support: older builds also advertise that movement contract.
 Stock Niri and unmarked custom shaders retain their existing resize interface.
 
-Closing during resize still uses a snapshot and does not continue the retained
-resize material. The [acceptance scope](validation.md#retained-material-acceptance-unreleased)
-separates the tested native phase and capture paths from closing, background blur,
-popups, mixed scales and graphics-reset recovery. These remain explicit follow-on
-work in the [design notes](next-phases.md#rendering-and-interruptions).
+See the [retarget acceptance scope](validation.md#retained-material-acceptance-unreleased)
+and the separate closing handoff below. Stock Niri and older experimental builds
+keep their existing snapshot behavior when closing.
+
+### Closing during resize
+
+The current development compositor keeps a running NiriFX resize alive as the
+window closes. Its material, piece layout and deformation phase continue along
+the existing size paths while fading out. Borders and shadows follow the evolving
+geometry. This handoff takes precedence over the ordinary closing style, just as
+the existing opening and movement continuations do.
+
+![Triangle resize continuing into close, before and after](gifs/native-resize-close-comparison.gif)
+
+Use a generated, marked resize shader and the matching experimental compositor.
+There is no additional profile toggle: the handoff applies when the selected
+resize effect is already running. Resize Off, Close Off or global animations Off
+ends the continuation. Profiles keep their independent action choices.
+
+Fullscreen windows and transitions, output-scale changes and material-capture
+failures retain the existing protected snapshot path. Output, ScreenCapture and Screencast keep
+separate frozen materials. Nested capture checks do not establish physical
+mixed-output migration, protected blurred backgrounds, PipeWire transport or
+graphics-reset recovery. See [native acceptance](validation.md#resize-to-close-acceptance-unreleased)
+and [recording instructions](gifs/README.md#native-resize-to-close-comparison).
