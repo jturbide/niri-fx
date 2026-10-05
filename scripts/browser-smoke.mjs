@@ -1,10 +1,11 @@
 // Run against an offline preview or an isolated studio --registry test path.
 // Requires Node 22+ and Chromium. Saves review images in the ignored artifacts/.
 import { execFileSync } from "node:child_process";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createHash } from "node:crypto";
 import assert from "node:assert/strict";
+import { parseArgs } from "node:util";
 import { setTimeout as sleep } from "node:timers/promises";
 import { checkResize } from "./lib/resize-checks.mjs";
 import { checkMotion } from "./lib/motion-checks.mjs";
@@ -13,14 +14,92 @@ import { launchBrowser, projectRoot } from "./lib/browser.mjs";
 
 process.chdir(projectRoot);
 
-const url = process.argv[2];
-if (!url) throw new Error("Usage: node scripts/browser-smoke.mjs PREVIEW_URL [--save-test]");
+const { values: options, positionals } = parseArgs({
+  allowPositionals: true,
+  options: {
+    suite: { type: "string", default: "all" },
+    "shape-aspect": { type: "string" },
+    "save-test": { type: "boolean", default: false },
+  },
+});
+const [url] = positionals;
+if (!url || positionals.length !== 1)
+  throw new Error(
+    "Usage: node scripts/browser-smoke.mjs PREVIEW_URL [--suite all|studio|shapes|motion] [--shape-aspect 0.25|1|4] [--save-test]",
+  );
+assert(["all", "studio", "shapes", "motion"].includes(options.suite), "Unknown browser suite");
+const shapeAspect = options["shape-aspect"];
+assert(
+  shapeAspect === undefined ||
+    (options.suite === "shapes" && ["0.25", "1", "4"].includes(shapeAspect)),
+  "--shape-aspect requires --suite shapes and one of 0.25, 1, 4",
+);
+const hasStudio = ["all", "studio"].includes(options.suite);
+assert(!options["save-test"] || hasStudio, "--save-test requires the all or studio suite");
+const suiteStarted = performance.now();
+let stageStarted = suiteStarted;
+let status = "failed";
+const timings = [];
+const finishStage = (name) => {
+  const milliseconds = Math.round(performance.now() - stageStarted);
+  timings.push({ name, milliseconds });
+  console.log(`TIMING: ${name} ${milliseconds} ms`);
+  stageStarted = performance.now();
+};
 const browser = await launchBrowser();
+const { rpc, evaluate, callFunction } = browser;
+const sample = () =>
+  evaluate(
+    `(()=>{const canvas=byId('stage'),gl=canvas.getContext('webgl');const pixels=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);let alpha=0,x=0,y=0,occupied=0;for(let i=0;i<pixels.length;i+=4){const a=pixels[i+3];if(a){const px=(i/4)%canvas.width,py=canvas.height-1-Math.floor(i/4/canvas.width);alpha+=a;x+=px*a;y+=py*a;occupied++;}}return {occupied,alpha,cx:alpha?x/alpha:0,cy:alpha?y/alpha:0,error:gl.getError()};})()`,
+  );
+const setProgress = async (value) => {
+  await evaluate(
+    `byId('progress').value=${Math.round(value * 1000)};byId('progress').dispatchEvent(new Event('input'))`,
+  );
+};
 try {
-  const { rpc, evaluate } = browser;
   await browser.navigate(url, { width: 1380, height: 1120 });
+  finishStage("browser-startup");
+  if (["all", "shapes"].includes(options.suite)) {
+    await checkShapes(evaluate, shapeAspect === undefined ? undefined : [Number(shapeAspect)]);
+    finishStage("shapes");
+  }
+  if (["all", "motion"].includes(options.suite)) {
+    await checkMotion(evaluate, setProgress, sample);
+    finishStage("motion");
+  }
+  if (hasStudio) await checkStudio();
+  status = "passed";
+} finally {
+  await browser.close();
+  finishStage(status === "passed" ? "browser-cleanup" : "failed-stage-and-cleanup");
+  const milliseconds = Math.round(performance.now() - suiteStarted);
+  console.log(`TIMING: total ${milliseconds} ms (${options.suite}, ${status})`);
+  if (process.env.GITHUB_STEP_SUMMARY) {
+    appendFileSync(
+      process.env.GITHUB_STEP_SUMMARY,
+      `## Browser ${options.suite}${shapeAspect ? ` (aspect ${shapeAspect})` : ""}: ${status}\n\n` +
+        "| Stage | Seconds |\n| --- | ---: |\n" +
+        timings
+          .map(({ name, milliseconds }) => `| ${name} | ${(milliseconds / 1000).toFixed(3)} |`)
+          .join("\n") +
+        `\n| Total | ${(milliseconds / 1000).toFixed(3)} |\n`,
+    );
+  }
+  if (process.env.NIRIFX_TIMINGS) {
+    writeFileSync(
+      process.env.NIRIFX_TIMINGS,
+      JSON.stringify(
+        { suite: options.suite, shapeAspect, status, milliseconds, stages: timings },
+        null,
+        2,
+      ) + "\n",
+    );
+  }
+}
+
+async function checkStudio() {
   const initialDocument = await evaluate("effectDocument()");
-  await checkShapes(evaluate);
   assert.equal(
     await evaluate("getComputedStyle(byId('spin').closest('.parameter')).display"),
     "none",
@@ -49,6 +128,7 @@ try {
   await evaluate(
     "byId('reduced-motion').checked=false;byId('advanced').checked=false;byId('advanced').dispatchEvent(new Event('change'))",
   );
+  finishStage("editor-preferences");
   const expected = JSON.parse(
     execFileSync(
       "python3",
@@ -59,16 +139,6 @@ try {
       { encoding: "utf8" },
     ),
   );
-  const sample = () =>
-    evaluate(
-      `(()=>{const canvas=byId('stage'),gl=canvas.getContext('webgl');const pixels=new Uint8Array(canvas.width*canvas.height*4);gl.readPixels(0,0,canvas.width,canvas.height,gl.RGBA,gl.UNSIGNED_BYTE,pixels);let alpha=0,x=0,y=0,occupied=0;for(let i=0;i<pixels.length;i+=4){const a=pixels[i+3];if(a){const px=(i/4)%canvas.width,py=canvas.height-1-Math.floor(i/4/canvas.width);alpha+=a;x+=px*a;y+=py*a;occupied++;}}return {occupied,alpha,cx:alpha?x/alpha:0,cy:alpha?y/alpha:0,error:gl.getError()};})()`,
-    );
-  const setProgress = async (value) => {
-    await evaluate(
-      `byId('progress').value=${Math.round(value * 1000)};byId('progress').dispatchEvent(new Event('input'))`,
-    );
-  };
-  await checkMotion(evaluate, setProgress, sample);
   const results = {};
   mkdirSync("artifacts", { recursive: true });
   for (const name of Object.keys(expected)) {
@@ -148,6 +218,7 @@ try {
   await setProgress(0.5);
   assert.equal((await sample()).error, 0);
   assert.equal(await evaluate("document.documentElement?.dataset.shaderStatus"), "ready");
+  finishStage("preset-parity-and-extremes");
   // Exercise the real resize shader, two texture inputs and stable endpoints.
   const resizeExpected = JSON.parse(
     execFileSync(
@@ -227,7 +298,8 @@ try {
   }
   assert(resizeModes.edge.alpha > resizeModes.full.alpha, "edge mode retains more content");
   assert(resizeModes.soft.alpha > resizeModes.full.alpha, "soft mode retains more content");
-  await checkResize(evaluate, setProgress, sample);
+  await checkResize(evaluate, setProgress, sample, callFunction);
+  finishStage("resize");
   // Both textured windows must exchange positions intact, with a visible
   // intermediate stream. The movement prototype must remain labelled as such.
   await evaluate(
@@ -262,23 +334,25 @@ try {
   sameImage(moveAfter[1], moveBefore[0], "move arrives intact");
   assert(
     await evaluate(`(()=>{
-      const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=760;
-      const preview=new MotionPreview(canvas,canvas);
-      const p={...catalog.defaults,particles:4096,size_variation:1,fragment_roundness:1,fragment_shrink:1,release:'checkerboard'};
-      for(const seed of [0,0.37,0.99]) {
-        const parts=preview.particles(0.5,'swap',p,seed);
-        if(!parts.length || parts.some(part=>part.sw<=0 || part.sh<=0 || part.scale<=0)) return false;
-        preview.draw(0.5,'swap',p,seed);
-      }
-      return true;
-    })()`),
+    const canvas=document.createElement('canvas');canvas.width=1000;canvas.height=760;
+    const preview=new MotionPreview(canvas,canvas);
+    const p={...catalog.defaults,particles:4096,size_variation:1,fragment_roundness:1,fragment_shrink:1,release:'checkerboard'};
+    for(const seed of [0,0.37,0.99]) {
+      const parts=preview.particles(0.5,'swap',p,seed);
+      if(!parts.length || parts.some(part=>part.sw<=0 || part.sh<=0 || part.scale<=0)) return false;
+      preview.draw(0.5,'swap',p,seed);
+    }
+    return true;
+  })()`),
     "unequal rounded concept pieces remain drawable at texture boundaries",
   );
   await evaluate("document.querySelector('[data-mode=effect]').click()");
+  finishStage("move-swap-concepts");
   // Import through the real file input; failed imports leave the editor untouched.
   const importFile = async (text) =>
-    evaluate(
-      `(async()=>{const transfer=new DataTransfer();transfer.items.add(new File([${JSON.stringify(text)}],'preset.json',{type:'application/json'}));byId('import-file').files=transfer.files;await byId('import-file').onchange();return {effect:effectDocument(),error:byId('error').textContent,status:byId('status').textContent};})()`,
+    callFunction(
+      `async function(text) { const transfer=new DataTransfer();transfer.items.add(new File([text],'preset.json',{type:'application/json'}));byId('import-file').files=transfer.files;await byId('import-file').onchange();return {effect:effectDocument(),error:byId('error').textContent,status:byId('status').textContent}; }`,
+      [text],
     );
   const importedDoc = {
     schema: 3,
@@ -409,6 +483,7 @@ try {
   );
   assert.equal(await evaluate("parameters.resize"), false);
   assert.equal(await evaluate("byId('slice-controls').hidden"), true);
+  finishStage("imports");
   // New controls must visibly affect pixels, round-trip exactly and remain deterministic.
   const pixelHash = () =>
     evaluate(
@@ -445,7 +520,12 @@ try {
     ["hinged-fan", { slice_pivot: 1, slice_collapse: 1 }],
     [
       "spring-wobble",
-      { elastic_twist: 80, elastic_stretch: 1, elastic_ripple: 4, elastic_anchor: "bottom-right" },
+      {
+        elastic_twist: 80,
+        elastic_stretch: 1,
+        elastic_ripple: 4,
+        elastic_anchor: "bottom-right",
+      },
     ],
   ]) {
     for (const [field, value] of Object.entries(changes)) {
@@ -566,6 +646,7 @@ try {
   await evaluate(
     "byId('preset').value='balanced';byId('preset').dispatchEvent(new Event('change'))",
   );
+  finishStage("variation-controls");
   // Independent actions must survive selection, editing, undo and export.
   await evaluate(
     `byId('preset').value='spring-wobble';byId('preset').dispatchEvent(new Event('change'));byId('independent').checked=true;byId('independent').dispatchEvent(new Event('change'));byId('action').value='close';byId('action').dispatchEvent(new Event('change'));byId('preset').value='ember-erosion';byId('preset').dispatchEvent(new Event('change'));byId('name').value='Browser Profile';`,
@@ -603,8 +684,8 @@ try {
   assert.equal(await evaluate("effectDocument().actions.open.elastic_twist"), 0);
   const profileSaved = await evaluate("effectDocument()");
   await evaluate(`window.downloadFixture={click:HTMLAnchorElement.prototype.click,url:URL.createObjectURL};
-    HTMLAnchorElement.prototype.click=function(){downloadFixture.name=this.download};
-    URL.createObjectURL=function(blob){downloadFixture.blob=blob;return downloadFixture.url.call(URL,blob)};`);
+  HTMLAnchorElement.prototype.click=function(){downloadFixture.name=this.download};
+  URL.createObjectURL=function(blob){downloadFixture.blob=blob;return downloadFixture.url.call(URL,blob)};`);
   for (const target of ["standalone", "noctalia"]) {
     await evaluate(
       `byId('save-target').value=${JSON.stringify(target)};byId('save-target').dispatchEvent(new Event('change'));byId('save').click()`,
@@ -628,7 +709,7 @@ try {
     "viewing resize never enables it",
   );
   await evaluate(
-    "byId('action-enabled').checked=true;byId('action-enabled').dispatchEvent(new Event('change'))",
+    "byId('action-mode').value='style';byId('action-mode').dispatchEvent(new Event('change'))",
   );
   assert(await evaluate("kdlDocument().includes('window-resize')"));
   assert.equal(await evaluate("effectDocument().actions.open.family"), "elastic");
@@ -639,15 +720,16 @@ try {
   assert.deepEqual(resizeImport.effect, resizeProfile);
   await evaluate("byId('action').value='resize';byId('action').dispatchEvent(new Event('change'))");
   await evaluate(
-    "byId('action-enabled').checked=false;byId('action-enabled').dispatchEvent(new Event('change'))",
+    "byId('action-mode').value='preserve';byId('action-mode').dispatchEvent(new Event('change'))",
   );
   assert(!(await evaluate("kdlDocument().includes('window-resize')")));
-  if (process.argv.includes("--save-test")) {
+  if (options["save-test"]) {
     await evaluate("byId('name').value='Browser Profile';byId('save').click()");
     for (let i = 0; i < 100 && (await evaluate("byId('save').disabled")); i++) await sleep(100);
     assert.equal(await evaluate("byId('error').textContent"), "");
     assert.match(await evaluate("byId('status').textContent"), /^Saved NiriFX/);
   }
+  finishStage("independent-actions");
   await importFile(JSON.stringify({ schema: 3, name: "Reveal Test", effect: { family: "iris" } }));
   for (const [preset, changes] of Object.entries({
     "ember-erosion": {
@@ -740,6 +822,7 @@ try {
       assert.equal((await sample()).error, 0);
     }
   }
+  finishStage("family-controls");
   await evaluate("byId('pin').click()");
   const pinnedHash = await pixelHash();
   await evaluate("byId('iris_x').value=0.9;byId('iris_x').dispatchEvent(new Event('input'))");
@@ -816,23 +899,24 @@ try {
     for (const position of [0, 0.001, 0.5, 0.999, 1]) {
       await setProgress(position);
       await evaluate(`(() => { const gl=byId('stage').getContext('webgl');
-        gl.uniform2f(gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'fx_window'),${geometry.join(",")});
-        gl.drawArrays(gl.TRIANGLES,0,6);gl.finish(); })()`);
+      gl.uniform2f(gl.getUniformLocation(gl.getParameter(gl.CURRENT_PROGRAM),'fx_window'),${geometry.join(",")});
+      gl.drawArrays(gl.TRIANGLES,0,6);gl.finish(); })()`);
       const pixels = await sample();
       assert.equal(pixels.error, 0, "vortex extreme renders without GL errors");
       if (position === 0) assert(pixels.occupied > 0, "vortex starts intact");
       if (position === 1) assert.equal(pixels.occupied, 0, "vortex ends transparent");
     }
   }
+  finishStage("editor-capabilities-and-vortex");
   // Generated edge highlights must never make a fully transparent source opaque.
   await evaluate(`(()=>{
-    const context=byId('stage').getContext('webgl');context.activeTexture(context.TEXTURE0);
-    window.alphaFixture={context,original:context.getParameter(context.TEXTURE_BINDING_2D),texture:context.createTexture()};
-    context.bindTexture(context.TEXTURE_2D,alphaFixture.texture);
-    context.texImage2D(context.TEXTURE_2D,0,context.RGBA,600,380,0,context.RGBA,context.UNSIGNED_BYTE,new Uint8Array(600*380*4));
-    for(const key of [context.TEXTURE_MIN_FILTER,context.TEXTURE_MAG_FILTER])context.texParameteri(context.TEXTURE_2D,key,context.LINEAR);
-    for(const key of [context.TEXTURE_WRAP_S,context.TEXTURE_WRAP_T])context.texParameteri(context.TEXTURE_2D,key,context.CLAMP_TO_EDGE);
-  })()`);
+  const context=byId('stage').getContext('webgl');context.activeTexture(context.TEXTURE0);
+  window.alphaFixture={context,original:context.getParameter(context.TEXTURE_BINDING_2D),texture:context.createTexture()};
+  context.bindTexture(context.TEXTURE_2D,alphaFixture.texture);
+  context.texImage2D(context.TEXTURE_2D,0,context.RGBA,600,380,0,context.RGBA,context.UNSIGNED_BYTE,new Uint8Array(600*380*4));
+  for(const key of [context.TEXTURE_MIN_FILTER,context.TEXTURE_MAG_FILTER])context.texParameteri(context.TEXTURE_2D,key,context.LINEAR);
+  for(const key of [context.TEXTURE_WRAP_S,context.TEXTURE_WRAP_T])context.texParameteri(context.TEXTURE_2D,key,context.CLAMP_TO_EDGE);
+})()`);
   for (const preset of [
     "ember-erosion",
     "frost-vanish",
@@ -862,7 +946,7 @@ try {
   await evaluate(
     "alphaFixture.context.bindTexture(alphaFixture.context.TEXTURE_2D,alphaFixture.original);alphaFixture.context.deleteTexture(alphaFixture.texture);delete window.alphaFixture",
   );
-  if (process.argv.includes("--save-test")) {
+  if (options["save-test"]) {
     for (const [family, preset] of Object.entries({
       fragments: "bubble-burst",
       slices: "hinged-fan",
@@ -886,11 +970,10 @@ try {
       assert.match(await evaluate("byId('status').textContent"), /^Saved NiriFX/);
     }
   }
+  finishStage("transparency-and-family-saves");
   writeFileSync("artifacts/browser-checks.json", JSON.stringify(results, null, 2) + "\n");
   console.log(
     `PASS: ${Object.keys(expected).length} WebGL-rendered presets, exact endpoints, motion, shader parity, extreme controls, three resize styles, texture transitions, intact move/swap endpoints, valid/invalid JSON imports exact imported values, piece shapes, hinges, elastic transforms, spatial releases, visible/reproducible variation, capabilities and current schema validation` +
-      (process.argv.includes("--save-test") ? ", and save to isolated registry." : "."),
+      (options["save-test"] ? ", and save to isolated registry." : "."),
   );
-} finally {
-  await browser.close();
 }

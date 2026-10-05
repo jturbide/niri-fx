@@ -1,11 +1,12 @@
 // Small real-process checks complement the full Studio rendering suite.
 import assert from "node:assert/strict";
+import { spawnSync } from "node:child_process";
 import fs from "node:fs";
 import { existsSync, readdirSync } from "node:fs";
 import { syncBuiltinESMExports } from "node:module";
 import { tmpdir } from "node:os";
 import { test } from "node:test";
-import { launchBrowser } from "../scripts/lib/browser.mjs";
+import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
 const page = (status) =>
   "data:text/html," +
@@ -41,6 +42,19 @@ test("browser protocol failures are bounded and cleanup rejects in-flight reques
   try {
     await browser.navigate(page("ready"));
     assert.equal(await browser.evaluate("1 + 2"), 3);
+    const fixture = {
+      text: "quotes '\" \\ and `template ${tokens}` \u2028",
+      nested: [0, false, null],
+    };
+    assert.deepEqual(
+      await browser.callFunction("function(value) { return value; }", [fixture]),
+      fixture,
+    );
+    assert.equal(await browser.callFunction("async function(a,b) { return a+b; }", [2, 3]), 5);
+    await assert.rejects(
+      browser.callFunction("function() { throw new Error('argument fixture exception'); }"),
+      /argument fixture exception/,
+    );
     await assert.rejects(
       browser.evaluate("(()=>{throw new Error('fixture exception')})()"),
       /fixture exception/,
@@ -159,4 +173,33 @@ test("an incomplete port does not hide an exiting browser's startup diagnostics"
     /Chrome did not start \(exit \d+\).*bad option: --headless/s,
   );
   assert(!readdirSync(tmpdir()).some((name) => name.startsWith(prefix)));
+});
+
+test("rendering suite selectors reject incomplete coverage before browser startup", () => {
+  for (const arguments_ of [
+    ["--suite", "unknown"],
+    ["--shape-aspect", "1"],
+    ["--suite", "studio", "--shape-aspect", "1"],
+    ["--suite", "motion", "--shape-aspect", "1"],
+    ["--suite", "shapes", "--shape-aspect", "0.5"],
+    ["--suite", "motion", "--save-test"],
+    ["--suite", "shapes", "--save-test"],
+  ]) {
+    const result = spawnSync(
+      process.execPath,
+      ["scripts/browser-smoke.mjs", "http://127.0.0.1/", ...arguments_],
+      {
+        cwd: projectRoot,
+        env: { ...process.env, CHROME_BIN: "/browser-must-not-launch" },
+        encoding: "utf8",
+        timeout: 5000,
+      },
+    );
+    assert.notEqual(result.status, 0);
+    assert.doesNotMatch(result.stderr, /Chrome did not start/);
+    assert.match(
+      result.stderr,
+      /Unknown browser suite|--shape-aspect requires|--save-test requires/,
+    );
+  }
 });

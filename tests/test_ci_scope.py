@@ -2,6 +2,7 @@
 
 import importlib.util
 import os
+import re
 import subprocess
 import tempfile
 import unittest
@@ -229,6 +230,56 @@ class ScopeTests(unittest.TestCase):
                         timeout=5,
                     )
                     self.assertEqual(checked.returncode == 0, succeeds)
+
+    def test_browser_aggregate_requires_every_selected_suite(self):
+        workflow = (ROOT / ".github/workflows/checks.yml").read_text()
+        browser = workflow.split("  browser:\n", 1)[1]
+        self.assertIn("needs: [changes, browser-tests, browser-render]", browser)
+        self.assertIn("    if: always()\n", browser)
+        block = browser.split("      - name: Require every selected browser suite\n", 1)[1]
+        lines = []
+        for line in block.split("        run: |\n", 1)[1].splitlines():
+            if not line.startswith("          "):
+                break
+            lines.append(line[10:])
+        states = ("success", "failure", "cancelled", "skipped", "")
+        for renderer in ("true", "false", "", "maybe"):
+            for tests_result in states:
+                for render_result in states:
+                    with self.subTest(renderer=renderer, tests=tests_result, render=render_result):
+                        expected = "success" if renderer == "true" else "skipped"
+                        checked = subprocess.run(
+                            ["bash", "-e", "-c", "\n".join(lines)],
+                            env=os.environ
+                            | {
+                                "RENDER_CHECKS": renderer,
+                                "BROWSER_TESTS_RESULT": tests_result,
+                                "BROWSER_RENDER_RESULT": render_result,
+                            },
+                            capture_output=True,
+                            timeout=5,
+                        )
+                        self.assertEqual(
+                            checked.returncode == 0,
+                            renderer in {"true", "false"}
+                            and tests_result == expected
+                            and render_result == expected,
+                        )
+
+    def test_rendering_jobs_cover_all_independent_matrices(self):
+        workflow = (ROOT / ".github/workflows/checks.yml").read_text()
+        render = workflow.split("  browser-render:\n", 1)[1].split("  browser:\n", 1)[0]
+        cases = re.findall(r'suite: (\w+)\n\s+aspect: "([^"]*)"', render)
+        self.assertCountEqual(
+            cases,
+            [("shapes", "0.25"), ("shapes", "1"), ("shapes", "4"), ("motion", ""), ("studio", "")],
+        )
+        self.assertIn("fail-fast: false", render)
+        self.assertIn(
+            'render_command=(python scripts/studio-e2e.py --suite "$RENDER_SUITE")', render
+        )
+        self.assertIn('render_command+=(--shape-aspect "$SHAPE_ASPECT")', render)
+        self.assertIn("npm run test:browser", workflow.split("  browser-tests:\n", 1)[1])
 
     def test_invalid_revision_cannot_be_interpreted_as_a_git_option(self):
         with self.assertRaises(ValueError):

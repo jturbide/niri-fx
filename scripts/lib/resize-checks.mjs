@@ -2,7 +2,7 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
 
-export async function checkResize(evaluate, setProgress, sample) {
+export async function checkResize(evaluate, setProgress, sample, callFunction) {
   await evaluate(
     "byId('preset').value='ripple-collapse';byId('preset').dispatchEvent(new Event('change'))",
   );
@@ -88,9 +88,12 @@ export async function checkResize(evaluate, setProgress, sample) {
       ],
     ]) {
       await setProgress(0.5);
-      await evaluate(`(()=>{const gl=byId('stage').getContext('webgl'),program=gl.getParameter(gl.CURRENT_PROGRAM),from=${JSON.stringify(from)},to=${JSON.stringify(to)},size=from.map((v,i)=>(v+to[i])/2);
+      await callFunction(
+        `function(from,to) { const gl=byId('stage').getContext('webgl'),program=gl.getParameter(gl.CURRENT_PROGRAM),size=from.map((v,i)=>(v+to[i])/2);
         gl.uniform2f(gl.getUniformLocation(program,'fx_resize_from'),...from);gl.uniform2f(gl.getUniformLocation(program,'fx_resize_to'),...to);
-        for(const [name,geometry] of [['prev',from],['next',to]])gl.uniformMatrix3fv(gl.getUniformLocation(program,'niri_curr_geo_to_'+name+'_geo'),false,new Float32Array([size[0]/geometry[0],0,0,0,size[1]/geometry[1],0,0,0,1]));gl.drawArrays(gl.TRIANGLES,0,6);})()`);
+        for(const [name,geometry] of [['prev',from],['next',to]])gl.uniformMatrix3fv(gl.getUniformLocation(program,'niri_curr_geo_to_'+name+'_geo'),false,new Float32Array([size[0]/geometry[0],0,0,0,size[1]/geometry[1],0,0,0,1]));gl.drawArrays(gl.TRIANGLES,0,6); }`,
+        [from, to],
+      );
       const result = await sample();
       assert.equal(
         result.occupied,
