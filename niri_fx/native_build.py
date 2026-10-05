@@ -149,7 +149,9 @@ def _read_manifest(path):
     return value
 
 
-def inspect(manifest_path, *, source, repository, desktop=False, pinned_revision=True):
+def inspect(
+    manifest_path, *, source, repository, desktop=False, pinned_revision=True, patch_directory=None
+):
     """Check bytes and recorded build prerequisites without executing any program."""
     result = {
         "status": "unknown",
@@ -268,10 +270,10 @@ def inspect(manifest_path, *, source, repository, desktop=False, pinned_revision
     if not binary.is_absolute():
         binary = Path(manifest_path).resolve().parent / binary
     checks = [("binary", binary, manifest["binary_sha256"])]
-    checks.extend(
-        (item["file"], Path(repository) / "experimental" / item["file"], item["sha256"])
-        for item in patches
+    patch_root = (
+        Path(patch_directory) if patch_directory is not None else Path(repository) / "experimental"
     )
+    checks.extend((item["file"], patch_root / item["file"], item["sha256"]) for item in patches)
     checks.append(("cargo_lock", Path(source) / "Cargo.lock", inputs["cargo_lock_sha256"]))
     for name, path, expected in checks:
         try:

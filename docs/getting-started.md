@@ -4,6 +4,12 @@ Install NiriFX, choose a combo in **Library**, then review and apply it. You can
 return to your previous settings with **Restore previous**. Choosing a preview
 or saving a profile leaves the desktop unchanged.
 
+This guide covers the app on stock Niri. For movement, swaps, continuous
+fragments and pointer wobble, use the [complete NiriFX session](native-session.md).
+Its source installer prepares all compositor features together; published
+distribution packages are still being prepared. Both paths use the same Library
+and leave shell source code untouched.
+
 ## Requirements
 
 - Linux and Python 3.10 or newer. NiriFX has no Python runtime dependencies.
@@ -12,7 +18,7 @@ or saving a profile leaves the desktop unchanged.
 - A WebGL-capable browser. Chromium opens Studio as an app; otherwise Studio
   uses your default browser.
 - Niri animations enabled. Plain Niri needs no shell integration, Quickshell,
-  Rust toolchain or experimental compositor.
+  Rust toolchain or NiriFX compositor.
 
 ## Install and open Library
 
@@ -58,7 +64,7 @@ is also available before installation; it cannot apply desktop settings.
 
 Resize changes only when explicitly set to NiriFX Style or Off. Move / swap and
 Pointer drag can be previewed and saved, but live changes require the matching
-experimental compositor and separate activation choices. Leave them on Preserve
+NiriFX session and separate activation choices. Leave them on Preserve
 for this first stock-Niri setup. See [compatibility](compatibility.md).
 
 ## iNiR and iRiS

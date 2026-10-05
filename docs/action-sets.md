@@ -2,7 +2,7 @@
 
 Choose a complete look with **Fragments Motion**, **Ribbons Motion** or
 **Elastic Motion**. Each supplies opening, closing and stock desktop springs.
-Resize and experimental movement have matching suggestions, enabled separately.
+Resize and movement have matching suggestions; choose which actions to customize.
 These sets require NiriFX 0.16 or newer and use ordinary portable profile documents.
 
 | Set | Opening | Closing | Desktop timing |
@@ -33,6 +33,13 @@ The setup command previews the files. Append `--apply` to activate the reviewed
 profile with a restore snapshot. From the checkout, replace `niri-fx` with
 `python3 -m niri_fx`. Shell pickers use the same profile names after refreshing
 their preset pack. See [setup and restore](setup.md) and [collections](collections.md).
+
+For a prepared [NiriFX session](native-session.md), open
+`niri-fx studio --target native --profile fragments-motion` instead. Choose
+**Preserve**, **NiriFX Style** or **Off** for each action, then review **Select for
+next login**. The session includes movement, pointer wobble and continuous
+fragments in one build; selecting a set does not edit shell source or change the
+running desktop.
 
 In Studio, choose **Ready-made profile**, then view Resize or Movement under
 **Editing action**. The matching suggestion appears in the controls without
@@ -66,9 +73,9 @@ Without `--include-resize`, this command leaves resize unset. Both include flags
 require `--action-set`; arbitrary per-action overrides use the existing preset
 flags or Studio instead.
 
-## Add experimental movement
+## Add movement
 
-Native movement requires the separately built [experimental compositor](../experimental/README.md).
+Native movement requires the [NiriFX session](native-session.md).
 The following recordings show real column swaps with synthetic mint and violet
 clients in a nested compositor. Each returns to the initial window positions.
 
@@ -82,16 +89,18 @@ movement alone, use only `--include-movement`:
 
 ```sh
 niri-fx profile --action-set fragments-motion --include-movement > /tmp/fragments-movement.json
-# Run from the checkout after building the pinned experimental compositor:
+# Run from the checkout after building the NiriFX compositor:
 python3 scripts/nested-demo.py --custom /tmp/fragments-movement.json
 ```
 
 Adding movement to JSON does not activate it. Stock exports omit movement;
-[live activation](setup.md#activate-experimental-movement) requires explicit
+[live activation](setup.md#activate-movement-in-a-running-session) requires explicit
 standalone review and a verified running compositor contract. Native motion
 follows compositor trajectories; Studio's shader preview uses a synthetic path.
-These sets do not add interactive drag wobble or particle sharing between windows.
+Managed Studio can instead prepare the choices for the next login. These sets do
+not select pointer wobble or continuous fragments automatically, and windows do
+not share particles. Choose those drag settings separately in Library.
 
 [All nine examples and preview commands](../examples/profiles/README.md#coordinated-action-sets)
-provide base, resize-only and experimental versions. The
+provide base, resize-only and resize-plus-movement versions. The
 [recording manifests](gifs/README.md) retain exact settings and source hashes.

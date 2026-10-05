@@ -93,7 +93,7 @@ try {
     pointerDocument.pointer,
   );
   assert.doesNotMatch(readFileSync(join(root, "nirifx.kdl"), "utf8"), /pointer-wobble/);
-  assert.match(readFileSync(join(root, "nirifx-experimental.kdl"), "utf8"), /pointer-wobble/);
+  assert.match(readFileSync(join(root, "nirifx-session.kdl"), "utf8"), /pointer-wobble/);
   execFileSync("niri", ["validate", "-c", join(root, "nirifx.kdl")]);
   // Retain the actual first downloads as evidence without affecting the later
   // save/copy/rename sequence or Chrome's duplicate-filename behavior.

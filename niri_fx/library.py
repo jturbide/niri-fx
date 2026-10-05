@@ -11,6 +11,7 @@ import fcntl
 import importlib.util
 import io
 import json
+import os
 import re
 from pathlib import Path
 from types import SimpleNamespace
@@ -40,6 +41,10 @@ def registry_document(preset):
 
 def studio_target(arguments):
     target = getattr(arguments, "target", "auto")
+    if target != "native" and any(
+        getattr(arguments, key, None) is not None for key in ("native_root", "native_base")
+    ):
+        raise ValueError("--native-root and --native-base require --target native")
     if target == "auto":
         return (
             "inir"
@@ -56,6 +61,22 @@ class Library:
         self.config = Path(getattr(arguments, "config", default_config())).expanduser()
         self.state = Path(arguments.state).expanduser() / "studio-apply"
         self.folder = Path(arguments.state).expanduser() / "profiles"
+        if target == "native":
+            from . import native_session
+
+            root = getattr(arguments, "native_root", None)
+            if root is None:
+                root = native_session.default_root()
+            self.native_root = Path(root).expanduser().absolute()
+            base = getattr(arguments, "native_base", None)
+            if base is None:
+                base = native_session.load_selection(self.native_root)["selected"]
+            if base is None:
+                raise ValueError("Select a managed bundle first or supply --native-base")
+            # A Studio session always derives from the same launch-time bundle.
+            # Changes to the selector invalidate review without silently rebasing edits.
+            self.native_base = native_session.inspect_bundle(self.native_root, base)
+            self.native_socket = os.environ.get("NIRI_SOCKET")
 
     def scope(self):
         """Bind history to the launch configuration, including the picker connection."""
@@ -74,6 +95,8 @@ class Library:
         raise ValueError("No applied NiriFX Library snapshot remains for this setup")
 
     def listing(self):
+        if self.target == "native":
+            return self.native_listing()
         customs = {}
         active = None
         active_name = "Current Niri settings"
@@ -145,6 +168,52 @@ class Library:
             else []
         )
         return managed, warnings
+
+    def native_listing(self):
+        """Separate retained configuration from the advertised running renderer."""
+        from . import native_session
+
+        report = native_session.status(self.native_root, socket_path=self.native_socket)
+        managed, warnings = self.saved_profiles()
+        base_recipe = self.native_base.get("customization")
+        baseline = base_recipe["baseline_bundle"] if base_recipe else self.native_base["bundle_id"]
+        selected = report["selection"]["selected"]
+        active, recipe, reopen = None, None, False
+        for row in report["bundles"]:
+            if row["bundle_id"] == selected:
+                if row["status"] == "metadata-match":
+                    recipe = row.get("customization")
+                    if recipe:
+                        active = recipe["document"]
+                        reopen = recipe["baseline_bundle"] == baseline
+                else:
+                    warnings.append("The next-login bundle is unavailable: " + row["reason"])
+        previous = report["selection"].get("previous")
+        rollback_available = "previous" in report["selection"] and (
+            previous is None
+            or any(
+                row["bundle_id"] == previous and row["status"] == "metadata-match"
+                for row in report["bundles"]
+            )
+        )
+        return {
+            "customs": {key: entry["document"] for key, entry in managed.items()},
+            "managed": managed,
+            "warnings": warnings,
+            "active": active,
+            "active_name": active["name"] if active else (selected or "Stock Niri"),
+            "restore": rollback_available,
+            "target": self.target,
+            "native": {
+                "base_bundle": self.native_base["bundle_id"],
+                "baseline_bundle": baseline,
+                "selection": report["selection"],
+                "running": report["running"],
+                "bundles": report["bundles"],
+                "recipe": recipe,
+                "reopen": reopen,
+            },
+        }
 
     def check_folder(self):
         if self.folder.is_symlink():
@@ -233,6 +302,23 @@ class Library:
         return {"name": name, "changed": True}
 
     def plan(self, request):
+        if self.target == "native":
+            from .native_customization import configure_plan
+
+            if (
+                not isinstance(request, dict)
+                or "document" not in request
+                or set(request) - {"document", "fragment_preset"}
+            ):
+                raise ValueError(
+                    "Managed review accepts a document and optional fragment preset only"
+                )
+            return configure_plan(
+                self.native_root,
+                self.native_base["bundle_id"],
+                request["document"],
+                fragment_preset=request.get("fragment_preset"),
+            )
         required = {"document", "allow_resize", "allow_movement"}
         if (
             not isinstance(request, dict)
@@ -442,14 +528,47 @@ class Library:
         ):
             raise ValueError("Apply requires the exact reviewed selection")
         plan = self.plan(request["selection"])
+        if self.target == "native":
+            from .native_customization import apply_native
+
+            return apply_native(plan, self.native_root, expected=request["expected"])
         plan["selection_document"] = request["selection"]["document"]
         plan["library_scope"] = self.scope()
         return apply_plan(plan, self.state, expected=request["expected"])
 
     def undo(self):
+        if self.target == "native":
+            raise ValueError(
+                "Managed rollback requires Review rollback, then Select for next login"
+            )
         return restore(
             self.state,
             self.transaction(),
             apply=True,
             binary=getattr(self.arguments, "movement_binary", None),
         )
+
+    def rollback_review(self, request):
+        if self.target != "native" or request != {}:
+            raise ValueError("Managed rollback accepts no client-selected path or bundle")
+        from .native_session import rollback_plan
+
+        return summarize(rollback_plan(self.native_root))
+
+    def rollback_apply(self, request):
+        if (
+            self.target != "native"
+            or not isinstance(request, dict)
+            or set(request) != {"expected"}
+            or not isinstance(request["expected"], str)
+        ):
+            raise ValueError("Managed rollback requires the exact reviewed fingerprint")
+        from .native_session import rollback_plan
+
+        result = apply_plan(
+            rollback_plan(self.native_root),
+            self.native_root / "state/selection",
+            expected=request["expected"],
+        )
+        result.pop("restore", None)
+        return result

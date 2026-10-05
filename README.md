@@ -25,8 +25,14 @@ Quickshell is optional. Studio opens as an app-style window or a browser tab.
 [Roadmap](ROADMAP.md) · [Changelog](CHANGELOG.md)
 
 Opening, closing and resize effects work on **stock Niri**, tested with 26.04.
-Built-in presets leave resize unchanged. Native movement and swaps, pointer
-deformation and the interruption improvements require the [experimental compositor](experimental/README.md).
+Built-in presets leave resize unchanged. The **[NiriFX session](docs/native-session.md)**
+adds movement and swaps, pointer deformation, continuous fragments and interruption
+improvements in one compositor build. Choose which effects to use in Library;
+you do not need to choose individual patches.
+
+The complete session currently uses the source-build and managed-login workflow.
+Distribution packages and signed compositor downloads are being prepared. Stock
+Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
 release. [Download v0.19.0](https://github.com/jturbide/niri-fx/releases/tag/v0.19.0)
@@ -60,6 +66,12 @@ then choose **Review & apply**. Review the proposed changes before clicking
 Use the same [Library workflow](docs/library.md) with plain Niri or a supported
 shell; [setup guides](docs/getting-started.md) explain each connection.
 If several shells coexist, choose the target explicitly as shown in those guides.
+
+For the full NiriFX session, follow [session setup](docs/native-session.md), then
+open `python3 -m niri_fx studio --target native`. Choose presets for each action
+and review **Select for next login**. Move and swap currently share one choice.
+The [build and acceptance matrix](docs/native-compatibility.md) explains what is
+tested and what still needs physical desktop validation.
 
 Prefer the terminal? Run `python3 -m niri_fx` to choose a preset, review its files
 and type `apply`. Run it again and choose `undo` to restore. No extra UI toolkit
@@ -131,7 +143,7 @@ and silhouette timing. Available since v0.12.0; existing resize settings are pre
 [Shape controls and comparisons](docs/fragment-shapes.md) ·
 [Try Triangle Shatter](https://jturbide.github.io/niri-fx/gallery/#preset-triangle-shatter)
 
-The [experimental compositor](experimental/README.md) also uses these shapes for
+The [NiriFX session](docs/native-session.md) also uses these shapes for
 native movement and swaps:
 
 | Triangle swap | Hexagon swap |
@@ -161,11 +173,11 @@ Resize or Movement; choose the companion to include it in your profile.
 | ![Mixed pieces arrive and orbit away](docs/gifs/profile-fragments-motion.gif) | ![Ribbons wave in and zipper shut](docs/gifs/profile-ribbons-motion.gif) | ![A springy arrival and rubber-sheet exit](docs/gifs/profile-elastic-motion.gif) |
 | **Edge rebuild** | **Ribbon resize** | **Spring resize** |
 | ![Mixed fragments rebuild a resized edge](docs/gifs/fragments-motion-resize.gif) | ![Ribbons wave during resize](docs/gifs/ribbons-motion-resize.gif) | ![Elastic resize settles gently](docs/gifs/elastic-motion-resize.gif) |
-| **Experimental fragment swap** | **Experimental ribbon swap** | **Experimental elastic swap** |
+| **Fragment swap** | **Ribbon swap** | **Elastic swap** |
 | ![Two windows swap with mixed fragments](docs/gifs/native-swap-fragments-motion.gif) | ![Two windows swap with flowing ribbons](docs/gifs/native-swap-ribbons-motion.gif) | ![Two windows glide into exchanged positions](docs/gifs/native-swap-elastic-motion.gif) |
 
 The first two rows use real shaders with synthetic content. Swaps are native
-nested-compositor recordings and require the experimental build.
+nested-compositor recordings and require the NiriFX session.
 [Build a combo from an action set](docs/action-sets.md) ·
 [Browse coordinated sets](https://jturbide.github.io/niri-fx/gallery/?collection=action-sets)
 
@@ -198,25 +210,25 @@ Choose a coordinated opening and closing look by name; detailed tuning is option
 | **Ribbon Fold** | **Twist Snap** | **Hive Collapse** |
 | ![Ribbons rotate and fold](docs/gifs/preset-ribbon-fold.gif) | ![A window twists and settles](docs/gifs/preset-twist-snap.gif) | ![Hexagonal tiles collapse inward](docs/gifs/preset-hive-collapse.gif) |
 
-### Pointer-driven wobble prototype
+### Pointer-driven wobble
 
-Grab a window, change direction and let it settle. The pointer extension
-adds actual drag response to the isolated experimental compositor. It is available
-from source; Studio's timed Elastic effects remain separate.
+Grab a window, change direction and let it settle. The NiriFX session includes
+actual drag response. Studio's timed Elastic effects remain a separate choice.
 Choose **Pointer drag** in Library to save a preset or tune its strength, damping
 and frequency. Use **Try pointer drag** to drag the sample window, or **Play drag
 demo** for a repeatable comparison. **Preview combo** includes dragging when
 pointer strength is above zero. These browser previews use native spring and shader math with
 synthetic input; they work online without changing your desktop.
 Portable JSON retains the choice on every setup. Live activation
-requires the verified experimental compositor and an explicit standalone Apply.
+requires a verified running NiriFX compositor; managed session choices are
+reviewed for the next login.
 
 | Gentle | Rubber Sheet | Release Settle |
 | --- | --- | --- |
 | ![A firm, subtle pointer-driven bend](docs/gifs/native-pointer-gentle.gif) | ![A softer window bends with the pointer and rebounds](docs/gifs/native-pointer-rubber-sheet.gif) | ![A dragged window settles after release](docs/gifs/native-pointer-release-settle.gif) |
 
 These recordings use real pointer events and synthetic windows in nested Niri.
-[Try the prototype and its three presets](docs/pointer-wobble.md).
+[Choose a pointer preset](docs/pointer-wobble.md).
 
 These complete Studio combos pair Fragment Flow with each drag preset. Import
 the [portable examples](examples/profiles/README.md#pointer-preview-combos) to try
@@ -296,10 +308,11 @@ profile from the [resize guide](docs/resize.md#edge-ripple-and-torsion-resize).
 | ![Subtle and expressive edge ripple resize](docs/gifs/compare-edge-ripple-resize.gif) | ![Subtle and expressive torsion resize](docs/gifs/compare-torsion-resize.gif) |
 
 
-## Experimental movement and swaps
+## Movement and swaps
 
-These recordings run in a **separate, patched Niri instance** with synthetic app
-cards. The standard installation does not replace your compositor.
+The NiriFX session includes movement and swap effects. These recordings use an
+isolated compositor and synthetic app cards. Stock Niri stays installed alongside
+the NiriFX session.
 
 | Fragment explosion | Slice Exchange |
 | --- | --- |
@@ -344,7 +357,7 @@ workspace effects remain on the [roadmap](ROADMAP.md).
 
 ### Smoother resize reversals
 
-The 0.19 experimental compositor keeps neighboring edges aligned in the
+The 0.19 compositor patches keep neighboring edges aligned in the
 resize reversals below. These native comparisons show the 0.18 baseline beside the
 updated geometry, using plain synthetic cards.
 
@@ -352,9 +365,9 @@ updated geometry, using plain synthetic cards.
 | --- | --- |
 | ![Native width reversal before and after](docs/gifs/native-resize-width-comparison.gif) | ![Native height reversal before and after](docs/gifs/native-resize-height-comparison.gif) |
 
-[Behavior, requirements and limits](docs/resize.md#resize-reversals-in-the-experimental-compositor)
+[Behavior, requirements and limits](docs/resize.md#resize-reversals-in-the-nirifx-session)
 
-The **Unreleased experimental build** also maintains spacing between neighboring
+The **Unreleased NiriFX session** also maintains spacing between neighboring
 windows when an extreme resize reaches the minimum size:
 
 | Minimum width | Minimum height |
@@ -363,7 +376,7 @@ windows when an extreme resize reaches the minimum size:
 
 ### Resize effects that continue through retargets
 
-The **Unreleased experimental build** preserves an active NiriFX resize effect
+The **Unreleased NiriFX session** preserves an active NiriFX resize effect
 when another size change arrives. Pieces keep their layout and deformation phase;
 new window content blends into that continuing animation.
 
@@ -371,14 +384,14 @@ new window content blends into that continuing animation.
 | --- | --- |
 | ![Fragment resize retargets in 0.19 and the updated compositor](docs/gifs/native-resize-material-fragments-comparison.gif) | ![Triangle resize retargets in 0.19 and the updated compositor](docs/gifs/native-resize-material-triangles-comparison.gif) |
 
-These are native recordings at their configured speed. Rebuild the experimental
-compositor and regenerate the resize shader from the same checkout to try it.
+These are native recordings at their configured speed. Build the NiriFX session
+and generate the resize shader from the same checkout to try it.
 Stock Niri keeps its existing resize behavior. Closing during resize still uses
 a snapshot on older builds. [Retained resize appearance and limits](docs/resize.md#retained-resize-appearance).
 
 ### Keep resizing while closing
 
-The **Unreleased experimental build** carries a running resize through closing.
+The **Unreleased NiriFX session** carries a running resize through closing.
 The current pieces keep their phase and size trajectory while fading out, with
 borders and shadows following the changing window.
 
@@ -473,7 +486,7 @@ compare shader costs while keeping the same particles and motion.
 | --- | --- |
 | Open/close, nine families | Stock Niri with animations enabled |
 | Resize, four families | Stock Niri; choose a profile action or a style with `--resize` |
-| Native movement and interruption continuity | Pinned experimental Niri build |
+| Movement, swaps, pointer wobble, continuous fragments and interruption continuity | Full NiriFX session |
 | iNiR/iRiS, DMS, Noctalia pickers | Optional [shell integrations](docs/compatibility.md) |
 | Waybar or another bar on Niri | Standalone path; no effects plugin needed |
 

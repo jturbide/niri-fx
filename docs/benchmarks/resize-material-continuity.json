@@ -28,7 +28,7 @@
     "scripts/lib/movement.py": "af6593c8f57588be01debc22d8a2895c88956b250b092faaeb24bc29f1869732",
     "scripts/lib/pointer_scene.py": "4f1d37c163bec16dcea410c34b4381db25dd27627f7a2589edc8a1ab41c448e2",
     "scripts/fixtures/pointer-card.qml": "eb6aa6800b799fb9aa1ffe6e7989e821443948d60d8122220b39963ccfb5860e",
-    "niri_fx/effects.py": "6f34e165b5e97e5abe62b5048e159b1965d58aad6cf7cb555c3f95b02cb0599c",
+    "niri_fx/effects.py": "1870ea0f985c6bba097d050fde8d6e7684600a9d63dbf1783ba4655539275a5d",
     "niri_fx/presets.py": "cfdd512714f03e1e36e093cf04338f02d2ffa345f63a5dbeb16880bb703506fb",
     "niri_fx/shaders/resize-state.glsl": "8ff3f5b782f6a476c9b046655935c671a9f9bc2d89c203901d54ba255c914458",
     "niri_fx/shaders/resize.glsl": "77f4db203d8c7008f21685bd62302f954366fd84e6e95e4789ff10bbfdb2695f",
@@ -44,7 +44,7 @@
       "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
       "shader_sha256": "2febfff457d8d6c7c1d0a6133bd4e5f7ed5af32a7e24a24c200d4e47fad1f414",
       "config_sha256": "e79d1fd00663626e0deef7ae3ab53bdec1b45c0c7fb9561e9792626af6bc0f88",
-      "video_sha256": "1cb1d4a7262190e32341451bf228bb92ad425c69df63883c15c6fb016df66dc6",
+      "video_sha256": "4e940662a1d0c2251dfded6109b07ebfb43ba3c4ace15ba86530be1088f5fc2d",
       "dimensions": [
         1280,
         800
@@ -55,19 +55,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6155
+          "committed_s": 0.6151
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0705
+          "committed_s": 1.0701
         },
         {
           "axis": "width",
           "extent": 520,
-          "request_s": 1.3501,
-          "committed_s": 1.3695
+          "request_s": 1.3502,
+          "committed_s": 1.3689
         }
       ],
       "final_size": [
@@ -76,7 +76,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 5503,
+        "after_two_retargets": 5400,
         "settled": 0
       }
     },
@@ -86,7 +86,7 @@
       "binary_sha256": "161ba2fae7a07da4f6c459db0093d91acc3c0847088c9214de3a0eea4c2e786c",
       "shader_sha256": "92f0f2e260685c8d526d7e1929a73c98f63943b1a692d20f3ed46c3882d08b15",
       "config_sha256": "7bf7b2d8fe8d9d8e30d06c5ef20c037502628d4116a9a16851a2a21074bc173d",
-      "video_sha256": "98c1e4a617ce33e1d5b298690b86fc43908ed2c798958d8fadcdcd2e2bff77f3",
+      "video_sha256": "0df98e721ca3fea7b35351bf264f30d1f61f2b853b3bec0643079fa1115f05cb",
       "dimensions": [
         1280,
         800
@@ -97,19 +97,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6142
+          "committed_s": 0.6161
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0686
+          "committed_s": 1.0669
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3682
+          "committed_s": 1.3721
         }
       ],
       "final_size": [
@@ -118,7 +118,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 6314,
+        "after_two_retargets": 6300,
         "settled": 0
       }
     },
@@ -128,7 +128,7 @@
       "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "2febfff457d8d6c7c1d0a6133bd4e5f7ed5af32a7e24a24c200d4e47fad1f414",
       "config_sha256": "e79d1fd00663626e0deef7ae3ab53bdec1b45c0c7fb9561e9792626af6bc0f88",
-      "video_sha256": "d9fde4089c6dd04001b8fafd74a90d4eb34b8189e6c2ca73fa7687b012a8a607",
+      "video_sha256": "512a6787340f42ab020eb2f74184d71d8f7bc99015f269b1b5b0377404d38601",
       "dimensions": [
         1280,
         800
@@ -139,19 +139,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6173
+          "committed_s": 0.6171
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0734
+          "committed_s": 1.0641
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.3715
+          "committed_s": 1.372
         }
       ],
       "final_size": [
@@ -160,7 +160,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 42604,
+        "after_two_retargets": 42627,
         "settled": 0
       }
     },
@@ -170,7 +170,7 @@
       "binary_sha256": "8d5a2ee948109812a11dd3c1fc58d1659f1e31c835b0a12670faa5a7dfb08b07",
       "shader_sha256": "92f0f2e260685c8d526d7e1929a73c98f63943b1a692d20f3ed46c3882d08b15",
       "config_sha256": "7bf7b2d8fe8d9d8e30d06c5ef20c037502628d4116a9a16851a2a21074bc173d",
-      "video_sha256": "5ec3bbf35028dcd1d419c11c795e8f8c6bd81fc1bba22791bc8180c2c78fe378",
+      "video_sha256": "7a07cf833dd140bf3429e93c80789fd9de1a09bfc653f97b09e740ec9240511e",
       "dimensions": [
         1280,
         800
@@ -181,19 +181,19 @@
           "axis": "width",
           "extent": 700,
           "request_s": 0.6001,
-          "committed_s": 0.6147
+          "committed_s": 0.6143
         },
         {
           "axis": "height",
           "extent": 460,
           "request_s": 1.0501,
-          "committed_s": 1.0723
+          "committed_s": 1.0646
         },
         {
           "axis": "width",
           "extent": 520,
           "request_s": 1.3501,
-          "committed_s": 1.37
+          "committed_s": 1.3693
         }
       ],
       "final_size": [
@@ -202,7 +202,7 @@
       ],
       "interior_background_pixels": {
         "intact": 0,
-        "after_two_retargets": 43969,
+        "after_two_retargets": 43820,
         "settled": 0
       }
     }
@@ -210,11 +210,11 @@
   "comparisons": [
     {
       "file": "docs/gifs/native-resize-material-fragments-comparison.gif",
-      "gif_sha256": "27196c16691ed2271a4107112539ab80ed090c347c0c16dcbec2c6fb2ce4517f"
+      "gif_sha256": "b53bb34385d27f9365aef1f3b00329a0a328d30805dee6d3158de02dfcd9e0f1"
     },
     {
       "file": "docs/gifs/native-resize-material-triangles-comparison.gif",
-      "gif_sha256": "3aebb9a79f55c68c51011c0db2b1b66b1ade19de3c727771b5d3a5a7eb42e78b"
+      "gif_sha256": "c55253434f1a35602a4e7760296e0c496df9cab2ed92faa237dca18a0a2491bc"
     }
   ]
 }

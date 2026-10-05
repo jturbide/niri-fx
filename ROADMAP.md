@@ -12,10 +12,10 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Make desktop updates independent.** Keep shell integrations outside vendor
-   source trees and prepare versioned native builds with review and rollback.
-2. **Broaden desktop acceptance.** Verify physical input removal, capture and
-   presentation, and collect additional GPU/output results.
+1. **Deliver one complete NiriFX installation.** Include the full compositor
+   feature set, a NiriFX session and Library in the supported package path.
+2. **Make choosing effects simple.** Lead with finished combos and per-action
+   presets, reveal advanced controls when requested, and keep shell sources untouched.
 3. **Finish native capture reliability.** Resolve the remaining stale-output
    probe and expand popup, blur and PipeWire acceptance.
 4. **Keep contributor feedback fast and useful.** Track the longest rendering
@@ -32,8 +32,8 @@ follow the core controls and reliability work below.
 Stock open/close/resize effects, standalone setup, shell adapters, the shared
 Library and online Studio are available. Profiles support independent Preserve / NiriFX Style / Off choices,
 curated combinations, favorites, saved JSON and reviewed Apply/Restore.
-Experimental movement, swaps and pointer deformation require a separate compositor
-build. See [current support](docs/compatibility.md), [the catalog](docs/catalog.md)
+Movement, swaps and pointer deformation use the full NiriFX session, currently
+available through the source installation workflow. See [current support](docs/compatibility.md), [the catalog](docs/catalog.md)
 and [release history](CHANGELOG.md) for delivered features and version details.
 
 ## Next release and motion continuity
@@ -68,6 +68,37 @@ Goal: use NiriFX without blocking normal Niri or shell updates. Stock effects
 use external configuration. Native features need a separately maintained
 compositor build with an explicit upgrade path.
 
+### One integrated product
+
+NiriFX is one product. The full session includes every supported compositor
+feature; users choose effects and action modes, not patch variants. Stock-Niri
+configuration remains a lightweight compatibility path. Reduced-feature builds
+are developer regression controls, not separate consumer editions.
+
+- [x] Provide one full-feature desktop build command with required regressions.
+- [x] Review and install a finished full build, configuration snapshot and
+      next-login selection together; retain administrator login-entry registration
+      until packages provide it.
+- [ ] Install the NiriFX app, full compositor and login entry through one supported
+      package workflow, keeping stock Niri available.
+- [ ] Start Library from the selected session with its configuration owner detected
+      and a simple first-use flow.
+- [ ] Load normal user/shell settings beneath a NiriFX-owned effect overlay and
+      follow their updates, retaining a validated full snapshot for recovery.
+      The current frozen baseline requires a new import for other desktop changes.
+- [x] Present recommended combos and per-action presets first; keep configuration
+      paths, build identities and technical controls in advanced details.
+- [x] Offer the same preset/action choices through CLI and agent discovery.
+- [ ] Version a portable session recipe that also carries continuous fragment
+      controls, with import/export in local and online Studio. Current portable
+      profiles retain the action styles; native response choices stay with the bundle.
+- [ ] Add independent move and swap choices once the compositor exposes reliable
+      action identity; until then label their shared setting explicitly.
+- [ ] Verify physical login, shell startup, capture, input, suspend and rollback
+      for the declared package targets before advertising desktop support.
+- [ ] Publish the installation/support matrix with exact known limits, without
+      presenting every integrated feature as a separate experiment.
+
 ### Shell integration
 
 - [x] Retire new installation of the source-patched iRiS entry; keep the app and
@@ -87,8 +118,8 @@ compositor build with an explicit upgrade path.
       toolchain, target, profile and enabled features; inspect artifacts read-only.
 - [x] Build changed patch stacks into fresh candidate directories without
       overwriting the working or previous build.
-- [ ] Maintain a tested upstream revision/feature matrix and CI that checks
-      clean patch application, compilation and native regressions on candidates.
+- [x] Pin an upstream compatibility matrix and check clean application of all
+      patch stacks in CI, with compilation and native regressions for the full build.
 - [ ] Separate upstream compatibility failures from user updates; offer only
       candidates that pass the declared release gates.
 - [ ] Evaluate narrow upstream contributions for rendering hooks and shell
@@ -98,7 +129,7 @@ compositor build with an explicit upgrade path.
 
 - [x] Present retained-bundle status, review and next-login rollback through the
       existing CLI without a background configuration manager.
-- [ ] Add the same native-session review and rollback controls to Studio.
+- [x] Add the same native-session review and rollback controls to Studio.
 - [x] Prepare a per-user systemd login launcher that pins a selected pair,
       preserves the stock service lifecycle and handles stale leases.
 - [ ] Package a distinctly named compositor and NiriFX login session alongside
@@ -109,8 +140,10 @@ compositor build with an explicit upgrade path.
       and never restart a running compositor from a background updater.
 - [x] Import literal include trees into isolated candidate configuration with
       per-file review, preserved ordering and retained missing-optional state.
-- [ ] Connect shell/Studio settings to a reviewed candidate-editing workflow
-      without changing stock config ownership or editing retained bundles.
+- [x] Connect Studio settings to a reviewed candidate-editing workflow without
+      changing stock config ownership or editing retained bundles.
+- [ ] Let supported shell extensions open that same Studio workflow without
+      introducing another settings writer.
 - [x] Show retained-bundle storage sizes and distinguish the advertised running
       session from next-login and rollback selections, with explicit unknown states.
 - [ ] Provide reviewed cleanup that preserves all running, selected and rollback
@@ -123,6 +156,8 @@ compositor build with an explicit upgrade path.
 The [desktop update guide](docs/desktop-updates.md) separates current tools
 from this planned package/session workflow. Build identity is not runtime or
 physical acceptance; the native capture and input gates remain required.
+Native release candidates follow the [distribution checklist](docs/releasing.md#native-release-candidates)
+before being advertised as supported downloads.
 
 ## Consistent action selection
 
@@ -218,7 +253,7 @@ a profile that selects resize changes it.
 Goal: retain visual direction and state when actions overlap.
 
 - [x] Preserve movement phase, seed, direction and sampled position velocity in
-      the pinned experimental build.
+      the NiriFX compositor.
 - [x] Continue an interrupted opening or movement while fading a closing window.
 - [x] Expand coverage to move/resize/close combinations and vertical layout changes.
 - [ ] Fix discontinuities demonstrated by those scenarios and add regressions.
@@ -251,13 +286,13 @@ Goal: responsive, Compiz-inspired deformation tied to actual dragging.
 - [x] Record native showcases and publish the tested compositor/renderer requirements.
 - [x] Respect disabled animations and retain the ordinary-renderer fallback.
 
-Try the [pointer prototype](docs/pointer-wobble.md). Native checks and their scope
+Try the [pointer controls](docs/pointer-wobble.md). Native checks and their scope
 are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble).
 
 ### Integration and broader acceptance
 
 - [x] Add pointer settings to portable profiles and Studio, with preset-first controls.
-- [x] Add capability-verified standalone Apply/Restore and explicit experimental exports.
+- [x] Add capability-verified standalone Apply/Restore and NiriFX session exports.
 - [x] Test pointer-only, combined movement and disabled profiles against the running renderer.
 - [x] Add native-math pointer playback to combo previews, with clear native support limits.
 - [x] Add interactive dragging, keyboard demo playback and reduced-motion behavior in Studio.

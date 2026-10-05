@@ -16,15 +16,19 @@ do not need iNiR installed.
 | Niri + Waybar | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
 | DMS on another compositor | No current NiriFX backend | Installing a shell does not supply Niri's shader interface. |
-| Move/swap effects | Pinned experimental Niri patch | Separate nested demo only; shell plugins cannot add this rendering hook. |
-| Pointer-driven wobble | Optional pointer extension to the pinned build | [Native prototype](pointer-wobble.md); portable profiles and Studio controls in version 0.18 and newer. Live Apply requires a verified standalone session. |
+| NiriFX session, with any Niri-compatible shell | [Unified desktop build and managed login](native-session.md) | Includes movement, pointer wobble, continuous fragments and interruption improvements. Source-based installation is available; distribution packages and physical acceptance remain pending. |
+| Move/swap effects | NiriFX session | One shared movement setting with independent choices for other actions. Shell plugins cannot add this rendering hook to stock Niri. |
+| Pointer-driven wobble | NiriFX session | [Pointer controls](pointer-wobble.md), portable profiles and Studio. Live Apply requires a verified running renderer; managed next-login selection validates the retained build separately. |
+| Continuous fragments | NiriFX session | Gentle, Tear and Cascade presets for square fragments. Browser movement preview does not reproduce the continuous renderer; see [tested scope](fragment-drag.md). |
 
 See [tested versions and reproduction details](validation.md#workflow-and-compositor-scenarios)
 for the scope of each integration check.
 
 Keep shell source checkouts separate from NiriFX user configuration. The
 [desktop update guide](desktop-updates.md) covers removal of the earlier iRiS
-source entry and the planned versioned native-session workflow.
+source entry and the versioned native-session workflow. The
+[native compatibility matrix](native-compatibility.md) separates build checks,
+isolated runtime tests and physical desktop acceptance.
 
 The standard preset pack leaves existing resize behavior unchanged. Add a resize
 style with `--resize`, or set Resize to **NiriFX Style** in Library or Studio.
@@ -74,7 +78,7 @@ python3 -m niri_fx preview --output /tmp/nirifx-preview.html
 xdg-open /tmp/nirifx-preview.html
 ```
 
-Use **Export Niri config**, then put the exported contents in the NiriFX
+Use **Export stock Niri config**, then put the exported contents in the NiriFX
 include file. **Save to iRiS** is specific to iNiR; it is not a DMS save action.
 Choose the standalone save target for a KDL download; iRiS registration requires iNiR.
 

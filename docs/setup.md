@@ -32,14 +32,14 @@ and its config are healthy, 1 for missing prerequisites, or 2 for a command erro
 ### Movement support
 
 `doctor` compares temporary baseline configurations with movement-shader and
-pointer-wobble nodes separately. This distinguishes stock Niri, the movement
-experiment and the additional pointer extension even when they share a version
-number. The pointer profile and activation workflow requires version 0.18 or
-newer and the separate native extension for live deformation.
+pointer-wobble nodes separately. This distinguishes stock Niri, earlier partial
+builds and the full NiriFX session even when they share a version number.
+The full session includes both capabilities; independent checks determine what
+the selected executable and running renderer actually support.
 
 ```sh
 python3 -m niri_fx doctor --text
-# Inspect a trusted experimental build without installing or starting it:
+# Inspect a trusted NiriFX build without installing or starting it:
 python3 -m niri_fx doctor --text --niri-binary /path/to/candidate/bin/niri
 ```
 
@@ -59,12 +59,12 @@ renderer `session.contract.status` and the resulting `activation_ready`:
 
 | Status | Meaning |
 | --- | --- |
-| `supported` | The tested executable accepts the probed experimental node |
-| `unsupported` | The baseline configuration passes, but the experimental node is rejected |
+| `supported` | The tested executable accepts the probed NiriFX node |
+| `unsupported` | The baseline configuration passes, but the NiriFX node is rejected |
 | `unknown` | The probe could not establish support, or the running executable differs or cannot be identified |
 
 Parser results remain separate from `session.contract.status`. A matching running
-experimental binary must advertise movement contract 2 and compile an isolated
+NiriFX binary must advertise movement contract 2 and compile an isolated
 probe in its own renderer. `activation_ready` is true only when both checks pass.
 `movement_configured` reports whether a shader is configured; it does not claim an
 arbitrary custom shader compiled. The probe does not replace the active shader.
@@ -77,14 +77,15 @@ current settings, not whether the extension can be activated. A supported but
 unconfigured pointer renderer can be ready. Strength zero keeps it configured
 and explicitly disabled.
 
-### Activate experimental movement
+### Activate movement in a running session
 
-Only use this after deliberately starting the experimental compositor as your
-session. NiriFX does not install or replace a compositor. The default setup and
-all stock exports continue to omit movement shaders.
+Use live activation after starting the NiriFX compositor as your session.
+The `setup` command configures the running compositor; it does not install one.
+Use the [session installer](native-session.md) to prepare a full build separately.
+The default setup and all stock exports omit movement shaders.
 
 ```sh
-# Preview a plan against the executable running your experimental session:
+# Preview a plan against the executable running your NiriFX session:
 niri-fx setup --target standalone --preset fragment-wake --enable-movement \
   --niri-binary /path/to/patched/niri --no-launcher
 # Repeat the setup command with --apply --expect-plan REVIEWED_PLAN_SHA256.
@@ -96,15 +97,15 @@ niri-fx restore --transaction TRANSACTION_ID --apply
 For a profile, its `movement` slot must explicitly select a supported style.
 Create one with `profile --movement-preset fragment-wake`, or use
 [an example profile](../examples/profiles/fragment-wake-motion.json).
-Activation requires explicit `--target standalone`. The connected standalone
+Live activation requires explicit `--target standalone`. The connected standalone
 Studio also offers a separate movement activation choice when the running contract
 is verified. iNiR registration, Noctalia exports, terminal-guided setup and stock
-shell packs omit experimental nodes.
+shell packs omit nodes that require the NiriFX compositor.
 The Apply step rechecks the socket and running contract before writing, including
 when a prior plan has no file changes. File-state and plan-hash checks still apply.
 [Runtime support and limits](../experimental/README.md#runtime-verification-and-output-feedback).
 
-### Activate experimental pointer drag
+### Activate pointer drag in a running session
 
 Create a profile with `--pointer gentle`, `rubber-sheet` or `release-settle`.
 `--pointer off` saves an explicit zero-strength override. Leaving the option out
@@ -119,7 +120,7 @@ python3 -m niri_fx setup --target standalone --custom /tmp/gentle-fragments.json
   --enable-pointer --niri-binary /path/to/pointer-enabled/niri --no-launcher
 ```
 
-Use an executable matching the running experimental session. Parser support or
+Use an executable matching the running NiriFX session. Parser support or
 a nested demo alone does not prove support in the login compositor. Check
 `pointer_capability.activation_ready`, review the setup plan, then repeat the
 same setup command with `--apply --expect-plan REVIEWED_PLAN_SHA256`. A profile
@@ -133,7 +134,7 @@ python3 -m niri_fx studio --target standalone --custom /tmp/gentle-fragments.jso
   --niri-binary /path/to/pointer-enabled/niri
 ```
 
-Choose **Apply experimental pointer drag**, review, then Apply. The choice is
+Choose **Apply pointer drag**, review, then Apply. The choice is
 shown only for a verified standalone connection with pointer settings selected.
 **Disabled** requires explicit consent too. Settings remain editable and shareable
 in hosted/offline Studio or unsupported shells; ordinary exports omit the native
@@ -240,7 +241,7 @@ Restoring an earlier native pointer or movement selection verifies the running
 renderer again. New snapshots retain the selected validation executable; for an
 older snapshot or an explicitly changed path, pass `--niri-binary PATH` to both
 review and Restore. Unsupported reactivation leaves the files and snapshot
-untouched. Removing native settings to return to stock needs no experimental
+untouched. Removing native settings to return to stock needs no NiriFX
 session. Restored native configurations are validated, with rollback on failure.
 
 Each file replacement is atomic; the complete multi-file operation is not a

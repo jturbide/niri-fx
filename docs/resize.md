@@ -4,6 +4,10 @@ Built-in presets preserve your existing resize settings. Choose a resize effect
 for Fragments, Elastic, Slices or Distortion, or assign one separately in
 a [profile](profiles.md).
 
+These shaders work on stock Niri. The [NiriFX session](native-session.md) adds
+the interruption improvements described below alongside movement and drag
+effects in the same build.
+
 Niri animates selected size changes, including cycling preset column widths and
 maximizing a column. This does not turn continuous pointer resizing into a spring
 simulation. Very small changes may not animate; see [Niri's resize interface](https://niri-wm.github.io/niri/Configuration:-Animations.html#window-resize).
@@ -27,7 +31,9 @@ niri validate -c /tmp/nirifx-resize.kdl
 ```
 
 Use [standalone setup](standalone.md) or your shell's documented installation path
-when ready to apply. For a single style, `--resize --resize-strength 0.5` explicitly
+when ready to apply on stock Niri. For a managed NiriFX session, select the Resize
+style in `niri-fx studio --target native` and review **Select for next login**.
+For a single style, `--resize --resize-strength 0.5` explicitly
 adds resize; omitting the flag preserves your existing resize configuration.
 
 All families share resize time and strength. Elastic uses spring strength,
@@ -63,9 +69,9 @@ current rectangle, preserving transparent source pixels and exact endpoints.
 
 Selecting a mode or adjusting its controls does **not** enable resize. A single
 style still needs `--resize`; a profile needs an explicit resize slot. These modes
-do not add pointer physics or carry shader velocity across interrupted resizes.
-Niri owns interruption handling; the tests check settling and cleanup rather than
-claiming uninterrupted velocity.
+do not add pointer physics. Stock Niri owns interruption handling without retained
+shader state; the NiriFX session adds the bounded continuation described below.
+The stock checks verify settling and cleanup rather than uninterrupted velocity.
 
 ## Shaped resize
 
@@ -96,10 +102,10 @@ python3 scripts/test-interruptions.py --resize-profile examples/profiles/triangl
 ```
 
 On stock Niri, the shader keeps deterministic piece identities within one resize,
-but has no retained state across successive resizes. The current experimental
+but has no retained state across successive resizes. The current NiriFX
 renderer adds the bounded continuation described below.
 
-## Resize reversals in the experimental compositor
+## Resize reversals in the NiriFX session
 
 When a resize reverses, its edge and the neighboring window should continue
 along matching paths. The development build after 0.18 retains the incoming
@@ -146,20 +152,20 @@ from the visible-edge gap range. See the [native results](validation.md#resize-g
 
 ### Retained resize appearance
 
-The current [development compositor](../experimental/README.md) retains the
+The current [NiriFX compositor](native-session.md) retains the
 original resize phase, reference geometry and shader program for an active NiriFX
 resize episode. Newly committed content blends on its own clock. Retargeting or
 replacing a shader therefore does not reconstruct the existing fragment grid;
 the next episode adopts the new shader. Resize Off or global animations Off ends
 the retained episode immediately. Resize remains an explicit profile choice.
 
-This requires the current experimental build and a generated shader carrying the
+This requires the current NiriFX build and a generated shader carrying the
 resize-continuity marker. A verified movement contract 2 alone does **not** prove
 retained resize support: older builds also advertise that movement contract.
 Stock Niri and unmarked custom shaders retain their existing resize interface.
 
 See the [retarget acceptance scope](validation.md#retained-material-acceptance-unreleased)
-and the separate closing handoff below. Stock Niri and older experimental builds
+and the separate closing handoff below. Stock Niri and older NiriFX builds
 keep their existing snapshot behavior when closing.
 
 ### Closing during resize
@@ -172,7 +178,7 @@ the existing opening and movement continuations do.
 
 ![Triangle resize continuing into close, before and after](gifs/native-resize-close-comparison.gif)
 
-Use a generated, marked resize shader and the matching experimental compositor.
+Use a generated, marked resize shader and the matching NiriFX compositor.
 There is no additional profile toggle: the handoff applies when the selected
 resize effect is already running. Resize Off, Close Off or global animations Off
 ends the continuation. Profiles keep their independent action choices.

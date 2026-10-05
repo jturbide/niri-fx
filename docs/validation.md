@@ -321,9 +321,10 @@ limited to one step out of 255. At most four pixels may exceed that only when
 each crosses a foreground/background silhouette with stable foreground and
 background neighbors within one pixel in **both** images. Interior exceptions
 are forbidden; the report includes every exceptional coordinate and difference.
-All eight stationary controls matched exactly. Fragments required at most two
-silhouette exceptions per frame in the latest run, with a maximum channel difference of 121;
-Slices and Elastic stayed within one channel step everywhere.
+All eight stationary controls matched exactly. The latest
+[acceptance report](benchmarks/resize-close.json) records at most three silhouette
+exceptions per Fragments frame, with a maximum channel difference of 123 and no
+interior exceptions. Slices and Elastic stayed within one channel step everywhere.
 
 This narrow allowance follows GPU probes with identical phase, geometry and UV
 inputs: output-to-offscreen rasterization differed by at most `2^-24` in normalized

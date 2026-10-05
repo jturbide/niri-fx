@@ -63,6 +63,39 @@ publication is a separate decision; no automatic PyPI upload is configured.
 Use `NiriFX X.Y.Z` for the GitHub release title. Put feature summaries in the
 release notes, keeping titles consistent across versions.
 
+## Native release candidates
+
+The Python package and a patched compositor have different release gates. A
+NiriFX package may include experimental build/session tools without shipping a
+supported compositor binary. Keep those claims separate in release notes and
+downloads. The [native compatibility matrix](native-compatibility.md) records
+build targets; passing it does not certify a physical desktop.
+
+Before publishing a native binary candidate:
+
+- [ ] Select an exact Niri commit and ordered patch stack, and pass clean patch,
+      compilation and regression checks for every advertised variant.
+- [ ] Build with the declared desktop features and locked dependencies; retain
+      toolchain, target, build identity, source, patch and license provenance.
+- [ ] Package a distinctly named compositor and session alongside stock Niri.
+      Declare runtime library dependencies and verify a clean installation on
+      each advertised distribution and architecture.
+- [ ] Exercise Studio and CLI review, stale-review refusal, next-login selection,
+      rollback and interrupted-install recovery using the installed package.
+- [ ] Complete the [physical session checks](native-session.md#updates-and-acceptance):
+      startup, input, movement, resizing, capture, suspend, logout and return to
+      stock. Record the tested GPU, outputs, scale and known limitations.
+- [ ] Verify an ordinary Niri and shell upgrade leaves their sources unchanged
+      and either keeps the native session working or provides a clear stock
+      recovery path.
+- [ ] Sign the release tag and declared artifacts, verify checksums and inspect
+      the draft release's source correspondence, licenses and installation guide.
+
+Keep a failed candidate out of supported downloads. Publish its limitation in
+the compatibility results without changing users' installed or next-login
+selections. A release candidate should invite testing against a stated scope;
+it is not a substitute for the future [1.0 acceptance criteria](stability.md#acceptance-criteria-for-10).
+
 ## Repository maintenance
 
 Keep the public [release and download guide](releases.md), versioned documentation

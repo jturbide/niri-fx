@@ -52,8 +52,8 @@ keeps those edits. Refined actions show the matching combo name, such as
 match a built-in style or combo action. Undo/Redo also works for combo changes. Move and swap share the
 compositor's movement effect; they are not independent shader slots.
 
-**Pointer drag** is a separate native experiment with a browser preview in
-version 0.18 and newer. Select **NiriFX Style**, choose Gentle, Rubber Sheet or
+**Pointer drag** controls the NiriFX session's drag response independently of the
+window style, with a browser preview in version 0.18 and newer. Select **NiriFX Style**, choose Gentle, Rubber Sheet or
 Release Settle, then expand its controls to tune strength, damping and frequency.
 **Preserve** leaves
 the underlying pointer behavior alone; **Off** stores an explicit zero-strength
@@ -69,7 +69,7 @@ the combo. Preserve uses no invented animation: its real behavior needs the
 desktop context. Off shows the action's endpoint immediately. Previewing leaves
 the saved document and your desktop configuration unchanged.
 
-The movement phase is labelled **experimental** and uses a synthetic path. It
+The movement phase uses the NiriFX movement shader on a synthetic path. It
 does not test native compositor movement or desktop springs. See the
 [movement guide](movement.md) for live support and the
 [desktop motion recordings](desktop-motion.md) for workspace, camera and overview
@@ -94,14 +94,19 @@ the pointer phase. Previewing is available without a patched compositor.
 - **Save to My profiles** asks for a name and keeps an editable document without activation.
   An existing name shows **Replace saved profile** before replacing that Library copy.
 - **Export JSON** produces a portable style/profile for every supported setup.
-- **Export stock Niri config** produces stock Niri shaders. Experimental movement and pointer nodes are omitted.
-- **Export experimental config** appears when pointer settings are selected. It includes
+- **Export stock Niri config** produces stock Niri shaders. Movement and pointer nodes are omitted.
+- **Export NiriFX session config** appears when pointer settings are selected. It includes
   those settings and any selected movement shader in one movement block, for the
-  matching experimental compositor only. Neither download activates settings.
+  matching NiriFX compositor only. Neither download activates settings.
 - In the installed app, **Review & apply** lists the configuration changes.
   **Apply these changes** activates exactly that reviewed selection.
 - **Restore previous** restores this app's most recent change for the same setup and config. Later file edits
   cause a conflict rather than being overwritten.
+
+The **NiriFX session** (`native`) target uses **Select for next login** and reviewed
+rollback instead of live Apply/Restore. Each selection retains a separate
+binary/configuration pair. See [managed session editing](native-session.md#choose-effects-in-studio)
+for baseline semantics and continuous fragment presets.
 
 The profile name identifies saved looks. Names are case insensitive; spaces,
 underscores and hyphens map to the same saved ID. Local profiles live in the
@@ -134,12 +139,12 @@ adds the imported document to the current Library. Browser storage is local to
 the current browser and site; it does not sync to another computer.
 
 Resize is explicitly chosen per profile. Movement can be previewed and saved on
-every setup. Live activation requires the verified experimental compositor and
-the separate **Apply experimental movement** checkbox on the standalone target.
-Pointer drag has its own **Apply experimental pointer drag** checkbox, available
+every setup. Live activation requires the verified NiriFX compositor and
+the separate **Apply movement** checkbox on the standalone target.
+Pointer drag has its own **Apply pointer drag** checkbox, available
 only for a verified running pointer renderer on the standalone target. Choosing
 another pointer setting clears that consent. An iNiR or Noctalia adapter applies
-stock actions only; its portable JSON retains the experimental choices.
+stock actions only; its portable JSON retains the NiriFX session choices.
 
 ## One interface, different configuration owners
 
@@ -149,6 +154,7 @@ stock actions only; its portable JSON retains the experimental choices.
 | iNiR, including iRiS | `niri-fx studio --target inir --active` | Installed iNiR serializer, external registry and watched animation block |
 | DankMaterialShell / Material Shell | Use the NiriFX launcher's Studio entry | Standalone include outside DMS-owned files |
 | Noctalia 5 with Niri Animations | Connect the folder/file below | Existing picker's preset folder and target file |
+| NiriFX session, with any shell | `niri-fx studio --target native` | New retained bundle and reviewed next-login selection |
 | Web Studio | [Open online](https://jturbide.github.io/niri-fx/studio/) | Preview, browser-saved profiles and downloads |
 
 All paths share the same FX, presets, profiles and combo builder. No bar or

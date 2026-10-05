@@ -27,16 +27,24 @@ profile's override for the action and reveals the underlying configuration.
 It does not keep the previous NiriFX effect. Restore returns the exact saved
 configuration from before Apply.
 
+In a managed [NiriFX session](native-session.md#choose-effects-in-studio), Preserve
+inherits the saved baseline captured for that session. Reopening a customized
+bundle keeps its original baseline; it does not follow later shell edits.
+**Select for next login** and reviewed rollback affect the next session, without
+reloading the current desktop.
+
 Studio can preview a selected NiriFX style or an instant Off transition. It
 cannot know how an inherited desktop animation will look offline; Preserve is
 labelled in the preview instead of simulating an assumed Niri default.
 
-Live movement and pointer choices require the verified
-[experimental compositor](../experimental/README.md). Stock exports keep their
-choices in JSON but omit them from KDL, including Off. The experimental native
-contract 2 keeps movement and pointer overrides independent even though they
-share one Niri configuration block. Applying Off for timed movement does not
-turn off pointer drag, and vice versa. Global Niri animations Off still wins.
+Movement and pointer choices require the [NiriFX session](native-session.md),
+which includes both in one build. Stock exports keep their choices in JSON but
+omit them from KDL, including Off. Native contract 2 keeps movement and pointer
+wobble overrides independent even though they share one Niri configuration block.
+Applying Off for movement does not turn off pointer wobble, and vice versa.
+[Continuous fragments](fragment-drag.md) follow the movement choice, including
+Off; Pointer drag controls the separate whole-window wobble. Global Niri
+animations Off still wins.
 
 ## Compose a partial profile
 
@@ -58,7 +66,9 @@ niri-fx profile --name 'Still Windows' --open off --close off --resize off \
 Use `--movement preserve|off|PRESET` and `--pointer preserve|off|PRESET` for the
 native choices. The older `--open-preset`, `--close-preset`, `--resize-preset` and
 `--movement-preset` names remain aliases. Previewing or creating JSON changes no
-active settings. Use Library Review and Apply when the selection is ready.
+active settings. Review the selection in Library when ready: **Apply** updates
+a connected stock configuration, while **Select for next login** prepares a
+managed NiriFX session.
 
 ## Choose a finished pairing
 
@@ -102,9 +112,12 @@ registrations and Noctalia preset packs need a reviewed update to add the new na
 Browse by look in the [preset collections](collections.md). Pairings build on
 the named source presets; the five recommended combos refine their action settings
 as described above. Their JSON files contain the exact resolved parameters.
-The [motion packs](desktop-motion.md) and [coordinated action sets](action-sets.md) additionally coordinate stock desktop springs. Action sets suggest separately enabled resize and movement companions in Studio or through `profile --action-set`. All leave resize and experimental
-movement and pointer drag unset. Their shader cost is the cost of the chosen action; profiles do
-not add a second rendering pass. See [performance measurements](performance.md).
+The [motion packs](desktop-motion.md) and [coordinated action sets](action-sets.md)
+additionally coordinate stock desktop springs. Action sets suggest resize and
+movement companions in Studio or through `profile --action-set`. The built-in
+profiles leave resize, movement and pointer drag at Preserve. Their shader cost
+is the cost of the chosen action; profiles do not add a second rendering pass.
+See [performance measurements](performance.md).
 
 ```sh
 python3 -m niri_fx list --profiles --text
@@ -143,9 +156,10 @@ use native spring and shader math with synthetic window content; native input,
 layout, capture behavior and display latency require compositor checks. See
 [pointer-driven wobble](pointer-wobble.md).
 
-Resize requires an explicit choice. **Movement (experimental)** shows the shader
-on a synthetic path; live move/swap effects require the verified experimental
-compositor. See [movement support](movement.md). Playful Motion also includes stock
+Resize requires an explicit choice. **Movement (shader preview)** shows the shader
+on a synthetic path; actual move/swap effects require the NiriFX session.
+It does not simulate the continuous fragment renderer. See
+[movement support](movement.md). Playful Motion also includes stock
 desktop spring settings, whose workspace, camera and overview behavior is shown
 in the [native desktop recordings](desktop-motion.md), separately from the
 window shader preview.
@@ -182,18 +196,22 @@ Each nested effect keeps `resize: false`: the separate resize slot selects that 
 Single-style documents continue to use effect schema 3; these are different
 document types, not compatibility aliases. [Complete example](../examples/profiles/spring-and-ember.json).
 
-The experimental `movement` slot is validated and preserved on import/export.
-Studio can edit it and preview the actual shader in **Movement (experimental shader)**.
+The `movement` slot is validated and preserved on JSON import/export.
+Studio can edit it and preview the actual shader in **Movement (shader preview)**.
 Choose **NiriFX Style** or **Off** for Move / swap to store an override;
-viewing an action alone does not select it. Stock KDL and iRiS exports omit it by default; explicit standalone activation requires a verified running contract. See [Apply and Restore](setup.md#activate-experimental-movement). Movement requires the separate [compositor experiment](../experimental/README.md).
-Profiles do not add application-specific rules. Pointer drag uses a separate
-optional native extension, described below.
+viewing an action alone does not select it. Stock KDL and iNiR/iRiS registrations
+omit movement nodes. The NiriFX session target includes the selected movement in
+its next-login configuration. To apply it in an already running session, use
+[verified live Apply and Restore](setup.md#activate-movement-in-a-running-session).
+Profiles do not add application-specific rules. Pointer drag is an independent
+control in the same NiriFX build, described below.
 
 ## Pointer drag
 
 Pointer settings in profiles, Studio and reviewed activation are available in
-**0.18 and newer**. Live pointer deformation requires the separately built
-[experimental compositor](pointer-wobble.md).
+**0.18 and newer**. Pointer deformation is included in the
+[NiriFX session](native-session.md); see [pointer-driven wobble](pointer-wobble.md)
+for its behavior and validation limits.
 
 In Library, **Pointer drag** uses Preserve / NiriFX Style / Off. NiriFX Style
 offers **Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer drag** exposes
@@ -208,9 +226,9 @@ python3 -m niri_fx inspect --custom /tmp/gentle-fragments.json
 python3 scripts/nested-demo.py --custom /tmp/gentle-fragments.json
 ```
 
-Build the [pointer extension](pointer-wobble.md) before running that demo. The
-profile can contain pointer settings with no timed `movement` action. The nested
-window uses its own compositor and configuration.
+Build the [NiriFX compositor](native-session.md#prepare-a-version) before running
+that demo. The profile can contain pointer settings with no timed `movement`
+action. The nested window uses its own compositor and configuration.
 
 A profile's optional top-level `pointer` object contains all three controls:
 `{"strength": 0.4, "damping": 85, "frequency": 10}`. Strength is a finite number
@@ -222,15 +240,17 @@ profiles remain valid.
 
 Saving a pointer choice does not activate it. Stock KDL, iNiR registrations and
 Noctalia preset downloads omit pointer nodes, including a disabled override.
-Portable JSON retains the settings. Studio's **Export experimental config** includes
+Portable JSON retains the settings. Studio's **Export NiriFX session config** includes
 pointer settings and any selected timed movement in one `window-movement` block;
-that file requires the matching compositor extensions.
+that file requires the matching NiriFX build.
 
 Live activation is available through the standalone adapter after verifying the
-running pointer contract. **Apply experimental pointer drag** is a separate
-choice from **Apply experimental movement**. Changing the pointer settings clears
+running pointer contract. **Apply pointer drag** is a separate
+choice from **Apply movement**. Changing the pointer settings clears
 its activation choice and invalidates the review. A disabled override also requires
-explicit activation. See [reviewed pointer Apply and Restore](setup.md#activate-experimental-pointer-drag).
+explicit activation. See [reviewed pointer Apply and Restore](setup.md#activate-pointer-drag-in-a-running-session).
+In the managed session target, review **Select for next login** instead; all
+selected actions are prepared together without changing the running compositor.
 
 ![Independent action editing in Studio](studio-profiles.png)
 
@@ -254,6 +274,13 @@ Launch with `python3 -m niri_fx studio --target standalone` to start with file
 downloads, or choose `--target inir` / `--target noctalia`. The default `auto`
 selects iNiR when its helper is installed, otherwise standalone. Offline previews
 also default to standalone. The target changes the save UI, not your active effect.
+
+For a prepared NiriFX session, use `niri-fx studio --target native`. Choose a
+ready-made combo, set each action and review **Select for next login**. Continuous
+fragments add **Gentle**, **Tear** and **Cascade** choices with their matching
+movement materials. Those extra response settings are retained in the session's
+editable recipe, not portable profile JSON or My profiles. See
+[choosing session effects](native-session.md#choose-effects-in-studio).
 
 Test an exported movement profile without replacing the login compositor:
 

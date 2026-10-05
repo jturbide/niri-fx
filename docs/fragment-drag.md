@@ -1,6 +1,6 @@
 # Continuous fragment motion
 
-The continuous fragment prototype lets square pieces follow a window at
+Continuous fragments let square pieces follow a window at
 different speeds. Pressing expands the pieces around the grabbed region before
 you move. A fresh grab at rest pins its piece to your hand. Distant pieces wait
 near their previous screen positions, then catch up with individually varied
@@ -8,14 +8,20 @@ delays and response speeds. Reversing direction retains queued motion. Pausing
 keeps the held spread; releasing reconstructs the window, including a press
 that never became a drag.
 
-This is an **Unreleased native experiment** for the pinned patched Niri build.
+This is included in the **Unreleased NiriFX session**.
 It uses the selected movement material for pointer dragging and timed window
 movement, including column reordering. A long drag is driven by incoming motion;
 it does not finish when a fixed movement timer expires or repeatedly play an
 opening animation. Each window owns its own state. Pieces do not transfer
 between windows during a swap.
 
-## Scope of the first prototype
+Open `niri-fx studio --target native` after [session setup](native-session.md).
+Choose **Gentle**, **Tear** or **Cascade** under continuous fragments, keep or
+change your other action presets, then review **Select for next login**. There
+is no separate fragment build to install. The detailed controls and developer
+checks below explain the current renderer's limits.
+
+## Supported fragment material
 
 The first renderer supports an unmixed square grid with no grid orientation,
 roundness, shrink, size variation, direction variation or waves. Pieces must use
@@ -40,8 +46,8 @@ response variation, directional motion, tilt and held spread. Portable movement
 strength, focus, spin and gravity settings still govern the timed fallback shown
 in existing previews. Zero movement strength disables continuous eligibility;
 positive strength and the other portable controls are not mapped to native
-motion yet. The native controls are experimental and their names and ranges can
-change during this prototype.
+motion yet. Like other 0.x interfaces, native control names and ranges can
+change before the [stable contract](stability.md) is defined.
 Closing during continuous fragment motion uses the existing protected baked
 snapshot and configured close effect; it does not carry these fragment springs
 through closing.
@@ -62,10 +68,10 @@ input.
 
 The fragment material takes priority over the optional whole-window pointer
 wobble while it is active. A profile does not need a pointer-wobble choice to use
-continuous fragments. This prototype requires its own capability check; support
+continuous fragments. This renderer requires its own capability check; support
 for the earlier movement or wobble extension alone is insufficient.
 
-For this prototype, movement Off disables both timed and pointer-driven fragments.
+Movement Off disables both timed and pointer-driven fragments.
 Pointer Off controls the separate whole-window wobble; it does not disable the
 fragment material. Independent drag-fragment controls remain future integration
 work, so this behavior should not be treated as a frozen public contract.
@@ -116,7 +122,7 @@ another preset. The Python defaults, bounds and presets are maintained in
 [`fragment_motion.py`](../niri_fx/fragment_motion.py); they are not yet portable
 profile settings or Studio controls.
 
-The experimental compositor accepts a `fragment-motion` block inside the same
+The NiriFX compositor accepts a `fragment-motion` block inside the same
 `window-movement` node as the generated eligible shader. Omitting the block uses
 these defaults. Keep the existing shader in that node; these settings alone do
 not select a material. This block is not supported by stock Niri or stored in
@@ -264,7 +270,7 @@ for measured CPU cost and the exact-rest optimization used after a long idle.
 
 ## Desktop testing and compatibility
 
-Native use requires logging into a matching experimental compositor. Keep the
+Native use requires logging into the matching NiriFX session. Keep the
 stock login session available as a return path. NiriFX Apply does not replace a
 running compositor. The selected executable, running IPC peer and fragment
 renderer contract must agree before native activation.

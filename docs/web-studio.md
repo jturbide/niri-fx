@@ -32,7 +32,7 @@ damping and frequency. Online Studio can edit, share and download these settings
 combo playback includes a scripted drag when strength is above zero. **Try pointer
 drag** lets you drag the synthetic window with native spring and shader math.
 These previews do not verify compositor support. **Export stock Niri config** omits
-experimental nodes. **Export experimental config** includes selected pointer and
+NiriFX session nodes. **Export NiriFX session config** includes selected pointer and
 movement settings for the matching native build. Read the
 [pointer guide](pointer-wobble.md) before using that configuration.
 

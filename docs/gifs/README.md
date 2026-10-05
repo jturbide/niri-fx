@@ -36,6 +36,7 @@ From the checkout, with Python 3.10+, Node 22+, Chromium and FFmpeg:
 
 ```sh
 node scripts/render-readme-gifs.mjs
+node scripts/record-combo-showcases.mjs
 ```
 
 The script creates an offline Studio document and an isolated headless browser
@@ -56,6 +57,17 @@ examples and profiles use their saved action durations. The renderer verifies Py
 records resolved parameters in `manifest.json`. This allows the documentation
 check to catch a changed recipe whose recording has not been regenerated.
 The partial render preserves manifest entries for the other existing clips.
+
+Five profile clips use Studio's actual **Preview combo** sequence: Fragment Flow,
+Geometric Flow, Ribbon Current, Soft Landing and Playful Motion. Their canonical
+recorder is `record-combo-showcases.mjs`; it retains action timing, source hashes
+and document/Undo checks in the manifest. Run it after a complete or showcase-only
+generic render, which also includes these filenames but records simpler shader
+loops. To refresh only the five combo clips, run:
+
+```sh
+node scripts/record-combo-showcases.mjs
+```
 
 To regenerate the slice presets and their count comparison:
 
@@ -124,10 +136,10 @@ closing effects. Metadata includes both parameter sets.
 
 [Collections](../collections.md) group looks without adding renderer families.
 Geometric Flow, Ribbon Current and Soft Landing each have a resolved profile JSON
-and a real shader loop. Regenerate just these clips with:
+and a recorded Preview combo sequence. Regenerate just these clips with:
 
 ```sh
-node scripts/render-readme-gifs.mjs --only=profile-geometric-flow,profile-ribbon-current,profile-soft-landing
+node scripts/record-combo-showcases.mjs --only=geometric-flow,ribbon-current,soft-landing
 ```
 
 ## Pixels, wisps, distortion and configurable erosion
@@ -160,13 +172,15 @@ node scripts/render-readme-gifs.mjs --only=compare-pixel-directions,compare-dust
 node scripts/render-readme-gifs.mjs --only=compare-wisp-curl,compare-wisp-palette
 node scripts/render-readme-gifs.mjs --only=compare-distortion-strength,compare-shockwave-origin,compare-dissolve-flow
 node scripts/render-readme-gifs.mjs --only=profile-burst-and-drift,profile-frost-and-fragments,profile-ghost-and-shockwave
-node scripts/render-readme-gifs.mjs --only=profile-fragment-flow,profile-pixel-shuffle,profile-ribbon-exit
+node scripts/render-readme-gifs.mjs --only=profile-pixel-shuffle,profile-ribbon-exit
+node scripts/record-combo-showcases.mjs --only=fragment-flow
 ```
 
 All new comparisons use 1100 ms for each action. They change the labelled control
 or palette while keeping other settings fixed. Dust travel stays in cell units;
 increasing cell size also increases pixel travel. Profile loops close, then open,
 with separate shader parameters recorded for both actions. Resize remains off.
+Fragment Flow uses the complete opening-to-closing combo sequence instead.
 The documentation check enforces a recording for each preset and profile example,
 and a documentation link for each GIF, as well as parameter and file-size agreement.
 Fourteen early preset loops were also refreshed to complete parameter metadata
@@ -548,7 +562,8 @@ rearrangement clips use the compositor's layout paths. See the
 
 ```sh
 node scripts/render-readme-gifs.mjs --only=preset-mixed-confetti,preset-orbiting-shapes,compare-fragment-mixture
-node scripts/render-readme-gifs.mjs --only=profile-gentle-motion,profile-balanced-motion,profile-playful-motion
+node scripts/render-readme-gifs.mjs --only=profile-gentle-motion,profile-balanced-motion
+node scripts/record-combo-showcases.mjs --only=playful-motion
 python3 scripts/record-desktop-motion.py
 python3 scripts/test-movement.py --record
 python3 scripts/record-native-gif.py --preset mixed-confetti --name native-swap-mixed-confetti
