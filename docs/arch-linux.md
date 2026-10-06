@@ -135,7 +135,9 @@ Earlier retained copies remain available after package replacement. They still
 depend on system Python, shared libraries and drivers; retaining a binary does
 not freeze those dependencies. If adoption is interrupted, return through stock
 Niri and review the same command again. Exact partial copies can be resumed;
-changed or unrecognized files are preserved and refused.
+changed or unrecognized files are preserved and refused. Review again to get a
+new fingerprint before applying; a review made before the interruption no longer
+describes the partial copy. Keep that copy for inspection if a conflict is reported.
 
 ```sh
 sudo pacman -R niri-fx

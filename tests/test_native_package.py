@@ -355,6 +355,195 @@ class NativePackageTests(unittest.TestCase):
             if Path(item["target"]) == target:
                 break
 
+    def prepare_second_adoption(self, *, shared=False):
+        initial = self.plan()
+        self.apply(initial)
+        old = self.configure_recipe(initial["selection"]["selected"])
+        if shared:
+            config = self.directory / "desktop/config.kdl"
+            config.parent.mkdir()
+            config.write_text('include "shell.kdl"\ninput {}\n')
+            config.with_name("shell.kdl").write_text('environment { EXAMPLE "keep me"; }\n')
+            stock = self.directory / "stock-niri"
+            stock.write_bytes(b"synthetic stock validator, never executed\n")
+            stock.chmod(0o755)
+            shared_plan = native_shared.share_plan(
+                self.root, old["bundle_id"], config, stock_binary=stock
+            )
+            native_shared.apply_shared(
+                shared_plan, self.root, expected=setup.plan_fingerprint(shared_plan)
+            )
+            old = native_session.inspect_bundle(self.root, shared_plan["selection"]["selected"])
+        self.upgrade_candidate()
+        module = self.source / "__init__.py"
+        module.write_bytes(module.read_bytes() + b"# next synthetic package build\n")
+        return initial, old, self.plan(config=False)
+
+    def test_interrupted_upgrade_bundle_copies_resume_exact_frozen_and_shared_outputs(self):
+        for shared in (False, True):
+            for cut in (0, 1, -2):
+                with self.subTest(shared=shared, cut=cut):
+                    case = NativePackageTests("runTest")
+                    case.setUp()
+                    try:
+                        initial, old, plan = case.prepare_second_adoption(shared=shared)
+                        old_files = native_customization._owned_files(old)
+                        folder = case.root / "bundles" / plan["selection"]["selected"]
+                        writes = [
+                            item
+                            for item in plan["changes"]
+                            if Path(item["target"]).is_relative_to(folder)
+                        ]
+                        selectors = {
+                            path: path.read_bytes()
+                            for path in (
+                                case.root / "selection.json",
+                                case.root / "tools/selection.json",
+                            )
+                        }
+                        case.interrupt_before(plan, Path(writes[cut]["target"]), include=True)
+                        self.assertFalse((folder / "bundle.json").exists())
+                        self.assertEqual({path: path.read_bytes() for path in selectors}, selectors)
+                        copied = {
+                            path: path.read_bytes() for path in folder.rglob("*") if path.is_file()
+                        }
+                        resumed = case.plan(config=False)
+                        self.assertFalse(
+                            any(Path(item["target"]) in copied for item in resumed["changes"])
+                        )
+                        self.assertTrue(
+                            any(
+                                item["before"] is None
+                                for item in resumed["observed"]
+                                if Path(item["target"]).is_relative_to(folder)
+                            )
+                        )
+                        remaining = [
+                            item
+                            for item in resumed["changes"]
+                            if Path(item["target"]).is_relative_to(folder)
+                        ]
+                        self.assertEqual(Path(remaining[-1]["target"]), folder / "bundle.json")
+                        case.apply(resumed)
+                        selected = native_session.load_selection(case.root)
+                        self.assertEqual(selected["selected"], plan["selection"]["selected"])
+                        self.assertEqual(selected["previous"], old["bundle_id"])
+                        tools = native_tools._read_selection(case.root)[0]
+                        self.assertEqual(tools["previous"], initial["selection"]["tools_runtime"])
+                        self.assertEqual(
+                            native_customization._owned_files(
+                                native_session.inspect_bundle(case.root, old["bundle_id"])
+                            ),
+                            old_files,
+                        )
+                        new = native_session.inspect_bundle(case.root, selected["selected"])
+                        self.assertEqual(new["customization"], old["customization"])
+                    finally:
+                        case.doCleanups()
+
+    def test_second_adoption_resumes_on_both_sides_of_tools_selector(self):
+        for shared in (False, True):
+            for after_tools in (False, True):
+                with self.subTest(shared=shared, after_tools=after_tools):
+                    case = NativePackageTests("runTest")
+                    case.setUp()
+                    try:
+                        initial, old, plan = case.prepare_second_adoption(shared=shared)
+                        case.interrupt_before(
+                            plan, case.root / "tools/selection.json", include=after_tools
+                        )
+                        self.assertEqual(
+                            native_session.load_selection(case.root)["selected"], old["bundle_id"]
+                        )
+                        case.apply(case.plan(config=False))
+                        tools = native_tools._read_selection(case.root)[0]
+                        self.assertEqual(tools["current"], plan["selection"]["tools_runtime"])
+                        self.assertEqual(tools["previous"], initial["selection"]["tools_runtime"])
+                        self.assertEqual(
+                            native_session.load_selection(case.root)["previous"], old["bundle_id"]
+                        )
+                        # Both independent rollback lanes remain available after retry.
+                        rollback = native_session.rollback_plan(case.root)
+                        setup.apply_plan(
+                            rollback,
+                            case.root / "state/selection",
+                            setup.plan_fingerprint(rollback),
+                        )
+                        self.assertEqual(
+                            native_session.inspect_bundle(
+                                case.root, native_session.load_selection(case.root)["selected"]
+                            )["binary_sha256"],
+                            old["binary_sha256"],
+                        )
+                        rollback = native_tools.rollback_plan(
+                            case.root, registered_entry=case.registered
+                        )
+                        native_tools.apply_tools(
+                            rollback, case.root, setup.plan_fingerprint(rollback)
+                        )
+                        self.assertEqual(
+                            native_tools._read_selection(case.root)[0]["current"],
+                            initial["selection"]["tools_runtime"],
+                        )
+                    finally:
+                        case.doCleanups()
+
+    def test_partial_upgrade_rejects_foreign_mutated_mode_link_and_special_files(self):
+        for shared in (False, True):
+            for mutation in ("foreign", "empty-directory", "bytes", "mode", "symlink", "fifo"):
+                with self.subTest(shared=shared, mutation=mutation):
+                    case = NativePackageTests("runTest")
+                    case.setUp()
+                    try:
+                        _, old, plan = case.prepare_second_adoption(shared=shared)
+                        folder = case.root / "bundles" / plan["selection"]["selected"]
+                        binary = folder / "bin/niri"
+                        case.interrupt_before(plan, binary, include=True)
+                        if mutation == "foreign":
+                            (folder / "foreign.txt").write_text("unowned\n")
+                        elif mutation == "empty-directory":
+                            (folder / "foreign").mkdir()
+                        elif mutation == "bytes":
+                            binary.write_bytes(b"changed")
+                        elif mutation == "mode":
+                            binary.chmod(0o700)
+                        else:
+                            binary.unlink()
+                            if mutation == "symlink":
+                                binary.symlink_to(case.fixture.fixture.binary)
+                            else:
+                                os.mkfifo(binary)
+                        with self.assertRaises(ValueError):
+                            case.plan(config=False)
+                        self.assertEqual(
+                            native_session.load_selection(case.root)["selected"], old["bundle_id"]
+                        )
+                        self.assertFalse((folder / "bundle.json").exists())
+                    finally:
+                        case.doCleanups()
+
+    def test_partial_bundle_inventory_and_missing_files_are_bound_to_review(self):
+        _, old, plan = self.prepare_second_adoption()
+        folder = self.root / "bundles" / plan["selection"]["selected"]
+        self.interrupt_before(plan, folder / "bin/niri", include=True)
+        resumed = self.plan(config=False)
+        selectors = {
+            path: path.read_bytes()
+            for path in (self.root / "selection.json", self.root / "tools/selection.json")
+        }
+        for name in ("unexpected.txt", "config.kdl"):
+            path = folder / name
+            path.write_text("arrived after review\n")
+            path.chmod(0o600)
+            with self.assertRaisesRegex(ValueError, "changed since"):
+                self.apply(resumed)
+            self.assertEqual(path.read_text(), "arrived after review\n")
+            self.assertFalse((folder / "bundle.json").exists())
+            self.assertEqual({path: path.read_bytes() for path in selectors}, selectors)
+            path.unlink()
+        self.apply(resumed)
+        self.assertEqual(native_session.load_selection(self.root)["previous"], old["bundle_id"])
+
     def test_first_adoption_resumes_exact_assets_before_tools_selection(self):
         plan = self.plan()
         self.interrupt_before(plan, self.root / "tools/selection.json")

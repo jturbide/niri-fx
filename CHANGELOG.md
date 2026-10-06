@@ -7,6 +7,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+### Fixed
+
+- Retrying an interrupted packaged-session update resumes matching partial
+  compositor copies for both shared and frozen settings. Changed or unexpected
+  files are preserved and refused; the previous selection remains available.
+
 ## 0.22.0 - 2026-10-06
 
 ### Added

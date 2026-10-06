@@ -226,9 +226,14 @@ are developer regression controls, not separate consumer editions.
       two-user adoption, retained copies after removal and unchanged stock Niri.
 - [x] Verify upgrades from both earlier tools-only packages and normal switching
       between release and development channels without forced file overwrites.
-- [ ] Verify updates across two package versions, multiple users, Python path
-      changes, interrupted adoption and missing shared libraries. Preserve running,
-      selected and previous copies and the stock Niri recovery entry.
+- [ ] Verify reviewed updates between complete package builds with different
+      retained tools and compositor identities, including independent users and
+      separate rollback of each selection.
+- [x] Verify interruption recovery during shared and frozen bundle copying;
+      resume only exact partial files and preserve changed or unexpected content.
+- [ ] Repeat adopted-session upgrade acceptance between published versions.
+- [ ] Verify recovery after Python path changes and missing shared libraries;
+      preserve retained copies and the stock Niri recovery entry.
 - [ ] Complete physical login, shared-settings, capture and suspend acceptance
       before advertising a supported full-session package.
 

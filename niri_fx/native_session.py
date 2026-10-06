@@ -9,6 +9,7 @@ import json
 import os
 import re
 import stat
+from itertools import chain
 from pathlib import Path
 
 from . import native_build
@@ -104,6 +105,74 @@ def _observed(path, data, mode):
     item["expected_mode"] = mode
     item["regular_only"] = True
     return item
+
+
+def _bundle_inventory(folder):
+    """Read names and types without following links or opening special files."""
+    folder = _path(folder)
+    if not folder.exists():
+        return _json_bytes([])
+    if not folder.is_dir():
+        raise ValueError("Native bundle storage must be a directory")
+    entries = []
+    for path in chain((folder,), folder.rglob("*")):
+        _path(path)
+        info = path.lstat()
+        if not (stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)):
+            raise ValueError("Native bundle inventory contains a non-regular file")
+        entries.append(
+            {
+                "path": path.relative_to(folder).as_posix(),
+                "directory": stat.S_ISDIR(info.st_mode),
+                "mode": stat.S_IMODE(info.st_mode),
+            }
+        )
+        if len(entries) > 512:
+            raise ValueError("Native bundle inventory exceeds its size limit")
+    return _json_bytes(sorted(entries, key=lambda item: item["path"]))
+
+
+def _bundle_outputs(folder, outputs):
+    """Resume only exact generated files; bind absent files and the whole tree."""
+    folder = _path(folder)
+    inventory = _bundle_inventory(folder)
+    directories = {"."} | {parent.as_posix() for name in outputs for parent in Path(name).parents}
+    for entry in json.loads(inventory):
+        allowed = directories if entry["directory"] else outputs
+        if entry["path"] not in allowed:
+            raise ValueError("Incomplete native bundle contains unexpected paths; preserving it")
+    changes, observed = [], []
+    # The receipt is the completion marker; missing files always precede it.
+    for name in [name for name in outputs if name != "bundle.json"] + ["bundle.json"]:
+        data = outputs[name]
+        path = _path(folder / name)
+        mode = 0o755 if name == "bin/niri" else 0o600
+        try:
+            before = _read(path, len(data), mode=mode) if path.exists() else None
+        except ValueError as error:
+            raise ValueError(f"Incomplete native bundle cannot be resumed: {error}") from error
+        if before is not None and before != data:
+            raise ValueError("Incomplete native bundle file differs; preserving it")
+        item = change(path, data, expected_before=before)
+        item.update(
+            mode=mode, regular_only=True, expected_mode=mode if before is not None else None
+        )
+        observed.append(item)
+        if before is None:
+            changes.append(item)
+    if _bundle_inventory(folder) != inventory:
+        raise ValueError("Native bundle inventory changed during review")
+    observed.append(
+        {
+            "kind": "native-bundle-inventory",
+            "logical": str(folder),
+            "target": str(folder),
+            "before": inventory,
+            "after": inventory,
+            "mode": None,
+        }
+    )
+    return changes, observed
 
 
 def inspect_bundle(root, bundle_id):
@@ -382,13 +451,6 @@ def stage_plan(
             source_observed + existing["observed"],
             notes=notes,
         )
-    if folder.exists():
-        for existing in folder.rglob("*"):
-            _path(existing)
-            if not existing.is_dir():
-                raise ValueError(
-                    "Incomplete native session bundle exists; refusing to overwrite it"
-                )
     receipt = {
         "schema": 2 if config_snapshot else SCHEMA,
         "bundle_id": bundle_id,
@@ -415,17 +477,14 @@ def stage_plan(
     )
     # The completion marker is written last; only complete bundles can be selected.
     outputs.append((folder / "bundle.json", _json_bytes(receipt), 0o600))
-    changes = []
-    for path, data, mode in outputs:
-        _path(path)
-        item = change(path, data, expected_before=None)
-        item["mode"] = mode
-        changes.append(item)
+    changes, destination_observed = _bundle_outputs(
+        folder, {path.relative_to(folder).as_posix(): data for path, data, _ in outputs}
+    )
     return _plan(
         "native-session-stage",
         selection,
         changes,
-        source_observed + changes,
+        source_observed + destination_observed,
         config=str(folder / "config.kdl"),
         binary=str(folder / "bin/niri"),
         notes=notes,

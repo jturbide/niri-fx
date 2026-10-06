@@ -308,8 +308,6 @@ def _bundle_changes(root, source, files, shared, assets):
     folder = native_session._bundle_path(root, identifier)
     if (folder / "bundle.json").exists():
         return identifier, [], native_session.inspect_bundle(root, identifier)["observed"]
-    if folder.exists() and any(path.is_file() or path.is_symlink() for path in folder.rglob("*")):
-        raise ValueError("An incomplete shared bundle exists; preserving it for review")
     receipt = {
         "schema": 4,
         "bundle_id": identifier,
@@ -329,12 +327,8 @@ def _bundle_changes(root, source, files, shared, assets):
         **{name: data for name, data in old_files.items() if name.startswith("provenance/")},
         "bundle.json": native_session._json_bytes(receipt),
     }
-    changes = []
-    for name, data in outputs.items():
-        item = _change(folder / name, data, owned=True)
-        item["mode"] = 0o755 if name == "bin/niri" else 0o600
-        changes.append(item)
-    return identifier, changes, list(changes)
+    changes, observed = native_session._bundle_outputs(folder, outputs)
+    return identifier, changes, observed
 
 
 def _finish_plan(

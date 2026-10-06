@@ -23,6 +23,12 @@ if [[ $ID != arch ]]; then
     printf '%s\n' 'This acceptance check requires an official Arch Linux container.' >&2
     exit 2
 fi
+for baseline in "${NIRIFX_ARCH_PREVIOUS_SESSION_ARCHIVE:-}" "${NIRIFX_ARCH_PREVIOUS_TOOLS_ARCHIVE:-}"; do
+    if [[ -n $baseline && ( ! -f $baseline || ! -r $baseline ) ]]; then
+        printf 'Baseline archive is not a readable file: %s\n' "$baseline" >&2
+        exit 2
+    fi
+done
 
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 output=$(realpath -m -- "$1")
@@ -164,6 +170,11 @@ python "$repo/scripts/check-arch-package.py" "$package" > "$output/package-check
 # The installed archive audit owns stock-file snapshots, two synthetic users,
 # reviewed adoption and removal. It never launches a compositor or login session.
 session_args=("$output/session" "$package")
+if [[ -n ${NIRIFX_ARCH_PREVIOUS_SESSION_ARCHIVE:-} ]]; then
+    # Install and adopt the baseline first, then review the freshly built package
+    # as an update. Both archives are audited before either is installed.
+    session_args=("$output/session" "$NIRIFX_ARCH_PREVIOUS_SESSION_ARCHIVE" "$package")
+fi
 if [[ -n ${NIRIFX_ARCH_PREVIOUS_TOOLS_ARCHIVE:-} ]]; then
     session_args+=(--previous-tools-archive "$NIRIFX_ARCH_PREVIOUS_TOOLS_ARCHIVE")
 fi
