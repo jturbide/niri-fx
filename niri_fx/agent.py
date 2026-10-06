@@ -198,6 +198,16 @@ def agent_info():
                 "effect": "inspects shared tool runtime and launcher registration without desktop IPC",
                 "output": "json with current and previous tool runtimes and registration state",
             },
+            "native_adopt_review": {
+                "argv": ["native", "adopt"],
+                "effect": "read-only packaged-session upgrade review; first adoption requires --config; preserves saved settings",
+                "output": "json with retained tools, compositor selection, affected files and plan_sha256",
+            },
+            "native_adopt_apply": {
+                "argv": ["native", "adopt", "--apply", "--expect-plan", "REVIEWED_PLAN_SHA256"],
+                "effect": "copies packaged tools and compositor into retained user storage and selects the next login; no desktop restart",
+                "output": "json with transaction and next-login activation; prior bundles remain available for rollback",
+            },
             "native_tools_update_review": {
                 "argv": [
                     "native",

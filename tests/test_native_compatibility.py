@@ -299,6 +299,34 @@ class NativeCompatibilityTests(unittest.TestCase):
                 session.main()
             run.assert_not_called()
 
+    def test_unified_session_forwards_prepared_packaging_paths(self):
+        source = self.root / "prepared"
+        cargo = self.root / "cargo"
+        source.mkdir()
+        cargo.mkdir()
+        options = [
+            "--prepared-source",
+            str(source),
+            "--build-root",
+            str(self.root / "attempts"),
+            "--cargo-home",
+            str(cargo),
+            "--output",
+            str(self.root / "export"),
+        ]
+        with (
+            patch.object(sys, "argv", ["build-nirifx-session", *options]),
+            patch.object(
+                session.subprocess, "run", return_value=subprocess.CompletedProcess([], 0)
+            ) as run,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            self.assertEqual(session.main(), 0)
+        self.assertEqual(
+            run.call_args.args[0][2:6], ["--fragment-drag", "--desktop", "--release", "--test"]
+        )
+        self.assertEqual(run.call_args.args[0][6:], options)
+
 
 if __name__ == "__main__":
     unittest.main()

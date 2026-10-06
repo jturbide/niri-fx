@@ -223,7 +223,8 @@ def dropin_text(root, token):
         "from niri_fx.native_login import main; raise SystemExit(main())"
     )
     command = " ".join(
-        _unit_argument(part) for part in (sys.executable, "-c", bootstrap, "--root", root)
+        _unit_argument(part)
+        for part in (sys.executable, "-I", "-B", "-c", bootstrap, "--root", root)
     )
     return (
         f"# NiriFX temporary login lease {token}\n"

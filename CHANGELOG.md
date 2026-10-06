@@ -9,6 +9,13 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Reviewed `native adopt` for packaged full sessions. It retains tools and the
+  compositor in user storage, preserves saved effects and shared desktop settings
+  on upgrade, and keeps earlier selections available for rollback. Package
+  replacement does not switch the running or next-login version automatically.
+- A full-session Arch development recipe with a generic per-user login entry,
+  offline compilation from prepared pinned source and relocatable provenance.
+  It remains unpublished while full package and physical acceptance are completed.
 - Arch/AUR recipes for `niri-fx` releases and `niri-fx-git` development builds,
   including CLI, Studio, desktop integration and portable examples. Isolated
   package checks verify installation, removal and preservation of stock Niri.

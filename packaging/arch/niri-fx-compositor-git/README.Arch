@@ -1,0 +1,80 @@
+NiriFX compositor development package
+===================================
+
+This recipe builds the complete NiriFX patch stack from the NiriFX main branch
+and its exact upstream Niri revision. It is a development candidate, not a
+published or physically accepted compositor release. It is paired with the
+niri-fx-git tools package; rebuild both when testing a new source revision.
+
+The package installs a candidate at /usr/lib/niri-fx/session-candidate and the
+separate "NiriFX (package)" login entry. Stock Niri supplies niri.service,
+niri-session, shutdown handling and portal configuration. Its executable,
+login entry and service files remain unchanged. No package hook adopts a
+candidate, changes a user's configuration, or starts a session.
+
+Adopt explicitly as your normal user, after reviewing your existing Niri config:
+
+  /usr/bin/niri-fx native adopt --candidate /usr/lib/niri-fx/session-candidate \
+    --config ~/.config/niri/config.kdl
+
+Review the proposed files and plan_sha256. Repeat the command with --apply and
+--expect-plan REVIEWED_SHA256 only when you want to retain that candidate and
+select it for the next login. Adoption copies the compositor, configuration and
+tools into private retained storage. A package upgrade does not switch that
+selection. For later adoptions, omit --config to preserve the current settings:
+
+  /usr/bin/niri-fx native adopt --candidate /usr/lib/niri-fx/session-candidate
+
+Review that new plan before repeating it with --apply and --expect-plan.
+Unsupported existing managed installations are preserved and refused
+with migration guidance, rather than silently replaced.
+
+After successful adoption, log out and select "NiriFX (package)". An unprepared
+user receives an actionable error; login never adopts or selects a candidate.
+Keep the ordinary "Niri" entry available for recovery. The packaged entry has a
+different filename from previously registered per-user niri-fx.desktop entries.
+Do not use pacman --overwrite or delete another user's entry to resolve a clash.
+
+Install xdg-desktop-portal-gnome for screencasting and xdg-desktop-portal-gtk as
+the fallback portal. The stock niri-portals.conf may use GNOME's file chooser,
+which requires Nautilus unless a user explicitly selects GTK for FileChooser.
+X11 applications need xwayland-satellite. Shell, notification, secret-service
+and authentication-agent choices remain yours; this package does not add shell
+service dependencies or alter portal settings.
+
+Removing this package removes its candidate, dispatcher and chooser entry.
+It leaves retained per-user bundles and configuration alone. Use stock Niri or
+reinstall the package to regain its chooser entry. Retained native binaries still
+depend on system libraries; retaining them does not freeze a distribution ABI.
+
+Validation boundaries
+---------------------
+
+Builds use the full ordered patch stack, release/default desktop features and
+locked dependencies. Cargo fetching occurs in prepare(); compilation and native
+regressions run offline. makepkg's later stripping/debug processing is disabled
+because the producer records the final executable after stripping it itself.
+The exported provenance uses relative paths, and the final installed hash must
+match its manifest.
+
+The disposable-container acceptance harness checks payload ownership, two-user
+adoption, stock-file preservation, package removal and retained selection.
+Running that harness is a separate gate after building the candidate; this draft
+recipe does not imply a passing result. Those checks do not establish
+display-manager login, portals/PipeWire, lock/unlock,
+suspend/resume, physical input, mixed monitors, graphics resets or GPU behavior.
+Known native capture limitations remain applicable. Require the project's native
+acceptance gates before publishing a supported full-session package.
+
+From a disposable official Arch container with the checkout mounted read-only,
+run the harness as root with explicit archives built from the reviewed source:
+
+  NIRIFX_ARCH_PACKAGE_CONTAINER=1 bash scripts/test-arch-session-package.sh \
+    /output/fresh-run /packages/niri-fx-git.pkg.tar.zst \
+    /packages/niri-fx-compositor-git.pkg.tar.zst
+
+An optional second tools/compositor archive pair checks that package replacement
+leaves both users' selections unchanged. It does not apply the replacement
+candidate or prove a version upgrade. The harness refuses host execution and
+records which optional checks ran. It installs dependencies inside the container;
+it neither builds packages nor fetches project source.

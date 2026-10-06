@@ -5,7 +5,7 @@ from .native_entry import entry_files
 from .setup import change
 
 
-def install_plan(root, candidate, config, *, name="NiriFX"):
+def install_plan(root, candidate, config, *, name="NiriFX", include_entry=True):
     """Review a full candidate, owned config snapshot, launcher and next login.
 
     Candidate layout is fixed by the source builder. Frozen patch evidence is
@@ -74,7 +74,11 @@ def install_plan(root, candidate, config, *, name="NiriFX"):
     selection_change["mode"] = 0o600
     if previous_bytes is not None:
         selection_change["expected_mode"] = 0o600
-    entry = entry_files(root, name)
+    entry = (
+        entry_files(root, name)
+        if include_entry
+        else {"selection": {}, "changes": [], "observed": [], "notes": []}
+    )
     changes = [*stage["changes"], *entry["changes"]]
     if after != previous:
         changes.append(selection_change)

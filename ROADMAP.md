@@ -215,10 +215,16 @@ are developer regression controls, not separate consumer editions.
       and menu integration; keep stock Niri and user settings outside package ownership.
 - [x] Validate and publish `niri-fx` and `niri-fx-git` on AUR, with source checksums,
       resolved development revisions, isolated builds and install/removal checks.
-- [ ] Build a relocatable full-session candidate from prepared pinned source and
-      locked dependencies; finish binary processing before recording provenance.
-- [ ] Provide a generic login entry that resolves each user's retained runtime,
+- [x] Add prepared-source offline builds and relocatable full-session exports;
+      verify the pinned patch stack and finish stripping before hashing the binary.
+- [x] Provide a generic login entry that resolves each user's retained runtime,
       with reviewed adoption from system packages into immutable user storage.
+- [x] Preserve saved shader bytes, shared desktop settings and previous selections
+      during adoption; test stale-review refusal, validation failure and rollback.
+- [x] Verify actual staged package payloads in disposable Arch: two-user adoption,
+      stale-review refusal, retained tools after removal and unchanged stock Niri files.
+- [ ] Validate the complete Arch compositor recipe and paired tools package in a
+      clean distribution build before publishing `niri-fx-compositor-git` on AUR.
 - [ ] Verify updates across two package versions, multiple users, Python path
       changes, interrupted adoption and missing shared libraries. Preserve running,
       selected and previous copies and the stock Niri recovery entry.
