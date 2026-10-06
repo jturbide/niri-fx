@@ -4,7 +4,8 @@
 
 The original Python application, GLSL effects, browser editor, scripts,
 documentation and synthetic demonstration assets are copyright 2026 Julien
-Turbide and licensed under [MIT](LICENSE), except for the Niri-derived components below.
+Turbide and licensed under [MIT](LICENSE), except for the Niri-derived components
+and separately licensed packaging sources below.
 No community shader collection is vendored. Related projects are credited as
 references in [the research notes](docs/related-projects.md).
 
@@ -39,6 +40,14 @@ build directories. Those projects retain their own licenses. No Niri binary,
 Rust toolchain, browser or third-party Python dependency is distributed here.
 If distributing a modified Niri binary separately, review its upstream notices
 and source-distribution requirements for that artifact.
+
+## Arch packaging sources
+
+The recipes, desktop entries and package instructions in
+`packaging/arch/niri-fx/` and `packaging/arch/niri-fx-git/` use **0BSD**. Each
+directory includes its packaging license and file-level scope in `REUSE.toml`.
+This applies to those packaging sources; the application and Niri-derived
+components retain the licenses described above.
 
 ## External integrations and tooling
 

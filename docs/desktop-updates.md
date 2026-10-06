@@ -118,7 +118,9 @@ new NiriFX build or use [frozen recovery](shared-settings.md#rollback-and-frozen
 if they diverge. Recovery changes the next NiriFX login without overwriting your
 current normal configuration or effects files.
 
-Dependency-aware distribution packages and signed compositor downloads are still
+[Arch tools packages](arch-linux.md) provide CLI and Studio through the package
+manager. Existing managed login runtimes still use the reviewed tool update
+workflow above. Full-session packages and signed compositor downloads remain
 planned:
 
 1. Install a separately named NiriFX compositor package/session alongside stock

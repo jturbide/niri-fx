@@ -20,3 +20,5 @@ recursive-include docs *.svg
 recursive-include integrations *.qml *.json *.md *.js *.toml *.luau
 
 recursive-include docs/gallery *.html *.js *.css *.webp
+recursive-include packaging PKGBUILD .SRCINFO LICENSE *.toml *.desktop *.Arch *.md
+recursive-include scripts *.sh

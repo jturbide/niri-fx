@@ -6,8 +6,8 @@ or saving a profile leaves the desktop unchanged.
 
 This guide covers the app on stock Niri. For movement, swaps, continuous
 fragments and pointer wobble, use the [complete NiriFX session](native-session.md).
-Its source installer prepares all compositor features together; published
-distribution packages are still being prepared. Both paths use the same Library
+Its source installer prepares all compositor features together; full-session
+packages are still being prepared. Both paths use the same Library
 and leave shell source code untouched.
 
 This guide covers version 0.21. The wheel includes Studio and the managed-session
@@ -25,6 +25,9 @@ For another version, follow its included [release documentation](releases.md).
   Rust toolchain or NiriFX compositor.
 
 ## Install and open Library
+
+On Arch Linux or CachyOS, use the [AUR package guide](arch-linux.md) for a
+source-built system package of CLI and Studio.
 
 Download the wheel and `SHA256SUMS` from the same
 [release](releases.md), then run these commands in the download directory:

@@ -1,8 +1,8 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-05**, including portable fragment recipes, 0.21.0 package acceptance, native candidate isolation,
-installed upgrade/Restore checks, experimental resize continuation and device-owned
-pointer cleanup. These checks
+Evidence updated on **2026-10-06**, including Arch package acceptance, native
+output tracing, portable fragment recipes, installed upgrade/Restore checks,
+native candidate isolation, resize continuation and device-owned pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
 See the [changelog](../CHANGELOG.md) for user-visible changes.
 For setup instructions, use the [documentation index](README.md); check
@@ -14,6 +14,22 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_FRAGMENT_MANIFEST` for the corresponding experiment, and
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
+
+## Arch tools packages
+
+`niri-fx` 0.21.0-1 and `niri-fx-git` 0.21.0.r75.g3b8e03e-1 passed independent
+build, installation and removal tests in fresh official Arch Linux containers.
+Each build ran all 725 tests from its source revision. Both archives passed
+metadata, checksum, license, desktop-entry and resource checks; installed CLI
+commands generated a complete portable profile, stock-valid configuration and
+offline Studio page. Stock Niri files and pre-existing synthetic user settings
+remained unchanged after installation and removal.
+
+These are CLI/Studio packages. The tests do not establish display-manager login,
+physical desktop, compositor upgrade or screen-sharing acceptance. Existing
+managed sessions retain their separate update workflow. See the
+[Arch guide](arch-linux.md) for installation and the
+[packaging workflow](../packaging/arch/README.md) for reproduction.
 
 ## Portable fragment recipes (0.21)
 
