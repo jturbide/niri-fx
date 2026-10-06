@@ -678,9 +678,8 @@ python3 scripts/test-pointer-ownership.py --pointer-wobble
 The optional `--output-targets` probe uses a second owned compositor and retains
 strict assertions. It currently fails on the tested GPU: the child's direct
 capture clears after closing while the parent's image stays stale, even with
-pointer deformation and privacy rules omitted. Both compositors continue
-submitting frames. A fresh run of the current pointer build reproduced the
-failure: direct capture had no protected pixels, while parent Output retained
+pointer deformation and privacy rules omitted. A fresh run of the current pointer
+build reproduced the failure: direct capture had no protected pixels, while parent Output retained
 124,085; the public companion remained visible in both. This failed capture
 probe is separate from the passing device-ownership checks above.
 Output/Screencast privacy remains unverified for this pointer scenario. Actual PipeWire capture,
@@ -695,6 +694,19 @@ seconds after a 1.6-second close. Direct captures are clear, with the public
 control visible in every sample. Clicking the surviving client clears the stale
 parent image. The FX patches are therefore not necessary to reproduce either
 failure; compositor, driver and nested-harness causation remains unisolated.
+
+The [capture-order and protocol comparison](benchmarks/native-output-trace.json)
+adds 12 fresh cases: both capture orders for both targets in each of the three
+variants. Every case still fails the stale-output check. All 24 directional
+traces contain recognized surface traffic without unparsed surface-request
+lines. During the settled captures and intervening gaps, neither child request
+logs nor parent receipt logs record additional toplevel attach, damage or commit
+requests. Clicking the survivor produces four commits on each side and clears
+the image. Cumulative attach, damage and commit counts match in every case.
+Changing capture order does not distinguish the failure on this setup; its
+cause remains unknown. These counters do not establish buffer contents or
+presentation, and server request IDs do not independently identify a connection.
+Protocol logging can affect timing. The completed comparison still exits **1**.
 
 Reproduce without replacing the login compositor:
 

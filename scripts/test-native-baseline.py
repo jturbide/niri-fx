@@ -25,6 +25,7 @@ from lib.native_selection import explicit_manifest
 from lib.nested import NestedSession, source_hashes, wait_for
 from lib.pointer import VirtualPointer, build_pointer, pointer_protocol
 from lib.pointer_scene import client, config, grab, place_floating
+from lib.wayland_trace import surface_trace
 
 
 def module(name, filename):
@@ -41,9 +42,17 @@ hardening = module("baseline_hardening", "test-pointer-hardening.py")
 class ObservedSession(NestedSession):
     """Retain the renderer identity, without adding verbose logs to other tools."""
 
+    def __init__(self, *args, protocol_trace=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.protocol_trace = protocol_trace
+
     def launch(self, command, name, *, env=None, private_bus=False):
         if name == "niri":
             env = env | {"RUST_LOG": "warn,niri=info,smithay::backend::renderer::gles=info"}
+            if self.protocol_trace is not None:
+                # Trace only the owned parent's server and the child's client.
+                # In particular, do not trace the parent's host connection.
+                env["WAYLAND_DEBUG"] = self.protocol_trace
         return super().launch(command, name, env=env, private_bus=private_bus)
 
     def renderer(self):
@@ -94,13 +103,63 @@ def comparable_builds(unmodified, patched):
     return {key: unmodified[key] for key in keys}
 
 
-def observation(parent, session, name):
+CAPTURE_ORDERS = {
+    "parent-first": ("output", "screen_capture"),
+    "child-first": ("screen_capture", "output"),
+}
+
+
+class OutputTrace:
+    """Bracket capture and idle phases in the two owned compositor logs."""
+
+    def __init__(self, parent, session, closed_at):
+        self.logs = {
+            "child_sent": (session.root / "niri.log", "sent"),
+            "parent_received": (parent.root / "niri.log", "received"),
+        }
+        self.closed_at = closed_at
+        self.intervals = {key: [] for key in self.logs}
+        self.previous = self.position()
+
+    def position(self):
+        return {
+            "time": round((time.monotonic() - self.closed_at) * 1000),
+            "offsets": {key: path.stat().st_size for key, (path, _) in self.logs.items()},
+        }
+
+    def mark(self, phase):
+        current = self.position()
+        for key in self.logs:
+            self.intervals[key].append(
+                {
+                    "phase": phase,
+                    "begin_ms_after_close": self.previous["time"],
+                    "end_ms_after_close": current["time"],
+                    "start_offset": self.previous["offsets"][key],
+                    "end_offset": current["offsets"][key],
+                }
+            )
+        self.previous = current
+
+    def report(self):
+        return {
+            key: surface_trace(path, direction, self.intervals[key])
+            for key, (path, direction) in self.logs.items()
+        }
+
+
+def observation(parent, session, name, order="parent-first", trace=None):
     # Capture only the two owned outputs. A public card is required in each, so
     # an empty output cannot look like a successfully cleared closing snapshot.
-    values = {
-        "output": hardening.colors(parent.capture(name + "-output")),
-        "screen_capture": hardening.colors(session.capture(name + "-capture")),
-    }
+    targets = {"output": (parent, "-output"), "screen_capture": (session, "-capture")}
+    values = {}
+    for target in CAPTURE_ORDERS[order]:
+        if trace is not None:
+            trace.mark(f"before-{name}-{target}")
+        owner, suffix = targets[target]
+        values[target] = hardening.colors(owner.capture(name + suffix))
+        if trace is not None:
+            trace.mark(f"capture-{name}-{target}")
     for target, counts in values.items():
         assert counts["public"] > 10000, (target, "missing public control", counts)
     return values
@@ -118,13 +177,17 @@ def pixel_hash(path):
         return hashlib.sha256(image.convert("RGB").tobytes()).hexdigest()
 
 
-def output_probe(binary, protocol, enabled, preview):
+def output_probe(binary, protocol, enabled, preview, order="parent-first"):
     child_config = config(hardening.WOBBLE if enabled else None, close_ms=1600)
     if preview:
         child_config += 'debug { preview-render "screencast"; }\n'
-    with ObservedSession(config(None), binary=binary, width=1440, height=1000) as parent:
+    with ObservedSession(
+        config(None), binary=binary, width=1440, height=1000, protocol_trace="server"
+    ) as parent:
         with patch.dict(os.environ, parent.env, clear=True):
-            child = ObservedSession(child_config, binary=binary, width=1280, height=800)
+            child = ObservedSession(
+                child_config, binary=binary, width=1280, height=800, protocol_trace="client"
+            )
         with child as session:
             parent.focus()
             helper = build_pointer(session.root / "pointer", protocol)
@@ -132,7 +195,7 @@ def output_probe(binary, protocol, enabled, preview):
             _, secondary = client(session, "Public", hardening.PUBLIC)
             place_floating(session, primary, x=60)
             place_floating(session, secondary, x=740)
-            controls = observation(parent, session, "unblocked")
+            controls = observation(parent, session, "unblocked", order)
             assert all(value["protected"] > 10000 for value in controls.values()), controls
             with VirtualPointer(session, helper) as pointer:
                 start = grab(session, pointer, primary)
@@ -142,26 +205,29 @@ def output_probe(binary, protocol, enabled, preview):
                     + 'window-rule { match title=r#"^NiriFX pointer / Protected"#; '
                     + 'block-out-from "screen-capture"; }\n'
                 )
-                protected = observation(parent, session, "protected-drag")
+                protected = observation(parent, session, "protected-drag", order)
                 assert protected["screen_capture"]["protected"] == 0, protected
                 expected = protected["output"]["protected"]
                 assert expected == 0 if preview else expected > 10000, protected
                 closed_at = time.monotonic()
+                trace = OutputTrace(parent, session, closed_at)
                 session.msg("action", "close-window", "--id", str(primary))
                 wait_for(
                     lambda: all(w["id"] != primary for w in session.windows()),
                     "closed protected client",
                 )
-                closing = observation(parent, session, "closing")
+                closing = observation(parent, session, "closing", order, trace)
                 assert closing["screen_capture"]["redaction"] > 10000, closing
                 pointer.release()
+                trace.mark("pointer-release")
                 # The close duration is 1.6 s. Give presentation another second
                 # before sampling six fresh pairs across a further two seconds.
                 time.sleep(2.6)
+                trace.mark("settling-without-capture")
                 settled = []
                 for index in range(6):
                     started = round((time.monotonic() - closed_at) * 1000)
-                    sample = observation(parent, session, f"settled-{index}")
+                    sample = observation(parent, session, f"settled-{index}", order, trace)
                     finished = round((time.monotonic() - closed_at) * 1000)
                     sample.update(
                         begin_ms_after_close=started,
@@ -182,11 +248,15 @@ def output_probe(binary, protocol, enabled, preview):
                 renderer = session.renderer()
                 assert parent.renderer() == renderer, "Parent and child use different renderers"
                 hardening.click(session, pointer, secondary, 1)
-                after_click = observation(parent, session, "after-survivor-click")
+                trace.mark("survivor-click")
+                after_click = observation(parent, session, "after-survivor-click", order, trace)
+                trace_evidence = trace.report()
             session.check_render_log()
         parent.check_render_log()
     return {
         "target": "debug Screencast" if preview else "Output",
+        "capture_order": order,
+        "protocol_trace": trace_evidence,
         "renderer": renderer,
         "unblocked_controls": controls,
         "protected_drag": protected,
@@ -252,6 +322,7 @@ def main():
             "scripts/lib/pointer_scene.py",
             "scripts/lib/pointer.py",
             "scripts/lib/nested.py",
+            "scripts/lib/wayland_trace.py",
             "scripts/fixtures/pointer.c",
             "scripts/fixtures/pointer-card.qml",
             "experimental/niri-movement.patch",
@@ -262,6 +333,9 @@ def main():
             "Baseline reproduction does not isolate compositor, driver or harness root cause.",
             "Parent grim observes child Output, or its debug Screencast override; no PipeWire transport.",
             "No physical device removal, physical displays, suspend or graphics reset acceptance.",
+            "Protocol logging may affect timing; capture orders use independent fresh sessions.",
+            "Surface request and receipt counters do not prove contents, rendering or presentation.",
+            "Server surface IDs lack connection identity; toplevel attribution is not verified.",
         ],
         "results": [],
     }
@@ -287,16 +361,18 @@ def main():
         if args.probe in ("all", "output"):
             result["output"] = []
             for preview in (False, True):
-                observation = output_probe(binary, protocol, enabled, preview)
-                defect |= observation["stale_parent_output_reproduced"]
-                if renderer is not None:
-                    assert observation["renderer"] == renderer, "Comparison changed renderer"
-                renderer = observation["renderer"]
-                result["output"].append(observation)
-                print(
-                    f"{name}: {observation['target']} stale={observation['stale_parent_output_reproduced']}",
-                    flush=True,
-                )
+                for order in CAPTURE_ORDERS:
+                    observed = output_probe(binary, protocol, enabled, preview, order)
+                    defect |= observed["stale_parent_output_reproduced"]
+                    if renderer is not None:
+                        assert observed["renderer"] == renderer, "Comparison changed renderer"
+                    renderer = observed["renderer"]
+                    result["output"].append(observed)
+                    print(
+                        f"{name}: {observed['target']} {order} "
+                        f"stale={observed['stale_parent_output_reproduced']}",
+                        flush=True,
+                    )
         if args.probe in ("all", "overlap"):
             result["overlap"] = disconnect_probe(binary, protocol, enabled, overlapping=True)
             defect |= bool(result["overlap"]["failed_controls"])
