@@ -36,9 +36,10 @@ follow the core controls and reliability work below.
 
 ## Release milestones
 
-- [ ] Publish 0.20 tools with shared settings, integrated session management,
-      independent Swap choices, current guides and verified upgrade/recovery.
-      Keep native binary and physical desktop acceptance claims separate.
+- [x] Publish [0.20.0 tools](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0)
+      with shared settings, integrated session management, independent Swap choices,
+      current guides and verified upgrade/recovery. Native binary and physical
+      desktop acceptance remain separate gates.
 - [ ] Deliver [complete portable recipes in 0.21](#021-target-complete-portable-recipes),
       with action styles and continuous-fragment response preserved together.
 - [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
