@@ -25,13 +25,43 @@ See [available features](README.md),
 4. **Deliver one supported installation and update path.** Package the app,
    full compositor and login entry for an initial declared distribution and
    architecture; verify clean install, upgrade, rollback and return to stock Niri.
-5. **Ship the next 0.x release, then complete the 1.0 contract.** Bring
-   packages, guides and Studio features into agreement, publish the tested limits,
-   and extend compatibility fixtures before freezing the stable interface.
+5. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
+   tools and shared settings together. Target complete recipe portability next,
+   followed by reliability and installation improvements in later 0.x releases.
+   The 1.0 contract stays a separate milestone after its acceptance gates pass.
 
 New presets should demonstrate a distinct useful look, with importable settings
 and a faithful showcase. More shells, workspace shaders and compositor ports
 follow the core controls and reliability work below.
+
+## Release milestones
+
+- [ ] Publish 0.20 tools with shared settings, integrated session management,
+      independent Swap choices, current guides and verified upgrade/recovery.
+      Keep native binary and physical desktop acceptance claims separate.
+- [ ] Deliver [complete portable recipes in 0.21](#021-target-complete-portable-recipes),
+      with action styles and continuous-fragment response preserved together.
+- [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
+      publish tested environments and remaining limits with each release.
+- [ ] Complete the [1.0 acceptance criteria](docs/stability.md#acceptance-criteria-for-10)
+      before freezing the supported API. There is no scheduled jump to 1.0.
+
+### 0.21 target: complete portable recipes
+
+- [ ] Define one versioned recipe for action modes, desktop springs, pointer wobble
+      and explicit continuous-fragment values; built-in preset updates must not change saved values.
+- [ ] Preserve existing document meanings and migrate retained 0.20 recipes with
+      matching Python/browser validation, units, bounds and rejected-input fixtures.
+- [ ] Keep the complete recipe through JSON download/import, share links, My profiles,
+      copying, reopening and Undo/Redo in local and online Studio.
+- [ ] Offer Gentle, Tear and Cascade first, with detailed response controls secondary
+      and a clear explanation that the canvas does not simulate continuous response.
+- [ ] Define Move Preserve/Style/Off, material edits and Pointer wobble interactions
+      without silently losing response settings or enabling another action.
+- [ ] Use existing shared/frozen review, Apply and recovery paths; refuse unsupported
+      native activation and keep stock exports compatible without losing portable data.
+- [ ] Verify an installed 0.20 upgrade, complete browser/local round trips, stale-review
+      refusal and exact recovery. Publish importable examples and a faithful showcase.
 
 ## Available foundation
 
@@ -57,7 +87,7 @@ acceptance boundary.
       retargeting and reloads, with independent content updates and capture targets.
 - [x] Continue resize through closing with separate decoration and privacy
       snapshots; compare the first closing frame within the documented
-      [rasterization bounds](docs/validation.md#resize-to-close-acceptance-unreleased).
+      [rasterization bounds](docs/validation.md#resize-to-close-acceptance-020).
 - [x] Fix virtual-device disconnection and overlapping button ownership, retaining
       the unmodified pinned-Niri baseline comparison (Epic 4).
 - [ ] Resolve the remaining stale-output failure and verify physical device removal.
@@ -225,7 +255,7 @@ configuration underneath NiriFX, including existing user or shell customizations
       profiles, with examples and complete workflow coverage.
 - [x] Verify a clean installation through Library selection, per-action choices,
       reviewed Apply and Restore, and make this path consistent across setup guides.
-- [ ] Clarify pointer controls in Studio: Off disables whole-window wobble, while
+- [x] Clarify pointer controls in Studio: Off disables whole-window wobble, while
       continuous fragments follow Move. Explain this relationship beside the
       controls and show how to disable the currently active drag effect.
 

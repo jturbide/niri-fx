@@ -1,8 +1,8 @@
 # Updating the NiriFX tools together
 
 The managed tool workflow keeps CLI, Studio and the login launcher on one
-selected Python installation. It is available in current source builds. Stock
-Niri and shell packages continue to use their normal updaters.
+selected Python installation. It is included in NiriFX 0.20. Stock Niri and
+shell packages continue to use their normal updaters.
 
 Install each NiriFX update in a new persistent virtual environment. Run the
 update command from that environment to select it after review. Existing
@@ -13,8 +13,10 @@ close it normally.
 
 ## Prepare an installation
 
-Use a trusted wheel built from the version you want to install. For example,
-replace the paths below with your new persistent environment and wheel:
+Download the wheel and `SHA256SUMS` from the same [release](releases.md), and
+verify the checksum before installing. A wheel built from a trusted source
+checkout also works. Replace the paths below with your new persistent
+environment and wheel:
 
 ```sh
 python3 -m venv /persistent/path/to/new-runtime

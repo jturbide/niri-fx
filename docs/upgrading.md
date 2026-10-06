@@ -11,17 +11,40 @@ Users of the earlier compact iRiS source integration should follow its reviewed
 removal path before updating the shell. Normal preset registration remains
 available without modifying iNiR's checkout.
 
-For managed NiriFX sessions in current source builds, use
+For managed NiriFX sessions in version 0.20 and newer, use
 [tool-runtime updates](tool-updates.md) to keep CLI, Studio and the login launcher
 on the same installation. That workflow retains complete environments for
 rollback; the historical in-place package commands below describe their releases.
 
-Current source builds use [isolated native candidates](../experimental/README.md#isolated-build-candidates).
+The 0.20 build tools use [isolated native candidates](../experimental/README.md#isolated-build-candidates).
 Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned
 upgrade notes below describe their original release workflows.
 
-## Independent swaps in Unreleased
+## From 0.19 to 0.20
+
+For a standalone wheel installation, verify the new release's `SHA256SUMS`,
+install it in the same environment and reopen Studio:
+
+```sh
+.venv/bin/python -m pip install --no-index --no-deps --upgrade ./niri_fx-0.20.0-py3-none-any.whl
+.venv/bin/niri-fx studio --active
+```
+
+Keep the configuration and NiriFX state directories. Existing profiles, favorites,
+registrations and Restore history remain available. Studio now starts with
+individual action choices; complete looks are under **Combos**. Its footer shows
+the tool version and UI build. Close an older editor after saving any draft, then
+launch Studio again to use the updated installation.
+
+If a NiriFX login launcher uses this environment, use the
+[managed tool update workflow](tool-updates.md) instead of upgrading its files in
+place. Prepare 0.20 in a new persistent environment, review launcher migration
+if needed, then select it for CLI, Studio and future logins together. Preserve the
+previous environment for rollback. A separately running Studio or compositor
+keeps its current process until it closes normally.
+
+### Move and Swap choices
 
 Updated NiriFX builds add independent styles for explicit left/right window swaps.
 Existing profiles and retained builds keep their current shared Move behavior.
@@ -30,6 +53,36 @@ cannot read. Choosing Preserve again removes the override and saves schema 2.
 Update tools and the full NiriFX compositor before applying independent swaps;
 Studio reports older retained builds without replacing them. Stock Niri exports
 omit Swap overrides and portable JSON retains them.
+
+### Full session and shared desktop settings
+
+Build the complete compositor from the 0.20 source archive or tag using
+`python3 scripts/build-nirifx-session.py`, then follow the
+[session guide](native-session.md). Select a reviewed build for the next login;
+installing or updating the Python package does not replace your running compositor.
+Earlier retained builds remain available. Use one full build for all native
+features rather than selecting individual patch variants.
+
+Existing frozen configurations remain frozen after upgrading. To have both
+sessions follow the normal Niri files, first save an effects recipe to the
+selected bundle, then review [shared-setting adoption](shared-settings.md).
+First adoption requires the next NiriFX login. Later shared changes update watched
+includes for both sessions, with stock-compatible effects kept separate from
+native-only effects. A written configuration is reported separately from verified
+live activation. Frozen recovery remains available if a shell or stock Niri
+update introduces syntax the selected NiriFX build cannot read.
+
+Continuous-fragment presets are retained in managed session recipes. **Download
+JSON**, **Share settings** and **My profiles** still omit those native response
+controls. Keep the bundle and reopen its recipe in local Studio when updating;
+portable profile export alone is not a complete backup of continuous motion.
+The **Pointer wobble** Off choice disables whole-window wobble; use Move Off to
+disable continuous fragments as well as the timed movement effect.
+
+If you used the earlier compact iRiS source integration, follow its
+[reviewed removal](desktop-updates.md#removing-the-earlier-compact-iris-entry)
+before a shell update. Current installation uses external configuration and does
+not patch the shell checkout.
 
 ## From 0.18 to 0.19
 
@@ -329,12 +382,13 @@ Use [setup and restore](setup.md) to inspect or undo managed changes.
 
 Use `niri-fx` or `python3 -m niri_fx`. Single-style JSON uses **schema 3** with
 exactly `schema`, `name` and `effect` at the top level. Independent profiles use
-kind `profile`, schema 1; see [profiles](profiles.md). Unknown fields and malformed
-names are rejected rather than ignored.
+kind `profile`, schema 2, or schema 3 when a separate Swap style or Off is saved.
+Schema 1 profiles still import with their existing meaning; see [profiles](profiles.md).
+Unknown fields and malformed names are rejected rather than ignored.
 
-Older command aliases and preset formats are not supported by the current
-version. Re-export or recreate an older preset for the current format, keeping
-its original file until the replacement works. If an older distribution is
+Unsupported older command aliases and document formats require migration.
+Re-export or recreate those presets for the current format, keeping each
+original until its replacement works. If an older distribution is
 installed in the same virtual environment, remove it before installing NiriFX.
 
 For custom file locations, see [setup options](setup.md) and the

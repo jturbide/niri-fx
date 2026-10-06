@@ -784,11 +784,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "cb8f12a456a2b182fd88419ee501e78a204880e8c66a80332fe7880bcc1ae1cd",
-        "inputs_sha256": "292272064db40487ef440653e3f1f36e0dbcbe78971105597b2da36a8385b96e",
+        "preview_sha256": "5b4ffd11e669acc693656886f82e2e3b687c7088ef9a06c5aa92601ff63d737f",
+        "inputs_sha256": "a0cd5e1f87920839d66e3b4fbd7618c7859c6f8dad6922b39f7f377fa4439742",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -828,11 +828,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "a13b57add962336080b48e4dcc0897a3edfbaf184894f657a276881692072832",
-        "inputs_sha256": "292272064db40487ef440653e3f1f36e0dbcbe78971105597b2da36a8385b96e",
+        "preview_sha256": "f97a0c7307f998a9ee133c41c238cff1faf9dc3ac2cf07cfe56fc27dd622ed8c",
+        "inputs_sha256": "a0cd5e1f87920839d66e3b4fbd7618c7859c6f8dad6922b39f7f377fa4439742",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -872,11 +872,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "f0b6f5a737a9c508f26c337e4334ebf7d7e88e0a45bb320fec45befffa1f1cbc",
-        "inputs_sha256": "292272064db40487ef440653e3f1f36e0dbcbe78971105597b2da36a8385b96e",
+        "preview_sha256": "4280a98c73397688cc0bb4b0eb436e5b62b168812d3f1401a6d640e8d00b16e1",
+        "inputs_sha256": "a0cd5e1f87920839d66e3b4fbd7618c7859c6f8dad6922b39f7f377fa4439742",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -2915,7 +2915,7 @@
         "actual JSON/KDL downloads",
         "stock Niri validation"
       ],
-      "bytes": 322785,
+      "bytes": 325698,
       "sources": {
         "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
@@ -2927,11 +2927,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "6367f808995034626ca0dc2043f7d6414d763f9fc6e08bd3db419f2f5a3d2371",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "5487071af85216f6a08ec50ff6b53b2be1bfedb772f8e5f9507740a5c85da326",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -2964,7 +2964,7 @@
         "actual JSON and KDL downloads",
         "stock Niri validation"
       ],
-      "bytes": 3756950,
+      "bytes": 3762473,
       "sources": {
         "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
@@ -2979,11 +2979,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "6db5618313ba3617d5b1be65213d0fedf0f3256d1fec6a063416ecc766ba8ac5",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "2d45ac69c5dc2fcefcccab1774e6ce5d20ced15cf50c8a2ab34cb667902189ef",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -3007,7 +3007,7 @@
         "stock Niri validation",
         "resize absent"
       ],
-      "bytes": 675795,
+      "bytes": 674893,
       "sources": {
         "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
@@ -3022,11 +3022,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "28168a7411191bcf3d7dd2bb2902e5a695ed5a3291b86b0ece6e29bb018ba632",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "e93101fa1c20d5c2a6f23e380ec6dd15e8f12818945da091b4900a3e4f762c42",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",

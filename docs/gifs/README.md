@@ -455,7 +455,7 @@ the gallery and run `python3 scripts/check-docs.py` afterward.
 The separate pixel diagnostic proves retained phase/reference dimensions,
 shader reload/removal behavior and dynamic privacy. These comparisons do not
 establish resize-to-close continuation.
-[Acceptance and remaining limits](../validation.md#retained-material-acceptance-unreleased).
+[Acceptance and remaining limits](../validation.md#retained-material-acceptance-020).
 
 ## Native resize-to-close comparison
 
@@ -489,7 +489,7 @@ Then regenerate the gallery and run `python3 scripts/check-docs.py`.
 
 The comparison illustrates the transition; the separate pixel checks establish
 its tested state continuity and privacy behavior. See
-[acceptance and limits](../validation.md#resize-to-close-acceptance-unreleased)
+[acceptance and limits](../validation.md#resize-to-close-acceptance-020)
 for the bounded raster comparison, capture targets and fallback cases.
 
 ## Expanded styles, resize and native continuity

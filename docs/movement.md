@@ -23,8 +23,11 @@ before a separate Swap choice can be applied.
 Review **Apply to desktop** to see the exact action changes. A verified running
 NiriFX session can load them immediately; otherwise Studio saves the selection
 for the next login and reports that outcome. Applying does not edit a shell
-checkout. The managed workflow is available in the current source checkout;
-distribution packages and broader physical-session acceptance remain pending.
+checkout. The managed tools are included in NiriFX 0.20; the full compositor
+builds from its matching source. Shared configurations instead update watched
+includes through [Apply shared settings](shared-settings.md), reporting file
+updates separately from confirmed live activation. Distribution packages and
+broader physical-session acceptance remain pending.
 
 Studio's **Movement (shader preview)** tab renders the same GLSL used by the
 pinned compositor, with a synthetic texture and a simple directional path. Niri

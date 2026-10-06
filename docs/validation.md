@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-05**, including native candidate isolation, 0.19.0 action choices,
+Evidence updated on **2026-10-05**, including 0.20.0 package acceptance, native candidate isolation,
 installed upgrade/Restore checks, experimental resize continuation and device-owned
 pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
@@ -15,7 +15,28 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
 
-## Shared desktop settings (Unreleased)
+## Release 0.20.0 package acceptance
+
+The installed 0.20.0 wheel passed first-use browser workflows in empty temporary
+accounts for standalone Niri and the real installed iNiR helper. Both paths
+covered choosing a combo, independent action controls, saving, Review/Cancel,
+Apply, reopening Studio and exact Restore. Stock Niri validated the generated
+configuration; the installed helper source remained unchanged.
+
+The published 0.19.0 wheel, verified against its release checksums, upgraded to
+the 0.20.0 wheel without changing saved JSON, shell registrations, profiles,
+favorites or user resize settings. CLI and browser checks retained
+Preserve/Style/Off choices and verified conflict-safe, exact Restore. Eight
+shared-settings integration tests also passed against the installed wheel
+outside the checkout, covering adoption, stale reviews, stock-session routing,
+authorized requests and frozen recovery with a missing source configuration.
+
+These checks used disposable configuration and no desktop connection. They do
+not establish physical login, mixed-monitor behavior or GPU performance.
+Reproduce the [upgrade](releases.md#verify-an-upgrade) and
+[first-use workflows](../CONTRIBUTING.md#development-setup) with the release wheel.
+
+## Shared desktop settings (0.20)
 
 An owned nested session using the full four-patch desktop build accepted shared
 adoption with both the stock and retained native parsers. Editing an included
@@ -46,7 +67,7 @@ mixed-monitor use remain on the roadmap. Reproduce the temporary integration
 checks with `python3 -m unittest discover -s tests -p 'test_*shared*.py' -v`;
 see [shared settings](shared-settings.md) for adoption and recovery commands.
 
-## Independent swaps and Studio selection (Unreleased)
+## Independent swaps and Studio selection (0.20)
 
 The full four-patch desktop build passes native configuration, animation and
 layout regressions for explicit left/right swaps. An owned nested compositor
@@ -95,7 +116,7 @@ These checks establish build/selection ownership, not physical desktop, capture
 or dependency compatibility. The [native lifecycle roadmap](../ROADMAP.md#updates-and-native-build-lifecycle)
 keeps installation, session selection and rollback as separate release gates.
 
-## Shared tool-runtime updates (Unreleased)
+## Shared tool-runtime updates (0.20)
 
 Temporary installation checks cover different existing login and CLI/Studio
 runtimes, read-only review, preparation without replacing legacy launchers,
@@ -111,7 +132,7 @@ failures. Compatible system-interpreter changes do not invalidate the retained
 pure-Python package. These checks do not constitute a physical login or a system
 Python upgrade test.
 
-## Studio action selection and live settings (Unreleased)
+## Studio action selection and live settings (0.20)
 
 Studio's simple view assigns styles independently to Open, Close, Resize,
 Move and Swap and replays each selected style. Browser regressions cover preserved
@@ -211,7 +232,7 @@ restores the original files exactly while retaining the saved profile. Stock
 Niri validates the generated configuration. A synthetic helper checks automatic
 iNiR selection and an explicit standalone override.
 
-With the **Unreleased adapter fix**, the same browser workflow also passes from
+With the **0.20 adapter fix**, the same browser workflow also passes from
 source and an installed wheel using the real iNiR helper. The separate
 `scripts/test-library-adapters.py` check hosts the actual iRiS service and gallery
 in an owned nested session. Ten helper combinations cover individual, mixed and
@@ -375,7 +396,7 @@ spring's equation. Closing material continuation has a separate acceptance gate
 below. Camera movement and physical mixed outputs remain follow-on work;
 see the [design notes](next-phases.md#rendering-and-interruptions).
 
-### Retained material acceptance (Unreleased)
+### Retained material acceptance (0.20)
 
 The optimized experimental build passes the native retained-material diagnostic on
 both direct ScreenCapture and Output observed through an owned nested parent.
@@ -409,7 +430,7 @@ requests. They do not establish closing continuation, blurred-background
 privacy, popup behavior, mixed-scale handoffs, graphics-reset recovery or
 PipeWire transport acceptance.
 
-### Resize-to-close acceptance (Unreleased)
+### Resize-to-close acceptance (0.20)
 
 The [native comparison and acceptance report](benchmarks/resize-close.json) cover
 23 passing cases in the matching development compositor on RTX 4070 Ti/NVIDIA.
@@ -461,7 +482,7 @@ cleanup; they do not substitute for those hardware checks. See the
 [recording guide](gifs/README.md#native-resize-to-close-comparison)
 to reproduce the real-speed comparison.
 
-## Continuous fragments (Unreleased)
+## Continuous fragments (0.20)
 
 The [continuous fragment experiment](fragment-drag.md#build-and-check) uses owned
 nested sessions to verify delayed screen-space following, queued reversals,

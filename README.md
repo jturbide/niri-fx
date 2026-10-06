@@ -35,7 +35,7 @@ Distribution packages and signed compositor downloads are being prepared. Stock
 Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.19.0](https://github.com/jturbide/niri-fx/releases/tag/v0.19.0)
+release. [Download v0.20.0](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.
@@ -51,7 +51,7 @@ Preserve uses your underlying Niri or shell configuration, including customizati
 settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0190-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0200-prerelease).
 On Niri with Python 3.10+, you can also open Library from source:
 
 ```sh
@@ -373,7 +373,7 @@ updated geometry, using plain synthetic cards.
 
 [Behavior, requirements and limits](docs/resize.md#resize-reversals-in-the-nirifx-session)
 
-The **Unreleased NiriFX session** also maintains spacing between neighboring
+The **NiriFX 0.20 session** also maintains spacing between neighboring
 windows when an extreme resize reaches the minimum size:
 
 | Minimum width | Minimum height |
@@ -382,7 +382,7 @@ windows when an extreme resize reaches the minimum size:
 
 ### Resize effects that continue through retargets
 
-The **Unreleased NiriFX session** preserves an active NiriFX resize effect
+The **NiriFX 0.20 session** preserves an active NiriFX resize effect
 when another size change arrives. Pieces keep their layout and deformation phase;
 new window content blends into that continuing animation.
 
@@ -397,7 +397,7 @@ a snapshot on older builds. [Retained resize appearance and limits](docs/resize.
 
 ### Keep resizing while closing
 
-The **Unreleased NiriFX session** carries a running resize through closing.
+The **NiriFX 0.20 session** carries a running resize through closing.
 The current pieces keep their phase and size trajectory while fading out, with
 borders and shadows following the changing window.
 

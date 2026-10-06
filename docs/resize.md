@@ -164,7 +164,7 @@ resize-continuity marker. A verified movement contract 2 alone does **not** prov
 retained resize support: older builds also advertise that movement contract.
 Stock Niri and unmarked custom shaders retain their existing resize interface.
 
-See the [retarget acceptance scope](validation.md#retained-material-acceptance-unreleased)
+See the [retarget acceptance scope](validation.md#retained-material-acceptance-020)
 and the separate closing handoff below. Stock Niri and older NiriFX builds
 keep their existing snapshot behavior when closing.
 
@@ -187,5 +187,5 @@ Fullscreen windows and transitions, output-scale changes and material-capture
 failures retain the existing protected snapshot path. Output, ScreenCapture and Screencast keep
 separate frozen materials. Nested capture checks do not establish physical
 mixed-output migration, protected blurred backgrounds, PipeWire transport or
-graphics-reset recovery. See [native acceptance](validation.md#resize-to-close-acceptance-unreleased)
+graphics-reset recovery. See [native acceptance](validation.md#resize-to-close-acceptance-020)
 and [recording instructions](gifs/README.md#native-resize-to-close-comparison).

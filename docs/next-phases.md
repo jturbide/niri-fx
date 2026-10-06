@@ -46,7 +46,7 @@ Each capture target owns its own bounded cache. A visibility-rule change starts
 with current content under the new rule, and renderer recreation discards old
 context resources. Unmarked custom shaders keep the stock interface; generated
 NiriFX shaders also fall back to stock behavior without the native extension.
-See [native material validation](validation.md#retained-material-acceptance-unreleased)
+See [native material validation](validation.md#retained-material-acceptance-020)
 for the tested boundaries.
 
 The closing handoff freezes undeformed material separately for each render target

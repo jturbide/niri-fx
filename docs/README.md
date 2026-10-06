@@ -4,8 +4,9 @@ Start with [Getting started](getting-started.md), or [choose your setup](scenari
 for instructions tailored to your desktop. NiriFX works standalone on Niri;
 iNiR/iRiS, DMS and Noctalia integrations are optional.
 
-These guides describe the source checkout. Use [Releases](releases.md) to choose
-a versioned package and its matching documentation.
+These guides cover version 0.20. Later changes on `main` are recorded under
+[Unreleased](../CHANGELOG.md). Use [Releases](releases.md) to choose a versioned
+package and its matching documentation.
 
 ## Install and use
 

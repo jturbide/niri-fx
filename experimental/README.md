@@ -273,7 +273,7 @@ with matching neighbor geometry, orthogonal resize retargets,
 and resize/cancellation layout regression tests. Marked resize shaders also pass
 retained phase/reference, shader reload/removal, and changing capture restrictions
 in owned nested Output, ScreenCapture and debug Screencast views. See the
-[material acceptance scope](../docs/validation.md#retained-material-acceptance-unreleased).
+[material acceptance scope](../docs/validation.md#retained-material-acceptance-020).
 
 The shared base patch also tracks pointer presses and consumed bindings per
 device. Virtual-device removal releases only presses without a surviving owner;

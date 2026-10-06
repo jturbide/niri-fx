@@ -13924,11 +13924,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -19264,11 +19264,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -19822,11 +19822,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -20383,11 +20383,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -21710,11 +21710,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
-        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
+        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
+        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
         "studio": {
-          "version": "0.19.0",
-          "build": "1dab054ebcc4"
+          "version": "0.20.0",
+          "build": "9a5f97c64b16"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
