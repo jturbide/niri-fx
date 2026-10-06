@@ -454,7 +454,7 @@ function kdlDocument(options = {}) {
 byId("kdl").onclick = () => {
   download("nirifx.kdl", kdlDocument(), "text/plain");
   byId("status").textContent =
-    "Downloaded stock Niri config. NiriFX movement, swaps and pointer drag are omitted; JSON preserves those settings.";
+    "Downloaded stock Niri config. NiriFX movement, swaps and pointer wobble are omitted; JSON preserves those settings.";
 };
 byId("pointer-kdl").onclick = () => {
   try {
@@ -659,7 +659,7 @@ byId("save").onclick = async () => {
       byId("status").textContent =
         target === "noctalia"
           ? "Place the downloaded file in the Noctalia Niri Animations preset folder, then select it in the picker."
-          : "Downloaded a stock Niri animation include. NiriFX movement, swaps and pointer drag are omitted; JSON preserves those settings.";
+          : "Downloaded a stock Niri animation include. NiriFX movement, swaps and pointer wobble are omitted; JSON preserves those settings.";
     } catch (error) {
       byId("error").textContent = error.message;
     }
@@ -1054,7 +1054,7 @@ try {
           ? "Dragging the sample window. Reverse direction, then let go."
           : phase === "settling"
             ? "Released. The spring is settling at the same window position."
-            : "Drag the sample window to try these pointer settings.";
+            : "Drag the sample window to try whole-window wobble.";
     document.documentElement.dataset.shaderStatus = "ready";
   }
   function pointerTick(now) {
@@ -1079,7 +1079,7 @@ try {
       }
     } catch (error) {
       cancelPointerPreview();
-      byId("error").textContent = "Cannot preview pointer drag: " + error.message;
+      byId("error").textContent = "Cannot preview pointer wobble: " + error.message;
     }
   }
   function advancePointer(now = performance.now()) {
@@ -1109,7 +1109,7 @@ try {
     for (const [tab, pressed] of pointerView.tabs) tab.setAttribute("aria-pressed", pressed);
     pointerView = null;
     byId("pointer-preview-tools").hidden = true;
-    byId("try-pointer").textContent = "Try pointer drag";
+    byId("try-pointer").textContent = "Try pointer wobble";
     byId("try-pointer").setAttribute("aria-pressed", "false");
     delete document.documentElement.dataset.pointerPreview;
     refresh();

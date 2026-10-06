@@ -88,7 +88,7 @@ try {
   );
   const pointerDocument = await evaluate("effectDocument()");
   assert.deepEqual(pointerDocument.pointer, { strength: 0.75, damping: 85, frequency: 10 });
-  await frames("Customize the spring / Try pointer drag to preview the response", 1.25);
+  await frames("Customize the spring / Try pointer wobble to preview the response", 1.25);
   await comboFrames("Preview pointer drag and release together with your combo");
   await evaluate(
     `byId('transfer-options').open=true;byId('export').click();byId('kdl').click();byId('pointer-kdl').click()`,

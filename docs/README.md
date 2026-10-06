@@ -26,6 +26,7 @@ a versioned package and its matching documentation.
 | Update an installation | [Updating NiriFX](upgrading.md) |
 | Keep CLI, Studio and the login launcher together | [Managed tool updates](tool-updates.md) |
 | Update Niri or a desktop shell | [Desktop updates and native build lifecycle](desktop-updates.md) |
+| Keep normal desktop settings and effects shared between sessions | [Shared settings](shared-settings.md) |
 | Install the complete NiriFX compositor session | [Session setup and rollback](native-session.md) |
 | Choose a version or understand release downloads | [Releases](releases.md) |
 

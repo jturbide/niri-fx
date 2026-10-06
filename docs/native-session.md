@@ -9,6 +9,10 @@ Prepare the full build and a separate configuration, then select that pair for
 the next login. Stock Niri stays installed and available. These commands never
 restart the running compositor or modify a shell checkout.
 
+Installation starts with a frozen configuration snapshot. To keep ordinary shell
+and desktop settings shared with stock Niri while adding native effects, use
+[shared desktop settings](shared-settings.md) after saving your first effects recipe.
+
 The current source installation is a **single-user, systemd-based** workflow.
 Distribution packages are not published yet. It requires the
 stock `/usr/bin/niri`, `/usr/bin/niri-session`, `niri.service` and
@@ -105,7 +109,8 @@ Bundles live under `$XDG_DATA_HOME/niri-fx/native`, or
 configuration, build manifest, lockfile and patch evidence. Preparing another
 version does not overwrite an earlier one. Use [Studio](#choose-effects-in-studio)
 to change effects, or edit the source candidate config and stage it again for
-other desktop settings. Do not edit a stored bundle.
+other desktop settings in frozen mode. [Shared mode](shared-settings.md) follows
+your normal desktop settings instead. Do not edit a stored bundle.
 
 All commands accept `--root /path/to/native-storage` for a separate installation
 or temporary testing. Use that same root throughout the workflow.
@@ -138,15 +143,14 @@ are refused. Niri still validates the copied result before selection.
 Only Niri configuration includes are copied. Applications, startup scripts,
 wallpapers and other paths referenced inside ordinary settings remain external
 dependencies. In particular, a frozen bundle does not redirect iRiS's config
-writer: iRiS continues editing its usual stock Niri files. For this source-based
-workflow, use Studio's native target for effects; edit the source configuration
-and stage a new pair for other desktop settings. Do not redirect global
+writer: iRiS continues editing its usual stock Niri files. In frozen mode, use
+Studio's native target for effects; edit the source configuration and stage a new
+pair for other desktop settings. Do not redirect global
 `XDG_CONFIG_HOME` to work around this boundary.
 
-Following live shell settings beneath a separate NiriFX effect layer is on the
-[integration checklist](../ROADMAP.md#one-integrated-product). Until that lands,
-changing a shell's ordinary desktop settings requires importing a new baseline
-to see those changes in the managed session.
+To follow those edits automatically, [adopt shared desktop settings](shared-settings.md).
+The normal configuration stays editable, common effects remain stock-compatible,
+and native effects use a separate include. A frozen recovery copy remains available.
 
 ## Choose effects in Studio
 
@@ -170,7 +174,8 @@ contains shared styles and detailed action controls. Each action can use
 **Preserve / NiriFX Style / Off**. Preserve
 inherits the chosen baseline, including its existing user settings and effects.
 When reopening a previously customized bundle, Preserve returns to its original
-baseline for that action. It does not retain an override you are removing.
+baseline for that action. In shared mode it follows the current normal desktop
+configuration instead. It does not retain an override you are removing.
 
 For a fragment-capable build, the continuous-fragment selector offers **Gentle**,
 **Tear** and **Cascade**. Selecting one explicitly sets its matching movement
@@ -179,6 +184,10 @@ movement choice. The continuous settings belong to the managed bundle's recipe;
 portable profile JSON alone does not contain those extra native controls.
 The browser preview is still a timed movement preview, not a simulation of the
 continuous fragment renderer.
+
+The following confirmed reload flow applies to frozen configurations. Shared
+setups instead offer **Apply shared settings** and report that files were written,
+with active settings unverified; see the [shared-mode guide](shared-settings.md).
 
 Review your choices, then choose **Apply to desktop** when Studio verifies a
 running managed session using the same build and baseline. Studio prepares and
@@ -234,7 +243,8 @@ chosen effects.
 
 ### Apply from the terminal
 
-Add `--live` to both review and Apply to update the running managed session:
+For a frozen configuration, add `--live` to both review and Apply to update the
+running managed session:
 
 ```sh
 niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json --live
@@ -246,7 +256,9 @@ The command verifies the session advertised by `NIRI_SOCKET`, requires the same
 compositor build and original baseline, and waits for configuration-load
 confirmation. A missing or incompatible session is refused before saving a new
 selection. A changed session or receipt invalidates the review. Without `--live`,
-`native configure` continues to select settings only for the next login.
+`native configure` selects frozen settings only for the next login. Shared
+configurations use watched includes and refuse `--live`; their Apply result
+reports written files without claiming a confirmed desktop reload.
 
 The JSON result separates `activation` from `live.status`. Only
 `live.status: "applied"` confirms the reload. A rejected or unconfirmed reload
@@ -371,11 +383,18 @@ niri-fx native rollback
 niri-fx native rollback --apply --expect-plan REVIEWED_SHA256
 ```
 
-Rollback exchanges the current and previous next-login selections. Both bundles
-remain installed. After the first selection, rollback returns to **no native
-selection**; choose stock Niri. Another rollback restores the former selection.
+For frozen configurations, rollback exchanges the current and previous next-login
+selections. Both bundles remain installed. After the first selection, rollback
+returns to **no native selection**; choose stock Niri. Another rollback restores
+the former selection.
 If the previous bundle was edited or no longer validates against installed
 libraries, rollback refuses and stock Niri remains the recovery path.
+
+When the previous recipe uses shared settings, rollback restores its effects
+against the current normal configuration after review and validation. It does
+not restore old desktop settings. Use [frozen recovery](shared-settings.md#rollback-and-frozen-recovery)
+to select a retained closed snapshot without changing the shared source or its
+generated effects files.
 
 Generic `niri-fx restore` does not remove native bundles or bypass this selection
 validation. Automatic cleanup is not available yet. Retain running, selected and

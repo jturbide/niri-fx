@@ -12,10 +12,10 @@ See [available features](README.md),
 
 ## Next priorities
 
-1. **Keep desktop settings current without losing effects.** Add a reviewed
-   refresh from the user's normal Niri configuration, preserving the selected
-   combo and continuous-fragment response. Start with next-login selection and
-   rollback before following live shell changes automatically.
+1. **Validate shared settings in daily use.** One normal Niri configuration and
+   one saved recipe now feed stock and full-session effects. Verify shell-driven
+   edits, normal updates and recovery on physical desktops before broadening
+   support claims; keep frozen recovery available.
 2. **Make the complete look portable.** Save continuous-fragment response with
    the action styles, so local and online Studio can exchange the same recipe.
    Keep simple preset choices first and make preview limitations explicit.
@@ -91,15 +91,16 @@ are developer regression controls, not separate consumer editions.
       per-action preset choices with immediate previews.
 - [x] Apply reviewed effects and same-build rollback directly to the running
       managed session, with configuration-load confirmation and next-login storage.
-- [ ] Add **Refresh desktop settings** in Studio and the CLI: review an explicitly
-      selected source configuration and its includes, retain the same compositor
-      and known effect recipe, validate the result, and select it for the next login.
-      Refuse changed sources after review; Cancel and failed validation must leave
-      the current selection intact, and rollback must recover the previous pair.
-- [ ] Follow normal user/shell settings beneath a NiriFX-owned effect overlay,
-      retaining a validated full snapshot for recovery. Define how external edits,
-      invalid configurations and Preserve interact before enabling live updates.
-      The current frozen baseline still requires a new import for desktop changes.
+- [x] Share normal user/shell settings beneath generated stock/native effect
+      projections, preserving one saved combo and continuous-fragment response.
+      Studio and CLI review source ownership, both validators and all affected
+      files; stale review and handled validation failures preserve prior settings.
+- [x] Keep independent frozen recovery for missing or invalid shared settings.
+      Shared rollback restores an earlier recipe over current desktop settings;
+      frozen recovery selects retained settings for next login without changing
+      the shared source. Distinguish file updates from verified live activation.
+- [ ] Verify shared configuration with shell-driven edits and updates on physical
+      desktops, including cross-version parser conflicts and return to stock Niri.
 - [x] Present recommended combos and per-action presets first; keep configuration
       paths, compositor build identities and technical controls in advanced details.
 - [x] Identify the loaded Studio version and UI build in local, web and offline

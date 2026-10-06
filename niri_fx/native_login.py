@@ -242,8 +242,19 @@ def write_new(path, text):
         os.fsync(stream.fileno())
 
 
-def _bundle(root, bundle_id):
+def _bundle(root, bundle_id, *, process_only=False):
     report = inspect_bundle(root, bundle_id)
+    if report.get("shared"):
+        if process_only:
+            # Shell startup may rewrite shared includes. ExecStartPost proves
+            # process ownership, not that those mutable files stayed frozen.
+            return report
+        from .native_shared import preflight
+
+        preflight(report)
+        if inspect_bundle(root, bundle_id) != report:
+            raise RuntimeError("Selected native bundle changed during configuration validation")
+        return report
     result = subprocess.run(
         [str(report["binary"]), "validate", "-c", str(report["config"])],
         text=True,
@@ -357,7 +368,7 @@ def verify(root, token):
         if not pid or not same_executable(pid, STOCK):
             raise RuntimeError("Expired native lease did not start the stock compositor")
         return
-    report = _bundle(root, lease["bundle_id"])
+    report = _bundle(root, lease["bundle_id"], process_only=True)
     deadline = time.monotonic() + VERIFY_TIMEOUT
     while time.monotonic() < deadline:
         _, pid = service_state()

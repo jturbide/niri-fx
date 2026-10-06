@@ -45,7 +45,7 @@
       >
       <label id="activate-pointer-label" hidden
         ><input id="activate-pointer" type="checkbox" />
-        <span id="activate-pointer-text">Apply pointer drag</span></label
+        <span id="activate-pointer-text">Apply pointer wobble</span></label
       >
       <button class="button-primary" id="review-selection">Review &amp; apply</button>
       <button class="button-secondary" id="restore-selection" disabled>Restore previous</button>
@@ -69,7 +69,7 @@
       <section id="native-session" hidden aria-label="NiriFX session selection">
         <strong>NiriFX session</strong>
         <p id="native-session-help">
-          Choose your effects here. Changes start at your next NiriFX login.
+          Choose your effects here, then review how they will be applied.
         </p>
         <small id="native-running"></small>
         <details>
@@ -81,6 +81,15 @@
           <small id="native-base"></small>
           <small id="native-bundles"></small>
           <small id="native-running-detail"></small>
+          <section id="native-shared-settings" hidden aria-label="Shared desktop settings">
+            <p id="native-shared-help"></p>
+            <button class="button-secondary" id="native-share" disabled hidden>
+              Share normal Niri settings
+            </button>
+            <button class="button-quiet" id="native-recovery" disabled hidden>
+              Review frozen recovery
+            </button>
+          </section>
         </details>
       </section>
       <div class="preview-heading">
@@ -114,7 +123,7 @@
         aria-label="Interactive preview of NiriFX window effects"
         tabindex="0"
       ></canvas>
-      <section id="pointer-preview-tools" aria-label="Pointer drag preview" hidden>
+      <section id="pointer-preview-tools" aria-label="Pointer wobble preview" hidden>
         <p id="pointer-preview-status" role="status"></p>
         <div class="controls">
           <button class="button-secondary" id="pointer-demo" type="button">Play drag demo</button>
@@ -224,24 +233,28 @@
           </select>
           <small id="native-fragment-description"></small>
         </section>
-        <section id="pointer-settings" aria-label="Pointer drag settings">
-          <label for="combo-pointer-mode">Pointer drag</label>
-          <select id="combo-pointer-mode">
+        <section id="pointer-settings" aria-label="Pointer wobble settings">
+          <label for="combo-pointer-mode">Pointer wobble</label>
+          <select
+            id="combo-pointer-mode"
+            aria-describedby="pointer-description pointer-movement-note"
+          >
             <option value="preserve">Preserve</option>
             <option value="style">NiriFX Style</option>
             <option value="off">Off</option>
           </select>
-          <label for="combo-pointer">Pointer style</label>
+          <label for="combo-pointer">Wobble style</label>
           <select id="combo-pointer">
             <option value="" hidden>Choose a style</option>
             <option value="disabled" hidden>Off</option>
           </select>
           <small id="pointer-description"></small>
+          <small id="pointer-movement-note" hidden></small>
           <button id="try-pointer" type="button" aria-pressed="false" disabled>
-            Try pointer drag
+            Try pointer wobble
           </button>
           <details id="pointer-tuning">
-            <summary>Customize pointer drag</summary>
+            <summary>Customize pointer wobble</summary>
             <div class="pointer-fields">
               <label for="pointer-strength">Strength</label
               ><input id="pointer-strength" type="number" step="0.05" />
@@ -253,14 +266,14 @@
           </details>
           <small id="pointer-availability"></small>
           <small
-            >Try pointer drag to move the sample window. Preview combo includes a scripted drag when
-            pointer strength is above zero. Browser previews do not activate effects.</small
+            >Try pointer wobble to move the sample window. Preview combo includes a scripted drag
+            when pointer strength is above zero. Browser previews do not activate effects.</small
           >
           <a
             href="https://github.com/jturbide/niri-fx/blob/main/docs/pointer-wobble.md"
             target="_blank"
             rel="noopener"
-            >Pointer drag setup guide</a
+            >Pointer wobble setup guide</a
           >
         </section>
         <label for="combo-name">Profile name</label>
@@ -269,8 +282,8 @@
     </aside>
     <aside id="editor-panel" data-view="basic" hidden>
       <div class="wide">
-        <button id="edit-pointer">Choose pointer drag in Library</button
-        ><small id="editor-pointer-summary">Pointer drag uses desktop settings.</small>
+        <button id="edit-pointer">Choose pointer wobble in Library</button
+        ><small id="editor-pointer-summary">Pointer wobble uses desktop settings.</small>
       </div>
       <div class="wide">
         <label><input id="advanced" type="checkbox" /> Advanced controls</label
@@ -402,7 +415,7 @@
         ><button class="button-quiet" id="save">Save to iRiS</button>
       </div>
       <small id="pointer-export-note" hidden
-        >Stock config exports omit pointer drag, movement and swaps. JSON preserves them; the
+        >Stock config exports omit pointer wobble, movement and swaps. JSON preserves them; the
         session export requires matching compositor extensions with action-preservation
         support.</small
       >

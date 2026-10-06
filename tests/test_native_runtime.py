@@ -125,6 +125,24 @@ class NativeRuntimeTests(unittest.TestCase):
         self.assertEqual(report["status"], "offline")
         self.assertIsNone(report["pid"])
 
+    def test_shared_wrapper_identifies_process_without_claiming_mutable_source_bytes(self):
+        source = self.root / "desktop.kdl"
+        source.write_text("layout {}\n")
+        shared = self.bundle | {"shared": {"source_config": str(source)}}
+        for data in ("layout {}\n", "a later shell edit\n"):
+            with self.subTest(data=data):
+                source.write_text(data)
+                report, _ = self.inspect([shared])
+                self.assertEqual(report["status"], "matched")
+                self.assertEqual(report["configuration_mode"], "shared")
+                self.assertEqual(report["config"], str(self.config))
+                self.assertIn("not verified", report["detail"])
+                self.assertNotIn("source_fingerprint", report)
+        with patch.object(
+            native_runtime, "_arguments", return_value=(str(self.binary), "-c", str(source))
+        ):
+            self.assertEqual(self.inspect([shared])[0]["status"], "external")
+
     def test_supported_config_argument_forms_are_equivalent(self):
         for arguments in (
             ("-c", str(self.config)),

@@ -27,10 +27,10 @@ Actual Move/Swap effects need a matching NiriFX compositor; Web Studio cannot pr
 hooks. Stock desktop springs are described and recorded separately in the
 [desktop motion guide](desktop-motion.md).
 
-Library also stores **Pointer drag** presets and custom strength,
+Library also stores **Pointer wobble** presets and custom strength,
 damping and frequency. Online Studio can edit, share and download these settings;
 combo playback includes a scripted drag when strength is above zero. **Try pointer
-drag** lets you drag the synthetic window with native spring and shader math.
+wobble** lets you drag the synthetic window with native spring and shader math.
 These previews do not verify compositor support. **Export stock Niri config** omits
 NiriFX session nodes. **Export NiriFX session config** includes selected pointer,
 Move and Swap settings for the matching native build. Read the

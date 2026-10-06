@@ -67,9 +67,13 @@ Use the same [Library workflow](docs/library.md) with plain Niri or a supported
 shell; [setup guides](docs/getting-started.md) explain each connection.
 If several shells coexist, choose the target explicitly as shown in those guides.
 
+Both sessions can [share your normal Niri settings](docs/shared-settings.md) and
+the same effect choices; stock Niri uses its supported actions.
+
 For the full NiriFX session, follow [session setup](docs/native-session.md), then
 open `python3 -m niri_fx studio --target native`. Choose presets for each action
 and review **Apply to desktop** when the running build matches, or **Select for next login**.
+Shared setups use **Apply shared settings** to update the files both sessions follow.
 Updated NiriFX builds let you choose different Move and Swap styles. Swap targets
 explicit left/right window swaps; dragging and column reordering use Move.
 The [build and acceptance matrix](docs/native-compatibility.md) explains what is
@@ -216,8 +220,8 @@ Choose a coordinated opening and closing look by name; detailed tuning is option
 
 Grab a window, change direction and let it settle. The NiriFX session includes
 actual drag response. Studio's timed Elastic effects remain a separate choice.
-Choose **Pointer drag** in Library to save a preset or tune its strength, damping
-and frequency. Use **Try pointer drag** to drag the sample window, or **Play drag
+Choose **Pointer wobble** in Library to save a preset or tune its strength, damping
+and frequency. Use **Try pointer wobble** to drag the sample window, or **Play drag
 demo** for a repeatable comparison. **Preview combo** includes dragging when
 pointer strength is above zero. These browser previews use native spring and shader math with
 synthetic input; they work online without changing your desktop.

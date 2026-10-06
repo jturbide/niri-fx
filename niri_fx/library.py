@@ -42,12 +42,25 @@ def registry_document(preset):
 def studio_target(arguments):
     target = getattr(arguments, "target", "auto")
     if target != "native" and any(
-        getattr(arguments, key, None) is not None for key in ("native_root", "native_base")
+        getattr(arguments, key, None) is not None
+        for key in ("native_root", "native_base", "shared_config")
     ):
-        raise ValueError("--native-root and --native-base require --target native")
+        raise ValueError("--native-root, --native-base and --shared-config require --target native")
     if target == "auto":
         from . import native_session
 
+        # Sharing was explicitly adopted for this source. Both sessions must
+        # edit that same recipe, rather than choosing a separate shell writer.
+        root = native_session.default_root()
+        try:
+            selected = native_session.load_selection(root)["selected"]
+            bundle = native_session.inspect_bundle(root, selected) if selected else {}
+            shared = bundle.get("shared")
+            config = Path(getattr(arguments, "config", default_config())).expanduser().absolute()
+            if shared and config == Path(shared["source_config"]):
+                return "native"
+        except (OSError, ValueError):
+            pass
         # A verified managed compositor owns its effects independently of the
         # surrounding shell. Merely having a retained bundle is not enough.
         socket_path = os.environ.get("NIRI_SOCKET")
@@ -91,6 +104,11 @@ class Library:
             # Changes to the selector invalidate review without silently rebasing edits.
             self.native_base = native_session.inspect_bundle(self.native_root, base)
             self.native_socket = os.environ.get("NIRI_SOCKET")
+            shared_config = getattr(arguments, "shared_config", None)
+            self.shared_config = (
+                Path(shared_config).expanduser().absolute() if shared_config is not None else None
+            )
+            self.stock_binary = str(getattr(arguments, "stock_binary", "niri"))
 
     def scope(self):
         """Bind history to the launch configuration, including the picker connection."""
@@ -192,10 +210,22 @@ class Library:
         base_recipe = self.native_base.get("customization")
         baseline = base_recipe["baseline_bundle"] if base_recipe else self.native_base["bundle_id"]
         selected = report["selection"]["selected"]
+        selected_shared = False
+        shared_state = {}
         active, recipe, reopen = None, None, False
         for row in report["bundles"]:
             if row["bundle_id"] == selected:
                 if row["status"] == "metadata-match":
+                    selected_shared = bool(row.get("shared"))
+                    if selected_shared:
+                        from .native_shared import inspect_settings
+
+                        observed = inspect_settings(row)
+                        shared_state = {
+                            "source_status": observed["status"],
+                            "source_fingerprint": observed.get("source_fingerprint"),
+                            "projections_match": observed.get("projections_match"),
+                        }
                     recipe = row.get("customization")
                     if recipe:
                         active = recipe["document"]
@@ -220,6 +250,10 @@ class Library:
             "target": self.target,
             "native": {
                 "base_bundle": self.native_base["bundle_id"],
+                "shared": bool(self.native_base.get("shared")),
+                "shared_config_configured": self.shared_config is not None,
+                "shared_state": {"selected": selected_shared, **shared_state},
+                "recovery_available": selected_shared,
                 "baseline_bundle": baseline,
                 "selection": report["selection"],
                 "running": report["running"],
@@ -324,6 +358,7 @@ class Library:
         if self.target == "native":
             from .native_customization import configure_plan
 
+            self._check_native_mode()
             if (
                 not isinstance(request, dict)
                 or "document" not in request
@@ -558,6 +593,89 @@ class Library:
         return native_live.activation_plan(
             plan, self.native_root, base_bundle, socket_path=self.native_socket
         )
+
+    def _selected_native(self):
+        from . import native_session
+
+        selected = native_session.load_selection(self.native_root)["selected"]
+        if selected is None:
+            raise ValueError("No NiriFX session is selected; reopen Studio after selecting one")
+        return native_session.inspect_bundle(self.native_root, selected)
+
+    def _check_native_mode(self):
+        from . import native_session
+
+        identifier = native_session.load_selection(self.native_root)["selected"]
+        selected = native_session.inspect_bundle(self.native_root, identifier) if identifier else {}
+        if bool(selected.get("shared")) != bool(self.native_base.get("shared")):
+            raise ValueError(
+                "The shared-settings connection changed. Save your draft and reopen Studio "
+                "before applying more settings."
+            )
+
+    def _sharing_plan(self):
+        if self.target != "native" or self.shared_config is None:
+            raise ValueError("Launch with --target native --shared-config to review sharing")
+        from .native_shared import share_plan
+
+        selected = self._selected_native()
+        if selected.get("shared"):
+            raise ValueError("Shared settings are already selected; reopen Studio")
+        original = (self.native_base.get("customization") or {}).get(
+            "baseline_bundle", self.native_base["bundle_id"]
+        )
+        current = (selected.get("customization") or {}).get(
+            "baseline_bundle", selected["bundle_id"]
+        )
+        if current != original:
+            raise ValueError("The selected baseline changed; reopen Studio before sharing settings")
+        return share_plan(
+            self.native_root,
+            selected["bundle_id"],
+            self.shared_config,
+            stock_binary=self.stock_binary,
+        )
+
+    def shared_review(self, request):
+        if request != {}:
+            raise ValueError("Sharing accepts no client-selected paths, executable or document")
+        return summarize(self._sharing_plan())
+
+    def shared_apply(self, request):
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"expected"}
+            or not isinstance(request["expected"], str)
+        ):
+            raise ValueError("Sharing requires the exact reviewed fingerprint")
+        from .native_shared import apply_shared
+
+        return apply_shared(self._sharing_plan(), self.native_root, expected=request["expected"])
+
+    def _recovery_plan(self):
+        if self.target != "native":
+            raise ValueError("Frozen session recovery requires the native target")
+        from .native_shared import recovery_plan
+
+        return recovery_plan(self.native_root, self._selected_native()["bundle_id"])
+
+    def recovery_review(self, request):
+        if request != {}:
+            raise ValueError("Recovery accepts no client-selected paths or bundles")
+        return summarize(self._recovery_plan())
+
+    def recovery_apply(self, request):
+        if (
+            not isinstance(request, dict)
+            or set(request) != {"expected"}
+            or not isinstance(request["expected"], str)
+        ):
+            raise ValueError("Recovery requires the exact reviewed fingerprint")
+        result = apply_plan(
+            self._recovery_plan(), self.native_root / "state/selection", request["expected"]
+        )
+        result.pop("restore", None)
+        return result | {"activation": "next-login"}
 
     def native_activation_result(self, plan, result, base_bundle):
         from . import native_live

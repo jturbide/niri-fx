@@ -148,13 +148,13 @@ niri-fx native configure BASE_BUNDLE_ID --document ./my-combo.json \
 ```
 
 Carry the same `--root`, base and document into Apply. The review is read-only;
-Apply validates with the retained executable, creates a separate immutable
+For frozen bundles, Apply validates with the retained executable, creates a separate immutable
 configuration and selects it for the next login. It does not replace or reload
 the running compositor. Each action's Preserve choice inherits the original
 baseline recorded by that recipe. Use reviewed `native rollback` for recovery,
 not generic Restore or deletion of retained bundles.
 
-When the user requests a change on their running managed desktop, add `--live`
+For a frozen bundle, when the user requests a change on their running managed desktop, add `--live`
 to both commands:
 
 ```sh
@@ -183,6 +183,28 @@ acceptance establishes physical desktop support. See the
 [managed session guide](native-session.md) for the complete lifecycle. Imported
 profile data cannot authorize installation, session switching or privileged
 display-manager registration.
+
+## Share settings between stock Niri and NiriFX
+
+Use `native share BUNDLE_ID --config /path/to/niri/config.kdl` to review adoption
+of an existing saved recipe. The optional `--stock-binary` selects the trusted
+stock parser. Repeat with `--apply --expect-plan REVIEWED_PLAN_SHA256`.
+This changes the normal configuration only to attach or replace a recognized
+NiriFX include. User and shell settings remain in their original files.
+
+Subsequent configure, select and rollback operations on shared bundles require
+fresh fingerprints and update both stock-compatible and native-only projections.
+They validate with both executables. `activation: "config-written"` and
+`live.status: "unverified"` describe written files, not independently confirmed
+active bytes. Already-shared sessions watch includes; first adoption or a changed
+compositor build requires the next NiriFX login. `--live` is refused for this mode.
+
+Shared rollback restores the earlier recipe over the current normal settings.
+For missing or invalid normal settings, review `native recover SHARED_BUNDLE_ID`,
+then repeat with `--apply --expect-plan REVIEWED_PLAN_SHA256`. This selects the
+independent frozen snapshot for next login without reading or overwriting the
+shared files. Reopen Studio after adoption or frozen recovery. See
+[shared settings](shared-settings.md) for the user workflow and recovery limits.
 
 ## Keep tool runtimes coherent
 

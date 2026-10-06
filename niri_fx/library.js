@@ -16,7 +16,13 @@ function createFxLibrary({
   const core = createEffectCore(catalog);
   const native = catalog.connection?.target === "native";
   const nativeOptions = catalog.connection?.native;
-  let nativeListing = null;
+  let nativeListing = null,
+    nativeRestoreAvailable = false,
+    nativeSetupChanged = false;
+  const sharedBase = nativeOptions?.shared === true;
+  const sharedSelectionChanged = () =>
+    nativeSetupChanged ||
+    (!!nativeListing && sharedBase !== (nativeListing.shared_state?.selected === true));
   const nativeSettings = sessionSettings || { fragment_preset: null };
   const title = (id) => id.replaceAll("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const styles = Object.fromEntries(
@@ -282,7 +288,7 @@ function createFxLibrary({
     row.append(caption, mode, picker, tune);
     element("combo-actions").append(row);
   }
-  // Pointer drag has its own native spring contract. It is profile metadata,
+  // Pointer wobble has its own native spring contract. It is profile metadata,
   // never an inferred fifth shader action or a timed preview.
   let pointerConsentValue = null;
   const pointerReady =
@@ -321,13 +327,25 @@ function createFxLibrary({
         : match?.[0] || "custom";
     element("pointer-description").textContent = !settings
       ? native
-        ? "Preserve the pointer settings from this session's original saved baseline."
-        : "Preserve the underlying desktop or shell pointer configuration."
+        ? sharedBase
+          ? "Preserve whole-window wobble from your shared Niri configuration."
+          : "Preserve whole-window wobble from this session's original saved baseline."
+        : "Preserve the underlying desktop or shell whole-window wobble configuration."
       : settings.strength === 0
-        ? "Explicitly disable pointer deformation when these settings are applied."
+        ? "Disable whole-window wobble when these settings are applied."
         : match
           ? match[1].description
           : "Your custom spring response.";
+    const movement = actionEffects(doc).movement;
+    element("pointer-movement-note").hidden = !native || nativeOptions.variant !== "fragment";
+    element("pointer-movement-note").textContent = element("pointer-movement-note").hidden
+      ? ""
+      : movement === "off"
+        ? "Move is Off: fragment dragging and timed Move effects are disabled. Pointer wobble remains a separate choice."
+        : (nativeSettings.fragment_preset
+            ? "Your continuous fragments take priority over whole-window wobble. "
+            : "When Move uses continuous fragments, they take priority over whole-window wobble. ") +
+          "Pointer wobble Off does not stop those fragments. Set Move to Off to disable fragment dragging and timed Move effects.";
     for (const key of pointerKeys) {
       const input = element("pointer-" + key);
       input.min = catalog.pointer_limits[key][0];
@@ -341,7 +359,7 @@ function createFxLibrary({
         ? "Off"
         : match?.[1].name || "custom";
     element("editor-pointer-summary").textContent =
-      "Pointer drag: " + summary + ". Try it from the Library or Preview combo.";
+      "Pointer wobble: " + summary + ". Try it from the Library or Preview combo.";
     element("try-pointer").disabled = !settings || settings.strength <= 0;
     element("pointer-export-note").hidden = element("pointer-kdl").hidden =
       !settings && !doc.actions?.movement && !doc.actions?.swap;
@@ -350,7 +368,7 @@ function createFxLibrary({
     pointerConsentValue = consentValue;
     element("activate-pointer-label").hidden = !settings || !pointerReady;
     element("activate-pointer-text").textContent =
-      settings?.strength === 0 ? "Apply pointer drag disabled" : "Apply pointer drag";
+      settings?.strength === 0 ? "Apply pointer wobble disabled" : "Apply pointer wobble";
     return summary;
   }
   element("combo-pointer-mode").onchange = () => {
@@ -644,7 +662,7 @@ function createFxLibrary({
               : title(actionMode(actions[action]))),
         )
         .join(" · ") +
-      " · Pointer drag: " +
+      " · Pointer wobble: " +
       syncPointer(doc);
     element("combo-name").value = doc.name;
     element("combo-mode").value = same ? "same" : "mixed";
@@ -696,20 +714,25 @@ function createFxLibrary({
     element("active-look").textContent = (native ? "Next login: " : "Active: ") + data.active_name;
     if (native) {
       nativeListing = data.native;
+      nativeRestoreAvailable = data.restore;
       const live = nativeListing.live;
-      element("native-session-help").textContent = live?.ready
-        ? "Apply your choices directly to this desktop and keep them for your next NiriFX login."
-        : "Choose your effects here and select them for your next NiriFX login.";
-      element("review-selection").textContent = live?.ready
-        ? "Review & apply"
-        : "Review next login";
+      element("native-session-help").textContent = sharedSelectionChanged()
+        ? "Your selected setup changed. Save or export any draft edits, then close and reopen Studio to continue with that setup."
+        : sharedBase
+          ? "Normal Niri settings are shared with this setup. Sessions already using the shared files reload them automatically; other NiriFX sessions use them at the next login."
+          : live?.ready
+            ? "Apply your choices directly to this desktop and keep them for your next NiriFX login."
+            : "Choose your effects here and select them for your next NiriFX login.";
+      element("review-selection").textContent =
+        sharedBase || live?.ready ? "Review & apply" : "Review next login";
       const selection = nativeListing.selection;
-      element("native-base").textContent =
-        "Editing bundle: " +
-        nativeListing.base_bundle +
-        ". Preserve inherits original baseline " +
-        nativeListing.baseline_bundle +
-        ".";
+      element("native-base").textContent = sharedBase
+        ? "Editing shared settings. Preserve follows your normal Niri configuration beneath the NiriFX effects."
+        : "Editing bundle: " +
+          nativeListing.base_bundle +
+          ". Preserve inherits original baseline " +
+          nativeListing.baseline_bundle +
+          ".";
       element("native-selected").textContent =
         "Next login: " + sessionName(selection.selected, "Stock Niri");
       element("native-rollback").textContent =
@@ -721,9 +744,11 @@ function createFxLibrary({
       element("native-running").textContent =
         "Running: " +
         (running.status === "matched"
-          ? live && !live.ready
-            ? "NiriFX; effects not confirmed"
-            : sessionName(live?.loaded_bundle || running.bundle_id, "NiriFX session")
+          ? sharedBase
+            ? "NiriFX; loaded effects not independently confirmed"
+            : live && !live.ready
+              ? "NiriFX; effects not confirmed"
+              : sessionName(live?.loaded_bundle || running.bundle_id, "NiriFX session")
           : running.status === "external"
             ? "Another Niri session"
             : running.status === "offline"
@@ -748,8 +773,30 @@ function createFxLibrary({
         : nativeListing.recipe
           ? "This recipe uses another baseline. Relaunch Studio with that bundle as --native-base to edit it."
           : "This bundle has no editable recipe. Preserve keeps its existing configuration.";
+      const selectedShared = nativeListing.shared_state?.selected === true;
+      element("native-share").hidden = !nativeOptions.shared_config_configured || selectedShared;
+      element("native-recovery").hidden = !nativeListing.recovery_available;
+      element("native-shared-settings").hidden =
+        !nativeOptions.shared_config_configured && !sharedBase && !selectedShared;
+      element("native-shared-help").textContent = selectedShared
+        ? "Normal Niri settings stay in their original files. NiriFX manages separate effect files. Frozen recovery selects a saved configuration for the next login without undoing your normal settings."
+        : nativeListing.recipe
+          ? "Share the selected saved settings with your normal Niri configuration. Review the connected files first. Your unsaved Studio draft is not used or changed."
+          : "Choose your effects and apply them first, then share the saved settings. Your unsaved Studio draft is not used for sharing.";
+      updateNativeButtons();
     }
     cards();
+  }
+  function updateNativeButtons() {
+    if (!native || !nativeListing) return;
+    const changed = sharedSelectionChanged();
+    element("review-selection").disabled = busy || changed;
+    element("restore-selection").disabled = busy || changed || !nativeRestoreAvailable;
+    element("apply-selection").disabled = busy || (changed && !review?.recovery);
+    element("native-reopen").disabled = busy || changed || !nativeListing.reopen;
+    element("native-share").disabled =
+      busy || changed || !nativeListing.recipe || element("native-share").hidden;
+    element("native-recovery").disabled = busy || element("native-recovery").hidden;
   }
   async function operation(work) {
     if (busy) return;
@@ -768,6 +815,8 @@ function createFxLibrary({
       "restore-selection",
       "apply-selection",
       "native-reopen",
+      "native-share",
+      "native-recovery",
     ])
       element(id).disabled = true;
     try {
@@ -791,6 +840,7 @@ function createFxLibrary({
         element("remove-profile").disabled =
         element("apply-selection").disabled =
           false;
+      updateNativeButtons();
     }
   }
   element("review-selection").onclick = () =>
@@ -818,28 +868,35 @@ function createFxLibrary({
       review = { selection, expected: plan.plan_sha256 };
       showReview(
         plan,
-        (native && plan.activation !== "live-and-next-login"
-          ? "Select for next login: "
-          : "Apply ") +
+        (native && plan.activation === "config-written"
+          ? "Update shared settings: "
+          : native && plan.activation !== "live-and-next-login"
+            ? "Select for next login: "
+            : "Apply ") +
           doc.name +
           ". ",
       );
     });
   function showReview(plan, message) {
     const live = native && plan.activation === "live-and-next-login";
+    const shared = native && plan.activation === "config-written";
     element("apply-selection").textContent = native
-      ? live
-        ? "Apply to desktop"
-        : "Select for next login"
+      ? shared
+        ? "Apply shared settings"
+        : live
+          ? "Apply to desktop"
+          : "Select for next login"
       : "Apply these changes";
     element("review-summary").textContent =
       message +
       (native
-        ? live
-          ? "Update this desktop and your next NiriFX login. Your previous selection stays available for rollback."
-          : "Your current desktop stays unchanged. The previous selection stays available for rollback."
+        ? shared
+          ? "Update the shared configuration files. Sessions already using these files reload automatically; other NiriFX sessions use them at the next login. Studio cannot independently confirm what the running desktop loaded."
+          : live
+            ? "Update this desktop and your next NiriFX login. Your previous selection stays available for rollback."
+            : "Your current desktop stays unchanged. The previous selection stays available for rollback."
         : plan.notes.join(" "));
-    element("review-file-details").open = !native;
+    element("review-file-details").open = !native || shared;
     element("review-notes").hidden = !native;
     element("review-notes").textContent = native ? plan.notes.join(" ") : "";
     element("review-files").replaceChildren();
@@ -849,30 +906,69 @@ function createFxLibrary({
       element("review-files").append(row);
     }
     if (!plan.changes.length && !live)
-      element("review-summary").textContent = native
-        ? "This next-login selection is already stored. The running session stays unchanged."
-        : "This look is already applied.";
+      element("review-summary").textContent = shared
+        ? "Shared configuration files already match these choices. Running settings have not been independently confirmed."
+        : native
+          ? "This next-login selection is already stored. The running session stays unchanged."
+          : "This look is already applied.";
     element("apply-review").hidden = false;
     element("apply-review").scrollIntoView({ block: "nearest" });
+  }
+  function nativeResultMessage(result, { adopted, recovered }) {
+    if (recovered)
+      return "Selected frozen recovery for your next NiriFX login. Normal Niri settings were not changed. Save any draft edits, then close and reopen Studio.";
+    if (adopted)
+      return "Shared saved configuration files updated. Sessions already using these files reload automatically; other NiriFX sessions use them at the next login. The running desktop has not been independently confirmed. Your draft is unchanged. Save or export it, then close and reopen Studio.";
+    if (result.activation === "config-written")
+      return "Updated shared configuration files. Sessions already using these files reload automatically; other NiriFX sessions use them at the next login. The running desktop has not been independently confirmed.";
+    if (result.live?.status === "applied")
+      return "Applied to this desktop and saved for your next NiriFX login.";
+    if (result.live && ["failed", "unconfirmed", "unavailable"].includes(result.live.status))
+      return "Saved for next login. The desktop update was not confirmed. " + result.live.detail;
+    return result.selection?.selected === null
+      ? "No managed version is selected. Your current session stays unchanged. Choose stock Niri at the next login."
+      : "Selected for next login. Your current session stays unchanged. Log out when ready and choose NiriFX.";
   }
   element("apply-selection").onclick = () =>
     operation(async () => {
       if (!review) throw new Error("Review the current selection first");
-      const result = review.rollback
-        ? await post("/rollback-apply", { expected: review.expected })
-        : await post("/apply", review);
+      const adopted = review.shared,
+        recovered = review.recovery;
+      const result = adopted
+        ? await post("/shared-apply", { expected: review.expected })
+        : recovered
+          ? await post("/recovery-apply", { expected: review.expected })
+          : review.rollback
+            ? await post("/rollback-apply", { expected: review.expected })
+            : await post("/apply", review);
+      if (adopted || recovered) nativeSetupChanged = true;
       invalidate();
       element("status").textContent = native
-        ? result.live?.status === "applied"
-          ? "Applied to this desktop and saved for your next NiriFX login."
-          : result.live && ["failed", "unconfirmed", "unavailable"].includes(result.live.status)
-            ? "Saved for next login. The desktop update was not confirmed. " + result.live.detail
-            : result.selection?.selected === null
-              ? "No managed version is selected. Your current session stays unchanged. Choose stock Niri at the next login."
-              : "Selected for next login. Your current session stays unchanged. Log out when ready and choose NiriFX."
+        ? nativeResultMessage(result, { adopted, recovered })
         : "Applied. Use Restore previous to return to your earlier settings.";
     });
   element("cancel-review").onclick = invalidate;
+  element("native-share").onclick = () =>
+    operation(async () => {
+      const reviewedRevision = revision;
+      const plan = await post("/shared-review", {});
+      if (revision !== reviewedRevision)
+        throw new Error("Selection changed. Review sharing again.");
+      review = { shared: true, expected: plan.plan_sha256 };
+      showReview(plan, "Share saved settings. Your unsaved Studio draft is not used or changed. ");
+    });
+  element("native-recovery").onclick = () =>
+    operation(async () => {
+      const reviewedRevision = revision;
+      const plan = await post("/recovery-review", {});
+      if (revision !== reviewedRevision)
+        throw new Error("Selection changed. Review recovery again.");
+      review = { recovery: true, expected: plan.plan_sha256 };
+      showReview(
+        plan,
+        "Select frozen recovery for the next login. Your normal Niri settings and unsaved Studio draft stay unchanged. ",
+      );
+    });
   function suggestedCopy(name) {
     for (let index = 1; ; index++) {
       const suffix = " copy" + (index > 1 ? " " + index : "");
@@ -1031,9 +1127,11 @@ function createFxLibrary({
         review = { rollback: true, expected: plan.plan_sha256 };
         showReview(
           plan,
-          plan.activation === "live-and-next-login"
-            ? "Restore your previous effects. "
-            : "Restore the previous next-login selection. ",
+          plan.activation === "config-written"
+            ? "Restore shared effects. "
+            : plan.activation === "live-and-next-login"
+              ? "Restore your previous effects. "
+              : "Restore the previous next-login selection. ",
         );
         return;
       }
@@ -1051,9 +1149,11 @@ function createFxLibrary({
   element("native-session").hidden = !native;
   if (native) {
     element("active-look").hidden = true;
-    element("review-selection").textContent = "Review next login";
+    element("review-selection").textContent = sharedBase ? "Review & apply" : "Review next login";
     element("restore-selection").textContent = "Review rollback";
-    element("apply-selection").textContent = "Select for next login";
+    element("apply-selection").textContent = sharedBase
+      ? "Apply shared settings"
+      : "Select for next login";
     element("native-reopen").textContent = "Reopen saved choices";
     document.querySelector('[data-mode="movement"] small').textContent = "shader preview";
     element("pointer-kdl").textContent = "Export NiriFX session config";
@@ -1072,9 +1172,9 @@ function createFxLibrary({
   element("pointer-availability").textContent = !catalog.connection
     ? "Save pointer settings here, then use the local app with a verified pointer-enabled compositor to apply them."
     : native
-      ? "Pointer choices are validated against your NiriFX build. Review shows whether they can be applied to this desktop or saved for your next login."
+      ? "Pointer wobble choices are validated against your NiriFX build. Review shows whether they can be applied to this desktop or saved for your next login."
       : pointerReady
-        ? "This running compositor supports pointer drag. Select settings, then explicitly enable them in Review & apply."
+        ? "This running compositor supports pointer wobble. Select settings, then explicitly enable them in Review & apply."
         : catalog.connection.pointer?.target_detail ||
           "Pointer activation requires the standalone target and a verified running pointer extension. These settings can still be saved and exported.";
   view(

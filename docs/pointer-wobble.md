@@ -6,7 +6,7 @@ and settles after release. Its spring responds to actual drag events.
 
 Pointer wobble is included in the full **NiriFX session**. After
 [session setup](native-session.md), open `niri-fx studio --target native`, choose
-a **Pointer drag** preset and review **Select for next login**. It does not
+a **Pointer wobble** preset and review **Select for next login**. It does not
 require a separate pointer build. The 0.18 wheel includes portable profiles, interactive browser previews
 and Studio controls, with reviewed standalone Apply/Restore when the running
 renderer verifies support. Browser previews use synthetic window content and
@@ -106,7 +106,7 @@ python3 -m niri_fx doctor --niri-binary /path/to/patched/niri
 python3 -m niri_fx studio --target standalone --niri-binary /path/to/patched/niri
 ```
 
-After choosing a pointer profile, **Apply pointer drag** is offered
+After choosing a pointer profile, **Apply pointer wobble** is offered
 only when the running renderer and executable match. **Review & apply** describes
 the changes; Apply verifies support again before writing. **Restore previous**
 restores the saved files unless later edits conflict. See [setup](setup.md) for

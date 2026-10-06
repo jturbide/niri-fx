@@ -80,7 +80,9 @@ def _bundle_path(root, bundle_id):
     return _path(_path(root) / "bundles" / bundle_id)
 
 
-def _bundle_id(binary_sha256, config_sha256, metadata, config_files=None, customization=None):
+def _bundle_id(
+    binary_sha256, config_sha256, metadata, config_files=None, customization=None, *, shared=None
+):
     identity = {
         "binary_sha256": binary_sha256,
         "config_sha256": config_sha256,
@@ -90,6 +92,8 @@ def _bundle_id(binary_sha256, config_sha256, metadata, config_files=None, custom
         identity["config_files"] = config_files
     if customization is not None:
         identity["customization"] = customization
+    if shared is not None:
+        identity["shared"] = shared
     return native_build.fingerprint(identity)
 
 
@@ -119,9 +123,12 @@ def inspect_bundle(root, bundle_id):
     }
     config_files = receipt.get("config_files")
     customization = receipt.get("customization")
+    shared = receipt.get("shared")
+    if receipt.get("schema") == 4:
+        fields.add("shared")
     if receipt.get("schema") == 3:
         fields.add("customization")
-    if receipt.get("schema") in (2, 3):
+    if receipt.get("schema") in (2, 3, 4):
         fields.add("config_files")
         if (
             not isinstance(config_files, dict)
@@ -138,7 +145,7 @@ def inspect_bundle(root, bundle_id):
     if (
         set(receipt) != fields
         or type(receipt["schema"]) is not int
-        or receipt["schema"] not in (1, 2, 3)
+        or receipt["schema"] not in (1, 2, 3, 4)
         or receipt["bundle_id"] != bundle_id
         or receipt["binary"] != "bin/niri"
         or receipt["config"] != "config.kdl"
@@ -152,6 +159,7 @@ def inspect_bundle(root, bundle_id):
             receipt["native_build"],
             config_files,
             customization,
+            shared=shared,
         )
         != bundle_id
     ):
@@ -206,6 +214,17 @@ def inspect_bundle(root, bundle_id):
         baseline_data = _read(baseline, MAX_CONFIG_BYTES, mode=0o600)
         public_recipe = validate_customization(customization, files, baseline_data, variant=variant)
         config_evidence.append((baseline, baseline_data))
+    if receipt["schema"] == 4:
+        from .native_shared import FILES, validate_shared
+
+        assets = {}
+        for key, name in FILES.items():
+            path = folder / name
+            assets[key] = _read(path, MAX_CONFIG_BYTES, mode=0o600)
+            config_evidence.append((path, assets[key]))
+        public_recipe = validate_shared(
+            root, shared, receipt["binary_sha256"], assets, variant=variant
+        )
     evidence = [(provenance / "manifest.json", manifest_data)]
     evidence.append(
         (
@@ -247,6 +266,14 @@ def inspect_bundle(root, bundle_id):
     }
     if public_recipe is not None:
         result["customization"] = public_recipe
+    if shared is not None:
+        result.update(
+            shared=shared,
+            recovery_config=str(config),
+            recovery_config_sha256=receipt["config_sha256"],
+            config=shared["runtime_config"],
+            config_sha256=shared["runtime_sha256"],
+        )
     return result
 
 
@@ -440,6 +467,10 @@ def _selection_plan(root, bundle_id, *, rollback=False):
             raise ValueError("No previous native session selection is available")
         bundle_id = before["previous"]
     selected = inspect_bundle(root, bundle_id) if bundle_id is not None else None
+    if selected is not None and selected.get("shared") is not None:
+        from .native_shared import selection_plan
+
+        return selection_plan(root, bundle_id)
     after = (
         before
         if before["selected"] == bundle_id

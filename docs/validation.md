@@ -15,6 +15,37 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
 
+## Shared desktop settings (Unreleased)
+
+An owned nested session using the full four-patch desktop build accepted shared
+adoption with both the stock and retained native parsers. Editing an included
+normal-settings file triggered automatic reload in the same compositor process.
+A reviewed effect update disabled continuous fragments through the renderer IPC
+contract, without sending a configuration-load action. Explicit Swap Off passed
+native parsing; this check does not measure swapped-window pixels.
+
+A real stock-parser rejection rolled back NiriFX's owned writes and preserved
+the external source edit. Deleting the normal configuration still allowed frozen
+recovery selection, and that closed recovery booted in a second owned compositor.
+Temporary integration tests cover stale reviews, source ownership, historical
+projection bytes, both validation targets and browser request boundaries.
+Standalone review, stale Apply and historical Restore refuse shared ownership
+even when adoption preserves identical configuration bytes. An
+installed wheel passed the same CLI/Studio adoption and recovery workflows.
+
+The browser workflow verifies adoption, Cancel, preserved unsaved drafts, stale
+editor refusal and frozen recovery. Pointer wobble Off leaves continuous
+fragments selected by Move intact; Move Off disables that response. These UI
+checks use synthetic configuration and a stub validator; the nested checks above
+cover real executables separately.
+
+Shared file updates report unverified active contents because Niri's reload
+event does not identify the loaded revision. First adoption still needs a new
+NiriFX login to use its shared wrapper. Physical login, shell upgrades and daily
+mixed-monitor use remain on the roadmap. Reproduce the temporary integration
+checks with `python3 -m unittest discover -s tests -p 'test_*shared*.py' -v`;
+see [shared settings](shared-settings.md) for adoption and recovery commands.
+
 ## Independent swaps and Studio selection (Unreleased)
 
 The full four-patch desktop build passes native configuration, animation and

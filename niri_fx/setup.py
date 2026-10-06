@@ -332,6 +332,26 @@ def launcher_change():
     return change(target, desktop_entry())
 
 
+def _standalone_owner(config, files=()):
+    # Adoption can preserve the exact stock bytes. Hash checks alone cannot
+    # authorize a former standalone writer or Restore after ownership changes.
+    # Older snapshots omit validation_config; their file targets still identify
+    # the include boundary, including transactions that changed only its bytes.
+    paths = ([config] if config else []) + [
+        item[key] for item in files for key in ("logical", "target")
+    ]
+    for value in paths:
+        path = Path(value).expanduser().absolute()
+        receipts = [path.parent / "nirifx/shared.json"]
+        if path.name == "animations.kdl" and path.parent.name == "nirifx":
+            receipts.append(path.with_name("shared.json"))
+        if any(os.path.lexists(receipt) for receipt in receipts):
+            raise ValueError(
+                "These effects belong to shared NiriFX settings. Reopen Studio with "
+                "--target native; use reviewed shared rollback or frozen recovery."
+            )
+
+
 def plan_setup(args, effect, custom=None):
     config = Path(args.config).expanduser().absolute()
     target = args.target
@@ -339,6 +359,8 @@ def plan_setup(args, effect, custom=None):
         target = (
             "inir" if (Path(args.inir_root) / "scripts/niri-config.py").is_file() else "standalone"
         )
+    if target == "standalone":
+        _standalone_owner(config)
     changes, notes = [], []
     movement = None
     pointer = None
@@ -520,6 +542,7 @@ def summarize(plan):
         "pointer_activation": plan.get("pointer_activation"),
         "native_live": plan.get("native_live"),
         "validation_binary": plan.get("validation_binary"),
+        "validation_checks": plan.get("validation_checks", []),
         "changes": [
             {
                 "path": c["logical"],
@@ -554,6 +577,7 @@ def plan_fingerprint(plan):
         "native_live": plan.get("native_live"),
         "activation": plan.get("activation"),
         "validation_binary": plan.get("validation_binary"),
+        "validation_checks": plan.get("validation_checks", []),
         "changes": [
             {k: item[k] for k in ("logical", "target", "mode")}
             | {side: digest(item[side]) for side in ("before", "after")}
@@ -602,6 +626,8 @@ def apply_plan(plan, state, expected=None):
     and other tools do not honor it, so every write also checks current bytes.
     Multi-file writes are sequential, not crash-atomic; snapshots aid recovery.
     """
+    if plan["target"] == "standalone":
+        _standalone_owner(plan.get("validation_config"), plan.get("observed", plan["changes"]))
     if expected is not None and expected != plan_fingerprint(plan):
         raise ValueError(
             "The setup plan changed. Review the selection and files again before applying."
@@ -630,6 +656,8 @@ def apply_plan(plan, state, expected=None):
     state.mkdir(parents=True, exist_ok=True, mode=0o700)
     with (state / ".lock").open("a") as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
+        if plan["target"] == "standalone":
+            _standalone_owner(plan.get("validation_config"), plan.get("observed", plan["changes"]))
         for item in plan.get("observed", plan["changes"]):
             check_unchanged(item, item["before"])
         identifier = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ-") + uuid.uuid4().hex[:8]
@@ -642,6 +670,7 @@ def apply_plan(plan, state, expected=None):
             "target": plan["target"],
             "validation_config": plan.get("validation_config"),
             "validation_binary": plan.get("validation_binary"),
+            "validation_checks": plan.get("validation_checks", []),
             "files": [],
         }
         if plan.get("selection_document") is not None:
@@ -673,6 +702,8 @@ def apply_plan(plan, state, expected=None):
                     validate_config(plan["validation_config"], plan["validation_binary"])
                 else:
                     validate_config(plan["validation_config"])
+            for check in plan.get("validation_checks", []):
+                validate_config(check["config"], check["binary"])
             manifest["status"] = "applied"
             save()
         except BaseException:
@@ -733,6 +764,8 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
         if selected is None:
             raise ValueError("No applied setup snapshot remains to restore")
         path, data = selected
+        if data["target"] == "standalone":
+            _standalone_owner(data.get("validation_config"), data["files"])
         if data["target"].startswith("native-session-"):
             raise ValueError(
                 "Native bundles are retained for running sessions and recovery. "
@@ -806,6 +839,8 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
                     )
                     for restored_config in paths:
                         validate_config(restored_config, validator)
+                for check in data.get("validation_checks", []):
+                    validate_config(check["config"], check["binary"])
             except BaseException:
                 for item, before, after in reversed(restored):
                     if _still_owned(item, before):

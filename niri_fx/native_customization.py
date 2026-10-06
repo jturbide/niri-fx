@@ -195,7 +195,7 @@ def read_recipe(root, bundle_id):
 
 
 def _owned_files(report):
-    folder = Path(report["config"]).parent.resolve()
+    folder = Path(report.get("recovery_config", report["config"])).parent.resolve()
     return {
         Path(item["target"]).relative_to(folder).as_posix(): item["before"]
         for item in report["observed"]
@@ -205,6 +205,11 @@ def _owned_files(report):
 def configure_plan(root, base_bundle, document, *, fragment_preset=None):
     """Review a new immutable pair and a selector change; never query the desktop."""
     root = native_session._path(root)
+    source = native_session.inspect_bundle(root, base_bundle)
+    if source.get("shared") is not None:
+        from .native_shared import configure_shared_plan
+
+        return configure_shared_plan(root, base_bundle, document, fragment_preset=fragment_preset)
     selector = native_session._path(root / "selection.json")
     selected_bytes = (
         native_session._read(selector, native_session.MAX_METADATA_BYTES, mode=0o600)
@@ -212,7 +217,6 @@ def configure_plan(root, base_bundle, document, *, fragment_preset=None):
         else None
     )
     selected = native_session._parse_selection(selected_bytes)
-    source = native_session.inspect_bundle(root, base_bundle)
     source_files = _owned_files(source)
     original = native_session._object(source_files["bundle.json"], "native session bundle")
     document, effect = _document(document)
@@ -353,6 +357,10 @@ def configure_plan(root, base_bundle, document, *, fragment_preset=None):
 def apply_native(plan, root, *, expected=None):
     """Use the selector's shared transaction lock and retain every older bundle."""
     root = native_session._path(root)
+    if plan.get("shared") is not None:
+        from .native_shared import apply_shared
+
+        return apply_shared(plan, root, expected=expected)
     result = apply_plan(plan, root / "state/selection", expected)
     result.pop("restore", None)
     return result | {"activation": "next-login", "dry_run": False}
