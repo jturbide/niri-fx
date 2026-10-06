@@ -13910,28 +13910,28 @@
       "bytes": 585586,
       "sources": {
         "examples/profiles/fragment-flow.json": "4682b9ce7120031d653243da9505f6c190a8d9d412ac37310e7492581e6c6bf5",
-        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
+        "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
-        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
-        "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
+        "niri_fx/preview.py": "2ddd08e171f1eb55182d2528e5f706223a09cdc013d483db860d4a9847740707",
+        "niri_fx/combo-preview.js": "79a874ab963a16d1117c08927dd6505c97bc272013f3af86fefde0b193654a47",
+        "niri_fx/studio.js": "746a1ac0499bb3f05c74e01e2714c258cf3e637a24fe8bd1b2ff605717445b3b",
+        "niri_fx/preview.html": "65b1e212e67e59c720ba1a336d338665e21ba30274f9c6523cbdf18a805080de",
+        "niri_fx/studio.css": "013107bfce778311162795f24a883b22ea09405788415f731b395c7dde6ec065",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
         "niri_fx/shaders/gravity.glsl": "1921c9e364530bd6f3194d27e6cfef456f61ba4363a8195ed212665533be341a"
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
-        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
+        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
+        "inputs_sha256": "a4af69808ba067d656dac6d47bc21f835e2a5219649a52ac74f48e6e234e375d",
         "studio": {
           "version": "0.20.0",
-          "build": "9a5f97c64b16"
+          "build": "49feca05f16e"
         },
         "tool_sources": {
-          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
           "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
         }
       }
@@ -19249,14 +19249,14 @@
       "bytes": 944257,
       "sources": {
         "examples/profiles/geometric-flow.json": "664664c83b401b10b41378e340be01bf416e21fcbb02c70f8d905282388c9b00",
-        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
+        "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
-        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
-        "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
+        "niri_fx/preview.py": "2ddd08e171f1eb55182d2528e5f706223a09cdc013d483db860d4a9847740707",
+        "niri_fx/combo-preview.js": "79a874ab963a16d1117c08927dd6505c97bc272013f3af86fefde0b193654a47",
+        "niri_fx/studio.js": "746a1ac0499bb3f05c74e01e2714c258cf3e637a24fe8bd1b2ff605717445b3b",
+        "niri_fx/preview.html": "65b1e212e67e59c720ba1a336d338665e21ba30274f9c6523cbdf18a805080de",
+        "niri_fx/studio.css": "013107bfce778311162795f24a883b22ea09405788415f731b395c7dde6ec065",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/fragment-shapes.glsl": "a0365ba693dd4611ce1a466dff025298e3a57da9c2390524338e027571231e40",
         "niri_fx/shaders/shaped-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
@@ -19264,14 +19264,14 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
-        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
+        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
+        "inputs_sha256": "a4af69808ba067d656dac6d47bc21f835e2a5219649a52ac74f48e6e234e375d",
         "studio": {
           "version": "0.20.0",
-          "build": "9a5f97c64b16"
+          "build": "49feca05f16e"
         },
         "tool_sources": {
-          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
           "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
         }
       }
@@ -19808,28 +19808,28 @@
       "bytes": 531015,
       "sources": {
         "examples/profiles/ribbon-current.json": "8f48fff1b88db8ec3d0faf4d105a257568b836cf8d177d7c9b4e0dfd80e37208",
-        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
+        "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
-        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
-        "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
+        "niri_fx/preview.py": "2ddd08e171f1eb55182d2528e5f706223a09cdc013d483db860d4a9847740707",
+        "niri_fx/combo-preview.js": "79a874ab963a16d1117c08927dd6505c97bc272013f3af86fefde0b193654a47",
+        "niri_fx/studio.js": "746a1ac0499bb3f05c74e01e2714c258cf3e637a24fe8bd1b2ff605717445b3b",
+        "niri_fx/preview.html": "65b1e212e67e59c720ba1a336d338665e21ba30274f9c6523cbdf18a805080de",
+        "niri_fx/studio.css": "013107bfce778311162795f24a883b22ea09405788415f731b395c7dde6ec065",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/slices-entry.glsl": "b53cc7e606bc5c8051bbc62bf392f4f3cd79ca7be2db062437c47677e7090200",
         "niri_fx/shaders/slices.glsl": "a8410a9c9d4d6914be413e42f8fc442b57bfdb1536a8b3f6ece1f785eb931ec3"
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
-        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
+        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
+        "inputs_sha256": "a4af69808ba067d656dac6d47bc21f835e2a5219649a52ac74f48e6e234e375d",
         "studio": {
           "version": "0.20.0",
-          "build": "9a5f97c64b16"
+          "build": "49feca05f16e"
         },
         "tool_sources": {
-          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
           "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
         }
       }
@@ -20366,14 +20366,14 @@
       "bytes": 252252,
       "sources": {
         "examples/profiles/soft-landing.json": "f3d93b054f586066ad083f8b1144750c8d050ed8a82d8c6e10df7b8d4ece6196",
-        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
+        "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
-        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
-        "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
+        "niri_fx/preview.py": "2ddd08e171f1eb55182d2528e5f706223a09cdc013d483db860d4a9847740707",
+        "niri_fx/combo-preview.js": "79a874ab963a16d1117c08927dd6505c97bc272013f3af86fefde0b193654a47",
+        "niri_fx/studio.js": "746a1ac0499bb3f05c74e01e2714c258cf3e637a24fe8bd1b2ff605717445b3b",
+        "niri_fx/preview.html": "65b1e212e67e59c720ba1a336d338665e21ba30274f9c6523cbdf18a805080de",
+        "niri_fx/studio.css": "013107bfce778311162795f24a883b22ea09405788415f731b395c7dde6ec065",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/dissolve.glsl": "d2e377d21b9240c98ae86a9b955ece1675760ad2310eda4f71482f3d68749966",
         "niri_fx/shaders/edge-color.glsl": "7c424de26bb4581033933f6fdd29cc121514716451f2c34fa9414f6ed8638512",
@@ -20383,14 +20383,14 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
-        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
+        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
+        "inputs_sha256": "a4af69808ba067d656dac6d47bc21f835e2a5219649a52ac74f48e6e234e375d",
         "studio": {
           "version": "0.20.0",
-          "build": "9a5f97c64b16"
+          "build": "49feca05f16e"
         },
         "tool_sources": {
-          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
           "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
         }
       }
@@ -21694,14 +21694,14 @@
       "bytes": 456503,
       "sources": {
         "examples/profiles/playful-motion.json": "7ca0a7c40231e9eac8b73d51bb31c38520c38a199642337888c41aa2192bf878",
-        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
-        "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
+        "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
+        "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
-        "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
-        "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
-        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
-        "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
+        "niri_fx/preview.py": "2ddd08e171f1eb55182d2528e5f706223a09cdc013d483db860d4a9847740707",
+        "niri_fx/combo-preview.js": "79a874ab963a16d1117c08927dd6505c97bc272013f3af86fefde0b193654a47",
+        "niri_fx/studio.js": "746a1ac0499bb3f05c74e01e2714c258cf3e637a24fe8bd1b2ff605717445b3b",
+        "niri_fx/preview.html": "65b1e212e67e59c720ba1a336d338665e21ba30274f9c6523cbdf18a805080de",
+        "niri_fx/studio.css": "013107bfce778311162795f24a883b22ea09405788415f731b395c7dde6ec065",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/elastic-entry.glsl": "74de1e74ff530108cf8bf514ae174fe575f7076669603886d20d026e183411b0",
         "niri_fx/shaders/elastic.glsl": "f7c61ec8e3d21a9a1a11ad918ec5696f9ed1be464bc96d8757e4a1cf88e68da1",
@@ -21710,14 +21710,14 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "7e5b267d3319d187c0681950829a1e6bc5ecfe06f77a81d65800595172c14e2a",
-        "inputs_sha256": "9ceb6eeab6260f7c129237006cb2b86c99b28c4b0977cc032eb273af33a37301",
+        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
+        "inputs_sha256": "a4af69808ba067d656dac6d47bc21f835e2a5219649a52ac74f48e6e234e375d",
         "studio": {
           "version": "0.20.0",
-          "build": "9a5f97c64b16"
+          "build": "49feca05f16e"
         },
         "tool_sources": {
-          "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
+          "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
           "scripts/lib/browser.mjs": "7cfc9083e2b9a26c6f4aa7714a709d81cfb6a28500185cc5543446f6b7ae0a7a"
         }
       }

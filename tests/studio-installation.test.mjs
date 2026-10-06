@@ -152,7 +152,7 @@ print(preview_document(PRESETS['balanced'],connection=connection,hosted=kind=='h
 
 const snapshot = (browser) =>
   browser.evaluate(`({
-  document:effectDocument(),parameters,editHistory,historyIndex,editingAction,mode,progress,seed,sessionSettings,
+  document:effectDocument(),parameters,editHistory,historyIndex,editingAction,mode,progress,seed,
   href:location.href,status:byId('status').textContent,error:byId('error').textContent,
   undo:byId('undo').disabled,redo:byId('redo').disabled,
   selection:byId('selection-actions').textContent
@@ -168,11 +168,18 @@ test("local heartbeat reports same-version runtime changes without touching unsa
   assert.equal(await browser.evaluate("installationHeartbeats.length"), 1);
   assert.equal(view.requests.includes("/ping"), false);
   assert.equal(await browser.evaluate("byId('installation-notice').hidden"), true);
+  await browser.evaluate(`
+    byId('native-fragment-preset').value='tear';
+    byId('native-fragment-preset').dispatchEvent(new Event('change'));
+    byId('fragment-response-max_lag').value='555';
+    byId('fragment-response-max_lag').dispatchEvent(new Event('change'));
+  `);
   await browser.evaluate(
     "byId('show-editor').click();byId('spin').value=175;byId('spin').dispatchEvent(new Event('input'))",
   );
   const draft = await snapshot(browser);
   assert(draft.historyIndex > 0);
+  assert.equal(draft.document.fragment_motion.max_lag, 555);
   const version = await browser.evaluate("catalog.studio.version");
   await view.check(status("changed", version));
   assert.equal(await browser.evaluate("byId('installation-notice').hidden"), false);

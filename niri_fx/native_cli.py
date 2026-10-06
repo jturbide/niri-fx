@@ -20,6 +20,8 @@ def add_parser(commands):
     presets.add_argument(
         "--text", action="store_true", help="Print concise preset names and descriptions"
     )
+    export = actions.add_parser("export", help="Export a complete saved recipe as portable JSON")
+    export.add_argument("bundle", help="Retained bundle with a saved effects recipe")
     status = actions.add_parser("status", help="Inspect installed bundles and next-login selection")
     status.add_argument(
         "--offline", action="store_true", help="Inspect stored bundles without connecting to Niri"
@@ -121,6 +123,7 @@ def add_parser(commands):
         )
     for command in (
         status,
+        export,
         stage,
         install,
         select,
@@ -170,6 +173,14 @@ def run(args):
             print(json.dumps(choices, indent=2))
         return
     root = args.root.expanduser().absolute()
+    if action == "export":
+        from .native_customization import portable_recipe
+
+        recipe = portable_recipe(root, args.bundle)
+        if recipe is None:
+            raise ValueError("This bundle has no saved recipe; choose and save effects first")
+        print(json.dumps(recipe["document"], indent=2))
+        return
     if getattr(args, "expect_plan", None) and not args.apply:
         raise ValueError("--expect-plan requires --apply")
     if action in ("share", "recover") and args.apply and not args.expect_plan:
@@ -247,7 +258,6 @@ def run(args):
                 root,
                 args.bundle,
                 document,
-                fragment_preset=args.fragment_preset,
             )
             scope = "selection"
         elif action == "share":

@@ -9,8 +9,6 @@ function createFxLibrary({
   edit,
   favorites,
   favorite,
-  sessionSettings,
-  sessionChanged,
 }) {
   const element = (id) => document.getElementById(id);
   const core = createEffectCore(catalog);
@@ -23,7 +21,6 @@ function createFxLibrary({
   const sharedSelectionChanged = () =>
     nativeSetupChanged ||
     (!!nativeListing && sharedBase !== (nativeListing.shared_state?.selected === true));
-  const nativeSettings = sessionSettings || { fragment_preset: null };
   const title = (id) => id.replaceAll("-", " ").replace(/\b\w/g, (c) => c.toUpperCase());
   const styles = Object.fromEntries(
     Object.entries(catalog.presets).map(([id, effect]) => [
@@ -99,14 +96,31 @@ function createFxLibrary({
   const normalized = (effect) => ({ ...effect, resize: false });
   const equal = (a, b) =>
     isStyle(a) && isStyle(b) && Object.keys(catalog.defaults).every((key) => a[key] === b[key]);
-  const fragmentChoices = nativeOptions?.fragment_choices || {};
+  const fragmentChoices = catalog.fragment_presets;
+  const fragmentControls = catalog.fragment_controls;
+  const fragmentDefaults = Object.fromEntries(
+    Object.entries(fragmentControls).map(([key, control]) => [key, control.default]),
+  );
+  const fragmentMatch = (settings) =>
+    settings &&
+    Object.entries(fragmentChoices).find(([, choice]) =>
+      Object.keys(fragmentControls).every((key) => choice.settings[key] === settings[key]),
+    );
+  const fragmentActive = (doc) =>
+    !!doc.fragment_motion &&
+    isStyle(doc.actions?.movement) &&
+    core.fragmentMotionEligible(doc.actions.movement);
   function chooseFragment(id) {
-    nativeSettings.fragment_preset = id || null;
-    if (id) {
-      const doc = profile();
+    const doc = profile();
+    if (Object.hasOwn(fragmentChoices, id)) {
       doc.actions.movement = structuredClone(fragmentChoices[id].effect);
-      select(doc, "movement", true);
-    } else sessionChanged();
+      doc.fragment_motion = structuredClone(fragmentChoices[id].settings);
+    } else if (id === "custom") {
+      doc.fragment_motion ||= structuredClone(fragmentDefaults);
+    } else delete doc.fragment_motion;
+    doc.schema = doc.fragment_motion ? catalog.profile_schema : 3;
+    select(core.normalizePreset(doc), "movement", true);
+    element("fragment-tuning").open = id === "custom";
   }
   function sessionName(bundle, fallback) {
     if (!bundle) return fallback;
@@ -120,9 +134,68 @@ function createFxLibrary({
     option.textContent = choice.name;
     element("native-fragment-preset").append(option);
   }
-  element("native-fragments").hidden = !native || nativeOptions.variant !== "fragment";
+  const customFragment = document.createElement("option");
+  customFragment.value = "custom";
+  customFragment.textContent = "Custom response";
+  element("native-fragment-preset").append(customFragment);
+  element("native-fragments").hidden = false;
   element("native-fragment-preset").onchange = () =>
     chooseFragment(element("native-fragment-preset").value);
+  const fragmentLabels = {
+    batches: "Response groups",
+    delay_near_ms: "Delay near the grab",
+    delay_far_ms: "Delay far from the grab",
+    delay_jitter: "Delay variation",
+    response_near_ms: "Catch-up time near the grab",
+    response_far_ms: "Catch-up time far from the grab",
+    response_jitter: "Catch-up variation",
+    distance_exponent: "Distance response curve",
+    max_lag: "Maximum separation",
+    pin_radius: "Attached area around the grab",
+    press_spread: "Spread when pressed",
+    press_response_ms: "Press response time",
+    rotation_mode: "Rotation follows",
+    rotation_degrees: "Maximum rotation",
+    rotation_response_ms: "Rotation response time",
+    rotation_speed: "Speed for maximum rotation",
+    tilt: "Maximum tilt",
+    release_ms: "Return time after release",
+  };
+  for (const [key, control] of Object.entries(fragmentControls)) {
+    const label = document.createElement("label"),
+      input = document.createElement(control.kind === "choice" ? "select" : "input");
+    input.id = "fragment-response-" + key;
+    label.htmlFor = input.id;
+    label.textContent = fragmentLabels[key] + (control.unit ? " (" + control.unit + ")" : "");
+    if (control.kind === "choice") {
+      for (const value of control.choices) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = title(value);
+        input.append(option);
+      }
+    } else {
+      input.type = "number";
+      input.min = control.minimum;
+      input.max = control.maximum;
+      input.step = control.kind === "integer" ? "1" : "any";
+      if (control.exclusive_min) input.title = "Must be greater than " + control.minimum;
+    }
+    input.onchange = () => {
+      const doc = profile();
+      if (!doc.fragment_motion) return;
+      try {
+        if (!input.value.trim()) throw new Error("Enter a value for " + fragmentLabels[key] + ".");
+        doc.fragment_motion[key] = control.kind === "choice" ? input.value : Number(input.value);
+        select(core.normalizePreset(doc), "movement");
+        element("error").textContent = "";
+      } catch (error) {
+        syncFragments(getDocument());
+        element("error").textContent = error.message;
+      }
+    };
+    element("fragment-fields").append(label, input);
+  }
   const actionEffects = (doc) =>
     doc.actions
       ? { swap: null, ...doc.actions }
@@ -137,11 +210,12 @@ function createFxLibrary({
     const doc = getDocument();
     return {
       kind: "profile",
-      schema: catalog.profile_schema,
+      schema: doc.fragment_motion ? catalog.profile_schema : 3,
       name: doc.name,
       actions: structuredClone(actionEffects(doc)),
       ...(doc.motion ? { motion: structuredClone(doc.motion) } : {}),
       ...(doc.pointer ? { pointer: structuredClone(doc.pointer) } : {}),
+      ...(doc.fragment_motion ? { fragment_motion: structuredClone(doc.fragment_motion) } : {}),
     };
   }
   const actionLabels = {
@@ -177,15 +251,16 @@ function createFxLibrary({
     );
   }
   function syncBrowse() {
-    const actions = actionEffects(getDocument());
+    const doc = getDocument(),
+      actions = actionEffects(doc);
     for (const button of element("library-actions").children) {
       const action = button.dataset.libraryAction;
       button.setAttribute("aria-pressed", String(action === browseAction));
       button.querySelector("small").textContent =
         action === "combo"
           ? "All actions together"
-          : action === "movement" && nativeSettings.fragment_preset
-            ? fragmentChoices[nativeSettings.fragment_preset].name
+          : action === "movement" && fragmentActive(doc)
+            ? (fragmentMatch(doc.fragment_motion)?.[1].name || "Custom") + " response"
             : isStyle(actions[action])
               ? styleName(actions[action])
               : title(actionMode(actions[action]));
@@ -204,8 +279,8 @@ function createFxLibrary({
           ? native && !nativeOptions.swap_supported
             ? "Preview and save a separate swap style here. Applying it requires an updated NiriFX compositor; this retained build shares the Move setting."
             : "For Swap window left/right commands. Preserve keeps the underlying swap setting, which follows Move when unset. Dragging and column reordering use Move."
-          : browseAction === "movement" && native
-            ? "Choose a style to preview its material. Continuous fragments follow your gestures on the NiriFX desktop."
+          : browseAction === "movement"
+            ? "Start with Gentle, Tear or Cascade. The canvas previews the material; continuous response follows gestures on a compatible NiriFX desktop. Editing material keeps your response settings."
             : "Click a style to preview it. Your other choices stay the same.";
   }
   for (const choice of ["preserve", "off"])
@@ -337,15 +412,15 @@ function createFxLibrary({
           ? match[1].description
           : "Your custom spring response.";
     const movement = actionEffects(doc).movement;
-    element("pointer-movement-note").hidden = !native || nativeOptions.variant !== "fragment";
+    element("pointer-movement-note").hidden = !doc.fragment_motion;
     element("pointer-movement-note").textContent = element("pointer-movement-note").hidden
       ? ""
       : movement === "off"
-        ? "Move is Off: fragment dragging and timed Move effects are disabled. Pointer wobble remains a separate choice."
-        : (nativeSettings.fragment_preset
+        ? "Move is Off: fragment dragging and timed Move effects are disabled. Your fragment response is saved. Pointer wobble remains a separate choice."
+        : (fragmentActive(doc)
             ? "Your continuous fragments take priority over whole-window wobble. "
-            : "When Move uses continuous fragments, they take priority over whole-window wobble. ") +
-          "Pointer wobble Off does not stop those fragments. Set Move to Off to disable fragment dragging and timed Move effects.";
+            : "Your fragment response is saved but inactive for this Move choice. ") +
+          "Pointer wobble Off does not stop continuous fragments. Set Move to Off to disable fragment dragging and timed Move effects.";
     for (const key of pointerKeys) {
       const input = element("pointer-" + key);
       input.min = catalog.pointer_limits[key][0];
@@ -362,7 +437,7 @@ function createFxLibrary({
       "Pointer wobble: " + summary + ". Try it from the Library or Preview combo.";
     element("try-pointer").disabled = !settings || settings.strength <= 0;
     element("pointer-export-note").hidden = element("pointer-kdl").hidden =
-      !settings && !doc.actions?.movement && !doc.actions?.swap;
+      !settings && !doc.actions?.movement && !doc.actions?.swap && !doc.fragment_motion;
     const consentValue = JSON.stringify(settings || null);
     if (pointerConsentValue !== consentValue) element("activate-pointer").checked = false;
     pointerConsentValue = consentValue;
@@ -478,9 +553,7 @@ function createFxLibrary({
       );
     element("library-results").replaceChildren();
     const continuous =
-      browseAction === "movement" &&
-      nativeOptions?.variant === "fragment" &&
-      ["recommended", "all"].includes(group)
+      browseAction === "movement" && ["recommended", "all"].includes(group)
         ? Object.entries(fragmentChoices).filter(([id, choice]) =>
             [id, choice.name, "continuous fragments"].join(" ").toLowerCase().includes(search),
           )
@@ -491,7 +564,13 @@ function createFxLibrary({
       const button = document.createElement("button");
       button.className = "library-look";
       button.dataset.fragment = id;
-      button.setAttribute("aria-pressed", String(nativeSettings.fragment_preset === id));
+      button.setAttribute(
+        "aria-pressed",
+        String(
+          fragmentMatch(getDocument().fragment_motion)?.[0] === id &&
+            equal(actionEffects(getDocument()).movement, choice.effect),
+        ),
+      );
       const name = document.createElement("strong");
       name.textContent = choice.name;
       const detail = document.createElement("small");
@@ -509,7 +588,7 @@ function createFxLibrary({
         String(
           browseAction === "combo"
             ? sameDocument(doc, getDocument())
-            : !(browseAction === "movement" && nativeSettings.fragment_preset) &&
+            : !(browseAction === "movement" && fragmentActive(getDocument())) &&
                 equal(actionEffects(getDocument())[browseAction], normalized(doc.effect)),
         ),
       );
@@ -520,7 +599,14 @@ function createFxLibrary({
       detail.textContent = doc.actions
         ? `${isStyle(a.open) ? title(a.open.family) : title(actionMode(a.open))} → ${isStyle(a.close) ? title(a.close.family) : title(actionMode(a.close))} combo`
         : title(doc.effect.family) +
-          (["movement", "swap"].includes(browseAction) ? " · Timed movement" : "");
+          (browseAction === "movement"
+            ? " · Move material"
+            : browseAction === "swap"
+              ? " · Timed swap"
+              : "");
+      if (doc.fragment_motion)
+        detail.textContent +=
+          " · " + (fragmentMatch(doc.fragment_motion)?.[1].name || "Custom") + " fragment response";
       if (Object.hasOwn(catalog.recommended_profiles, id))
         detail.textContent += " · " + catalog.recommended_profiles[id];
       if (id.startsWith("custom-") && !Object.hasOwn(managed, id))
@@ -530,7 +616,6 @@ function createFxLibrary({
         if (browseAction === "combo") select(core.normalizePreset(doc), "open", true);
         else {
           const chosen = profile();
-          if (browseAction === "movement") nativeSettings.fragment_preset = null;
           chosen.actions[browseAction] = normalized(doc.effect);
           select(chosen, browseAction, true);
         }
@@ -627,6 +712,33 @@ function createFxLibrary({
     review = null;
     element("apply-review").hidden = true;
   }
+  function syncFragments(doc) {
+    const response = doc.fragment_motion,
+      match = fragmentMatch(response),
+      movement = actionEffects(doc).movement;
+    element("native-fragment-preset").value = response ? match?.[0] || "custom" : "";
+    let description = response
+      ? (match ? match[1].description : "Your custom fragment response.") + " "
+      : "Timed movement uses the selected material without a continuous fragment response. ";
+    if (response && !fragmentActive(doc))
+      description +=
+        movement === "off"
+          ? "Move is Off. The response stays saved and becomes active again with a compatible Move style. "
+          : movement === null
+            ? "Move is Preserve. The response stays saved; the underlying desktop movement is used. "
+            : "This material does not support continuous fragments. The response stays saved and becomes active again with a compatible Move style. ";
+    description +=
+      "The canvas previews the material only; gesture response requires a compatible NiriFX compositor. JSON and My profiles keep the complete recipe.";
+    element("native-fragment-description").textContent = description;
+    for (const key of Object.keys(fragmentControls)) {
+      const input = element("fragment-response-" + key);
+      input.value = (response || fragmentDefaults)[key];
+      input.disabled = !response;
+    }
+    return response
+      ? (match?.[1].name || "Custom") + (fragmentActive(doc) ? "" : " (saved, inactive)")
+      : "Timed";
+  }
   function sync() {
     invalidate();
     const doc = getDocument(),
@@ -634,17 +746,6 @@ function createFxLibrary({
       selectedStyles = Object.values(actions).filter(isStyle),
       sharedStyle = selectedStyles[0] || remembered.open || normalized(catalog.presets.balanced),
       same = selectedStyles.every((effect) => equal(sharedStyle, effect));
-    if (
-      nativeSettings.fragment_preset &&
-      !equal(actions.movement, fragmentChoices[nativeSettings.fragment_preset]?.effect)
-    )
-      nativeSettings.fragment_preset = null;
-    const fragmentPreset = nativeSettings.fragment_preset;
-    element("native-fragment-preset").value = fragmentPreset || "";
-    element("native-fragment-description").textContent = fragmentPreset
-      ? fragmentChoices[fragmentPreset].description +
-        " The canvas previews its material only; the continuous response runs on your NiriFX desktop."
-      : "Preserve keeps the base movement. A movement Style uses its timed effect; Off disables movement animation. Choosing a continuous preset explicitly replaces the movement style. Editing that style clears the continuous preset.";
     element("selection-name").textContent = doc.name;
     element("selection-actions").textContent =
       Object.entries(actionNames)
@@ -663,7 +764,9 @@ function createFxLibrary({
         )
         .join(" · ") +
       " · Pointer wobble: " +
-      syncPointer(doc);
+      syncPointer(doc) +
+      " · Fragment response: " +
+      syncFragments(doc);
     element("combo-name").value = doc.name;
     element("combo-mode").value = same ? "same" : "mixed";
     selectOptions(element("combo-same"), "open", sharedStyle);
@@ -851,7 +954,6 @@ function createFxLibrary({
       const selection = native
         ? {
             document: doc,
-            fragment_preset: nativeSettings.fragment_preset,
           }
         : {
             document: doc,
@@ -1024,9 +1126,9 @@ function createFxLibrary({
           : exists && action === "save"
             ? "A saved profile already uses this name. Replacing it updates the Library copy only; your active effects stay the same."
             : "Keep an editable Library copy. Your active effects stay the same.";
-    if (native && nativeSettings.fragment_preset && ["save", "copy"].includes(action))
+    if (document.fragment_motion && ["save", "copy"].includes(action))
       element("profile-dialog-help").textContent +=
-        " My profiles and exported JSON keep the portable styles, but exclude continuous fragment response. Select for next login retains that response in the session recipe.";
+        " My profiles and exported JSON keep the complete recipe, including continuous fragment response.";
   }
   for (const [id, action] of Object.entries({
     "store-profile": "save",
@@ -1141,7 +1243,6 @@ function createFxLibrary({
     });
   element("native-reopen").onclick = () => {
     if (busy || !nativeListing?.reopen) return;
-    nativeSettings.fragment_preset = nativeListing.recipe.fragment_preset;
     select(nativeListing.recipe.document, "open");
     element("status").textContent =
       "Reopened your saved choices. Review any edits before applying them.";

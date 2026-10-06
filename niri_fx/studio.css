@@ -128,7 +128,8 @@ button,
 select,
 input[type="text"],
 input[type="search"],
-.pointer-fields input {
+.pointer-fields input,
+.response-fields input {
     font: inherit;
     padding: 10px 14px;
     background: var(--surface-raised);
@@ -734,7 +735,8 @@ html[data-workspace="library"] #save-help {
     display: none;
 }
 
-#pointer-settings {
+#pointer-settings,
+#native-fragments {
     border-top: 1px solid #425464;
     margin-top: 16px;
     padding-top: 14px;
@@ -745,24 +747,37 @@ html[data-workspace="library"] #save-help {
     color: #9de5d7;
     font-size: 13px;
 }
-#pointer-settings small {
+#pointer-settings small,
+#native-fragments small {
     margin: 0;
 }
-#pointer-tuning summary {
+#pointer-tuning summary,
+#fragment-tuning summary {
     cursor: pointer;
     font-size: 14px;
 }
-.pointer-fields {
+.pointer-fields,
+.response-fields {
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(70px, 95px);
     align-items: center;
     gap: 8px;
     padding-top: 10px;
 }
-.pointer-fields label {
+.pointer-fields label,
+.response-fields label {
     margin: 0;
 }
-.pointer-fields input {
+.response-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(100px, 126px);
+}
+.response-fields input,
+.response-fields select {
+    padding: 8px 10px;
+}
+.pointer-fields input,
+.response-fields input,
+.response-fields select {
     min-width: 0;
     width: 100%;
     box-sizing: border-box;

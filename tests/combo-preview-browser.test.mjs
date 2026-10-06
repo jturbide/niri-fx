@@ -323,6 +323,165 @@ test("pointer choices survive Library editing, JSON, sharing and stock-safe expo
   }
 });
 
+test("portable fragment recipes keep custom response through editing, sharing and Library storage", async () => {
+  const html = execFileSync(
+    "python3",
+    [
+      "-c",
+      'from niri_fx.preview import preview_document; from niri_fx.presets import PRESETS; print(preview_document(PRESETS["balanced"], hosted=True))',
+    ],
+    { cwd: projectRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+  );
+  const scratch = mkdtempSync(join(tmpdir(), "nirifx-fragment-ui-")),
+    page = join(scratch, "studio.html");
+  writeFileSync(page, html);
+  const browser = await launchBrowser();
+  try {
+    await browser.navigate(pathToFileURL(page).href + "?breakup=0");
+    const evaluate = browser.evaluate;
+    await evaluate("window.requestAnimationFrame=()=>1;window.cancelAnimationFrame=()=>{}");
+    const choose = (id, value) =>
+      browser.callFunction(
+        "function(id,value){byId(id).value=value;byId(id).dispatchEvent(new Event('change'))}",
+        [id, value],
+      );
+    const waitForSave = () =>
+      evaluate(`new Promise((resolve,reject)=>{
+      const started=Date.now();function check(){if(!byId('profile-dialog').open&&!byId('store-profile').disabled)resolve();else if(Date.now()-started>5000)reject(new Error(byId('profile-dialog-error').textContent||'Save timeout'));else setTimeout(check,20)}check();
+    })`);
+    await evaluate('document.querySelector("[data-library-action=movement]").click()');
+    assert.deepEqual(
+      await evaluate(
+        '[...byId("library-results").querySelectorAll("button")].slice(0,3).map(item=>item.dataset.fragment)',
+      ),
+      ["gentle", "tear", "cascade"],
+    );
+    assert.equal(await evaluate('byId("native-fragments").hidden'), false);
+    assert.equal(await evaluate('byId("fragment-tuning").open'), false);
+    assert.equal(
+      await evaluate('byId("fragment-fields").querySelectorAll("input,select").length'),
+      18,
+    );
+    for (const id of ["gentle", "tear", "cascade"]) {
+      await choose("native-fragment-preset", id);
+      assert.deepEqual(
+        await evaluate("effectDocument().fragment_motion"),
+        await evaluate(`catalog.fragment_presets.${id}.settings`),
+      );
+      assert.equal(await evaluate("effectDocument().schema"), 4);
+    }
+    await choose("native-fragment-preset", "custom");
+    assert.equal(await evaluate('byId("fragment-tuning").open'), true);
+    await choose("fragment-response-max_lag", "500");
+    const response = await evaluate("effectDocument().fragment_motion");
+    assert.equal(response.max_lag, 500);
+    assert.equal(await evaluate('byId("native-fragment-preset").value'), "custom");
+    await choose("fragment-response-distance_exponent", "0");
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    assert.match(await evaluate('byId("error").textContent'), /distance_exponent/);
+    await choose("fragment-response-max_lag", "501");
+    await evaluate('byId("undo").click()');
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    await evaluate('byId("redo").click()');
+    assert.equal(await evaluate("effectDocument().fragment_motion.max_lag"), 501);
+    await choose("fragment-response-max_lag", "500");
+    for (const choice of ["off", "preserve", "style"]) {
+      await choose("combo-movement-mode", choice);
+      assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+      if (choice !== "style")
+        assert.match(
+          await evaluate('byId("native-fragment-description").textContent'),
+          /response stays saved/,
+        );
+    }
+    // An incompatible material makes response dormant, without deleting it.
+    await choose("combo-movement", "ribbon-transfer");
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    assert.match(
+      await evaluate('byId("native-fragment-description").textContent'),
+      /does not support continuous fragments/,
+    );
+    await choose("combo-close", "frost-vanish");
+    await choose("combo-same", "balanced");
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    await evaluate('byId("preview-combo").click()');
+    const plan = await evaluate("niriFxComboPreview.currentPlan");
+    assert.deepEqual(plan.document.fragment_motion, response);
+    assert.match(
+      plan.stages.find((stage) => stage.action === "movement").support,
+      /Material preview only/,
+    );
+    await evaluate("niriFxComboPreview.seek(niriFxComboPreview.currentPlan.totalMs)");
+    await choose("combo-name", "Portable Fragment Recipe");
+    const complete = await evaluate("effectDocument()");
+    await evaluate(
+      'window.recipeDownloads=[];download=(...args)=>recipeDownloads.push(args);byId("export").click();byId("kdl").click();byId("pointer-kdl").click()',
+    );
+    const downloads = await evaluate("recipeDownloads");
+    assert.deepEqual(JSON.parse(downloads[0][1]), complete);
+    assert.doesNotMatch(downloads[1][1], /fragment-motion/);
+    assert.match(downloads[2][1], /fragment-motion/);
+    await evaluate('byId("share").onclick()');
+    const shared = await evaluate(
+      'decodeShareDocument(new URLSearchParams(new URL(byId("share-url").value).hash.slice(1)).get("style"))',
+    );
+    assert.deepEqual(shared, complete);
+    await evaluate('byId("store-profile").click();byId("profile-confirm").click()');
+    await waitForSave();
+    assert.deepEqual(
+      await evaluate(
+        'JSON.parse(localStorage.getItem("nirifx-my-profiles"))["custom-portable-fragment-recipe"]',
+      ),
+      complete,
+    );
+    await evaluate('byId("copy-profile").click();byId("profile-confirm").click()');
+    await waitForSave();
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    await evaluate(
+      'byId("rename-profile").click();byId("profile-save-name").value="Renamed Fragment Recipe";byId("profile-confirm").click()',
+    );
+    await waitForSave();
+    assert.deepEqual(
+      await evaluate(
+        'JSON.parse(localStorage.getItem("nirifx-my-profiles"))["custom-renamed-fragment-recipe"].fragment_motion',
+      ),
+      response,
+    );
+    await choose("native-fragment-preset", "");
+    assert.equal(await evaluate("effectDocument().fragment_motion"), undefined);
+    await evaluate('byId("pointer-kdl").click()');
+    const timedKdl = await evaluate("recipeDownloads.at(-1)[1]");
+    assert.match(timedKdl, /window-movement/);
+    assert.doesNotMatch(timedKdl, /nirifx-fragment-motion|fragment-motion/);
+    await evaluate('byId("undo").click()');
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    await evaluate('byId("pointer-kdl").click()');
+    const restoredKdl = await evaluate("recipeDownloads.at(-1)[1]");
+    assert.match(restoredKdl, /nirifx-fragment-motion/);
+    assert.match(restoredKdl, /fragment-motion \{/);
+    await browser.callFunction(
+      `async function(text){const files=new DataTransfer();files.items.add(new File([text],"recipe.json",{type:"application/json"}));byId("import-file").files=files.files;await byId("import-file").onchange()}`,
+      [JSON.stringify(complete)],
+    );
+    assert.deepEqual(await evaluate("effectDocument()"), complete);
+    await choose("combo-movement-mode", "preserve");
+    assert.equal(await evaluate('byId("independent").disabled'), false);
+    await evaluate('byId("show-editor").click();byId("independent").click()');
+    assert.equal(await evaluate('byId("independent").checked'), false);
+    assert.deepEqual(await evaluate("effectDocument().fragment_motion"), response);
+    await browser.navigate(pathToFileURL(page).href + "?breakup=0");
+    await choose("library-collection", "customs");
+    await evaluate(
+      'document.querySelector("[data-style=custom-portable-fragment-recipe]").click()',
+    );
+    assert.deepEqual(await evaluate("effectDocument()"), complete);
+    assert.equal(await evaluate('byId("error").textContent'), "");
+  } finally {
+    await browser.close();
+    rmSync(scratch, { recursive: true, force: true });
+  }
+});
+
 test("pointer Apply consent is offered only for a verified standalone session", async () => {
   const scratch = mkdtempSync(join(tmpdir(), "nirifx-pointer-consent-"));
   const browser = await launchBrowser();

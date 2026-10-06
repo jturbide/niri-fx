@@ -528,7 +528,8 @@ class NativeCustomizationTests(unittest.TestCase):
             self.assertEqual(main([*args, "--apply", "--expect-plan", reviewed["plan_sha256"]]), 0)
         recipe = native_customization.read_recipe(self.root, reviewed["selection"]["bundle_id"])
         self.assertEqual(recipe["document"], document)
-        self.assertEqual(recipe["fragment_preset"], "tear")
+        self.assertIsNone(recipe["fragment_preset"])
+        self.assertEqual(recipe["document"]["fragment_motion"], asdict(PRESETS["tear"].settings))
 
     def test_cli_choices_are_mutually_exclusive_and_have_no_implicit_default(self):
         for flags in (

@@ -64,12 +64,9 @@ for (const [id, doc] of Object.entries(catalog.profiles)) {
 let actions = catalog.profile ? structuredClone(catalog.profile.actions) : null;
 let desktopMotion = catalog.profile?.motion ? structuredClone(catalog.profile.motion) : null;
 let pointerSettings = catalog.profile?.pointer ? structuredClone(catalog.profile.pointer) : null;
-// Native response settings are editor history, not portable profile parameters.
-// Bundle recipes persist them separately; JSON export remains shell independent.
-const sessionSettings =
-  catalog.connection?.target === "native"
-    ? { fragment_preset: catalog.connection.native.recipe?.fragment_preset || null }
-    : null;
+let fragmentMotion = catalog.profile?.fragment_motion
+  ? structuredClone(catalog.profile.fragment_motion)
+  : null;
 const isActionStyle = (value) => value !== null && typeof value === "object";
 const actionMode = (value) =>
   isActionStyle(value) ? "style" : value === "off" ? "off" : "preserve";
@@ -152,6 +149,7 @@ function loadDocument(doc, action = "open") {
       if (isActionStyle(value)) rememberedActions[slot] = { ...value };
   desktopMotion = doc.motion ? structuredClone(doc.motion) : null;
   pointerSettings = doc.pointer ? structuredClone(doc.pointer) : null;
+  fragmentMotion = doc.fragment_motion ? structuredClone(doc.fragment_motion) : null;
   if (!actions) editingAction = "open";
   parameters = { ...(actions ? actionParameters(editingAction) : doc.effect) };
   byId("independent").checked = !!actions;
@@ -168,7 +166,6 @@ function recordHistory() {
     document: effectDocument(),
     preset: byId("preset").value,
     action: editingAction,
-    ...(sessionSettings ? { session: sessionSettings } : {}),
   });
   if (editHistory[historyIndex] === snapshot) return;
   editHistory = editHistory.slice(0, historyIndex + 1);
@@ -263,6 +260,7 @@ function supportsConcept() {
   );
 }
 function labels() {
+  byId("fragment-preview-note").hidden = !fragmentMotion;
   for (const id of [...numeric, ...choices, "density", "resize", "family", "preset"])
     byId(id).disabled = false;
   const fragment = parameters.family === "fragments",
@@ -411,13 +409,13 @@ function labels() {
 }
 byId("import").onclick = () => byId("import-file").click();
 function effectDocument() {
-  // Pointer settings are profile metadata. Consolidating window styles must
-  // keep them even while the editor uses its single-style representation.
-  if (actions || pointerSettings) {
+  // Response settings stay with the recipe, including while its material is
+  // dormant or the editor uses its single-style representation.
+  if (actions || pointerSettings || fragmentMotion) {
     commitAction();
     return normalizePreset({
       kind: "profile",
-      schema: catalog.profile_schema,
+      schema: fragmentMotion ? catalog.profile_schema : 3,
       name: byId("name").value.trim(),
       actions: actions
         ? { swap: null, ...structuredClone(actions) }
@@ -430,6 +428,7 @@ function effectDocument() {
           },
       ...(desktopMotion ? { motion: structuredClone(desktopMotion) } : {}),
       ...(pointerSettings ? { pointer: structuredClone(pointerSettings) } : {}),
+      ...(fragmentMotion ? { fragment_motion: structuredClone(fragmentMotion) } : {}),
     });
   }
   return { schema: catalog.schema, name: byId("name").value.trim(), effect: { ...parameters } };
@@ -449,12 +448,13 @@ byId("export").onclick = () =>
     "application/json",
   );
 function kdlDocument(options = {}) {
-  return renderKdl(effectDocument(), options);
+  const doc = effectDocument();
+  return renderKdl(doc, { ...options, continuous_fragments: !!doc.fragment_motion });
 }
 byId("kdl").onclick = () => {
   download("nirifx.kdl", kdlDocument(), "text/plain");
   byId("status").textContent =
-    "Downloaded stock Niri config. NiriFX movement, swaps and pointer wobble are omitted; JSON preserves those settings.";
+    "Downloaded stock Niri config. NiriFX movement, swaps, fragment response and pointer wobble are omitted; JSON preserves those settings.";
 };
 byId("pointer-kdl").onclick = () => {
   try {
@@ -465,11 +465,12 @@ byId("pointer-kdl").onclick = () => {
         pointer: !!doc.pointer,
         movement: !!doc.actions?.movement,
         swap: !!doc.actions?.swap,
+        continuous_fragments: !!doc.fragment_motion,
       }),
       "text/plain",
     );
     byId("status").textContent =
-      "Downloaded NiriFX session config with all selected actions and pointer settings. It requires matching compositor extensions.";
+      "Downloaded NiriFX session config with the selected actions and active response settings. It requires matching compositor extensions. JSON also keeps dormant fragment response.";
   } catch (error) {
     byId("error").textContent = error.message;
   }
@@ -523,7 +524,7 @@ if (catalog.connection?.target === "native") {
   byId("save-target").hidden = byId("save").hidden = true;
   document.querySelector('label[for="save-target"]').hidden = true;
   byId("save-help").textContent =
-    "Save to My profiles keeps portable settings. Select for next login stores the managed recipe, including its continuous fragment choice. Your current desktop stays unchanged.";
+    "Save to My profiles keeps the complete editable recipe, including continuous fragment response. Review & apply shows how it can be used by your NiriFX session.";
 }
 if (catalog.connection && !catalog.hosted) {
   const states = new Set(["current", "changed", "prepared", "unmanaged", "unavailable"]);
@@ -659,7 +660,7 @@ byId("save").onclick = async () => {
       byId("status").textContent =
         target === "noctalia"
           ? "Place the downloaded file in the Noctalia Niri Animations preset folder, then select it in the picker."
-          : "Downloaded a stock Niri animation include. NiriFX movement, swaps and pointer wobble are omitted; JSON preserves those settings.";
+          : "Downloaded a stock Niri animation include. NiriFX movement, swaps, fragment response and pointer wobble are omitted; JSON preserves those settings.";
     } catch (error) {
       byId("error").textContent = error.message;
     }
@@ -982,7 +983,9 @@ try {
       const count = Math.ceil(600 / tile) * Math.ceil(380 / tile);
       const caption =
         mode === "movement"
-          ? `NiriFX ${editingAction === "swap" ? "swap" : "movement"} shader preview · ${parameters.movement_ms} ms · Stock exports omit this action`
+          ? fragmentMotion && editingAction !== "swap"
+            ? "Movement material preview · Continuous gesture response requires a compatible NiriFX compositor"
+            : `NiriFX ${editingAction === "swap" ? "swap" : "movement"} shader preview · ${parameters.movement_ms} ms · Stock exports omit this action`
           : mode === "resize"
             ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
             : `${parameters.family === "slices" ? parameters.slice_count + " slices" : parameters.family !== "fragments" ? catalog.families[parameters.family].label + " window" : "About " + count + " pieces in this window"} · ${parameters.open_ms} ms opening · ${parameters.close_ms} ms closing`;
@@ -1722,8 +1725,6 @@ try {
     byId(direction).onclick = () => {
       historyIndex += direction === "undo" ? -1 : 1;
       const snapshot = JSON.parse(editHistory[historyIndex]);
-      if (sessionSettings)
-        sessionSettings.fragment_preset = snapshot.session?.fragment_preset || null;
       editingAction = snapshot.action;
       loadDocument(snapshot.document, snapshot.action);
       byId("action").value = editingAction;
@@ -1802,8 +1803,6 @@ try {
   workspace = createFxLibrary({
     catalog,
     getDocument: effectDocument,
-    sessionSettings,
-    sessionChanged: recordHistory,
     select: (doc, action) => {
       cancelAnimationFrame(frame);
       comparing = false;

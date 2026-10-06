@@ -6,14 +6,16 @@ previous override and repeated editing never adds nested include layers.
 """
 
 import json
-from dataclasses import asdict, replace
+import re
+from dataclasses import replace
 from pathlib import Path
 
 from . import native_session
 from .documents import MAX_DOCUMENT_BYTES, effect_document, parse_document
-from .effects import render_kdl
+from .effects import fragment_motion_eligible, render_kdl
 from .fragment_motion import PRESETS as FRAGMENT_PRESETS
-from .fragment_motion import render_node as fragment_node
+from .fragment_motion import fragment_documents, parse_fragment_motion
+from .model import Effect
 from .native_config import inspect_snapshot
 from .profiles import Profile
 from .setup import apply_plan, change
@@ -21,18 +23,12 @@ from .storage import digest
 
 RECIPE_SCHEMA = 1
 BASELINE_ROOT = "customization/base-config.kdl"
+LEGACY_FRAGMENT_PRESETS = ("gentle", "tear", "cascade")
 
 
 def fragment_choices():
-    """Canonical material and response choices; browser requests carry only an ID."""
-    return {
-        key: {
-            "name": preset.name,
-            "description": preset.description,
-            "effect": asdict(preset.effect),
-        }
-        for key, preset in FRAGMENT_PRESETS.items()
-    }
+    """Canonical starting points; saved documents retain the expanded values."""
+    return fragment_documents()
 
 
 def _document(document):
@@ -41,11 +37,11 @@ def _document(document):
     except (TypeError, ValueError) as error:
         raise ValueError("Native settings require a portable JSON document") from error
     if len(raw) > MAX_DOCUMENT_BYTES:
-        raise ValueError("Native settings document must be at most 16 KiB")
+        raise ValueError("Native settings document must be at most 32 KiB")
     name, _, effect = parse_document(document)
     canonical = effect_document(name, effect)
     if len(json.dumps(canonical, allow_nan=False).encode()) > MAX_DOCUMENT_BYTES:
-        raise ValueError("Expanded native settings document must be at most 16 KiB")
+        raise ValueError("Expanded native settings document must be at most 32 KiB")
     return canonical, effect
 
 
@@ -77,26 +73,43 @@ def configuration_document(*, document=None, profile=None, preset=None, fragment
     if not isinstance(effect, Profile):
         style = replace(effect, resize=False)
         effect = Profile(open=style, close=style, resize=style if effect.resize else None)
-    effect = replace(effect, movement=FRAGMENT_PRESETS[fragment_preset].effect)
+    choice = FRAGMENT_PRESETS[fragment_preset]
+    effect = replace(effect, movement=choice.effect, fragment_motion=choice.settings)
     return _document(effect_document(document["name"], effect))[0]
 
 
-def _validate_choices(effect, fragment_preset, variant):
+def _validate_choices(effect, fragment_preset, variant, *, retained=False):
     movement = isinstance(effect, Profile) and effect.movement is not None
     pointer = isinstance(effect, Profile) and effect.pointer is not None
     if movement and variant not in ("movement", "pointer", "fragment"):
         raise ValueError("Movement settings require a retained movement-capable build")
     if pointer and variant not in ("pointer", "fragment"):
         raise ValueError("Pointer settings require a retained pointer-capable build")
+    response = isinstance(effect, Profile) and effect.fragment_motion is not None
+    if response and fragment_preset is not None:
+        raise ValueError("Choose explicit fragment response or a legacy preset, not both")
+    if (
+        response
+        and isinstance(effect.movement, Effect)
+        and fragment_motion_eligible(effect.movement)
+        and variant != "fragment"
+    ):
+        raise ValueError("Continuous fragments require a retained fragment build")
     if fragment_preset is not None:
-        if not isinstance(fragment_preset, str) or fragment_preset not in FRAGMENT_PRESETS:
+        choices = LEGACY_FRAGMENT_PRESETS if retained else FRAGMENT_PRESETS
+        if not isinstance(fragment_preset, str) or fragment_preset not in choices:
             raise ValueError("Choose a known continuous fragment preset")
         if variant != "fragment":
             raise ValueError("Continuous fragments require a retained fragment build")
-        if (
-            not isinstance(effect, Profile)
-            or effect.movement != FRAGMENT_PRESETS[fragment_preset].effect
-        ):
+        style = effect.movement if isinstance(effect, Profile) else None
+        # Existing bundles own their material bytes. Current prefab definitions
+        # must not invalidate historical recipes when their defaults change.
+        valid_material = isinstance(style, Effect) and (
+            fragment_motion_eligible(style)
+            if retained
+            else style == FRAGMENT_PRESETS[fragment_preset].effect
+        )
+        if not valid_material:
             raise ValueError(
                 "The continuous fragment preset requires its matching canonical movement material"
             )
@@ -105,6 +118,8 @@ def _validate_choices(effect, fragment_preset, variant):
 
 def _overlay(effect, fragment_preset, variant):
     movement, pointer = _validate_choices(effect, fragment_preset, variant)
+    if fragment_preset is not None:
+        effect = replace(effect, fragment_motion=FRAGMENT_PRESETS[fragment_preset].settings)
     # The shader marker also enables the compositor's default continuous
     # response. Omitting a native settings node alone would not disable it.
     generated = render_kdl(
@@ -112,15 +127,8 @@ def _overlay(effect, fragment_preset, variant):
         movement=movement,
         pointer=pointer,
         swap=isinstance(effect, Profile) and effect.swap is not None,
-        continuous_fragments=fragment_preset is not None,
+        continuous_fragments=isinstance(effect, Profile) and effect.fragment_motion is not None,
     )
-    if fragment_preset is not None:
-        marker = "    window-movement {\n"
-        if generated.count(marker) != 1:
-            raise ValueError("Expected exactly one generated movement node")
-        generated = generated.replace(
-            marker, marker + fragment_node(FRAGMENT_PRESETS[fragment_preset].settings), 1
-        )
     return generated.encode()
 
 
@@ -180,7 +188,7 @@ def validate_customization(recipe, files, baseline_root, *, variant):
     document, effect = _document(recipe["document"])
     if document != recipe["document"]:
         raise ValueError("Native customization document is not canonical")
-    _validate_choices(effect, recipe["fragment_preset"], variant)
+    _validate_choices(effect, recipe["fragment_preset"], variant, retained=True)
     return {
         "schema": RECIPE_SCHEMA,
         "baseline_bundle": recipe["baseline_bundle"],
@@ -192,6 +200,43 @@ def validate_customization(recipe, files, baseline_root, *, variant):
 def read_recipe(root, bundle_id):
     """Return a validated saved recipe, or None for a plain staged baseline."""
     return native_session.inspect_bundle(root, bundle_id).get("customization")
+
+
+def portable_recipe(root, bundle_id, *, report=None):
+    """Expand a retained 0.20 response without changing its bundle or projections.
+
+    The owned overlay is the historical authority. Using today's preset defaults
+    here would silently change an older recipe when a prefab is improved.
+    """
+    report = report or native_session.inspect_bundle(root, bundle_id)
+    recipe = report.get("customization")
+    if not recipe or recipe["fragment_preset"] is None:
+        return recipe
+    files = _owned_files(report)
+    if report.get("shared"):
+        overlay = files["shared/native.kdl"]
+    else:
+        original = native_session._object(files["bundle.json"], "native session bundle")
+        overlay = files[original["customization"]["overlay_file"]]
+    blocks = re.findall(
+        r"(?m)^        fragment-motion \{\n((?:            [^\n]+\n)+)        \}", overlay.decode()
+    )
+    if len(blocks) != 1:
+        raise ValueError("Retained fragment response is missing or ambiguous")
+    settings = {}
+    for line in blocks[0].splitlines():
+        key, value = line.strip().split(" ", 1)
+        key = key.replace("-", "_")
+        if key in settings:
+            raise ValueError("Retained fragment response repeats a control")
+        settings[key] = json.loads(value)
+    document, profile = _document(recipe["document"])
+    profile = replace(profile, fragment_motion=parse_fragment_motion(settings))
+    return {
+        **recipe,
+        "document": effect_document(document["name"], profile),
+        "fragment_preset": None,
+    }
 
 
 def _owned_files(report):

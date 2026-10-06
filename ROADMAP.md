@@ -16,9 +16,9 @@ See [available features](README.md),
    one saved recipe now feed stock and full-session effects. Verify shell-driven
    edits, normal updates and recovery on physical desktops before broadening
    support claims; keep frozen recovery available.
-2. **Make the complete look portable.** Save continuous-fragment response with
-   the action styles, so local and online Studio can exchange the same recipe.
-   Keep simple preset choices first and make preview limitations explicit.
+2. **Ship complete recipes in 0.21.** Current source keeps continuous-fragment
+   response with action styles across Studio, JSON and sharing. Finish package
+   release checks and publish migration guidance for existing installations.
 3. **Prove everyday session reliability.** Prioritize mixed monitors, capture
    privacy, suspend/resume and recovery. Resolve the remaining stale-output probe
    and verify real PipeWire capture before expanding desktop support claims.
@@ -49,19 +49,19 @@ follow the core controls and reliability work below.
 
 ### 0.21 target: complete portable recipes
 
-- [ ] Define one versioned recipe for action modes, desktop springs, pointer wobble
+- [x] Define one versioned recipe for action modes, desktop springs, pointer wobble
       and explicit continuous-fragment values; built-in preset updates must not change saved values.
-- [ ] Preserve existing document meanings and migrate retained 0.20 recipes with
+- [x] Preserve existing document meanings and migrate retained 0.20 recipes with
       matching Python/browser validation, units, bounds and rejected-input fixtures.
-- [ ] Keep the complete recipe through JSON download/import, share links, My profiles,
+- [x] Keep the complete recipe through JSON download/import, share links, My profiles,
       copying, reopening and Undo/Redo in local and online Studio.
-- [ ] Offer Gentle, Tear and Cascade first, with detailed response controls secondary
+- [x] Offer Gentle, Tear and Cascade first, with detailed response controls secondary
       and a clear explanation that the canvas does not simulate continuous response.
-- [ ] Define Move Preserve/Style/Off, material edits and Pointer wobble interactions
+- [x] Define Move Preserve/Style/Off, material edits and Pointer wobble interactions
       without silently losing response settings or enabling another action.
-- [ ] Use existing shared/frozen review, Apply and recovery paths; refuse unsupported
+- [x] Use existing shared/frozen review, Apply and recovery paths; refuse unsupported
       native activation and keep stock exports compatible without losing portable data.
-- [ ] Verify an installed 0.20 upgrade, complete browser/local round trips, stale-review
+- [x] Verify an installed 0.20 upgrade, complete browser/local round trips, stale-review
       refusal and exact recovery. Publish importable examples and a faithful showcase.
 
 ## Available foundation
@@ -139,13 +139,12 @@ are developer regression controls, not separate consumer editions.
 - [x] Offer the same preset/action choices through CLI and agent discovery.
 - [x] Share verified live Apply and rollback between Studio, CLI and agents,
       binding each desktop reload to its reviewed session and configuration.
-- [ ] Version a portable session recipe that also carries continuous fragment
-      controls, with import/export in local and online Studio. Current portable
-      profiles retain the action styles; native response choices stay with the bundle.
-      Round trips must retain response values and action modes; older documents
-      must keep their meaning and unsupported builds must refuse activation.
-- [ ] Make Download JSON, Share settings and My profiles retain the same complete
-      recipe, or explicitly identify omitted native response settings before saving.
+- [x] Version a portable session recipe carrying continuous-fragment controls,
+      with import/export in local and online Studio. Schema 4 retains response
+      values and action modes; older documents keep their meaning and unsupported
+      builds refuse activation. Available in current source for 0.21.
+- [x] Make Download JSON, Share settings and My profiles retain the same complete
+      recipe, including dormant response values while Move is preserved or Off.
 - [x] Verify independent Move and Swap choices through explicit compositor action
       routing, portable profiles, Studio previews, reviewed Apply and old-build refusal.
 - [ ] Extend independent Swap to additional exchange gestures only when their

@@ -9,6 +9,8 @@ from importlib.resources import files
 
 from . import __version__
 from .documents import MAX_DOCUMENT_BYTES
+from .fragment_motion import CONTROLS as FRAGMENT_CONTROLS
+from .fragment_motion import FragmentMotionSettings, fragment_documents
 from .model import FAMILIES, PARAMETERS, PRESET_SCHEMA
 from .pointer import POINTER_LIMITS, PointerWobble, pointer_documents
 from .profiles import PROFILE_SCHEMA
@@ -26,8 +28,9 @@ def agent_info():
         "document_formats": {
             "effect_schema": PRESET_SCHEMA,
             "profile_schema": 2,
-            "profile_schema_with_swap": PROFILE_SCHEMA,
-            "accepted_profile_schemas": [1, 2, PROFILE_SCHEMA],
+            "profile_schema_with_swap": 3,
+            "profile_schema_with_fragment_motion": PROFILE_SCHEMA,
+            "accepted_profile_schemas": [1, 2, 3, PROFILE_SCHEMA],
             "action_modes": {"preserve": None, "off": "off", "style": "effect object"},
             "pointer_modes": {
                 "preserve": "absent or null",
@@ -36,7 +39,7 @@ def agent_info():
             },
             "max_bytes": MAX_DOCUMENT_BYTES,
             "shader_actions": ["open", "close", "resize", "movement", "swap"],
-            "optional_profile_settings": ["motion", "pointer"],
+            "optional_profile_settings": ["motion", "pointer", "fragment_motion"],
         },
         "operations": {
             "catalog": {
@@ -246,6 +249,11 @@ def agent_info():
                 "effect": "read-only review against an exact retained baseline",
                 "output": "json with plan_sha256, affected paths, hashes and notes",
             },
+            "native_recipe_export": {
+                "argv": ["native", "export", "BUNDLE_ID"],
+                "effect": "read-only export of saved styles and explicit response values",
+                "output": "portable profile JSON; older retained recipes expand without writes",
+            },
             "native_configure_apply": {
                 "argv": [
                     "native",
@@ -359,6 +367,12 @@ def parameter_info():
             "defaults": asdict(PointerWobble()),
             "limits": POINTER_LIMITS,
             "integer": [field.name for field in fields(PointerWobble) if field.type is int],
+        },
+        "fragment_motion": {
+            "defaults": asdict(FragmentMotionSettings()),
+            "controls": {key: asdict(control) for key, control in FRAGMENT_CONTROLS.items()},
+            "presets": fragment_documents(),
+            "activation": "Stored response runs only with an eligible square-fragment Move style and a verified native compositor.",
         },
         "note": "These are model capabilities, not evidence of support in the running compositor. Use inspect for complete cross-field validation and doctor for runtime support.",
     }

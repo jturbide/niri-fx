@@ -6,6 +6,8 @@ from dataclasses import asdict
 from functools import lru_cache
 from importlib.resources import files
 
+from .fragment_motion import FragmentMotionSettings
+from .fragment_motion import render_node as fragment_node
 from .model import (
     ELASTIC_ANCHORS,
     ELASTIC_AXES,
@@ -294,6 +296,14 @@ def animation_types(
         )
         if not pointer:
             result["window-movement"]["preserve-pointer"] = True
+        if (
+            continuous_fragments
+            and isinstance(effect, Profile)
+            and effect.fragment_motion is not None
+            and isinstance(style, Effect)
+            and fragment_motion_eligible(style)
+        ):
+            result["window-movement"]["fragment-motion"] = asdict(effect.fragment_motion)
     if pointer:
         if not isinstance(effect, Profile) or effect.pointer is None:
             raise ValueError("The profile must explicitly choose pointer settings")
@@ -355,6 +365,8 @@ def render_kdl(effect, *, movement=False, pointer=False, swap=False, continuous_
             )
         if "pointer-wobble" in spec:
             parts.append(render_node(PointerWobble(**spec["pointer-wobble"])).rstrip())
+        if "fragment-motion" in spec:
+            parts.append(fragment_node(FragmentMotionSettings(**spec["fragment-motion"])).rstrip())
         parts.append("    }")
     return "\n".join([*parts, "}", ""])
 

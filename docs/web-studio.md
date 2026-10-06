@@ -36,11 +36,13 @@ NiriFX session nodes. **Export NiriFX session config** includes selected pointer
 Move and Swap settings for the matching native build. Read the
 [pointer guide](pointer-wobble.md) before using that configuration.
 
-The managed session's **Gentle / Tear / Cascade continuous-fragment response**
-is separate from pointer wobble and timed movement. Those native controls are
-currently kept in the local session recipe, not in portable profiles, JSON,
-share links or config downloads. Web Studio therefore cannot reproduce or
-transfer that complete session choice. See [continuous fragments](fragment-drag.md).
+**Current source, Unreleased:** **Gentle / Tear / Cascade** fragment responses
+and their custom controls can be saved to My profiles, downloaded and shared
+online. Values travel with the profile, even while Move is Off, preserved or
+using an incompatible material. **Timed movement** removes the response.
+Stock config exports omit it; native exports need an eligible material and a
+compatible NiriFX compositor. The browser previews the movement material, not
+continuous gesture behavior. See [portable fragment recipes](profiles.md#portable-fragment-response).
 
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
    nine recommended looks. **Open/close pairings** shows sixteen finished combinations;
@@ -92,7 +94,8 @@ If clipboard access is unavailable, select and copy the displayed URL.
 The document is encoded in the URL fragment and decoded in the browser. There is
 no preset-upload service, but anyone who receives the complete link can read its
 name and settings. Treat it as shared content. Links accept validated parameter
-data only, with the same 16 KiB document limit as JSON imports. Malformed links
+data only, with the same 32 KiB document limit as JSON imports in current source
+(16 KiB in 0.20). Malformed links
 show an error without replacing the current settings. Keep a JSON export as your
 editable copy; development versions may change the format or defaults.
 

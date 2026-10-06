@@ -62,7 +62,7 @@ shell style before unregistering. See [update and rollback](getting-started.md).
 Studio shares Python/GLSL templates with CLI exports. Its loopback save endpoint
 accepts validated parameters rather than arbitrary shader text or destinations.
 Requests require a per-session token and matching Origin/Host; request bodies are
-limited to 16 KiB. See [security boundaries](../SECURITY.md).
+limited to 32 KiB in current source (16 KiB in 0.20). See [security boundaries](../SECURITY.md).
 
 Chromium app mode uses a dedicated profile under
 `$XDG_STATE_HOME/niri-fx/studio-profile`, defaulting to
@@ -86,5 +86,8 @@ configuration owners; they do not use iNiR's registry. See
 
 The CLI, registry generator and ID prefix are `niri-fx`; the Python package is
 `niri_fx`. Single-effect documents use schema 3; independent action profiles use
-kind `profile`, schema 2 without a Swap override or schema 3 with one, with schema 1 import support. Stock shell adapters omit native Swap overrides. Registry paths remain
+kind `profile`, schema 2 without a Swap override or schema 3 with one, with schema 1 import support.
+Current source uses schema 4 for complete continuous-fragment responses. Stock
+shell adapters omit native movement, Swap and response nodes while portable
+JSON retains their settings. Registry paths remain
 those defined by iNiR's external-preset API, including its config-root selection.

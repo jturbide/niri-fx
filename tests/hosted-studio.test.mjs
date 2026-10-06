@@ -163,6 +163,25 @@ test("hosted gallery settings load, edit, share and download without local endpo
     const pairingLink = await browser.evaluate('byId("share-url").value');
     await browser.navigate(base + "/studio/" + new URL(pairingLink).hash);
     assert.deepEqual(await browser.evaluate("effectDocument()"), pairing);
+    await browser.evaluate(`
+      document.querySelector('[data-library-action=movement]').click();
+      document.querySelector('[data-fragment=tear]').click();
+      byId('fragment-response-max_lag').value='555';
+      byId('fragment-response-max_lag').dispatchEvent(new Event('change'));
+      byId('share').click();
+    `);
+    const recipe = await browser.evaluate("effectDocument()"),
+      recipeLink = await browser.evaluate('byId("share-url").value');
+    assert.equal(recipe.schema, 4);
+    assert.equal(recipe.fragment_motion.max_lag, 555);
+    await browser.navigate(base + "/studio/" + new URL(recipeLink).hash);
+    assert.deepEqual(await browser.evaluate("effectDocument()"), recipe);
+    assert.equal(await browser.evaluate('byId("native-fragment-preset").value'), "custom");
+    assert.match(
+      await browser.evaluate('byId("native-fragment-description").textContent'),
+      /canvas previews the material only/,
+    );
+    assert.equal(await browser.evaluate('byId("activation-controls").hidden'), true);
     // Browser tests use software rendering: a load batch must still refuse to
     // report it as hardware performance, and malformed counts fail explicitly.
     const timing = await browser.evaluate("window.niriFxBenchmark({draws: 4, samples: 10})");

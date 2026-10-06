@@ -167,6 +167,8 @@ print(json.dumps([movement_shader(replace(PRESETS['balanced'], **p)) for p in js
       JSON.stringify(change),
     );
   });
+  for (const value of [null, undefined, "off", false, []])
+    assert.equal(core.fragmentMotionEligible(value), false);
 });
 
 test("shaped lookup bounds and shaders match Python at extreme controls", () => {
@@ -487,4 +489,196 @@ test("independent swaps round-trip and export their own timed shader", () => {
       },
     }),
   );
+});
+
+const fragmentDefaults = () =>
+  Object.fromEntries(
+    Object.entries(catalog.fragment_controls).map(([name, control]) => [name, control.default]),
+  );
+const fragmentProfile = (fragment_motion = fragmentDefaults()) => ({
+  kind: "profile",
+  schema: 4,
+  name: "Portable response",
+  actions: {
+    open: null,
+    close: "off",
+    resize: null,
+    movement: catalog.fragment_presets.tear.effect,
+    swap: null,
+  },
+  fragment_motion,
+});
+
+test("complete fragment responses preserve preset values, dormant choices and shared links", () => {
+  assert.equal(Object.keys(catalog.fragment_controls).length, 18);
+  for (const preset of Object.values(catalog.fragment_presets)) {
+    for (const movement of [null, "off", preset.effect, catalog.presets["pixel-relay"]]) {
+      const input = fragmentProfile(preset.settings);
+      input.actions.movement = movement;
+      const before = JSON.stringify(input);
+      const normalized = core.normalizePreset(input);
+      assert.equal(normalized.schema, 4);
+      assert.equal(normalized.actions.swap, null);
+      assert.deepEqual(plain(normalized.fragment_motion), preset.settings);
+      assert.deepEqual(
+        plain(core.decodeShareDocument(core.encodeShareDocument(input))),
+        plain(normalized),
+      );
+      assert.deepEqual(plain(core.normalizePreset(normalized)), plain(normalized));
+      assert.doesNotMatch(core.renderKdl(normalized), /window-movement|fragment-motion/);
+      assert.equal(JSON.stringify(input), before);
+    }
+  }
+  assert.equal(core.normalizeFragmentMotion(null), null);
+});
+
+test("fragment responses reject incomplete maps, invalid controls and inverted timing ranges", () => {
+  const invalid = [null, {}, [], true, "tear", { ...fragmentDefaults(), unknown: 1 }];
+  for (const [key, control] of Object.entries(catalog.fragment_controls)) {
+    const missing = fragmentDefaults();
+    delete missing[key];
+    invalid.push(missing);
+    const bad =
+      control.kind === "choice"
+        ? [0, true, "elsewhere"]
+        : [
+            true,
+            "1",
+            null,
+            control.minimum - 1,
+            control.maximum + 1,
+            ...(control.exclusive_min ? [control.minimum] : []),
+            ...(control.kind === "integer" ? [control.default + 0.5] : []),
+          ];
+    invalid.push(...bad.map((value) => ({ ...fragmentDefaults(), [key]: value })));
+    if (control.kind !== "choice")
+      for (const value of [NaN, Infinity, -Infinity])
+        assert.throws(() => core.normalizeFragmentMotion({ ...fragmentDefaults(), [key]: value }));
+  }
+  invalid.push(
+    { ...fragmentDefaults(), delay_near_ms: 100, delay_far_ms: 99 },
+    { ...fragmentDefaults(), response_near_ms: 100, response_far_ms: 99 },
+  );
+  const documents = invalid.map(fragmentProfile);
+  for (const schema of [1, 2, 3]) {
+    const actions = { ...fragmentProfile().actions };
+    if (schema < 3) delete actions.swap;
+    documents.push({ ...fragmentProfile(), schema, actions });
+  }
+  const missingResponse = fragmentProfile();
+  delete missingResponse.fragment_motion;
+  const missingSwap = fragmentProfile();
+  delete missingSwap.actions.swap;
+  documents.push(missingResponse, missingSwap);
+  for (const document of documents) assert.throws(() => core.normalizePreset(document));
+  const accepted = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `
+import json, sys
+from niri_fx.documents import parse_document
+accepted=[]
+for document in json.load(sys.stdin):
+    try:
+        parse_document(document)
+        accepted.append(True)
+    except ValueError:
+        accepted.append(False)
+print(json.dumps(accepted))
+`,
+      ],
+      { input: JSON.stringify(documents), encoding: "utf8" },
+    ),
+  );
+  assert.deepEqual(
+    accepted,
+    documents.map(() => false),
+  );
+});
+
+test("portable fragment KDL matches Python without rounding native response precision", () => {
+  const settings = {
+    ...fragmentDefaults(),
+    batches: 64.0,
+    distance_exponent: 1e-8,
+    delay_jitter: 0.12345678912345678,
+    response_jitter: 0,
+    tilt: -0,
+  };
+  const cases = [];
+  for (const movement of [
+    null,
+    "off",
+    catalog.fragment_presets.tear.effect,
+    catalog.presets["pixel-relay"],
+    { ...catalog.fragment_presets.tear.effect, fragment_shape: "circle" },
+  ]) {
+    const document = fragmentProfile(settings);
+    document.actions.movement = movement;
+    document.actions.swap = catalog.presets.balanced;
+    document.pointer = catalog.pointer_defaults;
+    for (const options of [
+      {},
+      { pointer: true },
+      { swap: true },
+      ...(movement === null
+        ? []
+        : [
+            { movement: true, pointer: true, swap: true },
+            { movement: true, continuous_fragments: false },
+          ]),
+    ])
+      cases.push({ document, options });
+  }
+  const references = JSON.parse(
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `
+import json, sys
+from niri_fx.documents import parse_document, effect_document
+from niri_fx.effects import render_kdl
+result=[]
+for item in json.load(sys.stdin):
+    name, _, profile=parse_document(item['document'])
+    result.append({'document':effect_document(name, profile),
+                   'kdl':render_kdl(profile, **item['options'])})
+print(json.dumps(result))
+`,
+      ],
+      { input: JSON.stringify(cases), encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+    ),
+  );
+  const semantic = (kdl) =>
+    kdl.slice(kdl.indexOf("\n")).replace(/( {12}[a-z-]+) ([^\n]+)(?=\n)/g, (line, key, value) => {
+      // Python and JavaScript use different valid JSON exponent spellings.
+      // Compare native scalar values while retaining every shader byte.
+      if (
+        !Object.keys(catalog.fragment_controls).some(
+          (name) => key.trim() === name.replaceAll("_", "-"),
+        )
+      )
+        return line;
+      return key + " " + JSON.stringify(JSON.parse(value));
+    });
+  cases.forEach(({ document, options }, index) => {
+    const normalized = core.normalizePreset(document);
+    assert.deepEqual(plain(normalized), references[index].document);
+    const actual = core.renderKdl(normalized, options);
+    assert.equal(semantic(actual), semantic(references[index].kdl));
+    const active =
+      options.movement &&
+      options.continuous_fragments !== false &&
+      core.fragmentMotionEligible(normalized.actions.movement);
+    assert.equal(actual.includes("fragment-motion {"), Boolean(active));
+    if (active) {
+      assert.match(actual, /distance-exponent 1e-8\n/);
+      assert.match(actual, /delay-jitter 0\.12345678912345678\n/);
+    }
+    if (options.swap)
+      assert.doesNotMatch(actual.split("    window-swap {")[1], /fragment-motion|NIRIFX_FRAGMENT/);
+  });
 });

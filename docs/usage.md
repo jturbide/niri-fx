@@ -119,10 +119,12 @@ xdg-open /tmp/fragments.html
 
 Both offline and app-style Studio support **Import preset**, JSON export and
 standalone KDL export. Import validates the entire file before replacing editor
-settings; it does not save or activate anything. Files are limited to 16 KiB and
-contain named parameters, never arbitrary shaders. Missing fields use defaults;
+settings; it does not save or activate anything. Files are limited to 32 KiB in
+current source (16 KiB in 0.20) and
+contain named parameters, never arbitrary shaders. Missing effect fields use defaults;
 single-effect documents without `resize` leave the underlying resize settings
-unchanged. An explicit `resize: true` is retained.
+unchanged. An explicit `resize: true` is retained. Schema 4
+[fragment responses](profiles.md#portable-fragment-response) require all 18 values.
 
 Open the same file directly from the CLI:
 

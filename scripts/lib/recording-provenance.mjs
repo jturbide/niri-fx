@@ -92,11 +92,22 @@ export function recordingProvenance(recorder, { root = projectRoot } = {}) {
       throw new Error("Generated recording preview changed during capture");
   }
 
-  function generate(page, arguments_ = []) {
+  function generate(page, arguments_ = [], { hosted = false } = {}) {
     unchanged();
     generated = null;
     loaded = null;
-    execFileSync("python3", ["-m", "niri_fx", "preview", ...arguments_, "--output", page], {
+    assert(
+      !hosted || !arguments_.length,
+      "Hosted recording starts from the public default catalog",
+    );
+    const command = hosted
+      ? [
+          "-c",
+          "import sys; from pathlib import Path; from niri_fx.preview import preview_document; from niri_fx.presets import PRESETS; Path(sys.argv[1]).write_text(preview_document(PRESETS['balanced'], hosted=True))",
+          page,
+        ]
+      : ["-m", "niri_fx", "preview", ...arguments_, "--output", page];
+    execFileSync("python3", command, {
       cwd: root,
       stdio: "pipe",
     });
@@ -109,6 +120,8 @@ export function recordingProvenance(recorder, { root = projectRoot } = {}) {
         "null",
     );
     assert(catalog && !catalog.connection, "Record only an offline, unauthenticated preview");
+    if (hosted)
+      assert.equal(catalog.hosted, true, "Hosted recording requires the Web Studio document");
     assert.match(catalog.studio?.build || "", /^[0-9a-f]{12}$/);
     assert.equal(typeof catalog.studio.version, "string");
     generated = {
