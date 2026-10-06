@@ -213,7 +213,7 @@ are developer regression controls, not separate consumer editions.
 
 - [x] Define release and development tools packages with CLI, Studio, examples
       and menu integration; keep stock Niri and user settings outside package ownership.
-- [ ] Validate and publish `niri-fx` and `niri-fx-git` on AUR, with source checksums,
+- [x] Validate and publish `niri-fx` and `niri-fx-git` on AUR, with source checksums,
       resolved development revisions, isolated builds and install/removal checks.
 - [ ] Build a relocatable full-session candidate from prepared pinned source and
       locked dependencies; finish binary processing before recording provenance.
