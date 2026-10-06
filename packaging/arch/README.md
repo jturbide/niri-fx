@@ -1,23 +1,27 @@
 # Arch packaging
 
-`niri-fx/` contains the release recipe mirrored to the AUR. It builds a fixed,
-checksum-verified source release with standard Python build tools. A GitHub
-prerelease is still a fixed release; this recipe does not track a moving Git tip.
-`niri-fx-git/` tracks `main` and derives its version from source metadata, the
-commit count and commit ID. It provides and conflicts with `niri-fx`. Keep the
-two recipes' payloads consistent; users install one channel at a time.
-The package contains CLI/Studio and their resources. See the
-[user guide](../../docs/arch-linux.md) for installation and managed-session limits.
-The packaging sources use 0BSD, as recorded in each recipe's `LICENSE` and
-`REUSE.toml`. This does not change the application's MIT/GPL licensing.
+There are exactly two package recipes. `niri-fx/` builds a fixed release tag;
+`niri-fx-git/` tracks `main` and derives its version from the source version,
+commit count and commit ID. Users install one channel. **Both contain the full
+product:** CLI, Studio, presets, examples, compositor and login entry.
+
+Each recipe uses one NiriFX checkout for the wheel, native patches and session
+launcher. The native source is pinned separately to the canonical upstream Niri
+revision and receives the complete four-patch stack. Stock Niri stays installed
+for service lifecycle, portal configuration and recovery. Users can continue to
+use stock Niri with the tools without adopting the included session.
+
+See the [user guide](../../docs/arch-linux.md) for installation and updates.
+Packaging sources use 0BSD, as recorded in each recipe's `LICENSE` and
+`REUSE.toml`; application and upstream licensing is preserved in the payload.
 
 ## Validate a recipe
 
-Work from a copy of the recipe so build files remain outside the source tree:
+Work from a copy so downloaded sources and build files stay outside the checkout:
 
 ```sh
 mkdir -p artifacts/arch-package/review
-cp packaging/arch/niri-fx/{PKGBUILD,.SRCINFO,README.Arch,niri-fx-studio.desktop,LICENSE,REUSE.toml} \
+cp packaging/arch/niri-fx/{PKGBUILD,.SRCINFO,README.Arch,niri-fx-studio.desktop,niri-fx-packaged.desktop,LICENSE,REUSE.toml} \
   artifacts/arch-package/review/
 cd artifacts/arch-package/review
 makepkg --verifysource
@@ -28,66 +32,82 @@ makepkg --cleanbuild
 namcap niri-fx-*.pkg.tar.zst
 ```
 
-Repeat with `packaging/arch/niri-fx-git/` in its own build directory for the
-development channel. Verify submitted `.SRCINFO` before building: `pkgver()`
-updates the copied development recipe to its resolved source revision. Retain
-that revision and its regenerated metadata with the build evidence.
+Repeat with `niri-fx-git/` in a separate directory. Check submitted `.SRCINFO`
+before building: development `pkgver()` updates the copied recipe after resolving
+its source. Retain the exact source commit and effective metadata with evidence.
 
-From the repository root, inspect and exercise the resulting package outside
-the checkout without installing it:
+The release recipe uses a fixed Git tag and checks its Python version against
+`pkgver`. Makepkg uses `SKIP` checksums for VCS sources; this is not automatic
+SSH tag-signature authentication. Maintainers verify the signed release tag and
+its commit before publishing the recipe. Local desktop, README and license files
+have explicit SHA-256 checksums.
+
+From the repository root, audit the complete archive without installing it:
 
 ```sh
 python3 scripts/check-arch-package.py \
-  artifacts/arch-package/review/niri-fx-VERSION-RELEASE-any.pkg.tar.zst
+  artifacts/arch-package/review/niri-fx-VERSION-RELEASE-x86_64.pkg.tar.zst
 ```
 
-The checker requires Python and `zstd`. It rejects unsafe archive paths, links,
-installation hooks and files outside the tools package's declared locations.
-It verifies installed resources, license texts, desktop integration, portable
-recipes, stock exports and offline preview generation. Package metadata supplies
-the tested version, so the recipe can remain on the latest release while `main`
-develops the next one.
+The bounded archive reader rejects unsafe paths, links, installation hooks,
+unexpected files and incomplete tools or compositor payloads. It verifies wheel
+resources and metadata, licenses, both desktop entries, native provenance and
+final binary hashes. It also exercises extracted CLI commands, portable recipes,
+stock exports and offline previews outside the checkout.
 
-The **Arch package** workflow builds in an official Arch container, tests a real
-installation and removal, and verifies that stock Niri files and a disposable
-user's settings remain intact. Its container-only helper refuses host execution.
-Keep physical desktop acceptance separate from this package test.
+## Clean build and installed acceptance
 
-Namcap can report the optional Quickshell/QML imports and interpret the
-`niri_fx.cli.main` entry-point function as an external Python module. Review those
-warnings against the package's optional dependencies and actual installed CLI
-execution; do not silence all namcap diagnostics.
+The **Arch package** workflow builds both channels in official Arch containers.
+Its helper, `scripts/test-arch-package.sh`, refuses host execution. Candidate
+checks explicitly substitute the exact tested checkout for the release tag or
+moving branch and retain the original and effective source metadata. This lets a
+pull request validate the new package before its release tag exists. It does not
+establish that the release tag has been published.
+
+The build downloads locked Cargo dependencies in `prepare()`, then runs native
+regressions and release compilation offline. Each complete archive is audited
+and installed in a disposable container. The session acceptance helper exercises
+two synthetic users, read-only review, stale-review refusal, adoption, retained
+tools after removal and unchanged stock Niri files. No graphical session starts.
+
+The installation helper also accepts a previously published tools-only archive
+for upgrade checks. Keep its archive hash and package identity with the evidence;
+never point the helper at a host installation. Physical login, mixed monitors,
+PipeWire capture and suspend/resume have separate acceptance gates.
+
+The producer strips its owned executable before recording its final SHA-256.
+Makepkg stripping and debug splitting are disabled to preserve that identity.
+Makepkg's C/C++ LTO flags are also disabled because GCC LTO objects from
+PipeWire's C helpers cannot link with Rust's LLVM linker. Rust's release-profile
+thin LTO remains enabled. See Arch's
+[package options](https://man.archlinux.org/man/PKGBUILD.5.en#options_(array)).
+
+Namcap cannot infer every dynamically used session dependency or optional QML
+import. Review warnings against the actual payload and installed execution;
+do not suppress all diagnostics. Errors block publication.
 
 ## Publish an update
 
-1. Use a published source release and verify its checksum independently.
-2. Update `pkgver` and reset `pkgrel` for a new upstream release. Increment
-   `pkgrel` for packaging changes to the same upstream version.
-3. Refresh checksums for changed local source files and regenerate `.SRCINFO`.
-4. Pass local and isolated Arch checks; inspect the archive for unintended files.
-5. Copy only the recipe, `.SRCINFO`, desktop entry, `README.Arch`, `LICENSE` and
-   `REUSE.toml` into the AUR checkout. Create a signed commit and verify the remote
-   ref after pushing.
+1. Verify the signed release tag and commit for `niri-fx`, or the tested development
+   revision for `niri-fx-git`. Confirm the release recipe's tag actually exists.
+2. Update `pkgver` and reset `pkgrel` for a new release. Increment `pkgrel` for a
+   packaging-only change to the same source version.
+3. Refresh changed local source checksums and regenerate `.SRCINFO`.
+4. Pass clean build, archive and installed acceptance for each channel. Check
+   upgrades from the earlier tools-only packages when changing file ownership.
+5. Copy only the recipe, `.SRCINFO`, both desktop entries, `README.Arch`, `LICENSE`
+   and `REUSE.toml` into the matching AUR checkout. Sign the commit, verify its
+   signature and confirm the published remote ref.
 
-Do not publish build artifacts, downloaded archives, credentials or raw test
-evidence. Do not use package installation hooks to adopt or activate effects.
+Do not publish downloaded sources, binaries, credentials or raw evidence in AUR
+Git. Package installation must not adopt settings, enable effects, switch the
+selected runtime or restart a compositor. Reviewed per-user adoption happens
+through the included CLI after installation.
 
-## Full-session packaging
+## Prepared offline builds
 
-`niri-fx-compositor-git/` is the development recipe for the complete pinned
-four-patch compositor. Pair it with `niri-fx-git` built from the same commit.
-It does not replace stock Niri, which supplies the established service lifecycle
-and portal configuration. The distinct `niri-fx-packaged.desktop` entry resolves
-each user's retained selection without adopting anything during login.
-
-The recipe fetches locked Cargo dependencies in `prepare()`, then builds and
-runs native regressions offline. The shared producer copies and strips the
-executable before recording its hash. Its compact export contains a relative
-manifest, binary, Cargo lockfile, upstream license/readme and frozen patch stack.
-Makepkg stripping/debug splitting is disabled to preserve that final hash.
-
-For a prepared, already-patched source tree and populated Cargo cache, the same
-producer can be exercised independently:
+The same producer can build from an already-patched tree and populated Cargo
+cache without running makepkg:
 
 ```sh
 python3 scripts/build-nirifx-session.py \
@@ -99,36 +119,11 @@ python3 scripts/build-nirifx-session.py \
   --strip-program /usr/bin/strip
 ```
 
-Use a fresh output path for each attempt. The producer verifies the upstream
-commit and exact canonical patch diff, uses a local copy without Git hardlinks,
-and does not alter prepared source or fetch dependencies during compilation.
+Use a fresh output path. The producer verifies the upstream commit and exact
+patch diff, copies source without Git hardlinks, and neither changes the prepared
+tree nor fetches dependencies during compilation. The export contains a relative
+manifest, binary, Cargo lockfile, upstream license/readme and frozen patches.
 
-Inspect paired package archives without installing them:
-
-```sh
-python3 scripts/check-arch-session-package.py /path/to/niri-fx-compositor-git-VERSION.pkg.tar.zst \
-  --tools-package /path/to/niri-fx-git-VERSION.pkg.tar.zst
-```
-
-Run `scripts/test-arch-session-package.sh` only in a disposable Arch container
-with its explicit container marker. The harness accepts paired archive paths,
-tests separate users and retained selections, then removes packages and compares
-stock files. It never starts the display-manager session. See its usage for the
-required paths and marker; do not bypass its host-execution guard.
-
-The prepared offline producer has passed its 168 native test executions and
-relocation checks. The complete recipe has also passed source fetching, offline
-regressions, release compilation and package assembly in clean Arch x86_64 with
-Rust 1.99. The paired archives passed installation, two-user adoption, stale-review
-refusal, package removal and stock-file preservation. Validation pinned both
-recipes to the same published NiriFX commit instead of a moving `main` branch.
-
-The recipe disables makepkg's C/C++ LTO flags because GCC's LTO-only PipeWire
-helper objects cannot link with Rust's LLVM linker. Rust's own release-profile
-thin LTO remains enabled. See Arch's [package options](https://man.archlinux.org/man/PKGBUILD.5.en#options_(array)).
-
-Publication remains gated on actual package acceptance and the
-[native distribution gates](../../docs/releasing.md#native-release-candidates).
-In particular, package checks do not establish physical login, screen sharing,
-suspend, mixed-monitor behavior or compatibility across system Python/library
-upgrades. Retaining sources and binaries does not retain the distribution ABI.
+A retained copy still depends on distribution libraries, Python and drivers.
+Keep the [native distribution acceptance](../../docs/releasing.md#native-release-candidates)
+and [validation limits](../../docs/validation.md) aligned with actual results.

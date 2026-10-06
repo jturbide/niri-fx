@@ -83,7 +83,8 @@ Before publishing a native binary candidate:
       compilation and regression checks for every advertised variant.
 - [ ] Build with the declared desktop features and locked dependencies; retain
       toolchain, target, build identity, source, patch and license provenance.
-- [ ] Package a distinctly named compositor and session alongside stock Niri.
+- [ ] Include the full compositor and session in each complete distribution
+      package alongside stock Niri. Arch uses only `niri-fx` and `niri-fx-git`.
       Declare runtime library dependencies and verify a clean installation on
       each advertised distribution and architecture.
 - [ ] Exercise Studio and CLI review, stale-review refusal, next-login selection,

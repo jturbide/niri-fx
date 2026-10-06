@@ -5,15 +5,39 @@ on:
   pull_request:
     paths:
       - "packaging/**"
-      - "scripts/check-arch-package.py"
-      - "scripts/test-arch-package.sh"
+      - "niri_fx/__init__.py"
+      - "niri_fx/native_*.py"
+      - "niri_fx/package_session.py"
+      - "experimental/**"
+      - "pyproject.toml"
+      - "MANIFEST.in"
+      - "scripts/build-nirifx-session.py"
+      - "scripts/build-niri-movement.py"
+      - "scripts/lib/native_*.py"
+      - "scripts/check-arch*.py"
+      - "scripts/test-arch*.sh"
+      - "tests/test_arch*.py"
+      - "tests/test_native*.py"
+      - "tests/test_experimental_build.py"
       - ".github/workflows/arch-package.yml"
   push:
     branches: [main]
     paths:
       - "packaging/**"
-      - "scripts/check-arch-package.py"
-      - "scripts/test-arch-package.sh"
+      - "niri_fx/__init__.py"
+      - "niri_fx/native_*.py"
+      - "niri_fx/package_session.py"
+      - "experimental/**"
+      - "pyproject.toml"
+      - "MANIFEST.in"
+      - "scripts/build-nirifx-session.py"
+      - "scripts/build-niri-movement.py"
+      - "scripts/lib/native_*.py"
+      - "scripts/check-arch*.py"
+      - "scripts/test-arch*.sh"
+      - "tests/test_arch*.py"
+      - "tests/test_native*.py"
+      - "tests/test_experimental_build.py"
       - ".github/workflows/arch-package.yml"
 
 permissions:
@@ -43,10 +67,12 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - name: Build and test the tools package
+          fetch-depth: 0
+      - name: Build and test the complete candidate package
         env:
           NIRIFX_ARCH_PACKAGE_CONTAINER: "1"
           PACKAGE_NAME: ${{ matrix.package }}
+          CARGO_BUILD_JOBS: "2"
         run: bash scripts/test-arch-package.sh "$GITHUB_WORKSPACE/artifacts/arch-package/$PACKAGE_NAME" "$PACKAGE_NAME"
       - name: Retain package acceptance evidence
         if: always()

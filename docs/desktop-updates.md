@@ -118,13 +118,13 @@ new NiriFX build or use [frozen recovery](shared-settings.md#rollback-and-frozen
 if they diverge. Recovery changes the next NiriFX login without overwriting your
 current normal configuration or effects files.
 
-[Arch tools packages](arch-linux.md) provide CLI and Studio through the package
-manager. Existing managed login runtimes still use the reviewed tool update
-workflow above. Full-session packages and signed compositor downloads remain
-planned:
+[Arch packages](arch-linux.md) include CLI, Studio, presets and the full NiriFX
+compositor in either `niri-fx` or `niri-fx-git`. Package updates leave retained
+login runtimes unchanged until reviewed adoption. Source-installed runtimes use
+the tool update workflow above. The complete package follows this lifecycle:
 
-1. Install a separately named NiriFX compositor package/session alongside stock
-   Niri. Keep stock configuration free of unsupported native nodes.
+1. Install one NiriFX package alongside stock Niri. Keep stock configuration
+   free of unsupported native nodes.
 2. Download or build a candidate with an exact upstream revision, ordered patch
    hashes, build features, toolchain information and binary identity.
 3. Validate the candidate and its configuration in isolation. Publish supported
