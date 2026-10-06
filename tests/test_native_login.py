@@ -287,6 +287,77 @@ class NativeLoginTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "bad configuration"):
                 login._bundle(self.root, BUNDLE)
 
+    def test_shared_launch_preflights_mutable_settings_and_rechecks_owned_bundle(self):
+        shared = self.report | {"shared": {"owner_id": "e" * 64}}
+        with (
+            patch.object(login, "inspect_bundle", return_value=shared) as inspect,
+            patch("niri_fx.native_shared.preflight") as preflight,
+            patch.object(login.subprocess, "run") as validate,
+        ):
+            self.assertEqual(login._bundle(self.root, BUNDLE), shared)
+        preflight.assert_called_once_with(shared)
+        self.assertEqual(inspect.call_count, 2)
+        validate.assert_not_called()
+        with (
+            patch.object(
+                login,
+                "inspect_bundle",
+                side_effect=[shared, shared | {"binary_sha256": "f" * 64}],
+            ),
+            patch("niri_fx.native_shared.preflight"),
+            self.assertRaisesRegex(RuntimeError, "changed during"),
+        ):
+            login._bundle(self.root, BUNDLE)
+
+    def test_incompatible_shared_settings_prevent_execution_without_stock_fallback(self):
+        self.write_lease()
+        shared = self.report | {"shared": {"owner_id": "e" * 64}}
+        with (
+            patch.object(login, "inspect_bundle", return_value=shared),
+            patch("niri_fx.native_shared.preflight", side_effect=ValueError("incompatible base")),
+            patch.object(login.os, "execv") as execute,
+        ):
+            with self.assertRaisesRegex(ValueError, "incompatible base"):
+                login.compositor(self.root, TOKEN)
+        execute.assert_not_called()
+        self.assertFalse(login._receipt_path(self.directory, TOKEN).exists())
+
+    def test_shared_post_start_verifies_process_without_revalidating_shell_writes(self):
+        self.write_lease()
+        (self.runtime / "niri.wayland-1.4242.sock").touch()
+        shared = self.report | {"shared": {"owner_id": "e" * 64}}
+        with (
+            patch.object(login, "inspect_bundle", return_value=shared),
+            patch("niri_fx.native_shared.preflight") as preflight,
+            patch.object(login.subprocess, "run") as validate,
+            patch.object(login, "service_state", return_value=("active", 4242)),
+            patch.object(login, "_owned_compositor", return_value=True),
+            patch.object(login, "same_executable", return_value=True),
+            patch.object(Path, "is_socket", return_value=True),
+            patch.object(login, "_socket_version", return_value="26.04"),
+        ):
+            login.verify(self.root, TOKEN)
+        preflight.assert_not_called()
+        validate.assert_not_called()
+        report = json.loads((self.directory / f"verified-{TOKEN}.json").read_text())
+        self.assertEqual(report["scope"], "process-and-ipc")
+        self.assertNotIn("active_configuration", report)
+
+    def test_frozen_recovery_keeps_legacy_validation_even_after_start(self):
+        with (
+            patch.object(login, "inspect_bundle", return_value=self.report),
+            patch("niri_fx.native_shared.preflight") as preflight,
+            patch.object(
+                login.subprocess, "run", return_value=subprocess.CompletedProcess([], 0, "", "")
+            ) as validate,
+        ):
+            self.assertEqual(login._bundle(self.root, BUNDLE, process_only=True), self.report)
+        preflight.assert_not_called()
+        self.assertEqual(
+            validate.call_args.args[0],
+            [self.report["binary"], "validate", "-c", self.report["config"]],
+        )
+
     def test_launch_captures_selection_once_and_cleans_runtime(self):
         captured = []
         child = Mock()

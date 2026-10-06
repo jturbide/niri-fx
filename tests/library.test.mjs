@@ -7,6 +7,152 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { launchBrowser, projectRoot } from "../scripts/lib/browser.mjs";
 
+async function sharedStudioFixture(t, { configured = true, saved = true } = {}) {
+  let shared = false,
+    selected = false,
+    stale = false,
+    unchanged = false,
+    browser;
+  const requests = [];
+  const html = (shared) =>
+    execFileSync(
+      "python3",
+      [
+        "-c",
+        `
+import json,sys
+from niri_fx.native_customization import fragment_choices
+from niri_fx.preview import preview_document
+from niri_fx.presets import PRESETS
+shared,configured=json.loads(sys.argv[1])
+connection={"target":"native","token":"synthetic-shared-test",
+    "installation":{"state":"unmanaged","selected_version":None},"native":{
+    "base_bundle":"shared-base" if shared else "launch-base","variant":"fragment",
+    "recipe":None,"fragment_choices":fragment_choices(),"swap_supported":True,
+    "shared":shared,"shared_config_configured":configured}}
+print(preview_document(PRESETS["balanced"],connection=connection))
+`,
+        JSON.stringify([shared, configured]),
+      ],
+      { cwd: projectRoot, encoding: "utf8", maxBuffer: 4 * 1024 * 1024 },
+    );
+  let page = html(shared);
+  const plan = (activation) => ({
+    activation,
+    plan_sha256: "a".repeat(64),
+    changes: unchanged ? [] : [{ action: "update", path: "/synthetic/nirifx-effects.kdl" }],
+    notes: ["Synthetic shared-settings fixture; no desktop files are written."],
+  });
+  const server = createServer(async (request, response) => {
+    const path = new URL(request.url, "http://127.0.0.1").pathname;
+    if (path === "/") {
+      response.writeHead(200, { "Content-Type": "text/html; charset=utf-8" }).end(page);
+      return;
+    }
+    response.setHeader("Content-Type", "application/json");
+    if (path === "/library") {
+      response.end(
+        JSON.stringify({
+          customs: {},
+          managed: {},
+          warnings: [],
+          restore: true,
+          active_name: "Synthetic settings",
+          native: {
+            base_bundle: shared ? "shared-base" : "launch-base",
+            baseline_bundle: "launch-base",
+            shared,
+            shared_state: { selected },
+            recovery_available: selected,
+            selection: { selected: selected ? "shared-base" : "launch-base", previous: null },
+            bundles: [],
+            recipe: saved
+              ? {
+                  document: { schema: 3, name: "Saved settings", effect: {} },
+                  fragment_preset: null,
+                }
+              : null,
+            reopen: saved,
+            running: { status: "matched", bundle_id: "launch-base", detail: "Synthetic identity" },
+            live: { ready: false, status: shared ? "shared-config" : "offline" },
+          },
+        }),
+      );
+      return;
+    }
+    let body = "";
+    for await (const part of request) body += part;
+    requests.push({
+      path,
+      body: JSON.parse(body || "{}"),
+      token: request.headers["x-nirifx-token"],
+    });
+    if (path === "/shared-review" || path === "/review") {
+      response.end(JSON.stringify(plan("config-written")));
+    } else if (path === "/recovery-review") {
+      response.end(JSON.stringify(plan("next-login")));
+    } else if (path === "/shared-apply" || path === "/apply") {
+      if (stale) {
+        response
+          .writeHead(409)
+          .end(JSON.stringify({ error: "Shared sources changed. Review again." }));
+      } else {
+        selected = true;
+        response.end(
+          JSON.stringify({ activation: "config-written", live: { status: "unverified" } }),
+        );
+      }
+    } else if (path === "/recovery-apply") {
+      selected = false;
+      response.end(JSON.stringify({ activation: "next-login" }));
+    } else {
+      response.writeHead(404).end(JSON.stringify({ error: "Unknown synthetic endpoint" }));
+    }
+  });
+  t.after(async () => {
+    try {
+      await browser?.close();
+    } finally {
+      if (server.listening) {
+        server.closeAllConnections();
+        await new Promise((resolve) => server.close(resolve));
+      }
+    }
+  });
+  await new Promise((resolve) => server.listen(0, "127.0.0.1", resolve));
+  browser = await launchBrowser();
+  await reduceTransactionMotion(browser);
+  const url = `http://127.0.0.1:${server.address().port}/?breakup=0`;
+  const wait = (expression) =>
+    browser.evaluate(`new Promise((resolve,reject)=>{
+      const started=Date.now();function check(){if(${expression})resolve();else if(Date.now()-started>3000)reject(new Error('Shared Studio timeout: '+byId('error').textContent));else setTimeout(check,10)}check();
+    })`);
+  const navigate = async () => {
+    await browser.navigate(url, { width: 1440, height: 1080 });
+    await wait("byId('native-selected').textContent.length>0");
+  };
+  await navigate();
+  return {
+    browser,
+    requests,
+    async click(id) {
+      await browser.callFunction("function(id){byId(id).click()}", [id]);
+      await wait("!byId('store-profile').disabled");
+    },
+    stale(value) {
+      stale = value;
+    },
+    unchanged(value) {
+      unchanged = value;
+    },
+    async reopen() {
+      shared = selected;
+      page = html(shared);
+      await navigate();
+    },
+  };
+}
+
 async function reduceTransactionMotion(browser) {
   // Selecting a Library card automatically replays it. Transaction checks keep
   // real shaders at their endpoints; dedicated preview tests exercise playback.
@@ -36,6 +182,174 @@ async function assertTransactionMotion(browser) {
     "Transaction workflows must honor reduced motion without queuing playback",
   );
 }
+
+test("shared settings review preserves drafts and separates file updates from running confirmation", async (t) => {
+  const view = await sharedStudioFixture(t);
+  const { browser, click, requests } = view;
+  const { evaluate } = browser;
+  const snapshot = () =>
+    evaluate("({document:effectDocument(),sessionSettings,history:editHistory,historyIndex})");
+  assert.equal(await evaluate("byId('native-share').disabled"), false);
+  await evaluate(`
+    byId('combo-name').value='Unsaved shared draft';
+    byId('combo-name').dispatchEvent(new Event('change'));
+    byId('native-fragment-preset').value='cascade';
+    byId('native-fragment-preset').dispatchEvent(new Event('change'));
+  `);
+  const draft = await snapshot();
+  await click("native-share");
+  assert.match(await evaluate("byId('review-summary').textContent"), /Share saved settings/);
+  assert.match(
+    await evaluate("byId('review-summary').textContent"),
+    /draft is not used or changed/,
+  );
+  assert.match(
+    await evaluate("byId('review-summary').textContent"),
+    /cannot independently confirm/,
+  );
+  assert.equal(await evaluate("byId('apply-selection').textContent"), "Apply shared settings");
+  assert.equal(await evaluate("byId('review-files').children.length"), 1);
+  if (process.env.NIRIFX_SHARED_STUDIO_SCREENSHOT) {
+    await evaluate("byId('native-share').closest('details').open=true;window.scrollTo(0,0)");
+    const shot = await browser.rpc("Page.captureScreenshot", { format: "png" });
+    writeFileSync(process.env.NIRIFX_SHARED_STUDIO_SCREENSHOT, Buffer.from(shot.data, "base64"));
+  }
+  await click("cancel-review");
+  assert.equal(
+    requests.some((request) => request.path === "/shared-apply"),
+    false,
+  );
+  assert.deepEqual(await snapshot(), draft);
+
+  view.stale(true);
+  await click("native-share");
+  await click("apply-selection");
+  assert.match(await evaluate("byId('error').textContent"), /Shared sources changed/);
+  assert.equal(await evaluate("byId('native-share').disabled"), false);
+  assert.equal(await evaluate("byId('apply-review').hidden"), true);
+  assert.deepEqual(await snapshot(), draft);
+  view.stale(false);
+  await click("native-share");
+  await click("apply-selection");
+  assert.deepEqual(await snapshot(), draft);
+  assert.match(await evaluate("byId('status').textContent"), /draft is unchanged/);
+  assert.match(
+    await evaluate("byId('status').textContent"),
+    /has not been independently confirmed/,
+  );
+  assert.equal(await evaluate("byId('native-share').hidden"), true);
+  assert.equal(await evaluate("byId('review-selection').disabled"), true);
+  assert.equal(await evaluate("byId('restore-selection').disabled"), true);
+  assert.equal(await evaluate("byId('store-profile').disabled"), false);
+  assert.equal(await evaluate("byId('export').disabled"), false);
+  assert.match(
+    await evaluate("byId('native-session-help').textContent"),
+    /close and reopen Studio/,
+  );
+  for (const request of requests.filter((item) => item.path.startsWith("/shared-"))) {
+    assert.equal(request.token, "synthetic-shared-test");
+    assert.deepEqual(
+      request.body,
+      request.path === "/shared-review" ? {} : { expected: "a".repeat(64) },
+      "Sharing submits neither the unsaved document nor a browser-selected path",
+    );
+  }
+
+  // Opening a new document simulates relaunch against the selected shared base.
+  // A selector change alone must never switch the source of the existing editor.
+  await view.reopen();
+  assert.equal(await evaluate("byId('review-selection').disabled"), false);
+  assert.equal(await evaluate("byId('review-selection').textContent"), "Review & apply");
+  assert.match(
+    await evaluate("byId('native-session-help').textContent"),
+    /Normal Niri settings are shared/,
+  );
+  assert.match(await evaluate("byId('native-running').textContent"), /not independently confirmed/);
+  assert.match(
+    await evaluate("byId('native-base').textContent"),
+    /Preserve follows your normal Niri/,
+  );
+  assert.match(
+    await evaluate("byId('pointer-description').textContent"),
+    /shared Niri configuration/,
+  );
+  await click("review-selection");
+  assert.equal(await evaluate("byId('apply-selection').textContent"), "Apply shared settings");
+  assert.doesNotMatch(
+    await evaluate("byId('review-summary').textContent"),
+    /desktop stays unchanged/,
+  );
+  assert.match(
+    await evaluate("byId('review-summary').textContent"),
+    /already using these files reload automatically/,
+  );
+  await click("apply-selection");
+  assert.match(await evaluate("byId('status').textContent"), /^Updated shared configuration files/);
+  assert.match(
+    await evaluate("byId('status').textContent"),
+    /already using these files reload automatically/,
+  );
+  assert.doesNotMatch(
+    await evaluate("byId('status').textContent"),
+    /Applied to this desktop|current session stays unchanged/,
+  );
+  view.unchanged(true);
+  await click("review-selection");
+  assert.match(
+    await evaluate("byId('review-summary').textContent"),
+    /files already match.*not been independently confirmed/s,
+  );
+  await click("cancel-review");
+  view.unchanged(false);
+  assert.equal(await evaluate("byId('native-recovery').disabled"), false);
+  await click("native-recovery");
+  assert.equal(await evaluate("byId('apply-selection').textContent"), "Select for next login");
+  assert.match(
+    await evaluate("byId('review-summary').textContent"),
+    /normal Niri settings.*stay unchanged/,
+  );
+  await click("cancel-review");
+  assert.equal(
+    requests.some((request) => request.path === "/recovery-apply"),
+    false,
+  );
+  const recoveryDraft = await snapshot();
+  await click("native-recovery");
+  await click("apply-selection");
+  assert.deepEqual(await snapshot(), recoveryDraft);
+  assert.match(
+    await evaluate("byId('status').textContent"),
+    /next NiriFX login.*Normal Niri settings were not changed/,
+  );
+  assert.equal(await evaluate("byId('review-selection').disabled"), true);
+  assert.equal(await evaluate("byId('native-recovery').hidden"), true);
+  assert.equal(await evaluate("byId('store-profile').disabled"), false);
+  assert.deepEqual(requests.find((request) => request.path === "/recovery-apply").body, {
+    expected: "a".repeat(64),
+  });
+  await assertTransactionMotion(browser);
+});
+
+test("shared setup needs a launch-scoped source and an applied recipe", async (t) => {
+  for (const options of [{ configured: false }, { saved: false }])
+    await t.test(JSON.stringify(options), async (t) => {
+      const view = await sharedStudioFixture(t, options);
+      const { evaluate } = view.browser;
+      assert.equal(await evaluate("byId('native-share').disabled"), true);
+      if (options.configured === false) {
+        assert.equal(await evaluate("byId('native-share').hidden"), true);
+        assert.equal(await evaluate("byId('native-shared-settings').hidden"), true);
+      } else {
+        assert.equal(await evaluate("byId('native-share').hidden"), false);
+        assert.match(await evaluate("byId('native-shared-help').textContent"), /apply them first/);
+      }
+      await view.click("native-share");
+      assert.equal(
+        view.requests.some((request) => request.path.startsWith("/shared-")),
+        false,
+      );
+    });
+});
 
 test("simple Studio previews one action while preserving the rest of the combo", async () => {
   const html = execFileSync(
@@ -82,6 +396,12 @@ test("simple Studio previews one action while preserving the rest of the combo",
     assert.equal(await evaluate('byId("combo-options").open'), false);
     assert.equal(await evaluate('byId("transfer-options").open'), false);
     assert.equal(await evaluate('byId("export").checkVisibility()'), true);
+    assert.equal(
+      await evaluate('document.querySelector("label[for=combo-pointer-mode]").textContent'),
+      "Pointer wobble",
+    );
+    assert.equal(await evaluate('byId("pointer-movement-note").hidden'), true);
+    assert.equal(await evaluate('byId("pointer-movement-note").textContent'), "");
     assert.equal(
       await evaluate(
         'document.querySelector("[data-library-action=open]").getAttribute("aria-pressed")',
@@ -818,8 +1138,49 @@ finally:
       await evaluate("effectDocument().actions.movement"),
       await evaluate("catalog.connection.native.fragment_choices.cascade.effect"),
     );
+    await choose("combo-pointer-mode", "style");
+    await choose("combo-pointer", "rubber-sheet");
+    assert.equal(await evaluate("byId('pointer-movement-note').hidden"), false);
+    assert.match(
+      await evaluate("byId('pointer-movement-note').textContent"),
+      /continuous fragments take priority over whole-window wobble/,
+    );
+    await choose("combo-pointer-mode", "off");
+    assert.equal(await evaluate("effectDocument().pointer.strength"), 0);
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "cascade");
+    assert.deepEqual(
+      await evaluate("effectDocument().actions.movement"),
+      await evaluate("catalog.connection.native.fragment_choices.cascade.effect"),
+    );
+    assert.match(
+      await evaluate("byId('pointer-description').textContent"),
+      /^Disable whole-window wobble/,
+    );
+    assert.match(
+      await evaluate("byId('pointer-movement-note').textContent"),
+      /Pointer wobble Off does not stop those fragments.*Set Move to Off/s,
+    );
+    assert.match(
+      await evaluate("byId('combo-pointer-mode').getAttribute('aria-describedby')"),
+      /pointer-movement-note/,
+    );
     await choose("combo-movement-mode", "off");
     assert.equal(await evaluate("byId('native-fragment-preset').value"), "");
+    assert.match(
+      await evaluate("byId('pointer-movement-note').textContent"),
+      /^Move is Off: fragment dragging and timed Move effects are disabled/,
+    );
+    await click("undo");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "cascade");
+    assert.equal(await evaluate("effectDocument().pointer.strength"), 0);
+    assert.match(
+      await evaluate("byId('pointer-movement-note').textContent"),
+      /continuous fragments take priority/,
+    );
+    await click("redo");
+    assert.equal(await evaluate("effectDocument().actions.movement"), "off");
+    assert.match(await evaluate("byId('pointer-movement-note').textContent"), /^Move is Off:/);
+    await choose("combo-pointer-mode", "preserve");
     await choose("native-fragment-preset", "tear");
     await choose("combo-name", "Studio Trial");
     const document = await evaluate("effectDocument()");
@@ -870,6 +1231,10 @@ finally:
     await click("native-reopen");
     assert.deepEqual(await evaluate("effectDocument()"), document);
     assert.equal(await evaluate("byId('native-fragment-preset').value"), "tear");
+    assert.match(
+      await evaluate("byId('pointer-movement-note').textContent"),
+      /continuous fragments take priority/,
+    );
     const beforeRollback = files(fixture.root);
     await click("restore-selection");
     await settle();

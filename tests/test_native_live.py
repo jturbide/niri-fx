@@ -162,6 +162,130 @@ class NativeLiveTests(unittest.TestCase):
         self.assertEqual(context["status"], "offline")
         self.assertFalse((self.root / native_live.RECEIPT).exists())
 
+    def test_shared_review_and_result_never_promise_or_send_a_live_reload(self):
+        plan = self.plan | {"shared": {"owner_id": "e" * 64}}
+        with (
+            patch.object(native_live, "context") as context,
+            patch.object(native_live, "apply") as apply,
+        ):
+            reviewed = native_live.activation_plan(
+                plan, self.root, self.base, socket_path=self.socket
+            )
+            result = native_live.activation_result(
+                reviewed, {"applied": True}, self.root, self.base, socket_path=self.socket
+            )
+        context.assert_not_called()
+        apply.assert_not_called()
+        self.assertEqual(reviewed["activation"], "config-written")
+        self.assertNotIn("native_live", reviewed)
+        self.assertEqual(result["activation"], "config-written")
+        self.assertEqual(result["live"]["status"], "unverified")
+        self.assertIn("already using", result["live"]["detail"])
+        self.assertIn("next login", result["live"]["detail"])
+        self.assertFalse((self.root / native_live.RECEIPT).exists())
+        with self.assertRaisesRegex(ValueError, "without --live"):
+            native_live.activation_plan(plan, self.root, self.base, require_live=True)
+
+    def test_shared_context_keeps_process_identity_separate_from_source_drift(self):
+        original_inspect = native_session.inspect_bundle
+
+        def shared_bundle(root, bundle_id):
+            return original_inspect(root, bundle_id) | {"shared": {"owner_id": "e" * 64}}
+
+        for status, projections_match in (
+            ("current", True),
+            ("changed", False),
+            ("unavailable", False),
+        ):
+            self.socket = str(self.root.parent / f"ipc-{status}.sock")
+            with (
+                self.subTest(status=status),
+                patch.object(native_session, "inspect_bundle", side_effect=shared_bundle),
+                patch(
+                    "niri_fx.native_shared.inspect_settings",
+                    return_value={"status": status, "projections_match": projections_match},
+                ),
+                ipc(self.socket) as requests,
+            ):
+                context = self.context()
+                self.assertFalse(context["ready"])
+                self.assertEqual(context["status"], "shared-config")
+                self.assertEqual(context["startup_bundle"], self.base)
+                self.assertIsNone(context["effective_bundle"])
+                self.assertIsNone(context["loaded_bundle"])
+                self.assertEqual(context["shared_settings"]["status"], status)
+                result = self.apply({})
+                self.assertEqual(result["status"], "unavailable")
+                self.assertEqual(self.actions(requests), [])
+                self.assertFalse((self.root / native_live.RECEIPT).exists())
+
+    def test_shared_source_inspection_cannot_hide_a_replaced_process(self):
+        original_inspect = native_session.inspect_bundle
+
+        def shared_bundle(root, bundle_id):
+            return original_inspect(root, bundle_id) | {"shared": {"owner_id": "e" * 64}}
+
+        def inspect_settings(_):
+            native_runtime._process_start.return_value = 124
+            return {"status": "current", "projections_match": True}
+
+        with (
+            patch.object(native_session, "inspect_bundle", side_effect=shared_bundle),
+            patch("niri_fx.native_shared.inspect_settings", side_effect=inspect_settings),
+            ipc(self.socket) as requests,
+        ):
+            context = self.context()
+        self.assertFalse(context["ready"])
+        self.assertEqual(context["status"], "unavailable")
+        self.assertEqual(self.actions(requests), [])
+        self.assertFalse((self.root / native_live.RECEIPT).exists())
+
+    def test_frozen_recovery_from_shared_session_is_next_login_only(self):
+        original_inspect = native_session.inspect_bundle
+
+        def shared_startup(root, bundle_id):
+            result = original_inspect(root, bundle_id)
+            return result | {"shared": {"owner_id": "e" * 64}} if bundle_id == self.base else result
+
+        with (
+            patch.object(native_session, "inspect_bundle", side_effect=shared_startup),
+            patch(
+                "niri_fx.native_shared.inspect_settings",
+                return_value={"status": "unavailable", "projections_match": False},
+            ),
+            ipc(self.socket) as requests,
+        ):
+            reviewed = native_live.activation_plan(
+                self.plan, self.root, self.base, socket_path=self.socket
+            )
+            result = native_live.activation_result(
+                reviewed, {"applied": True}, self.root, self.base, socket_path=self.socket
+            )
+        self.assertEqual(reviewed["activation"], "next-login")
+        self.assertNotIn("native_live", reviewed)
+        self.assertEqual(result["activation"], "next-login")
+        self.assertNotIn("live", result)
+        self.assertEqual(self.actions(requests), [])
+        self.assertFalse((self.root / native_live.RECEIPT).exists())
+
+    def test_shared_target_cannot_use_a_frozen_sessions_confirmed_reload_route(self):
+        original_inspect = native_session.inspect_bundle
+
+        def shared_target(root, bundle_id):
+            result = original_inspect(root, bundle_id)
+            return (
+                result | {"shared": {"owner_id": "e" * 64}} if bundle_id == self.target else result
+            )
+
+        with ipc(self.socket) as requests:
+            context = self.context()
+            self.assertTrue(context["ready"])
+            with patch.object(native_session, "inspect_bundle", side_effect=shared_target):
+                result = self.apply(context["identity"])
+        self.assertEqual(result["status"], "unavailable")
+        self.assertEqual(self.actions(requests), [])
+        self.assertFalse((self.root / native_live.RECEIPT).exists())
+
     def test_context_probes_startup_executable_not_copied_target(self):
         with ipc(self.socket) as requests:
             before = {path: path.read_bytes() for path in self.root.rglob("*") if path.is_file()}

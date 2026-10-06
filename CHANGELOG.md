@@ -9,6 +9,15 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Added
 
+- Shared desktop settings for stock Niri and the NiriFX session. Reviewed adoption
+  keeps normal configuration files in place and uses one saved recipe to generate
+  stock-compatible effects plus native-only movement, swaps and pointer controls.
+  Both executables validate changes; external edits invalidate stale reviews.
+  Studio exposes sharing and frozen recovery in advanced settings; CLI equivalents
+  are `native share` and `native recover`. Already-shared sessions watch includes;
+  first adoption or a changed compositor build takes effect at the next NiriFX login.
+  File updates are reported separately from confirmed live activation.
+
 - Local Studio installation status identifies changed tool selections, unfinished
   migration and unavailable installations. A notice explains when to save and
   reopen, including same-version updates and rollbacks. About offers a manual
@@ -124,6 +133,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
+- Studio calls whole-window pointer deformation **Pointer wobble** and explains
+  that its Off setting leaves continuous fragments enabled when Move uses them.
+  Move Off disables continuous fragments as well as the timed movement effect.
+
 - Studio puts the current combo, primary Apply action and JSON download above the
   preview. Profile tools are secondary, review stays beside the action that opens
   it, and session details are collapsed. The narrow layout wraps controls and
@@ -148,6 +161,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - Update the pinned checkout, Python/Node setup and Pages publishing actions.
 
 ### Fixed
+
+- Standalone setup and historical Restore refuse effects now owned by shared
+  settings, including stale reviews and adoption that preserves identical bytes.
 
 - Source archives include the native compatibility matrix required by their
   bundled checker. Package checks exercise the checker from an extracted archive.

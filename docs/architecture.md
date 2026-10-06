@@ -48,7 +48,8 @@ import-boundary test enforces that separation.
 | [picker.py](../niri_fx/picker.py), [qml/](../niri_fx/qml/), [gtk/](../niri_fx/gtk/) | Optional desktop launchers and reusable pickers. Toolkit views call the CLI through argument arrays; no shader renderer or configuration writer is duplicated in the UI. |
 | [setup.py](../niri_fx/setup.py), [pack.py](../niri_fx/pack.py) | Inspectable plans, apply/restore snapshots, standalone includes and picker folders. |
 | [storage.py](../niri_fx/storage.py) | Staged, flushed file writes and atomic replacement. Callers decide ownership, locking and symlink policy. |
-| [native_build.py](../niri_fx/native_build.py), [native_session.py](../niri_fx/native_session.py) | Read-only native build evidence, retained desktop bundles and selector-only next-login rollback. Reuses setup plans and transactions; never writes stock config. |
+| [native_build.py](../niri_fx/native_build.py), [native_session.py](../niri_fx/native_session.py) | Read-only native build evidence, retained desktop bundles and reviewed selection/rollback. Reuses setup plans and transactions; shared bundles delegate projection writes to native_shared. |
+| [native_shared.py](../niri_fx/native_shared.py) | Shared normal configuration, stock/native effect projections, paired validation and independent frozen recovery. Native runtime paths are isolated by build identity. |
 | [native_config.py](../niri_fx/native_config.py) | Bounded include-graph snapshots. Rewrites literal include paths while retaining file boundaries and positional merges; verifies the entire owned graph before selection. |
 | [native_customization.py](../niri_fx/native_customization.py) | Validated profile recipes over an immutable baseline, creating a new retained bundle and reviewed next-login selection through setup transactions. Repeated edits replace one overlay rather than growing the include graph. |
 | [native_live.py](../niri_fx/native_live.py) | Same-build managed-session reload over verified IPC, process-bound reload receipts and bounded configuration-load confirmation. Keeps immutable bundles and next-login transactions separate from active runtime evidence. |
@@ -260,6 +261,29 @@ Locks coordinate cooperating NiriFX writers using the same state/registry path.
 They do not lock out external editors. Atomic file replacement is not a
 crash-atomic multi-file transaction. Keep snapshots and conflict checks even
 when an individual rename is atomic.
+
+### Shared desktop configuration
+
+Bundle schema 4 separates a mutable normal Niri include tree from immutable
+recovery data. Older bundle schemas retain closed snapshot validation. The shared
+source keeps its original path so shell writers continue using their usual files.
+One saved document and continuous-fragment choice generate stock-supported
+settings and a native-only overlay; common actions are absent from the latter so
+Preserve can expose the current source settings.
+
+Plans bind both validation executables, observed source files, ownership receipts
+and generated files to the same fingerprint. Apply uses the existing transaction
+backend and rolls back owned writes on handled validation failures. Stock paths
+are source-bound; native wrapper/overlay paths also include binary identity so a
+new compositor selection cannot inject new native syntax into an older build.
+Shared historical selection reuses retained shader bytes with current external
+settings. Frozen recovery uses the retained snapshot without reading shared files.
+
+Niri watches includes. Shared writes do not send `LoadConfigFile`, because its
+uncorrelated event stream cannot acknowledge which mutable file revision became
+active. Results report `config-written` / `unverified`. Startup validates shared
+inputs before launch; post-start process verification avoids racing shell writes.
+First adoption or a changed binary uses the new wrapper at the next login.
 
 ## Studio trust and lifetime
 

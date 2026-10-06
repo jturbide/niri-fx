@@ -99,9 +99,9 @@ refusal. Imported presets cannot authorize tool installation or registration.
   `native presets` lists continuous fragment choices; an explicit
   `--fragment-preset tear` replaces movement with its matching material and response.
   Use `--document FILE` for a portable combo. Review, then apply the same arguments
-  with `--apply --expect-plan REVIEWED_PLAN_SHA256`. Without `--live`, this selects
+  with `--apply --expect-plan REVIEWED_PLAN_SHA256`. For frozen bundles, omitting `--live` selects
   settings for the next login and leaves the running desktop unchanged.
-- For authorized changes to the running managed desktop, add `--live` to the
+- For authorized changes to a running frozen managed desktop, add `--live` to the
   configure review, then repeat the same arguments with
   `--apply --expect-plan REVIEWED_PLAN_SHA256`. This flag requires the verified
   same-build NiriFX session and retained baseline. Unavailable support refuses
@@ -112,8 +112,17 @@ refusal. Imported presets cannot authorize tool installation or registration.
   already be saved. A saved selection does not prove live activation.
 - `studio --target native` exposes the same choices and reviewed rollback.
   Its review shows whether changes apply to the desktop and next login or only
-  the next login. Preserve uses the original frozen baseline; later shell
-  settings require a fresh import.
+  the next login. Frozen Preserve uses the original baseline. Shared Preserve
+  inherits the current normal Niri configuration.
+- `native share BUNDLE_ID --config /path/to/niri/config.kdl` reviews connecting
+  the selected saved recipe to normal desktop settings. Repeat with the exact
+  `--apply --expect-plan` fingerprint. Both the trusted stock and retained native
+  executable validate the result. Shared Apply/configure/select/rollback update
+  watched includes and report `config-written` with unverified active contents;
+  do not add `--live` or claim a correlated reload acknowledgement. First adoption
+  or a different build requires the next NiriFX login. Reopen Studio after
+  changing modes. `native recover SHARED_BUNDLE_ID` reviews a frozen next-login
+  recovery without reading or overwriting a missing or invalid shared source.
 - Use reviewed `native rollback` for this target. Add `--live` during both review
   and Apply to reload a compatible retained previous selection too; an empty
   rollback target cannot be loaded live. Retain older bundles and the

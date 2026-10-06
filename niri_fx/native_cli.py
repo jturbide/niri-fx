@@ -68,6 +68,18 @@ def add_parser(commands):
         choices=FRAGMENT_PRESETS,
         help="Explicitly replace movement with this continuous response and its matching material",
     )
+    share = actions.add_parser(
+        "share", help="Share normal Niri desktop settings and supported effects with NiriFX"
+    )
+    share.add_argument("bundle", help="Retained bundle whose saved effect choices to use")
+    share.add_argument("--config", type=Path, required=True, help="Normal Niri configuration")
+    share.add_argument(
+        "--stock-binary", default="niri", help="Trusted stock Niri executable for validation"
+    )
+    recover = actions.add_parser(
+        "recover", help="Select a shared session's frozen configuration for recovery"
+    )
+    recover.add_argument("bundle", help="Shared bundle whose frozen snapshot to recover")
     rollback = actions.add_parser("rollback", help="Restore the previous next-login selection")
     for command in (configure, rollback):
         command.add_argument(
@@ -113,6 +125,8 @@ def add_parser(commands):
         install,
         select,
         configure,
+        share,
+        recover,
         rollback,
         entry,
         tools_status,
@@ -127,6 +141,8 @@ def add_parser(commands):
         install,
         select,
         configure,
+        share,
+        recover,
         rollback,
         entry,
         tools_update,
@@ -156,6 +172,8 @@ def run(args):
     root = args.root.expanduser().absolute()
     if getattr(args, "expect_plan", None) and not args.apply:
         raise ValueError("--expect-plan requires --apply")
+    if action in ("share", "recover") and args.apply and not args.expect_plan:
+        raise ValueError("Shared settings changes require --expect-plan from a fresh review")
     if action.startswith("tools-"):
         from . import native_tools
 
@@ -232,6 +250,16 @@ def run(args):
                 fragment_preset=args.fragment_preset,
             )
             scope = "selection"
+        elif action == "share":
+            from .native_shared import share_plan
+
+            plan = share_plan(root, args.bundle, args.config, stock_binary=args.stock_binary)
+            scope = "selection"
+        elif action == "recover":
+            from .native_shared import recovery_plan
+
+            plan = recovery_plan(root, args.bundle)
+            scope = "selection"
         elif action == "rollback":
             plan = native_session.rollback_plan(root)
             scope = "selection"
@@ -247,7 +275,11 @@ def run(args):
             plan = activation_plan(
                 plan, root, live_base, socket_path=live_socket, require_live=True
             )
-        if args.apply and action == "configure":
+        if args.apply and plan.get("shared"):
+            from .native_shared import apply_shared
+
+            result = apply_shared(plan, root, expected=args.expect_plan)
+        elif args.apply and action == "configure":
             from .native_customization import apply_native
 
             result = apply_native(plan, root, expected=args.expect_plan)
@@ -273,9 +305,18 @@ def run(args):
                 if plan["selection"]["selected"]
                 else "No native version is selected. Choose stock Niri at the next login."
             )
-            if action in ("select", "configure", "rollback")
+            if action in ("select", "configure", "rollback", "recover")
             else "Review the staged desktop entry before administrator registration."
         )
+        if action == "share" or plan.get("activation") == "config-written":
+            result["next_step"] = (
+                "Shared effect files were updated. Sessions already using the shared configuration "
+                "reload included files automatically; first adoption or a different compositor build "
+                "requires the next NiriFX login. Active settings were not independently confirmed."
+                if args.apply
+                else "Review both sessions' generated settings, then repeat with --apply "
+                "--expect-plan and this plan_sha256."
+            )
         if live_requested:
             result["next_step"] = (
                 result["live"]["detail"]

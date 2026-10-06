@@ -282,6 +282,14 @@ def parser():
         "--native-base",
         help="Exact retained bundle ID to customize; default is the next-login selection",
     )
+    studio.add_argument(
+        "--shared-config",
+        type=Path,
+        help="Normal Niri config to offer for reviewed sharing in the native session",
+    )
+    studio.add_argument(
+        "--stock-binary", default="niri", help="Trusted stock Niri executable for shared validation"
+    )
 
     picker = commands.add_parser("picker", help="Open an optional desktop style/profile picker")
     picker.add_argument("--toolkit", choices=("quickshell", "gtk"), default="quickshell")

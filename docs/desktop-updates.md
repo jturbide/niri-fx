@@ -34,6 +34,13 @@ If configuration validation fails, retain your saved profile and use the
 may still need their owner's normal merge process; NiriFX cannot resolve
 unrelated local modifications automatically.
 
+With the [NiriFX session](native-session.md), choose how desktop settings follow
+these updates. Frozen mode keeps its copied configuration until you stage another
+baseline. [Shared desktop settings](shared-settings.md) lets both sessions follow
+the normal Niri files while keeping native effects in a separate include. It uses
+Niri's existing file watcher, with no shell-source patch or synchronization daemon.
+This shared workflow requires the current source checkout, newer than 0.19.
+
 ## Removing the earlier compact iRiS entry
 
 The earlier source-checkout installer placed a compact entry directly inside
@@ -103,6 +110,14 @@ The [managed tool update workflow](tool-updates.md) provides a one-time stable
 launcher migration, then reviewed runtime selection for CLI, Studio and future
 logins together. It retains the previous runtime and checks bundle compatibility
 again before tool rollback.
+
+Shared settings still need compatible parsers: a shell or stock Niri update can
+introduce syntax that an older NiriFX build rejects. Shared Apply validates both
+configurations, and login preflight checks the selected build again. Review a
+new NiriFX build or use [frozen recovery](shared-settings.md#rollback-and-frozen-recovery)
+if they diverge. Recovery changes the next NiriFX login without overwriting your
+current normal configuration or effects files.
+
 Dependency-aware distribution packages and signed compositor downloads are still
 planned:
 

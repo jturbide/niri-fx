@@ -13910,13 +13910,13 @@
       "bytes": 585586,
       "sources": {
         "examples/profiles/fragment-flow.json": "4682b9ce7120031d653243da9505f6c190a8d9d412ac37310e7492581e6c6bf5",
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
         "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "17af94c6458b45f17572786323db7bdd1afd8b4311314c0010a00d8adab0f421",
-        "niri_fx/preview.html": "5328ad3de8c6d476cea4ecd4bb9c4f98a392cc794cdb0bf4444d5bf9ce33ff4a",
+        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
+        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
         "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/gravity-entry.glsl": "b3155a96e0a342bf70642979e75438bf0fe94b50d0ef61563f77eadde8f8404a",
@@ -13924,11 +13924,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "0f5fa96e8457e6bf11c8c589ae074c0afa59849e762d0aee02ddf7fc88b9417d",
-        "inputs_sha256": "66a91cb023cb1b450d43d88eeb5ce59d72e4d6963a1fd62f13cff6ce73bbfee5",
+        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
+        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
         "studio": {
           "version": "0.19.0",
-          "build": "9a95a290217d"
+          "build": "1dab054ebcc4"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -19249,13 +19249,13 @@
       "bytes": 944257,
       "sources": {
         "examples/profiles/geometric-flow.json": "664664c83b401b10b41378e340be01bf416e21fcbb02c70f8d905282388c9b00",
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
         "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "17af94c6458b45f17572786323db7bdd1afd8b4311314c0010a00d8adab0f421",
-        "niri_fx/preview.html": "5328ad3de8c6d476cea4ecd4bb9c4f98a392cc794cdb0bf4444d5bf9ce33ff4a",
+        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
+        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
         "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/fragment-shapes.glsl": "a0365ba693dd4611ce1a466dff025298e3a57da9c2390524338e027571231e40",
@@ -19264,11 +19264,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "0f5fa96e8457e6bf11c8c589ae074c0afa59849e762d0aee02ddf7fc88b9417d",
-        "inputs_sha256": "66a91cb023cb1b450d43d88eeb5ce59d72e4d6963a1fd62f13cff6ce73bbfee5",
+        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
+        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
         "studio": {
           "version": "0.19.0",
-          "build": "9a95a290217d"
+          "build": "1dab054ebcc4"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -19808,13 +19808,13 @@
       "bytes": 531015,
       "sources": {
         "examples/profiles/ribbon-current.json": "8f48fff1b88db8ec3d0faf4d105a257568b836cf8d177d7c9b4e0dfd80e37208",
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
         "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "17af94c6458b45f17572786323db7bdd1afd8b4311314c0010a00d8adab0f421",
-        "niri_fx/preview.html": "5328ad3de8c6d476cea4ecd4bb9c4f98a392cc794cdb0bf4444d5bf9ce33ff4a",
+        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
+        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
         "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/slices-entry.glsl": "b53cc7e606bc5c8051bbc62bf392f4f3cd79ca7be2db062437c47677e7090200",
@@ -19822,11 +19822,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "0f5fa96e8457e6bf11c8c589ae074c0afa59849e762d0aee02ddf7fc88b9417d",
-        "inputs_sha256": "66a91cb023cb1b450d43d88eeb5ce59d72e4d6963a1fd62f13cff6ce73bbfee5",
+        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
+        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
         "studio": {
           "version": "0.19.0",
-          "build": "9a95a290217d"
+          "build": "1dab054ebcc4"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -20366,13 +20366,13 @@
       "bytes": 252252,
       "sources": {
         "examples/profiles/soft-landing.json": "f3d93b054f586066ad083f8b1144750c8d050ed8a82d8c6e10df7b8d4ece6196",
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
         "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "17af94c6458b45f17572786323db7bdd1afd8b4311314c0010a00d8adab0f421",
-        "niri_fx/preview.html": "5328ad3de8c6d476cea4ecd4bb9c4f98a392cc794cdb0bf4444d5bf9ce33ff4a",
+        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
+        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
         "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/dissolve.glsl": "d2e377d21b9240c98ae86a9b955ece1675760ad2310eda4f71482f3d68749966",
@@ -20383,11 +20383,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "0f5fa96e8457e6bf11c8c589ae074c0afa59849e762d0aee02ddf7fc88b9417d",
-        "inputs_sha256": "66a91cb023cb1b450d43d88eeb5ce59d72e4d6963a1fd62f13cff6ce73bbfee5",
+        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
+        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
         "studio": {
           "version": "0.19.0",
-          "build": "9a95a290217d"
+          "build": "1dab054ebcc4"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",
@@ -21694,13 +21694,13 @@
       "bytes": 456503,
       "sources": {
         "examples/profiles/playful-motion.json": "7ca0a7c40231e9eac8b73d51bb31c38520c38a199642337888c41aa2192bf878",
-        "niri_fx/library.js": "2a4ed97f18ea3ea155069370ba846f5a7af4fd5f7ed6d81ea1225ea5129a6da4",
+        "niri_fx/library.js": "4a1f1002844b031ca5444a095129ef0de5b0732bea61ec737b2cf797bb7cd9d9",
         "niri_fx/effect-core.js": "3f98311ad1979b551d2635de16b7cbaeb24852074c1dcba64819e98f7af0bc53",
         "niri_fx/pointer-preview.js": "54fc53a8b887a688c63037715fcce748a5fc066faa45ba62b0b2939940f8800a",
         "niri_fx/preview.py": "c107d888601b7d95b466e565cc675595068ce90b1b319ef02ca43fed196f7820",
         "niri_fx/combo-preview.js": "37cba6fec2b745677ad6e3581d4064f9158a7f24c2621ec72813b1c375b2d748",
-        "niri_fx/studio.js": "17af94c6458b45f17572786323db7bdd1afd8b4311314c0010a00d8adab0f421",
-        "niri_fx/preview.html": "5328ad3de8c6d476cea4ecd4bb9c4f98a392cc794cdb0bf4444d5bf9ce33ff4a",
+        "niri_fx/studio.js": "3c5c7b4fb49bd8c85ba32aa1bd1b7285cf5b8c977b9f7d3ef99ff62a41c3f775",
+        "niri_fx/preview.html": "6c193faa12ef44fb5440f0e87192052a09cbb1e9e0797991b605186c18a01d71",
         "niri_fx/studio.css": "439427eb3a8553b3aa17f69b6f6cedc526818d864c8f9defa2ad9d1f94d014ec",
         "scripts/record-combo-showcases.mjs": "b5077ed7897c4dfcd313bc520f14b72fc7786a1c694a68a7cdd4fc4b5f315c3c",
         "niri_fx/shaders/elastic-entry.glsl": "74de1e74ff530108cf8bf514ae174fe575f7076669603886d20d026e183411b0",
@@ -21710,11 +21710,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "0f5fa96e8457e6bf11c8c589ae074c0afa59849e762d0aee02ddf7fc88b9417d",
-        "inputs_sha256": "66a91cb023cb1b450d43d88eeb5ce59d72e4d6963a1fd62f13cff6ce73bbfee5",
+        "preview_sha256": "777fa38173e22b03ce0571e4f334f7843b8bc2b682ac30e8f2f4e9318acfacea",
+        "inputs_sha256": "8faaa63a195c207cbd06bde7bec90145badb49a8b39cbddfc343b96be5903bd7",
         "studio": {
           "version": "0.19.0",
-          "build": "9a95a290217d"
+          "build": "1dab054ebcc4"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "6edaf94b3ffe2db1dbb41eee8d610fcaa956e5e3b911065dd1a43300f2ce25e5",

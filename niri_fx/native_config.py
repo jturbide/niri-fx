@@ -345,9 +345,18 @@ def inspect_snapshot(root_file, files):
     return _fingerprint(root_file, files)
 
 
-def snapshot(path):
+def snapshot(path, *, overrides=None):
     """Read an include graph and rewrite paths into an immutable owned snapshot."""
     root = _safe_path(Path(path).expanduser())
+    overrides = (
+        {}
+        if overrides is None
+        else {_safe_path(Path(name).expanduser()): data for name, data in overrides.items()}
+    )
+    if any(
+        not isinstance(data, bytes) or len(data) > MAX_FILE_BYTES for data in overrides.values()
+    ):
+        raise ValueError("Config snapshot overrides require bounded file bytes")
     names, files, records, observed = {root: "config.kdl"}, {}, {}, []
     total, edge_count = 0, 0
 
@@ -362,18 +371,19 @@ def snapshot(path):
         if len(names) > MAX_FILES:
             raise ValueError("Too many files in config snapshot")
         try:
-            data, mode = _read(path)
+            original, mode = _read(path)
         except FileNotFoundError:
-            if not optional:
+            if not optional and path not in overrides:
                 raise ValueError(f"Required config include is missing: {path}") from None
-            data, mode = None, None
+            original, mode = None, None
+        data = overrides.get(path, original)
         records[path] = data
         observed.append(
             {
                 "logical": str(path),
                 "target": str(path),
-                "before": data,
-                "after": data,
+                "before": original,
+                "after": original,
                 "mode": mode if mode is not None else 0o600,
                 "regular_only": True,
                 **({"expected_mode": mode} if mode is not None else {}),

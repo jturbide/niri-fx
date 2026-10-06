@@ -226,6 +226,15 @@ def inspect_running(bundles, *, socket_path=None):
                     "the inspected bundles. Other sessions were not inspected."
                 ),
             )
+            if matches:
+                matched = next(item for item in bundles if item["bundle_id"] == matches[0])
+                if matched.get("shared"):
+                    report["configuration_mode"] = "shared"
+                    report["detail"] = (
+                        "The advertised process executable and owned shared-config wrapper "
+                        "match this bundle. Shared settings can change; active configuration "
+                        "contents and renderer acceptance are not verified."
+                    )
     except (OSError, ValueError, KeyError, IndexError, TypeError, AttributeError):
         # Paths, socket names and raw replies can contain private data. Return a
         # bounded diagnostic instead of echoing exceptions or command arguments.

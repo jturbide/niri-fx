@@ -39,8 +39,11 @@ previous** returns to the settings from before Apply while keeping your saved
 profile. Reopening the app with the same target, config and state directory
 retains this Restore history.
 
-The default connection recognizes a verified managed NiriFX session first, then
-detects iNiR's helper or uses standalone Niri. In a matching NiriFX session,
+The default connection uses an adopted shared configuration when its normal
+source matches, including from stock Niri. Otherwise it recognizes a verified
+managed NiriFX session, then detects iNiR's helper or uses standalone Niri.
+Shared mode updates watched files through **Apply shared settings**; see
+[shared settings](shared-settings.md). With a matching frozen NiriFX session,
 **Apply to desktop** loads the reviewed effects immediately and saves them for the
 next login. You do not need to open your shell's settings. When a matching session
 is unavailable, `niri-fx studio --target native` lets you prepare effects with
@@ -61,7 +64,7 @@ Searching Recommended searches the full built-in catalog.
 Choosing a card replays the actual shader preview without changing your desktop.
 Apply is a separate action after review.
 
-**Customize your combo** shows all action choices together, with Pointer drag below.
+**Customize your combo** shows all action choices together, with Pointer wobble below.
 Each has **Preserve / NiriFX Style / Off**. Preserve keeps
 the underlying desktop or shell configuration; Off disables the selected action.
 Choose a preset after selecting NiriFX Style.
@@ -80,12 +83,14 @@ and `swap-window-right` commands. Dragging and column reordering keep the Move
 style. Preserve uses the underlying swap settings, which follow Move when unset.
 Older retained builds require an update before applying a separate Swap choice.
 
-**Pointer drag** controls the NiriFX session's drag response independently of the
+**Pointer wobble** controls whole-window bending during dragging independently of the
 window style, with a browser preview in version 0.18 and newer. Select **NiriFX Style**, choose Gentle, Rubber Sheet or
 Release Settle, then expand its controls to tune strength, damping and frequency.
 **Preserve** leaves
 the underlying pointer behavior alone; **Off** stores an explicit zero-strength
-override. Changing the shared window style preserves this independent choice.
+override. Continuous fragments use Move instead: Pointer wobble Off leaves them
+enabled, while Move Off disables fragment dragging and timed Move effects. Changing
+the shared window style preserves the separate wobble choice.
 See [pointer-driven wobble](pointer-wobble.md) for its compositor requirements.
 
 ## Preview the sequence
@@ -105,7 +110,7 @@ behavior. If the profile explicitly selects pointer drag with strength above
 zero, the combo also plays a scripted drag and release before closing. **Preserve** and **Off** add no pointer phase. Use **Tune** to adjust
 any shader action before previewing again.
 
-For an interactive pointer preview, choose **Try pointer drag**, then drag the
+For an interactive pointer preview, choose **Try pointer wobble**, then drag the
 sample window, reverse direction and release. **Play drag demo** runs the same
 repeatable path used by the combo; Enter or Space also starts it while the canvas
 has keyboard focus. **Reset position** recenters the window, and **Return to
@@ -137,7 +142,7 @@ That response stays in the managed session recipe when you Apply or select it
 for the next login. A profile export alone cannot recreate that complete session
 choice; see [continuous fragments](fragment-drag.md#native-settings).
 
-The **NiriFX session** (`native`) target offers live Apply when the running
+For frozen configurations, the **NiriFX session** (`native`) target offers live Apply when the running
 compositor matches the selected build and verifies the required renderer contracts.
 Otherwise, it uses **Select for next login**. Each selection retains a separate
 binary/configuration pair for reviewed rollback. See [managed session editing](native-session.md#choose-effects-in-studio)
@@ -176,10 +181,14 @@ the current browser and site; it does not sync to another computer.
 Resize is explicitly chosen per profile. Movement can be previewed and saved on
 every setup. Live activation requires the verified NiriFX compositor and
 the separate **Apply movement** checkbox on the standalone target.
-Pointer drag has its own **Apply pointer drag** checkbox, available
+Pointer wobble has its own **Apply pointer wobble** checkbox, available
 only for a verified running pointer renderer on the standalone target. Choosing
 another pointer setting clears that consent. An iNiR or Noctalia adapter applies
 stock actions only; its portable JSON retains the NiriFX session choices.
+
+For one recipe across stock Niri and the NiriFX session, use
+[shared desktop settings](shared-settings.md). Studio then updates common and
+native effects together while your normal desktop settings stay in place.
 
 ## One interface, different configuration owners
 

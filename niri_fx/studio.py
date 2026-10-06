@@ -107,6 +107,8 @@ def make_server(arguments, effect):
 
             value["native"] = {
                 "base_bundle": library.native_base["bundle_id"],
+                "shared": bool(library.native_base.get("shared")),
+                "shared_config_configured": library.shared_config is not None,
                 "variant": library.native_base["variant"],
                 "recipe": library.native_base.get("customization") if not native_document else None,
                 "fragment_choices": fragment_choices(),
@@ -215,6 +217,10 @@ def make_server(arguments, effect):
                 "/restore",
                 "/rollback-review",
                 "/rollback-apply",
+                "/shared-review",
+                "/shared-apply",
+                "/recovery-review",
+                "/recovery-apply",
             ) or not valid_save_request(self.headers, self.server.origin, token):
                 self.respond(403, {"error": "Save request must come from this editor session."})
                 return
@@ -234,6 +240,10 @@ def make_server(arguments, effect):
                     "/restore",
                     "/rollback-review",
                     "/rollback-apply",
+                    "/shared-review",
+                    "/shared-apply",
+                    "/recovery-review",
+                    "/recovery-apply",
                 ):
                     if self.path == "/restore" and data != {}:
                         raise ValueError("Restore accepts no client-selected paths or transaction")
@@ -245,6 +255,10 @@ def make_server(arguments, effect):
                         "/restore": lambda _: library.undo(),
                         "/rollback-review": library.rollback_review,
                         "/rollback-apply": library.rollback_apply,
+                        "/shared-review": library.shared_review,
+                        "/shared-apply": library.shared_apply,
+                        "/recovery-review": library.recovery_review,
+                        "/recovery-apply": library.recovery_apply,
                     }[self.path]
                     self.respond(200, action(data))
                     return
@@ -267,7 +281,7 @@ def make_server(arguments, effect):
                     return
                 if target == "native":
                     raise ValueError(
-                        "Use Save to My profiles or Select for next login for managed sessions"
+                        "Use Save to My profiles or Review & apply for managed sessions"
                     )
                 registry = read_shell_presets(arguments.inir_root)
                 preset = make_custom_preset(registry, data, arguments.base)
@@ -302,7 +316,7 @@ def serve(arguments, effect):
     with make_server(arguments, effect) as server:
         print(f"NiriFX Studio: {server.session_url}", flush=True)
         print(
-            "Choose effects for each action, preview, then review and apply. A verified matching NiriFX session supports live Apply; otherwise choices are saved for the next login. Ctrl+C stops the app."
+            "Choose effects for each action, preview, then review and apply. Shared settings update watched files. Frozen settings use verified live Apply or next-login selection. Ctrl+C stops the app."
             if server.save_target == "native"
             else "Choose a look in Library or customize it in Studio. Review & apply activates effects. Ctrl+C stops the app.",
             flush=True,

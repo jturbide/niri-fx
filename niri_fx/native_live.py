@@ -1,9 +1,10 @@
-"""Reload a reviewed immutable bundle in its verified managed compositor.
+"""Separate confirmed immutable reloads from shared configuration file updates.
 
 The process command line identifies the startup bundle forever. A separate,
 process-bound receipt records only our last confirmed reload; it cannot observe
 configuration changes made by other IPC clients. Niri's ConfigLoaded event has
 no request ID or path, so confirmation is scoped to this serialized reload.
+Shared settings use watched includes and never claim this IPC confirmation.
 """
 
 import fcntl
@@ -32,6 +33,21 @@ def activation_plan(plan, root, base_bundle, *, socket_path=None, require_live=F
     Studio can offer next-login saving when no managed desktop is available.
     An explicit CLI live request must instead fail before the selection writer.
     """
+    if plan.get("shared"):
+        if require_live:
+            raise ValueError(
+                "Shared settings use automatic config reload, whose active result is not "
+                "verified. Review and apply without --live."
+            )
+        plan.pop("native_live", None)
+        plan["activation"] = "config-written"
+        plan["notes"] = [
+            "Writes the reviewed shared settings. Sessions already using this shared "
+            "wrapper watch its includes; other NiriFX sessions need the next login. "
+            "The active compositor configuration is not verified.",
+            *plan["notes"],
+        ]
+        return plan
     plan["activation"] = "next-login"
     if base_bundle is None:
         if require_live:
@@ -56,6 +72,15 @@ def activation_plan(plan, root, base_bundle, *, socket_path=None, require_live=F
 
 def activation_result(plan, result, root, base_bundle, *, socket_path=None):
     """Report retained selection separately from a confirmed desktop reload."""
+    if plan.get("shared"):
+        result["activation"] = "config-written"
+        result["live"] = {
+            "status": "unverified",
+            "detail": "Shared configuration files were written. Sessions already using this "
+            "shared wrapper watch its includes; other NiriFX sessions need the next login. "
+            "The active compositor configuration has not been verified.",
+        }
+        return result
     result["activation"] = "next-login"
     if plan.get("native_live"):
         live = apply(
@@ -217,6 +242,27 @@ def context(root, base_bundle, *, socket_path=None):
             "binary_sha256": startup["binary_sha256"],
             "socket": str(socket_path),
         }
+        if base.get("shared") or startup.get("shared"):
+            from .native_shared import inspect_settings
+
+            settings = inspect_settings(base if base.get("shared") else startup)
+            if _process(running["pid"]) != process:
+                raise ValueError("The running process changed during shared settings inspection")
+            # A watcher can reload any included file between observations. Do
+            # not let its uncorrelated ConfigLoaded event confirm an IPC Apply.
+            return result | {
+                "status": "shared-config",
+                "configuration_mode": "shared",
+                "startup_bundle": startup["bundle_id"],
+                "baseline_bundle": _baseline(startup),
+                "shared_settings": {
+                    "status": settings["status"],
+                    "projections_match": settings["projections_match"],
+                },
+                "detail": "This session follows shared configuration files automatically. "
+                "The process and startup wrapper are identified; active settings and "
+                "renderer acceptance are not verified.",
+            }
         receipt, raw = _receipt(root)
         loaded = None
         if (
@@ -363,6 +409,10 @@ def apply(root, base_bundle, bundle_id, *, socket_path, expected_identity, state
             if not current["ready"] or current["identity"] != expected_identity:
                 raise ValueError("Live Apply review changed; review the settings again")
             target = native_session.inspect_bundle(root, bundle_id)
+            if target.get("shared"):
+                raise ValueError(
+                    "Shared configuration uses watched files, not confirmed IPC reloads"
+                )
             identity = current["identity"]
             result["startup_bundle"] = current["startup_bundle"]
             if (
