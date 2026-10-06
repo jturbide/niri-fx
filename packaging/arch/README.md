@@ -72,8 +72,34 @@ tools after removal and unchanged stock Niri files. No graphical session starts.
 
 The installation helper also accepts a previously published tools-only archive
 for upgrade checks. Keep its archive hash and package identity with the evidence;
-never point the helper at a host installation. Physical login, mixed monitors,
-PipeWire capture and suspend/resume have separate acceptance gates.
+never point the helper at a host installation.
+
+To test adoption after an update, provide an earlier complete archive from the
+same channel through `NIRIFX_ARCH_PREVIOUS_SESSION_ARCHIVE` when running
+`test-arch-package.sh` inside the disposable container. The helper adopts that
+baseline before installing the freshly built candidate. You can also test two
+existing archives without recompiling:
+
+```sh
+# Inside a disposable official Arch container, as root:
+NIRIFX_ARCH_PACKAGE_CONTAINER=1 bash scripts/test-arch-session-package.sh \
+  /evidence/adopted-update /fixtures/baseline.pkg.tar.zst /fixtures/candidate.pkg.tar.zst
+```
+
+The check reviews adoption for one user, preserves the other user's selection,
+and exercises rollback separately for changed tools and compositor identities.
+Same-archive reinstallation cannot establish an upgrade or rollback; the report
+distinguishes unchanged identities from exercised transitions. A changed binary
+hash from a rebuild does not establish changed compositor behavior. Keep the
+source revisions and package hashes with the results.
+
+Both archives must satisfy the current archive audit, including the reviewed
+native patch stack and dispatcher. Transitions from a different patch or
+dispatcher contract need a version-specific baseline audit before this helper
+can assess them.
+
+Physical login, mixed monitors, PipeWire capture, suspend/resume and compatibility
+with changed system Python or shared libraries have separate acceptance gates.
 
 The producer strips its owned executable before recording its final SHA-256.
 Makepkg stripping and debug splitting are disabled to preserve that identity.

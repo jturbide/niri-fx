@@ -639,6 +639,12 @@ def plan_fingerprint(plan):
 
 def check_unchanged(item, expected):
     logical, target = Path(item["logical"]), Path(item["target"])
+    if item.get("kind") == "native-bundle-inventory":
+        from .native_session import _bundle_inventory
+
+        if logical != target or _bundle_inventory(logical) != expected:
+            raise ValueError(f"Native bundle inventory changed since review: {logical}")
+        return
     if item.get("kind") == "symlink":
         if logical != target or _link_bytes(logical) != expected:
             raise ValueError(

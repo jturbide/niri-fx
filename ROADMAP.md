@@ -19,11 +19,11 @@ See [available features](README.md),
 2. **Prove everyday session reliability.** Prioritize mixed monitors, capture
    privacy, suspend/resume and recovery. Resolve the remaining stale-output probe
    and verify real PipeWire capture before expanding desktop support claims.
-3. **Deliver one supported installation and update path.** Package the app,
-   full compositor and login entry for an initial declared distribution and
-   architecture; verify clean install, upgrade, rollback and return to stock Niri.
-   Ship exactly two complete Arch/AUR channels, `niri-fx` and `niri-fx-git`,
-   without tying retained login runtimes to files replaced by the package manager.
+3. **Validate packaged upgrades and recovery.** The complete Arch/AUR channels,
+   `niri-fx` and `niri-fx-git`, include the app, compositor and login entry.
+   Follow container acceptance with upgrades between published versions and
+   physical login, rollback and return to stock Niri. Keep retained login runtimes
+   independent of files replaced by the package manager.
 4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
    tools and shared settings together; 0.21 adds complete recipe portability.
    Follow with reliability and installation improvements in later 0.x releases.
@@ -42,6 +42,9 @@ follow the core controls and reliability work below.
 - [x] Deliver [complete portable recipes in 0.21](#021-target-complete-portable-recipes),
       with action styles and continuous-fragment response preserved together,
       installed upgrade checks and [migration guidance](docs/upgrading.md#from-020-to-021).
+- [x] Publish [complete Arch packages in 0.22](https://github.com/jturbide/niri-fx/releases/tag/v0.22.0),
+      with reviewed per-user adoption and retained recovery copies. Physical-session
+      acceptance remains separate from clean-container package checks.
 - [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
       publish tested environments and remaining limits with each release.
 - [ ] Complete the [1.0 acceptance criteria](docs/stability.md#acceptance-criteria-for-10)
@@ -69,8 +72,9 @@ follow the core controls and reliability work below.
 Stock open/close/resize effects, standalone setup, shell adapters, the shared
 Library and online Studio are available. Profiles support independent Preserve / NiriFX Style / Off choices,
 curated combinations, favorites, saved JSON and reviewed Apply/Restore.
-Movement, swaps and pointer deformation use the full NiriFX session, currently
-available through the source installation workflow. See [current support](docs/compatibility.md), [the catalog](docs/catalog.md)
+Movement, swaps and pointer deformation use the full NiriFX session, available
+through [Arch packages](docs/arch-linux.md) and the source installation workflow.
+See [current support](docs/compatibility.md), [the catalog](docs/catalog.md)
 and [release history](CHANGELOG.md) for delivered features and version details.
 
 ## Next release and motion continuity
@@ -226,9 +230,14 @@ are developer regression controls, not separate consumer editions.
       two-user adoption, retained copies after removal and unchanged stock Niri.
 - [x] Verify upgrades from both earlier tools-only packages and normal switching
       between release and development channels without forced file overwrites.
-- [ ] Verify updates across two package versions, multiple users, Python path
-      changes, interrupted adoption and missing shared libraries. Preserve running,
-      selected and previous copies and the stock Niri recovery entry.
+- [x] Verify reviewed updates between complete package builds with different
+      retained tools and compositor identities, including independent users and
+      separate rollback of each selection.
+- [x] Verify interruption recovery during shared and frozen bundle copying;
+      resume only exact partial files and preserve changed or unexpected content.
+- [ ] Repeat adopted-session upgrade acceptance between published versions.
+- [ ] Verify recovery after Python path changes and missing shared libraries;
+      preserve retained copies and the stock Niri recovery entry.
 - [ ] Complete physical login, shared-settings, capture and suspend acceptance
       before advertising a supported full-session package.
 

@@ -50,7 +50,8 @@ done
 mkdir "$output/archives"
 cp -- "$package_argument" "$output/archives/package.pkg.tar.zst"
 # Reinstalling the same archive is the minimum package-replacement check. An
-# explicit later archive additionally exercises a genuine version replacement.
+# explicit replacement archive can exercise distinct tools/native identities,
+# including same-version builds. The report distinguishes each identity.
 cp -- "$replacement_argument" "$output/archives/replacement.pkg.tar.zst"
 if [[ -n $previous_tools ]]; then
     cp -- "$previous_tools" "$output/archives/previous-tools.pkg.tar.zst"
@@ -156,6 +157,23 @@ for path in paths:
 print(json.dumps({"version": version, "files": records}, sort_keys=True, indent=2))
 PY
 snapshot() { python "$work/snapshot.py" "$1" > "$2"; }
+acceptance_helper="$repo/scripts/lib/arch_session_acceptance.py"
+capture() { as_user "$1" /usr/bin/python -I -B "$acceptance_helper" capture > "$2"; }
+reviewed_apply() {
+    local account=$1 label=$2 fingerprint
+    shift 2
+    snapshot "$work/home-$account" "$output/$label-before-review.json"
+    as_user "$account" /usr/bin/niri-fx "$@" > "$output/$label-plan.json"
+    snapshot "$work/home-$account" "$output/$label-after-review.json"
+    cmp "$output/$label-before-review.json" "$output/$label-after-review.json"
+    fingerprint=$(python "$acceptance_helper" plan "$output/$label-plan.json" "$work/home-$account")
+    as_user "$account" /usr/bin/niri-fx "$@" --apply --expect-plan "$fingerprint" \
+        > "$output/$label-applied.json"
+    if [[ $account == a && -f $output/user-b-ready.json ]]; then
+        snapshot "$work/home-b" "$output/$label-other-user.json"
+        cmp "$output/user-b-ready.json" "$output/$label-other-user.json"
+    fi
+}
 snapshot niri "$output/niri-before.json"
 for account in a b; do
     snapshot "$work/home-$account" "$output/user-$account-before.json"
@@ -284,6 +302,29 @@ print("Retained executable/config/tools are independent, private, and byte-match
 PY
     snapshot "$work/home-$account" "$output/user-$account-adopted.json"
 done
+# A owns a saved continuous recipe; B keeps its plain native configuration.
+# Re-adoption must preserve actual choices, not only a blank baseline snapshot.
+initial_a=$(python - "$output/adopt-a-applied.json" <<'PY_ID'
+import json
+from pathlib import Path
+import sys
+print(json.loads(Path(sys.argv[1]).read_text())["selection"]["selected"])
+PY_ID
+)
+reviewed_apply a configure-a native configure "$initial_a" --document "$output/profile.json"
+for account in a b; do
+    capture "$account" "$output/state-$account-ready.json"
+    snapshot "$work/home-$account" "$output/user-$account-ready.json"
+done
+python - "$output/state-a-ready.json" "$output/state-b-ready.json" <<'PY_RECIPES'
+import json
+from pathlib import Path
+import sys
+
+a, b = (json.loads(Path(path).read_text()) for path in sys.argv[1:])
+assert a["customization"] is not None and b["customization"] is None
+assert a["config_files"] != b["config_files"]
+PY_RECIPES
 snapshot niri "$output/niri-adopted.json"
 cmp "$output/niri-before.json" "$output/niri-adopted.json"
 
@@ -294,13 +335,42 @@ for account in a b; do
     as_user "$account" "$work/home-$account/.local/bin/niri-fx" native status --offline \
         > "$output/retained-$account-after-replacement.json"
     snapshot "$work/home-$account" "$output/user-$account-replaced.json"
-    cmp "$output/user-$account-adopted.json" "$output/user-$account-replaced.json"
+    cmp "$output/user-$account-ready.json" "$output/user-$account-replaced.json"
 done
-if cmp -s "$output/archives/package.pkg.tar.zst" "$output/archives/replacement.pkg.tar.zst"; then
-    printf '%s\n' 'Same-archive reinstallation retained both user selections; cross-version package replacement was not assessed.'
-else
-    printf '%s\n' 'Package replacement retained both user selections; explicit upgrade adoption was not exercised.'
+# Only A explicitly adopts the replacement. B's retained settings and selected
+# tools must remain byte-identical throughout A's independent transactions.
+reviewed_apply a readopt-a native adopt
+capture a "$output/state-a-readopted.json"
+snapshot "$work/home-a" "$output/user-a-readopted.json"
+snapshot "$work/home-b" "$output/user-b-after-readoption.json"
+cmp "$output/user-b-ready.json" "$output/user-b-after-readoption.json"
+python "$acceptance_helper" assess "$output" > "$output/upgrade-assessment-initial.json"
+native_changed=$(python -c 'import json,sys; print(int(json.load(open(sys.argv[1]))["native_identity_changed"]))' "$output/upgrade-assessment.json")
+tools_changed=$(python -c 'import json,sys; print(int(json.load(open(sys.argv[1]))["tools_content_changed"]))' "$output/upgrade-assessment.json")
+if [[ $native_changed == 1 ]]; then
+    reviewed_apply a compositor-rollback native rollback
+    capture a "$output/state-a-compositor-rollback.json"
+    reviewed_apply a compositor-rollforward native rollback
+    capture a "$output/state-a-compositor-rollforward.json"
 fi
+if [[ $tools_changed == 1 ]]; then
+    reviewed_apply a tools-rollback native tools-rollback \
+        --registered-entry /usr/share/wayland-sessions/niri-fx-packaged.desktop
+    capture a "$output/state-a-tools-rollback.json"
+    reviewed_apply a tools-rollforward native tools-rollback \
+        --registered-entry /usr/share/wayland-sessions/niri-fx-packaged.desktop
+    capture a "$output/state-a-tools-rollforward.json"
+fi
+capture a "$output/state-a-final.json"
+python "$acceptance_helper" rollback "$output"
+for account in a b; do
+    snapshot "$work/home-$account" "$output/user-$account-retained-final.json"
+    as_user "$account" "$work/home-$account/.local/bin/niri-fx" --version \
+        > "$output/retained-$account-final-version.txt"
+done
+cmp "$output/user-b-ready.json" "$output/user-b-retained-final.json"
+snapshot niri "$output/niri-readopted.json"
+cmp "$output/niri-before.json" "$output/niri-readopted.json"
 pacman -R --noconfirm "$package_name"
 
 for path in /usr/bin/niri-fx-session /usr/bin/niri-fx \
@@ -322,11 +392,11 @@ for account in a b; do
         > "$output/retained-$account-after-removal.json"
     as_user "$account" "$work/home-$account/.local/bin/niri-fx" --version \
         > "$output/retained-$account-after-removal-version.txt"
-    cmp "$output/retained-$account-version.txt" "$output/retained-$account-after-removal-version.txt"
+    cmp "$output/retained-$account-final-version.txt" "$output/retained-$account-after-removal-version.txt"
     snapshot "$work/home-$account" "$output/user-$account-removed.json"
-    cmp "$output/user-$account-adopted.json" "$output/user-$account-removed.json"
+    cmp "$output/user-$account-retained-final.json" "$output/user-$account-removed.json"
 done
 snapshot niri "$output/niri-removed.json"
 cmp "$output/niri-before.json" "$output/niri-removed.json"
-printf '%s\n' 'PASS: audited complete package, install/replacement, two-user reviewed adoption, retained CLI after removal, and unchanged stock Niri files.'
+printf '%s\n' 'PASS: audited complete package, install/replacement, two-user adoption, explicit re-adoption and applicable rollback, retained CLI after removal, and unchanged stock Niri files.'
 printf '%s\n' 'No compositor session was launched. Display-manager/systemd lifecycle, portals and physical desktop acceptance remain separate gates.'

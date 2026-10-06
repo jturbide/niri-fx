@@ -24,6 +24,8 @@ def _prepared_source(root, plan):
     folder = native_session._bundle_path(root, identifier)
     files = {}
     for item in [*plan["observed"], *plan["changes"]]:
+        if "kind" in item:
+            continue
         path = Path(item["target"])
         if path.is_relative_to(folder):
             data = item.get("after", item["before"])
@@ -71,10 +73,6 @@ def _frozen_plan(root, old, prepared, observations):
     if (folder / "bundle.json").exists():
         observations.extend(native_session.inspect_bundle(root, identifier)["observed"])
     else:
-        if folder.exists() and any(
-            path.is_file() or path.is_symlink() for path in folder.rglob("*")
-        ):
-            raise ValueError("An incomplete upgrade bundle exists; preserving it for review")
         outputs = {
             "bin/niri": incoming["bin/niri"],
             **{name: contents[name] for name in names},
@@ -82,11 +80,8 @@ def _frozen_plan(root, old, prepared, observations):
             **{name: data for name, data in incoming.items() if name.startswith("provenance/")},
             "bundle.json": native_session._json_bytes(receipt),
         }
-        for name, data in outputs.items():
-            item = native_shared._change(folder / name, data, owned=True)
-            item["mode"] = 0o755 if name == "bin/niri" else 0o600
-            changes.append(item)
-        observations.extend(changes)
+        changes, destination_observed = native_session._bundle_outputs(folder, outputs)
+        observations.extend(destination_observed)
     selected, selector = native_shared._selector(root, identifier)
     observations.append(selector)
     if selector["before"] != selector["after"]:
