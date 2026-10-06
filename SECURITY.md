@@ -24,7 +24,7 @@ backup/atomic replacement and does not activate the saved preset. The separate
 Library Review/Apply endpoints use conflict-aware configuration snapshots and
 validate the resulting Niri config. Paths and executable choices are fixed at
 launch; browser requests cannot supply them. Restore refuses external edits.
-Current source limits imported recipe documents to 32 KiB (16 KiB in 0.20).
+NiriFX 0.21 limits imported recipe documents to 32 KiB (16 KiB in 0.20).
 Continuous-fragment recipes contain validated numeric controls and fixed choices,
 not shader source, SVG paths or executable content.
 Hosted/offline Studio has no local activation endpoints. The editor

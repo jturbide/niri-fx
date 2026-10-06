@@ -36,7 +36,7 @@ NiriFX session nodes. **Export NiriFX session config** includes selected pointer
 Move and Swap settings for the matching native build. Read the
 [pointer guide](pointer-wobble.md) before using that configuration.
 
-**Current source, Unreleased:** **Gentle / Tear / Cascade** fragment responses
+**NiriFX 0.21:** **Gentle / Tear / Cascade** fragment responses
 and their custom controls can be saved to My profiles, downloaded and shared
 online. Values travel with the profile, even while Move is Off, preserved or
 using an incompatible material. **Timed movement** removes the response.
@@ -94,7 +94,7 @@ If clipboard access is unavailable, select and copy the displayed URL.
 The document is encoded in the URL fragment and decoded in the browser. There is
 no preset-upload service, but anyone who receives the complete link can read its
 name and settings. Treat it as shared content. Links accept validated parameter
-data only, with the same 32 KiB document limit as JSON imports in current source
+data only, with the same 32 KiB document limit as JSON imports in NiriFX 0.21
 (16 KiB in 0.20). Malformed links
 show an error without replacing the current settings. Keep a JSON export as your
 editable copy; development versions may change the format or defaults.

@@ -7,6 +7,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+## 0.21.0 - 2026-10-05
+
 ### Added
 
 - Complete portable fragment recipes. Gentle, Tear and Cascade now save their
@@ -21,7 +23,7 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - `profile --fragment-preset gentle|tear|cascade` creates a complete recipe.
   `native export BUNDLE_ID` reads older managed recipes without changing their
   files, preserving the response recorded in the bundle even if preset defaults
-  have since changed. See the [migration guide](docs/upgrading.md#portable-fragment-recipes-unreleased).
+  have since changed. See the [migration guide](docs/upgrading.md#from-020-to-021).
 - Four importable continuous-fragment combos and a Studio workflow showcase.
   The browser preview shows the movement material; continuous gesture response
   still needs the NiriFX compositor.
@@ -36,8 +38,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 ### Fixed
 
 - Standalone Apply and Restore check the running native renderer contract before
-  enabling continuous-fragment settings. Timed movement omits the shader marker that would otherwise
-  enable the compositor's default continuous response.
+  enabling continuous-fragment settings. Timed movement omits the shader marker
+  that would otherwise enable the compositor's default continuous response.
 
 ## 0.20.0 - 2026-10-05
 

@@ -10,7 +10,7 @@ Its source installer prepares all compositor features together; published
 distribution packages are still being prepared. Both paths use the same Library
 and leave shell source code untouched.
 
-This guide covers version 0.20. The wheel includes Studio and the managed-session
+This guide covers version 0.21. The wheel includes Studio and the managed-session
 tools; the compositor still builds from the matching source archive or tag.
 For another version, follow its included [release documentation](releases.md).
 
@@ -32,7 +32,7 @@ Download the wheel and `SHA256SUMS` from the same
 ```sh
 sha256sum --ignore-missing -c SHA256SUMS
 python3 -m venv .venv
-.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.20.0-py3-none-any.whl
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.21.0-py3-none-any.whl
 .venv/bin/niri-fx studio
 ```
 

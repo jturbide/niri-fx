@@ -4,7 +4,7 @@ Find tagged versions and release notes on the
 [GitHub releases page](https://github.com/jturbide/niri-fx/releases).
 NiriFX is in early development; prereleases may change commands or preset formats.
 Read the notes for the version you install. The [path to 1.0](stability.md)
-defines future stability gates. Releases continue through 0.20 and later 0.x
+defines future stability gates. Releases continue through 0.21 and later 0.x
 versions while the interfaces and installation workflow develop; 1.0 has no
 release date or interface freeze yet.
 
@@ -18,6 +18,42 @@ release date or interface freeze yet.
 [Getting started](getting-started.md) documents installation from source or into
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
+
+## 0.21.0 prerelease
+
+[Download v0.21.0](https://github.com/jturbide/niri-fx/releases/tag/v0.21.0) to
+create, customize and share complete continuous-fragment recipes in local,
+online or offline Studio. Choose **Gentle**, **Tear** or **Cascade** for Move,
+then adjust its response under **Customize fragment response**. JSON, share
+links and My profiles retain every response value alongside your action choices.
+Try the [four importable examples](../examples/profiles/README.md#portable-continuous-fragment-combos).
+
+Download the wheel and `SHA256SUMS` from the same release. In their download
+directory, verify the wheel before installing it in a new environment:
+
+```sh
+sha256sum --ignore-missing -c SHA256SUMS
+python3 -m venv .venv
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.21.0-py3-none-any.whl
+.venv/bin/niri-fx studio
+```
+
+For an existing installation, follow [the 0.20 to 0.21 upgrade guide](upgrading.md#from-020-to-021).
+Managed installations select a new tool environment through a reviewed update;
+their previous environment remains available. The source archive includes
+documentation, examples, showcases and the full compositor build tools.
+
+Schema 4 saves all five action choices and 18 explicit fragment-response values.
+Move Off, Preserve or an incompatible material keeps those values dormant;
+**Timed movement** removes the continuous response. Older profile schemas keep
+their existing meaning. The read-only `native export` command also recovers
+complete recipes from retained 0.20 bundles without changing them.
+
+This is a tools release; the compositor patch stack is unchanged from 0.20.
+Continuous gesture behavior still requires a compatible NiriFX compositor and
+verified activation. Browser previews show the movement material, while stock
+exports omit native actions. The wheel does not install a compositor, and no
+supported compositor binary is included. See [session setup and tested limits](native-session.md).
 
 ## 0.20.0 prerelease
 
@@ -237,14 +273,14 @@ signing and publishing a version.
 
 Maintainers can exercise a published release wheel and a candidate wheel with
 `scripts/test-upgrade.py`. Download the old wheel and its `SHA256SUMS` from
-[v0.19.0](https://github.com/jturbide/niri-fx/releases/tag/v0.19.0), build the new
-wheel, then run from the checkout, replacing `X.Y.Z` with the candidate version:
+[v0.20.0](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0), build the
+0.21 candidate wheel, then run from the checkout:
 
 ```sh
 python3 scripts/test-upgrade.py \
-  --from-wheel artifacts/upgrade-v019/niri_fx-0.19.0-py3-none-any.whl \
-  --checksums artifacts/upgrade-v019/SHA256SUMS \
-  --to-wheel dist/niri_fx-X.Y.Z-py3-none-any.whl \
+  --from-wheel artifacts/upgrade-v020/niri_fx-0.20.0-py3-none-any.whl \
+  --checksums artifacts/upgrade-v020/SHA256SUMS \
+  --to-wheel dist/niri_fx-0.21.0-py3-none-any.whl \
   --browser
 ```
 
@@ -254,10 +290,11 @@ own virtual environment, configuration, shell registry and state; it verifies
 old JSON, favorites, named Library profiles and active files survive installation,
 and restores existing CLI and Library snapshots exactly. Both Restore paths must
 refuse external edits without changing the files or consuming recovery history.
-The 0.19 source also creates an active mixture of Preserve and Off before upgrading;
-0.17 and 0.18 wheels remain supported for legacy schema migration checks.
-It also checks new
-pointer documents without activating the native extension. Its synthetic shell
+The 0.20 source creates an active mixture of Preserve and Off plus an independent
+Swap profile, checking both schema 2 and schema 3. Earlier wheels from 0.17 through
+0.19 remain supported for legacy migration checks. The candidate also round-trips
+pointer and complete fragment-response documents without activating native effects.
+Its synthetic shell
 base tests registry preservation; the
 [adapter checks](validation.md) cover real shell serializers separately. No login
 session or personal browser profile is used, and temporary files are removed.

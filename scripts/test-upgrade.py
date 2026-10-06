@@ -31,7 +31,7 @@ ROOT = Path(__file__).resolve().parents[1]
 # Each source release must create its own real documents and restore snapshots.
 # Record its schema explicitly so a changed source artifact cannot silently turn
 # an upgrade check into a current-format round trip.
-SOURCE_SCHEMAS = {"0.17.0": 1, "0.18.0": 1, "0.19.0": 2}
+SOURCE_SCHEMAS = {"0.17.0": 1, "0.18.0": 1, "0.19.0": 2, "0.20.0": 2}
 BASE = """// An existing user configuration; resize belongs to the user.
 hotkey-overlay { skip-at-startup; }
 animations { window-resize { duration-ms 170; curve "ease-out-cubic"; }; }
@@ -60,6 +60,23 @@ def verify_checksum(wheel, checksums):
     actual = hashlib.sha256(wheel.read_bytes()).hexdigest()
     if entries.get(wheel.name) != actual:
         raise ValueError("The old wheel does not match its release SHA256SUMS")
+
+
+def verify_source_profile(document, version, *, swap=False):
+    """Require the historical format, including 0.20's independent Swap envelope."""
+    schema = SOURCE_SCHEMAS[version]
+    actions = {"open", "close", "resize", "movement"}
+    if swap:
+        assert version == "0.20.0", "The source release does not support independent Swap"
+        schema = 3
+        actions.add("swap")
+        assert isinstance(document["actions"].get("swap"), dict), "Missing explicit Swap style"
+    assert document["kind"] == "profile"
+    assert type(document["schema"]) is int and document["schema"] == schema, (
+        "Source release emitted an unexpected schema"
+    )
+    assert set(document["actions"]) == actions, "Source release emitted unexpected actions"
+    assert "fragment_motion" not in document, "Source release emitted a portable fragment response"
 
 
 def run(command, *, root, env, json_output=False):
@@ -134,7 +151,9 @@ def studio(executable, *, root, env, current=False):
                     yield Session(line.strip().removeprefix("NiriFX Studio: "))
                     return
             if process.poll() is not None:
-                raise RuntimeError("The disposable Studio stopped before startup")
+                raise RuntimeError(
+                    "The disposable Studio stopped before startup: " + process.stderr.read().strip()
+                )
         raise RuntimeError("The disposable Studio did not start within 15 seconds")
     finally:
         process.terminate()
@@ -279,7 +298,8 @@ try {
 
 
 def exercise(old_wheel, new_wheel, *, browser):
-    source_schema = SOURCE_SCHEMAS[wheel_version(old_wheel)]
+    source_version = wheel_version(old_wheel)
+    source_schema = SOURCE_SCHEMAS[source_version]
     with tempfile.TemporaryDirectory(prefix="nirifx-upgrade-") as directory:
         root = Path(directory)
         env = isolated_environment(root)
@@ -328,7 +348,7 @@ def exercise(old_wheel, new_wheel, *, browser):
             "Saved Night",
             json_output=True,
         )
-        assert document["schema"] == source_schema, "Source release emitted an unexpected schema"
+        verify_source_profile(document, source_version)
         custom = root / "saved-night.json"
         custom.write_text(json.dumps(document, indent=2) + "\n")
 
@@ -378,9 +398,27 @@ def exercise(old_wheel, new_wheel, *, browser):
         )
         staged_file = root / "saved-native-choice.json"
         staged_file.write_text(json.dumps(staged, indent=2) + "\n")
+        verify_source_profile(staged, source_version)
+        source_documents = {custom: document, staged_file: staged}
+        if source_version == "0.20.0":
+            independent_swap = cli(
+                "profile",
+                "--name",
+                "Saved Swap Choice",
+                "--movement",
+                "pixel-relay",
+                "--swap",
+                "momentum-glide",
+                json_output=True,
+            )
+            verify_source_profile(independent_swap, source_version, swap=True)
+            assert independent_swap["actions"]["movement"] != independent_swap["actions"]["swap"]
+            swap_file = root / "saved-swap-choice.json"
+            swap_file.write_text(json.dumps(independent_swap, indent=2) + "\n")
+            source_documents[swap_file] = independent_swap
         favorites = ["custom-saved-night", "frost-vanish", "zipper"]
         with studio(executable, root=root, env=env) as session:
-            for saved_document in (document, staged):
+            for saved_document in source_documents.values():
                 assert session.post("/store", {"document": saved_document, "expected": None})[
                     "changed"
                 ]
@@ -429,7 +467,7 @@ def exercise(old_wheel, new_wheel, *, browser):
         assert include.read_bytes() != setup_files[include]
         # Installation must not migrate or activate settings. Compare the complete
         # disposable config/state trees to catch additions as well as lost files.
-        protected = (custom, staged_file, root / "config", state)
+        protected = (*source_documents, root / "config", state)
         before = snapshot_files(*protected)
         install(new_wheel)
         assert snapshot_files(*protected) == before
@@ -441,11 +479,19 @@ def exercise(old_wheel, new_wheel, *, browser):
         assert cli("inspect", "--custom", custom, json_output=True) == document
         assert cli("inspect", "--custom", staged_file, json_output=True) == staged
         assert "window-movement" not in cli("render", "--custom", staged_file)
+        if source_version == "0.20.0":
+            assert cli("inspect", "--custom", swap_file, json_output=True) == independent_swap
+            stock = cli("render", "--custom", swap_file)
+            assert "window-movement" not in stock and "window-swap" not in stock
         with studio(executable, root=root, env=env, current=True) as session:
             listing = json.loads(session.get("/library"))
             assert listing["active"] == library_document and listing["restore"]
             assert listing["managed"]["custom-saved-night"]["document"] == document
             assert listing["managed"]["custom-saved-native-choice"]["document"] == staged
+            if source_version == "0.20.0":
+                assert (
+                    listing["managed"]["custom-saved-swap-choice"]["document"] == independent_swap
+                )
             # An upgrade must retain conflict protection as well as a happy-path
             # Restore. Refusal must leave the user's edit and snapshot usable.
             applied_include = include.read_bytes()
@@ -599,14 +645,48 @@ def exercise(old_wheel, new_wheel, *, browser):
                 assert json.loads(session.get("/library"))["active"] == native
                 assert not session.post("/restore", {})["dry_run"]
                 assert config.read_text() == BASE and not include.exists()
+            # Complete response values belong to the portable recipe even when
+            # stock activation omits every native node and marker.
+            portable = cli(
+                "profile", "--name", "Portable Tear", "--fragment-preset", "tear", json_output=True
+            )
+            assert portable["schema"] == 4 and len(portable["fragment_motion"]) == 18
+            assert set(portable["actions"]) == {"open", "close", "resize", "movement", "swap"}
+            portable_file = root / "portable-tear.json"
+            portable_file.write_text(json.dumps(portable, indent=2) + "\n")
+            portable_bytes = portable_file.read_bytes()
+            assert cli("inspect", "--custom", portable_file, json_output=True) == portable
+            stock = cli("render", "--custom", portable_file)
+            assert all(
+                marker not in stock
+                for marker in ("window-movement", "window-swap", "fragment-motion")
+            )
+            assert session.post("/store", {"document": portable, "expected": None})["changed"]
+            selection = {"document": portable, "allow_resize": False, "allow_movement": False}
+            before_rejection = snapshot_files(config, include, state)
+            session.rejected(
+                "/review",
+                dict(selection, allow_movement=True),
+                "verified running shader contract",
+            )
+            assert snapshot_files(config, include, state) == before_rejection
+            review = session.post("/review", selection)
+            assert session.post(
+                "/apply", {"selection": selection, "expected": review["plan_sha256"]}
+            )["changed"]
+            assert include.read_text().endswith(stock + "\n")
+            run(["niri", "validate", "-c", config], root=root, env=env)
+            listing = json.loads(session.get("/library"))
+            assert listing["active"] == portable
+            assert listing["managed"]["custom-portable-tear"]["document"] == portable
+            assert not session.post("/restore", {})["dry_run"]
+            assert config.read_text() == BASE and not include.exists()
+            assert portable_file.read_bytes() == portable_bytes
         assert registry.read_bytes() == before[registry]
-        assert custom.read_bytes() == before[custom]
-        assert staged_file.read_bytes() == before[staged_file]
-        for path in (
-            state / "profiles/saved-night.json",
-            state / "profiles/saved-native-choice.json",
-        ):
+        for path in source_documents:
             assert path.read_bytes() == before[path]
+            saved_path = state / "profiles" / path.name
+            assert saved_path.read_bytes() == before[saved_path]
         assert (state / "studio-preferences.json").read_bytes() == before[
             state / "studio-preferences.json"
         ]
@@ -614,14 +694,19 @@ def exercise(old_wheel, new_wheel, *, browser):
             f"PASS {wheel_version(old_wheel)} -> {wheel_version(new_wheel)}: installed CLI/Studio, "
             "old JSON and shell registry, saved Library profiles and favorites, "
             "conflict-safe and exact CLI/Library Restore, native metadata and activation guards, "
+            "schema4 portable response with stock omission, "
             f"schema2 Preserve/Style/Off choices, user resize and schema{source_schema} files preserved"
         )
+        if source_version == "0.20.0":
+            print(
+                "PASS published 0.20 schema3 independent Move/Swap JSON and Library data preserved"
+            )
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--from-wheel", type=Path, required=True, help="Official v0.17.0, v0.18.0 or v0.19.0 wheel"
+        "--from-wheel", type=Path, required=True, help="Official v0.17.0–v0.20.0 wheel"
     )
     parser.add_argument("--to-wheel", type=Path, required=True, help="Newly built candidate wheel")
     parser.add_argument(
@@ -639,7 +724,7 @@ def main():
         parser.error("--browser requires Node 22 or newer and Chromium/Chrome")
     old_wheel, new_wheel = args.from_wheel.resolve(), args.to_wheel.resolve()
     if wheel_version(old_wheel) not in SOURCE_SCHEMAS:
-        parser.error("--from-wheel must be an official 0.17.0, 0.18.0 or 0.19.0 release wheel")
+        parser.error("--from-wheel must be an official 0.17.0, 0.18.0, 0.19.0 or 0.20.0 wheel")
     verify_checksum(old_wheel, args.checksums.resolve())
     exercise(old_wheel, new_wheel, browser=args.browser)
 

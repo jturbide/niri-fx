@@ -4,7 +4,7 @@ Start with [Getting started](getting-started.md), or [choose your setup](scenari
 for instructions tailored to your desktop. NiriFX works standalone on Niri;
 iNiR/iRiS, DMS and Noctalia integrations are optional.
 
-These guides cover version 0.20. Later changes on `main` are recorded under
+These guides cover version 0.21. Later changes on `main` are recorded under
 [Unreleased](../CHANGELOG.md). Use [Releases](releases.md) to choose a versioned
 package and its matching documentation.
 
@@ -52,6 +52,7 @@ package and its matching documentation.
 | Use movement and swaps | [NiriFX session](native-session.md) |
 | Make a window bend while dragging | [Pointer wobble](pointer-wobble.md) |
 | Make pieces spread on press and follow a drag with individual delays | [Continuous fragments](fragment-drag.md) |
+| Save, customize or share a complete fragment-motion recipe | [Portable fragment response](profiles.md#portable-fragment-response), [ready-made examples](../examples/profiles/README.md#portable-continuous-fragment-combos) |
 | Check support, performance and known limits | [Compatibility](compatibility.md), [performance measurements](performance.md), [validation and known limits](validation.md) |
 | See planned improvements and the path to 1.0 | [Project roadmap](../ROADMAP.md), [stability and compatibility policy](stability.md) |
 

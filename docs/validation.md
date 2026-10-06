@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-05**, including portable fragment recipes, 0.20.0 package acceptance, native candidate isolation,
+Evidence updated on **2026-10-05**, including portable fragment recipes, 0.21.0 package acceptance, native candidate isolation,
 installed upgrade/Restore checks, experimental resize continuation and device-owned
 pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
@@ -15,7 +15,7 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
 
-## Portable fragment recipes (Unreleased)
+## Portable fragment recipes (0.21)
 
 Shared Python/browser fixtures cover complete schema 4 responses, action modes,
 units, bounds, cross-field constraints and rejected inputs. Earlier document
@@ -48,8 +48,39 @@ not visual quality or physical-session acceptance.
 Reproduce the focused contracts with
 `python3 -m unittest discover -s tests -p 'test_*fragment*.py'` and
 `python3 -m unittest discover -s tests -p 'test_portable_recipes.py'`.
-The [upgrade guide](upgrading.md#portable-fragment-recipes-unreleased) describes
+The [upgrade guide](upgrading.md#from-020-to-021) describes
 read-only export and reviewed Apply for an existing installation.
+
+## Release 0.21.0 package acceptance
+
+The installed 0.21.0 wheel passed first-use browser workflows in empty temporary
+accounts for standalone Niri and the real installed iNiR helper. Both paths
+covered independent action choices, saving, Review/Cancel, Apply, reopening and
+exact Restore. Stock Niri accepted the generated configuration, and the helper
+checkout remained unchanged.
+
+The checksum-verified published 0.20.0 wheel upgraded to 0.21.0 without changing
+saved JSON, profiles, favorites, shell registrations or user resize settings.
+CLI and browser checks preserved schema 2 modes and independent schema 3
+Move/Swap choices, then verified conflict-safe Restore. Complete schema 4
+recipes also passed installed import, storage, stock Apply and exact Restore.
+
+Installed managed-tool checks used both actual releases. Version 0.21 read
+retained legacy and schema 4 bundles. Version 0.20 refused tool selection and
+rollback when either the selected or previous bundle contained a schema 4
+recipe, leaving files unchanged. Legacy-only rollback review succeeded.
+
+The full Studio rendering suite passed all 80 presets, shape/aspect cases,
+shader parity, action controls and isolated save workflows. The 12 recordings
+that depend on the Studio build were regenerated with source provenance and
+reviewed alongside their downloadable examples. Browser previews do not
+simulate continuous fragment gestures.
+
+These checks use disposable accounts and no desktop connection. Managed-bundle
+transaction fixtures use a stub compositor validator; the real parser checks
+are described above. They do not establish physical login, capture, mixed-monitor
+behavior or GPU performance. Reproduce the [installed upgrade](releases.md#verify-an-upgrade)
+and [first-use workflows](../CONTRIBUTING.md#development-setup) with the release wheel.
 
 ## Release 0.20.0 package acceptance
 

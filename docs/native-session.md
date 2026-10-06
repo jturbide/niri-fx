@@ -13,7 +13,7 @@ Installation starts with a frozen configuration snapshot. To keep ordinary shell
 and desktop settings shared with stock Niri while adding native effects, use
 [shared desktop settings](shared-settings.md) after saving your first effects recipe.
 
-The current source installation is a **single-user, systemd-based** workflow.
+The source-built session uses a **single-user, systemd-based** installation workflow.
 Distribution packages are not published yet. It requires the
 stock `/usr/bin/niri`, `/usr/bin/niri-session`, `niri.service` and
 `niri-shutdown.target`, plus the distribution's Niri portal configuration and
@@ -23,14 +23,14 @@ Keep using the nested preview if you do not want a separate login session.
 
 ## Prepare a version
 
-The session commands are included in NiriFX 0.20. Download the wheel and
-`SHA256SUMS` from the same [release](releases.md#0200-prerelease), verify them,
+Use the NiriFX 0.21 tools for the current session workflow. Download the wheel and
+`SHA256SUMS` from the same [release](releases.md#0210-prerelease), verify them,
 and install the wheel in a persistent Python environment:
 
 ```sh
 sha256sum --ignore-missing -c SHA256SUMS
 python3 -m venv ~/.local/share/niri-fx/session-tools
-~/.local/share/niri-fx/session-tools/bin/pip install --no-index --no-deps ./niri_fx-0.20.0-py3-none-any.whl
+~/.local/share/niri-fx/session-tools/bin/pip install --no-index --no-deps ./niri_fx-0.21.0-py3-none-any.whl
 ```
 
 For an existing managed installation, prepare a new environment and follow
@@ -185,12 +185,12 @@ configuration instead. It does not retain an override you are removing.
 
 The fragment response selector offers **Gentle**, **Tear** and **Cascade**.
 Selecting one sets its matching movement material and native controls.
-Current source builds also offer **Customize fragment response** and retain
+NiriFX 0.21 adds **Customize fragment response** and retains
 the complete values in [portable profiles](profiles.md#portable-fragment-response).
 Move Off, Preserve or an ineligible material leaves those values dormant;
 **Timed movement** removes the response. NiriFX 0.20 instead retains the
 continuous preset in its managed bundle's recipe; see
-[exporting an older recipe](upgrading.md#portable-fragment-recipes-unreleased).
+[exporting an older recipe](upgrading.md#from-020-to-021).
 The browser preview is still a timed movement preview, not a simulation of the
 continuous fragment renderer.
 
@@ -250,7 +250,7 @@ continuous presets are `gentle`, `tear` and `cascade`. Baseline global
 animation Off/slowdown settings remain in force and can suppress or alter the
 chosen effects.
 
-Current source tools can export a retained recipe without selecting, rewriting
+NiriFX 0.21 can export a retained recipe without selecting, rewriting
 or activating it:
 
 ```sh
@@ -304,7 +304,7 @@ pinned to an older, separate installation will not gain support merely because
 a newer CLI or Studio creates the bundle. Keep the original installation and
 stock session available while reviewing a launcher migration.
 
-NiriFX 0.20 provides [managed tool updates](tool-updates.md) for this
+NiriFX 0.20 and newer provide [managed tool updates](tool-updates.md) for this
 migration. After registering the stable entry once, CLI, Studio and login use
 one reviewed runtime selection, with compatibility checks and tool rollback.
 

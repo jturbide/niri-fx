@@ -784,11 +784,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "9551a9317ba1d3c2b0ebc1a55f286662fc760e6849f6146d0557f8d468dadb1f",
-        "inputs_sha256": "4fbdfc505715040e563a6f8bf51ad049da6a013954def776fa14a222d23a6394",
+        "preview_sha256": "fea970a7d5a3ad1dd9f3abe64eb252b45312438a47039b8cd44b37b9ef50a39d",
+        "inputs_sha256": "4a8a1a9c3d27d30f446ad561ea8d637d0b878c5f35acfa1d09051632696948fe",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
@@ -828,11 +828,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "5921a25bcd709b8ba23c73254b8fc95d8f1b4e5054f1b699f9df8bd8313492b5",
-        "inputs_sha256": "4fbdfc505715040e563a6f8bf51ad049da6a013954def776fa14a222d23a6394",
+        "preview_sha256": "72efec01233845d2a515f40cd79a4e4ba506ed6cd67b45e19faef39805ea065e",
+        "inputs_sha256": "4a8a1a9c3d27d30f446ad561ea8d637d0b878c5f35acfa1d09051632696948fe",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
@@ -872,11 +872,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "d15622f2c04bac5011b81c2f8372f6879f3059cdd5239123704dd997394ebe61",
-        "inputs_sha256": "4fbdfc505715040e563a6f8bf51ad049da6a013954def776fa14a222d23a6394",
+        "preview_sha256": "f7e7d93fa53d913408d41bdec4fc3f8ada7126f6cb8e107e340be06882088115",
+        "inputs_sha256": "4a8a1a9c3d27d30f446ad561ea8d637d0b878c5f35acfa1d09051632696948fe",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
@@ -2763,7 +2763,7 @@
         "actual JSON/KDL downloads",
         "stock Niri validation"
       ],
-      "bytes": 339139,
+      "bytes": 330752,
       "sources": {
         "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
         "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
@@ -2775,11 +2775,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
-        "inputs_sha256": "61e8496bbb67d0a573af578b897f03d4d29c1d87c16197942c9bb85b663df6c5",
+        "preview_sha256": "eb3f3cbbc5048cd125fe4b522740887657f87c3470b028b2aee1347f276fcfcf",
+        "inputs_sha256": "c6a003fb85fc18973a5ef96a4c8d5bd6eedd5fe7dc94c2186e76b8ccf5a3314a",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
@@ -2812,7 +2812,7 @@
         "actual JSON and KDL downloads",
         "stock Niri validation"
       ],
-      "bytes": 3856758,
+      "bytes": 3857191,
       "sources": {
         "niri_fx/library.js": "eb05a2cec4928b3fd0c65553b1243397f66b343dd5d5b7d9ffa7042bb1109c78",
         "niri_fx/pointer.py": "ee3317d21e1cb11f96fb95e6367138d934eb29395bad7bfb8c90a42b99ff699d",
@@ -2827,11 +2827,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
-        "inputs_sha256": "1baf9556b1103235553409d39e3d6d06a2d37eb79f4908b7d36e47c31ee98391",
+        "preview_sha256": "eb3f3cbbc5048cd125fe4b522740887657f87c3470b028b2aee1347f276fcfcf",
+        "inputs_sha256": "39592b2eaada5a20fdc312635dc2c6f81e4ea5414689cbebbb97919bd2c4ba2f",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
@@ -2855,7 +2855,7 @@
         "stock Niri validation",
         "resize absent"
       ],
-      "bytes": 675653,
+      "bytes": 674585,
       "sources": {
         "examples/profiles/burst-and-drift.json": "530ebb52e2c004aaaf459e3e15789c9bceaedb94c30520ed65dfd1326d6a2ba9",
         "niri_fx/effect-core.js": "2e6f506f5ecbaac2305ed64445b10bbd04aad58f71b3254821b272dc01184a24",
@@ -2870,11 +2870,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "dd38d30488f001cd195d1c1c151a5392c4b193beb1e2bb9df8f2073785e74dd7",
-        "inputs_sha256": "13864db63b9bc1577dcac86e1be8cc8d1f91075da73ddfb243b6dd3b12a69902",
+        "preview_sha256": "eb3f3cbbc5048cd125fe4b522740887657f87c3470b028b2aee1347f276fcfcf",
+        "inputs_sha256": "8e99c66e9ffdf5c51c8fd8a048dce29d05d8151cb4f12cae7231a2a7acf2eb13",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
@@ -2907,7 +2907,7 @@
         "no compositor response claim"
       ],
       "file": "docs/gifs/workflow-portable-recipe.gif",
-      "bytes": 597318,
+      "bytes": 602206,
       "sources": {
         "scripts/record-portable-recipe.mjs": "ebae386816237157893e6bb439139fa057fcd6d7a1c17e851e8dd663e7b43dda",
         "niri_fx/fragment_motion.py": "10170312e485f033946592d0518872ddf2a7a06a197d80b38aa01a1a4fe26c52",
@@ -2926,11 +2926,11 @@
       },
       "capture": {
         "schema": 1,
-        "preview_sha256": "6a6bff4e55b8fbb1f5bcbf041cfc70e7e518ef0f7a9a28a597f6ef528dbdb403",
-        "inputs_sha256": "586f9175fb0d5f9f89745141dae2c1a10e0057fed3d1927d498ae9160c7975a7",
+        "preview_sha256": "b59f626903d7a931e1fe6a274e09114a50a960518b37a7a29532980b311ba4e9",
+        "inputs_sha256": "b656fcb2bfbb50aaf12e359e9b7dc42078ed29ad861b9e9527e09755c6c586c6",
         "studio": {
-          "version": "0.20.0",
-          "build": "49feca05f16e"
+          "version": "0.21.0",
+          "build": "ac3b26bca640"
         },
         "tool_sources": {
           "scripts/lib/recording-provenance.mjs": "01a82f1d410dcf83a9494b6cd26dced189aad0cedece534d93f8e4e2c32a2ffc",
