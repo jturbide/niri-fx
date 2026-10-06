@@ -35,6 +35,7 @@ pkgbase = niri-fx-compositor-git
 	optdepends = xwayland-satellite: run X11 applications
 	options = !strip
 	options = !debug
+	options = !lto
 	source = niri-fx::git+https://github.com/jturbide/niri-fx.git#branch=main
 	source = niri::git+https://github.com/niri-wm/niri.git#commit=8ed0da44d974c32c6877d2f4630c314da0717ecb
 	source = niri-fx-packaged.desktop
@@ -43,7 +44,7 @@ pkgbase = niri-fx-compositor-git
 	sha256sums = SKIP
 	sha256sums = SKIP
 	sha256sums = 4f5b3d3b995d406866385c9b892557e4b3521645a59f4526ca999e93cabfb977
-	sha256sums = 4a17d84a9861d2d6b5d79c62d1305f09baeb7701e28141baa822c45133c69920
+	sha256sums = 2511db4b18b52be5778983686e6106e9b54ffb573c9bd12555a0827ce92d49b5
 	sha256sums = 336feffd8a99323d56058efe2b2deb3480dcf935dbb6813324c95a7e61bbbca3
 
 pkgname = niri-fx-compositor-git

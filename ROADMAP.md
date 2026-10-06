@@ -223,8 +223,9 @@ are developer regression controls, not separate consumer editions.
       during adoption; test stale-review refusal, validation failure and rollback.
 - [x] Verify actual staged package payloads in disposable Arch: two-user adoption,
       stale-review refusal, retained tools after removal and unchanged stock Niri files.
-- [ ] Validate the complete Arch compositor recipe and paired tools package in a
-      clean distribution build before publishing `niri-fx-compositor-git` on AUR.
+- [x] Validate the complete Arch compositor recipe and paired tools package in a
+      clean distribution build, including installation, adoption and removal.
+- [ ] Publish `niri-fx-compositor-git` on AUR after update and physical acceptance.
 - [ ] Verify updates across two package versions, multiple users, Python path
       changes, interrupted adoption and missing shared libraries. Preserve running,
       selected and previous copies and the stock Niri recovery entry.
