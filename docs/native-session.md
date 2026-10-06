@@ -183,11 +183,14 @@ When reopening a previously customized bundle, Preserve returns to its original
 baseline for that action. In shared mode it follows the current normal desktop
 configuration instead. It does not retain an override you are removing.
 
-For a fragment-capable build, the continuous-fragment selector offers **Gentle**,
-**Tear** and **Cascade**. Selecting one explicitly sets its matching movement
-material and native controls. **Use profile movement** uses the profile's normal
-movement choice. The continuous settings belong to the managed bundle's recipe;
-portable profile JSON alone does not contain those extra native controls.
+The fragment response selector offers **Gentle**, **Tear** and **Cascade**.
+Selecting one sets its matching movement material and native controls.
+Current source builds also offer **Customize fragment response** and retain
+the complete values in [portable profiles](profiles.md#portable-fragment-response).
+Move Off, Preserve or an ineligible material leaves those values dormant;
+**Timed movement** removes the response. NiriFX 0.20 instead retains the
+continuous preset in its managed bundle's recipe; see
+[exporting an older recipe](upgrading.md#portable-fragment-recipes-unreleased).
 The browser preview is still a timed movement preview, not a simulation of the
 continuous fragment renderer.
 
@@ -246,6 +249,17 @@ Use the same selection arguments and `--root` on review and Apply. The available
 continuous presets are `gentle`, `tear` and `cascade`. Baseline global
 animation Off/slowdown settings remain in force and can suppress or alter the
 chosen effects.
+
+Current source tools can export a retained recipe without selecting, rewriting
+or activating it:
+
+```sh
+niri-fx native export BUNDLE_ID > ./my-combo.json
+```
+
+The exported document includes resolved continuous response values from older
+recipes. Review an import against the desired build before applying it; a saved
+document does not establish that a compositor supports its native features.
 
 ### Apply from the terminal
 

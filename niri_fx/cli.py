@@ -137,9 +137,15 @@ def parser():
     document.add_argument("--custom", type=Path)
     document.add_argument("--profile", choices=PROFILES)
     profile = commands.add_parser("profile", help="Create an independent action profile as JSON")
+    from .fragment_motion import PRESETS as FRAGMENT_PRESETS
     from .motion import MOTION_PACKS
     from .pointer import PRESETS as POINTER_PRESETS
 
+    profile.add_argument(
+        "--fragment-preset",
+        choices=FRAGMENT_PRESETS,
+        help="Choose a continuous Move prefab and save all its response values in JSON",
+    )
     profile.add_argument(
         "--pointer",
         choices=(*POINTER_PRESETS, "preserve", "off"),
@@ -542,6 +548,13 @@ def main(argv=None):
                     if arguments.pointer == "off"
                     else POINTER_PRESETS[arguments.pointer].wobble,
                 )
+            if arguments.fragment_preset:
+                from .fragment_motion import PRESETS as FRAGMENT_PRESETS
+
+                if arguments.movement_preset is not None:
+                    raise ValueError("--fragment-preset supplies Move; omit --movement-preset")
+                choice = FRAGMENT_PRESETS[arguments.fragment_preset]
+                effect = replace(effect, movement=choice.effect, fragment_motion=choice.settings)
             document = effect.document(name)
             parse_document(document)
             print(json.dumps(document, indent=2))

@@ -87,6 +87,7 @@ function createEffectCore(catalog) {
     });
   }
   function fragmentMotionEligible(p) {
+    if (!p || typeof p !== "object" || Array.isArray(p)) return false;
     const shape = p.fragment_mix === 1 ? p.fragment_secondary : p.fragment_shape;
     const mixed =
       p.fragment_mix > 0 && p.fragment_mix < 1 && p.fragment_shape !== p.fragment_secondary;
@@ -137,17 +138,29 @@ function createEffectCore(catalog) {
   function normalizePreset(doc) {
     if (doc?.kind === "profile") {
       if (
-        ![1, 2, 3].includes(doc.schema) ||
+        ![1, 2, 3, 4].includes(doc.schema) ||
         !["kind", "schema", "name", "actions"].every((key) => Object.hasOwn(doc, key)) ||
         Object.keys(doc).some(
-          (key) => !["kind", "schema", "name", "actions", "motion", "pointer"].includes(key),
+          (key) =>
+            ![
+              "kind",
+              "schema",
+              "name",
+              "actions",
+              "motion",
+              "pointer",
+              ...(doc.schema === 4 ? ["fragment_motion"] : []),
+            ].includes(key),
         ) ||
+        (doc.schema === 4 && doc.fragment_motion == null) ||
         !doc.actions ||
+        typeof doc.actions !== "object" ||
+        Array.isArray(doc.actions) ||
         Object.keys(doc.actions).sort().join() !==
-          (doc.schema === 3 ? "close,movement,open,resize,swap" : "close,movement,open,resize")
+          (doc.schema >= 3 ? "close,movement,open,resize,swap" : "close,movement,open,resize")
       )
         throw new Error(
-          "Expected profile schema 1 or 2 with four actions, or schema 3 with an additional swap action.",
+          "Expected profile schema 1 or 2 with four actions, schema 3 with Swap, or schema 4 with Swap and explicit fragment motion settings.",
         );
       validateName(doc.name);
       const normalized = {};
@@ -156,7 +169,7 @@ function createEffectCore(catalog) {
         "close",
         "resize",
         "movement",
-        ...(doc.schema === 3 ? ["swap"] : []),
+        ...(doc.schema >= 3 ? ["swap"] : []),
       ]) {
         const value = doc.actions[action];
         if (
@@ -180,14 +193,17 @@ function createEffectCore(catalog) {
           throw new Error("This family does not support " + action);
         normalized[action] = effect;
       }
-      if (normalized.swap === null) delete normalized.swap;
+      if (normalized.swap === null && doc.schema !== 4) delete normalized.swap;
       return {
         kind: "profile",
-        schema: Object.hasOwn(normalized, "swap") ? 3 : 2,
+        schema: doc.schema === 4 ? 4 : Object.hasOwn(normalized, "swap") ? 3 : 2,
         name: doc.name,
         actions: normalized,
         ...(Object.hasOwn(doc, "motion") ? { motion: normalizeMotion(doc.motion) } : {}),
         ...(doc.pointer == null ? {} : { pointer: normalizePointer(doc.pointer) }),
+        ...(doc.schema === 4
+          ? { fragment_motion: normalizeFragmentMotion(doc.fragment_motion) }
+          : {}),
       };
     }
     if (
@@ -279,7 +295,57 @@ function createEffectCore(catalog) {
     }
     return settings;
   }
-  function renderKdl(document, { movement = false, pointer = false, swap = false } = {}) {
+  function normalizeFragmentMotion(data) {
+    if (data === null) return null;
+    const controls = catalog.fragment_controls;
+    if (
+      !data ||
+      typeof data !== "object" ||
+      Array.isArray(data) ||
+      Object.keys(data).sort().join() !== Object.keys(controls).sort().join()
+    )
+      throw new Error("Fragment motion requires all supported response controls only.");
+    const settings = {};
+    for (const [key, control] of Object.entries(controls)) {
+      const value = data[key];
+      if (control.kind === "choice") {
+        if (typeof value !== "string" || !control.choices.includes(value))
+          throw new Error("Fragment motion " + key + " must be a supported choice.");
+      } else {
+        if (
+          typeof value !== "number" ||
+          !Number.isFinite(value) ||
+          value < control.minimum ||
+          value > control.maximum ||
+          (control.exclusive_min && value === control.minimum)
+        )
+          throw new Error("Fragment motion " + key + " is outside its supported range.");
+        if (control.kind === "integer" && !Number.isInteger(value))
+          throw new Error("Fragment motion " + key + " must be a whole number.");
+      }
+      settings[key] = value;
+    }
+    for (const prefix of ["delay", "response"])
+      if (settings[prefix + "_near_ms"] > settings[prefix + "_far_ms"])
+        throw new Error("Fragment motion " + prefix + " near must not exceed far.");
+    return settings;
+  }
+  function fragmentMotionNode(settings) {
+    const entries = Object.entries(normalizeFragmentMotion(settings));
+    // These values configure native f64 state, not GLSL constants. Preserve
+    // small positive exponents and full precision instead of rounding to 1e-6.
+    return (
+      "        fragment-motion {\n" +
+      entries
+        .map(([key, value]) => `            ${key.replaceAll("_", "-")} ${JSON.stringify(value)}\n`)
+        .join("") +
+      "        }\n"
+    );
+  }
+  function renderKdl(
+    document,
+    { movement = false, pointer = false, swap = false, continuous_fragments = true } = {},
+  ) {
     const parameters = document.effect;
     let result = "// Generated by NiriFX Studio\nanimations {\n";
     const selected = document.actions || {
@@ -311,8 +377,16 @@ function createEffectCore(catalog) {
       result += `    window-${action} {\n`;
       if (action === "movement" && !pointer) result += "        preserve-pointer\n";
       const moving = ["movement", "swap"].includes(action);
-      result += `        duration-ms ${effect[(moving ? "movement" : action) + "_ms"]}\n        curve "linear"\n        custom-shader r"\n${shaderFor(effect, action === "open", action === "resize", moving, action !== "swap").trimEnd()}\n        "\n`;
+      result += `        duration-ms ${effect[(moving ? "movement" : action) + "_ms"]}\n        curve "linear"\n        custom-shader r"\n${shaderFor(effect, action === "open", action === "resize", moving, continuous_fragments && action !== "swap").trimEnd()}\n        "\n`;
       if (action === "movement" && pointer) result += pointerNode(document);
+      if (
+        action === "movement" &&
+        continuous_fragments &&
+        document.actions &&
+        document.fragment_motion != null &&
+        fragmentMotionEligible(effect)
+      )
+        result += fragmentMotionNode(document.fragment_motion);
       result += "    }\n";
     }
     if (pointer && !movement)
@@ -356,7 +430,7 @@ function createEffectCore(catalog) {
       : { ...doc, effect: compact(doc.effect) };
     const bytes = new TextEncoder().encode(JSON.stringify(data));
     if (bytes.length > catalog.max_document_bytes)
-      throw new Error("Shared preset must be at most 16 KiB.");
+      throw new Error(`Shared preset must be at most ${catalog.max_document_bytes / 1024} KiB.`);
     return btoa(String.fromCharCode(...bytes))
       .replaceAll("+", "-")
       .replaceAll("/", "_")
@@ -374,7 +448,7 @@ function createEffectCore(catalog) {
       (character) => character.charCodeAt(0),
     );
     if (bytes.length > catalog.max_document_bytes)
-      throw new Error("Shared preset must be at most 16 KiB.");
+      throw new Error(`Shared preset must be at most ${catalog.max_document_bytes / 1024} KiB.`);
     return normalizePreset(JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes)));
   }
   return {
@@ -382,6 +456,8 @@ function createEffectCore(catalog) {
     shaderFor,
     normalizePreset,
     normalizePointer,
+    normalizeFragmentMotion,
+    fragmentMotionEligible,
     renderKdl,
     encodeShareDocument,
     decodeShareDocument,

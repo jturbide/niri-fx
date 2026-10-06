@@ -21,14 +21,13 @@ async function sharedStudioFixture(t, { configured = true, saved = true } = {}) 
         "-c",
         `
 import json,sys
-from niri_fx.native_customization import fragment_choices
 from niri_fx.preview import preview_document
 from niri_fx.presets import PRESETS
 shared,configured=json.loads(sys.argv[1])
 connection={"target":"native","token":"synthetic-shared-test",
     "installation":{"state":"unmanaged","selected_version":None},"native":{
     "base_bundle":"shared-base" if shared else "launch-base","variant":"fragment",
-    "recipe":None,"fragment_choices":fragment_choices(),"swap_supported":True,
+    "recipe":None,"swap_supported":True,
     "shared":shared,"shared_config_configured":configured}}
 print(preview_document(PRESETS["balanced"],connection=connection))
 `,
@@ -187,8 +186,7 @@ test("shared settings review preserves drafts and separates file updates from ru
   const view = await sharedStudioFixture(t);
   const { browser, click, requests } = view;
   const { evaluate } = browser;
-  const snapshot = () =>
-    evaluate("({document:effectDocument(),sessionSettings,history:editHistory,historyIndex})");
+  const snapshot = () => evaluate("({document:effectDocument(),history:editHistory,historyIndex})");
   assert.equal(await evaluate("byId('native-share').disabled"), false);
   await evaluate(`
     byId('combo-name').value='Unsaved shared draft';
@@ -1123,7 +1121,7 @@ finally:
     assert.equal(await evaluate("byId('native-fragment-preset').value"), "gentle");
     assert.deepEqual(
       await evaluate("effectDocument().actions.movement"),
-      await evaluate("catalog.connection.native.fragment_choices.gentle.effect"),
+      await evaluate("catalog.fragment_presets.gentle.effect"),
     );
     await click("redo");
     assert.equal(await evaluate("byId('native-fragment-preset').value"), "tear");
@@ -1136,7 +1134,7 @@ finally:
     await choose("native-fragment-preset", "cascade");
     assert.deepEqual(
       await evaluate("effectDocument().actions.movement"),
-      await evaluate("catalog.connection.native.fragment_choices.cascade.effect"),
+      await evaluate("catalog.fragment_presets.cascade.effect"),
     );
     await choose("combo-pointer-mode", "style");
     await choose("combo-pointer", "rubber-sheet");
@@ -1150,7 +1148,7 @@ finally:
     assert.equal(await evaluate("byId('native-fragment-preset').value"), "cascade");
     assert.deepEqual(
       await evaluate("effectDocument().actions.movement"),
-      await evaluate("catalog.connection.native.fragment_choices.cascade.effect"),
+      await evaluate("catalog.fragment_presets.cascade.effect"),
     );
     assert.match(
       await evaluate("byId('pointer-description').textContent"),
@@ -1158,14 +1156,18 @@ finally:
     );
     assert.match(
       await evaluate("byId('pointer-movement-note').textContent"),
-      /Pointer wobble Off does not stop those fragments.*Set Move to Off/s,
+      /Pointer wobble Off does not stop continuous fragments.*Set Move to Off/s,
     );
     assert.match(
       await evaluate("byId('combo-pointer-mode').getAttribute('aria-describedby')"),
       /pointer-movement-note/,
     );
     await choose("combo-movement-mode", "off");
-    assert.equal(await evaluate("byId('native-fragment-preset').value"), "");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "cascade");
+    assert.deepEqual(
+      await evaluate("effectDocument().fragment_motion"),
+      await evaluate("catalog.fragment_presets.cascade.settings"),
+    );
     assert.match(
       await evaluate("byId('pointer-movement-note').textContent"),
       /^Move is Off: fragment dragging and timed Move effects are disabled/,
@@ -1182,12 +1184,14 @@ finally:
     assert.match(await evaluate("byId('pointer-movement-note').textContent"), /^Move is Off:/);
     await choose("combo-pointer-mode", "preserve");
     await choose("native-fragment-preset", "tear");
+    await choose("fragment-response-max_lag", "555");
     await choose("combo-name", "Studio Trial");
     const document = await evaluate("effectDocument()");
+    assert.equal(document.fragment_motion.max_lag, 555);
     await click("store-profile");
     assert.match(
       await evaluate("byId('profile-dialog-help').textContent"),
-      /exclude continuous fragment response/,
+      /keep the complete recipe, including continuous fragment response/,
     );
     await click("profile-confirm");
     await wait("!byId('profile-dialog').open&&!byId('store-profile').disabled");
@@ -1230,7 +1234,7 @@ finally:
     await choose("combo-close-mode", "off");
     await click("native-reopen");
     assert.deepEqual(await evaluate("effectDocument()"), document);
-    assert.equal(await evaluate("byId('native-fragment-preset').value"), "tear");
+    assert.equal(await evaluate("byId('native-fragment-preset').value"), "custom");
     assert.match(
       await evaluate("byId('pointer-movement-note').textContent"),
       /continuous fragments take priority/,

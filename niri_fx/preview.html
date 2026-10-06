@@ -226,12 +226,16 @@
           Swap can use its own style for Swap window left/right commands.</small
         >
         <small id="movement-availability"></small>
-        <section id="native-fragments" hidden aria-label="Continuous fragment motion">
-          <label for="native-fragment-preset">Continuous fragments</label>
-          <select id="native-fragment-preset">
-            <option value="">Use profile movement</option>
+        <section id="native-fragments" aria-label="Continuous fragment response">
+          <label for="native-fragment-preset">Fragment response</label>
+          <select id="native-fragment-preset" aria-describedby="native-fragment-description">
+            <option value="">Timed movement — remove continuous response</option>
           </select>
           <small id="native-fragment-description"></small>
+          <details id="fragment-tuning">
+            <summary>Customize fragment response</summary>
+            <div id="fragment-fields" class="response-fields"></div>
+          </details>
         </section>
         <section id="pointer-settings" aria-label="Pointer wobble settings">
           <label for="combo-pointer-mode">Pointer wobble</label>
@@ -308,6 +312,10 @@
         <small
           >NiriFX shader on synthetic content. The desktop controls position and interruptions; this
           preview uses a simple path. Stock Niri exports omit movement.</small
+        >
+        <small id="fragment-preview-note" hidden
+          >This recipe also stores continuous fragment response. This canvas shows the material
+          only; it does not simulate that gesture response.</small
         >
       </div>
       <div class="wide profile-controls">
@@ -415,9 +423,9 @@
         ><button class="button-quiet" id="save">Save to iRiS</button>
       </div>
       <small id="pointer-export-note" hidden
-        >Stock config exports omit pointer wobble, movement and swaps. JSON preserves them; the
-        session export requires matching compositor extensions with action-preservation
-        support.</small
+        >Stock config exports omit pointer wobble, movement, swaps and fragment response. JSON
+        preserves them; the session export requires matching compositor extensions with
+        action-preservation support.</small
       >
       <label id="share-result" hidden
         >Preview link<input id="share-url" type="text" readonly

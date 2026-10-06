@@ -17,7 +17,7 @@ from pathlib import Path
 
 from .branding import APP_ID, desktop_entry
 from .documents import effect_document
-from .effects import render_kdl
+from .effects import Effect, fragment_motion_eligible, render_kdl
 from .integration import (
     make_builtin_profile,
     make_custom_preset,
@@ -160,9 +160,14 @@ def _native_requirements(path, overrides, seen=None):
                     "custom-shader",
                     "preserve-movement",
                     "preserve-pointer",
+                    "fragment-motion",
                 ):
                     kind = (
-                        "pointer" if name in ("pointer-wobble", "preserve-movement") else "movement"
+                        "fragment"
+                        if name == "fragment-motion"
+                        else "pointer"
+                        if name in ("pointer-wobble", "preserve-movement")
+                        else "movement"
                     )
                     signature = digest(json.dumps((arguments, children)).encode())
                     requirements.add((kind, signature))
@@ -186,7 +191,7 @@ def _restore_native_requirements(work, config):
     for root in roots:
         prior = _native_requirements(root, before)
         current = _native_requirements(root, after)
-        for kind in ("pointer", "movement"):
+        for kind in ("pointer", "movement", "fragment"):
             prior_signatures = {value for feature, value in prior if feature == kind}
             current_signatures = {value for feature, value in current if feature == kind}
             if prior_signatures and prior_signatures != current_signatures:
@@ -364,6 +369,7 @@ def plan_setup(args, effect, custom=None):
     changes, notes = [], []
     movement = None
     pointer = None
+    fragment = None
     validation_binary = None
     if getattr(effect, "swap", None) is not None:
         notes.append(
@@ -385,6 +391,31 @@ def plan_setup(args, effect, custom=None):
         notes.append(
             "Experimental movement is explicitly enabled and the running renderer contract is verified."
         )
+    fragment_settings = getattr(effect, "fragment_motion", None)
+    if fragment_settings is not None:
+        if (
+            movement is not None
+            and isinstance(effect.movement, Effect)
+            and fragment_motion_eligible(effect.movement)
+        ):
+            from .capabilities import fragment_capability
+
+            fragment = fragment_capability(
+                movement["binary"], socket_path=os.environ.get("NIRI_SOCKET")
+            )
+            if not fragment["activation_ready"]:
+                raise ValueError(
+                    "Continuous fragment response requires a matching binary and verified running "
+                    "fragment contract. Run doctor --niri-binary PATH first."
+                )
+            notes.append(
+                "Continuous fragment response is enabled with Move and the running fragment contract is verified."
+            )
+        else:
+            notes.append(
+                "Fragment response settings are retained in the profile but omitted from this "
+                "activation; they require enabled movement with an eligible square material."
+            )
     pointer_settings = getattr(effect, "pointer", None)
     if getattr(args, "enable_pointer", False):
         if args.target != "standalone":
@@ -450,7 +481,12 @@ def plan_setup(args, effect, custom=None):
             raise ValueError(
                 "An unmanaged NiriFX include already exists; remove/review it before setup."
             )
-        generated = render_kdl(effect, movement=movement is not None, pointer=pointer is not None)
+        generated = render_kdl(
+            effect,
+            movement=movement is not None,
+            pointer=pointer is not None,
+            continuous_fragments=fragment is not None,
+        )
         if native := pointer or movement:
             validation_binary = native["binary"]
         elif selected := getattr(args, "movement_binary", None):
@@ -516,6 +552,7 @@ def plan_setup(args, effect, custom=None):
         else None,
         "desktop_motion": document.get("motion"),
         "pointer": document.get("pointer"),
+        "fragment_motion": document.get("fragment_motion"),
         "activation": "select in iRiS" if target == "inir" else "Niri config reload",
         "validation_config": str(config) if target == "standalone" else None,
         "validation_binary": validation_binary,
@@ -524,6 +561,12 @@ def plan_setup(args, effect, custom=None):
         else None,
         "pointer_activation": {"binary": pointer["binary"], "socket": os.environ.get("NIRI_SOCKET")}
         if pointer
+        else None,
+        "fragment_activation": {
+            "binary": fragment["binary"],
+            "socket": os.environ.get("NIRI_SOCKET"),
+        }
+        if fragment
         else None,
     }
 
@@ -537,9 +580,11 @@ def summarize(plan):
         "effect": plan.get("effect"),
         "desktop_motion": plan.get("desktop_motion"),
         "pointer": plan.get("pointer"),
+        "fragment_motion": plan.get("fragment_motion"),
         "activation": plan.get("activation"),
         "movement": plan.get("movement"),
         "pointer_activation": plan.get("pointer_activation"),
+        "fragment_activation": plan.get("fragment_activation"),
         "native_live": plan.get("native_live"),
         "validation_binary": plan.get("validation_binary"),
         "validation_checks": plan.get("validation_checks", []),
@@ -572,8 +617,10 @@ def plan_fingerprint(plan):
         "effect": plan.get("effect"),
         "desktop_motion": plan.get("desktop_motion"),
         "pointer": plan.get("pointer"),
+        "fragment_motion": plan.get("fragment_motion"),
         "movement": plan.get("movement"),
         "pointer_activation": plan.get("pointer_activation"),
+        "fragment_activation": plan.get("fragment_activation"),
         "native_live": plan.get("native_live"),
         "activation": plan.get("activation"),
         "validation_binary": plan.get("validation_binary"),
@@ -632,13 +679,14 @@ def apply_plan(plan, state, expected=None):
         raise ValueError(
             "The setup plan changed. Review the selection and files again before applying."
         )
-    from .capabilities import movement_capability, pointer_capability
+    from .capabilities import fragment_capability, movement_capability, pointer_capability
 
     # Review binds the selected executable and session. Re-query the renderer
     # immediately before the transaction, even for an otherwise idempotent plan.
     for key, label, capability in (
         ("movement", "movement", movement_capability),
         ("pointer_activation", "pointer", pointer_capability),
+        ("fragment_activation", "fragment", fragment_capability),
     ):
         if selected := plan.get(key):
             if (
@@ -794,10 +842,15 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
         )
         validator = binary if binary is not None else data.get("validation_binary")
         if native and (apply or verify_native):
-            from .capabilities import movement_capability, pointer_capability
+            from .capabilities import fragment_capability, movement_capability, pointer_capability
 
+            capabilities = {
+                "movement": movement_capability,
+                "pointer": pointer_capability,
+                "fragment": fragment_capability,
+            }
             for feature in native:
-                capability = pointer_capability if feature == "pointer" else movement_capability
+                capability = capabilities[feature]
                 report = capability(validator, socket_path=os.environ.get("NIRI_SOCKET"))
                 if not report["activation_ready"]:
                     raise ValueError(

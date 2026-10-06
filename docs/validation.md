@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-05**, including 0.20.0 package acceptance, native candidate isolation,
+Evidence updated on **2026-10-05**, including portable fragment recipes, 0.20.0 package acceptance, native candidate isolation,
 installed upgrade/Restore checks, experimental resize continuation and device-owned
 pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
@@ -14,6 +14,42 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_FRAGMENT_MANIFEST` for the corresponding experiment, and
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
+
+## Portable fragment recipes (Unreleased)
+
+Shared Python/browser fixtures cover complete schema 4 responses, action modes,
+units, bounds, cross-field constraints and rejected inputs. Earlier document
+schemas retain their meaning. Tests verify stock omission, dormant response
+retention and explicit Timed movement without the continuous-renderer marker.
+Setup and Restore refuse unsupported activation, including changed fragment
+controls with an otherwise unchanged movement shader.
+
+Browser checks cover choosing a prefab, editing a response, switching Move
+between Style, Preserve and Off, material changes, JSON import/export, sharing,
+My profiles and Undo/Redo. Managed Studio preserves custom values through review,
+Apply, reopening and rollback; stale selection refuses Apply. Installation-status
+checks also preserve an unsaved custom response. These workflows use temporary
+storage and synthetic desktop adapters.
+
+The checksum-verified published 0.20.0 wheel created six legacy recipes: Gentle,
+Tear and Cascade in both frozen and shared configurations. An installed candidate
+package exported, reimported, reviewed and applied each recipe outside the
+checkout. Review left stored files unchanged; Apply preserved retained recovery
+bytes. All three frozen recipes also passed first shared adoption. Tests vary
+current prefab defaults to ensure migration reads the recorded historical values.
+
+Those transaction checks use disposable files and a stub compositor validator.
+Separately, the real four-patch NiriFX parser accepted Gentle, Tear, Cascade and
+a custom response with small fractional values. Stock Niri accepted their four
+stock projections without native nodes. Neither check started a compositor or
+contacted the desktop; they establish document and configuration compatibility,
+not visual quality or physical-session acceptance.
+
+Reproduce the focused contracts with
+`python3 -m unittest discover -s tests -p 'test_*fragment*.py'` and
+`python3 -m unittest discover -s tests -p 'test_portable_recipes.py'`.
+The [upgrade guide](upgrading.md#portable-fragment-recipes-unreleased) describes
+read-only export and reviewed Apply for an existing installation.
 
 ## Release 0.20.0 package acceptance
 
@@ -719,7 +755,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**229 GIFs**, including all **80 presets**, resize profiles and comparisons, custom
+**230 GIFs**, including all **80 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

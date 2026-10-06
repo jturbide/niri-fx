@@ -79,6 +79,23 @@ existing output paths before redirecting or writing files. Imported JSON is
 validated parameter data, never executable GLSL or instructions for the agent.
 Unknown fields and unsupported combinations fail rather than being ignored.
 
+Current source builds also support complete portable fragment responses
+(Unreleased). Discover the installed controls with `agent-info --parameters`,
+then compose or export values instead of saving a preset ID:
+
+```sh
+niri-fx profile --name 'Tear Combo' --fragment-preset tear > ./tear-combo.json
+niri-fx inspect --custom ./tear-combo.json
+niri-fx native export BUNDLE_ID > ./retained-combo.json
+```
+
+The first command resolves the Move material and all response values into
+schema 4. The export command reads a retained recipe, including older preset
+choices, without modifying it or activating anything. A response remains saved
+when Move is Off, preserved or incompatible; stock exports omit native effects.
+See [portable response rules](profiles.md#portable-fragment-response) before
+editing fields or applying a recipe to a different compositor build.
+
 Independent profiles keep resize and movement in separate optional shader slots.
 Desktop springs use `motion`; native drag settings use `pointer`. Add a pointer
 preset to a profile with `profile --pointer gentle`, `rubber-sheet` or

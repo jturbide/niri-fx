@@ -12,7 +12,8 @@ from pathlib import Path
 from .model import PRESET_SCHEMA, Effect
 from .profiles import Profile, parse_profile
 
-MAX_DOCUMENT_BYTES = 16 * 1024
+# Five independent styles plus explicit response controls fit when pretty-printed.
+MAX_DOCUMENT_BYTES = 32 * 1024
 
 
 def parse_document(data):
@@ -47,7 +48,7 @@ def load_document(path):
     with Path(path).open("rb") as stream:
         raw = stream.read(MAX_DOCUMENT_BYTES + 1)
     if len(raw) > MAX_DOCUMENT_BYTES:
-        raise ValueError("Custom preset must be at most 16 KiB")
+        raise ValueError("Custom preset must be at most 32 KiB")
     data = json.loads(raw)
     parse_document(data)
     return data

@@ -54,7 +54,7 @@ or reloading the preview rejects the recording. Failed verification leaves the
 existing GIF and manifest unchanged; staged frames and output remain in
 `artifacts/` for inspection. Restart the recorder after changing any input.
 
-This guard covers `record-action-choices.mjs`, `record-library-workflow.mjs`,
+This guard covers `record-portable-recipe.mjs`, `record-action-choices.mjs`, `record-library-workflow.mjs`,
 `record-studio-workflow.mjs`, `record-combo-showcases.mjs` and
 `record-pointer-preview.mjs`. Runtime, example and recorder hashes remain checked
 against the checkout, including changes to recorded actions and timing. Shared
@@ -161,7 +161,7 @@ node scripts/record-combo-showcases.mjs --only=geometric-flow,ribbon-current,sof
 
 ## Pixels, wisps, distortion and configurable erosion
 
-The gallery contains **229 GIFs**, including all **80 presets**. The earlier eight
+The gallery contains **230 GIFs**, including all **80 presets**. The earlier eight
 preset loops and three comparisons show pixel modes, curling wisps, distortion
 patterns and black/white/warm Ember palettes. Dissolve preset loops, its noise-scale
 comparison and the Spring/Ember profile were regenerated for the revised shaders.
@@ -217,11 +217,19 @@ plus `ffmpeg` and stock Niri for exported KDL validation:
 node scripts/record-library-workflow.mjs
 node scripts/record-action-choices.mjs
 node scripts/record-studio-workflow.mjs
+node scripts/record-portable-recipe.mjs
 ```
 
 The Library recording includes pointer preset selection, custom strength and
 portable JSON, stock KDL and experimental KDL downloads. These are editor controls;
 the native clips below demonstrate actual dragging.
+
+The portable-recipe recording uses the hosted Studio controls to choose Tear,
+customize its lag, preserve that response while Move is Off, then save, reopen
+and export it. It also imports the four continuous-fragment example profiles
+and verifies their values through the actual file picker. The manifest's
+`document_sources` lists those inputs, each with a checked source hash. This is
+an editor workflow; it does not simulate continuous native dragging.
 
 The following tools run **inside an existing Niri desktop** and create their own
 nested compositor. They require stock `niri`, `qs`, `grim`, `wf-recorder`, `wtype`,

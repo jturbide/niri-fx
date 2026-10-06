@@ -68,7 +68,9 @@ class NativeLibraryFixture(unittest.TestCase):
 
 class NativeLibraryTests(NativeLibraryFixture):
     def test_auto_target_prefers_a_verified_managed_session_over_the_shell(self):
-        args = SimpleNamespace(target="auto", inir_root=self.args.inir_root)
+        args = SimpleNamespace(
+            target="auto", inir_root=self.args.inir_root, config=self.args.config
+        )
         with (
             patch.dict(os.environ, {"NIRI_SOCKET": "/synthetic/niri.sock"}),
             patch.object(native_session, "status") as status,
@@ -187,9 +189,13 @@ class NativeLibraryTests(NativeLibraryFixture):
         self.assertEqual(current["previous"], self.base)
         self.assertNotEqual(current["selected"], self.base)
         listing = self.library.listing()
-        self.assertEqual(listing["active"], self.document)
+        from niri_fx.native_customization import portable_recipe
+
+        portable = portable_recipe(self.native, current["selected"])["document"]
+        self.assertEqual(listing["active"], portable)
+        self.assertEqual(portable["schema"], 4)
         self.assertTrue(listing["native"]["reopen"])
-        self.assertEqual(listing["native"]["recipe"]["fragment_preset"], "tear")
+        self.assertIsNone(listing["native"]["recipe"]["fragment_preset"])
         roles = {row["bundle_id"]: row["roles"] for row in listing["native"]["bundles"]}
         self.assertEqual(roles[self.base], ["rollback"])
         self.assertEqual(roles[current["selected"]], ["next-login"])

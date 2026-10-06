@@ -84,11 +84,14 @@ function createComboPreview({
           : action === "open"
             ? "Opening"
             : "Closing";
-      const support = ["movement", "swap"].includes(action)
-        ? "NiriFX shader preview; stock Niri exports omit movement and swaps"
-        : action === "resize"
-          ? "Stock Niri resize"
-          : "Stock Niri open/close";
+      const support =
+        action === "movement" && snapshot.fragment_motion
+          ? "Material preview only; saved continuous gesture response requires a compatible NiriFX compositor"
+          : ["movement", "swap"].includes(action)
+            ? "NiriFX shader preview; stock Niri exports omit movement and swaps"
+            : action === "resize"
+              ? "Stock Niri resize"
+              : "Stock Niri open/close";
       const stage = {
         action,
         mode,

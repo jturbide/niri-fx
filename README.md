@@ -40,6 +40,12 @@ for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.
 
+**New in current source:** save, share and import complete
+[continuous-fragment recipes](docs/profiles.md#portable-fragment-response),
+including custom delays, rotation and release timing. Start with
+[Gentle, Tear or Cascade](examples/profiles/README.md#portable-continuous-fragment-combos-unreleased)
+in local, online or offline Studio. These additions are not included in 0.20.
+
 ## Quick start
 
 **Try without installing:** choose from [nine starter looks](https://jturbide.github.io/niri-fx/gallery/?collection=starter), open [Web Studio](https://jturbide.github.io/niri-fx/studio/),

@@ -48,7 +48,7 @@ Installation preserves active settings; effect changes and shared-setting adopti
 have their own review. [Upgrade from 0.19](upgrading.md#from-019-to-020) before
 replacing an existing installation.
 
-Profiles without a Swap override remain schema 2; a separate Swap style or Off
+In 0.20, profiles without a Swap override remain schema 2; a separate Swap style or Off
 uses schema 3, which older tools cannot read. Portable JSON retains action styles
 and pointer wobble, but continuous-fragment response still belongs to the managed
 session recipe. Keep that retained bundle when updating.

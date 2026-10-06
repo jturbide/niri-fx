@@ -84,9 +84,16 @@ class CompatibilityTests(unittest.TestCase):
                 with self.subTest(baseline=corpus["baseline"], case=case["id"]):
                     result = self.command(*case["argv"])
                     self.assertEqual(result.returncode, 0, result.stderr)
-                    self.assertEqual(
-                        json_subset(json.loads(result.stdout), case["expected"]), case["expected"]
-                    )
+                    actual = json.loads(result.stdout)
+                    expected = json.loads(json.dumps(case["expected"]))
+                    formats = expected.get("document_formats", {})
+                    if "max_bytes" in formats:
+                        # A larger import limit accepts the historical corpus;
+                        # shrinking it would remove previously supported inputs.
+                        limit = actual["document_formats"]["max_bytes"]
+                        self.assertGreaterEqual(limit, formats["max_bytes"])
+                        formats["max_bytes"] = limit
+                    self.assertEqual(json_subset(actual, expected), expected)
 
     def test_representative_catalog_ids_resolve_to_their_documented_intent(self):
         result = self.command("list", "--documents")

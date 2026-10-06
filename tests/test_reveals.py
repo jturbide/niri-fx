@@ -65,7 +65,11 @@ class RevealTests(unittest.TestCase):
         ):
             root = Path(directory)
             args = Namespace(
-                port=0, preset="balanced", inir_root=root, registry=root / "presets.json"
+                port=0,
+                preset="balanced",
+                inir_root=root,
+                registry=root / "presets.json",
+                config=root / "config.kdl",
             )
             for target, installed in (("standalone", False), ("noctalia", False), ("inir", True)):
                 if installed:

@@ -80,12 +80,22 @@ both validators and those cases together.
 
 A schema 2 profile keeps four shader actions: open, close, resize and movement.
 Each stores an effect, `null` (Preserve), or `"off"`. Schema 1 imports migrate
-without changing action behavior. Serialization keeps schema 2 when no swap
-override exists; schema 3 adds an independent `swap` action. Null removes that
+without changing action behavior. Without a fragment response, serialization
+keeps schema 2 when no swap override exists; schema 3 adds an independent `swap` action. Null removes that
 override, Off disables explicit swaps, and a style emits the timed `window-swap`
 shader. Stock exports omit both native actions. Explicit swaps carry an immutable
 config and shader through their active episode; ordinary moves retain their own
 material and continuous fragment response.
+
+Profile schema 4 requires a complete `fragment_motion` response and all
+five action keys. The 18 controls share metadata and validation with
+`FragmentMotionSettings`; saved values do not refer back to mutable preset IDs.
+Schemas 1, 2 and 3 reject this field and retain their prior semantics. A response stays
+in the document while Move is Preserve, Off or ineligible; only an explicit
+eligible native Move export emits its configuration block. Native scalar output
+retains full precision rather than using the shader formatter's six decimals.
+The browser mirrors these rules for JSON, sharing and config downloads.
+
 Optional `motion` and `pointer` objects live beside `actions`. The pointer object
 requires strength, damping and frequency. Omission or null canonicalizes to no
 override; strength zero remains an explicit disabled override. The Python document
@@ -267,7 +277,7 @@ when an individual rename is atomic.
 Bundle schema 4 separates a mutable normal Niri include tree from immutable
 recovery data. Older bundle schemas retain closed snapshot validation. The shared
 source keeps its original path so shell writers continue using their usual files.
-One saved document and continuous-fragment choice generate stock-supported
+One saved document, including any continuous-fragment response, generates stock-supported
 settings and a native-only overlay; common actions are absent from the latter so
 Preserve can expose the current source settings.
 
@@ -288,7 +298,7 @@ First adoption or a changed binary uses the new wrapper at the next login.
 ## Studio trust and lifetime
 
 Only loopback is bound. Writes require matching Host and Origin plus a per-session
-token, and accept at most the shared 16 KiB document limit. Preview/catalog assets
+token, and accept at most the shared 32 KiB document limit. Preview/catalog assets
 are local; token-bearing request URLs are not logged. Documents contain named
 parameters, never arbitrary shader source, paths or commands from the browser.
 

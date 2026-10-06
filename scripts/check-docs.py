@@ -46,6 +46,65 @@ def recording_sources(clip, errors):
                 errors.append(f"Native patch changed; regenerate {name}: {patch}")
 
 
+def recorded_documents(clip, profile_sources, errors):
+    """Count explicitly demonstrated profiles, bound to the guarded capture inputs.
+
+    A workflow can import several profiles. Merely listing a dependency in
+    ``sources`` does not claim it was shown; the recorder declares those inputs
+    separately after checking their imported values during capture.
+    """
+    if "document_sources" not in clip:
+        return set()
+    name = clip["file"]
+    documents = clip["document_sources"]
+    if (
+        not isinstance(documents, list)
+        or not documents
+        or any(not isinstance(source, str) for source in documents)
+        or len(documents) != len(set(documents))
+    ):
+        errors.append(f"Recording needs unique document source paths: {name}")
+        return set()
+    capture = clip.get("capture")
+    if (
+        not isinstance(capture, dict)
+        or type(capture.get("schema")) is not int
+        or capture.get("schema") != 1
+        or any(
+            not isinstance(capture.get(key), str) or not re.fullmatch(r"[0-9a-f]{64}", capture[key])
+            for key in ("preview_sha256", "inputs_sha256")
+        )
+    ):
+        errors.append(f"Document showcase needs guarded capture provenance: {name}")
+        return set()
+    sources = clip.get("sources")
+    if not isinstance(sources, dict):
+        errors.append(f"Document showcase needs recorded source hashes: {name}")
+        return set()
+    verified = set()
+    for source in documents:
+        if source not in profile_sources:
+            errors.append(f"Document showcase needs a valid profile example: {name}: {source}")
+            continue
+        path = ROOT / source
+        digest = sources.get(source)
+        try:
+            matches = (
+                isinstance(digest, str)
+                and re.fullmatch(r"[0-9a-f]{64}", digest)
+                and path.is_file()
+                and path.resolve() == path
+                and hashlib.sha256(path.read_bytes()).hexdigest() == digest
+            )
+        except OSError:
+            matches = False
+        if not matches:
+            errors.append(f"Document showcase source missing or changed: {name}: {source}")
+            continue
+        verified.add(source)
+    return verified
+
+
 def main():
     errors = []
     docs = sorted(
@@ -206,6 +265,7 @@ def main():
     for clip in json.loads((ROOT / "docs/gifs/scenario-manifest.json").read_text())["clips"]:
         if clip.get("source") in profile_sources and clip["source"] in clip.get("sources", {}):
             showcased_sources.add(clip["source"])
+        showcased_sources.update(recorded_documents(clip, profile_sources, errors))
     for source in sorted(profile_sources - showcased_sources):
         errors.append(f"Profile example needs a showcase: {source}")
     for clip in manifest["clips"]:

@@ -1,14 +1,14 @@
-"""Settings and starting points for experimental native square-fragment motion.
+"""Portable response settings for experimental native square-fragment motion.
 
-These controls belong to the patched compositor's ``fragment-motion`` block.
-They are not a portable profile document or part of Studio's parameter schema.
+Profiles retain these controls independently of their selected movement material.
+Only an explicit native export with an eligible square material activates them.
 This module performs no configuration writes or activation.
 """
 
 import json
 import math
 from collections.abc import Mapping
-from dataclasses import dataclass, field, fields, replace
+from dataclasses import asdict, dataclass, field, fields, replace
 from types import MappingProxyType
 
 from .presets import PRESETS as EFFECT_PRESETS
@@ -123,6 +123,30 @@ def parse_settings(data: Mapping) -> FragmentMotionSettings:
     return FragmentMotionSettings(**data)
 
 
+def parse_fragment_motion(data):
+    """Parse one complete portable response, or no response for null.
+
+    Saved recipes carry every value so changing a preset's defaults cannot change
+    their behavior. JSON integer controls accept whole-number floats because browser
+    JSON has one numeric type; the native settings API keeps its stricter int types.
+    """
+    if data is None:
+        return None
+    if not isinstance(data, dict) or set(data) != set(CONTROLS):
+        raise ValueError("Fragment motion requires all supported response controls only")
+    settings = dict(data)
+    for name, control in CONTROLS.items():
+        value = settings[name]
+        if (
+            control.kind == "integer"
+            and type(value) is float
+            and math.isfinite(value)
+            and value.is_integer()
+        ):
+            settings[name] = int(value)
+    return FragmentMotionSettings(**settings)
+
+
 def render_node(settings: FragmentMotionSettings, indent: int = 8) -> str:
     """Render a block inside an experimental ``window-movement`` configuration."""
     if not isinstance(settings, FragmentMotionSettings):
@@ -227,3 +251,16 @@ PRESETS = MappingProxyType(
         ),
     }
 )
+
+
+def fragment_documents():
+    """Named starting points expand into copied material and response values."""
+    return {
+        key: {
+            "name": preset.name,
+            "description": preset.description,
+            "effect": asdict(preset.effect),
+            "settings": asdict(preset.settings),
+        }
+        for key, preset in PRESETS.items()
+    }

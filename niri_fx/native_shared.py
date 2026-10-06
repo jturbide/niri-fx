@@ -189,7 +189,7 @@ def validate_shared(root, descriptor, binary_sha256, assets, *, variant):
     document, effect = _document(descriptor["document"])
     if document != descriptor["document"]:
         raise ValueError("Shared recipe is not canonical")
-    _validate_choices(effect, descriptor["fragment_preset"], variant)
+    _validate_choices(effect, descriptor["fragment_preset"], variant, retained=True)
     return {
         "schema": 1,
         "baseline_bundle": descriptor["baseline_bundle"],
@@ -400,13 +400,15 @@ def _finish_plan(
 
 def share_plan(root, base_bundle, config, *, stock_binary="niri"):
     """Review first adoption without moving the source or changing shell code."""
+    from .native_customization import portable_recipe
+
     root, config = map(native_session._path, (root, config))
     if config.is_relative_to(root):
         raise ValueError("Shared desktop configuration must be outside managed storage")
     source = native_session.inspect_bundle(root, base_bundle)
     if source.get("shared") is not None:
         raise ValueError("This bundle already uses shared settings; configure its saved recipe")
-    recipe = source.get("customization")
+    recipe = portable_recipe(root, base_bundle, report=source)
     if recipe is None:
         raise ValueError("Choose and save a NiriFX recipe before sharing desktop settings")
     binary, binary_observation = _stock_binary(stock_binary)

@@ -103,14 +103,20 @@ def make_server(arguments, effect):
         }
         if target == "native":
             from .capabilities import swap_capability
-            from .native_customization import fragment_choices
+            from .native_customization import fragment_choices, portable_recipe
 
             value["native"] = {
                 "base_bundle": library.native_base["bundle_id"],
                 "shared": bool(library.native_base.get("shared")),
                 "shared_config_configured": library.shared_config is not None,
                 "variant": library.native_base["variant"],
-                "recipe": library.native_base.get("customization") if not native_document else None,
+                "recipe": portable_recipe(
+                    library.native_root,
+                    library.native_base["bundle_id"],
+                    report=library.native_base,
+                )
+                if not native_document
+                else None,
                 "fragment_choices": fragment_choices(),
                 "swap_supported": library.native_base.get("swap_supported", False)
                 and swap_capability(library.native_base["binary"])["status"] == "supported",

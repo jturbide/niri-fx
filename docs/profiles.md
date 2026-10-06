@@ -1,7 +1,7 @@
 # Independent action profiles
 
 A style describes one effect. A profile assigns separate styles to opening,
-closing and optionally resizing or moving. Desktop springs and pointer drag can
+closing and optionally resizing, moving or swapping. Desktop springs and pointer drag can
 be stored separately from these shader actions. For example: open with Balanced
 fragments, close with Implosion, and leave your existing resize behavior unchanged.
 
@@ -217,8 +217,10 @@ parameters and `movement_ms` timing as Move.
 Each of `open`, `close`, `resize` and `movement` contains an effect object for
 NiriFX Style, `null` for Preserve or the string `"off"` for Off. Schema 1 profiles
 remain readable and normalize to schema 2 without changing their behavior.
-Documents with a Swap style or Off serialize as schema 3. Removing that override
-returns to schema 2, keeping existing saved recipes unchanged.
+Without a saved fragment response, documents with a Swap style or Off serialize
+as schema 3; removing that override returns to schema 2. Current source builds
+use schema 4 when a complete `fragment_motion` response is saved, retaining all
+five action keys, including `swap: null` when Swap is preserved.
 Each nested effect keeps `resize: false`: the separate resize slot selects that action.
 Single-style documents continue to use effect schema 3; these are different
 document types, not compatibility aliases. [Complete example](../examples/profiles/spring-and-ember.json).
@@ -232,6 +234,59 @@ its next-login configuration. To apply it in an already running session, use
 [verified live Apply and Restore](setup.md#activate-movement-in-a-running-session).
 Profiles do not add application-specific rules. Pointer wobble is an independent
 control in the same NiriFX build, described below.
+
+## Portable fragment response
+
+**Unreleased, available from current source:** continuous-fragment recipes now
+travel with the profile. In Library's Move view, choose **Gentle**, **Tear** or
+**Cascade**, or use **Fragment response** under **Customize your combo**. The
+prefab sets its square movement material and response together. Other actions
+keep their choices. **Customize fragment response** exposes delays, batches,
+catch-up times, spread, rotation, tilt and release timing. Edited values show
+**Custom response**.
+
+These controls work in local, hosted and offline Studio. **Save to My profiles**,
+**Download JSON**, **Share settings**, import and Undo/Redo retain all response
+values. The document stores values rather than a preset ID, so changing a
+prefab's defaults cannot change an existing recipe. The browser previews the
+movement material; it does not simulate the compositor's continuous gesture.
+
+![Choose a fragment response, customize it and keep it in a saved profile](gifs/workflow-portable-recipe.gif)
+
+Move **Off**, **Preserve**, or a material that cannot use the square mesh leaves
+the saved response dormant. It remains editable and returns when a compatible
+Move style is selected. Choose **Timed movement** to remove the continuous
+response from the recipe explicitly. Pointer wobble remains independent.
+
+Create a portable recipe without opening Studio:
+
+```sh
+python3 -m niri_fx profile --name 'My Tear Combo' \
+  --open balanced --close implosion --fragment-preset tear > /tmp/tear-combo.json
+python3 -m niri_fx inspect --custom /tmp/tear-combo.json
+python3 -m niri_fx studio --custom /tmp/tear-combo.json
+```
+
+`--fragment-preset` resolves the matching Move material and all 18 response
+controls. It does not activate them. Resize and Swap stay at Preserve unless
+selected separately. Start with the importable
+[Gentle](../examples/profiles/continuous-gentle.json),
+[Tear](../examples/profiles/continuous-tear.json),
+[Cascade](../examples/profiles/continuous-cascade.json) or
+[custom Long Trail](../examples/profiles/continuous-long-trail.json) examples.
+
+Schema 4 requires a complete top-level `fragment_motion` object using snake_case
+control names and all five `actions` keys. Unknown or missing controls fail
+validation. Delays and response times require near ≤ far; native integer
+controls accept whole JSON numbers. Profile schemas 1, 2 and 3 remain supported
+and do not acquire response settings automatically. NiriFX 0.20 cannot import
+schema 4; keep an older recipe when sharing with older tools.
+
+Stock config exports omit Move, Swap and the native response. JSON preserves
+them for a compatible NiriFX session. Native config export includes the response
+only for an eligible Move material; applying it still requires verified native
+support. See [continuous fragment controls](fragment-drag.md) and
+[retained-recipe export](upgrading.md#portable-fragment-recipes-unreleased).
 
 ## Pointer drag
 
@@ -263,7 +318,7 @@ from 0 to 2, damping is a whole percentage from 10 to 100, and frequency is a wh
 number from 2 to 16 Hz. Omitting `pointer` or setting it to `null` inherits existing
 behavior. Strength zero is an explicit disabled override; use `profile --pointer off`
 to generate one. Pointer settings do not add a shader action; profiles have four
-`actions` keys in schema 2, or five when schema 3 carries a Swap override.
+`actions` keys in schema 2, or five in schema 3 and schema 4.
 Existing schema 1 profiles remain valid.
 
 Saving a pointer choice does not activate it. Stock KDL, iNiR registrations and
@@ -306,8 +361,9 @@ also default to standalone. The target changes the save UI, not your active effe
 For a prepared NiriFX session, use `niri-fx studio --target native`. Choose a
 ready-made combo, set each action and review **Select for next login**. Continuous
 fragments add **Gentle**, **Tear** and **Cascade** choices with their matching
-movement materials. Those extra response settings are retained in the session's
-editable recipe, not portable profile JSON or My profiles. See
+movement materials. Current source builds save those response values in the
+[portable profile](#portable-fragment-response); 0.20 keeps them only in the
+retained session recipe. See
 [choosing session effects](native-session.md#choose-effects-in-studio).
 
 Test an exported movement profile without replacing the login compositor:

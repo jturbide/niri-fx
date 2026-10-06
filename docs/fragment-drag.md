@@ -24,10 +24,19 @@ the watched includes and reports file writes separately from confirmed activatio
 There is no separate fragment build to install. The detailed controls and
 developer checks below explain the current renderer's limits.
 
-**Save to My profiles**, **Download JSON**, **Share settings** and config downloads
-keep the portable styles but omit these native response controls. Applying or
-selecting for the next login retains the continuous preset in the managed session
-recipe; reopen that recipe in local Studio to continue editing it.
+**Current source, Unreleased:** **Save to My profiles**, **Download JSON** and
+**Share settings** retain the complete response alongside the action styles.
+Hosted and offline Studio offer the same three prefabs and
+**Customize fragment response** controls. The browser shows the movement
+material, not a simulation of continuous dragging. Stock config exports omit
+the native response; NiriFX config exports include it for an eligible Move style.
+See [portable recipes](profiles.md#portable-fragment-response).
+
+Move Off, Preserve or an incompatible material keeps the response saved but
+dormant. **Timed movement** explicitly removes it. In 0.20, response controls
+were retained only in managed session recipes; current tools can
+[export those recipes](upgrading.md#portable-fragment-recipes-unreleased) without
+modifying the retained bundle.
 
 ## Supported fragment material
 
@@ -127,14 +136,15 @@ after settling. Regrabbing before settling continues the current settings. This
 avoids a jump from changing delays, release duration or lag limits mid-flight.
 Off takes effect immediately. Release and let the pieces settle before comparing
 another preset. The Python defaults, bounds and presets are maintained in
-[`fragment_motion.py`](../niri_fx/fragment_motion.py); they are not yet portable
-profile settings or Studio controls.
+[`fragment_motion.py`](../niri_fx/fragment_motion.py). Current source exports all
+18 values as portable profile settings and exposes them in Studio.
 
 The NiriFX compositor accepts a `fragment-motion` block inside the same
 `window-movement` node as the generated eligible shader. Omitting the block uses
 these defaults. Keep the existing shader in that node; these settings alone do
-not select a material. This block is not supported by stock Niri or stored in
-portable Studio profiles yet.
+not select a material. This block is not supported by stock Niri. Portable
+profiles store its values in `fragment_motion`, with snake_case names rather
+than KDL's hyphenated control names.
 
 ```kdl
 fragment-motion {

@@ -49,6 +49,37 @@ To make a new combination, use Library's combo builder, Studio's **Independent a
 for editing, saving and resize selection; follow [setup and restore](../../docs/setup.md)
 when ready to apply a profile.
 
+## Portable continuous-fragment combos (Unreleased)
+
+These current-source examples keep Fragment Flow's opening and closing,
+preserve Resize and Swap, and add a square Move material with all 18 response
+values. Import one in local, hosted or offline Studio. JSON, My profiles and
+share links retain the whole recipe; NiriFX 0.20 cannot import their schema 4.
+
+| Profile | Response |
+| --- | --- |
+| [Continuous Gentle](continuous-gentle.json) | Short delays, restrained spread and a quick return |
+| [Continuous Tear](continuous-tear.json) | A delayed, uneven wave following the grabbed region |
+| [Continuous Cascade](continuous-cascade.json) | More pieces, longer delays and stronger separation |
+| [Continuous Long Trail](continuous-long-trail.json) | A custom Tear response: 96 batches, 520 ms far delay, 500 ms far catch-up and 32° rotation |
+
+```sh
+python3 -m niri_fx studio --custom examples/profiles/continuous-tear.json
+python3 -m niri_fx preview --custom examples/profiles/continuous-gentle.json --output /tmp/continuous-gentle.html
+python3 -m niri_fx preview --custom examples/profiles/continuous-tear.json --output /tmp/continuous-tear.html
+python3 -m niri_fx preview --custom examples/profiles/continuous-cascade.json --output /tmp/continuous-cascade.html
+python3 -m niri_fx preview --custom examples/profiles/continuous-long-trail.json --output /tmp/continuous-long-trail.html
+python3 -m niri_fx render --custom examples/profiles/continuous-gentle.json > /tmp/continuous-gentle-stock.kdl
+niri validate -c /tmp/continuous-gentle-stock.kdl
+```
+
+Browser previews show the movement material, not continuous compositor gestures.
+Stock Niri receives the opening and closing effects; the native response needs a
+verified compatible NiriFX session. Move Off, Preserve or an incompatible
+material keeps response values dormant. **Timed movement** removes them.
+See [portable response editing](../../docs/profiles.md#portable-fragment-response)
+and [native behavior](../../docs/fragment-drag.md).
+
 ## Pointer preview combos
 
 These source-checkout examples add the three experimental drag presets to

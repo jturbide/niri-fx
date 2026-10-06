@@ -27,7 +27,7 @@ class DocumentTests(unittest.TestCase):
             path.write_bytes(valid + b" " * (MAX_DOCUMENT_BYTES - len(valid)))
             self.assertEqual(load_document(path)["name"], "Test")
             path.write_bytes(b"\xff" * (MAX_DOCUMENT_BYTES + 1))
-            with self.assertRaisesRegex(ValueError, "16 KiB"):
+            with self.assertRaisesRegex(ValueError, "32 KiB"):
                 load_document(path)
 
     def test_domain_imports_do_not_load_shell_or_http_layers(self):

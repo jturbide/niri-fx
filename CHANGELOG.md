@@ -7,6 +7,38 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+### Added
+
+- Complete portable fragment recipes. Gentle, Tear and Cascade now save their
+  movement material and all response values together. Local, online and offline
+  Studio expose the same choices, with detailed delay, spread, rotation and
+  release controls under Customize fragment response. My profiles, JSON,
+  sharing and Undo/Redo retain the complete recipe.
+- Profile schema 4 carries explicit continuous-fragment settings and all five
+  action choices. Earlier profile schemas keep their meaning. Move Preserve,
+  Off or an incompatible material retains the response for later use; Timed
+  movement explicitly removes it. Stock exports omit native controls.
+- `profile --fragment-preset gentle|tear|cascade` creates a complete recipe.
+  `native export BUNDLE_ID` reads older managed recipes without changing their
+  files, preserving the response recorded in the bundle even if preset defaults
+  have since changed. See the [migration guide](docs/upgrading.md#portable-fragment-recipes-unreleased).
+- Four importable continuous-fragment combos and a Studio workflow showcase.
+  The browser preview shows the movement material; continuous gesture response
+  still needs the NiriFX compositor.
+
+### Changed
+
+- JSON imports and share links accept up to 32 KiB to accommodate complete
+  five-action recipes, desktop springs, pointer wobble and fragment response.
+  NiriFX 0.20 cannot read schema 4 documents; retain older exports when sharing
+  with older tools.
+
+### Fixed
+
+- Standalone Apply and Restore check the running native renderer contract before
+  enabling continuous-fragment settings. Timed movement omits the shader marker that would otherwise
+  enable the compositor's default continuous response.
+
 ## 0.20.0 - 2026-10-05
 
 ### Added

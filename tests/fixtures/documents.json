@@ -875,5 +875,610 @@
       }
     },
     "valid": false
+  },
+  {
+    "name": "fragment response gentle round trip",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 600
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 32,
+        "delay_near_ms": 0,
+        "delay_far_ms": 180,
+        "delay_jitter": 0.15,
+        "response_near_ms": 100,
+        "response_far_ms": 220,
+        "response_jitter": 0.15,
+        "distance_exponent": 1.2,
+        "max_lag": 384,
+        "pin_radius": 28,
+        "press_spread": 8,
+        "press_response_ms": 120,
+        "rotation_mode": "movement",
+        "rotation_degrees": 8,
+        "rotation_response_ms": 140,
+        "rotation_speed": 1000,
+        "tilt": 0.2,
+        "release_ms": 1100
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "fragment response tear round trip",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": "off",
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "fragment response cascade round trip",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "fragment_shape": "triangle",
+          "particles": 1200
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 128,
+        "delay_near_ms": 0,
+        "delay_far_ms": 460,
+        "delay_jitter": 0.35,
+        "response_near_ms": 140,
+        "response_far_ms": 460,
+        "response_jitter": 0.35,
+        "distance_exponent": 1.1,
+        "max_lag": 1024,
+        "pin_radius": 20,
+        "press_spread": 32,
+        "press_response_ms": 160,
+        "rotation_mode": "movement",
+        "rotation_degrees": 30,
+        "rotation_response_ms": 210,
+        "rotation_speed": 1000,
+        "tilt": 0.75,
+        "release_ms": 2000
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "fragment response whole JSON integers",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64.0,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800.0
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "fragment response tiny positive exponent",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1e-12,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": true
+  },
+  {
+    "name": "fragment response boolean integer",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": true,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response fractional integer",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64.5,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response zero exponent",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 0,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response inverted delays",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 301,
+        "delay_far_ms": 300,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response inverted responses",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 301,
+        "response_far_ms": 300,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response unknown rotation",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "gravity",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response unknown control",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800,
+        "shader": "arbitrary"
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response missing control",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response missing response",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response null response",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": null
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response missing swap",
+    "document": {
+      "kind": "profile",
+      "schema": 4,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        }
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
+  },
+  {
+    "name": "fragment response legacy schema",
+    "document": {
+      "kind": "profile",
+      "schema": 3,
+      "name": "Portable fragment response",
+      "actions": {
+        "open": null,
+        "close": null,
+        "resize": null,
+        "movement": {
+          "particles": 800
+        },
+        "swap": null
+      },
+      "fragment_motion": {
+        "batches": 64,
+        "delay_near_ms": 0,
+        "delay_far_ms": 360,
+        "delay_jitter": 0.25,
+        "response_near_ms": 120,
+        "response_far_ms": 360,
+        "response_jitter": 0.3,
+        "distance_exponent": 1.2,
+        "max_lag": 768,
+        "pin_radius": 24,
+        "press_spread": 20,
+        "press_response_ms": 140,
+        "rotation_mode": "movement",
+        "rotation_degrees": 20,
+        "rotation_response_ms": 180,
+        "rotation_speed": 1000,
+        "tilt": 0.55,
+        "release_ms": 1800
+      }
+    },
+    "valid": false
   }
 ]

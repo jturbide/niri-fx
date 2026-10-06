@@ -183,7 +183,7 @@ class Library:
                 with path.open("rb") as stream:
                     raw = stream.read(MAX_DOCUMENT_BYTES + 1)
                 if len(raw) > MAX_DOCUMENT_BYTES:
-                    raise ValueError("Profile exceeds 16 KiB")
+                    raise ValueError("Profile exceeds 32 KiB")
                 document = json.loads(raw)
                 name, slug, effect = parse_document(document)
                 if path.stem != slug:
@@ -204,6 +204,7 @@ class Library:
     def native_listing(self):
         """Separate retained configuration from the advertised running renderer."""
         from . import native_live, native_session
+        from .native_customization import portable_recipe
 
         report = native_session.status(self.native_root, socket_path=self.native_socket)
         managed, warnings = self.saved_profiles()
@@ -226,7 +227,7 @@ class Library:
                             "source_fingerprint": observed.get("source_fingerprint"),
                             "projections_match": observed.get("projections_match"),
                         }
-                    recipe = row.get("customization")
+                    recipe = portable_recipe(self.native_root, selected)
                     if recipe:
                         active = recipe["document"]
                         reopen = recipe["baseline_bundle"] == baseline

@@ -33,6 +33,8 @@ from .effects import (
     describe_presets,
     shader_templates,
 )
+from .fragment_motion import CONTROLS as FRAGMENT_CONTROLS
+from .fragment_motion import fragment_documents
 from .motion import SPRING_LIMITS, Spring, motion_documents
 from .pointer import POINTER_LIMITS, PointerWobble, pointer_documents
 from .profiles import PROFILE_SCHEMA, Profile
@@ -157,6 +159,8 @@ def preview_catalog(effect, name="balanced", connection=None, preferences=None, 
         "pointer_presets": pointer_documents(),
         "pointer_defaults": asdict(PointerWobble()),
         "pointer_limits": POINTER_LIMITS,
+        "fragment_presets": fragment_documents(),
+        "fragment_controls": {name: asdict(control) for name, control in FRAGMENT_CONTROLS.items()},
         "collections": collection_documents(),
         "profile_descriptions": {name: recipe[2] for name, recipe in PROFILE_RECIPES.items()},
         "templates": shader_templates(),
