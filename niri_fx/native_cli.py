@@ -48,6 +48,20 @@ def add_parser(commands):
         "--config", type=Path, required=True, help="KDL config to copy with its includes"
     )
     install.add_argument("--name", default="NiriFX", help="Login chooser label")
+    adopt = actions.add_parser("adopt", help="Adopt or upgrade a packaged NiriFX session")
+    adopt.add_argument(
+        "--candidate",
+        type=Path,
+        default=Path("/usr/lib/niri-fx/session-candidate"),
+        help="Packaged full-session candidate directory",
+    )
+    adopt.add_argument("--config", type=Path, help="Configuration for first adoption only")
+    adopt.add_argument(
+        "--registered-entry",
+        type=Path,
+        default=Path("/usr/share/wayland-sessions/niri-fx-packaged.desktop"),
+        help="Package-owned login entry to verify",
+    )
     select = actions.add_parser("select", help="Select a staged bundle for the next NiriFX login")
     select.add_argument("bundle", help="Exact bundle ID reported by stage/status")
     configure = actions.add_parser(
@@ -126,6 +140,7 @@ def add_parser(commands):
         export,
         stage,
         install,
+        adopt,
         select,
         configure,
         share,
@@ -142,6 +157,7 @@ def add_parser(commands):
     for command in (
         stage,
         install,
+        adopt,
         select,
         configure,
         share,
@@ -185,6 +201,18 @@ def run(args):
         raise ValueError("--expect-plan requires --apply")
     if action in ("share", "recover") and args.apply and not args.expect_plan:
         raise ValueError("Shared settings changes require --expect-plan from a fresh review")
+    if action == "adopt":
+        from .native_package import adopt_plan, apply_adoption
+
+        if args.apply and not args.expect_plan:
+            raise ValueError("Package adoption requires --expect-plan from a fresh review")
+        plan = adopt_plan(root, args.candidate, args.config, registered_entry=args.registered_entry)
+        result = (
+            apply_adoption(plan, root, expected=args.expect_plan) if args.apply else summarize(plan)
+        )
+        result["dry_run"] = not args.apply
+        print(json.dumps(result, indent=2))
+        return 0
     if action.startswith("tools-"):
         from . import native_tools
 

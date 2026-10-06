@@ -155,6 +155,7 @@ class NativeLoginTests(unittest.TestCase):
         self.assertIn('%%x/$$HOME/\\"quote', value)
         self.assertIn("from niri_fx.native_login import main", value)
         self.assertIn("sys.path.insert(0,", value)
+        self.assertIn('"-I" "-B" "-c"', value)
         self.assertNotIn("PYTHONPATH", value)
         self.assertNotIn("sh -c", value)
         with self.assertRaises(ValueError):

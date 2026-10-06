@@ -13,7 +13,11 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from lib.native_build import REVISION, cargo_artifact, digest, metadata, native_host
-from lib.native_candidates import Candidate
+from lib.native_candidates import (
+    Candidate,
+    add_packaging_arguments,
+    validate_packaging_arguments,
+)
 
 ROOT = Path(__file__).resolve().parents[1]
 PATCH = ROOT / "experimental/niri-movement.patch"
@@ -36,18 +40,21 @@ def apply_patches(source, revision, patches, *, verify_only=False):
     Comparing complete diffs also catches local edits outside the experiment;
     applying a new patch must never silently overwrite a contributor's work.
     """
-    head = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=source, text=True).strip()
+    read_env = os.environ | {"GIT_OPTIONAL_LOCKS": "0"}
+    head = subprocess.check_output(
+        ["git", "rev-parse", "HEAD"], cwd=source, text=True, env=read_env
+    ).strip()
     if head != revision:
         raise SystemExit(
             f"Source revision differs from {revision}; keep it and use a fresh checkout."
         )
     diff_args = ["git", "diff", "HEAD", "--binary", "--full-index"]
-    diff = subprocess.check_output(diff_args, cwd=source)
+    diff = subprocess.check_output(diff_args, cwd=source, env=read_env)
     unknown = subprocess.check_output(
-        ["git", "ls-files", "--others", "--exclude-standard"], cwd=source
+        ["git", "ls-files", "--others", "--exclude-standard"], cwd=source, env=read_env
     )
     with tempfile.TemporaryDirectory(prefix="nirifx-patch-index-") as directory:
-        env = os.environ | {"GIT_INDEX_FILE": str(Path(directory) / "index")}
+        env = read_env | {"GIT_INDEX_FILE": str(Path(directory) / "index")}
         run("git", "read-tree", revision, cwd=source, env=env)
         for patch in patches:
             run("git", "apply", "--cached", str(patch), cwd=source, env=env)
@@ -88,7 +95,15 @@ def main():
         action="store_true",
         help="Build the identical pinned revision without patches in a separate checkout",
     )
+    add_packaging_arguments(parser)
     args = parser.parse_args()
+    validate_packaging_arguments(parser, args)
+    if args.prepared_source and not (
+        args.fragment_drag and args.release and args.desktop and args.test
+    ):
+        parser.error(
+            "Prepared builds require the full --fragment-drag --release --desktop --test stack"
+        )
     if args.unmodified:
         patches = []
         variant = "unmodified"
@@ -98,10 +113,12 @@ def main():
     else:
         patches = [PATCH, POINTER_PATCH] if args.pointer_wobble else [PATCH]
         variant = "pointer" if args.pointer_wobble else "movement"
-    candidate = Candidate(ROOT / "artifacts/native-builds", variant)
+    candidate = Candidate(args.build_root or ROOT / "artifacts/native-builds", variant)
     print(f"Candidate attempt: {candidate.root}", flush=True)
     try:
         destination = build_candidate(args, variant, patches, candidate)
+        if args.output is not None:
+            destination = candidate.export(args.output)
     except BaseException as error:
         status = "interrupted" if isinstance(error, KeyboardInterrupt) else "failed"
         candidate.record(candidate.state["stage"], status=status, error=error)
@@ -116,26 +133,49 @@ def main():
         f"Compiled candidate manifest: {destination}\n"
         "Runtime and desktop acceptance remain unassessed.\n"
         f"Inspect: python3 scripts/inspect-native-build.py --manifest {shlex.quote(str(destination))} "
-        f"--source {shlex.quote(str(candidate.source))}\n"
+        f"--source {shlex.quote(str(destination.parent / 'source'))}\n"
         f"Try: {variable}={shlex.quote(str(destination))} python3 {command}"
     )
 
 
 def build_candidate(args, variant, patches, candidate):
     source = candidate.source
+    prepared = getattr(args, "prepared_source", None)
     frozen_patches, patch_hashes = candidate.snapshot(patches)
     command = candidate.command
     candidate.record("checkout")
-    command("git", "init", str(source))
-    command("git", "remote", "add", "origin", "https://github.com/niri-wm/niri.git")
-    command("git", "fetch", "--depth=1", "origin", REVISION)
-    command("git", "checkout", "--detach", "FETCH_HEAD")
+    if prepared is None:
+        command("git", "init", str(source))
+        command("git", "remote", "add", "origin", "https://github.com/niri-wm/niri.git")
+        command("git", "fetch", "--depth=1", "origin", REVISION)
+        command("git", "checkout", "--detach", "FETCH_HEAD")
+    else:
+        # The caller owns its prepared checkout. Read it without refreshing its
+        # index, then copy Git objects locally and recreate the frozen patch stack
+        # in this attempt. No fetch or caller working-tree mutation is needed.
+        apply_patches(prepared, REVISION, frozen_patches, verify_only=True)
+        command(
+            "git",
+            "clone",
+            "--local",
+            "--no-hardlinks",
+            "--no-checkout",
+            "--",
+            str(prepared),
+            str(source),
+            cwd=candidate.root,
+        )
+        command("git", "checkout", "--detach", REVISION)
     candidate.record("apply-patches")
     apply_patches(source, REVISION, frozen_patches)
     lock_sha256 = digest(source / "Cargo.lock")
     env = os.environ.copy()
     toolchain = ROOT / "artifacts/toolchain"
-    if (toolchain / "cargo/bin/rustc").exists():
+    if prepared is not None:
+        env.update(
+            CARGO_HOME=str(args.cargo_home), CARGO_NET_OFFLINE="true", RUSTUP_AUTO_INSTALL="0"
+        )
+    elif (toolchain / "cargo/bin/rustc").exists():
         env.update(RUSTUP_HOME=str(toolchain / "rustup"), CARGO_HOME=str(toolchain / "cargo"))
         env["PATH"] = str(toolchain / "cargo/bin") + os.pathsep + env["PATH"]
     # Resolve once, with relative paths interpreted as Cargo sees them from the
@@ -162,6 +202,8 @@ def build_candidate(args, variant, patches, candidate):
     env["CARGO_TARGET_DIR"] = str(candidate.target)
     env["CARGO_BUILD_TARGET_DIR"] = str(candidate.target)
     env["CARGO_BUILD_BUILD_DIR"] = str(candidate.target)
+    if getattr(args, "target_cache", None) is not None:
+        candidate.seed_target(args.target_cache)
     flags = ["--locked"] + ([] if args.desktop else ["--no-default-features"])
     if args.test:
         candidate.record("tests")
@@ -233,9 +275,13 @@ def build_candidate(args, variant, patches, candidate):
     result.check_returncode()
     profile = "release" if args.release else "debug"
     binary, features, target = cargo_artifact(result.stdout, candidate.target, profile, host)
+    if getattr(args, "strip_program", None) is not None:
+        binary = candidate.process_binary(binary, args.strip_program)
     # Do not publish evidence for inputs that changed while Cargo was running.
     candidate.record("verify-output")
     apply_patches(source, REVISION, frozen_patches, verify_only=True)
+    if prepared is not None:
+        apply_patches(prepared, REVISION, frozen_patches, verify_only=True)
     if digest(source / "Cargo.lock") != lock_sha256 or any(
         digest(path) != patch_hashes[path.name] for path in (*patches, *frozen_patches)
     ):

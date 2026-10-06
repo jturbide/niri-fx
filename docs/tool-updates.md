@@ -4,6 +4,12 @@ The managed tool workflow keeps CLI, Studio and the login launcher on one
 selected Python installation. It is included in NiriFX 0.20 and newer. Stock Niri and
 shell packages continue to use their normal updaters.
 
+This guide covers persistent virtual-environment installations. The paired Arch
+development packages use [reviewed package adoption](arch-linux.md#full-session-package-development)
+to retain Python sources and the compositor together. Run that adoption through
+`/usr/bin/niri-fx` after a package update; the normal launcher continues to use its
+previously selected tools until you apply the new review.
+
 Install each NiriFX update in a new persistent virtual environment. Run the
 update command from that environment to select it after review. Existing
 environments remain available for rollback; do not upgrade their files in place.

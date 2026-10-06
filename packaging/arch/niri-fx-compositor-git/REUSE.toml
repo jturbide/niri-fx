@@ -1,0 +1,7 @@
+version = 1
+
+# Only these packaging sources are covered, not the compositor or application.
+[[annotations]]
+path = ["PKGBUILD", ".SRCINFO", "README.Arch", "niri-fx-packaged.desktop"]
+SPDX-FileCopyrightText = "2026 Julien Turbide"
+SPDX-License-Identifier = "0BSD"

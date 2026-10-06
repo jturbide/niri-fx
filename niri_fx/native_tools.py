@@ -22,7 +22,7 @@ from .storage import digest
 # new command in order to demonstrate that they can read current bundle data.
 _PROBE = r"""
 import hashlib, json, pathlib, sys
-root, identifiers, package_hint = json.loads(sys.argv[1])
+root, identifiers, package_hint, retained = json.loads(sys.argv[1])
 if sys.version_info < (3, 10):
     raise ValueError("Tools require Python 3.10 or newer")
 if package_hint is not None:
@@ -32,12 +32,12 @@ from niri_fx.branding import desktop_entry
 from niri_fx.native_session import inspect_bundle
 prefix = pathlib.Path(sys.prefix).absolute()
 package = pathlib.Path(niri_fx.__file__).resolve().parent
-if sys.prefix == sys.base_prefix or not package.is_relative_to(prefix):
+if retained is None and (sys.prefix == sys.base_prefix or not package.is_relative_to(prefix)):
     raise ValueError("Use a persistent virtual environment with a normally installed NiriFX package, not an editable checkout")
 for identifier in identifiers:
     inspect_bundle(pathlib.Path(root), identifier)
 files = {}
-paths = [prefix / "pyvenv.cfg"]
+paths = [] if retained is not None else [prefix / "pyvenv.cfg"]
 paths += sorted(p for p in package.rglob("*") if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc")
 if len(paths) > 2048:
     raise ValueError("Runtime inventory exceeds its file limit")
@@ -45,15 +45,24 @@ for path in paths:
     if path.stat().st_size > 32 * 1024 * 1024:
         raise ValueError("Runtime file exceeds its size limit")
     files[str(path)] = hashlib.sha256(path.read_bytes()).hexdigest()
-print(json.dumps({"schema": 1, "python": str(pathlib.Path(sys.executable).absolute()), "package": str(package), "version": niri_fx.__version__, "files": files, "desktop": desktop_entry().decode()}))
+print(json.dumps({"schema": 2 if retained is not None else 1, "python": str(pathlib.Path(sys.executable).absolute()), "package": str(package), "version": niri_fx.__version__, "files": files, "desktop": retained["desktop"] if retained is not None else desktop_entry().decode()}))
 """
 
 
-def _probe(python, root, identifiers, *, package_path=None):
+def _probe(python, root, identifiers, *, package_path=None, retained=None):
     python = Path(python).expanduser().absolute()
     _exec_argument(str(python))
+    if retained is not None:
+        native_tools_launcher.verify_runtime(retained)
     result = subprocess.run(
-        [str(python), "-I", "-B", "-c", _PROBE, json.dumps([str(root), identifiers, package_path])],
+        [
+            str(python),
+            "-I",
+            "-B",
+            "-c",
+            _PROBE,
+            json.dumps([str(root), identifiers, package_path, retained]),
+        ],
         cwd="/",
         capture_output=True,
         text=True,
@@ -94,7 +103,7 @@ def _owned_change(path, data, *, mode=0o600):
     return item
 
 
-def _read_selection(root):
+def _read_selection(root, *, migration_assets=None):
     path = root / "tools/selection.json"
     if not path.exists():
         return None, None
@@ -133,7 +142,7 @@ def _read_selection(root):
             raise ValueError("Tools entry paths must be absolute")
     if selection["entry"] != str(root / "tools/niri-fx.desktop"):
         raise ValueError("Tools entry location changed")
-    _assets(root, selection)
+    _assets(root, selection, migration_assets=migration_assets)
     return selection, raw
 
 
@@ -177,8 +186,16 @@ def _runtime_observations(record):
 def _record(root, identifier, identifiers=None):
     path = root / "tools/runtimes" / f"{identifier}.json"
     record = native_tools_launcher.runtime_record(root / "tools", identifier)
+    if identifiers is not None:
+        native_tools_launcher.verify_runtime(record)
     current = (
-        _probe(record["python"], root, identifiers, package_path=record["package"])
+        _probe(
+            record["python"],
+            root,
+            identifiers,
+            package_path=record["package"],
+            **({"retained": record} if record["schema"] == 2 else {}),
+        )
         if identifiers is not None
         else record
     )
@@ -187,7 +204,7 @@ def _record(root, identifier, identifiers=None):
     return record, [_observe(path, mode=0o600), *_runtime_observations(record)]
 
 
-def _assets(root, selection=None):
+def _assets(root, selection=None, *, migration_assets=None):
     directory = root / "tools"
     if selection is not None:
         expected = {
@@ -206,7 +223,9 @@ def _assets(root, selection=None):
             data = native_session._read(
                 directory / name, native_tools_launcher.MAX_BYTES, mode=mode
             )
-            if digest(data) != selection["assets"][name]:
+            if digest(data) != selection["assets"][name] and (
+                migration_assets is None or migration_assets.get(name) != data
+            ):
                 raise ValueError("Stable tools launcher changed; preserving it for review")
             files.append((directory / name, data, mode))
         by_name = {path.name: data for path, data, _ in files}
@@ -331,12 +350,31 @@ def update_plan(
     root = native_session._path(root)
     registered_entry = native_session._path(registered_entry)
     identifiers, observed = _bundle_observations(root)
+    selection, before = _read_selection(root)
+    retained = None
+    if selection is not None:
+        for identifier in dict.fromkeys(
+            selection[key] for key in ("current", "previous", "bootstrap", "legacy")
+        ):
+            if identifier is None:
+                continue
+            record = native_tools_launcher.runtime_record(root / "tools", identifier)
+            if (
+                record["schema"] == 2
+                and record["python"] == str(Path(sys.executable).absolute())
+                and record["package"] == str(Path(__file__).resolve().parent)
+            ):
+                retained = record
+                break
     candidate = _probe(
-        sys.executable, root, identifiers, package_path=str(Path(__file__).resolve().parent)
+        sys.executable,
+        root,
+        identifiers,
+        package_path=str(Path(__file__).resolve().parent),
+        **({"retained": retained} if retained is not None else {}),
     )
     candidate_id = native_tools_launcher.fingerprint(candidate)
     observed.extend(_runtime_observations(candidate))
-    selection, before = _read_selection(root)
     assets, session, desktop = _assets(root, selection)
     items = [_owned_change(path, data, mode=mode) for path, data, mode in assets]
     items.append(
@@ -559,7 +597,13 @@ def entry_files(root):
     identifiers, observed = _bundle_observations(root)
     runtime, evidence = _record(root, selection["current"], identifiers)
     if (
-        _probe(sys.executable, root, identifiers, package_path=str(Path(__file__).resolve().parent))
+        _probe(
+            sys.executable,
+            root,
+            identifiers,
+            package_path=str(Path(__file__).resolve().parent),
+            **({"retained": runtime} if runtime["schema"] == 2 else {}),
+        )
         != runtime
     ):
         raise ValueError(

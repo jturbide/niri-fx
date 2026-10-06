@@ -89,6 +89,13 @@ rechecks compatibility with the current compositor selections. Do not use generi
 Restore, overwrite a custom launcher or remove retained runtimes to bypass a
 refusal. Imported presets cannot authorize tool installation or registration.
 
+- For paired full-session packages, `/usr/bin/niri-fx native adopt` reviews the
+  installed tools and compositor for retained user storage. First adoption needs
+  `--config`; upgrades omit it to preserve saved effects and shared/frozen mode.
+  Apply requires the same arguments and `--expect-plan`. Use the explicit system
+  command after package updates, since the ordinary launcher still resolves the
+  previously retained tools. Adoption selects the next login without restarting
+  the desktop. Package availability does not establish physical acceptance.
 - `native install --candidate DIR --config FILE` reviews a finished full build,
   configuration snapshot, login launcher and next-login selection. Apply only
   within the user's authorized scope with the exact reviewed `plan_sha256`.

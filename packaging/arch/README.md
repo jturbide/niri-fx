@@ -74,20 +74,57 @@ evidence. Do not use package installation hooks to adopt or activate effects.
 
 ## Full-session packaging
 
-The full session will need a package-aware adoption workflow before publication:
+`niri-fx-compositor-git/` is the development recipe for the complete pinned
+four-patch compositor. Pair it with `niri-fx-git` built from the same commit.
+It does not replace stock Niri, which supplies the established service lifecycle
+and portal configuration. The distinct `niri-fx-packaged.desktop` entry resolves
+each user's retained selection without adopting anything during login.
 
-- Build the complete pinned four-patch compositor from explicitly prepared source,
-  with locked dependencies, desktop features and offline compilation.
-- Package a relocatable candidate and provenance. Complete binary processing
-  before computing the recorded hash, and prevent later stripping from changing it.
-- Supply a generic login entry that resolves the current user's retained tools.
-  Never embed the packager's home directory or Python site-packages path.
-- Copy tools and compositor candidates into retained user storage through explicit
-  review. Keep selected, previous and running copies independent of `/usr` updates.
-- Test two package versions, multiple users, Python path changes, interrupted
-  adoption and missing dependencies. Retaining a binary does not retain its system
-  libraries; stock Niri remains a recovery option.
+The recipe fetches locked Cargo dependencies in `prepare()`, then builds and
+runs native regressions offline. The shared producer copies and strips the
+executable before recording its hash. Its compact export contains a relative
+manifest, binary, Cargo lockfile, upstream license/readme and frozen patch stack.
+Makepkg stripping/debug splitting is disabled to preserve that final hash.
 
-These are implementation and acceptance requirements, not current package
-features. They extend the existing managed transactions instead of adding a
-second settings writer. See the [native distribution gates](../../docs/releasing.md#native-release-candidates).
+For a prepared, already-patched source tree and populated Cargo cache, the same
+producer can be exercised independently:
+
+```sh
+python3 scripts/build-nirifx-session.py \
+  --prepared-source /path/to/prepared-niri \
+  --build-root /path/to/build-attempts \
+  --cargo-home /path/to/cargo-cache \
+  --target-cache /path/to/compatible-target-cache \
+  --output /path/to/new-session-candidate \
+  --strip-program /usr/bin/strip
+```
+
+Use a fresh output path for each attempt. The producer verifies the upstream
+commit and exact canonical patch diff, uses a local copy without Git hardlinks,
+and does not alter prepared source or fetch dependencies during compilation.
+
+Inspect paired package archives without installing them:
+
+```sh
+python3 scripts/check-arch-session-package.py /path/to/niri-fx-compositor-git-VERSION.pkg.tar.zst \
+  --tools-package /path/to/niri-fx-git-VERSION.pkg.tar.zst
+```
+
+Run `scripts/test-arch-session-package.sh` only in a disposable Arch container
+with its explicit container marker. The harness accepts paired archive paths,
+tests separate users and retained selections, then removes packages and compares
+stock files. It never starts the display-manager session. See its usage for the
+required paths and marker; do not bypass its host-execution guard.
+
+The prepared offline producer has passed its 168 native test executions and
+relocation checks. Staged archives using that real binary have also passed
+installation, two-user adoption, stale-review refusal, package removal and
+stock-file preservation in disposable Arch. These archives used an explicit
+working-tree fixture version; that evidence does not certify the recipe's full
+source-fetch and clean distribution build path.
+
+Publication remains gated on actual package acceptance and the
+[native distribution gates](../../docs/releasing.md#native-release-candidates).
+In particular, package checks do not establish physical login, screen sharing,
+suspend, mixed-monitor behavior or compatibility across system Python/library
+upgrades. Retaining sources and binaries does not retain the distribution ABI.

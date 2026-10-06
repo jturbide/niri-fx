@@ -68,10 +68,62 @@ make the versions appear equal.
 
 An existing full NiriFX session retains its own tool environment and compositor
 bundles. An AUR update does not switch that selection. Follow
-[managed tool updates](tool-updates.md) to update those retained tools; system
-Python is not a replacement for the required persistent virtual environment.
-This separation keeps ordinary package replacement from overwriting a selected
-or previous login runtime.
+[managed tool updates](tool-updates.md) for source installations. The full-session
+package workflow below instead retains a private copy of the packaged Python
+sources. Ordinary package replacement never overwrites either selected runtime.
+
+## Full-session package development
+
+The repository includes a `niri-fx-compositor-git` recipe for the complete
+compositor and a **NiriFX (package)** login entry. It is not yet published on AUR
+or declared a supported full-session distribution. Use the
+[packaging workflow](../packaging/arch/README.md#full-session-packaging) to build
+and validate it together with `niri-fx-git` from the same source revision.
+Physical login, capture, suspend and mixed-monitor acceptance remain open.
+
+After installing the paired development packages in a test environment, review
+first adoption as the normal user:
+
+```sh
+/usr/bin/niri-fx native adopt --config ~/.config/niri/config.kdl
+```
+
+Review the proposed files and `plan_sha256`, then repeat the command with
+`--apply --expect-plan REVIEWED_SHA256`. This copies the compositor, configuration
+and tools into retained user storage and selects them for the next login. It
+does not enable new effects or restart your desktop. Select **NiriFX (package)**
+at the next login; keep **Niri** available for recovery.
+
+For subsequent package updates, omit `--config`:
+
+```sh
+/usr/bin/niri-fx native adopt
+/usr/bin/niri-fx native adopt --apply --expect-plan REVIEWED_SHA256
+```
+
+Use the explicit `/usr/bin/` command to adopt the newly installed tools. The
+ordinary user launcher intentionally keeps using the previously retained tools
+until adoption succeeds. Updates preserve the selected recipe and exact shader
+bytes, including shared stock/native projections. Shared settings continue to
+follow the existing normal Niri configuration. Frozen installations retain their
+snapshot; adoption does not silently switch them to shared settings.
+
+Existing managed launchers must complete [tool migration](tool-updates.md#migrate-existing-launchers-once)
+before package adoption. Customized or unrecognized launchers are preserved and
+refused. The generic entry uses the current user's default XDG data storage;
+custom-root sessions keep their existing per-user entry.
+
+Use reviewed `native rollback` for the compositor and `native tools-rollback`
+for tools, passing the packaged entry as `--registered-entry` for tools. Earlier
+copies remain available after package replacement. They still depend on system
+Python and shared libraries; this does not freeze the distribution's ABI.
+Removing the compositor package removes its chooser entry, not retained settings
+or bundles. Stock Niri remains available.
+
+If adoption is interrupted, return through stock Niri and review the same system
+command again. Exact partial copies and dispatcher updates can be resumed.
+Changed or unrecognized files are preserved and refused; do not delete retained
+storage to force an update.
 
 ## Restore or remove
 
@@ -97,5 +149,5 @@ writes to home directories. It neither provides nor conflicts with stock Niri.
 The [packaging checks](../packaging/arch/README.md) cover source checksums,
 metadata, unit tests, extracted-package CLI/Studio resources, isolated Arch
 installation/removal and stock-file preservation. They do not establish physical
-desktop, suspend, display-manager or screen-sharing acceptance. Full-session
-packaging remains on the [roadmap](../ROADMAP.md#arch-packaging-and-full-session-adoption).
+desktop, suspend, display-manager or screen-sharing acceptance. The remaining
+full-session gates are on the [roadmap](../ROADMAP.md#arch-packaging-and-full-session-adoption).

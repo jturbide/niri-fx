@@ -48,11 +48,42 @@ def runtime_record(directory, identifier):
     record = json.loads(read_owned(directory / "runtimes" / f"{identifier}.json"))
     if (
         not isinstance(record, dict)
-        or record.get("schema") != 1
+        or type(record.get("schema")) is not int
+        or record["schema"] not in (1, 2)
         or fingerprint(record) != identifier
     ):
         raise ValueError("Tool runtime receipt identity changed")
+    if record["schema"] == 2:
+        package = Path(record["package"])
+        if package.parent.parent != directory / "packages":
+            raise ValueError("Retained package does not belong to this tools installation")
     return record
+
+
+def package_files(package, *, allow_bytecode=True):
+    """Inventory pure-Python source/resources without following symlinks."""
+    package = Path(package)
+    if not package.is_absolute() or any(p.is_symlink() for p in (package, *package.parents)):
+        raise ValueError("Retained package paths must be absolute and must not contain symlinks")
+    files = []
+    for path in package.rglob("*"):
+        if path.is_symlink():
+            raise ValueError("Retained package files must not be symlinks")
+        if not allow_bytecode and path.suffix == ".pyc":
+            raise ValueError("Retained pure-Python snapshots must not contain bytecode caches")
+        if "__pycache__" in path.parts or path.suffix == ".pyc":
+            continue
+        info = path.stat()
+        if stat.S_ISDIR(info.st_mode):
+            continue
+        if not stat.S_ISREG(info.st_mode) or info.st_size > 32 * 1024 * 1024:
+            raise ValueError("Runtime files must be bounded regular files")
+        if path.suffix in {".so", ".pyd", ".dll"}:
+            raise ValueError("Package adoption supports pure-Python runtimes only")
+        files.append(path)
+        if len(files) > 2048:
+            raise ValueError("Runtime inventory exceeds its file limit")
+    return sorted(files)
 
 
 def verify_runtime(record):
@@ -62,17 +93,38 @@ def verify_runtime(record):
     python = Path(record["python"])
     package = Path(record["package"])
     prefix = python.parent.parent
-    if not python.is_absolute() or not package.is_absolute() or not package.is_relative_to(prefix):
-        raise ValueError("Retained tools package must belong to its virtual environment")
+    schema = record["schema"]
+    if type(schema) is not int or schema not in (1, 2):
+        raise ValueError("Unsupported tools runtime receipt")
+    if schema == 1:
+        if (
+            not python.is_absolute()
+            or not package.is_absolute()
+            or not package.is_relative_to(prefix)
+        ):
+            raise ValueError("Retained tools package must belong to its virtual environment")
+    elif (
+        python != Path("/usr/bin/python3")
+        or package.name != "niri_fx"
+        or not re.fullmatch(r"[a-f0-9]{64}", package.parent.name)
+        or package.parent.parent.name != "packages"
+        or package.parent.parent.parent.name != "tools"
+    ):
+        raise ValueError("Invalid retained package location or system interpreter")
     files = record["files"]
     if not isinstance(files, dict) or not 1 <= len(files) <= 2048:
         raise ValueError("Invalid tools runtime file inventory")
-    actual = {
-        str(p)
-        for p in package.rglob("*")
-        if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"
-    }
-    actual.add(str(prefix / "pyvenv.cfg"))
+    actual = (
+        {str(p) for p in package_files(package, allow_bytecode=False)}
+        if schema == 2
+        else {
+            str(p)
+            for p in package.rglob("*")
+            if p.is_file() and "__pycache__" not in p.parts and p.suffix != ".pyc"
+        }
+    )
+    if schema == 1:
+        actual.add(str(prefix / "pyvenv.cfg"))
     if actual != set(files):
         raise ValueError("Retained tools runtime file inventory changed")
     for value, expected in files.items():
@@ -86,8 +138,14 @@ def verify_runtime(record):
         info = path.stat()
         if not stat.S_ISREG(info.st_mode) or info.st_size > 32 * 1024 * 1024:
             raise ValueError("Runtime files must be bounded regular files")
+        if schema == 2 and (info.st_uid != os.getuid() or stat.S_IMODE(info.st_mode) != 0o600):
+            raise ValueError("Retained package files must be private and user-owned")
         if hashlib.sha256(path.read_bytes()).hexdigest() != expected:
             raise ValueError(f"Retained tools runtime changed: {path}")
+    if schema == 2:
+        relative = {str(Path(path).relative_to(package)): value for path, value in files.items()}
+        if fingerprint(relative) != package.parent.name:
+            raise ValueError("Retained package content identity changed")
     python = Path(record["python"])
     package = Path(record["package"])
     if str(package / "__init__.py") not in files:
