@@ -23,14 +23,20 @@ Keep using the nested preview if you do not want a separate login session.
 
 ## Prepare a version
 
-The session commands below are available in the current source checkout; they
-are newer than the published 0.19 package. Install that checkout in a persistent
-Python environment and retain it, for example:
+The session commands are included in NiriFX 0.20. Download the wheel and
+`SHA256SUMS` from the same [release](releases.md#0200-prerelease), verify them,
+and install the wheel in a persistent Python environment:
 
 ```sh
+sha256sum --ignore-missing -c SHA256SUMS
 python3 -m venv ~/.local/share/niri-fx/session-tools
-~/.local/share/niri-fx/session-tools/bin/pip install .
+~/.local/share/niri-fx/session-tools/bin/pip install --no-index --no-deps ./niri_fx-0.20.0-py3-none-any.whl
 ```
+
+For an existing managed installation, prepare a new environment and follow
+[tool updates](tool-updates.md); keep its working environment intact for recovery.
+Download and extract the source archive from that release, or check out its tag,
+to use the matching compositor build tools below.
 
 Use `~/.local/share/niri-fx/session-tools/bin/niri-fx` in place of `niri-fx` below.
 Commands also work as `python3 -m niri_fx` from the checkout, but its location and
@@ -284,7 +290,7 @@ pinned to an older, separate installation will not gain support merely because
 a newer CLI or Studio creates the bundle. Keep the original installation and
 stock session available while reviewing a launcher migration.
 
-Current source builds provide [managed tool updates](tool-updates.md) for this
+NiriFX 0.20 provides [managed tool updates](tool-updates.md) for this
 migration. After registering the stable entry once, CLI, Studio and login use
 one reviewed runtime selection, with compatibility checks and tool rollback.
 

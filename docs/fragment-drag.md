@@ -8,7 +8,7 @@ delays and response speeds. Reversing direction retains queued motion. Pausing
 keeps the held spread; releasing reconstructs the window, including a press
 that never became a drag.
 
-This is included in the **Unreleased NiriFX session**.
+This is included in the **NiriFX 0.20 session**, built from the matching source.
 It uses the selected movement material for pointer dragging and timed window
 movement, including column reordering. A long drag is driven by incoming motion;
 it does not finish when a fixed movement timer expires or repeatedly play an
@@ -19,8 +19,10 @@ Open `niri-fx studio --target native` after [session setup](native-session.md).
 Choose **Gentle**, **Tear** or **Cascade** under continuous fragments, keep or
 change your other action presets, then review your changes. Studio offers
 **Apply to desktop** on a matching running session or **Select for next login**
-otherwise. There is no separate fragment build to install. The detailed controls
-and developer checks below explain the current renderer's limits.
+otherwise. Shared configurations use **Apply shared settings**, which updates
+the watched includes and reports file writes separately from confirmed activation.
+There is no separate fragment build to install. The detailed controls and
+developer checks below explain the current renderer's limits.
 
 **Save to My profiles**, **Download JSON**, **Share settings** and config downloads
 keep the portable styles but omit these native response controls. Applying or

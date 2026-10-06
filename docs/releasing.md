@@ -1,8 +1,10 @@
 # Maintaining releases
 
 This guide is for maintainers preparing a release. For installation and package
-selection, use [Releases and downloads](releases.md). Before publishing 1.0 as
-stable, complete
+selection, use [Releases and downloads](releases.md). Continue publishing useful,
+tested 0.x prereleases while the product and its interfaces develop. A 0.20 or
+later 0.x release does not require completing the future 1.0 contract.
+Before publishing 1.0 as stable, complete
 all [stability acceptance criteria](stability.md#acceptance-criteria-for-10).
 Subsequent 1.x releases must preserve that published contract and pass the
 compatibility fixtures from all earlier stable 1.x interfaces, even when those

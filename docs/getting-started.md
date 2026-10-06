@@ -10,10 +10,9 @@ Its source installer prepares all compositor features together; published
 distribution packages are still being prepared. Both paths use the same Library
 and leave shell source code untouched.
 
-This page follows `main`. The published 0.19 wheel has the earlier Library layout;
-the managed-session tools and separate Swap choice require the current source
-version. Use the [source instructions](#get-the-source-and-preview) for those
-features, or follow the guide included with your [tagged release](releases.md).
+This guide covers version 0.20. The wheel includes Studio and the managed-session
+tools; the compositor still builds from the matching source archive or tag.
+For another version, follow its included [release documentation](releases.md).
 
 ## Requirements
 
@@ -33,7 +32,7 @@ Download the wheel and `SHA256SUMS` from the same
 ```sh
 sha256sum --ignore-missing -c SHA256SUMS
 python3 -m venv .venv
-.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.19.0-py3-none-any.whl
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.20.0-py3-none-any.whl
 .venv/bin/niri-fx studio
 ```
 
@@ -44,8 +43,7 @@ activate the environment with `source .venv/bin/activate`.
 
 ## Choose your first combo
 
-1. In Library, choose **Combos → Recommended** (**Recommended** in version 0.19),
-   then **Fragment Flow**. Try **Soft Landing**
+1. In Library, choose **Combos → Recommended**, then **Fragment Flow**. Try **Soft Landing**
    for a quieter frosted exit, **Ribbon Current** for strips, **Playful Motion**
    for a spring and bubbles, or **Geometric Flow** for triangles and hexagons.
 2. Press **Preview combo** to see the opening and closing sequence. The recommended

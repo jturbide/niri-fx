@@ -5,6 +5,8 @@ still change as real use exposes better designs. Breaking changes belong in the
 [changelog](../CHANGELOG.md), with practical migration guidance in
 [Updating NiriFX](upgrading.md). This document sets the target for a future stable
 release; it does not freeze today's interfaces or announce a 1.0 release date.
+Version 0.20 and subsequent 0.x releases can deliver tested improvements while
+these gates remain open. There is no requirement to move directly from 0.20 to 1.0.
 
 The [roadmap](../ROADMAP.md) tracks the work. [Compatibility](compatibility.md)
 describes current support, and [validation](validation.md) records what has

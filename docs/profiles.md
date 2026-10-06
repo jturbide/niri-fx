@@ -17,7 +17,7 @@ Each action has the same three choices:
 | **NiriFX Style** | Apply the selected effect or pointer preset. |
 | **Off** | Disable that action's animation. |
 
-Choose independently for Open, Close, Resize, Move, Swap and Pointer drag.
+Choose independently for Open, Close, Resize, Move, Swap and Pointer wobble.
 Updated NiriFX builds support an independent Swap override for explicit left/right
 window swaps. Ordinary moves, pointer drags and column reordering use Move. Shared styles change only actions
 already set to **NiriFX Style**; Preserve and Off remain unchanged. If a shared
@@ -44,7 +44,7 @@ omit them from KDL, including Off. Native contract 2 keeps movement and pointer
 wobble overrides independent even though they share one Niri configuration block.
 Applying Off for movement does not turn off pointer wobble, and vice versa.
 [Continuous fragments](fragment-drag.md) follow the movement choice, including
-Off; Pointer drag controls the separate whole-window wobble. Global Niri
+Off; Pointer wobble controls the separate whole-window wobble. Global Niri
 animations Off still wins.
 
 ## Separate Move and Swap styles
@@ -230,7 +230,7 @@ viewing an action alone does not select it. Stock KDL and iNiR/iRiS registration
 omit movement nodes. The NiriFX session target includes the selected movement in
 its next-login configuration. To apply it in an already running session, use
 [verified live Apply and Restore](setup.md#activate-movement-in-a-running-session).
-Profiles do not add application-specific rules. Pointer drag is an independent
+Profiles do not add application-specific rules. Pointer wobble is an independent
 control in the same NiriFX build, described below.
 
 ## Pointer drag
@@ -240,8 +240,8 @@ Pointer settings in profiles, Studio and reviewed activation are available in
 [NiriFX session](native-session.md); see [pointer-driven wobble](pointer-wobble.md)
 for its behavior and validation limits.
 
-In Library, **Pointer drag** uses Preserve / NiriFX Style / Off. NiriFX Style
-offers **Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer drag** exposes
+In Library, **Pointer wobble** uses Preserve / NiriFX Style / Off. NiriFX Style
+offers **Gentle**, **Rubber Sheet** and **Release Settle**. **Customize pointer wobble** exposes
 strength, damping and frequency. These choices are independent of the opening,
 closing, resize and timed movement styles. Switching to one shared window style
 preserves the pointer choice; Undo/Redo, JSON import/export and share links preserve it too.
@@ -262,8 +262,9 @@ A profile's optional top-level `pointer` object contains all three controls:
 from 0 to 2, damping is a whole percentage from 10 to 100, and frequency is a whole
 number from 2 to 16 Hz. Omitting `pointer` or setting it to `null` inherits existing
 behavior. Strength zero is an explicit disabled override; use `profile --pointer off`
-to generate one. The four `actions` keys remain unchanged, and existing schema 1
-profiles remain valid.
+to generate one. Pointer settings do not add a shader action; profiles have four
+`actions` keys in schema 2, or five when schema 3 carries a Swap override.
+Existing schema 1 profiles remain valid.
 
 Saving a pointer choice does not activate it. Stock KDL, iNiR registrations and
 Noctalia preset downloads omit pointer nodes, including a disabled override.
@@ -272,7 +273,7 @@ pointer settings and any selected timed movement in one `window-movement` block;
 that file requires the matching NiriFX build.
 
 Live activation is available through the standalone adapter after verifying the
-running pointer contract. **Apply pointer drag** is a separate
+running pointer contract. **Apply pointer wobble** is a separate
 choice from **Apply movement**. Changing the pointer settings clears
 its activation choice and invalidates the review. A disabled override also requires
 explicit activation. See [reviewed pointer Apply and Restore](setup.md#activate-pointer-drag-in-a-running-session).

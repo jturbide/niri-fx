@@ -497,7 +497,7 @@ interrupted resize requests:
 | [Baseline and updated](gifs/native-resize-minimum-width-comparison.gif) | [Baseline and updated](gifs/native-resize-minimum-height-comparison.gif) | [Baseline and updated](gifs/native-resize-material-fragments-comparison.gif) | [Baseline and updated](gifs/native-resize-material-triangles-comparison.gif) |
 
 These native pairs use verified v0.19.0 and updated builds with the same settings.
-[Evidence and limits](validation.md#retained-material-acceptance-unreleased).
+[Evidence and limits](validation.md#retained-material-acceptance-020).
 
 [Resize continuing into close](gifs/native-resize-close-comparison.gif) compares
 the preserved snapshot behavior with the current experimental handoff at the same

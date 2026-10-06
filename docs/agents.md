@@ -7,7 +7,10 @@ guessing which configuration file to replace.
 
 The agent commands and bundled skill are included in **version 0.18 and newer**.
 Use the installed `niri-fx` command, or replace it below with `python3 -m niri_fx`
-when working from a source checkout.
+when working from a source checkout. Managed sessions, shared desktop settings
+and coherent tool updates require **0.20 or newer**. Read discovery from the
+installed version before constructing commands; importing a newer recipe does
+not add support to older tools or compositor builds.
 
 ## Start here
 

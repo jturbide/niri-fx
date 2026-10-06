@@ -175,8 +175,8 @@ Tool configurations: [Ruff](https://docs.astral.sh/ruff/configuration/),
 Write user guides for someone discovering NiriFX for the first time: explain
 what a feature does, how to use it and which setups it supports. Use the changelog
 for release history and the engineering/testing guides for implementation details.
-Keep limitations explicit, especially stock Niri versus experimental movement and
-pointer drag. Describe source-checkout additions as Unreleased until they ship in
+Keep limitations explicit, especially stock Niri versus the NiriFX session’s movement and
+pointer wobble. Describe source-checkout additions as Unreleased until they ship in
 a versioned package.
 
 Keep personal configurations, local workspace paths, session URLs, raw audit

@@ -7,6 +7,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+## 0.20.0 - 2026-10-05
+
 ### Added
 
 - Shared desktop settings for stock Niri and the NiriFX session. Reviewed adoption
@@ -156,8 +158,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - Setup guides lead with Library for choosing a combo and reviewing independent
   action choices, Apply and Restore. Terminal and scriptable setup remain available.
 - Generated resize shaders use retained material when the native extension is
-  available. Build the experimental compositor from the same checkout to use it;
-  stock Niri and older experimental builds keep their existing shader behavior.
+  available. Build the NiriFX compositor from the same checkout to use it;
+  stock Niri and older NiriFX builds keep their existing shader behavior.
 - Update the pinned checkout, Python/Node setup and Pages publishing actions.
 
 ### Fixed
@@ -205,10 +207,24 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - Turning resize or all animations off finishes the shared resize paths before
   removing their source, so neighboring windows settle with the resized window.
 
-Resize-to-close continuation requires the matching development compositor and a
+Resize-to-close continuation requires the matching NiriFX compositor and a
 marked NiriFX resize shader. Fullscreen windows and transitions, output-scale
 changes and unavailable frozen material use the existing protected closing snapshot. Physical
 device unplug/replug and graphics-reset acceptance remain separate validation work.
+
+### Upgrade
+
+Install the 0.20 tools in a new persistent environment and use the reviewed
+[shared tool update](docs/tool-updates.md) when launchers are already managed.
+Reopen Studio after switching tools. Existing profiles keep their behavior;
+schema 3 adds a separate Swap choice, while profiles without it remain schema 2.
+
+Shared desktop settings require a separate reviewed adoption. Keep the installed
+tools compatible with the selected shared bundle; older tools cannot read the
+new bundle format. Complete session features still require a source-built NiriFX
+compositor. Independent Swap needs the updated four-patch build and a new login.
+No supported compositor binaries or distribution packages are included in this
+Python-tools prerelease. See [upgrade guidance](docs/upgrading.md#from-019-to-020).
 
 ## 0.19.0 — 2026-10-04
 

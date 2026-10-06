@@ -6,8 +6,8 @@ common effects such as Open, Close and Resize into a stock-compatible include.
 Move, Swap, pointer wobble and continuous fragments stay in a separate NiriFX
 include for the selected compositor build.
 
-This workflow is available in the current source checkout, newer than the
-published 0.19 package. First [prepare a NiriFX session](native-session.md) and
+This workflow is included in NiriFX 0.20. First
+[prepare a NiriFX session](native-session.md) and
 update the persistent [CLI, Studio and login tools](tool-updates.md). The selected
 bundle must have a saved effects recipe: choose a combo in local Studio, review
 it, then **Apply to desktop** or **Select for next login**. Saving a profile file

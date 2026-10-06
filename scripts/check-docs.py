@@ -88,7 +88,9 @@ def main():
     changelog = (ROOT / "CHANGELOG.md").read_text()
     if not re.search(r"^## Unreleased$", changelog, re.M):
         errors.append("Changelog needs an Unreleased section")
-    if not re.search(rf"^## {re.escape(__version__)} — \d{{4}}-\d{{2}}-\d{{2}}$", changelog, re.M):
+    if not re.search(
+        rf"^## {re.escape(__version__)} [-—] \d{{4}}-\d{{2}}-\d{{2}}$", changelog, re.M
+    ):
         errors.append(f"Changelog needs a dated entry for {__version__}")
 
     manifest = json.loads((ROOT / "docs/gifs/manifest.json").read_text())

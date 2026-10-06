@@ -4,7 +4,9 @@ Find tagged versions and release notes on the
 [GitHub releases page](https://github.com/jturbide/niri-fx/releases).
 NiriFX is in early development; prereleases may change commands or preset formats.
 Read the notes for the version you install. The [path to 1.0](stability.md)
-defines future stability gates; current 0.x interfaces remain under development.
+defines future stability gates. Releases continue through 0.20 and later 0.x
+versions while the interfaces and installation workflow develop; 1.0 has no
+release date or interface freeze yet.
 
 ## Choose a version
 
@@ -16,6 +18,40 @@ defines future stability gates; current 0.x interfaces remain under development.
 [Getting started](getting-started.md) documents installation from source or into
 a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
 currently provided by this project.
+
+## 0.20.0 prerelease
+
+[Download v0.20.0](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0) for a
+simpler Studio with independent Open, Close, Resize, Move and Swap choices, five
+new movement presets, and reviewed management of the complete NiriFX session.
+[Shared desktop settings](shared-settings.md) lets stock Niri and NiriFX use your
+normal configuration and one saved effects recipe. [Tool updates](tool-updates.md)
+keep CLI, Studio and the login launcher on one selected installation, with the
+previous version retained for recovery.
+
+The source-built NiriFX compositor adds continuous square-fragment motion,
+retained resize effects and resize-to-close continuation. These features require
+the matching full compositor build; installing the wheel does not install or
+replace a compositor. Distribution packages and supported compositor downloads
+remain in development. See [session setup and tested limits](native-session.md).
+
+```sh
+sha256sum --ignore-missing -c SHA256SUMS
+python3 -m venv .venv
+.venv/bin/python -m pip install --no-index --no-deps ./niri_fx-0.20.0-py3-none-any.whl
+.venv/bin/niri-fx studio
+```
+
+Download the wheel and `SHA256SUMS` from the same release. Use the source archive
+for the matching build tools, compositor patches, documentation and showcases.
+Installation preserves active settings; effect changes and shared-setting adoption
+have their own review. [Upgrade from 0.19](upgrading.md#from-019-to-020) before
+replacing an existing installation.
+
+Profiles without a Swap override remain schema 2; a separate Swap style or Off
+uses schema 3, which older tools cannot read. Portable JSON retains action styles
+and pointer wobble, but continuous-fragment response still belongs to the managed
+session recipe. Keep that retained bundle when updating.
 
 ## 0.19.0 prerelease
 
@@ -178,12 +214,13 @@ not activate effects. For iNiR/iRiS, DMS and Noctalia, follow the
 
 | Format | Contents |
 | --- | --- |
-| Source archive | Python code, Studio assets, shader sources, documentation, examples, tests, recording tools and the optional experimental patch |
+| Source archive | Python code, Studio assets, shader sources, documentation, examples, tests, recording tools and the complete compositor patch stack |
 | Python wheel | The `niri-fx` command and terminal guide, Python package, Studio resources, reusable QML/GTK pickers, shaders, application icon and license notices |
 
-Installing the Python package does not install a patched compositor. Opening and
-closing use stock Niri; native movement requires the separate
-[experimental build](../experimental/README.md). Built-in profiles preserve existing resize settings.
+Installing the Python package does not install a compositor. Opening, closing
+and selected resize effects work with stock Niri; movement, swaps, pointer wobble
+and continuous fragments require the [full NiriFX session](native-session.md).
+Built-in profiles preserve existing resize settings.
 See [license notices](../THIRD_PARTY.md) for the MIT application and GPL-licensed patch.
 
 ## Update or roll back

@@ -39,7 +39,7 @@ these updates. Frozen mode keeps its copied configuration until you stage anothe
 baseline. [Shared desktop settings](shared-settings.md) lets both sessions follow
 the normal Niri files while keeping native effects in a separate include. It uses
 Niri's existing file watcher, with no shell-source patch or synchronization daemon.
-This shared workflow requires the current source checkout, newer than 0.19.
+This shared workflow is included in NiriFX 0.20.
 
 ## Removing the earlier compact iRiS entry
 
@@ -78,7 +78,7 @@ The native patches are tied to an exact Niri revision and ordered patch stack.
 They are not plugins that an arbitrary newer Niri executable can load. A newer
 upstream release may need a port and fresh rendering, input and capture tests.
 
-New source builds record [versioned build identity](../experimental/README.md#inspect-build-identity).
+The 0.20 build tools record [versioned build identity](../experimental/README.md#inspect-build-identity).
 The read-only inspector detects changed files and missing desktop build
 prerequisites. Its result does not approve a login-session upgrade.
 
