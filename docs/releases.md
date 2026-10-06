@@ -24,7 +24,7 @@ currently provided by this project.
 
 ## 0.22.0 prerelease
 
-NiriFX 0.22 brings complete Arch packages: choose `niri-fx` for the release or
+[NiriFX 0.22](https://github.com/jturbide/niri-fx/releases/tag/v0.22.0) brings complete Arch packages: choose `niri-fx` for the release or
 `niri-fx-git` for development. Each includes Studio, CLI, presets, the full
 compositor and its login entry. Keep using the tools in stock Niri, or follow
 [session setup](arch-linux.md#use-the-nirifx-session) to use the included compositor.

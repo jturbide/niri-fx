@@ -63,7 +63,7 @@ updates and existing managed sessions. Starting with 0.22, either package includ
 Studio, CLI, presets and the complete NiriFX session. Keep using stock Niri with
 the tools, or [set up the included session](docs/arch-linux.md#use-the-nirifx-session).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0210-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0220-prerelease).
 On Niri with Python 3.10+, you can also open Library from source:
 
 ```sh

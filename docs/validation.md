@@ -17,10 +17,31 @@ manifests remain explicit inputs to comparison recorders.
 
 ## Arch packages
 
-The complete 0.22 recipes build CLI, Studio, presets and the full compositor
-together in `niri-fx` or `niri-fx-git`. Their acceptance covers package contents
-and temporary-account setup, separately from physical-session checks. Current
-results are recorded below as the complete-package validation finishes.
+The complete 0.22 release and development recipes passed fresh official Arch
+x86_64 container builds with Rust 1.99. Each build ran 785 Python tests and 168
+native test executions, then audited the full tools, compositor and session
+payload. Candidate validation pinned both recipes to the reviewed source commit;
+it did not fetch an unpublished release tag or a moving branch.
+
+Both channels upgraded their published 0.21 tools-only packages without file
+conflicts. Installed CLI commands produced stock-compatible effects and offline
+previews. Two users independently reviewed and adopted the included session;
+incorrect plan fingerprints were refused without writes. Reinstalling the package
+preserved selected copies, and retained CLI/resources still worked after removal.
+Stock Niri files and existing synthetic settings stayed unchanged.
+A separate clean-container check switched release to development and back through
+normal package-manager conflict handling, with sole package ownership and the
+matching native binary verified after each step. No forced overwrite was used.
+
+The installed 0.22 wheel also passed first-use Studio flows for standalone Niri
+and the real iNiR helper, using temporary configuration: independent action modes,
+saving, review/cancel, Apply, reopening and exact Restore. No test connected to
+the user's compositor or changed a shell checkout.
+
+These checks do not establish upgrades between two adopted native versions,
+physical login, portal capture, suspend/resume or mixed-monitor behavior. Those
+remain separate gates. See the [Arch guide](arch-linux.md) for use and the
+[packaging workflow](../packaging/arch/README.md) for reproduction.
 
 ### Earlier tools-only packages (0.21)
 

@@ -222,10 +222,10 @@ are developer regression controls, not separate consumer editions.
       with reviewed adoption from system packages into immutable user storage.
 - [x] Preserve saved shader bytes, shared desktop settings and previous selections
       during adoption; test stale-review refusal, validation failure and rollback.
-- [ ] Validate both complete packages in clean Arch, including stock tools usage,
+- [x] Validate both complete packages in clean Arch, including stock tools usage,
       two-user adoption, retained copies after removal and unchanged stock Niri.
-- [ ] Publish the complete packages through the existing two AUR names and document
-      the upgrade from the earlier tools-only packages.
+- [x] Verify upgrades from both earlier tools-only packages and normal switching
+      between release and development channels without forced file overwrites.
 - [ ] Verify updates across two package versions, multiple users, Python path
       changes, interrupted adoption and missing shared libraries. Preserve running,
       selected and previous copies and the stock Niri recovery entry.
