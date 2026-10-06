@@ -226,7 +226,7 @@ are developer regression controls, not separate consumer editions.
       two-user adoption, retained copies after removal and unchanged stock Niri.
 - [x] Verify upgrades from both earlier tools-only packages and normal switching
       between release and development channels without forced file overwrites.
-- [ ] Verify reviewed updates between complete package builds with different
+- [x] Verify reviewed updates between complete package builds with different
       retained tools and compositor identities, including independent users and
       separate rollback of each selection.
 - [x] Verify interruption recovery during shared and frozen bundle copying;

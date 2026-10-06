@@ -93,6 +93,11 @@ distinguishes unchanged identities from exercised transitions. A changed binary
 hash from a rebuild does not establish changed compositor behavior. Keep the
 source revisions and package hashes with the results.
 
+Both archives must satisfy the current archive audit, including the reviewed
+native patch stack and dispatcher. Transitions from a different patch or
+dispatcher contract need a version-specific baseline audit before this helper
+can assess them.
+
 Physical login, mixed monitors, PipeWire capture, suspend/resume and compatibility
 with changed system Python or shared libraries have separate acceptance gates.
 

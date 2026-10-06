@@ -116,6 +116,9 @@ def assess(output):
             output / "user-a-readopted.json"
         ).read_bytes()
     first, replacement = load("package-check.json"), load("replacement-check.json")
+    for state, archive in ((before, first), (after, replacement)):
+        assert state["native_build_id"] == archive["native"]["build_id"]
+        assert state["native_sha256"] == archive["native"]["binary_sha256"]
     summary = {
         "archive_changed": first["sha256"] != replacement["sha256"],
         "package_version_changed": first["pkgver"] != replacement["pkgver"],
