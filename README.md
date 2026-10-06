@@ -35,16 +35,16 @@ Distribution packages and signed compositor downloads are being prepared. Stock
 Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.20.0](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0)
+release. [Download v0.21.0](https://github.com/jturbide/niri-fx/releases/tag/v0.21.0)
 for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.
 
-**New in current source:** save, share and import complete
+**New in 0.21:** save, share and import complete
 [continuous-fragment recipes](docs/profiles.md#portable-fragment-response),
 including custom delays, rotation and release timing. Start with
-[Gentle, Tear or Cascade](examples/profiles/README.md#portable-continuous-fragment-combos-unreleased)
-in local, online or offline Studio. These additions are not included in 0.20.
+[Gentle, Tear or Cascade](examples/profiles/README.md#portable-continuous-fragment-combos)
+in local, online or offline Studio. [Upgrade from 0.20](docs/upgrading.md#from-020-to-021).
 
 ## Quick start
 
@@ -57,7 +57,7 @@ Preserve uses your underlying Niri or shell configuration, including customizati
 settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0200-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0210-prerelease).
 On Niri with Python 3.10+, you can also open Library from source:
 
 ```sh

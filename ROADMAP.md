@@ -16,18 +16,15 @@ See [available features](README.md),
    one saved recipe now feed stock and full-session effects. Verify shell-driven
    edits, normal updates and recovery on physical desktops before broadening
    support claims; keep frozen recovery available.
-2. **Ship complete recipes in 0.21.** Current source keeps continuous-fragment
-   response with action styles across Studio, JSON and sharing. Finish package
-   release checks and publish migration guidance for existing installations.
-3. **Prove everyday session reliability.** Prioritize mixed monitors, capture
+2. **Prove everyday session reliability.** Prioritize mixed monitors, capture
    privacy, suspend/resume and recovery. Resolve the remaining stale-output probe
    and verify real PipeWire capture before expanding desktop support claims.
-4. **Deliver one supported installation and update path.** Package the app,
+3. **Deliver one supported installation and update path.** Package the app,
    full compositor and login entry for an initial declared distribution and
    architecture; verify clean install, upgrade, rollback and return to stock Niri.
-5. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
-   tools and shared settings together. Target complete recipe portability next,
-   followed by reliability and installation improvements in later 0.x releases.
+4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
+   tools and shared settings together; 0.21 adds complete recipe portability.
+   Follow with reliability and installation improvements in later 0.x releases.
    The 1.0 contract stays a separate milestone after its acceptance gates pass.
 
 New presets should demonstrate a distinct useful look, with importable settings
@@ -40,8 +37,9 @@ follow the core controls and reliability work below.
       with shared settings, integrated session management, independent Swap choices,
       current guides and verified upgrade/recovery. Native binary and physical
       desktop acceptance remain separate gates.
-- [ ] Deliver [complete portable recipes in 0.21](#021-target-complete-portable-recipes),
-      with action styles and continuous-fragment response preserved together.
+- [x] Deliver [complete portable recipes in 0.21](#021-target-complete-portable-recipes),
+      with action styles and continuous-fragment response preserved together,
+      installed upgrade checks and [migration guidance](docs/upgrading.md#from-020-to-021).
 - [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
       publish tested environments and remaining limits with each release.
 - [ ] Complete the [1.0 acceptance criteria](docs/stability.md#acceptance-criteria-for-10)
@@ -142,7 +140,7 @@ are developer regression controls, not separate consumer editions.
 - [x] Version a portable session recipe carrying continuous-fragment controls,
       with import/export in local and online Studio. Schema 4 retains response
       values and action modes; older documents keep their meaning and unsupported
-      builds refuse activation. Available in current source for 0.21.
+      builds refuse activation. Included in 0.21.
 - [x] Make Download JSON, Share settings and My profiles retain the same complete
       recipe, including dormant response values while Move is preserved or Off.
 - [x] Verify independent Move and Swap choices through explicit compositor action

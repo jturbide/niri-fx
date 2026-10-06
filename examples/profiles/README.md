@@ -49,9 +49,9 @@ To make a new combination, use Library's combo builder, Studio's **Independent a
 for editing, saving and resize selection; follow [setup and restore](../../docs/setup.md)
 when ready to apply a profile.
 
-## Portable continuous-fragment combos (Unreleased)
+## Portable continuous-fragment combos
 
-These current-source examples keep Fragment Flow's opening and closing,
+These examples require NiriFX 0.21 or newer. They keep Fragment Flow's opening and closing,
 preserve Resize and Swap, and add a square Move material with all 18 response
 values. Import one in local, hosted or offline Studio. JSON, My profiles and
 share links retain the whole recipe; NiriFX 0.20 cannot import their schema 4.

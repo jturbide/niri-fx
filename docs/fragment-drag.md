@@ -8,7 +8,7 @@ delays and response speeds. Reversing direction retains queued motion. Pausing
 keeps the held spread; releasing reconstructs the window, including a press
 that never became a drag.
 
-This is included in the **NiriFX 0.20 session**, built from the matching source.
+This is included in the **NiriFX session from 0.20 onward**, built from the matching source.
 It uses the selected movement material for pointer dragging and timed window
 movement, including column reordering. A long drag is driven by incoming motion;
 it does not finish when a fixed movement timer expires or repeatedly play an
@@ -24,7 +24,7 @@ the watched includes and reports file writes separately from confirmed activatio
 There is no separate fragment build to install. The detailed controls and
 developer checks below explain the current renderer's limits.
 
-**Current source, Unreleased:** **Save to My profiles**, **Download JSON** and
+**NiriFX 0.21:** **Save to My profiles**, **Download JSON** and
 **Share settings** retain the complete response alongside the action styles.
 Hosted and offline Studio offer the same three prefabs and
 **Customize fragment response** controls. The browser shows the movement
@@ -34,8 +34,8 @@ See [portable recipes](profiles.md#portable-fragment-response).
 
 Move Off, Preserve or an incompatible material keeps the response saved but
 dormant. **Timed movement** explicitly removes it. In 0.20, response controls
-were retained only in managed session recipes; current tools can
-[export those recipes](upgrading.md#portable-fragment-recipes-unreleased) without
+were retained only in managed session recipes; 0.21 tools can
+[export those recipes](upgrading.md#from-020-to-021) without
 modifying the retained bundle.
 
 ## Supported fragment material
@@ -136,7 +136,7 @@ after settling. Regrabbing before settling continues the current settings. This
 avoids a jump from changing delays, release duration or lag limits mid-flight.
 Off takes effect immediately. Release and let the pieces settle before comparing
 another preset. The Python defaults, bounds and presets are maintained in
-[`fragment_motion.py`](../niri_fx/fragment_motion.py). Current source exports all
+[`fragment_motion.py`](../niri_fx/fragment_motion.py). NiriFX 0.21 exports all
 18 values as portable profile settings and exposes them in Studio.
 
 The NiriFX compositor accepts a `fragment-motion` block inside the same

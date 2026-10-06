@@ -218,8 +218,8 @@ Each of `open`, `close`, `resize` and `movement` contains an effect object for
 NiriFX Style, `null` for Preserve or the string `"off"` for Off. Schema 1 profiles
 remain readable and normalize to schema 2 without changing their behavior.
 Without a saved fragment response, documents with a Swap style or Off serialize
-as schema 3; removing that override returns to schema 2. Current source builds
-use schema 4 when a complete `fragment_motion` response is saved, retaining all
+as schema 3; removing that override returns to schema 2. NiriFX 0.21
+uses schema 4 when a complete `fragment_motion` response is saved, retaining all
 five action keys, including `swap: null` when Swap is preserved.
 Each nested effect keeps `resize: false`: the separate resize slot selects that action.
 Single-style documents continue to use effect schema 3; these are different
@@ -237,7 +237,7 @@ control in the same NiriFX build, described below.
 
 ## Portable fragment response
 
-**Unreleased, available from current source:** continuous-fragment recipes now
+**Available in NiriFX 0.21:** continuous-fragment recipes
 travel with the profile. In Library's Move view, choose **Gentle**, **Tear** or
 **Cascade**, or use **Fragment response** under **Customize your combo**. The
 prefab sets its square movement material and response together. Other actions
@@ -286,7 +286,7 @@ Stock config exports omit Move, Swap and the native response. JSON preserves
 them for a compatible NiriFX session. Native config export includes the response
 only for an eligible Move material; applying it still requires verified native
 support. See [continuous fragment controls](fragment-drag.md) and
-[retained-recipe export](upgrading.md#portable-fragment-recipes-unreleased).
+[retained-recipe export](upgrading.md#from-020-to-021).
 
 ## Pointer drag
 
@@ -361,7 +361,7 @@ also default to standalone. The target changes the save UI, not your active effe
 For a prepared NiriFX session, use `niri-fx studio --target native`. Choose a
 ready-made combo, set each action and review **Select for next login**. Continuous
 fragments add **Gentle**, **Tear** and **Cascade** choices with their matching
-movement materials. Current source builds save those response values in the
+movement materials. NiriFX 0.21 saves those response values in the
 [portable profile](#portable-fragment-response); 0.20 keeps them only in the
 retained session recipe. See
 [choosing session effects](native-session.md#choose-effects-in-studio).

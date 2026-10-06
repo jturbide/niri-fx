@@ -93,7 +93,7 @@ enabled, while Move Off disables fragment dragging and timed Move effects. Chang
 the shared window style preserves the separate wobble choice.
 See [pointer-driven wobble](pointer-wobble.md) for its compositor requirements.
 
-**Current source, Unreleased:** the Move view also offers **Gentle**, **Tear** and
+**NiriFX 0.21:** the Move view also offers **Gentle**, **Tear** and
 **Cascade** continuous-fragment cards in Recommended and All effects. Each
 selects its movement material and response together. **Fragment response** in
 the combo controls offers the same choices; expand **Customize fragment response**

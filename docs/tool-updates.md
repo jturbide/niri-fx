@@ -1,7 +1,7 @@
 # Updating the NiriFX tools together
 
 The managed tool workflow keeps CLI, Studio and the login launcher on one
-selected Python installation. It is included in NiriFX 0.20. Stock Niri and
+selected Python installation. It is included in NiriFX 0.20 and newer. Stock Niri and
 shell packages continue to use their normal updaters.
 
 Install each NiriFX update in a new persistent virtual environment. Run the

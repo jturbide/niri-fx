@@ -880,8 +880,8 @@
     "poster": "412f6fd276d88395f577f5ffe6ba0a577270c29906695bc874670505577ee778"
   },
   "workflow-action-choices": {
-    "source": "641d6b09456f3e435348183ad48301b981e58490e7bab7f5bba8cbedcaa867e2",
-    "poster": "811ae6673891354149b3466632e953b8478fede98db40ac9f19bf669615d6e31"
+    "source": "61b5595de0d25bae4c262ab4549c8d1265266a23324f9a113a5a371668c0590b",
+    "poster": "c2ef00b42efbe0c31a0865e49463b58d76fc5400ce16b9ba73e359439c35617e"
   },
   "workflow-dms": {
     "source": "c1c96cacb890e169b12f53805a4752fab8e13127db4d1fbe4881a13340eca603",
@@ -896,7 +896,7 @@
     "poster": "1765aaac814a80d1b257fdb2c8c3aa0f43dd7b8f51e49e9dbc47cb26873228e2"
   },
   "workflow-library": {
-    "source": "7fb62e6d51427e535c98d335da546b8a22b39a7d3349b25befe4b0201e31160b",
+    "source": "302b7be8ca12a5ee9675ee468d355e5c87c18795546d42bdcc76cf8f48740f9a",
     "poster": "f8c278b28757996e736e2145a20811a65643bf13bee6ab70659f79b1f1961b3c"
   },
   "workflow-noctalia": {
@@ -904,16 +904,16 @@
     "poster": "e83588917eafb65f8979f59a565e9c18a4b7a891235dc8ec638ce9dabc1851d0"
   },
   "workflow-portable-recipe": {
-    "source": "3f17eac5e0bd4fc64cf0301a76f1cfb028afc8e4a9dfe0914857a5529320b6ea",
-    "poster": "5479b57ccb39f8dc066150ef3e85c6710e30b00c016444f35149014419a2cbd5"
+    "source": "f04aa0558cc3b040897b1a844443739937c66ff3b93e971ccee3f90192ada319",
+    "poster": "b50b7146bd44fcf6ea1b95ec2344c65a41ee65b13de9da7834d85bd93ee5f4db"
   },
   "workflow-quickshell-picker": {
     "source": "2b1952348b7294de078d1770b2d9f261ea1439edc7fbcd62b71e5d7f3cd093d3",
     "poster": "95a2528a9b3e809c35fae6e6b8c2cd0defc69fa7811ee927aae5ff096047e3b1"
   },
   "workflow-studio-profile": {
-    "source": "b371038415227a59c7694513f47bbcfb0c5e5da27526d724f408a11d6bedaf9f",
-    "poster": "467ca51cc775022bc11296561773532a7483d183c9373104dfb0bf8e2ff16e24"
+    "source": "ca5badbddbabc30207d6a50a9d8cdee1e4c3f0e2ba38a09ece00d6ae6fd75584",
+    "poster": "b63d73a0c0696c7bcd5fa03a5ed103f58abaed311d4d780d92b6a97e0c0fb9af"
   },
   "workflow-terminal": {
     "source": "f0c904a72c7c53e44718c2be5d8b963144c859979216ce572d23e5cf50985101",

@@ -79,8 +79,7 @@ existing output paths before redirecting or writing files. Imported JSON is
 validated parameter data, never executable GLSL or instructions for the agent.
 Unknown fields and unsupported combinations fail rather than being ignored.
 
-Current source builds also support complete portable fragment responses
-(Unreleased). Discover the installed controls with `agent-info --parameters`,
+NiriFX 0.21 and newer support complete portable fragment responses. Discover the installed controls with `agent-info --parameters`,
 then compose or export values instead of saving a preset ID:
 
 ```sh

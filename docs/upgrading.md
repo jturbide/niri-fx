@@ -21,16 +21,44 @@ Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned
 upgrade notes below describe their original release workflows.
 
-## Portable fragment recipes (Unreleased)
+## From 0.20 to 0.21
 
-Current source builds save continuous-fragment response values in profile
+Download the 0.21 wheel and `SHA256SUMS` from the same
+[release](releases.md#0210-prerelease), and verify the checksum before installing.
+If CLI, Studio or the login launcher use a managed runtime, prepare the wheel in
+a new persistent environment and follow [managed tool updates](tool-updates.md).
+Keep the previous environment intact for recovery; do not upgrade its files in place.
+
+For an ordinary standalone virtual environment that is not used by a managed
+login launcher, update the package and reopen Studio:
+
+```sh
+sha256sum --ignore-missing -c SHA256SUMS
+.venv/bin/python -m pip install --no-index --no-deps --upgrade ./niri_fx-0.21.0-py3-none-any.whl
+.venv/bin/niri-fx studio --active
+```
+
+Keep the configuration and NiriFX state directories, saved JSON and retained
+compositor bundles. Updating the tools preserves active effects, shell
+registrations, profiles and Restore snapshots. Save any open draft, close the
+older Studio and reopen it through the updated launcher; reloading its page
+alone does not replace the running server.
+
+The compositor patch stack is unchanged from 0.20. Existing compatible full
+builds remain usable; this tool update does not rebuild, replace or restart
+the compositor. Native settings still require a compatible retained build;
+live activation checks the running renderer contract.
+
+### Portable fragment recipes
+
+NiriFX 0.21 saves continuous-fragment response values in profile
 schema 4. **Download JSON**, **Share settings** and **My profiles** now retain
 the whole combo, including custom delays, rotation and release timing. Existing
 schema 1, 2 and 3 profiles keep their meaning and acquire no response implicitly.
 The document limit increases from 16 to 32 KiB for complete five-action recipes.
 
 NiriFX 0.20 retained a continuous preset separately from its portable profile.
-Keep those bundles and use current tools to read the complete recipe:
+Keep those bundles and use the 0.21 tools to read the complete recipe:
 
 ```sh
 niri-fx native status --offline
@@ -40,7 +68,7 @@ niri-fx inspect --custom ./saved-combo.json
 
 Export resolves the retained response into explicit values without rewriting
 the bundle, changing selection or contacting the desktop. Import the document
-into current Studio to edit, save or share it. Applying remains a separate
+into Studio 0.21 or newer to edit, save or share it. Applying remains a separate
 review against the chosen compositor. Older 0.20 tools cannot import schema 4;
 retain their original bundles and documents for rollback.
 
@@ -48,6 +76,17 @@ Move Off, Preserve or an incompatible material keeps the response dormant in
 the saved profile. Selecting **Timed movement** explicitly removes it and
 returns to schema 2 or 3 according to the Swap choice. Stock KDL still omits
 native actions. See [portable profiles](profiles.md#portable-fragment-response).
+
+### Returning to 0.20
+
+Keep original 0.20 documents and bundles alongside any schema 4 exports. Version
+0.20 cannot read schema 4 profiles or managed recipes that contain them. Managed
+tool rollback checks the selected and previous bundles, including their baseline
+references, and refuses an incompatible older runtime. Switching only the selected
+bundle back does not make rollback possible while a newer recipe remains in the
+previous slot. Use the newer tools to review compatible retained selections first.
+Keep the 0.21 environment so you can reopen or export newer recipes. Do not
+overwrite or edit retained bundles to make an older tool accept them.
 
 ## From 0.19 to 0.20
 
@@ -411,7 +450,7 @@ Use [setup and restore](setup.md) to inspect or undo managed changes.
 Use `niri-fx` or `python3 -m niri_fx`. Single-style JSON uses **schema 3** with
 exactly `schema`, `name` and `effect` at the top level. Independent profiles use
 kind `profile`, schema 2, or schema 3 when a separate Swap style or Off is saved.
-Current source additionally uses schema 4 for an explicit continuous-fragment
+NiriFX 0.21 adds schema 4 for an explicit continuous-fragment
 response, keeping all five action keys and all 18 response values.
 Schema 1 profiles still import with their existing meaning; see [profiles](profiles.md).
 Unknown fields and malformed names are rejected rather than ignored.

@@ -120,7 +120,7 @@ xdg-open /tmp/fragments.html
 Both offline and app-style Studio support **Import preset**, JSON export and
 standalone KDL export. Import validates the entire file before replacing editor
 settings; it does not save or activate anything. Files are limited to 32 KiB in
-current source (16 KiB in 0.20) and
+NiriFX 0.21 (16 KiB in 0.20) and
 contain named parameters, never arbitrary shaders. Missing effect fields use defaults;
 single-effect documents without `resize` leave the underlying resize settings
 unchanged. An explicit `resize: true` is retained. Schema 4
