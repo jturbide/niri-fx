@@ -21,6 +21,29 @@ Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned
 upgrade notes below describe their original release workflows.
 
+## From 0.21 to 0.22
+
+Arch users keep the same package choice: `niri-fx` or `niri-fx-git`. Update through
+your AUR helper. Both now build and install the complete compositor and login
+entry alongside Studio, CLI and presets, so the first build takes longer than
+0.21. Stock Niri and your current settings remain in place.
+
+To keep using stock Niri, reopen Studio and continue normally. To use the included
+session, follow [first adoption](arch-linux.md#use-the-nirifx-session). Existing
+managed source installations first complete the
+[one-time launcher migration](tool-updates.md#migrate-existing-launchers-once).
+No additional package or shell-source modification is needed.
+
+After subsequent package updates, run `/usr/bin/niri-fx native adopt` without
+`--config`, review the plan and apply its fingerprint. This preserves the saved
+effects and shared or frozen settings mode. Keep previous retained copies for
+rollback and reopen Studio after the tools selection changes.
+
+For wheel installations, install the 0.22 wheel in a new persistent environment
+and use [managed tool updates](tool-updates.md) if that environment supplies your
+login launcher. The wheel remains tools-only; existing source-built compositor
+bundles stay available. Profile formats and effect defaults are unchanged.
+
 ## From 0.20 to 0.21
 
 Download the 0.21 wheel and `SHA256SUMS` from the same

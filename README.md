@@ -59,8 +59,9 @@ settings or download JSON. Previewing does not change your desktop.
 
 **Arch Linux / CachyOS:** install `niri-fx` from AUR, then run `niri-fx studio --active`.
 The [Arch guide](docs/arch-linux.md) covers release and `niri-fx-git` packages,
-updates and existing managed sessions. These packages install CLI and Studio;
-the full compositor follows the [session guide](docs/native-session.md).
+updates and existing managed sessions. Starting with 0.22, either package includes
+Studio, CLI, presets and the complete NiriFX session. Keep using stock Niri with
+the tools, or [set up the included session](docs/arch-linux.md#use-the-nirifx-session).
 
 For a small install without the source gallery, use the [release wheel](docs/releases.md#0210-prerelease).
 On Niri with Python 3.10+, you can also open Library from source:

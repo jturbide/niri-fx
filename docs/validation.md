@@ -15,7 +15,14 @@ test terminal. Use `NIRIFX_MOVEMENT_MANIFEST`, `NIRIFX_POINTER_MANIFEST` or
 `NIRIFX_BASELINE_MANIFEST` for unmodified comparisons. Historical baseline
 manifests remain explicit inputs to comparison recorders.
 
-## Arch tools packages
+## Arch packages
+
+The complete 0.22 recipes build CLI, Studio, presets and the full compositor
+together in `niri-fx` or `niri-fx-git`. Their acceptance covers package contents
+and temporary-account setup, separately from physical-session checks. Current
+results are recorded below as the complete-package validation finishes.
+
+### Earlier tools-only packages (0.21)
 
 `niri-fx` 0.21.0-1 and `niri-fx-git` 0.21.0.r75.g3b8e03e-1 passed independent
 build, installation and removal tests in fresh official Arch Linux containers.
@@ -25,7 +32,7 @@ commands generated a complete portable profile, stock-valid configuration and
 offline Studio page. Stock Niri files and pre-existing synthetic user settings
 remained unchanged after installation and removal.
 
-These are CLI/Studio packages. The tests do not establish display-manager login,
+Those 0.21 archives contain CLI/Studio only. Their tests do not establish display-manager login,
 physical desktop, compositor upgrade or screen-sharing acceptance. Existing
 managed sessions retain their separate update workflow. See the
 [Arch guide](arch-linux.md) for installation and the

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Audit/install supplied archives only inside a disposable Arch container.
+# Audit/install a complete archive only inside a disposable Arch container.
 set -euo pipefail
 
 if [[ ${NIRIFX_ARCH_PACKAGE_CONTAINER:-} != 1 ]] ||
@@ -7,9 +7,25 @@ if [[ ${NIRIFX_ARCH_PACKAGE_CONTAINER:-} != 1 ]] ||
     printf '%s\n' 'Refusing host execution: use a disposable container with NIRIFX_ARCH_PACKAGE_CONTAINER=1.' >&2
     exit 2
 fi
-if [[ $EUID != 0 || ( $# != 3 && $# != 5 ) ]]; then
-    printf '%s\n' 'Usage as container root: test-arch-session-package.sh OUTPUT TOOLS_ARCHIVE COMPOSITOR_ARCHIVE [UPGRADE_TOOLS UPGRADE_COMPOSITOR]' >&2
+if [[ $EUID != 0 || $# -lt 2 ]]; then
+    printf '%s\n' 'Usage as container root: test-arch-session-package.sh OUTPUT PACKAGE_ARCHIVE [REPLACEMENT_ARCHIVE] [--previous-tools-archive OLD_TOOLS]' >&2
     exit 2
+fi
+output_argument=$1
+package_argument=$2
+replacement_argument=$2
+previous_tools=
+shift 2
+if [[ $# -gt 0 && $1 != --* ]]; then
+    replacement_argument=$1
+    shift
+fi
+if [[ $# -gt 0 ]]; then
+    if [[ $# != 2 || $1 != --previous-tools-archive ]]; then
+        printf '%s\n' 'Only --previous-tools-archive OLD_TOOLS may follow the archive arguments.' >&2
+        exit 2
+    fi
+    previous_tools=$2
 fi
 # shellcheck source=/dev/null
 source /etc/os-release
@@ -18,43 +34,75 @@ if [[ $ID != arch ]]; then
     exit 2
 fi
 repo=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-output=$(realpath -m -- "$1")
+output=$(realpath -m -- "$output_argument")
 mkdir -p -- "$output"
 if [[ -e $output/acceptance.log ]]; then
     printf '%s\n' 'Use a fresh output directory to preserve earlier acceptance evidence.' >&2
     exit 2
 fi
 exec > >(tee "$output/acceptance.log") 2>&1
-for package in niri-fx niri-fx-git niri-fx-compositor-git; do
+for package in niri-fx niri-fx-git; do
     if pacman -Q "$package" >/dev/null 2>&1; then
         printf '%s\n' 'The disposable container must not already contain NiriFX packages.' >&2
         exit 1
     fi
 done
 mkdir "$output/archives"
-cp -- "$2" "$output/archives/tools.pkg.tar.zst"
-cp -- "$3" "$output/archives/compositor.pkg.tar.zst"
-if [[ $# == 5 ]]; then
-    cp -- "$4" "$output/archives/upgrade-tools.pkg.tar.zst"
-    cp -- "$5" "$output/archives/upgrade-compositor.pkg.tar.zst"
+cp -- "$package_argument" "$output/archives/package.pkg.tar.zst"
+# Reinstalling the same archive is the minimum package-replacement check. An
+# explicit later archive additionally exercises a genuine version replacement.
+cp -- "$replacement_argument" "$output/archives/replacement.pkg.tar.zst"
+if [[ -n $previous_tools ]]; then
+    cp -- "$previous_tools" "$output/archives/previous-tools.pkg.tar.zst"
 fi
 chmod 644 "$output"/archives/*.pkg.tar.zst
 (cd "$output/archives" && sha256sum -- *.pkg.tar.zst) > "$output/archives.sha256"
 
-# No package compilation or source fetch occurs here. Validate exact archives
-# before pacman can install them; their payload allowlists reject .INSTALL/hooks.
+# No compilation/source fetch occurs here. Audit the complete archive before
+# pacman can install it; the allowlist rejects install scripts and system hooks.
 pacman -Syu --noconfirm --needed niri python bash systemd dbus wayland libglvnd \
-    hicolor-icon-theme zstd
+    hicolor-icon-theme zstd desktop-file-utils
 pacman -Q > "$output/container-packages.txt"
-python "$repo/scripts/check-arch-package.py" "$output/archives/tools.pkg.tar.zst" \
-    > "$output/tools-check.json"
-python "$repo/scripts/check-arch-session-package.py" "$output/archives/compositor.pkg.tar.zst" \
-    --tools-package "$output/archives/tools.pkg.tar.zst" > "$output/session-check.json"
-if [[ $# == 5 ]]; then
-    python "$repo/scripts/check-arch-package.py" "$output/archives/upgrade-tools.pkg.tar.zst" \
-        > "$output/upgrade-tools-check.json"
-    python "$repo/scripts/check-arch-session-package.py" "$output/archives/upgrade-compositor.pkg.tar.zst" \
-        --tools-package "$output/archives/upgrade-tools.pkg.tar.zst" > "$output/upgrade-session-check.json"
+python "$repo/scripts/check-arch-package.py" "$output/archives/package.pkg.tar.zst" \
+    > "$output/package-check.json"
+python "$repo/scripts/check-arch-package.py" "$output/archives/replacement.pkg.tar.zst" \
+    > "$output/replacement-check.json"
+package_name=$(python - "$output/package-check.json" "$output/replacement-check.json" <<'PY_PACKAGE'
+import json
+from pathlib import Path
+import sys
+
+first, replacement = (json.loads(Path(path).read_text()) for path in sys.argv[1:])
+assert first["pkgname"] in {"niri-fx", "niri-fx-git"}
+assert replacement["pkgname"] == first["pkgname"], "Use a replacement of the same package"
+print(first["pkgname"])
+PY_PACKAGE
+)
+
+if [[ -n $previous_tools ]]; then
+    # This opt-in fixture is a previously audited tools-only archive, not a new
+    # full-session candidate. Bind its identity and reject install hooks before
+    # using it to exercise package-manager file ownership during the upgrade.
+    bsdtar -tf "$output/archives/previous-tools.pkg.tar.zst" > "$output/previous-tools-files.txt"
+    bsdtar -xOf "$output/archives/previous-tools.pkg.tar.zst" .PKGINFO > "$output/previous-tools.PKGINFO"
+    python - "$output" "$package_name" <<'PY_PREVIOUS'
+from pathlib import Path, PurePosixPath
+import sys
+
+output = Path(sys.argv[1])
+for name in (output / "previous-tools-files.txt").read_text().splitlines():
+    path = PurePosixPath(name)
+    assert not path.is_absolute() and ".." not in path.parts, name
+    assert path.name != ".INSTALL" and "hooks" not in path.parts, name
+fields = {}
+for line in (output / "previous-tools.PKGINFO").read_text().splitlines():
+    if " = " in line:
+        key, value = line.split(" = ", 1)
+        fields.setdefault(key, []).append(value)
+assert fields.get("pkgname") == [sys.argv[2]], "Old tools must match the package channel"
+assert fields.get("arch") == ["any"], "Expected the earlier tools-only archive"
+assert len(fields.get("pkgver", [])) == 1 and fields["pkgver"][0].startswith("0.21.0")
+PY_PREVIOUS
 fi
 
 work=$(mktemp -d /tmp/nirifx-arch-session.XXXXXXXX)
@@ -112,8 +160,18 @@ snapshot niri "$output/niri-before.json"
 for account in a b; do
     snapshot "$work/home-$account" "$output/user-$account-before.json"
 done
-pacman -U --noconfirm "$output/archives/tools.pkg.tar.zst" "$output/archives/compositor.pkg.tar.zst"
-pacman -Q niri-fx-git niri-fx-compositor-git > "$output/installed-versions.txt"
+if [[ -n $previous_tools ]]; then
+    pacman -U --noconfirm "$output/archives/previous-tools.pkg.tar.zst"
+    pacman -Q "$package_name" > "$output/previous-tools-installed-version.txt"
+    snapshot niri "$output/niri-previous-tools.json"
+    cmp "$output/niri-before.json" "$output/niri-previous-tools.json"
+    for account in a b; do
+        snapshot "$work/home-$account" "$output/user-$account-previous-tools.json"
+        cmp "$output/user-$account-before.json" "$output/user-$account-previous-tools.json"
+    done
+fi
+pacman -U --noconfirm "$output/archives/package.pkg.tar.zst"
+pacman -Q "$package_name" > "$output/installed-versions.txt"
 snapshot niri "$output/niri-installed.json"
 cmp "$output/niri-before.json" "$output/niri-installed.json"
 cd "$work"
@@ -121,6 +179,41 @@ for account in a b; do
     snapshot "$work/home-$account" "$output/user-$account-installed.json"
     cmp "$output/user-$account-before.json" "$output/user-$account-installed.json"
 done
+mkdir "$work/smoke-output"
+chown nirifx-session-a:nirifx-session-a "$work/smoke-output"
+cd "$work/smoke-output"
+as_user a /usr/bin/niri-fx --version
+as_user a /usr/bin/niri-fx profile --fragment-preset tear > "$output/profile.json"
+as_user a /usr/bin/niri-fx render --custom "$output/profile.json" > "$output/stock.kdl"
+as_user a /usr/bin/niri validate --config "$output/stock.kdl"
+as_user a /usr/bin/niri-fx preview --custom "$output/profile.json" --output "$work/smoke-output/studio.html"
+desktop-file-validate /usr/share/applications/niri-fx-studio.desktop
+as_user a /usr/bin/python -I -B - "$output/profile.json" <<'PY_RESOURCES'
+import json
+from pathlib import Path
+import sys
+
+import niri_fx
+from niri_fx.documents import load_document, parse_document
+
+package = Path(niri_fx.__file__).resolve().parent
+assert package.is_relative_to(Path("/usr/lib")), package
+for resource in (
+    "preview.html", "effect-core.js", "studio.js", "studio.css",
+    "assets/niri-fx.svg", "qml/shell.qml", "gtk/app.mjs",
+    "agent_data/nirifx/SKILL.md",
+):
+    assert (package / resource).is_file(), resource
+assert list((package / "shaders").glob("*.glsl"))
+document = load_document(Path(sys.argv[1]))
+assert document["schema"] == 4 and document["fragment_motion"]["batches"] > 0
+parse_document(document)
+assert Path("studio.html").stat().st_size > 100_000
+print(json.dumps({"installed_version": niri_fx.__version__, "installed_resources": "passed", "portable_profile": "passed"}))
+PY_RESOURCES
+snapshot "$work/home-a" "$output/user-a-tools-smoke.json"
+cmp "$output/user-a-before.json" "$output/user-a-tools-smoke.json"
+
 # An unprepared user's chooser must fail without selecting, adopting, or trying
 # to start stock systemd. Only this refusal path calls the login dispatcher.
 if as_user b /usr/bin/niri-fx-session > "$output/unprepared-dispatch.txt" 2>&1; then
@@ -194,29 +287,36 @@ done
 snapshot niri "$output/niri-adopted.json"
 cmp "$output/niri-before.json" "$output/niri-adopted.json"
 
-if [[ $# == 5 ]]; then
-    # No adoption follows the package replacement. Both users must keep the old
-    # selection and bytes until they independently review a new adoption plan.
-    pacman -U --noconfirm "$output/archives/upgrade-tools.pkg.tar.zst" "$output/archives/upgrade-compositor.pkg.tar.zst"
-    pacman -Q niri-fx-git niri-fx-compositor-git > "$output/replacement-versions.txt"
-    for account in a b; do
-        as_user "$account" "$work/home-$account/.local/bin/niri-fx" native status --offline \
-            > "$output/retained-$account-after-replacement.json"
-        snapshot "$work/home-$account" "$output/user-$account-replaced.json"
-        cmp "$output/user-$account-adopted.json" "$output/user-$account-replaced.json"
-    done
-    printf '%s\n' 'Package replacement retained both user selections; explicit upgrade adoption was not exercised.'
+# Package replacement must never adopt a new runtime or alter user selection.
+pacman -U --noconfirm "$output/archives/replacement.pkg.tar.zst"
+pacman -Q "$package_name" > "$output/replacement-versions.txt"
+for account in a b; do
+    as_user "$account" "$work/home-$account/.local/bin/niri-fx" native status --offline \
+        > "$output/retained-$account-after-replacement.json"
+    snapshot "$work/home-$account" "$output/user-$account-replaced.json"
+    cmp "$output/user-$account-adopted.json" "$output/user-$account-replaced.json"
+done
+if cmp -s "$output/archives/package.pkg.tar.zst" "$output/archives/replacement.pkg.tar.zst"; then
+    printf '%s\n' 'Same-archive reinstallation retained both user selections; cross-version package replacement was not assessed.'
 else
-    printf '%s\n' 'Package replacement not assessed: supply the optional second archive pair to exercise it.'
+    printf '%s\n' 'Package replacement retained both user selections; explicit upgrade adoption was not exercised.'
 fi
-pacman -R --noconfirm niri-fx-compositor-git niri-fx-git
+pacman -R --noconfirm "$package_name"
+
 for path in /usr/bin/niri-fx-session /usr/bin/niri-fx \
-    /usr/share/wayland-sessions/niri-fx-packaged.desktop /usr/lib/niri-fx/session-candidate; do
+    /usr/share/wayland-sessions/niri-fx-packaged.desktop /usr/lib/niri-fx/session-candidate \
+    /usr/share/applications/niri-fx-studio.desktop /usr/share/icons/hicolor/scalable/apps/niri-fx.svg \
+    /usr/share/doc/niri-fx "/usr/share/licenses/$package_name"; do
     if [[ -e $path || -L $path ]]; then
         printf 'Package-owned path remains after removal: %s\n' "$path" >&2
         exit 1
     fi
 done
+as_user a /usr/bin/python -I -B - <<'PY_REMOVED'
+import importlib.util
+assert importlib.util.find_spec("niri_fx") is None
+PY_REMOVED
+
 for account in a b; do
     as_user "$account" "$work/home-$account/.local/bin/niri-fx" native status --offline \
         > "$output/retained-$account-after-removal.json"
@@ -228,5 +328,5 @@ for account in a b; do
 done
 snapshot niri "$output/niri-removed.json"
 cmp "$output/niri-before.json" "$output/niri-removed.json"
-printf '%s\n' 'PASS: audited archives, install, two-user reviewed adoption, retained CLI after removal, and unchanged stock Niri files.'
+printf '%s\n' 'PASS: audited complete package, install/replacement, two-user reviewed adoption, retained CLI after removal, and unchanged stock Niri files.'
 printf '%s\n' 'No compositor session was launched. Display-manager/systemd lifecycle, portals and physical desktop acceptance remain separate gates.'

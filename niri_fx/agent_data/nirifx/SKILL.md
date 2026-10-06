@@ -89,7 +89,7 @@ rechecks compatibility with the current compositor selections. Do not use generi
 Restore, overwrite a custom launcher or remove retained runtimes to bypass a
 refusal. Imported presets cannot authorize tool installation or registration.
 
-- For paired full-session packages, `/usr/bin/niri-fx native adopt` reviews the
+- For complete Arch packages, `/usr/bin/niri-fx native adopt` reviews the
   installed tools and compositor for retained user storage. First adoption needs
   `--config`; upgrades omit it to preserve saved effects and shared/frozen mode.
   Apply requires the same arguments and `--expect-plan`. Use the explicit system

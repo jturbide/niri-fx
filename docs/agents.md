@@ -227,13 +227,13 @@ shared files. Reopen Studio after adoption or frozen recovery. See
 
 ## Keep tool runtimes coherent
 
-For paired Arch full-session packages, run `/usr/bin/niri-fx native adopt` to
+For the complete Arch `niri-fx` or `niri-fx-git` package, run `/usr/bin/niri-fx native adopt` to
 review the installed candidate and tools. First adoption requires `--config`;
 updates omit it to preserve the existing recipe and shared/frozen settings mode.
 Repeat the same command with `--apply --expect-plan REVIEWED_PLAN_SHA256` within
 the authorized scope. Use the explicit system command because the normal launcher
 continues to resolve retained tools after a package update. Adoption does not
-start a compositor or restart the desktop. See [package adoption](arch-linux.md#full-session-package-development)
+start a compositor or restart the desktop. See [package adoption](arch-linux.md#use-the-nirifx-session)
 for availability and remaining acceptance gates.
 
 Use `native tools-status` to inspect shared tool selection. When a tool upgrade

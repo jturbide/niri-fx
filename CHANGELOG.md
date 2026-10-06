@@ -7,23 +7,26 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+## 0.22.0 - 2026-10-06
+
 ### Added
 
 - Reviewed `native adopt` for packaged full sessions. It retains tools and the
   compositor in user storage, preserves saved effects and shared desktop settings
   on upgrade, and keeps earlier selections available for rollback. Package
   replacement does not switch the running or next-login version automatically.
-- A full-session Arch development recipe with a generic per-user login entry,
-  offline compilation from prepared pinned source and relocatable provenance.
-  Clean Arch builds and two-user adoption/removal are verified. It remains
-  unpublished while update and physical acceptance are completed.
-- Arch/AUR recipes for `niri-fx` releases and `niri-fx-git` development builds,
-  including CLI, Studio, desktop integration and portable examples. Isolated
-  package checks verify installation, removal and preservation of stock Niri.
-  Existing managed login runtimes retain their separate reviewed update path.
+- Complete Arch/AUR packages in two channels: `niri-fx` for releases and
+  `niri-fx-git` for development. Both include Studio, CLI, presets, the full
+  compositor and a login entry. They build tools and compositor from the same
+  source revision; no separate compositor package is needed.
+- Offline compilation from prepared pinned source and relocatable compositor
+  provenance. The producer strips its executable before recording its identity.
 
 ### Changed
 
+- Updating from the earlier Arch tools-only packages also installs the full
+  compositor. Existing users can keep using stock Niri and the tools; package
+  installation does not enable effects, adopt a session or change configuration.
 - Native output diagnostics compare both capture orders and count owned child
   surface submissions against parent receipts. All 12 baseline cases still
   reproduce stale output; the report narrows the investigation without claiming

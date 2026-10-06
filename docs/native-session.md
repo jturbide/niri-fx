@@ -13,12 +13,14 @@ Installation starts with a frozen configuration snapshot. To keep ordinary shell
 and desktop settings shared with stock Niri while adding native effects, use
 [shared desktop settings](shared-settings.md) after saving your first effects recipe.
 
-The source-built session uses a **single-user, systemd-based** installation workflow.
-Distribution packages are not published yet. It requires the
+For Arch Linux and CachyOS, the complete 0.22 packages include the compositor and
+login entry; follow the [Arch guide](arch-linux.md#use-the-nirifx-session).
+The source-built session below uses a **single-user, systemd-based** installation
+workflow. It requires the
 stock `/usr/bin/niri`, `/usr/bin/niri-session`, `niri.service` and
 `niri-shutdown.target`, plus the distribution's Niri portal configuration and
-runtime dependencies. Dinit, NixOS integration and multi-user distribution
-packages remain on the [roadmap](../ROADMAP.md#installation-selection-and-rollback).
+runtime dependencies. Dinit, NixOS integration and broader distribution support
+remain on the [roadmap](../ROADMAP.md#installation-selection-and-rollback).
 Keep using the nested preview if you do not want a separate login session.
 
 ## Prepare a version

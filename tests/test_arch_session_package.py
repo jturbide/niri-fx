@@ -1,8 +1,11 @@
-"""Session archive audit rejects unsafe ownership, partial stacks and stale pairs."""
+"""Complete Arch archive contract: tools and native session are inseparable."""
 
+import base64
+import csv
 import importlib.util
 import io
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -14,32 +17,60 @@ from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 spec = importlib.util.spec_from_file_location(
-    "arch_session_check", ROOT / "scripts/check-arch-session-package.py"
+    "arch_package_check", ROOT / "scripts/check-arch-package.py"
 )
 check = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(check)
-native = check.native_build
-VERSION = "0.21.0.r75.g1234567-1"
+session = check.session
+native = session.native_build
+VERSION = "0.21.0"
 
 
 class ArchSessionPackageTests(unittest.TestCase):
     def setUp(self):
-        self.temporary = tempfile.TemporaryDirectory(prefix="session package tests ")
+        self.temporary = tempfile.TemporaryDirectory(prefix="complete package tests ")
         self.addCleanup(self.temporary.cleanup)
         self.root = Path(self.temporary.name)
         self.payload = self.root / "payload"
-        self.site = self.root / "site"
-        (self.site / "niri_fx").mkdir(parents=True)
-        for name in check.PAYLOAD | check.METADATA:
+        self.site = self.payload / "usr/lib/python3.14/site-packages"
+        self.distribution = self.site / f"niri_fx-{VERSION}.dist-info"
+        self.candidate = self.payload / session.PREFIX
+        self.licenses = self.payload / "usr/share/licenses/niri-fx"
+        files = (
+            check.METADATA
+            | session.PAYLOAD
+            | {"usr/bin/niri-fx", check.DESKTOP, check.ICON, "usr/share/doc/niri-fx/README.Arch"}
+            | {
+                f"usr/share/licenses/niri-fx/{name}"
+                for name in (
+                    "LICENSE",
+                    "COPYING-NIRI",
+                    "LICENSE.niri",
+                    "LICENSE.packaging",
+                    "THIRD_PARTY.md",
+                )
+            }
+            | {f"usr/lib/python3.14/site-packages/niri_fx/{name}" for name in check.RESOURCES}
+        )
+        for name in files:
             path = self.payload / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b"synthetic package fixture\n" * 8)
-        self.candidate = self.payload / check.PREFIX
-        (self.payload / check.DESKTOP).write_bytes(check.DESKTOP_ENTRY)
+            path.chmod(0o644)
+        self.distribution.mkdir()
+        (self.distribution / "METADATA").write_text(f"Name: niri-fx\nVersion: {VERSION}\n")
+        (self.payload / check.DESKTOP).write_text(
+            "[Desktop Entry]\nType=Application\nExec=/usr/bin/niri-fx studio --active\n"
+            "Icon=niri-fx\nTerminal=false\n"
+        )
+        (self.payload / session.DESKTOP).write_bytes(session.DESKTOP_ENTRY)
         dispatcher = (ROOT / "niri_fx/package_session.py").read_bytes()
-        (self.payload / check.DISPATCHER).write_bytes(dispatcher)
-        (self.payload / check.DISPATCHER).chmod(0o755)
+        (self.payload / session.DISPATCHER).write_bytes(dispatcher)
+        (self.payload / session.DISPATCHER).chmod(0o755)
         (self.site / "niri_fx/package_session.py").write_bytes(dispatcher)
+        cli = self.payload / "usr/bin/niri-fx"
+        cli.write_bytes(b"#!/usr/bin/python3\n# synthetic entry point\n")
+        cli.chmod(0o755)
         for name in native.STACKS["fragment"]:
             shutil.copyfile(ROOT / "experimental" / name, self.candidate / "patches" / name)
         binary = self.candidate / "bin/niri"
@@ -68,32 +99,50 @@ class ArchSessionPackageTests(unittest.TestCase):
             rustc_verbose=f"{rustc}\nhost: x86_64-unknown-linux-gnu",
         )
         self.write_manifest()
-        self.pkginfo = (
-            "pkgname = niri-fx-compositor-git\n"
-            f"pkgver = {VERSION}\narch = x86_64\n"
-            + "".join(
-                f"depend = {name}\n"
-                for name in (
-                    "niri",
-                    "niri-fx-git",
-                    "python",
-                    "bash",
-                    "systemd",
-                    "dbus",
-                    "wayland",
-                    "libglvnd",
-                )
+        self.pkginfo = f"pkgname = niri-fx\npkgver = {VERSION}-1\narch = x86_64\n" + "".join(
+            f"depend = {name}\n"
+            for name in (
+                "niri",
+                "python",
+                "bash",
+                "systemd",
+                "dbus",
+                "wayland",
+                "libglvnd",
+                "hicolor-icon-theme",
             )
         )
         (self.payload / ".PKGINFO").write_text(self.pkginfo)
+        self.write_record()
 
     def write_manifest(self):
         (self.candidate / "manifest.json").write_text(json.dumps(self.manifest))
 
+    def write_record(self):
+        record = self.distribution / "RECORD"
+        rows = []
+        for path in sorted(self.site.rglob("*")) + [self.payload / "usr/bin/niri-fx"]:
+            if not path.is_file() or path == record:
+                continue
+            digest = (
+                base64.urlsafe_b64encode(bytes.fromhex(native.digest(path))).decode().rstrip("=")
+            )
+            rows.append((os.path.relpath(path, self.site), f"sha256={digest}", path.stat().st_size))
+        rows.append((os.path.relpath(record, self.site), "", ""))
+        with record.open("w", newline="") as stream:
+            csv.writer(stream).writerows(rows)
+
+    def files(self):
+        return {
+            str(path.relative_to(self.payload))
+            for path in self.payload.rglob("*")
+            if path.is_file()
+        }
+
     def archive(self, *, extra=None, missing=None):
         output = self.root / "package.tar"
         with tarfile.open(output, "w") as archive:
-            for name in sorted(check.PAYLOAD | check.METADATA):
+            for name in sorted(self.files()):
                 if name == missing:
                     continue
                 path = self.payload / name
@@ -105,47 +154,130 @@ class ArchSessionPackageTests(unittest.TestCase):
                 archive.addfile(extra, io.BytesIO(b""))
         return output
 
-    def test_complete_payload_is_checked_without_running_any_executable(self):
+    def test_complete_payload_and_exact_hashes_without_running_native_executables(self):
         output = self.root / "extracted"
         files = check.extract_tar(self.archive(), output)
-        self.assertEqual(files, check.PAYLOAD | check.METADATA)
+        self.assertEqual(files, self.files())
         with patch.object(check.subprocess, "Popen", side_effect=AssertionError("must not run")):
-            report, digest = check.inventory(output, self.site)
-        self.assertEqual(report["status"], "metadata-match")
-        self.assertEqual(digest, self.manifest["binary_sha256"])
-        self.assertEqual(check.package_version(output, VERSION), VERSION)
+            name, pkgver, version = check.package_version(output)
+            site = check.inventory(output, files, name, version)
+            evidence = session.inventory(output, site, name)
+        self.assertEqual((name, pkgver, version), ("niri-fx", f"{VERSION}-1", VERSION))
+        self.assertEqual(evidence["binary_sha256"], self.manifest["binary_sha256"])
+        self.assertEqual(
+            evidence["manifest_sha256"], native.digest(self.candidate / "manifest.json")
+        )
+        self.assertEqual(set(evidence["patch_sha256"]), set(native.STACKS["fragment"]))
+        self.assertEqual(evidence["runtime_acceptance"], "not_assessed")
+
+    def test_real_packaged_cli_schema4_render_and_preview_outside_checkout(self):
+        from niri_fx import __version__
+
+        shutil.copytree(
+            ROOT / "niri_fx",
+            self.site / "niri_fx",
+            dirs_exist_ok=True,
+            ignore=shutil.ignore_patterns("__pycache__", "*.pyc"),
+        )
+        (self.payload / "usr/bin/niri-fx").write_text(
+            "#!/usr/bin/python3\nfrom niri_fx.cli import main\nmain()\n"
+        )
+        isolated = self.root / "isolated"
+        isolated.mkdir()
+        self.assertGreater(check.smoke(self.payload, self.site, isolated, __version__), 50)
+
+    def test_vcs_package_is_self_contained_and_uses_its_own_license_directory(self):
+        pkgver = f"{VERSION}.r75.g1234567-2"
+        (self.payload / ".PKGINFO").write_text(
+            self.pkginfo.replace("pkgname = niri-fx\n", "pkgname = niri-fx-git\n").replace(
+                f"pkgver = {VERSION}-1", f"pkgver = {pkgver}"
+            )
+            + f"provides = niri-fx={VERSION}\nconflict = niri-fx\n"
+        )
+        self.licenses.rename(self.licenses.with_name("niri-fx-git"))
+        name, actual, version = check.package_version(self.payload)
+        self.assertEqual((name, actual, version), ("niri-fx-git", pkgver, VERSION))
+        site = check.inventory(self.payload, self.files(), name, version)
+        self.assertEqual(
+            session.inventory(self.payload, site, name)["binary_sha256"],
+            self.manifest["binary_sha256"],
+        )
+        self.licenses.with_name("niri-fx-git").rename(self.licenses)
+        with self.assertRaisesRegex(ValueError, "License directory"):
+            check.inventory(self.payload, self.files(), name, version)
 
     def test_unsafe_members_are_rejected_before_any_extraction(self):
         for name, kind in (
             ("../escape", tarfile.REGTYPE),
             ("/etc/passwd", tarfile.REGTYPE),
             ("usr/bin/niri", tarfile.REGTYPE),
+            ("usr/bin/niri-session", tarfile.REGTYPE),
+            ("etc/niri/config.kdl", tarfile.REGTYPE),
+            ("home/example/config.kdl", tarfile.REGTYPE),
+            ("usr/lib/systemd/user/niri.service", tarfile.REGTYPE),
             (".INSTALL", tarfile.REGTYPE),
+            ("usr/share/libalpm/hooks/niri-fx.hook", tarfile.REGTYPE),
+            ("usr/share/wayland-sessions/niri.desktop", tarfile.REGTYPE),
             ("usr/lib/niri-fx/link", tarfile.SYMTYPE),
+            ("usr/lib/niri-fx/link", tarfile.LNKTYPE),
             (check.DESKTOP, tarfile.REGTYPE),
         ):
             with self.subTest(name=name, kind=kind):
                 entry = tarfile.TarInfo(name)
+                entry.mode = 0o644
                 entry.type = kind
-                entry.linkname = "/etc/passwd" if kind == tarfile.SYMTYPE else ""
+                entry.linkname = "/etc/passwd" if kind in {tarfile.SYMTYPE, tarfile.LNKTYPE} else ""
                 destination = self.root / "not-created"
                 with self.assertRaises(ValueError):
                     check.extract_tar(self.archive(extra=entry), destination)
                 self.assertFalse(destination.exists())
 
-    def test_missing_patch_file_is_rejected_before_extraction(self):
-        with self.assertRaisesRegex(ValueError, "incomplete"):
-            check.extract_tar(
-                self.archive(missing=f"{check.PREFIX}/patches/niri-swap.patch"),
-                self.root / "missing",
-            )
+    def test_neither_tools_only_nor_native_only_archive_is_accepted(self):
+        for name in (
+            "usr/bin/niri-fx",
+            check.DESKTOP,
+            session.DISPATCHER,
+            f"{session.PREFIX}/bin/niri",
+            f"{session.PREFIX}/patches/niri-swap.patch",
+        ):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, "incomplete"):
+                check.extract_tar(self.archive(missing=name), self.root / "missing")
+            self.assertFalse((self.root / "missing").exists())
 
-    def test_private_producer_modes_cannot_leak_into_system_package(self):
-        entry = tarfile.TarInfo(check.PREFIX)
-        entry.type = tarfile.DIRTYPE
-        entry.mode = 0o700
-        with self.assertRaisesRegex(ValueError, "system-readable permissions"):
-            check.extract_tar(self.archive(extra=entry), self.root / "private-directory")
+    def test_missing_wheel_resource_and_unrecorded_runtime_are_rejected(self):
+        (self.site / "niri_fx/studio.js").unlink()
+        self.write_record()
+        with self.assertRaisesRegex(ValueError, "Missing packaged resource: studio.js"):
+            check.inventory(self.payload, self.files(), "niri-fx", VERSION)
+        (self.site / "niri_fx/unrecorded.py").write_text("# not inventoried\n")
+        with self.assertRaisesRegex(ValueError, "Incomplete installed RECORD"):
+            check.inventory(self.payload, self.files(), "niri-fx", VERSION)
+
+    def test_missing_shader_and_session_resource_are_rejected(self):
+        for name in ("shaders/hexagons.glsl", "native_package.py"):
+            with self.subTest(name=name):
+                path = self.site / "niri_fx" / name
+                original = path.read_bytes()
+                path.unlink()
+                self.write_record()
+                with self.assertRaisesRegex(ValueError, "Missing packaged resource"):
+                    check.inventory(self.payload, self.files(), "niri-fx", VERSION)
+                path.write_bytes(original)
+                self.write_record()
+
+    def test_wheel_record_and_version_must_match_package(self):
+        with self.assertRaisesRegex(ValueError, "metadata differs"):
+            check.inventory(self.payload, self.files(), "niri-fx", "0.99.0")
+        (self.site / "niri_fx/studio.js").write_text("tampered\n")
+        with self.assertRaisesRegex(ValueError, "RECORD mismatch"):
+            check.inventory(self.payload, self.files(), "niri-fx", VERSION)
+
+    def test_private_modes_or_nonroot_owner_cannot_leak_into_package(self):
+        for mode, uid, error in ((0o700, 0, "permissions"), (0o755, 1000, "ownership")):
+            entry = tarfile.TarInfo(session.PREFIX)
+            entry.type, entry.mode, entry.uid = tarfile.DIRTYPE, mode, uid
+            with self.assertRaisesRegex(ValueError, error):
+                check.extract_tar(self.archive(extra=entry), self.root / "private-directory")
         (self.candidate / "manifest.json").chmod(0o600)
         with self.assertRaisesRegex(ValueError, "system-readable permissions"):
             check.extract_tar(self.archive(), self.root / "private-file")
@@ -160,7 +292,7 @@ class ArchSessionPackageTests(unittest.TestCase):
                 output = self.root / error
                 with (
                     patch.object(
-                        check.subprocess,
+                        session.subprocess,
                         "Popen",
                         side_effect=lambda *a, code=code, **kw: popen(
                             [sys.executable, "-c", code], **kw
@@ -168,7 +300,7 @@ class ArchSessionPackageTests(unittest.TestCase):
                     ),
                     self.assertRaisesRegex(ValueError, error),
                 ):
-                    check.decompress(self.root / "unused", output, limit=limit, timeout=timeout)
+                    session.decompress(self.root / "unused", output, limit=limit, timeout=timeout)
                 self.assertLessEqual(output.stat().st_size, limit)
 
     def test_partial_stack_and_minimal_features_are_rejected(self):
@@ -176,7 +308,7 @@ class ArchSessionPackageTests(unittest.TestCase):
         inputs["patches"].pop()
         self.write_manifest()
         with self.assertRaisesRegex(ValueError, "four current"):
-            check.inventory(self.payload, self.site)
+            session.inventory(self.payload, self.site, "niri-fx")
         inputs["patches"].append(
             {"file": "niri-swap.patch", "sha256": self.manifest["swap_patch_sha256"]}
         )
@@ -184,36 +316,70 @@ class ArchSessionPackageTests(unittest.TestCase):
         self.manifest["native_build"]["build_id"] = native.fingerprint(inputs)
         self.write_manifest()
         with self.assertRaisesRegex(ValueError, "Desktop build"):
-            check.inventory(self.payload, self.site)
+            session.inventory(self.payload, self.site, "niri-fx")
 
-    def test_binary_tampering_and_escaping_manifest_are_rejected(self):
-        binary = self.candidate / "bin/niri"
-        binary.write_bytes(binary.read_bytes() + b"changed")
-        with self.assertRaisesRegex(ValueError, "binary differs"):
-            check.inventory(self.payload, self.site)
+    def test_wrong_build_target_or_license_identity_is_rejected(self):
+        inputs = self.manifest["native_build"]["inputs"]
+        target = inputs["target"]
+        inputs["target"] = "aarch64-unknown-linux-gnu"
+        self.write_manifest()
+        with self.assertRaisesRegex(ValueError, "build target"):
+            session.inventory(self.payload, self.site, "niri-fx")
+        inputs["target"] = target
+        self.write_manifest()
+        (self.licenses / "LICENSE.niri").write_text("different upstream license\n" * 8)
+        with self.assertRaisesRegex(ValueError, "Upstream license differs"):
+            session.inventory(self.payload, self.site, "niri-fx")
+
+    def test_binary_lock_and_patch_hash_tampering_is_rejected(self):
+        for name in ("bin/niri", "source/Cargo.lock", "patches/niri-swap.patch"):
+            with self.subTest(name=name):
+                path = self.candidate / name
+                original = path.read_bytes()
+                path.write_bytes(original + b"changed")
+                with self.assertRaisesRegex(ValueError, "differs from the recorded SHA"):
+                    session.inventory(self.payload, self.site, "niri-fx")
+                path.write_bytes(original)
+
+    def test_escaping_manifest_and_wrong_dispatcher_are_rejected(self):
         self.manifest["binary"] = "/usr/bin/niri"
         self.write_manifest()
         with self.assertRaisesRegex(ValueError, "fixed relative"):
-            check.inventory(self.payload, self.site)
-
-    def test_dispatcher_must_match_paired_tools_and_checkout(self):
+            session.inventory(self.payload, self.site, "niri-fx")
+        self.manifest["binary"] = "bin/niri"
+        self.write_manifest()
         (self.site / "niri_fx/package_session.py").write_text("print('unexpected')\n")
         with self.assertRaisesRegex(ValueError, "Dispatcher differs"):
-            check.inventory(self.payload, self.site)
+            session.inventory(self.payload, self.site, "niri-fx")
 
-    def test_package_versions_match_source_but_allow_different_pkgrels(self):
-        self.assertEqual(check.package_version(self.payload, VERSION[:-1] + "2"), VERSION)
-        with self.assertRaisesRegex(ValueError, "different source"):
-            check.package_version(self.payload, VERSION.replace("1234567", "2345678"))
-
-    def test_stock_package_conflicts_and_missing_lifecycle_deps_are_rejected(self):
+    def test_vcs_requires_version_suffix_and_replacement_relationships(self):
+        vcs = self.pkginfo.replace("pkgname = niri-fx\n", "pkgname = niri-fx-git\n")
         path = self.payload / ".PKGINFO"
-        path.write_text(self.pkginfo + "conflict = niri\n")
-        with self.assertRaisesRegex(ValueError, "must not provide"):
-            check.package_version(self.payload, VERSION)
-        path.write_text(self.pkginfo.replace("depend = niri\n", ""))
-        with self.assertRaisesRegex(ValueError, "lifecycle"):
-            check.package_version(self.payload, VERSION)
+        path.write_text(vcs + "provides = niri-fx\nconflict = niri-fx\n")
+        with self.assertRaisesRegex(ValueError, "VCS pkgver"):
+            check.package_version(self.payload)
+        vcs = vcs.replace(f"pkgver = {VERSION}-1", f"pkgver = {VERSION}.r75.g1234567-1")
+        for relationship in ("provides = niri-fx\n", "conflict = niri-fx\n"):
+            path.write_text(vcs + relationship)
+            with self.assertRaisesRegex(ValueError, "must provide and conflict"):
+                check.package_version(self.payload)
+
+    def test_unsupported_names_split_dependencies_and_stock_conflicts_are_rejected(self):
+        invalid = (
+            self.pkginfo.replace("pkgname = niri-fx\n", "pkgname = niri-fx-compositor-git\n"),
+            self.pkginfo.replace("pkgname = niri-fx\n", "pkgname = niri-fx-tools\n"),
+            self.pkginfo.replace("arch = x86_64", "arch = any"),
+            self.pkginfo + "depend = niri-fx-git\n",
+            self.pkginfo + "depend = niri-fx-compositor-git\n",
+            self.pkginfo + "conflict = niri\n",
+            self.pkginfo + "provides = niri\n",
+            self.pkginfo + "replaces = niri-fx\n",
+            self.pkginfo.replace("depend = niri\n", ""),
+        )
+        for pkginfo in invalid:
+            with self.subTest(pkginfo=pkginfo), self.assertRaises(ValueError):
+                (self.payload / ".PKGINFO").write_text(pkginfo)
+                check.package_version(self.payload)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Smoke-test a tools-only Arch package without installing it or opening a desktop.
+"""Audit a complete Arch package without installing it or opening a desktop.
 
 Requires zstd. Extracts bounded regular files into temporary storage and runs the
 packaged entry point with isolated user directories, outside the checkout.
@@ -10,6 +10,7 @@ import base64
 import configparser
 import csv
 import hashlib
+import importlib.util
 import json
 import os
 import re
@@ -21,10 +22,28 @@ import tempfile
 from email.parser import BytesParser
 from pathlib import Path, PurePosixPath
 
+ROOT = Path(__file__).resolve().parents[1]
+spec = importlib.util.spec_from_file_location(
+    "arch_session_check", ROOT / "scripts/check-arch-session-package.py"
+)
+session = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(session)
+METADATA = {".PKGINFO", ".BUILDINFO", ".MTREE"}
+
 DESKTOP = "usr/share/applications/niri-fx-studio.desktop"
 ICON = "usr/share/icons/hicolor/scalable/apps/niri-fx.svg"
 SITE = r"usr/lib/python[0-9]+\.[0-9]+/site-packages"
 RESOURCES = (
+    "native_package.py",
+    "native_cli.py",
+    "native_entry.py",
+    "native_install.py",
+    "native_upgrade.py",
+    "native_session.py",
+    "native_tools.py",
+    "native_tools_launcher.py",
+    "native_login.py",
+    "package_session.py",
     "preview.html",
     "studio.js",
     "studio.css",
@@ -45,6 +64,28 @@ RESOURCES = (
     "gtk/picker.css",
 )
 
+# Audit every declared data resource from the reviewed source, including shader
+# families that the small CLI smoke does not happen to render.
+RESOURCES = tuple(
+    sorted(
+        set(RESOURCES)
+        | {
+            path.relative_to(ROOT / "niri_fx").as_posix()
+            for pattern in (
+                "shaders/*.glsl",
+                "*.js",
+                "*.css",
+                "assets/*.svg",
+                "qml/*.qml",
+                "gtk/*.mjs",
+                "gtk/*.css",
+                "agent_data/*/*.md",
+            )
+            for path in (ROOT / "niri_fx").glob(pattern)
+        }
+    )
+)
+
 
 def require(condition, message):
     if not condition:
@@ -53,41 +94,36 @@ def require(condition, message):
 
 def allowed_file(name):
     return (
-        name in {".PKGINFO", ".BUILDINFO", ".MTREE", "usr/bin/niri-fx", DESKTOP, ICON}
+        name in METADATA | session.PAYLOAD | {"usr/bin/niri-fx", DESKTOP, ICON}
         or re.fullmatch(SITE + r"/(?:niri_fx|niri_fx-[^/]+\.dist-info)/.+", name)
-        or name.startswith("usr/share/doc/niri-fx/")
-        or re.fullmatch(r"usr/share/licenses/niri-fx(?:-git)?/.+", name)
+        or name == "usr/share/doc/niri-fx/README.Arch"
+        or re.fullmatch(r"usr/share/doc/niri-fx/examples/[^/]+\.json", name)
+        or re.fullmatch(
+            r"usr/share/licenses/niri-fx(?:-git)?/(?:LICENSE|LICENSE\.niri|LICENSE\.packaging|COPYING-NIRI|THIRD_PARTY\.md)",
+            name,
+        )
     )
 
 
 def extract(package, destination, temporary):
     """Validate the entire member list before writing any payload files."""
     unpacked = temporary / "package.tar"
-    with unpacked.open("wb") as output:
-        with subprocess.Popen(
-            ["zstd", "-q", "-d", "-c", "--", str(package)], stdout=subprocess.PIPE
-        ) as process:
-            size = 0
-            try:
-                while chunk := process.stdout.read(1024 * 1024):
-                    size += len(chunk)
-                    require(size <= 128 * 1024 * 1024, "Tools package exceeds 128 MiB")
-                    output.write(chunk)
-                require(process.wait(timeout=30) == 0, "Cannot decompress the Arch package")
-            finally:
-                if process.poll() is None:
-                    process.kill()
+    session.decompress(package, unpacked)
+    return extract_tar(unpacked, destination)
+
+
+def extract_tar(unpacked, destination):
+    """Reject invalid ownership, modes and payload boundaries before extraction."""
     with tarfile.open(unpacked, "r:") as archive:
-        members = archive.getmembers()
-        require(len(members) <= 4096, "Tools package has too many archive members")
         paths = {}
-        for member in members:
+        for count, member in enumerate(archive, start=1):
+            require(count <= 4096, "Package has too many archive members")
             path = PurePosixPath(member.name)
             require(
                 not path.is_absolute()
                 and ".." not in path.parts
                 and "\\" not in member.name
-                and not any(ord(c) < 32 for c in member.name),
+                and not any(ord(c) < 32 or ord(c) == 127 for c in member.name),
                 f"Unsafe archive path: {member.name!r}",
             )
             name = str(path)
@@ -95,17 +131,33 @@ def extract(package, destination, temporary):
                 continue
             require(name not in paths, f"Duplicate archive path: {name}")
             require(member.isfile() or member.isdir(), f"Links/devices are unsupported: {name}")
-            require(not member.mode & 0o6022, f"Unsafe file permissions: {name}")
-            require(member.size <= 32 * 1024 * 1024, f"Oversized package member: {name}")
+            expected_mode = (
+                0o755
+                if member.isdir()
+                or name in {"usr/bin/niri-fx", session.DISPATCHER, f"{session.PREFIX}/bin/niri"}
+                else 0o644
+            )
+            require(member.mode == expected_mode, f"Incorrect system-readable permissions: {name}")
+            require(member.uid == member.gid == 0, f"Non-root package ownership: {name}")
+            limit = 512 * 1024 * 1024 if name == f"{session.PREFIX}/bin/niri" else 32 * 1024 * 1024
+            require(0 <= member.size <= limit, f"Oversized package member: {name}")
             if member.isfile():
-                require(bool(allowed_file(name)), f"Unexpected tools-only package file: {name}")
+                require(bool(allowed_file(name)), f"Unexpected package file: {name}")
                 require(
-                    not name.endswith(".desktop") or name == DESKTOP,
+                    not name.endswith(".desktop") or name in {DESKTOP, session.DESKTOP},
                     f"Unexpected desktop/session entry: {name}",
                 )
             paths[name] = member
         files = {name for name, member in paths.items() if member.isfile()}
+        require(
+            METADATA
+            | session.PAYLOAD
+            | {"usr/bin/niri-fx", DESKTOP, ICON, "usr/share/doc/niri-fx/README.Arch"}
+            <= files,
+            "Complete tools and native session package payload is incomplete",
+        )
         ancestors = {str(parent) for name in files for parent in PurePosixPath(name).parents}
+        require(not files & ancestors, "Archive file is also a parent directory")
         require(
             all(member.isfile() or name in ancestors for name, member in paths.items()),
             "Unexpected empty package directory",
@@ -131,16 +183,27 @@ def package_version(root):
     names = fields.get("pkgname", [])
     require(
         len(names) == 1 and names[0] in {"niri-fx", "niri-fx-git"},
-        "Expected the niri-fx or niri-fx-git tools package",
+        "Expected the complete niri-fx or niri-fx-git package",
     )
     relationships = {
         key: {re.split(r"[<>=]", value, maxsplit=1)[0] for value in fields.get(key, [])}
         for key in ("provides", "conflict", "replaces")
     }
-    require(not relationships["replaces"], "Tools packages must not replace another package")
+    require(not relationships["replaces"], "Packages must not replace another package")
     require(
         all(values <= {"niri-fx", "niri-fx-git"} for values in relationships.values()),
-        "Tools packages must not provide or conflict with stock Niri or unrelated packages",
+        "Packages must not provide or conflict with stock Niri or unrelated packages",
+    )
+    require(fields.get("arch") == ["x86_64"], "Expected the native x86_64 package")
+    dependencies = {re.split(r"[<>=]", value, maxsplit=1)[0] for value in fields.get("depend", [])}
+    require(
+        {"niri", "python", "bash", "systemd", "dbus", "wayland", "libglvnd", "hicolor-icon-theme"}
+        <= dependencies,
+        "Stock session lifecycle or explicit runtime dependency is missing",
+    )
+    require(
+        not dependencies & {"niri-fx", "niri-fx-git", "niri-fx-compositor-git"},
+        "Complete packages must not depend on a separate NiriFX package",
     )
     versions = fields.get("pkgver", [])
     require(len(versions) == 1, "Expected one package version")
@@ -214,7 +277,7 @@ def inventory(root, files, pkgname, version):
     for name in RESOURCES:
         require((site / "niri_fx" / name).is_file(), f"Missing packaged resource: {name}")
     licenses = root / license_prefix
-    for name in ("LICENSE", "THIRD_PARTY.md", "LICENSE.packaging"):
+    for name in ("LICENSE", "THIRD_PARTY.md", "LICENSE.packaging", "LICENSE.niri"):
         require(
             (licenses / name).is_file() and (licenses / name).stat().st_size > 100,
             f"Missing license: {name}",
@@ -364,6 +427,7 @@ def main():
         files = extract(package, root, temporary)
         pkgname, pkgver, version = package_version(root)
         site = inventory(root, files, pkgname, version)
+        native = session.inventory(root, site, pkgname)
         styles = smoke(root, site, temporary, version)
     print(
         json.dumps(
@@ -372,11 +436,12 @@ def main():
                 "pkgname": pkgname,
                 "pkgver": pkgver,
                 "version": version,
-                "sha256": hashlib.sha256(package.read_bytes()).hexdigest(),
+                "sha256": session.native_build.digest(package),
                 "files": len(files),
                 "catalog_entries": styles,
                 "status": "passed",
-                "scope": "extracted tools-only CLI/resources; no installation or desktop connection",
+                "native": native,
+                "scope": "complete archive, CLI/resources and native provenance; no installation, compositor execution or desktop connection",
             },
             indent=2,
         )
@@ -390,6 +455,7 @@ if __name__ == "__main__":
         OSError,
         ValueError,
         KeyError,
+        TypeError,
         configparser.Error,
         csv.Error,
         tarfile.TarError,

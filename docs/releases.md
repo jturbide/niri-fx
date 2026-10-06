@@ -17,8 +17,30 @@ release date or interface freeze yet.
 
 [Getting started](getting-started.md) documents installation from source or into
 a Python virtual environment. Arch Linux and CachyOS users can use the
-[AUR tools package](arch-linux.md). PyPI, Flatpak and a packaged full compositor
-session are not currently provided by this project.
+[AUR packages](arch-linux.md). Starting with 0.22, both release and development
+packages include Studio, CLI, presets and the complete compositor session. The
+Python wheel remains a tools installation. PyPI and Flatpak packages are not
+currently provided by this project.
+
+## 0.22.0 prerelease
+
+NiriFX 0.22 brings complete Arch packages: choose `niri-fx` for the release or
+`niri-fx-git` for development. Each includes Studio, CLI, presets, the full
+compositor and its login entry. Keep using the tools in stock Niri, or follow
+[session setup](arch-linux.md#use-the-nirifx-session) to use the included compositor.
+Updating from 0.21 adds these files without enabling effects or changing settings.
+
+Reviewed `native adopt` retains the package's tools and compositor in user
+storage. Later adoption preserves the saved recipe and shared or frozen settings;
+previous copies remain available for rollback. Package replacement does not
+switch the running or next-login runtime automatically. See
+[upgrading from 0.21](upgrading.md#from-021-to-022).
+
+The Python wheel continues to provide the tools for other installation methods.
+The source archive includes the matching compositor patches and build tools.
+Complete packaging does not extend the current physical desktop acceptance:
+check [tested environments and known limits](validation.md) for login, capture,
+suspend and mixed-monitor coverage.
 
 ## 0.21.0 prerelease
 

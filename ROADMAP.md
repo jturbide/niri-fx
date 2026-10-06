@@ -22,8 +22,8 @@ See [available features](README.md),
 3. **Deliver one supported installation and update path.** Package the app,
    full compositor and login entry for an initial declared distribution and
    architecture; verify clean install, upgrade, rollback and return to stock Niri.
-   Start with Arch/AUR tools packages, then add full-session adoption without
-   tying retained login runtimes to files replaced by the package manager.
+   Ship exactly two complete Arch/AUR channels, `niri-fx` and `niri-fx-git`,
+   without tying retained login runtimes to files replaced by the package manager.
 4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
    tools and shared settings together; 0.21 adds complete recipe portability.
    Follow with reliability and installation improvements in later 0.x releases.
@@ -211,21 +211,21 @@ are developer regression controls, not separate consumer editions.
 
 ### Arch packaging and full-session adoption
 
-- [x] Define release and development tools packages with CLI, Studio, examples
-      and menu integration; keep stock Niri and user settings outside package ownership.
-- [x] Validate and publish `niri-fx` and `niri-fx-git` on AUR, with source checksums,
-      resolved development revisions, isolated builds and install/removal checks.
+- [x] Consolidate release and development recipes into exactly `niri-fx` and
+      `niri-fx-git`. Each includes Studio, CLI, presets, the complete compositor
+      and login entry; either can also be used with stock Niri.
+- [x] Build tools and compositor from one source revision and audit both payloads
+      together. Keep package installation separate from configuration and effects.
 - [x] Add prepared-source offline builds and relocatable full-session exports;
       verify the pinned patch stack and finish stripping before hashing the binary.
 - [x] Provide a generic login entry that resolves each user's retained runtime,
       with reviewed adoption from system packages into immutable user storage.
 - [x] Preserve saved shader bytes, shared desktop settings and previous selections
       during adoption; test stale-review refusal, validation failure and rollback.
-- [x] Verify actual staged package payloads in disposable Arch: two-user adoption,
-      stale-review refusal, retained tools after removal and unchanged stock Niri files.
-- [x] Validate the complete Arch compositor recipe and paired tools package in a
-      clean distribution build, including installation, adoption and removal.
-- [ ] Publish `niri-fx-compositor-git` on AUR after update and physical acceptance.
+- [ ] Validate both complete packages in clean Arch, including stock tools usage,
+      two-user adoption, retained copies after removal and unchanged stock Niri.
+- [ ] Publish the complete packages through the existing two AUR names and document
+      the upgrade from the earlier tools-only packages.
 - [ ] Verify updates across two package versions, multiple users, Python path
       changes, interrupted adoption and missing shared libraries. Preserve running,
       selected and previous copies and the stock Niri recovery entry.
