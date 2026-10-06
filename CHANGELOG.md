@@ -7,6 +7,20 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+### Added
+
+- Arch/AUR recipes for `niri-fx` releases and `niri-fx-git` development builds,
+  including CLI, Studio, desktop integration and portable examples. Isolated
+  package checks verify installation, removal and preservation of stock Niri.
+  Existing managed login runtimes retain their separate reviewed update path.
+
+### Changed
+
+- Native output diagnostics compare both capture orders and count owned child
+  surface submissions against parent receipts. All 12 baseline cases still
+  reproduce stale output; the report narrows the investigation without claiming
+  a rendering or privacy fix.
+
 ## 0.21.0 - 2026-10-05
 
 ### Added

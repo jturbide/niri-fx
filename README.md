@@ -31,7 +31,7 @@ improvements in one compositor build. Choose which effects to use in Library;
 you do not need to choose individual patches.
 
 The complete session currently uses the source-build and managed-login workflow.
-Distribution packages and signed compositor downloads are being prepared. Stock
+Full-session packages and signed compositor downloads are being prepared. Stock
 Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
@@ -56,6 +56,11 @@ Choose **Preserve / NiriFX Style / Off** independently for each action.
 Preserve uses your underlying Niri or shell configuration, including customizations. Save a named profile, share its
 settings or download JSON. Previewing does not change your desktop.
 [Bring a downloaded style to Niri](docs/web-studio.md).
+
+**Arch Linux / CachyOS:** install `niri-fx` from AUR, then run `niri-fx studio --active`.
+The [Arch guide](docs/arch-linux.md) covers release and `niri-fx-git` packages,
+updates and existing managed sessions. These packages install CLI and Studio;
+the full compositor follows the [session guide](docs/native-session.md).
 
 For a small install without the source gallery, use the [release wheel](docs/releases.md#0210-prerelease).
 On Niri with Python 3.10+, you can also open Library from source:

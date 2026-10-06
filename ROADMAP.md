@@ -22,6 +22,8 @@ See [available features](README.md),
 3. **Deliver one supported installation and update path.** Package the app,
    full compositor and login entry for an initial declared distribution and
    architecture; verify clean install, upgrade, rollback and return to stock Niri.
+   Start with Arch/AUR tools packages, then add full-session adoption without
+   tying retained login runtimes to files replaced by the package manager.
 4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
    tools and shared settings together; 0.21 adds complete recipe portability.
    Follow with reliability and installation improvements in later 0.x releases.
@@ -206,6 +208,26 @@ are developer regression controls, not separate consumer editions.
       rollback and return to stock on supported physical desktops.
 - [ ] Publish signed artifacts and source/patch provenance for declared
       distributions and architectures without holding normal system updates.
+
+### Arch packaging and full-session adoption
+
+- [x] Define release and development tools packages with CLI, Studio, examples
+      and menu integration; keep stock Niri and user settings outside package ownership.
+- [x] Validate and publish `niri-fx` and `niri-fx-git` on AUR, with source checksums,
+      resolved development revisions, isolated builds and install/removal checks.
+- [ ] Build a relocatable full-session candidate from prepared pinned source and
+      locked dependencies; finish binary processing before recording provenance.
+- [ ] Provide a generic login entry that resolves each user's retained runtime,
+      with reviewed adoption from system packages into immutable user storage.
+- [ ] Verify updates across two package versions, multiple users, Python path
+      changes, interrupted adoption and missing shared libraries. Preserve running,
+      selected and previous copies and the stock Niri recovery entry.
+- [ ] Complete physical login, shared-settings, capture and suspend acceptance
+      before advertising a supported full-session package.
+
+See [Arch installation](docs/arch-linux.md) and the
+[packaging workflow](packaging/arch/README.md). These packages are installation
+channels for the same tools; the full session remains one integrated product.
 
 ### Coherent tool upgrades
 
@@ -399,6 +421,9 @@ are recorded in the [validation guide](docs/validation.md#pointer-driven-wobble)
 - [x] Verify virtual-device destruction, consumed bindings and reused device
       identities through the native input path.
 - [ ] Verify physical device removal and reconnection during grabs.
+- [x] Compare both capture orders and owned child/parent surface traffic across
+      all three baseline builds; record the still-failing 12-case comparison
+      without treating request receipt as proof of presentation.
 - [ ] Resolve stale parent output in the strict two-compositor capture probe, including the effects-disabled baseline.
 - [ ] Validate Output/Screencast privacy and actual PipeWire capture, including popups and blurred backgrounds.
 - [ ] Verify physical output hotplug, mixed monitors and graphics-reset recovery.
@@ -446,8 +471,10 @@ requires additional compositor support and starts in the isolated experiment.
       mixed outputs and input behavior before expanding its supported configurations.
 - [x] Select Gentle, Tear and Cascade in local Studio's native target and retain
       the choice in managed bundles, with reviewed Apply and rollback.
-- [ ] Carry continuous response in portable recipes and expose its bounded controls
-      in Studio, with independent action choices and faithful drag previews.
+- [x] Carry continuous response in portable recipes and expose its bounded controls
+      in Studio, with independent action choices.
+- [ ] Preview continuous fragments faithfully through grab, pause, reversal and
+      release in Studio, checked against the native response.
 - [ ] Tune per-piece motion through manual testing, including grab distance,
       travel direction, variation, tilt and acceleration toward the released
       window's resting position.

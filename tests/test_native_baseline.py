@@ -1,7 +1,9 @@
 """A baseline must be comparable and its privacy control must remain observable."""
 
 import importlib.util
+import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import Mock, patch
@@ -45,6 +47,108 @@ class BaselineComparisonTests(unittest.TestCase):
         self.assertTrue(baseline.cleared({"protected": 0, "redaction": 0}))
         self.assertFalse(baseline.cleared({"protected": 1, "redaction": 0}))
         self.assertFalse(baseline.cleared({"protected": 0, "redaction": 20000}))
+
+    def test_capture_orders_are_executed_and_each_capture_is_bracketed(self):
+        for order, expected in baseline.CAPTURE_ORDERS.items():
+            with self.subTest(order=order):
+                calls = []
+                parent, child, trace = Mock(), Mock(), Mock()
+                parent.capture.side_effect = lambda _, calls=calls: (
+                    calls.append("output") or "output"
+                )
+
+                child.capture.side_effect = lambda _, calls=calls: (
+                    calls.append("screen_capture") or "child"
+                )
+                counts = {"public": 20000, "protected": 0, "redaction": 0}
+                with patch.object(baseline.hardening, "colors", return_value=counts):
+                    result = baseline.observation(parent, child, "sample", order, trace)
+                self.assertEqual(calls, list(expected))
+                self.assertEqual(set(result), {"output", "screen_capture"})
+                self.assertEqual(
+                    [call.args[0] for call in trace.mark.call_args_list],
+                    [
+                        name
+                        for target in expected
+                        for name in (f"before-sample-{target}", f"capture-sample-{target}")
+                    ],
+                )
+
+    def test_protocol_logging_is_scoped_to_the_owned_compositor_launch(self):
+        for mode in ("client", "server"):
+            with self.subTest(mode=mode):
+                session = baseline.ObservedSession.__new__(baseline.ObservedSession)
+                session.protocol_trace = mode
+                original = {"PATH": "/synthetic/bin"}
+                with patch.object(baseline.NestedSession, "launch") as launch:
+                    session.launch(["owned-niri"], "niri", env=original)
+                    self.assertEqual(launch.call_args.kwargs["env"]["WAYLAND_DEBUG"], mode)
+                    self.assertNotIn("WAYLAND_DEBUG", original)
+                    session.launch(["owned-client"], "card", env=original)
+                    self.assertNotIn("WAYLAND_DEBUG", launch.call_args.kwargs["env"])
+
+    def test_trace_phase_boundaries_count_only_new_log_bytes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            parent, child = Mock(), Mock()
+            parent.root, child.root = Path(directory) / "parent", Path(directory) / "child"
+            for owner, arrow in ((parent, ""), (child, "->")):
+                owner.root.mkdir()
+                (owner.root / "niri.log").write_text(f"[1.000] {arrow} wl_surface#7.commit()\n")
+            with patch.object(baseline.time, "monotonic", side_effect=[10.0, 10.5, 10.8]):
+                trace = baseline.OutputTrace(parent, child, 10.0)
+                with (child.root / "niri.log").open("a") as stream:
+                    stream.write("[1.500] -> wl_surface#7.commit()\n")
+                trace.mark("child-request")
+                with (parent.root / "niri.log").open("a") as stream:
+                    stream.write("[1.800] wl_surface#7.commit()\n")
+                trace.mark("parent-receipt")
+            report = trace.report()
+        sent = report["child_sent"]["phases"]
+        received = report["parent_received"]["phases"]
+        self.assertEqual([p["all_surface_requests"]["commit"] for p in sent], [1, 0])
+        self.assertEqual([p["all_surface_requests"]["commit"] for p in received], [0, 1])
+        self.assertEqual(sent[1]["begin_ms_after_close"], 500)
+        self.assertEqual(sent[1]["end_ms_after_close"], 800)
+
+    def test_output_comparison_uses_fresh_order_cases_and_retains_strict_exit(self):
+        settings = {
+            "revision": "pinned",
+            "build_profile": "release",
+            "build_flags": [],
+            "rustc": "test",
+            "binary_sha256": "test",
+        }
+        probes = []
+
+        def output(binary, protocol, enabled, preview, order):
+            probes.append((binary, enabled, preview, order))
+            return {
+                "renderer": "test-renderer",
+                "target": "test-target",
+                "capture_order": order,
+                "stale_parent_output_reproduced": len(probes) == 1,
+            }
+
+        with tempfile.TemporaryDirectory() as directory:
+            report = Path(directory) / "report.json"
+            with (
+                patch.object(
+                    sys, "argv", ["baseline", "--probe", "output", "--report", str(report)]
+                ),
+                patch.object(baseline, "baseline", return_value=("base", settings)),
+                patch.object(baseline, "experiment", return_value=("fx", settings, None)),
+                patch.object(baseline, "pointer_protocol", return_value="protocol"),
+                patch.object(baseline, "source_hashes", return_value={}),
+                patch.object(baseline, "output_probe", side_effect=output),
+                patch("builtins.print"),
+            ):
+                self.assertEqual(baseline.main(), 1)
+            evidence = json.loads(report.read_text())
+        self.assertEqual(len(probes), 12)
+        self.assertEqual(len(set(probes)), 12)
+        self.assertTrue(evidence["completed_comparison"])
+        self.assertTrue(evidence["defect_reproduced"])
+        self.assertEqual([len(item["output"]) for item in evidence["results"]], [4, 4, 4])
 
     def test_missing_renderer_evidence_still_cleans_up_the_owned_session(self):
         sessions = []

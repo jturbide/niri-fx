@@ -16,8 +16,9 @@ release date or interface freeze yet.
   [Unreleased](../CHANGELOG.md) for changes beyond the latest tag.
 
 [Getting started](getting-started.md) documents installation from source or into
-a Python virtual environment. Official PyPI, AUR and Flatpak distribution is not
-currently provided by this project.
+a Python virtual environment. Arch Linux and CachyOS users can use the
+[AUR tools package](arch-linux.md). PyPI, Flatpak and a packaged full compositor
+session are not currently provided by this project.
 
 ## 0.21.0 prerelease
 

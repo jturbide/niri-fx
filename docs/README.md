@@ -13,6 +13,7 @@ package and its matching documentation.
 | I want to… | Guide |
 | --- | --- |
 | Preview effects and install NiriFX | [Getting started](getting-started.md) |
+| Install CLI and Studio on Arch Linux or CachyOS | [AUR package](arch-linux.md) |
 | Use plain Niri or Waybar | [Standalone setup](standalone.md) |
 | Use iNiR or iRiS | [iNiR/iRiS setup](getting-started.md#inir-and-iris) |
 | Use DankMaterialShell | [DMS launcher adapter](dms.md) |
