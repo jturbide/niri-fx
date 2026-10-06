@@ -54,6 +54,8 @@ Builds use the full ordered patch stack, release/default desktop features and
 locked dependencies. Cargo fetching occurs in prepare(); compilation and native
 regressions run offline. makepkg's later stripping/debug processing is disabled
 because the producer records the final executable after stripping it itself.
+makepkg's C/C++ LTO is also disabled so PipeWire's C helpers link with Rust's
+LLVM linker. Rust's release-profile thin LTO remains enabled.
 The exported provenance uses relative paths, and the final installed hash must
 match its manifest.
 

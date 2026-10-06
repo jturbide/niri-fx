@@ -117,11 +117,15 @@ stock files. It never starts the display-manager session. See its usage for the
 required paths and marker; do not bypass its host-execution guard.
 
 The prepared offline producer has passed its 168 native test executions and
-relocation checks. Staged archives using that real binary have also passed
-installation, two-user adoption, stale-review refusal, package removal and
-stock-file preservation in disposable Arch. These archives used an explicit
-working-tree fixture version; that evidence does not certify the recipe's full
-source-fetch and clean distribution build path.
+relocation checks. The complete recipe has also passed source fetching, offline
+regressions, release compilation and package assembly in clean Arch x86_64 with
+Rust 1.99. The paired archives passed installation, two-user adoption, stale-review
+refusal, package removal and stock-file preservation. Validation pinned both
+recipes to the same published NiriFX commit instead of a moving `main` branch.
+
+The recipe disables makepkg's C/C++ LTO flags because GCC's LTO-only PipeWire
+helper objects cannot link with Rust's LLVM linker. Rust's own release-profile
+thin LTO remains enabled. See Arch's [package options](https://man.archlinux.org/man/PKGBUILD.5.en#options_(array)).
 
 Publication remains gated on actual package acceptance and the
 [native distribution gates](../../docs/releasing.md#native-release-candidates).

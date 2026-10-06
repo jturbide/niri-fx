@@ -25,7 +25,9 @@ optdepends=(
 )
 # The producer strips its executable before recording the final SHA-256.
 # makepkg must not rewrite that executable or split it into a debug package.
-options=('!strip' '!debug')
+# GCC LTO objects from libspa's C helpers cannot be linked by Rust's LLVM linker.
+# Disabling makepkg LTO keeps Rust's own release-profile thin LTO enabled.
+options=('!strip' '!debug' '!lto')
 source=(
   'niri-fx::git+https://github.com/jturbide/niri-fx.git#branch=main'
   "niri::git+https://github.com/niri-wm/niri.git#commit=${_niri_revision}"
@@ -37,7 +39,7 @@ sha256sums=(
   'SKIP'
   'SKIP'
   '4f5b3d3b995d406866385c9b892557e4b3521645a59f4526ca999e93cabfb977'
-  '4a17d84a9861d2d6b5d79c62d1305f09baeb7701e28141baa822c45133c69920'
+  '2511db4b18b52be5778983686e6106e9b54ffb573c9bd12555a0827ce92d49b5'
   '336feffd8a99323d56058efe2b2deb3480dcf935dbb6813324c95a7e61bbbca3'
 )
 

@@ -15,7 +15,8 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   replacement does not switch the running or next-login version automatically.
 - A full-session Arch development recipe with a generic per-user login entry,
   offline compilation from prepared pinned source and relocatable provenance.
-  It remains unpublished while full package and physical acceptance are completed.
+  Clean Arch builds and two-user adoption/removal are verified. It remains
+  unpublished while update and physical acceptance are completed.
 - Arch/AUR recipes for `niri-fx` releases and `niri-fx-git` development builds,
   including CLI, Studio, desktop integration and portable examples. Isolated
   package checks verify installation, removal and preservation of stock Niri.
@@ -27,6 +28,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
   surface submissions against parent receipts. All 12 baseline cases still
   reproduce stale output; the report narrows the investigation without claiming
   a rendering or privacy fix.
+
+### Fixed
+
+- The Arch compositor recipe disables makepkg's C/C++ LTO flags to avoid missing
+  PipeWire helper symbols when linking with Rust. Rust's release optimizations
+  remain enabled.
 
 ## 0.21.0 - 2026-10-05
 
