@@ -606,7 +606,7 @@ are unchanged. Package updates do not select a style or enable resize.
   Hexagon Edge Rebuild and Circle Soft Reflow profiles.
 - Native consume/expel, vertical reorder, move/resize and insertion/removal checks;
   new swap, rearrangement, resize and shader showcases.
-- Public roadmap epics with acceptance checklists and Niri-first portability notes.
+- Public roadmap epics with acceptance checklists for Niri effects and integrations.
 
 ### Changed
 

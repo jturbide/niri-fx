@@ -15,7 +15,7 @@ do not need iNiR installed.
 | Niri + GTK 4 / AGS 3 | [GTK picker and reusable widget](gtk.md) | GJS 1.88.1 / GTK 4.22.5 and AGS source v3.1.2 keyboard Apply/Undo tested in isolated hosts. Full Astal shell embedding and GTK 3 are not covered. |
 | Niri + Waybar | [Standalone Niri](standalone.md); optional CLI launcher | No native UI adapter required for rendering. |
 | Niri + another shell | The same shell-independent KDL include | Check include ordering and that shell's config ownership. |
-| NiriFX session, with any Niri-compatible shell | [Unified desktop build and managed login](native-session.md) | Includes movement, pointer wobble, continuous fragments and interruption improvements. Source-based installation is available; distribution packages and physical acceptance remain pending. |
+| NiriFX session, with any Niri-compatible shell | [Unified desktop build and managed login](native-session.md) | Includes movement, pointer wobble, continuous fragments and interruption improvements. Complete Arch packages and source installation are available; physical desktop acceptance remains tracked separately. |
 | Move/swap effects | NiriFX session | Updated builds support separate Move and explicit left/right Swap styles. Older retained builds share Move. Shell plugins cannot add these rendering hooks to stock Niri. |
 | Pointer-driven wobble | NiriFX session | [Pointer controls](pointer-wobble.md), portable profiles and Studio. Live Apply requires a verified running renderer; managed next-login selection validates the retained build separately. |
 | Continuous fragments | NiriFX session | Gentle, Tear and Cascade presets for square fragments. Browser movement preview does not reproduce the continuous renderer; see [tested scope](fragment-drag.md). |

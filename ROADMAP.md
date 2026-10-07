@@ -1,8 +1,8 @@
 # NiriFX roadmap
 
 NiriFX focuses on finished effects and coherent motion for Niri. Choose a preset,
-apply it, and customize when useful. Niri remains the primary compositor; other
-backends are research candidates, not current compatibility claims.
+apply it, and customize when useful. Niri is the sole compositor target. Work
+focuses on effects, the NiriFX session and integrations for Niri-compatible shells.
 
 Checklists describe concrete deliverables. Checked items have shipped or have
 recorded validation; unchecked items are still planned or in development. The
