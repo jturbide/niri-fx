@@ -292,10 +292,10 @@ index a75e3ac913847c22178edabcd36eef0668d741f6..3600c7e4f18e4e04831102252b298fa0
  #[derive(Serialize, Deserialize, Debug, Clone)]
 diff --git a/src/animation/fragment_motion.rs b/src/animation/fragment_motion.rs
 new file mode 100644
-index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501de1cb686
+index 0000000..dd9e5d9
 --- /dev/null
 +++ b/src/animation/fragment_motion.rs
-@@ -0,0 +1,1686 @@
+@@ -0,0 +1,1922 @@
 +//! Bounded world-space followers for the native square-fragment material.
 +use std::cell::RefCell;
 +use std::collections::BTreeMap;
@@ -420,12 +420,36 @@ index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501
 +    value: Vector,
 +    velocity: Vector,
 +}
++/// Coefficients for one fixed-duration spring step. Recovery can reuse them
++/// without changing the operation order or snap-to-rest thresholds.
++#[derive(Clone, Copy)]
++struct SpringStep {
++    seconds: f64,
++    omega: f64,
++    decay: f64,
++}
++impl SpringStep {
++    fn new(seconds: f64, response_ms: f64) -> Self {
++        let omega = 3.889720169867429 / (response_ms / 1000.);
++        Self {
++            seconds,
++            omega,
++            decay: (-omega * seconds).exp(),
++        }
++    }
++}
 +impl Spring {
 +    fn advance(&mut self, target: Vector, seconds: f64, response_ms: f64) {
-+        let omega = 3.889720169867429 / (response_ms / 1000.);
++        self.advance_step(target, SpringStep::new(seconds, response_ms));
++    }
++    fn advance_step(&mut self, target: Vector, step: SpringStep) {
++        let SpringStep {
++            seconds,
++            omega,
++            decay,
++        } = step;
 +        let lag = self.value - target;
 +        let b = self.velocity + lag.upscale(omega);
-+        let decay = (-omega * seconds).exp();
 +        self.value = target + (lag + b.upscale(seconds)).upscale(decay);
 +        self.velocity = (self.velocity - b.upscale(omega * seconds)).upscale(decay);
 +        if norm(self.value - target) < 0.0001 && norm(self.velocity) < 0.001 {
@@ -556,6 +580,8 @@ index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501
 +            .advance((0., 0.).into(), dt, f64::from(config.rotation_response_ms));
 +    }
 +
++    // A short frame does not amortize preparing a coefficient cache. Keep its
++    // direct arithmetic; differential tests bind it to the longer replay path.
 +    fn advance(
 +        &mut self,
 +        target: Vector,
@@ -602,6 +628,105 @@ index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501
 +            .upscale(config.tilt.0 / (speed * speed + reference * reference).sqrt());
 +        self.tilt
 +            .advance(tilt, dt, f64::from(config.rotation_response_ms));
++    }
++    #[inline(always)]
++    fn advance_step(&mut self, target: Vector, delayed: Vector, step: &ParticleStep) {
++        self.position.advance_step(delayed, step.position);
++        if self.pin.value.x == 1. && self.pin_target {
++            self.position.finish(target);
++        }
++        self.pin.advance_step(step.pin_target, step.pin);
++        self.spread.advance_step(step.spread_target, step.spread);
++        let velocity = self.position.velocity + self.spread.velocity;
++        let speed = norm(velocity);
++        let signed = (velocity.x * step.axis.x + velocity.y * step.axis.y)
++            / (speed * speed + step.reference * step.reference).sqrt();
++        let angle = signed * step.rotation_radians;
++        self.rotation.advance_step((angle, 0.).into(), step.angular);
++        let tilt = Vector::from((-velocity.y, velocity.x))
++            .upscale(step.tilt / (speed * speed + step.reference * step.reference).sqrt());
++        self.tilt.advance_step(tilt, step.angular);
++    }
++    fn replay(
++        &mut self,
++        target: Vector,
++        history: &[Target],
++        start: Duration,
++        end: Duration,
++        held: bool,
++        config: Config,
++    ) {
++        let step = ParticleStep::new(self, HISTORY_QUANTUM.as_secs_f64(), held, config);
++        let mut cursor = start;
++        let mut index = start.checked_sub(self.delay).map_or(0, |at| {
++            history
++                .partition_point(|event| event.at <= at)
++                .saturating_sub(1)
++        });
++        // Replay this cell in chronological order. The target index only moves
++        // forward; delayed reversals and the initial rest sample are retained.
++        while cursor < end {
++            if let Some(at) = cursor.checked_sub(self.delay) {
++                while index + 1 < history.len() && history[index + 1].at <= at {
++                    index += 1;
++                }
++            }
++            let next = (cursor + HISTORY_QUANTUM).min(end);
++            if next - cursor == HISTORY_QUANTUM {
++                self.advance_step(target, history[index].position, &step);
++            } else {
++                self.advance(
++                    target,
++                    history,
++                    cursor,
++                    (next - cursor).as_secs_f64(),
++                    held,
++                    config,
++                );
++            }
++            cursor = next;
++        }
++    }
++}
++
++/// Constants for one cell and one slice. Each spring retains its own state;
++/// sharing coefficients does not merge batches, targets or release trajectories.
++struct ParticleStep {
++    position: SpringStep,
++    pin: SpringStep,
++    spread: SpringStep,
++    angular: SpringStep,
++    pin_target: Vector,
++    spread_target: Vector,
++    axis: Vector,
++    reference: f64,
++    rotation_radians: f64,
++    tilt: f64,
++}
++impl ParticleStep {
++    fn new(cell: &Particle, dt: f64, held: bool, config: Config) -> Self {
++        let axis = match config.rotation_mode {
++            FragmentRotation::Movement => (-cell.radial.y, cell.radial.x).into(),
++            FragmentRotation::Random => {
++                let angle = hash(cell.id, 3) * std::f64::consts::TAU;
++                (angle.cos(), angle.sin()).into()
++            }
++            FragmentRotation::None => (0., 0.).into(),
++        };
++        Self {
++            position: SpringStep::new(dt, cell.response_ms),
++            pin: SpringStep::new(dt, 80.),
++            spread: SpringStep::new(dt, f64::from(config.press_response_ms)),
++            angular: SpringStep::new(dt, f64::from(config.rotation_response_ms)),
++            pin_target: (if cell.pin_target { 1. } else { 0. }, 0.).into(),
++            spread_target: cell
++                .radial
++                .upscale(if held { config.press_spread.0 } else { 0. }),
++            axis,
++            reference: f64::from(config.rotation_speed),
++            rotation_radians: config.rotation_degrees.0.to_radians(),
++            tilt: config.tilt.0,
++        }
 +    }
 +}
 +
@@ -870,6 +995,23 @@ index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501
 +                    self.sampled_at = now;
 +                    return;
 +                }
++            }
++            // Long recovery keeps the same 4ms slices, but processes each cell
++            // together to reuse spring coefficients and walk delayed targets once.
++            // Ordinary display/input frames retain their small-step path.
++            if now - cursor > HISTORY_QUANTUM * 8 {
++                for cell in self.cells.values_mut() {
++                    cell.replay(
++                        self.target,
++                        &self.history,
++                        cursor,
++                        now,
++                        self.held,
++                        self.config,
++                    );
++                }
++                self.sampled_at = now;
++                return;
 +            }
 +            // Bounded integration slices also make changing velocity-driven tilt
 +            // stable at ordinary display rates. Capture passes share this clock.
@@ -1508,55 +1650,56 @@ index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501
 +        assert!(state.sample(at(60_001), size, rect).is_ok());
 +    }
 +
++    // Retain the old bounded replay as an independent differential oracle.
++    // It deliberately does not call exactly_stationary() or the new shortcut.
++    fn original_advance(state: &mut FragmentMotion, now: Duration) {
++        let done = state.released_at.is_some_and(|at| {
++            now.saturating_sub(at)
++                >= Duration::from_millis(u64::from(state.config.release_ms)).min(MAX_RELEASE)
++        });
++        if done {
++            for cell in state.cells.values_mut() {
++                cell.position.finish(state.target);
++                cell.spread.finish((0., 0.).into());
++                cell.rotation.finish((0., 0.).into());
++                cell.tilt.finish((0., 0.).into());
++            }
++        } else {
++            let mut cursor = state.sampled_at;
++            if now.saturating_sub(cursor) > MAX_RELEASE {
++                let recent = now - MAX_RELEASE;
++                for cell in state.cells.values_mut() {
++                    cell.advance_linear_history(
++                        state.target,
++                        &state.history,
++                        cursor,
++                        recent,
++                        state.held,
++                        state.config,
++                    );
++                }
++                cursor = recent;
++            }
++            while cursor < now {
++                let next = (cursor + HISTORY_QUANTUM).min(now);
++                for cell in state.cells.values_mut() {
++                    cell.advance(
++                        state.target,
++                        &state.history,
++                        cursor,
++                        (next - cursor).as_secs_f64(),
++                        state.held,
++                        state.config,
++                    );
++                }
++                cursor = next;
++            }
++        }
++        state.sampled_at = now;
++    }
++
 +    #[test]
 +    fn idle_shortcut_matches_original_replay_at_cutoffs_and_extreme_controls() {
-+        // Retain the old bounded replay as an independent differential oracle.
-+        // It deliberately does not call exactly_stationary() or the new shortcut.
-+        fn original_advance(state: &mut FragmentMotion, now: Duration) {
-+            let done = state.released_at.is_some_and(|at| {
-+                now.saturating_sub(at)
-+                    >= Duration::from_millis(u64::from(state.config.release_ms)).min(MAX_RELEASE)
-+            });
-+            if done {
-+                for cell in state.cells.values_mut() {
-+                    cell.position.finish(state.target);
-+                    cell.spread.finish((0., 0.).into());
-+                    cell.rotation.finish((0., 0.).into());
-+                    cell.tilt.finish((0., 0.).into());
-+                }
-+            } else {
-+                let mut cursor = state.sampled_at;
-+                if now.saturating_sub(cursor) > MAX_RELEASE {
-+                    let recent = now - MAX_RELEASE;
-+                    for cell in state.cells.values_mut() {
-+                        cell.advance_linear_history(
-+                            state.target,
-+                            &state.history,
-+                            cursor,
-+                            recent,
-+                            state.held,
-+                            state.config,
-+                        );
-+                    }
-+                    cursor = recent;
-+                }
-+                while cursor < now {
-+                    let next = (cursor + HISTORY_QUANTUM).min(now);
-+                    for cell in state.cells.values_mut() {
-+                        cell.advance(
-+                            state.target,
-+                            &state.history,
-+                            cursor,
-+                            (next - cursor).as_secs_f64(),
-+                            state.held,
-+                            state.config,
-+                        );
-+                    }
-+                    cursor = next;
-+                }
-+            }
-+            state.sampled_at = now;
-+        }
 +        let extreme = Config {
 +            delay_near_ms: 600,
 +            delay_far_ms: 600,
@@ -1857,6 +2000,99 @@ index 0000000000000000000000000000000000000000..df041e40b2f2484ac0e41c40f9de0501
 +                }
 +            }
 +            assert_eq!(reachable.active(now), capacity.active(now));
++        }
++    }
++
++    #[test]
++    fn cached_replay_preserves_dense_history_and_followup_trajectories() {
++        let size = (252., 224.).into();
++        let rect = Rectangle::from_size(size);
++        for rotation_mode in [
++            FragmentRotation::Movement,
++            FragmentRotation::Random,
++            FragmentRotation::None,
++        ] {
++            for extreme in [false, true] {
++                let config = if extreme {
++                    Config {
++                        delay_near_ms: 600,
++                        delay_far_ms: 600,
++                        delay_jitter: niri_config::FloatOrInt(0.),
++                        response_near_ms: 800,
++                        response_far_ms: 800,
++                        response_jitter: niri_config::FloatOrInt(0.),
++                        press_response_ms: 800,
++                        rotation_response_ms: 800,
++                        rotation_degrees: niri_config::FloatOrInt(60.),
++                        tilt: niri_config::FloatOrInt(1.1),
++                        max_lag: 1024,
++                        release_ms: 2000,
++                        rotation_mode,
++                        ..Default::default()
++                    }
++                } else {
++                    Config {
++                        rotation_mode,
++                        ..Default::default()
++                    }
++                };
++                let (initial, complete, _) = dense_history_state(config, size);
++                for capacity in [false, true] {
++                    for gap in [
++                        31,
++                        32,
++                        33,
++                        35,
++                        36,
++                        37,
++                        1999,
++                        2000,
++                        2001,
++                        2399,
++                        2600,
++                        4000,
++                        24 * 60 * 60 * 1000,
++                    ] {
++                        let mut original = initial.clone();
++                        if capacity {
++                            original.history = complete.clone();
++                        }
++                        let mut cached = original.clone();
++                        let now = initial.sampled_at + at(gap);
++                        original_advance(&mut original, now);
++                        cached.advance(now);
++                        for (a, b) in original.cells.values().zip(cached.cells.values()) {
++                            for (a, b) in [
++                                (a.position, b.position),
++                                (a.spread, b.spread),
++                                (a.rotation, b.rotation),
++                                (a.tilt, b.tilt),
++                                (a.pin, b.pin),
++                            ] {
++                                assert_eq!(a.value,b.value,"gap={gap}, capacity={capacity}, extreme={extreme}, mode={rotation_mode:?}");
++                                assert_eq!(a.velocity,b.velocity,"gap={gap}, capacity={capacity}, extreme={extreme}, mode={rotation_mode:?}");
++                            }
++                        }
++                        assert_eq!(original.active(now), cached.active(now));
++                        assert_same_pose(
++                            &original.sample(now, size, rect).unwrap(),
++                            &cached.sample(now, size, rect).unwrap(),
++                        );
++                        // A reversal, release, and re-grab must inherit exactly the
++                        // same velocities, not merely end at the same visible pose.
++                        for state in [&mut original, &mut cached] {
++                            state.push((-130., 45.).into(), now + at(1));
++                            state.release(now + at(31));
++                            state.grab((0.1, 0.8).into(), now + at(47));
++                            state.push((20., -80.).into(), now + at(48));
++                        }
++                        assert_same_pose(
++                            &original.sample(now + at(401), size, rect).unwrap(),
++                            &cached.sample(now + at(401), size, rect).unwrap(),
++                        );
++                    }
++                }
++            }
 +        }
 +    }
 +
