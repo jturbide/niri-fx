@@ -1,6 +1,6 @@
 # Validation and known limits
 
-Evidence updated on **2026-10-06**, including Arch package acceptance, native
+Evidence updated on **2026-10-07**, including Arch package acceptance, native
 output tracing, portable fragment recipes, installed upgrade/Restore checks,
 native candidate isolation, resize continuation and device-owned pointer cleanup. These checks
 establish behavior on the tested setups; they do not certify every GPU or desktop.
@@ -64,6 +64,25 @@ package build. This does not establish compatibility after a library ABI change.
 Physical login, portal capture, suspend/resume and mixed-monitor behavior remain
 separate gates. See the [Arch guide](arch-linux.md) for use and the
 [packaging workflow](../packaging/arch/README.md) for reproduction.
+
+### Release-package upgrade (0.22.0 to 0.22.1)
+
+A clean-container 0.22.1 release-channel build passed an upgrade from the
+complete 0.22.0 package, rebuilt from its verified
+[signed release tag](https://github.com/jturbide/niri-fx/releases/tag/v0.22.0).
+Both synthetic users adopted 0.22.0 before package replacement, which left their
+homes unchanged. One user then reviewed and adopted 0.22.1, preserving the saved
+schema 4 recipe and exact shaders. Compositor rollback, tools rollback and
+readoption passed independently; the second user's selection and stock Niri
+files stayed unchanged. Retained tools remained usable after package removal.
+
+The executable bytes changed, while the recorded native build inputs stayed
+identical; this establishes upgrade behavior without claiming a renderer change.
+The 0.22.1 package also repeated the dependency-recovery probes above, including
+Python-path and interpreter-entry failures and actual `libinput` loss/restoration.
+Original dependencies were restored and both users' retained files stayed intact.
+These checks did not start a compositor session or test a different Python minor
+version. Physical login, capture, mixed monitors and suspend/resume remain pending.
 
 ### Earlier tools-only packages (0.21)
 
