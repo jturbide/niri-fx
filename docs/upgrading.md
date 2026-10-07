@@ -21,6 +21,38 @@ Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned
 upgrade notes below describe their original release workflows.
 
+## From 0.22.0 to 0.22.1
+
+0.22.1 fixes interrupted package-adoption recovery and startup diagnostics.
+Effect defaults, compositor patches and document schemas are unchanged. Keep
+saved profiles, Restore history and retained runtimes in place.
+
+Update your Arch package through your normal AUR workflow. An adopted user's
+CLI, Studio and next-login session still use their retained tools until an
+explicit adoption succeeds. Use the newly installed system command to review
+the update, then apply the exact fingerprint it reports:
+
+```sh
+/usr/bin/niri-fx native adopt
+/usr/bin/niri-fx native adopt --apply --expect-plan REVIEWED_SHA256
+```
+
+Omit `--config` for an existing selection. Adoption preserves its saved recipe,
+shader bytes and shared or frozen settings mode, with previous selections kept
+for rollback. Save open drafts and reopen Studio after adopting; the running
+compositor continues until logout.
+
+If an earlier adoption was interrupted, review the same adoption command again
+with 0.22.1. It resumes matching partial copies and refuses changed or unexpected
+files. Use the new fingerprint rather than a review made before the interruption.
+Unavailable Python or compositor libraries still require repairing system
+dependencies; see [recovery guidance](arch-linux.md#recover-after-a-dependency-update).
+
+For a managed wheel or source installation, prepare 0.22.1 in a new persistent
+environment and use [tool-runtime updates](tool-updates.md). Keep the previous
+environment intact. Moving to an Arch package instead follows the
+[source-managed migration](#from-a-source-managed-session-to-an-arch-package) below.
+
 ## From 0.21 to 0.22
 
 Arch users keep the same package choice: `niri-fx` or `niri-fx-git`. Update through
@@ -28,10 +60,10 @@ your AUR helper. Both now build and install the complete compositor and login
 entry alongside Studio, CLI and presets, so the first build takes longer than
 0.21. Stock Niri and your current settings remain in place.
 
-To keep using stock Niri, reopen Studio and continue normally. To use the included
-session, follow [first adoption](arch-linux.md#use-the-nirifx-session). Existing
-managed source installations first complete the
-[one-time launcher migration](tool-updates.md#migrate-existing-launchers-once).
+To keep using stock Niri, reopen Studio and continue normally. If no native bundle
+is selected, follow [first adoption](arch-linux.md#use-the-nirifx-session) to use
+the included session. An existing source-managed session follows
+[the migration below](#from-a-source-managed-session-to-an-arch-package).
 No additional package or shell-source modification is needed.
 
 After subsequent package updates, run `/usr/bin/niri-fx native adopt` without
@@ -43,6 +75,38 @@ For wheel installations, install the 0.22 wheel in a new persistent environment
 and use [managed tool updates](tool-updates.md) if that environment supplies your
 login launcher. The wheel remains tools-only; existing source-built compositor
 bundles stay available. Profile formats and effect defaults are unchanged.
+
+### From a source-managed session to an Arch package
+
+Install or update `niri-fx` or `niri-fx-git`, keeping the existing retained bundles,
+tool environments and configuration. If the installation still uses an older
+per-user launcher, complete the
+[one-time launcher migration](tool-updates.md#migrate-existing-launchers-once)
+first. An already active managed-tools selection does not need that migration
+again. Customized or unrecognized launcher files are preserved and refused.
+
+For an already selected native session, including shared settings created with
+the 0.20 source tools, use the packaged command **without `--config`**:
+
+```sh
+/usr/bin/niri-fx native adopt
+/usr/bin/niri-fx native adopt --apply --expect-plan REVIEWED_SHA256
+```
+
+Review the first command's plan before applying its `plan_sha256`. This retains
+the packaged tools and compositor while preserving the selected recipe and
+shared configuration; a frozen selection keeps its frozen snapshot. The ordinary
+managed `niri-fx` launcher continues to use the older selected tools until adoption
+succeeds. Select **NiriFX (package)** at the next login. The package entry uses the
+default XDG native storage; custom-root installations keep their existing entry.
+
+Direct upgrades from 0.20 follow the same
+[portable-recipe migration rules](#portable-fragment-recipes) introduced in 0.21.
+Existing schema 1, 2 and 3 documents keep their meaning. The newer tools can
+export a retained 0.20 fragment recipe as schema 4 with its recorded response values,
+without rewriting the old bundle. Keep original documents and bundles: 0.20
+tools cannot read schema 4, and compatibility checks may refuse tool rollback
+while selected or previous bundles contain newer recipes.
 
 ## From 0.20 to 0.21
 

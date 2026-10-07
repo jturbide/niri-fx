@@ -22,6 +22,21 @@ packages include Studio, CLI, presets and the complete compositor session. The
 Python wheel remains a tools installation. PyPI and Flatpak packages are not
 currently provided by this project.
 
+## 0.22.1 prerelease
+
+0.22.1 is a recovery patch for managed sessions. Retrying an interrupted
+package adoption resumes exact partial compositor copies for shared and frozen
+settings, while preserving and refusing changed or unexpected files. Session
+startup identifies unavailable compositor executables separately from invalid
+configuration, and retained tool startup failures include recovery guidance.
+
+Effect defaults, compositor patches and document schemas are unchanged from
+0.22.0. Package updates leave adopted users on their retained tools and compositor
+until they explicitly review and apply adoption. Follow
+[the patch upgrade steps](upgrading.md#from-0220-to-0221), or
+[migration from a source-managed session](upgrading.md#from-a-source-managed-session-to-an-arch-package).
+These recovery changes do not extend [physical desktop acceptance](validation.md).
+
 ## 0.22.0 prerelease
 
 [NiriFX 0.22](https://github.com/jturbide/niri-fx/releases/tag/v0.22.0) brings complete Arch packages: choose `niri-fx` for the release or
@@ -297,13 +312,13 @@ signing and publishing a version.
 Maintainers can exercise a published release wheel and a candidate wheel with
 `scripts/test-upgrade.py`. Download the old wheel and its `SHA256SUMS` from
 [v0.20.0](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0), build the
-0.21 candidate wheel, then run from the checkout:
+0.22.1 candidate wheel, then run from the checkout:
 
 ```sh
 python3 scripts/test-upgrade.py \
   --from-wheel artifacts/upgrade-v020/niri_fx-0.20.0-py3-none-any.whl \
   --checksums artifacts/upgrade-v020/SHA256SUMS \
-  --to-wheel dist/niri_fx-0.21.0-py3-none-any.whl \
+  --to-wheel dist/niri_fx-0.22.1-py3-none-any.whl \
   --browser
 ```
 

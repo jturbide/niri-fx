@@ -7,6 +7,12 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+## 0.22.1 - 2026-10-07
+
+Effect defaults, compositor patches and document schemas are unchanged. Adopted
+sessions keep their retained tools until an explicit reviewed update; see
+[upgrade guidance](docs/upgrading.md#from-0220-to-0221).
+
 ### Fixed
 
 - Retrying an interrupted packaged-session update resumes matching partial

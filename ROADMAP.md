@@ -26,7 +26,7 @@ See [available features](README.md),
    independent of files replaced by the package manager.
 4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
    tools and shared settings together; 0.21 adds complete recipe portability.
-   Follow with reliability and installation improvements in later 0.x releases.
+   0.22 adds complete packages; 0.22.1 focuses on adoption and startup recovery.
    The 1.0 contract stays a separate milestone after its acceptance gates pass.
 
 New presets should demonstrate a distinct useful look, with importable settings
@@ -45,6 +45,10 @@ follow the core controls and reliability work below.
 - [x] Publish [complete Arch packages in 0.22](https://github.com/jturbide/niri-fx/releases/tag/v0.22.0),
       with reviewed per-user adoption and retained recovery copies. Physical-session
       acceptance remains separate from clean-container package checks.
+- [x] Complete [0.22.1 recovery fixes](CHANGELOG.md#0221---2026-10-07) for interrupted
+      adoption and unavailable runtime dependencies, preserving selections and
+      the existing effect/document contract. Published-version upgrades and
+      physical-session acceptance remain separate gates.
 - [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
       publish tested environments and remaining limits with each release.
 - [ ] Complete the [1.0 acceptance criteria](docs/stability.md#acceptance-criteria-for-10)

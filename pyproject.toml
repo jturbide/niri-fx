@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "niri-fx"
-version = "0.22.0"
+version = "0.22.1"
 description = "Configurable Niri window effects: fragments, slices, wobble, dissolves, pixels, hexagons and distortion, with profiles and a visual Studio."
 requires-python = ">=3.10"
 license = "MIT AND GPL-3.0-or-later"

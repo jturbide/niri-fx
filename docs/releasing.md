@@ -48,7 +48,9 @@ releases just to fill the list.
 6. Create a focused, **signed** version commit on a branch, verify its signature
    and open a pull request. Merge only after the exact head passes `lint`,
    `validate (3.10)`, `validate (3.14)` and `browser`. Never bypass signing or
-   branch protections to work around a failure.
+   branch protections to work around a failure. Complete Arch package releases
+   also require both `Arch niri-fx` and `Arch niri-fx-git` to pass. Verify their
+   retained archive and installed-acceptance reports, including dependency recovery.
 
 Commands after that pull request is merged (replace `X.Y.Z`):
 
@@ -71,9 +73,9 @@ release notes, keeping titles consistent across versions.
 
 ## Native release candidates
 
-The Python package and a patched compositor have different release gates. A
-NiriFX package may include experimental build/session tools without shipping a
-supported compositor binary. Keep those claims separate in release notes and
+The Python wheel provides tools; each complete Arch package also builds the
+compositor and installs its login entry. Package and compositor acceptance have
+different release gates. Keep the tested scope explicit in release notes and
 downloads. The [native compatibility matrix](native-compatibility.md) records
 build targets; passing it does not certify a physical desktop.
 
