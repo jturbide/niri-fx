@@ -243,15 +243,38 @@ def write_new(path, text):
         os.fsync(stream.fileno())
 
 
+def _check_executable(binary):
+    """Separate loader/runtime failures from configuration errors before login."""
+    recovery = (
+        "Use a TTY or working stock Niri session to repair system packages or rebuild the candidate, "
+        "then review native adopt or native rollback. The retained selection is unchanged."
+    )
+    try:
+        result = subprocess.run(
+            [str(binary), "--version"], text=True, capture_output=True, timeout=20
+        )
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise RuntimeError(f"Niri executable cannot run: {binary}: {error}. {recovery}") from error
+    if result.returncode:
+        detail = (result.stderr.strip() or result.stdout.strip())[-4096:]
+        detail = detail or f"exited with status {result.returncode}"
+        raise RuntimeError(f"Niri executable cannot run: {binary}: {detail}. {recovery}")
+
+
 def _bundle(root, bundle_id, *, process_only=False):
     report = inspect_bundle(root, bundle_id)
+    if not process_only:
+        _check_executable(report["binary"])
     if report.get("shared"):
         if process_only:
-            # Shell startup may rewrite shared includes. ExecStartPost proves
-            # process ownership, not that those mutable files stayed frozen.
+            # Shell startup may rewrite shared includes; process verification
+            # must not run new probes or revalidate those mutable settings.
             return report
         from .native_shared import preflight
 
+        stock = report["shared"].get("stock_binary")
+        if stock and stock != report["binary"]:
+            _check_executable(stock)
         preflight(report)
         if inspect_bundle(root, bundle_id) != report:
             raise RuntimeError("Selected native bundle changed during configuration validation")
