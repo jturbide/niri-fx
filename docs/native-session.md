@@ -410,7 +410,9 @@ selections. Both bundles remain installed. After the first selection, rollback
 returns to **no native selection**; choose stock Niri. Another rollback restores
 the former selection.
 If the previous bundle was edited or no longer validates against installed
-libraries, rollback refuses and stock Niri remains the recovery path.
+libraries, rollback refuses. Use stock Niri if it still works; a missing shared
+dependency can affect both compositors and require repair from a TTY or another
+working session. See [dependency recovery](arch-linux.md#recover-after-a-dependency-update).
 
 When the previous recipe uses shared settings, rollback restores its effects
 against the current normal configuration after review and validation. It does
@@ -426,8 +428,8 @@ previous bundles, along with their transaction records.
 
 Normal system and shell updates remain independent. A retained binary can still
 stop working after a shared-library or driver update. Each login rechecks file
-identity and config parsing; this is not a substitute for dependency-aware
-distribution packages or real desktop acceptance.
+identity, executable startup and config parsing; this is not a substitute for
+dependency-aware distribution packages or real desktop acceptance.
 
 Before adopting a version for daily use, check shell startup, open/close,
 move/swap, resize, screen sharing, suspend/resume, clean logout and return to

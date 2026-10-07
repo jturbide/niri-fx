@@ -236,9 +236,9 @@ are developer regression controls, not separate consumer editions.
 - [x] Verify interruption recovery during shared and frozen bundle copying;
       resume only exact partial files and preserve changed or unexpected content.
 - [ ] Repeat adopted-session upgrade acceptance between published versions.
-- [ ] Verify missing-interpreter and shared-library failure and recovery in
+- [x] Verify missing-interpreter and shared-library failure and recovery in
       disposable accounts, preserving retained copies and login entries.
-- [ ] Verify retained tools independently of the system package's Python path;
+- [x] Verify retained tools independently of the system package's Python path;
       distinguish path relocation from a real interpreter-version upgrade.
 - [ ] Verify supported Python minor-version upgrades and shared-library changes
       on physical desktops, including recovery when stock Niri shares the failure.
