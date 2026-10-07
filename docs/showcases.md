@@ -1,6 +1,6 @@
 # Choose an effect by scenario
 
-The gallery has **230 GIFs**, including all **80 built-in presets**. Use this
+The gallery has **233 GIFs**, including all **80 built-in presets**. Use this
 index to find a look or answer a tuning question. The [setup scenario guide](scenarios.md)
 separately covers installation on standalone Niri, iNiR/iRiS, DMS and Noctalia.
 

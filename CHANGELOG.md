@@ -7,6 +7,24 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+### Added
+
+- Local Studio can review setup or updates from the complete installed NiriFX
+  package, cancel without changes and select the reviewed session for next login.
+  Installed, running and selected versions remain distinct; updates preserve
+  saved effects and keep the current desktop running.
+- Interactive continuous-fragment previews for grab, hold, movement, reversal,
+  release and regrab, including a keyboard-playable demo and reduced-motion controls.
+
+### Changed
+
+- Studio uses the newly installed tools for package adoption, then asks users to
+  save their draft and reopen before applying more desktop changes.
+- Continuous fragments reuse spring coefficients during long recovery without
+  changing particle trajectories or preset defaults. Paired CPU measurements show
+  roughly 41–48% lower dense-history recovery costs after 2–4 second gaps;
+  compositor presentation and physical suspend/resume remain separate checks.
+
 ## 0.22.1 - 2026-10-07
 
 Effect defaults, compositor patches and document schemas are unchanged. Adopted

@@ -23,16 +23,17 @@ The patches add an optional movement shader hook, pointer-driven deformation, co
 rendering integration and associated configuration/testing changes; see
 [the experiment](experimental/README.md).
 
-The browser spring and deformation adapter in `niri_fx/pointer-preview.js` is
-derived from the pointer patch and also uses **GPL-3.0-or-later**. Its header links
-to the corresponding source and license. Studio includes this component in its
+The browser spring and deformation adapter in `niri_fx/pointer-preview.js` and
+continuous fragment model and mesh in `niri_fx/fragment-preview.js` are derived
+from their corresponding Niri patches and also use **GPL-3.0-or-later**. Their headers link
+to the corresponding source and license. Studio includes these components in its
 offline HTML and hosted page; the installed package includes the same readable
 JavaScript and license text.
 
 The source distribution includes the patches and both license texts, so project
 distribution metadata lists `MIT AND GPL-3.0-or-later`. The installed Python
 package does not contain or install a patched compositor. Its original Python
-code remains MIT licensed; the embedded pointer preview has the license described
+code remains MIT licensed; the embedded motion previews have the license described
 above. This combined metadata does not relicense the MIT files.
 
 The build helper fetches Niri and Cargo dependencies separately into ignored

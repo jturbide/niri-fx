@@ -30,21 +30,21 @@ adds movement and swaps, pointer deformation, continuous fragments and interrupt
 improvements in one compositor build. Choose which effects to use in Library;
 you do not need to choose individual patches.
 
-The complete session currently uses the source-build and managed-login workflow.
-Full-session packages and signed compositor downloads are being prepared. Stock
-Niri remains available, and NiriFX does not patch your shell's source files.
+The complete session is included in the `niri-fx` and `niri-fx-git`
+[Arch packages](docs/arch-linux.md), with a source-build workflow for other setups.
+Stock Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.21.0](https://github.com/jturbide/niri-fx/releases/tag/v0.21.0)
+release. [Download v0.22.1](https://github.com/jturbide/niri-fx/releases/tag/v0.22.1)
 for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.
 
-**New in 0.21:** save, share and import complete
-[continuous-fragment recipes](docs/profiles.md#portable-fragment-response),
-including custom delays, rotation and release timing. Start with
-[Gentle, Tear or Cascade](examples/profiles/README.md#portable-continuous-fragment-combos)
-in local, online or offline Studio. [Upgrade from 0.20](docs/upgrading.md#from-020-to-021).
+**New in development:** try continuous fragment dragging directly in Studio,
+with native-checked motion for Gentle, Tear and Cascade. Local Studio also offers
+reviewed setup and updates from an installed complete package.
+[What's changed](CHANGELOG.md#unreleased) ·
+[Upgrade a released installation](docs/upgrading.md).
 
 ## Quick start
 
@@ -63,7 +63,7 @@ updates and existing managed sessions. Starting with 0.22, either package includ
 Studio, CLI, presets and the complete NiriFX session. Keep using stock Niri with
 the tools, or [set up the included session](docs/arch-linux.md#use-the-nirifx-session).
 
-For a small install without the source gallery, use the [release wheel](docs/releases.md#0220-prerelease).
+For a small install without the source gallery, use the [release wheel](docs/releases.md#0221-prerelease).
 On Niri with Python 3.10+, you can also open Library from source:
 
 ```sh
@@ -144,6 +144,21 @@ or **Implosion** for an inward collapse.
 Tune particle density, gravity, spin, release order, waves, size variation and
 burst origin. [Compare those controls](docs/catalog.md#one-control-at-a-time).
 These clips use Studio's real shaders with synthetic window content.
+
+### Continuous fragment dragging
+
+Choose **Gentle**, **Tear** or **Cascade** for Move, then grab the sample window
+in development Studio. Hold, pause, reverse direction and release: nearby pieces
+follow first while distant pieces wait, catch up and reconstruct.
+
+| Gentle | Tear | Cascade |
+| --- | --- | --- |
+| ![A restrained fragment drag and reconstruction](docs/gifs/fragment-preview-gentle.gif) | ![Delayed pieces follow a reversing drag](docs/gifs/fragment-preview-tear.gif) | ![A wider cascade spreads, follows and reconstructs](docs/gifs/fragment-preview-cascade.gif) |
+
+These are browser previews using native response and mesh math with synthetic
+input, not desktop recordings. Use the NiriFX session for real window dragging.
+[Response settings and limits](docs/fragment-drag.md) ·
+[Importable recipes](examples/profiles/README.md#portable-continuous-fragment-combos)
 
 ### More fragment shapes
 

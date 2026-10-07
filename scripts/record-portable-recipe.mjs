@@ -67,7 +67,7 @@ try {
     await evaluate("effectDocument().fragment_motion"),
     await evaluate("catalog.fragment_presets.tear.settings"),
   );
-  await hold("2 / Tear includes material and response / The canvas previews material only");
+  await hold("2 / Tear includes material and response / Try continuous fragment dragging");
   await evaluate("byId('combo-options').open=true;byId('fragment-tuning').open=true");
   await focus("native-fragments");
   await hold("3 / Open response controls when you want more detail", 1.5);
@@ -133,7 +133,7 @@ try {
       "document.querySelector('[data-library-action=movement]').click();byId('combo-options').open=true;byId('fragment-tuning').open=false",
     );
     await focus("native-fragments", 100);
-    await hold("JSON example / " + input.name + " / Material preview only", 1.5);
+    await hold("JSON example / " + input.name + " / Complete editable recipe", 1.5);
   }
   assert.equal(await evaluate("byId('error').textContent"), "");
   const destination = "docs/gifs/workflow-portable-recipe.gif",
@@ -171,7 +171,7 @@ try {
     manifestPath: "docs/gifs/scenario-manifest.json",
     entry: {
       name: "workflow-portable-recipe",
-      backend: "actual hosted Studio UI / synthetic material preview only",
+      backend: "actual hosted Studio UI / synthetic window and saved recipe",
       document_sources: documentSources,
       fps,
       frames: count,
