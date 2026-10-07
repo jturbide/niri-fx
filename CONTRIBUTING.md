@@ -142,13 +142,16 @@ export parity; it is not a compositor GPU benchmark. See
   paths require the complete suite; so do manual runs, release branches/tags,
   version changes and unavailable history. Mixed changes take the broader scope.
   Required job names stay unchanged, and failed or malformed selection fails them.
-- Native pointer spring and shader math share a contract with the browser preview.
+- Native pointer and fragment motion math share a contract with the browser previews.
   The always-on Node tests verify native source hashes, recorded Rust traces and
   GLSL adaptation. After reviewing native math changes, regenerate the traces with
   `python3 scripts/pointer-preview-reference.py`, verify them with the same command
   plus `--check`, and update the browser adapter when needed. Changes to the trace
   fixture, generator or adapter require the full rendering suite. Native harness
   changes alone do not alter the browser's runtime inputs.
+  Continuous fragments use the same workflow with
+  `scripts/fragment-preview-reference.py`; their tests compare trajectories,
+  mesh vertices and material math through hold, reversal, release and regrab.
 - CI caches pip and npm downloads using the dependency-file hashes. Each run still
   installs its dependencies and tests fresh outputs; virtual environments, shader
   results, browser profiles and generated packages are not reused as test evidence.

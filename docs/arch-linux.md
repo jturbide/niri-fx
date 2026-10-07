@@ -62,7 +62,14 @@ its session services, portal configuration and recovery entry.
 ## Use the NiriFX session
 
 The package includes the full compositor and a **NiriFX (package)** login entry.
-Before its first use, review setup as your normal user:
+The development version of local Studio offers **Review setup** near the top of
+the window. Review the files, then choose **Apply for next login**. First setup
+keeps a saved copy of the Niri configuration selected when Studio opened; it does
+not apply an unsaved Studio draft. Enable shared settings later from the session
+controls if you want normal Niri edits to follow both sessions.
+
+The CLI remains available in released versions. Before first use, review setup
+as your normal user:
 
 ```sh
 /usr/bin/niri-fx native adopt --config ~/.config/niri/config.kdl
@@ -104,7 +111,19 @@ page still uses its existing Studio process. Existing per-user launchers may
 precede packaged commands; use `/usr/bin/niri-fx --version` and
 `/usr/bin/niri-fx studio --active` to inspect and open the system installation.
 
-For an adopted session, review the newly installed version without `--config`:
+In the development version of local Studio, **Review update** uses the installed
+package's tools, even if Studio is still running an earlier retained version.
+**Cancel** changes nothing. After Apply, save any draft and reopen Studio from
+its launcher. The compositor selection takes effect at the next NiriFX login;
+Studio never restarts your desktop or installs system packages.
+
+The setup card distinguishes the installed package, running desktop and next
+login. If package metadata, launchers or required files cannot be verified, it
+shows the reason rather than offering an update. Package installation remains
+part of your normal AUR workflow. These controls are local; online Studio cannot
+inspect or change a desktop installation.
+
+For the CLI, review an adopted session's newly installed version without `--config`:
 
 ```sh
 /usr/bin/niri-fx native adopt

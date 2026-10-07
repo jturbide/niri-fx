@@ -21,6 +21,7 @@ from .library import Library, studio_target
 from .preview import preview_document
 from .storage import atomic_write
 from .studio_installation import StudioInstallation
+from .studio_session import StudioSession
 
 
 def open_studio(url, browser=False):
@@ -88,7 +89,10 @@ def make_server(arguments, effect):
     library = Library(arguments, target)
     from .native_session import default_root
 
-    installation = StudioInstallation(getattr(arguments, "native_root", None) or default_root())
+    native_root = getattr(arguments, "native_root", None) or default_root()
+    installation = StudioInstallation(native_root)
+    session = StudioSession(native_root, library.config, socket_path=os.environ.get("NIRI_SOCKET"))
+    session_changed = False
     native_document = getattr(arguments, "native_document", False) or bool(
         getattr(arguments, "custom", None) or getattr(arguments, "profile", None)
     )
@@ -100,6 +104,7 @@ def make_server(arguments, effect):
             "target": target,
             "view": "editor" if getattr(arguments, "edit", False) else "library",
             "installation": installation.snapshot(),
+            "session": session.snapshot() | {"reopen_required": session_changed},
         }
         if target == "native":
             from .capabilities import swap_capability
@@ -227,6 +232,10 @@ def make_server(arguments, effect):
                 "/shared-apply",
                 "/recovery-review",
                 "/recovery-apply",
+                "/session-status",
+                "/session-review",
+                "/session-apply",
+                "/session-cancel",
             ) or not valid_save_request(self.headers, self.server.origin, token):
                 self.respond(403, {"error": "Save request must come from this editor session."})
                 return
@@ -238,6 +247,44 @@ def make_server(arguments, effect):
                         f"Preset request must be between 1 and {MAX_DOCUMENT_BYTES} bytes"
                     )
                 data = json.loads(self.rfile.read(length))
+                nonlocal session_changed
+                if self.path.startswith("/session-"):
+                    action = {
+                        "/session-status": session.status,
+                        "/session-review": session.review,
+                        "/session-apply": session.apply,
+                        "/session-cancel": session.cancel,
+                    }[self.path]
+                    if session_changed and self.path in ("/session-review", "/session-apply"):
+                        raise ValueError(
+                            "Session setup changed. Save your draft and reopen Studio before applying more settings."
+                        )
+                    try:
+                        result = action(data)
+                    finally:
+                        if self.path == "/session-apply" and session.reopen_required is True:
+                            session_changed = True
+                    if self.path == "/session-apply":
+                        session_changed = True
+                    elif self.path == "/session-status":
+                        result = result | {"reopen_required": session_changed}
+                    self.respond(200, result)
+                    return
+                if session_changed and self.path in (
+                    "/save",
+                    "/review",
+                    "/apply",
+                    "/restore",
+                    "/rollback-review",
+                    "/rollback-apply",
+                    "/shared-review",
+                    "/shared-apply",
+                    "/recovery-review",
+                    "/recovery-apply",
+                ):
+                    raise ValueError(
+                        "Session setup changed. Save your draft and reopen Studio before applying more settings."
+                    )
                 if self.path in (
                     "/store",
                     "/profiles",
@@ -302,7 +349,10 @@ def make_server(arguments, effect):
                     },
                 )
             except (OSError, ValueError, subprocess.SubprocessError) as error:
-                self.respond(400, {"error": str(error)})
+                result = {"error": str(error)}
+                if self.path == "/session-apply" and session_changed:
+                    result.update(reopen_required=True, apply_uncertain=True)
+                self.respond(400, result)
 
         def setup(self):
             super().setup()

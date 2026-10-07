@@ -53,6 +53,20 @@ Counts are targets, not exact totals; square tiles adapt to each window's shape.
 | 900 pieces · staged release | 1,200 pieces · lower-left origin | 1,400 pieces · 300° orbit |
 | [Settings JSON](../examples/directional-wave.json) | [Settings JSON](../examples/corner-burst.json) | [Settings JSON](../examples/orbital-collapse.json) |
 
+### Continuous fragment response
+
+Development Studio lets you drag a synthetic window with Gentle, Tear or Cascade
+response. These browser clips use native motion and mesh math through press,
+pause, reversal and release. Real window dragging requires the NiriFX session;
+the clips do not measure compositor performance.
+
+| Gentle | Tear | Cascade |
+| --- | --- | --- |
+| ![Gentle delayed following](gifs/fragment-preview-gentle.gif) | ![Tear delayed following](gifs/fragment-preview-tear.gif) | ![Cascade delayed following](gifs/fragment-preview-cascade.gif) |
+| [Recipe](../examples/profiles/continuous-gentle.json) | [Recipe](../examples/profiles/continuous-tear.json) | [Recipe](../examples/profiles/continuous-cascade.json) |
+
+[Response controls and renderer limits](fragment-drag.md).
+
 ### Waves and varied fragments
 
 Unequal pieces, travelling waves and seeded direction variation add more organic

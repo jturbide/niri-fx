@@ -207,6 +207,18 @@
     "source": "726d03705811d66d7f72ec0b8f3d5ac3822ac0004d52bded48a9287242525915",
     "poster": "88d44f09c65d4c081dd9b3aef44df4cb350aceaa079b78e23e55cfdc9d9e1ee4"
   },
+  "fragment-preview-cascade": {
+    "source": "de2f65085dc21d26a86cedd6b42e6ce6bf8d7b33ddffc96d5f85dc23a5384ce2",
+    "poster": "3e422c36c81b7a941df85a92b37cc578a21daf884f448585c5775e71926e02bf"
+  },
+  "fragment-preview-gentle": {
+    "source": "e7f660cf0aaf670e6120709ddd430574722d1d42c08d205b9bfcb6bc2fb7bac1",
+    "poster": "1fc80acfa11052a993f66b6d8651f433b25b37dd20b99e10ca9e3867a6072657"
+  },
+  "fragment-preview-tear": {
+    "source": "1abb35112ac1dd61bd2ed231f137dca4a619bb79e737b635126641730cfcc661",
+    "poster": "384e18ac2bdde76ba79cae01c80a64bff873d9ce4ae99c48d45e5f9e1ecd1680"
+  },
   "fragments-motion-resize": {
     "source": "69f2521bf21692f95f3c21a93d8a862107224aac4d492c0fd86dc2280ebe6693",
     "poster": "b9bcd9130e0fdcf365d61d2ef310f810b9b08745e91df84a72f7c179a2f5aa33"
@@ -880,8 +892,8 @@
     "poster": "412f6fd276d88395f577f5ffe6ba0a577270c29906695bc874670505577ee778"
   },
   "workflow-action-choices": {
-    "source": "61b5595de0d25bae4c262ab4549c8d1265266a23324f9a113a5a371668c0590b",
-    "poster": "c2ef00b42efbe0c31a0865e49463b58d76fc5400ce16b9ba73e359439c35617e"
+    "source": "aaa841b8d62289a2e72e2835799a87bc24e75400ae8ab0085b4237b6c2a6e88b",
+    "poster": "47db24e3cf2cc7d30f10747f2cc944bd0da8c3ebf1867c59faa21b5b02279fb5"
   },
   "workflow-dms": {
     "source": "c1c96cacb890e169b12f53805a4752fab8e13127db4d1fbe4881a13340eca603",
@@ -896,24 +908,24 @@
     "poster": "1765aaac814a80d1b257fdb2c8c3aa0f43dd7b8f51e49e9dbc47cb26873228e2"
   },
   "workflow-library": {
-    "source": "302b7be8ca12a5ee9675ee468d355e5c87c18795546d42bdcc76cf8f48740f9a",
-    "poster": "f8c278b28757996e736e2145a20811a65643bf13bee6ab70659f79b1f1961b3c"
+    "source": "e102673e067225b1ddad280e5bf19bbb9fcbb33fb089ea2ffcb68faa80c1093d",
+    "poster": "192d830184edb578e58e2fbec88ae7aa0809b530b2ec82bd3303bb6cd6fedeab"
   },
   "workflow-noctalia": {
     "source": "f82c439dfe7fe3db255adcff764251f4388b98cf961219918a89f404fc50ffbb",
     "poster": "e83588917eafb65f8979f59a565e9c18a4b7a891235dc8ec638ce9dabc1851d0"
   },
   "workflow-portable-recipe": {
-    "source": "f04aa0558cc3b040897b1a844443739937c66ff3b93e971ccee3f90192ada319",
-    "poster": "b50b7146bd44fcf6ea1b95ec2344c65a41ee65b13de9da7834d85bd93ee5f4db"
+    "source": "62a061c5f193494f11a90582a270277cc52340fccdfd708c9275870aa0a65ba8",
+    "poster": "cab9e736488b65ad3baa74a3656e00eb05549baaa533c1d2dbf9ab3dbbfd39a2"
   },
   "workflow-quickshell-picker": {
     "source": "2b1952348b7294de078d1770b2d9f261ea1439edc7fbcd62b71e5d7f3cd093d3",
     "poster": "95a2528a9b3e809c35fae6e6b8c2cd0defc69fa7811ee927aae5ff096047e3b1"
   },
   "workflow-studio-profile": {
-    "source": "ca5badbddbabc30207d6a50a9d8cdee1e4c3f0e2ba38a09ece00d6ae6fd75584",
-    "poster": "b63d73a0c0696c7bcd5fa03a5ed103f58abaed311d4d780d92b6a97e0c0fb9af"
+    "source": "5914e3d1590d5f68c4bc746bcd839a91068400b7e75976077fada5f238c7007a",
+    "poster": "467ca51cc775022bc11296561773532a7483d183c9373104dfb0bf8e2ff16e24"
   },
   "workflow-terminal": {
     "source": "f0c904a72c7c53e44718c2be5d8b963144c859979216ce572d23e5cf50985101",

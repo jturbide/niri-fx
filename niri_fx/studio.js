@@ -85,6 +85,7 @@ let comboPreviewFrame = null;
 let pointerPreviewFrame = null;
 let cancelComboPreview = () => {};
 let cancelPointerPreview = () => {};
+let cancelFragmentPreview = () => {};
 let favorites = [];
 try {
   favorites = JSON.parse(localStorage.getItem("nirifx-favorites") || "[]").filter(
@@ -137,6 +138,7 @@ function chooseAction(action) {
 function loadDocument(doc, action = "open") {
   cancelPointerPreview();
   cancelComboPreview();
+  cancelFragmentPreview();
   editingAction = action;
   const renamed = byId("name").value.trim() !== doc.name;
   if (renamed) for (const key of Object.keys(rememberedActions)) delete rememberedActions[key];
@@ -646,6 +648,11 @@ if (!catalog.connection)
   byId("status").textContent =
     "Preview only: download a Niri preset or export editable JSON. Previewing does not activate effects.";
 byId("studio-kind").textContent = catalog.hosted ? "WEB STUDIO" : "LOCAL STUDIO";
+const sessionSetup = createSessionSetup({
+  catalog,
+  onApplied: (outcome) => workspace?.sessionChanged(outcome),
+});
+window.niriFxSessionSetup = sessionSetup;
 byId("hosted-note").hidden = !catalog.hosted;
 byId("save").onclick = async () => {
   const target = byId("save-target").value;
@@ -751,6 +758,26 @@ try {
   ctx.fillStyle = "#627991";
   for (let i = 0; i < 3; i++) ctx.fillRect(32, 315 + i * 14, 400 - i * 60, 5);
   const motionPreview = new MotionPreview(byId("motion-stage"), sample);
+  const fragmentPreview = createFragmentPreviewControls({
+    getDocument: effectDocument,
+    canvas: byId("fragment-stage"),
+    texture: sample,
+    eligible: (effect) =>
+      effect &&
+      typeof effect === "object" &&
+      createEffectCore(catalog).fragmentMotionEligible(effect),
+    stopOther: () => {
+      cancelPointerPreview();
+      cancelComboPreview();
+      cancelAnimationFrame(frame);
+    },
+    restore: () => refresh(),
+    reportError: (message) => {
+      byId("error").textContent = message;
+    },
+  });
+  cancelFragmentPreview = fragmentPreview.stop;
+  window.niriFxFragmentPreview = fragmentPreview;
   const nextSample = document.createElement("canvas");
   nextSample.width = 800;
   nextSample.height = 440;
@@ -974,6 +1001,12 @@ try {
   }
   function refresh() {
     try {
+      const doc = effectDocument();
+      byId("try-fragments").hidden = !(
+        doc.fragment_motion &&
+        isActionStyle(doc.actions?.movement) &&
+        createEffectCore(catalog).fragmentMotionEligible(doc.actions.movement)
+      );
       rebuild();
       draw(progress);
       byId("error").textContent = "";
@@ -984,7 +1017,7 @@ try {
       const caption =
         mode === "movement"
           ? fragmentMotion && editingAction !== "swap"
-            ? "Movement material preview · Continuous gesture response requires a compatible NiriFX compositor"
+            ? "Movement material preview · Choose Try fragment dragging for continuous response"
             : `NiriFX ${editingAction === "swap" ? "swap" : "movement"} shader preview · ${parameters.movement_ms} ms · Stock exports omit this action`
           : mode === "resize"
             ? `Resize · ${parameters.resize_ms} ms · ${(actions ? actions.resize : parameters.resize) ? "Included when you save" : "Preview only: resize is disabled for this style"}`
@@ -1386,6 +1419,7 @@ try {
     draws = 1,
   } = {}) => {
     cancelPointerPreview();
+    cancelFragmentPreview();
     cancelComboPreview();
     if (
       ![width, height, samples, draws].every(Number.isInteger) ||
@@ -1816,10 +1850,12 @@ try {
     preview: (action) => {
       cancelPointerPreview();
       cancelComboPreview();
+      cancelFragmentPreview();
       if (actions) chooseAction(action);
       populate();
       document.querySelector(`[data-mode=${previewModeForAction(action)}]`).click();
       refresh();
+      if (action === "movement" && fragmentPreview.start(true)) return;
       animate(action === "open");
     },
     edit: (action) => {
@@ -1864,6 +1900,8 @@ try {
       filterPresets();
     },
   });
+  if (catalog.connection?.session?.reopen_required)
+    workspace.sessionChanged({ uncertain: catalog.connection.session.apply_uncertain });
 } catch (error) {
   byId("error").textContent = error.message;
   document.documentElement.dataset.shaderStatus = "error";

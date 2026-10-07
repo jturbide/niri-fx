@@ -6,13 +6,13 @@ or saving a profile leaves the desktop unchanged.
 
 This guide covers the app on stock Niri. For movement, swaps, continuous
 fragments and pointer wobble, use the [complete NiriFX session](native-session.md).
-Its source installer prepares all compositor features together; full-session
-packages are still being prepared. Both paths use the same Library
-and leave shell source code untouched.
+The [complete Arch packages](arch-linux.md) include its compositor, tools and
+login entry. Other setups can build all compositor features together from source.
+Both paths use the same Library and leave shell source code untouched.
 
-This guide covers version 0.21. The wheel includes Studio and the managed-session
-tools; the compositor still builds from the matching source archive or tag.
-For another version, follow its included [release documentation](releases.md).
+The wheel includes Studio and managed-session tools, without a compositor binary.
+Development additions are labelled in their guides; for a specific version,
+follow its included [release documentation](releases.md).
 
 ## Requirements
 

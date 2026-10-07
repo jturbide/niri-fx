@@ -18,7 +18,7 @@ do not need iNiR installed.
 | NiriFX session, with any Niri-compatible shell | [Unified desktop build and managed login](native-session.md) | Includes movement, pointer wobble, continuous fragments and interruption improvements. Complete Arch packages and source installation are available; physical desktop acceptance remains tracked separately. |
 | Move/swap effects | NiriFX session | Updated builds support separate Move and explicit left/right Swap styles. Older retained builds share Move. Shell plugins cannot add these rendering hooks to stock Niri. |
 | Pointer-driven wobble | NiriFX session | [Pointer controls](pointer-wobble.md), portable profiles and Studio. Live Apply requires a verified running renderer; managed next-login selection validates the retained build separately. |
-| Continuous fragments | NiriFX session | Gentle, Tear and Cascade presets for square fragments. Browser movement preview does not reproduce the continuous renderer; see [tested scope](fragment-drag.md). |
+| Continuous fragments | NiriFX session | Gentle, Tear and Cascade presets for square fragments. Development Studio previews their native-checked response and mesh math with synthetic input; desktop rendering still needs the [tested native setup](fragment-drag.md). |
 
 See [tested versions and reproduction details](validation.md#workflow-and-compositor-scenarios)
 for the scope of each integration check.

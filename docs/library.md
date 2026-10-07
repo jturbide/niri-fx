@@ -132,6 +132,16 @@ behavior or display latency. With **Reduced motion**, interactive dragging moves
 the sample directly without deformation or settling, and combo playback skips
 the pointer phase. Previewing is available without a patched compositor.
 
+In development Studio, selecting **Gentle**, **Tear** or **Cascade** under
+continuous fragments starts a sample drag. Choose **Try fragment dragging** to
+grab the sample yourself, pause, reverse direction and release it. Distant pieces
+wait near their previous positions before catching up; regrabbing during settling
+keeps their motion. **Play drag demo**, Enter or Space provides a repeatable path.
+**Reset position** recenters the sample, and Escape returns to the editor. The
+preview uses your saved response settings and native-checked square-mesh math.
+Reduced motion moves the sample directly without breakup. It does not verify
+desktop input, capture, output scaling or compositor performance.
+
 ## Save, export or apply
 
 - **Save to My profiles** asks for a name and keeps an editable document without activation.
@@ -145,12 +155,16 @@ the pointer phase. Previewing is available without a patched compositor.
 - **Restore previous** restores this app's most recent change for the same setup and config. Later file edits
   cause a conflict rather than being overwritten.
 
-Saved profiles, JSON and share links carry portable action choices and
-pointer-wobble settings. Neither these documents nor config downloads include
-the **Gentle / Tear / Cascade continuous-fragment response** selected in a managed NiriFX session.
-That response stays in the managed session recipe when you Apply or select it
-for the next login. A profile export alone cannot recreate that complete session
-choice; see [continuous fragments](fragment-drag.md#native-settings).
+From 0.21, saved profiles, JSON and share links carry action choices,
+pointer-wobble settings and the complete **Gentle / Tear / Cascade
+continuous-fragment response**. NiriFX config exports include an active response;
+stock config exports omit it. See [continuous fragments](fragment-drag.md#native-settings).
+
+Development local Studio also shows **Session setup**. Install the complete
+package if needed, then review and apply a first setup or update there. Package installation
+and selecting the next-login runtime are separate steps. Save your draft and
+reopen Studio afterward to use the selected tools. Your running desktop stays
+unchanged until the next login. See [Arch setup](arch-linux.md).
 
 For frozen configurations, the **NiriFX session** (`native`) target offers live Apply when the running
 compositor matches the selected build and verifies the required renderer contracts.

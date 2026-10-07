@@ -447,13 +447,24 @@ Its `fragment_capability` result distinguishes
 continuous fragments from timed movement; a matching version string or working
 timed animation is not evidence that the continuous-fragment renderer is enabled.
 
+Before testing a replacement, export your saved recipe and inspect **Installed,
+running and next login** in local Studio. Keep the previous retained session and
+the ordinary **Niri** login entry. Test with synthetic windows and record the
+NiriFX build, GPU/driver, output sizes, refresh rates and scale factors alongside
+each result. Mark untested cases as untested; an automated package check does not
+fill in this table.
+
 | Manual check | Expected result |
 | --- | --- |
 | Sign in | Familiar shell, outputs, shortcuts and input settings load. |
 | Open, close and resize | Chosen effects run; client content and input remain usable. |
 | Drag, pause, reverse and drop | With continuous fragments configured, held pieces remain separated and reconstruct after release. |
 | Keyboard move and swap | The selected movement style runs and window focus/order stay correct. |
+| Move between displays | Window size, fragment placement and pointer/input alignment remain correct across different resolutions and scale factors. |
+| Disconnect and reconnect a display | Windows remain reachable and effects settle correctly on the remaining output, then after reconnect. |
 | Screen sharing | The portal picker opens and the selected stream reaches a test application. |
+| Capture restrictions | Protected synthetic content remains excluded during movement, resizing and closing; popups and backgrounds follow the same restriction. |
+| Lock and unlock | The session returns with usable input and no stuck deformation. |
 | Suspend and resume | Displays, input, shell and capture recover normally. |
 | Logout and stock login | The temporary lease is removed and stock Niri starts without native config nodes. |
 | Previous candidate | Reviewed rollback selects the retained pair for the next login. |

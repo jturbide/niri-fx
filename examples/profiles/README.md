@@ -73,7 +73,12 @@ python3 -m niri_fx render --custom examples/profiles/continuous-gentle.json > /t
 niri validate -c /tmp/continuous-gentle-stock.kdl
 ```
 
-Browser previews show the movement material, not continuous compositor gestures.
+Released 0.21–0.22 browser previews show the timed movement material. Development
+Studio adds **Try fragment dragging** and a repeatable **Play drag demo**, using
+native response math with synthetic content.
+[Gentle preview](../../docs/gifs/fragment-preview-gentle.gif) ·
+[Tear preview](../../docs/gifs/fragment-preview-tear.gif) ·
+[Cascade preview](../../docs/gifs/fragment-preview-cascade.gif).
 Stock Niri receives the opening and closing effects; the native response needs a
 verified compatible NiriFX session. Move Off, Preserve or an incompatible
 material keeps response values dormant. **Timed movement** removes them.

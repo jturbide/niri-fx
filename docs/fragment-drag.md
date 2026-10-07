@@ -27,8 +27,14 @@ developer checks below explain the current renderer's limits.
 **NiriFX 0.21:** **Save to My profiles**, **Download JSON** and
 **Share settings** retain the complete response alongside the action styles.
 Hosted and offline Studio offer the same three prefabs and
-**Customize fragment response** controls. The browser shows the movement
-material, not a simulation of continuous dragging. Stock config exports omit
+**Customize fragment response** controls. Released 0.21–0.22 Studio previews the
+timed movement material. Development Studio adds **Try fragment dragging**:
+grab and hold the sample, change direction, pause, release and regrab to compare
+your actual response settings. The preview uses native-checked motion and mesh
+math with synthetic content, independently of a desktop session. Its keyboard
+demo follows a repeatable path; reduced motion disables breakup and settling.
+Desktop input routing, capture behavior and performance still need native testing.
+Stock config exports omit
 the native response; NiriFX config exports include it for an eligible Move style.
 See [portable recipes](profiles.md#portable-fragment-response).
 
@@ -37,6 +43,17 @@ dormant. **Timed movement** explicitly removes it. In 0.20, response controls
 were retained only in managed session recipes; 0.21 tools can
 [export those recipes](upgrading.md#from-020-to-021) without
 modifying the retained bundle.
+
+## Try the response in Studio
+
+These browser recordings use the same demo available through **Try fragment
+dragging** and **Play drag demo** in development Studio. They preserve the
+configured timing and use synthetic input and window content.
+
+| Gentle | Tear | Cascade |
+| --- | --- | --- |
+| ![Gentle fragment response](gifs/fragment-preview-gentle.gif) | ![Tear fragment response](gifs/fragment-preview-tear.gif) | ![Cascade fragment response](gifs/fragment-preview-cascade.gif) |
+| [Recipe](../examples/profiles/continuous-gentle.json) | [Recipe](../examples/profiles/continuous-tear.json) | [Recipe](../examples/profiles/continuous-cascade.json) |
 
 ## Supported fragment material
 

@@ -17,6 +17,19 @@ manifests remain explicit inputs to comparison recorders.
 
 ## Arch packages
 
+Development Studio's package setup uses the installed system tools even when
+Studio itself is running from an older retained copy. Isolated subprocess tests
+exercise that boundary with a different tools version and temporary storage.
+They check first setup, preserved updates, stale/cancelled reviews, changed
+package contents and refusal of untrusted paths. A simulated lost reply after
+successful adoption verifies that further desktop writes require reopening
+Studio. Chromium tests cover review, cancellation, Apply, missing-package
+guidance, unchanged drafts and the distinction between confirmed and uncertain
+results. Hosted Studio exposes no local setup endpoints.
+
+These tests do not install packages or change the login desktop. The physical
+acceptance checklist remains [separate](native-session.md#updates-and-acceptance).
+
 The complete 0.22.0 release and development recipes passed fresh official Arch
 x86_64 container builds with Rust 1.99. Each build ran 785 Python tests and 168
 native test executions, then audited the full tools, compositor and session
@@ -653,12 +666,33 @@ intervals are diagnostics; they do not measure GPU execution or input latency.
 The [CPU benchmark](performance.md#continuous-fragment-state) measures state work
 separately from rendering. Its long-idle optimization preserves the default
 motion fixture and passes exact differential comparisons. Dense-history checks
-also record the remaining recovery spikes after short pauses. The hardware mesh
+also record the remaining recovery spikes after short pauses. The subsequent
+[cached recovery comparison](performance.md#cached-recovery-steps) preserves exact
+particle state and native mesh traces while reducing measured dense recovery
+costs. The hardware mesh
 probe passes 24 combinations twice, with native geometry and independent visible
 window contributions; its GPU query batches exclude uploads and compositor work.
 Native compositor GPU cost, renderer recreation, physical suspend/resume and Output/Screencast/PipeWire
 privacy remain separate acceptance gates; nested screenshots do not establish
 physical desktop behavior.
+
+The recovery optimization passed the complete native candidate's 169 test
+executions and exact before/after trajectory checks. A further drag-capture run
+under a private Xvfb/software-rendered parent failed the same far-piece onset
+assertion on both the previous and revised builds, with identical measured
+drift and an EGL fallback reported by both. That comparison does not establish
+new nested capture acceptance; the revised build still needs a run on a working
+native renderer and the physical desktop checklist.
+
+Development Studio also has an interactive fragment preview. Its Node tests
+compare browser cell state, mesh vertices and bounds against extracted native
+Rust traces for the three presets and custom rotation/extreme controls. Browser
+checks exercise press, pause, reversal, release, regrab, exact rested pixels,
+reduced motion and cleanup on capture loss, blur, resize and profile changes.
+They also verify that previewing leaves the recipe and edit history unchanged.
+Run `python3 scripts/fragment-preview-reference.py --check` after native math
+changes, followed by `npm test` and `npm run test:browser`. This validates the
+synthetic preview's model, not physical input or display latency.
 
 ## Pointer-driven wobble
 
@@ -883,7 +917,7 @@ to 441 for staged release; particle count alone does not predict cost.
 ## Documentation recordings
 
 The [click-to-play gallery](https://jturbide.github.io/niri-fx/gallery/) contains
-**230 GIFs**, including all **80 presets**, resize profiles and comparisons, custom
+**233 GIFs**, including all **80 presets**, resize profiles and comparisons, custom
 recipes, labelled Canvas concepts, native swaps and workflow/compositor scenarios.
 Fragments appear first. Static posters load initially, and only one
 animation plays after an explicit click.

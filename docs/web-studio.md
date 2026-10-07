@@ -41,8 +41,10 @@ and their custom controls can be saved to My profiles, downloaded and shared
 online. Values travel with the profile, even while Move is Off, preserved or
 using an incompatible material. **Timed movement** removes the response.
 Stock config exports omit it; native exports need an eligible material and a
-compatible NiriFX compositor. The browser previews the movement material, not
-continuous gesture behavior. See [portable fragment recipes](profiles.md#portable-fragment-response).
+compatible NiriFX compositor. Development Studio adds **Try fragment dragging**
+and **Play drag demo** to preview grab, hold, reversal and reconstruction with
+native-checked math. These synthetic previews do not verify desktop input,
+capture or performance. See [portable fragment recipes](profiles.md#portable-fragment-response).
 
 1. Open the [gallery](https://jturbide.github.io/niri-fx/gallery/) and start with
    nine recommended looks. **Open/close pairings** shows sixteen finished combinations;

@@ -50,6 +50,9 @@ _STUDIO_ASSETS = (
     "motion-preview.js",
     "pointer-preview.js",
     "combo-preview.js",
+    "session-setup.js",
+    "fragment-preview.js",
+    "fragment-controls.js",
 )
 
 
@@ -234,8 +237,20 @@ def preview_document(effect, name="balanced", connection=None, preferences=None,
             "<script>" + root.joinpath("pointer-preview.js").read_text() + "</script>",
         )
         .replace(
+            "<!--@FRAGMENT_PREVIEW_JS@-->",
+            "<script>" + root.joinpath("fragment-preview.js").read_text() + "</script>",
+        )
+        .replace(
+            "<!--@FRAGMENT_CONTROLS_JS@-->",
+            "<script>" + root.joinpath("fragment-controls.js").read_text() + "</script>",
+        )
+        .replace(
             "<!--@COMBO_PREVIEW_JS@-->",
             "<script>" + root.joinpath("combo-preview.js").read_text() + "</script>",
+        )
+        .replace(
+            "<!--@SESSION_SETUP_JS@-->",
+            "<script>" + root.joinpath("session-setup.js").read_text() + "</script>",
         )
         .replace(
             "<!--@STUDIO_JS@-->", "<script>" + root.joinpath("studio.js").read_text() + "</script>"

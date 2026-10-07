@@ -12,6 +12,17 @@ See [available features](README.md),
 
 ## Next priorities
 
+The next 0.x delivery focuses on session setup and motion quality:
+
+- [x] Set up and update an installed NiriFX session directly from local Studio,
+      with review, cancellation, preserved recipes and clear next-login status.
+- [x] Reduce dense-history fragment recovery costs while preserving queued
+      movement, reversals and release; publish paired measurements.
+- [x] Preview continuous fragment dragging with native-checked trajectories,
+      including hold, pause, reversal, release and regrab.
+- [ ] Complete the [physical desktop checklist](docs/native-session.md#updates-and-acceptance)
+      on the packaged session and publish the tested hardware and limitations.
+
 1. **Validate shared settings in daily use.** One normal Niri configuration and
    one saved recipe now feed stock and full-session effects. Verify shell-driven
    edits, normal updates and recovery on physical desktops before broadening
@@ -63,7 +74,7 @@ follow the core controls and reliability work below.
 - [x] Keep the complete recipe through JSON download/import, share links, My profiles,
       copying, reopening and Undo/Redo in local and online Studio.
 - [x] Offer Gentle, Tear and Cascade first, with detailed response controls secondary
-      and a clear explanation that the canvas does not simulate continuous response.
+      and clear native renderer requirements.
 - [x] Define Move Preserve/Style/Off, material edits and Pointer wobble interactions
       without silently losing response settings or enabling another action.
 - [x] Use existing shared/frozen review, Apply and recovery paths; refuse unsupported
@@ -124,8 +135,8 @@ are developer regression controls, not separate consumer editions.
 - [x] Review and install a finished full build, configuration snapshot and
       next-login selection together; retain administrator login-entry registration
       until packages provide it.
-- [ ] Install the NiriFX app, full compositor and login entry through one supported
-      package workflow, keeping stock Niri available.
+- [x] Deliver the NiriFX app, full compositor and login entry through complete
+      Arch packages, keeping stock Niri available. Physical support acceptance is separate.
 - [x] Detect a verified managed session before shell adapters and present direct
       per-action preset choices with immediate previews.
 - [x] Apply reviewed effects and same-build rollback directly to the running
@@ -196,8 +207,8 @@ are developer regression controls, not separate consumer editions.
 - [x] Add the same native-session review and rollback controls to Studio.
 - [x] Prepare a per-user systemd login launcher that pins a selected pair,
       preserves the stock service lifecycle and handles stale leases.
-- [ ] Package a distinctly named compositor and NiriFX login session alongside
-      stock Niri, including desktop features, portals and service lifecycle.
+- [x] Package a distinctly named compositor and NiriFX login entry alongside
+      stock Niri, retaining its desktop features, portal configuration and service lifecycle.
 - [x] Review self-contained candidate configuration separately, keeping unsupported
       native nodes out of the stock-session configuration.
 - [x] Select updates for the next login; retain the previous binary/config pair
@@ -274,13 +285,13 @@ existing entries once, then switches their shared runtime selection.
 - [x] Show local Studio installation status and a save-and-reopen notice after
       shared tool selection changes; cover same-version updates, rollback,
       prepared migration, source installs and unavailable metadata without losing edits.
-- [ ] Include environment creation, shared tool setup and login registration in
-      supported distribution packages and an accessible update UI.
+- [x] Include retained tools and login registration in complete Arch packages,
+      with reviewed setup/update controls in local Studio.
 - [ ] Verify the migrated login entry on supported physical desktops, including
       system Python upgrades and return to stock Niri.
 
-The [desktop update guide](docs/desktop-updates.md) separates current tools
-from this planned package/session workflow. Build identity is not runtime or
+The [desktop update guide](docs/desktop-updates.md) explains tool and session
+updates. Build identity is not runtime or
 physical acceptance; the native capture and input gates remain required.
 Native release candidates follow the [distribution checklist](docs/releasing.md#native-release-candidates)
 before being advertised as supported downloads.
@@ -489,7 +500,7 @@ requires additional compositor support and starts in the isolated experiment.
       meshes at 1080p and 4K, with visible contribution checks and explicit scope.
 - [ ] Measure native buffer preparation, uploads and presentation, and collect
       additional GPU results before raising the particle limit.
-- [ ] Reduce dense-history recovery spikes after 2–4 second pauses while preserving
+- [x] Reduce dense-history recovery spikes after 2–4 second pauses while preserving
       queued motion and release continuity; repeat CPU and native acceptance checks.
 - [ ] Verify fragment recovery after renderer recreation and physical suspend/resume.
 - [ ] Verify Output/Screencast privacy and actual PipeWire capture.
@@ -499,7 +510,7 @@ requires additional compositor support and starts in the isolated experiment.
       the choice in managed bundles, with reviewed Apply and rollback.
 - [x] Carry continuous response in portable recipes and expose its bounded controls
       in Studio, with independent action choices.
-- [ ] Preview continuous fragments faithfully through grab, pause, reversal and
+- [x] Preview continuous fragments faithfully through grab, pause, reversal and
       release in Studio, checked against the native response.
 - [ ] Tune per-piece motion through manual testing, including grab distance,
       travel direction, variation, tilt and acceleration toward the released

@@ -559,9 +559,9 @@ Each combination has seven samples in each of two runs. The extreme-control
 case at 4096 cells took about 144 ms after a four-second gap. These are observed
 state-update costs on a shared host, not measured dropped frames or physical
 suspend/resume results. Shorter gaps still require the bounded recent replay,
-so the long-idle shortcut does not remove every recovery spike. Reducing that
-cost while retaining queued motion is a remaining optimization task. Preset
-defaults and the particle limit are unchanged.
+so the long-idle shortcut did not remove every recovery spike. The following
+comparison measures a subsequent recovery optimization. Preset defaults and
+the particle limit are unchanged.
 
 The [complete dense-history report](benchmarks/fragment-motion-dense-cpu.json)
 includes both runs, reachable and synthetic histories, default and extreme
@@ -574,6 +574,37 @@ export CARGO_TARGET_DIR=../target CARGO_BUILD_BUILD_DIR=../target
 NIRIFX_FRAGMENT_DENSE_BENCHMARK=/tmp/nirifx-fragment-dense-cpu.json \
     cargo test --release --locked --lib fragment_motion_dense_benchmark -- --ignored --nocapture
 ```
+
+### Cached recovery steps
+
+The development renderer reuses spring coefficients during recovery and walks
+each piece's delayed targets in order. It keeps the same 4 ms integration steps,
+queued reversals, rotation and release behavior. Ordinary frames of 32 ms or less
+retain their existing path.
+
+Paired release builds measured on 2026-10-07 on the same Ryzen 9 7950X show these
+median **CPU state-update** costs in the second independent pair. Both builds use
+the same compiler and benchmark inputs; run order is reversed for the repeat.
+
+| Actual cells | 2.001 s gap, before → after (ms) | 4 s gap, before → after (ms) |
+| ---: | ---: | ---: |
+| 600 | 21.982 → 12.583 | 19.605 → 10.175 |
+| 800 | 29.593 → 16.774 | 26.238 → 13.636 |
+| 1200 | 43.718 → 25.682 | 38.855 → 20.594 |
+| 4096 | 152.023 → 86.210 | 134.075 → 69.391 |
+
+Recovery costs fell roughly 41–48% across these cases. Ordinary 60/120 Hz state
+updates stayed within about 2% across both pairs. Exact differential tests retain
+particle positions and velocities at the short-frame and two-second boundaries,
+with default/extreme controls, three rotation modes, reversal, release and regrab.
+The native trajectory and mesh traces also remain byte-identical.
+
+The [paired report](benchmarks/fragment-motion-recovery-cpu.json) includes raw
+samples, compiler/container identity, source fingerprints and synthetic
+history-capacity cases. These measurements exclude GPU drawing, upload,
+presentation and physical suspend/resume. Dense recovery remains expensive at
+the largest grids; this does not establish a stutter-free desktop or justify
+raising the particle limit.
 
 ### Continuous mesh GPU probe
 
