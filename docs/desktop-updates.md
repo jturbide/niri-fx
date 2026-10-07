@@ -35,6 +35,11 @@ failed update with a blanket reset, overwrite or stash deletion. The installed
 iNiR helper remains trusted shell code; API checks are not an execution sandbox.
 
 Run `niri-fx doctor` after an update and check an ordinary open/close cycle.
+Development versions automatically inspect the verified running NiriFX bundle
+and distinguish it from a newer next-login selection. On released 0.22.1 tools,
+pass that bundle's `--niri-binary` and `--config` paths explicitly. A passing
+report checks the current files and capabilities; it does not replace the
+[physical session checks](native-session.md#updates-and-acceptance).
 If configuration validation fails, retain your saved profile and use the
 [reviewed Restore workflow](setup.md#restore-a-setup). Source-managed dotfiles
 may still need their owner's normal merge process; NiriFX cannot resolve

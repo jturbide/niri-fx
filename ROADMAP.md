@@ -24,6 +24,12 @@ The next 0.x delivery focuses on session setup and motion quality:
       sharing of normal Niri settings without extra launch flags.
 - [x] Check iNiR helper API changes, stale reviews and exact Restore across
       compatible upgrades with isolated configuration and unchanged shell sources.
+- [x] Make ordinary diagnostics inspect the verified running NiriFX session,
+      distinguish next-login updates and cover independent Swap support.
+- [ ] Harden native capture measurements and renderer-error detection, then
+      refresh affected showcases on a renderer without startup errors.
+- [ ] Let Studio show session recovery when the next-login bundle is missing or
+      damaged, without silently switching to another configuration owner.
 - [ ] Complete the [physical desktop checklist](docs/native-session.md#updates-and-acceptance)
       on the packaged session and publish the tested hardware and limitations.
 

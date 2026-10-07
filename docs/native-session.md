@@ -358,6 +358,13 @@ It does not discover every session or prove that the running renderer has enable
 an effect. Continue to use `doctor` and the manual acceptance checks below. An
 empty role list is not permission to delete a bundle; cleanup remains planned.
 
+In the development version, `niri-fx doctor --text` automatically checks the
+verified running bundle, even if stock Niri is on `PATH` or a newer bundle is
+selected for next login. Explicit `--niri-binary` or `--config` arguments disable
+that automatic choice; provide both to inspect a particular pair. Released
+0.22.1 tools still need those explicit paths. See
+[diagnostic scope and capabilities](setup.md#movement-support).
+
 Each bundle's `storage` reports logical regular-file bytes and filesystem-allocated
 regular-file bytes, deduplicating hard links within that bundle. The measurement
 does not follow symbolic links or include directory metadata, link storage,
