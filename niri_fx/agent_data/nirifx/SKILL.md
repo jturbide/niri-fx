@@ -43,8 +43,12 @@ and connected Noctalia use their own adapters; DMS can launch standalone Studio.
 Do not assume a shell name proves compositor capabilities.
 
 `doctor` reports JSON even when a failed health check returns exit status 1.
-For live native activation, use `doctor --niri-binary PATH` and inspect the
-relevant `activation_ready` value. Parser support alone is insufficient. The full
+Current tools automatically inspect a verified running managed NiriFX bundle;
+read the diagnostic scope and keep running and next-login identities distinct.
+Explicit `--config` or `--niri-binary` disables automatic selection; provide both
+for a particular pair. For live native activation, inspect the relevant
+`activation_ready` value, including independent Swap support. Parser support
+alone and a successful core health check are insufficient. The full
 NiriFX session includes movement and pointer support. Neither a nested demo nor a
 matching version string proves that the login compositor supports it.
 

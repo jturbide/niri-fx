@@ -29,6 +29,7 @@ import-boundary test enforces that separation.
 | --- | --- |
 | [parameters.py](../niri_fx/parameters.py), [model.py](../niri_fx/model.py) | Parameter types, limits, labels, family applicability, GLSL tokens and capability flags. No I/O. |
 | [capabilities.py](../niri_fx/capabilities.py) | Separate movement/pointer parser probes, IPC executable identity and running renderer contracts. Read-only checks; never activates effects or substitutes a version string for a contract. |
+| [diagnostics.py](../niri_fx/diagnostics.py) | Chooses doctor's inspected configuration and executable from explicit arguments or a verified running retained bundle. Keeps next-login selection separate; never executes paths supplied by an unverified IPC peer. |
 | [presets.py](../niri_fx/presets.py) | Named built-in values. All built-ins leave resize off. |
 | [catalog.py](../niri_fx/catalog.py) | Curated opening/closing recipes reference existing presets. Shared normalized documents and family labels feed every picker. No I/O. |
 | [profiles.py](../niri_fx/profiles.py), [pointer.py](../niri_fx/pointer.py), [motion.py](../niri_fx/motion.py) | Immutable action choices, optional pointer settings and desktop springs. Null optional choices inherit; pointer strength zero explicitly disables deformation. No I/O. |

@@ -427,6 +427,15 @@ need observation on an actual hosted rendering failure.
 
 ## Movement diagnostics
 
+Development `doctor` selects a verified running retained bundle automatically.
+Regression checks cover stock defaults, a different next-login selection,
+explicit binary/config overrides, unavailable retained metadata and rejected
+unverified IPC paths. Swap has its own parser and renderer-contract report.
+An isolated real CLI check with temporary user directories verifies stock Niri
+remains healthy when optional native actions are unsupported and no session is
+advertised. Diagnostic scope, core health and native activation readiness are
+separate results; these checks do not establish physical desktop acceptance.
+
 The parser probe was checked against stock Niri 26.04 and the pinned experimental
 build, which report the same upstream version. IPC executable identification
 correctly distinguished the running stock session from that separate binary,

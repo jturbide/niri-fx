@@ -364,7 +364,7 @@ def parser():
         "--movement-binary",
         dest="movement_binary",
         type=Path,
-        help="Probe movement and pointer support in this trusted Niri binary (default: Niri on PATH)",
+        help="Inspect this trusted Niri binary instead of automatically selecting a verified running NiriFX bundle",
     )
     restore = commands.add_parser("restore", help="Review or restore the latest setup snapshot")
     restore.add_argument("--transaction", help="Restore a specific setup transaction")
@@ -382,8 +382,12 @@ def parser():
             "--dry-run", action="store_true", help="Only review changes (the default)"
         )
         command.add_argument("--state", type=Path, default=default_state())
-    for command in (setup, diagnose):
-        command.add_argument("--config", type=Path, default=default_config())
+    setup.add_argument("--config", type=Path, default=default_config())
+    diagnose.add_argument(
+        "--config",
+        type=Path,
+        help="Inspect this configuration with Niri on PATH or --niri-binary; disables automatic running-session selection",
+    )
     for command in (register, studio, setup, diagnose):
         command.add_argument("--inir-root", type=Path, default=default_inir_root())
     for command in (register, studio, setup):

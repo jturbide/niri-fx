@@ -61,6 +61,8 @@ def agent_info():
                 "argv": ["doctor"],
                 "effect": "read-only probes with temporary validation files",
                 "output": "json, including when health checks return exit status 1",
+                "scope": "Read diagnostic_scope and native_session before interpreting results. A verified running managed bundle is selected automatically unless config or binary is explicit; next-login selection remains separate.",
+                "readiness": "Inspect each action's activation_ready, including swap_capability. healthy covers core checks, not native activation or physical desktop acceptance.",
             },
             "compose": {
                 "argv": [

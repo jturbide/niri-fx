@@ -427,6 +427,9 @@ class DoctorFragmentTests(unittest.TestCase):
             patch("niri_fx.capabilities.movement_capability", return_value=report),
             patch("niri_fx.capabilities.pointer_capability", return_value=report),
             patch("niri_fx.capabilities.fragment_capability", return_value=report) as inspect,
+            patch("niri_fx.capabilities.swap_capability", return_value=report),
+            patch("niri_fx.native_session.default_root", return_value=Path(temporary) / "native"),
+            patch.dict(os.environ, {"NIRI_SOCKET": ""}),
             patch("niri_fx.picker.picker_checks", return_value=[]),
         ):
             result = doctor(

@@ -121,6 +121,14 @@ niri-fx setup --target standalone --custom ./my-combo.json --no-launcher
 read the target, affected paths, notes, content hashes and `plan_sha256`.
 Temporary parser probes are removed after validation.
 
+Development `doctor` automatically selects a verified running managed NiriFX
+bundle, keeping its identity separate from the next-login selection. Explicit
+`--config` or `--niri-binary` disables that choice; provide both to inspect a
+particular pair. Read `diagnostic_scope` and `native_session` before interpreting
+capability results.
+Core health is not proof that every native action can be activated. Released
+0.22.1 tools require explicit paths for the managed session.
+
 If activation is within the user's requested scope, repeat the **same arguments**
 with the returned fingerprint:
 
@@ -129,14 +137,15 @@ niri-fx setup --target standalone --custom ./my-combo.json --no-launcher \
   --apply --expect-plan REVIEWED_PLAN_SHA256
 ```
 
-When using `--config`, `--state` or experimental flags, keep them identical between
+When using `--config`, `--state` or native activation flags, keep them identical between
 review and Apply. A changed selection or configuration invalidates the review.
 Inspect the new state and review again; do not silently omit `--expect-plan`.
 The result reports a transaction ID and restore command. Keep both with the
 task's local evidence, not in a public profile or shared prompt.
 
-Experimental movement and pointer activation require an explicit standalone
-target, the corresponding enable flag and a verified running renderer:
+The lower-level standalone setup path for movement and pointer activation
+requires an explicit standalone target, the corresponding enable flag and a
+verified running renderer. Managed sessions use the native workflow below:
 
 ```sh
 niri-fx doctor --niri-binary /path/to/patched/niri

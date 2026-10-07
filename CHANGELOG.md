@@ -30,6 +30,10 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Fixed
 
+- `doctor` checks the verified running NiriFX bundle automatically instead of
+  inspecting stock Niri on `PATH`. It distinguishes the running session from the
+  next-login selection, respects explicit config/binary choices and reports Swap
+  support alongside movement, pointer wobble and continuous fragments.
 - The adopted Studio app launcher selects the native editor explicitly, so it
   opens successfully from stock Niri before the first NiriFX login. Preparing
   effects there does not activate native effects on stock Niri.

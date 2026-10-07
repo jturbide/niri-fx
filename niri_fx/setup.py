@@ -911,10 +911,18 @@ def restore(state, identifier=None, apply=False, *, binary=None, verify_native=T
 
 
 def doctor(args):
-    from .capabilities import fragment_capability, movement_capability, pointer_capability
+    from .capabilities import (
+        fragment_capability,
+        movement_capability,
+        pointer_capability,
+        swap_capability,
+    )
+    from .diagnostics import resolve_context
 
     checks = []
-    selected = getattr(args, "movement_binary", None)
+    socket_path = os.environ.get("NIRI_SOCKET")
+    context = resolve_context(args, default_config(), socket_path=socket_path)
+    selected = context["binary"]
     requested = str(Path(selected).expanduser().absolute()) if selected is not None else "niri"
     niri = shutil.which(requested)
     try:
@@ -928,7 +936,7 @@ def doctor(args):
         checks.append({"check": "niri", "ok": bool(niri), "detail": version})
     except (OSError, subprocess.SubprocessError) as error:
         checks.append({"check": "niri", "ok": False, "detail": f"Could not query Niri: {error}"})
-    config = Path(args.config).expanduser()
+    config = context["config"]
     try:
         if selected is not None:
             validate_config(config, requested)
@@ -975,15 +983,21 @@ def doctor(args):
             else "Studio will use the default browser; WebGL is required.",
         }
     )
-    movement = movement_capability(
-        getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
-    )
-    pointer = pointer_capability(
-        getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
-    )
-    fragment = fragment_capability(
-        getattr(args, "movement_binary", None), socket_path=os.environ.get("NIRI_SOCKET")
-    )
+    movement = movement_capability(selected, socket_path=socket_path)
+    pointer = pointer_capability(selected, socket_path=socket_path)
+    fragment = fragment_capability(selected, socket_path=socket_path)
+    swap = swap_capability(selected, socket_path=socket_path)
+    for label, state in context["native_session"].items():
+        checks.append(
+            {
+                "check": "native-" + label.replace("_", "-"),
+                "ok": None,
+                "detail": state["status"]
+                + (f" · {state['bundle_id']}" if state["bundle_id"] else "")
+                + ": "
+                + state["detail"],
+            }
+        )
     checks.extend(
         [
             {
@@ -1012,19 +1026,44 @@ def doctor(args):
                 "ok": None,
                 "detail": fragment["session"]["contract"]["detail"],
             },
+            {
+                "check": "swap-binary",
+                "ok": None,
+                "detail": f"{swap['binary'] or 'Unavailable'}: {swap['detail']}",
+            },
+            {
+                "check": "swap-renderer",
+                "ok": None,
+                "detail": swap["session"]["contract"]["detail"],
+            },
         ]
     )
     from .picker import picker_checks
 
     checks.extend(picker_checks())
+    health_scope = (
+        "Health covers the inspected executable, configuration and installed integration "
+        "metadata. Informational renderer checks do not certify active effects, "
+        "next-login readiness or physical desktop behavior."
+    )
+    checks.extend(
+        [
+            {"check": "diagnostic-scope", "ok": None, "detail": context["scope"]["detail"]},
+            {"check": "health-scope", "ok": None, "detail": health_scope},
+        ]
+    )
     return {
         "checks": checks,
         "healthy": all(c["ok"] is not False for c in checks),
+        "health_scope": health_scope,
+        "diagnostic_scope": context["scope"],
+        "native_session": context["native_session"],
         "resize": "Choose resize separately; built-in presets preserve existing resize behavior.",
-        "movement": "Experimental movement requires a matching binary and verified running renderer contract.",
+        "movement": "Move and Swap use the NiriFX session. Each running renderer contract is checked separately.",
         "movement_capability": movement,
-        "pointer": "Experimental pointer deformation requires standalone mode, a matching binary and a verified running renderer contract.",
+        "pointer": "Pointer wobble and continuous fragments use the NiriFX session and verified running renderer support.",
         "pointer_capability": pointer,
         "fragment_capability": fragment,
-        "next": "Run niri-fx for guided preset selection, or setup for a scriptable JSON plan.",
+        "swap_capability": swap,
+        "next": "Use niri-fx studio to choose and review effects. Native status distinguishes running and next-login selections.",
     }

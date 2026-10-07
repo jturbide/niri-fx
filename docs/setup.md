@@ -23,8 +23,8 @@ python3 -m niri_fx setup
 ```
 
 `doctor` reports the Niri version, config validation, iNiR helper, browser,
-optional Quickshell/GJS/GTK interfaces, and separate movement and pointer
-capability reports as JSON.
+optional Quickshell/GJS/GTK interfaces, and separate movement, Swap, pointer
+wobble and continuous-fragment capability reports as JSON.
 Use `--text` for a readable report. Missing optional interfaces do not fail core
 health. It does not change settings. Exit status is 0 when Niri
 and its config are healthy, 1 for missing prerequisites, or 2 for a command error.
@@ -43,18 +43,31 @@ python3 -m niri_fx doctor --text
 python3 -m niri_fx doctor --text --niri-binary /path/to/candidate/bin/niri
 ```
 
-`--niri-binary PATH` selects the trusted executable for version reporting, existing
-configuration validation and both capability probes. `--movement-binary` is an
-alias for the same option. Without either flag, Niri on `PATH` is used. Standalone
-setup and Studio use the selected executable to validate their generated config too.
+In the development version, ordinary `doctor` identifies a running managed
+NiriFX session and checks its retained executable and startup configuration.
+The report distinguishes that running bundle from the bundle selected for next
+login, so an update waiting for login does not replace the current diagnostic
+target. Otherwise it checks normal Niri on `PATH` and the usual configuration.
+
+An explicit `--config` or `--niri-binary` disables automatic target selection.
+Pass both to inspect a particular executable/configuration pair. With only one
+flag, the other uses its normal stock-Niri default. `--movement-binary` remains
+an alias for `--niri-binary`. Earlier releases require explicit paths to inspect
+NiriFX. Standalone setup and Studio also use their selected executable to
+validate generated configuration.
+
+Diagnostics validate files as they exist now. A startup configuration path does
+not prove which settings a running compositor has reloaded, and a successful
+core health check does not certify physical input, capture or suspend/resume.
 
 When `NIRI_SOCKET` is available, the diagnostic makes a read-only version request
 and compares the IPC peer's executable with the probed binary using Linux peer
 credentials and `/proc`. It never executes a binary discovered through IPC.
 A matching version string or socket filename alone is not evidence of support.
 
-JSON integrations can read `movement_capability` and `pointer_capability`
-separately. Each exposes parser `status`, running executable `session.status`,
+JSON integrations can read `movement_capability`, `swap_capability`,
+`pointer_capability` and `fragment_capability` separately. Each exposes parser
+`status`, running executable match `session.same_binary`,
 renderer `session.contract.status` and the resulting `activation_ready`:
 
 | Status | Meaning |
