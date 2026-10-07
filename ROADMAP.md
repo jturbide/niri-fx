@@ -1,8 +1,8 @@
 # NiriFX roadmap
 
 NiriFX focuses on finished effects and coherent motion for Niri. Choose a preset,
-apply it, and customize when useful. Niri remains the primary compositor; other
-backends are research candidates, not current compatibility claims.
+apply it, and customize when useful. Niri is the sole compositor target. Work
+focuses on effects, the NiriFX session and integrations for Niri-compatible shells.
 
 Checklists describe concrete deliverables. Checked items have shipped or have
 recorded validation; unchecked items are still planned or in development. The
@@ -26,11 +26,11 @@ See [available features](README.md),
    independent of files replaced by the package manager.
 4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
    tools and shared settings together; 0.21 adds complete recipe portability.
-   Follow with reliability and installation improvements in later 0.x releases.
+   0.22 adds complete packages; 0.22.1 focuses on adoption and startup recovery.
    The 1.0 contract stays a separate milestone after its acceptance gates pass.
 
 New presets should demonstrate a distinct useful look, with importable settings
-and a faithful showcase. More shells, workspace shaders and compositor ports
+and a faithful showcase. Niri shell integrations and workspace shaders
 follow the core controls and reliability work below.
 
 ## Release milestones
@@ -45,6 +45,10 @@ follow the core controls and reliability work below.
 - [x] Publish [complete Arch packages in 0.22](https://github.com/jturbide/niri-fx/releases/tag/v0.22.0),
       with reviewed per-user adoption and retained recovery copies. Physical-session
       acceptance remains separate from clean-container package checks.
+- [x] Complete [0.22.1 recovery fixes](CHANGELOG.md#0221---2026-10-07) for interrupted
+      adoption and unavailable runtime dependencies, preserving selections and
+      the existing effect/document contract. Published-version upgrades and
+      physical-session acceptance remain separate gates.
 - [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
       publish tested environments and remaining limits with each release.
 - [ ] Complete the [1.0 acceptance criteria](docs/stability.md#acceptance-criteria-for-10)
@@ -549,28 +553,17 @@ Published results and reproducible commands remain in the
 
 See [fragment shapes](docs/fragment-shapes.md) and [action profiles](docs/profiles.md).
 
-## Epic 8: shell integration and future compositor ports
+## Epic 8: Niri shell integration
 
-Shells and compositors are different integration targets. iNiR/iRiS, DMS,
-Noctalia, Quickshell and GTK pickers use NiriFX's Niri backend today. Waybar needs
-only the standalone path.
+Improve the existing Niri workflows for iNiR/iRiS, DMS, Noctalia, Quickshell
+and GTK pickers. Waybar uses the standalone path.
 
 - [ ] Validate full shell embedding of reusable Quickshell and GTK/Astal components.
-- [ ] Assess Caelestia on a maintained Niri setup, then an ML4W Niri-session adapter.
-- [x] Document the reusable effect/preset model and compositor-specific rendering
-      inputs without introducing an unused generic backend framework.
-- [ ] After the Niri motion milestones, assess one Hyprland effect as a small port
-      experiment: textures, coordinates, progress, transparency and damage first.
-- [ ] Evaluate plugin/version maintenance and capture/input behavior before any
-      broader Hyprland support commitment.
-- [ ] Add another backend only when a working prototype justifies its abstractions.
+- [ ] Verify shell upgrades preserve user settings and leave shell sources unchanged.
+- [x] Document the effect/preset model and Niri rendering contract.
 
-Shader math and preset descriptions can be reused. Window textures, animation
-lifecycle, interruption state, damage and configuration belong to each compositor;
-Wayland is not a portable window-effects plugin API. Hyprland's
-[C++ plugin interface](https://wiki.hypr.land/Plugins/Development/Getting-Started/)
-is a possible research path, not a drop-in Niri shader loader. No Hyprland backend
-is being implemented in the current release. See [portability boundaries](docs/architecture.md#compositor-portability).
+Shell integrations use the same presets, reviewed Apply and Restore as Studio.
+See the [Niri rendering contract](docs/architecture.md#niri-rendering-contract).
 
 ## Epic 9: agent and automation integration
 

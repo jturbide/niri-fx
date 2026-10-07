@@ -32,7 +32,6 @@ to use `niri-fx` from elsewhere in place of `python3 -m niri_fx`.
 | Niri + Waybar or another UI | `python3 -m niri_fx studio --target standalone` | The same Niri include works independently of the UI. [Custom shell/bar guide](custom-shells.md). |
 | A config managed by Nix/Home Manager or another generator | `python3 -m niri_fx render --preset balanced` | Put the output into that manager's source and include it after base animations; avoid editing generated files with `setup`. |
 | Different effects on opening and closing | `python3 -m niri_fx studio` | Choose Open and Close styles separately, or start from Combos. [Profiles guide](profiles.md). |
-| Hyprland, GNOME or KWin | No NiriFX desktop backend | Studio previews still work; exported Niri shaders cannot be installed into these compositors. |
 
 Use one animation manager at a time. A late standalone include overrides earlier
 iRiS/Noctalia choices. Registration, previewing and pack export do not activate

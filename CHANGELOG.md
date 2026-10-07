@@ -7,6 +7,17 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+## 0.22.1 - 2026-10-07
+
+Effect defaults, compositor patches and document schemas are unchanged. Adopted
+sessions keep their retained tools until an explicit reviewed update; see
+[upgrade guidance](docs/upgrading.md#from-0220-to-0221).
+
+### Changed
+
+- Public guides and roadmap focus on Niri effects, the NiriFX session and
+  integrations for Niri-compatible shells.
+
 ### Fixed
 
 - Retrying an interrupted packaged-session update resumes matching partial
@@ -595,7 +606,7 @@ are unchanged. Package updates do not select a style or enable resize.
   Hexagon Edge Rebuild and Circle Soft Reflow profiles.
 - Native consume/expel, vertical reorder, move/resize and insertion/removal checks;
   new swap, rearrangement, resize and shader showcases.
-- Public roadmap epics with acceptance checklists and Niri-first portability notes.
+- Public roadmap epics with acceptance checklists for Niri effects and integrations.
 
 ### Changed
 
@@ -825,7 +836,7 @@ experimental compositor patch is unchanged from 0.10.0.
   requires a recording for every preset/profile example and links for all GIFs.
 - README TL;DR before the gallery, a scenario selector, a complete standalone
   guide and custom-shell/bar guidance. Prioritized integration roadmap for
-  custom Quickshell, AGS/Astal, Caelestia and ML4W; Waybar needs no shader adapter.
+  custom Quickshell and AGS/Astal on Niri; Waybar needs no shader adapter.
 - Browser checks for transparent input, downloadable standalone/Noctalia files
   and every new control; stock Niri open/close smoke of all new/revised styles.
 

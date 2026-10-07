@@ -9,6 +9,8 @@ or `python3 -m niri_fx agent-info`.
 - Keep parameter metadata and presets canonical in `niri_fx/`. Python and browser
   validation/export behavior must agree; use the shared document fixtures and
   export parity tests when changing schemas or controls.
+- Niri is the sole compositor target. Keep public guides and roadmap work focused
+  on Niri effects, the NiriFX session and integrations for Niri-compatible shells.
 - Resize, timed movement and pointer deformation remain explicit choices.
   Stock exports omit nodes that require the NiriFX compositor. Live activation requires
   the matching executable and verified running renderer contract.

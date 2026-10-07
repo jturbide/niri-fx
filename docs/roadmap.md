@@ -37,11 +37,10 @@ leaves the shell checkout unchanged. See [Desktop updates](desktop-updates.md).
 
 ## Further integration work
 
-Full-shell embedding and Caelestia/ML4W assessments remain planned. Each assessment
-should establish a maintained Niri setup, a usable UI extension point and a
-reproducible Apply/Restore workflow before advertising support.
+Focus on embedding the existing pickers in maintained Niri-compatible shells.
+Each integration needs a supported UI extension point and a reproducible
+Apply/Restore workflow before advertising support.
 
 Primary references: [Quickshell](https://quickshell.org/),
 [AGS](https://aylur.github.io/ags/), [Astal](https://aylur.github.io/astal/),
-[Caelestia's components](https://github.com/caelestia-dots/shell#components),
-[ML4W](https://github.com/mylinuxforwork/dotfiles), [Waybar](https://github.com/Alexays/Waybar).
+[Waybar](https://github.com/Alexays/Waybar).
