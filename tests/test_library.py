@@ -395,6 +395,8 @@ class LibraryTests(unittest.TestCase):
         helper = scripts / "niri-config.py"
         helper.write_text(
             "from pathlib import Path\nimport os\n"
+            "def _load_animation_presets(): raise AssertionError('Registry lookup must be captured')\n"
+            "def _write_validated(path, text): raise AssertionError('Review must not write')\n"
             "def resolve_niri_section_file(path): return Path(os.environ['XDG_CONFIG_HOME'])/'niri'/path\n"
             "def cmd_apply_animation_preset(ids):\n"
             " p = _load_animation_presets()['presets'][0]\n"

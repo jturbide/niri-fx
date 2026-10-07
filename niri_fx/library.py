@@ -8,8 +8,6 @@ the replacement without writing, then NiriFX snapshots and validates the change.
 
 import contextlib
 import fcntl
-import importlib.util
-import io
 import json
 import os
 import re
@@ -19,6 +17,7 @@ from types import SimpleNamespace
 from .branding import APP_ID
 from .documents import MAX_DOCUMENT_BYTES, effect_document, load_document, parse_document
 from .effects import render_kdl
+from .inir_serializer import serialize_preset
 from .integration import default_registry, make_custom_preset, merge_registry, read_shell_presets
 from .profiles import Profile
 from .setup import BEGIN, OWNED, apply_plan, change, default_config, plan_setup, restore, summarize
@@ -41,10 +40,16 @@ def registry_document(preset):
 
 def studio_target(arguments):
     target = getattr(arguments, "target", "auto")
-    if target != "native" and any(
+    native_options = any(
         getattr(arguments, key, None) is not None
         for key in ("native_root", "native_base", "shared_config")
-    ):
+    )
+    # Older retained app dispatchers pass --native-root without --target.
+    # An explicit native scope chooses that editor; automatic desktop detection
+    # remains unchanged when the caller supplied no native options.
+    if target == "auto" and native_options:
+        return "native"
+    if target != "native" and native_options:
         raise ValueError("--native-root, --native-base and --shared-config require --target native")
     if target == "auto":
         from . import native_session
@@ -105,8 +110,12 @@ class Library:
             self.native_base = native_session.inspect_bundle(self.native_root, base)
             self.native_socket = os.environ.get("NIRI_SOCKET")
             shared_config = getattr(arguments, "shared_config", None)
+            # Offer the source fixed at launch; sharing still requires its own
+            # reviewed transaction and never follows a path sent by the browser.
             self.shared_config = (
-                Path(shared_config).expanduser().absolute() if shared_config is not None else None
+                Path(self.config if shared_config is None else shared_config)
+                .expanduser()
+                .absolute()
             )
             self.stock_binary = str(getattr(arguments, "stock_binary", "niri"))
 
@@ -452,44 +461,20 @@ class Library:
         registry = Path(args.registry)
         old_registry = read_bytes(registry.resolve())
         merged = merge_registry(json.loads(old_registry) if old_registry else {}, [preset])
-        helper = Path(args.inir_root) / "scripts/niri-config.py"
-        spec = importlib.util.spec_from_file_location("_nirifx_inir_helper", helper)
-        module = importlib.util.module_from_spec(spec)
-        # Retain module metadata without reading or writing the shell checkout's
-        # bytecode cache. Review must use current source and leave updates clean.
-        exec(compile(helper.read_bytes(), str(helper), "exec"), module.__dict__)
-        animation = module.resolve_niri_section_file("config.d/60-animations.kdl")
-        before = read_bytes(animation.resolve())
-        captured = []
-
-        def capture(path, text):
-            if Path(path) != animation:
-                raise ValueError("iNiR changed its animation file contract")
-            captured.append(text.encode())
-            return 0
-
-        # Invoke the installed serializer, retaining off/slowdown and its exact
-        # preset matching. Override only I/O and registry lookup on this private
-        # module instance; neither the installed source nor live config is edited.
-        module._load_animation_presets = lambda: {"presets": [preset]}
-        module._write_validated = capture
-        with contextlib.redirect_stdout(io.StringIO()):
-            result = module.cmd_apply_animation_preset([preset["id"]])
-        if result != 0 or len(captured) != 1:
-            raise ValueError("iNiR could not assemble the selected profile")
+        serialized = serialize_preset(args.inir_root, default_config(), preset)
         observed = [
             change(
                 registry,
                 (json.dumps(merged, indent=2, ensure_ascii=False) + "\n").encode(),
                 old_registry,
             ),
-            change(animation, captured[0], before),
+            change(serialized.path, serialized.content, serialized.before),
             change(self.config, self.config.read_bytes()),
         ]
         return {
             "target": "inir-active",
             "activation": "iRiS animation service",
-            "selection": {"name": name, "helper_sha256": digest(helper.read_bytes())},
+            "selection": {"name": name, "helper_sha256": serialized.helper_sha256},
             "effect": document,
             "desktop_motion": document.get("motion"),
             "pointer": document.get("pointer"),

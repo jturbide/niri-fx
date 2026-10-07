@@ -36,7 +36,7 @@ class SharedWorkflowTests(unittest.TestCase):
                 "native",
                 "--native-root",
                 str(self.root),
-                "--shared-config",
+                "--config",
                 str(self.fixture.config),
                 "--stock-binary",
                 str(self.fixture.stock),
@@ -61,6 +61,27 @@ class SharedWorkflowTests(unittest.TestCase):
         with redirect_stdout(output), redirect_stderr(error):
             code = main(["native", *arguments, "--root", str(self.root)])
         return code, json.loads(output.getvalue()) if output.getvalue() else None, error.getvalue()
+
+    def test_launch_config_is_offered_without_sharing_or_writing(self):
+        self.assertIsNone(self.args.shared_config)
+        before = snapshot(self.root.parent)
+        library = Library(self.args, "native")
+        self.assertEqual(library.shared_config, self.fixture.config.absolute())
+        self.assertFalse(library.listing()["native"]["shared_state"]["selected"])
+        self.assertTrue(library.listing()["native"]["shared_config_configured"])
+        review = library.shared_review({})
+        self.assertTrue(review["changes"])
+        self.assertEqual(snapshot(self.root.parent), before)
+
+    def test_explicit_sharing_source_overrides_the_launch_config(self):
+        self.args.shared_config = self.fixture.config
+        self.args.config = self.root.parent / "unrelated-config.kdl"
+        before = snapshot(self.root.parent)
+        library = Library(self.args, "native")
+        self.assertEqual(library.shared_config, self.fixture.config.absolute())
+        review = library.shared_review({})
+        self.assertTrue(review["changes"])
+        self.assertEqual(snapshot(self.root.parent), before)
 
     def test_adoption_uses_latest_saved_recipe_and_requires_editor_reopen(self):
         draft = self.root.parent / "library/profiles/draft.json"
