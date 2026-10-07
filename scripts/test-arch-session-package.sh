@@ -371,6 +371,10 @@ done
 cmp "$output/user-b-ready.json" "$output/user-b-retained-final.json"
 snapshot niri "$output/niri-readopted.json"
 cmp "$output/niri-before.json" "$output/niri-readopted.json"
+if [[ ${NIRIFX_ARCH_SESSION_DEPENDENCIES:-} == 1 ]]; then
+    python "$repo/scripts/lib/arch_session_dependencies.py" \
+        "$output/dependencies" "$work/home-a" "$work/home-b"
+fi
 pacman -R --noconfirm "$package_name"
 
 for path in /usr/bin/niri-fx-session /usr/bin/niri-fx \

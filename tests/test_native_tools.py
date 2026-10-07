@@ -4,6 +4,8 @@ import contextlib
 import copy
 import io
 import json
+import subprocess
+import sys
 import tempfile
 import unittest
 import venv
@@ -13,6 +15,8 @@ from unittest.mock import patch
 from niri_fx import branding, native_entry, native_tools, native_tools_launcher, setup
 from niri_fx.cli import main
 from niri_fx.storage import digest
+
+PYTHON = sys.executable
 
 
 class NativeToolsTests(unittest.TestCase):
@@ -377,6 +381,89 @@ class NativeToolsTests(unittest.TestCase):
                     command[4],
                 )
                 self.assertEqual(command[5:], [str(Path(self.new["package"]).parent), *suffix])
+
+    def test_missing_or_nonfile_interpreter_refuses_without_selecting_fallback(self):
+        self.activate()
+        selected = (self.root / "tools/selection.json").read_bytes()
+        compositor = self.selected.read_bytes()
+        python = Path(self.new["python"])
+        python.unlink()
+        for directory in (False, True):
+            if directory:
+                python.mkdir()
+            with (
+                self.subTest(directory=directory),
+                patch.object(native_tools_launcher, "__file__", str(self.root / "tools/launch.py")),
+                patch.object(native_tools_launcher.os, "execv") as execute,
+                self.assertRaisesRegex(ValueError, "interpreter is unavailable.*repair Python"),
+            ):
+                native_tools_launcher.main(["session"])
+            execute.assert_not_called()
+            self.assertEqual((self.root / "tools/selection.json").read_bytes(), selected)
+            self.assertEqual(self.selected.read_bytes(), compositor)
+
+    def test_interpreter_exec_failure_preserves_selection_and_names_recovery(self):
+        self.activate()
+        selected = (self.root / "tools/selection.json").read_bytes()
+        with (
+            patch.object(native_tools_launcher, "__file__", str(self.root / "tools/launch.py")),
+            patch.object(
+                native_tools_launcher.os,
+                "execv",
+                side_effect=FileNotFoundError("missing interpreter loader"),
+            ) as execute,
+            self.assertRaisesRegex(ValueError, "interpreter could not start.*native adopt"),
+        ):
+            native_tools_launcher.main(["cli", "--version"])
+        self.assertEqual(execute.call_count, 1)
+        self.assertEqual(execute.call_args.args[0], self.new["python"])
+        self.assertEqual((self.root / "tools/selection.json").read_bytes(), selected)
+
+    def test_bootstrap_import_and_unsupported_python_failures_have_recovery_without_traceback(self):
+        self.activate()
+        selected = (self.root / "tools/selection.json").read_bytes()
+        compositor = self.selected.read_bytes()
+        for unsupported in (False, True):
+            with (
+                self.subTest(unsupported=unsupported),
+                patch.object(native_tools_launcher, "__file__", str(self.root / "tools/launch.py")),
+                patch.object(native_tools_launcher.os, "execv") as execute,
+            ):
+                native_tools_launcher.main(["session"])
+            command = execute.call_args.args[1]
+            # The private fixture deliberately has no native_login module.
+            # Simulate only the version gate; this is not a Python minor upgrade.
+            if unsupported:
+                command[4] = "import sys; sys.version_info = (3, 9, 0)\n" + command[4]
+            result = subprocess.run(
+                [PYTHON, *command[1:]], cwd=self.home, capture_output=True, text=True, timeout=10
+            )
+            self.assertEqual(result.returncode, 1)
+            self.assertIn("NiriFX tools could not load", result.stderr)
+            self.assertIn("stock Niri", result.stderr)
+            self.assertIn("retained selection is unchanged", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+            self.assertIn("Python 3.10" if unsupported else "native_login", result.stderr)
+            self.assertEqual((self.root / "tools/selection.json").read_bytes(), selected)
+            self.assertEqual(self.selected.read_bytes(), compositor)
+
+    def test_bootstrap_executes_retained_entrypoint_outside_default_site_packages(self):
+        module = Path(self.new["package"]) / "cli.py"
+        module.write_text("def main():\n    print('retained private runtime')\n    return 0\n")
+        self.new["files"][str(module)] = digest(module.read_bytes())
+        self.activate()
+        with (
+            patch.object(native_tools_launcher, "__file__", str(self.root / "tools/launch.py")),
+            patch.object(native_tools_launcher.os, "execv") as execute,
+        ):
+            native_tools_launcher.main(["cli", "--version"])
+        command = execute.call_args.args[1]
+        result = subprocess.run(
+            [PYTHON, *command[1:]], cwd=self.home, capture_output=True, text=True, timeout=10
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(result.stdout.strip(), "retained private runtime")
+        self.assertFalse(list(Path(self.new["package"]).rglob("*.pyc")))
 
     def test_new_package_file_after_review_is_refused_before_writes(self):
         plan = self.plan()

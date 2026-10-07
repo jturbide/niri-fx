@@ -1,11 +1,13 @@
 """Native login ownership tests use temporary paths and mocked user services."""
 
+import io
 import json
 import os
 import signal
 import subprocess
 import tempfile
 import unittest
+from contextlib import redirect_stderr
 from pathlib import Path
 from unittest.mock import Mock, patch
 
@@ -283,22 +285,118 @@ class NativeLoginTests(unittest.TestCase):
         failure = subprocess.CompletedProcess([], 1, "", "bad configuration")
         with (
             patch.object(login, "inspect_bundle", return_value=self.report),
-            patch.object(login.subprocess, "run", return_value=failure),
+            patch.object(
+                login.subprocess,
+                "run",
+                side_effect=[subprocess.CompletedProcess([], 0, "niri fixture", ""), failure],
+            ) as run,
         ):
-            with self.assertRaisesRegex(RuntimeError, "bad configuration"):
+            with self.assertRaisesRegex(
+                RuntimeError, "configuration failed validation: bad configuration"
+            ):
                 login._bundle(self.root, BUNDLE)
+        self.assertEqual(
+            [call.args[0][1] for call in run.call_args_list], ["--version", "validate"]
+        )
+
+    def test_missing_runtime_library_refuses_before_login_writes_for_frozen_and_shared(self):
+        binary = Path(self.report["binary"])
+        binary.parent.mkdir(parents=True)
+        binary.write_text(
+            "#!/bin/sh\n"
+            'if [ "$1" = --version ]; then\n'
+            "  printf '%s\\n' 'niri: error while loading shared libraries: libfixture.so: missing' >&2\n"
+            "  exit 127\n"
+            "fi\n"
+            "exit 91\n"
+        )
+        binary.chmod(0o755)
+        selection = self.root / "selection.json"
+        selection.write_text(
+            json.dumps({"schema": 1, "selected": BUNDLE, "previous": OTHER_BUNDLE})
+        )
+        selection.chmod(0o600)
+        before = selection.read_bytes()
+        for shared in (False, True):
+            report = self.report | (
+                {"shared": {"stock_binary": str(login.STOCK)}} if shared else {}
+            )
+            output = io.StringIO()
+            with (
+                self.subTest(shared=shared),
+                patch.object(login, "require_stopped"),
+                patch.object(login, "_require_tools"),
+                patch.object(login, "inspect_bundle", return_value=report),
+                patch.object(login, "write_new") as write,
+                patch.object(login.os, "execv") as execute,
+                patch("niri_fx.native_shared.preflight") as preflight,
+                redirect_stderr(output),
+            ):
+                self.assertEqual(login.main(["--root", str(self.root), "launch"]), 1)
+                write.assert_not_called()
+                execute.assert_not_called()
+                preflight.assert_not_called()
+            self.assertIn("Niri executable cannot run", output.getvalue())
+            self.assertIn("libfixture.so", output.getvalue())
+            self.assertIn("native rollback", output.getvalue())
+            self.assertNotIn("configuration failed", output.getvalue())
+            self.assertEqual(selection.read_bytes(), before)
+            self.assertFalse(self.directory.exists())
+            self.assertFalse(self.dropin.exists())
+
+    def test_executable_probe_reports_missing_loader_timeout_and_bounds_diagnostic(self):
+        for failure in (
+            FileNotFoundError("missing ELF loader"),
+            subprocess.TimeoutExpired("version", 20),
+        ):
+            with (
+                self.subTest(failure=failure),
+                patch.object(login.subprocess, "run", side_effect=failure),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "Niri executable cannot run.*TTY"):
+                    login._check_executable(self.report["binary"])
+        failure = subprocess.CompletedProcess([], 127, "", "x" * 10_000)
+        with patch.object(login.subprocess, "run", return_value=failure):
+            with self.assertRaises(RuntimeError) as error:
+                login._check_executable(self.report["binary"])
+        self.assertLess(len(str(error.exception)), 5_000)
+
+    def test_shared_stock_runtime_is_checked_before_configuration(self):
+        shared = self.report | {"shared": {"stock_binary": "/synthetic/stock-niri"}}
+        results = [
+            subprocess.CompletedProcess([], 0, "niri fixture", ""),
+            subprocess.CompletedProcess([], 127, "", "stock loader unavailable"),
+        ]
+        with (
+            patch.object(login, "inspect_bundle", return_value=shared),
+            patch.object(login.subprocess, "run", side_effect=results) as run,
+            patch("niri_fx.native_shared.preflight") as preflight,
+            self.assertRaisesRegex(RuntimeError, "stock loader unavailable"),
+        ):
+            login._bundle(self.root, BUNDLE)
+        self.assertEqual(
+            [call.args[0] for call in run.call_args_list],
+            [[self.report["binary"], "--version"], ["/synthetic/stock-niri", "--version"]],
+        )
+        preflight.assert_not_called()
 
     def test_shared_launch_preflights_mutable_settings_and_rechecks_owned_bundle(self):
         shared = self.report | {"shared": {"owner_id": "e" * 64}}
         with (
             patch.object(login, "inspect_bundle", return_value=shared) as inspect,
             patch("niri_fx.native_shared.preflight") as preflight,
-            patch.object(login.subprocess, "run") as validate,
+            patch.object(
+                login.subprocess,
+                "run",
+                return_value=subprocess.CompletedProcess([], 0, "niri fixture", ""),
+            ) as validate,
         ):
             self.assertEqual(login._bundle(self.root, BUNDLE), shared)
         preflight.assert_called_once_with(shared)
         self.assertEqual(inspect.call_count, 2)
-        validate.assert_not_called()
+        validate.assert_called_once_with(
+            [self.report["binary"], "--version"], text=True, capture_output=True, timeout=20
+        )
         with (
             patch.object(
                 login,
@@ -306,6 +404,7 @@ class NativeLoginTests(unittest.TestCase):
                 side_effect=[shared, shared | {"binary_sha256": "f" * 64}],
             ),
             patch("niri_fx.native_shared.preflight"),
+            patch.object(login, "_check_executable"),
             self.assertRaisesRegex(RuntimeError, "changed during"),
         ):
             login._bundle(self.root, BUNDLE)
@@ -316,6 +415,7 @@ class NativeLoginTests(unittest.TestCase):
         with (
             patch.object(login, "inspect_bundle", return_value=shared),
             patch("niri_fx.native_shared.preflight", side_effect=ValueError("incompatible base")),
+            patch.object(login, "_check_executable"),
             patch.object(login.os, "execv") as execute,
         ):
             with self.assertRaisesRegex(ValueError, "incompatible base"):
@@ -354,6 +454,7 @@ class NativeLoginTests(unittest.TestCase):
         ):
             self.assertEqual(login._bundle(self.root, BUNDLE, process_only=True), self.report)
         preflight.assert_not_called()
+        self.assertEqual(validate.call_count, 1)
         self.assertEqual(
             validate.call_args.args[0],
             [self.report["binary"], "validate", "-c", self.report["config"]],

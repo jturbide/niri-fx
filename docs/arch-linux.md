@@ -149,6 +149,29 @@ saved profiles, configurations, Restore history and retained session bundles
 in place. Stock Niri remains installed. Restore effects before removal if you
 want the underlying configuration back.
 
+## Recover after a dependency update
+
+Retained tools and compositor copies still use system Python and shared
+libraries. A saved copy protects the selected files, not the surrounding system.
+Keep your retained bundles and profiles while repairing the affected dependency.
+
+| Symptom | Recovery |
+| --- | --- |
+| `/usr/bin/niri-fx` reports `No module named niri_fx` after a Python update | Rebuild your chosen AUR package for the installed Python version. An adopted user's retained launcher loads its own copy of the package and can remain usable while system site-packages are unavailable. |
+| A retained launcher reports an incompatible interpreter or cannot import its tools | Restore a compatible Python installation, or use the repaired system CLI to review adoption of compatible tools. |
+| `/usr/bin/python3` itself is missing or cannot start | Repair the system Python package from a terminal or TTY. Python-based launchers cannot print their own recovery message when their interpreter cannot run. |
+| Niri reports a missing shared library or symbol | Repair the distribution's library/package mismatch, then rebuild the chosen NiriFX package if needed. A previous retained binary may depend on the same unavailable library. |
+
+Use the stock **Niri** login entry while repairing a NiriFX-specific failure.
+If the missing dependency also affects stock Niri, use a TTY or another working
+session for package repair. Restoring a dependency does not change the selected
+tools, compositor or recipe; retry the selection after the repair.
+
+Follow Arch's [Python rebuild guidance](https://wiki.archlinux.org/title/Python#Module_not_found_after_Python_version_update)
+and [system maintenance guidance](https://wiki.archlinux.org/title/System_maintenance#Partial_upgrades_are_unsupported).
+Complete system updates and rebuild affected AUR packages together; avoid mixing
+individual library versions as a permanent workaround.
+
 ## Scope and tested environments
 
 The package owns its CLI, Python module, Studio menu entry, icon, examples,

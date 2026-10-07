@@ -98,8 +98,28 @@ native patch stack and dispatcher. Transitions from a different patch or
 dispatcher contract need a version-specific baseline audit before this helper
 can assess them.
 
-Physical login, mixed monitors, PipeWire capture, suspend/resume and compatibility
-with changed system Python or shared libraries have separate acceptance gates.
+Both CI channels also set `NIRIFX_ARCH_SESSION_DEPENDENCIES=1`. This adds dependency
+failure and recovery checks to the existing adoption test before package removal;
+it does not require another native build. To exercise an existing archive:
+
+```sh
+# Inside a disposable official Arch container, as root:
+NIRIFX_ARCH_PACKAGE_CONTAINER=1 bash scripts/test-arch-session-dependencies.sh \
+  /evidence/dependencies /fixtures/candidate.pkg.tar.zst
+```
+
+The probe temporarily withholds the system Python package path, the interpreter
+entry and one actual compositor library. It verifies retained CLI behavior,
+startup refusal before session changes, restoration of the dependencies, and
+unchanged files for both users and stock Niri. A library shared by stock Niri
+can prevent both compositors from starting; the report records that result.
+Dependencies are restored even when an assertion fails. Do not run this helper
+against a host installation.
+
+Relocating the same Python executable establishes path independence, not
+compatibility with a different interpreter version. Physical login, mixed
+monitors, PipeWire capture, suspend/resume, real Python minor-version upgrades
+and shared-library upgrades have separate acceptance gates.
 
 The producer strips its owned executable before recording its final SHA-256.
 Makepkg stripping and debug splitting are disabled to preserve that identity.

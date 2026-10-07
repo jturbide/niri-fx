@@ -17,7 +17,7 @@ manifests remain explicit inputs to comparison recorders.
 
 ## Arch packages
 
-The complete 0.22 release and development recipes passed fresh official Arch
+The complete 0.22.0 release and development recipes passed fresh official Arch
 x86_64 container builds with Rust 1.99. Each build ran 785 Python tests and 168
 native test executions, then audited the full tools, compositor and session
 payload. Candidate validation pinned both recipes to the reviewed source commit;
@@ -38,9 +38,31 @@ and the real iNiR helper, using temporary configuration: independent action mode
 saving, review/cancel, Apply, reopening and exact Restore. No test connected to
 the user's compositor or changed a shell checkout.
 
-These checks do not establish upgrades between two adopted native versions,
-physical login, portal capture, suspend/resume or mixed-monitor behavior. Those
-remain separate gates. See the [Arch guide](arch-linux.md) for use and the
+Subsequent candidate builds of both channels also passed reviewed updates from
+an already adopted complete package. Each candidate ran 789 Python tests and 168
+native test executions. The check exercised changed retained tools and binary
+identities, independent rollback and readoption, preserving the saved recipe,
+the second user's selection and stock Niri files. Native patch inputs were
+unchanged; different executable bytes do not establish new compositor behavior.
+These were candidate-to-candidate updates, not updates between published releases.
+
+The dependency-recovery candidate passed another clean release-channel build
+with 796 Python tests and 168 native test executions, followed by adoption from
+the previous candidate. Temporarily withholding the system Python module path
+left retained tools and native configuration validation usable. Removing the
+interpreter entry refused both users' CLI/session launchers without a fallback;
+restoring it recovered the retained tools. Relocating the same interpreter also
+passed, but did not test a different Python version.
+
+Withholding the retained compositor's actual `libinput` dependency prevented both
+it and stock Niri from starting. Login preflight reported an executable failure
+before any session changes; restoring the original library recovered validation
+for both compositors. Both users' files and stock Niri files kept their original
+contents, modes and ownership throughout. CI runs these probes in each existing
+package build. This does not establish compatibility after a library ABI change.
+
+Physical login, portal capture, suspend/resume and mixed-monitor behavior remain
+separate gates. See the [Arch guide](arch-linux.md) for use and the
 [packaging workflow](../packaging/arch/README.md) for reproduction.
 
 ### Earlier tools-only packages (0.21)

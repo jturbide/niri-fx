@@ -13,6 +13,10 @@ import sys
 from pathlib import Path
 
 MAX_BYTES = 4 * 1024 * 1024
+RECOVERY = (
+    "Use a TTY or stock Niri to repair Python or review native adopt or native tools-update. "
+    "The retained selection is unchanged."
+)
 
 
 def read_owned(path):
@@ -150,8 +154,8 @@ def verify_runtime(record):
     package = Path(record["package"])
     if str(package / "__init__.py") not in files:
         raise ValueError("Tools runtime inventory is incomplete")
-    if not os.access(python, os.X_OK):
-        raise ValueError("Retained tools interpreter is unavailable")
+    if not python.is_file() or not os.access(python, os.X_OK):
+        raise ValueError(f"Retained tools interpreter is unavailable: {python}. {RECOVERY}")
 
 
 def main(arguments=None):
@@ -171,10 +175,16 @@ def main(arguments=None):
     # not move it out of the new interpreter's default site-packages path.
     module = "niri_fx.native_login" if action == "session" else "niri_fx.cli"
     bootstrap = (
-        "import sys; "
-        "assert sys.version_info >= (3, 10), 'NiriFX tools require Python 3.10 or newer'; "
-        "sys.path.insert(0, sys.argv.pop(1)); "
-        f"from {module} import main; raise SystemExit(main())"
+        "import sys\n"
+        "try:\n"
+        "    if sys.version_info < (3, 10):\n"
+        "        raise RuntimeError('NiriFX tools require Python 3.10 or newer')\n"
+        "    sys.path.insert(0, sys.argv.pop(1))\n"
+        f"    from {module} import main\n"
+        "except Exception as error:\n"
+        f"    print('NiriFX tools could not load: ' + str(error) + '. ' + {RECOVERY!r}, file=sys.stderr)\n"
+        "    raise SystemExit(1)\n"
+        "raise SystemExit(main())\n"
     )
     command = [record["python"], "-I", "-B", "-c", bootstrap, str(Path(record["package"]).parent)]
     if action == "session":
@@ -185,7 +195,12 @@ def main(arguments=None):
         if action == "studio":
             command += ["studio", "--native-root", str(root)]
         command += arguments
-    os.execv(command[0], command)
+    try:
+        os.execv(command[0], command)
+    except OSError as error:
+        raise ValueError(
+            f"Retained tools interpreter could not start: {error}. {RECOVERY}"
+        ) from error
 
 
 if __name__ == "__main__":

@@ -12,6 +12,9 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 - Retrying an interrupted packaged-session update resumes matching partial
   compositor copies for both shared and frozen settings. Changed or unexpected
   files are preserved and refused; the previous selection remains available.
+- Session startup distinguishes an unavailable compositor executable from a
+  rejected configuration, and retained tool startup failures include recovery
+  guidance. Failed startup keeps the selected runtime and saved effects in place.
 
 ## 0.22.0 - 2026-10-06
 
