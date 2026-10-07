@@ -212,8 +212,8 @@ native effects together while your normal desktop settings stay in place.
 | Web Studio | [Open online](https://jturbide.github.io/niri-fx/studio/) | Preview, browser-saved profiles and downloads |
 
 All paths share the same FX, presets, profiles and combo builder. No bar or
-Quickshell variant is required to use the app. This is Niri compatibility;
-opening the editor on another compositor does not supply missing shader hooks.
+Quickshell variant is required to use the app. Desktop activation uses Niri's
+rendering hooks and the selected configuration owner.
 
 For Noctalia, use the same paths already configured in Niri Animations:
 

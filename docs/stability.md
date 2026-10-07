@@ -177,5 +177,5 @@ remains incomplete.
   security fix permits arbitrary breaking changes; if valid supported use must
   change, publish its impact and migration path under an explicitly agreed policy.
 
-Completing every research epic, adding another compositor or reaching a particular
-preset count is not a 1.0 gate. A useful, tested and maintainable public contract is.
+Completing every research epic or reaching a particular preset count is not a
+1.0 gate. A useful, tested and maintainable public contract is.

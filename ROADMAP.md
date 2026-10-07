@@ -30,7 +30,7 @@ See [available features](README.md),
    The 1.0 contract stays a separate milestone after its acceptance gates pass.
 
 New presets should demonstrate a distinct useful look, with importable settings
-and a faithful showcase. More shells, workspace shaders and compositor ports
+and a faithful showcase. Niri shell integrations and workspace shaders
 follow the core controls and reliability work below.
 
 ## Release milestones
@@ -553,28 +553,17 @@ Published results and reproducible commands remain in the
 
 See [fragment shapes](docs/fragment-shapes.md) and [action profiles](docs/profiles.md).
 
-## Epic 8: shell integration and future compositor ports
+## Epic 8: Niri shell integration
 
-Shells and compositors are different integration targets. iNiR/iRiS, DMS,
-Noctalia, Quickshell and GTK pickers use NiriFX's Niri backend today. Waybar needs
-only the standalone path.
+Improve the existing Niri workflows for iNiR/iRiS, DMS, Noctalia, Quickshell
+and GTK pickers. Waybar uses the standalone path.
 
 - [ ] Validate full shell embedding of reusable Quickshell and GTK/Astal components.
-- [ ] Assess Caelestia on a maintained Niri setup, then an ML4W Niri-session adapter.
-- [x] Document the reusable effect/preset model and compositor-specific rendering
-      inputs without introducing an unused generic backend framework.
-- [ ] After the Niri motion milestones, assess one Hyprland effect as a small port
-      experiment: textures, coordinates, progress, transparency and damage first.
-- [ ] Evaluate plugin/version maintenance and capture/input behavior before any
-      broader Hyprland support commitment.
-- [ ] Add another backend only when a working prototype justifies its abstractions.
+- [ ] Verify shell upgrades preserve user settings and leave shell sources unchanged.
+- [x] Document the effect/preset model and Niri rendering contract.
 
-Shader math and preset descriptions can be reused. Window textures, animation
-lifecycle, interruption state, damage and configuration belong to each compositor;
-Wayland is not a portable window-effects plugin API. Hyprland's
-[C++ plugin interface](https://wiki.hypr.land/Plugins/Development/Getting-Started/)
-is a possible research path, not a drop-in Niri shader loader. No Hyprland backend
-is being implemented in the current release. See [portability boundaries](docs/architecture.md#compositor-portability).
+Shell integrations use the same presets, reviewed Apply and Restore as Studio.
+See the [Niri rendering contract](docs/architecture.md#niri-rendering-contract).
 
 ## Epic 9: agent and automation integration
 

@@ -1,7 +1,7 @@
 # Contributing
 
-Small, focused contributions are welcome. For a larger feature or compositor
-backend, open an issue describing the intended behavior before implementing it.
+Small, focused contributions are welcome. Niri is the sole compositor target.
+For a larger feature, open an issue describing the intended behavior before implementing it.
 Check the [project roadmap](ROADMAP.md), [compatibility](docs/compatibility.md) and
 [movement limits](experimental/README.md) first. Read the [architecture](docs/architecture.md),
 [effect contribution guide](docs/adding-effects.md) and [next phases](docs/next-phases.md)

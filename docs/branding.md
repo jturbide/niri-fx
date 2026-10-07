@@ -36,7 +36,7 @@ the separate experimental compositor build.
 | Other bars or shells on Niri | Standalone setup and optional CLI launchers |
 
 Studio is a web editor that can open in a dedicated app-style window. Quickshell
-is optional; installing a shell does not add support for another compositor.
+is optional; desktop effects use Niri's rendering hooks.
 See [compatibility](compatibility.md) for tested versions and limitations.
 
 NiriFX is independent of these projects. Link to upstream projects when giving

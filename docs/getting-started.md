@@ -18,7 +18,7 @@ For another version, follow its included [release documentation](releases.md).
 
 - Linux and Python 3.10 or newer. NiriFX has no Python runtime dependencies.
 - Niri with inline animation shaders. Tested with **26.04 (`8ed0da4`)**;
-  older versions and other compositors are not validated.
+  older Niri versions are not validated.
 - A WebGL-capable browser. Chromium opens Studio as an app; otherwise Studio
   uses your default browser.
 - Niri animations enabled. Plain Niri needs no shell integration, Quickshell,

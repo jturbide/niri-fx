@@ -13,6 +13,11 @@ Effect defaults, compositor patches and document schemas are unchanged. Adopted
 sessions keep their retained tools until an explicit reviewed update; see
 [upgrade guidance](docs/upgrading.md#from-0220-to-0221).
 
+### Changed
+
+- Public guides and roadmap focus on Niri effects, the NiriFX session and
+  integrations for Niri-compatible shells.
+
 ### Fixed
 
 - Retrying an interrupted packaged-session update resumes matching partial
@@ -831,7 +836,7 @@ experimental compositor patch is unchanged from 0.10.0.
   requires a recording for every preset/profile example and links for all GIFs.
 - README TL;DR before the gallery, a scenario selector, a complete standalone
   guide and custom-shell/bar guidance. Prioritized integration roadmap for
-  custom Quickshell, AGS/Astal, Caelestia and ML4W; Waybar needs no shader adapter.
+  custom Quickshell and AGS/Astal on Niri; Waybar needs no shader adapter.
 - Browser checks for transparent input, downloadable standalone/Noctalia files
   and every new control; stock Niri open/close smoke of all new/revised styles.
 

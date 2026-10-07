@@ -61,14 +61,3 @@ binds {
 Merge the binding into your existing `binds` block and choose an unused shortcut.
 It only opens Studio. The generic CLI/config path does not imply that every
 shell-specific UI has been tested.
-
-## Caelestia and ML4W
-
-The currently documented [Caelestia shell](https://github.com/caelestia-dots/shell)
-uses Hyprland, and [ML4W](https://github.com/mylinuxforwork/dotfiles) describes its
-dotfiles as a Hyprland setup. A new settings button would not make Niri shaders
-work in Hyprland. If you run a separate Niri session, use its standalone NiriFX
-configuration and keep the Hyprland configuration separate.
-
-Dedicated Caelestia and ML4W integrations are not available. See the
-[prioritized roadmap](roadmap.md) for the prerequisites and next steps.
