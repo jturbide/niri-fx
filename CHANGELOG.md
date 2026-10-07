@@ -18,12 +18,24 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ### Changed
 
+- Native Studio shows whether desktop settings are shared or saved as a copy,
+  with a visible **Share normal Niri settings** review using the configuration
+  selected when Studio opens. No extra launch flag is needed.
 - Studio uses the newly installed tools for package adoption, then asks users to
   save their draft and reopen before applying more desktop changes.
 - Continuous fragments reuse spring coefficients during long recovery without
   changing particle trajectories or preset defaults. Paired CPU measurements show
   roughly 41–48% lower dense-history recovery costs after 2–4 second gaps;
   compositor presentation and physical suspend/resume remain separate checks.
+
+### Fixed
+
+- The adopted Studio app launcher selects the native editor explicitly, so it
+  opens successfully from stock Niri before the first NiriFX login. Preparing
+  effects there does not activate native effects on stock Niri.
+- Incompatible iNiR serializer APIs return an actionable error instead of breaking
+  the Studio request. Reviews use one helper source snapshot; changes after review
+  require a fresh review, and existing Restore does not need the updated helper.
 
 ## 0.22.1 - 2026-10-07
 

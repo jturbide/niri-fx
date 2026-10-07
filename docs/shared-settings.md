@@ -15,8 +15,12 @@ alone does not configure that bundle.
 
 ## Start in Studio
 
-Close other NiriFX editors and use the same updated tool installation from both
-sessions. Open local Studio with the normal configuration you want both to use:
+Close other NiriFX editors and open the adopted **NiriFX Studio** app. The development
+version shows a shared-settings card below the session controls. It offers the
+normal Niri configuration selected when Studio opens; **Share normal Niri settings**
+always requires its own review and does not use an unsaved draft.
+
+To choose another normal configuration, launch Studio with:
 
 ```sh
 niri-fx studio --target native --shared-config ~/.config/niri/config.kdl
@@ -26,13 +30,18 @@ For separate native storage, also pass `--native-root /path/to/native-storage`.
 Adoption uses the current selected bundle's saved recipe. The configuration and
 storage paths are fixed when Studio opens; imported profiles cannot change them.
 
-1. Expand **Session details and saved recipe**.
+1. Check the configuration path under **Using a saved copy of Niri settings**.
 2. Choose **Share normal Niri settings**. This uses the bundle's saved recipe,
    leaving your unsaved Studio draft unchanged.
 3. Review the listed configuration changes, then choose **Apply shared settings**.
 4. Save or export any draft edits, close Studio, and reopen it with
    `niri-fx studio --target native` to edit the newly selected shared setup.
    Repeat the same `--native-root` argument if you use separate storage.
+
+In released 0.22.1 and earlier tools, pass `--shared-config` as shown above and
+expand **Session details and saved recipe** to find the sharing controls.
+The development version also accepts that explicit override; otherwise `--config`
+provides the source. Offering a source does not connect it until you apply the review.
 
 First adoption requires your next NiriFX login to use the shared wrapper. Log
 out when convenient and choose **NiriFX**. Once a session uses that wrapper,

@@ -23,10 +23,16 @@ declarations. A custom placement in a settings page needs a supported extension
 point or an accepted upstream change. Quickshell itself does not provide one
 common settings API for every shell.
 
-If a shell changes its helper contract, NiriFX should report the incompatible
-adapter and preserve the current configuration. The standalone app and stock
-export remain separate ways to use NiriFX. Do not work around a failed update
-with a blanket reset, overwrite or stash deletion.
+The development version checks iNiR's serializer API and reports unsupported
+functions, arguments or replacement output during review. A helper change after
+review requires a fresh review. Existing Library Restore uses its saved transaction
+and remains available even when the updated serializer is incompatible; it still
+refuses to overwrite later configuration edits.
+
+Update NiriFX when its adapter needs to catch up with a shell change. The standalone
+app and stock export remain separate ways to use NiriFX. Do not work around a
+failed update with a blanket reset, overwrite or stash deletion. The installed
+iNiR helper remains trusted shell code; API checks are not an execution sandbox.
 
 Run `niri-fx doctor` after an update and check an ordinary open/close cycle.
 If configuration validation fails, retain your saved profile and use the

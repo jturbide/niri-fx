@@ -45,6 +45,7 @@ import-boundary test enforces that separation.
 | [studio.py](../niri_fx/studio.py) | On-demand app launch and authenticated loopback HTTP transport. Delegates validation and writes. |
 | [studio_installation.py](../niri_fx/studio_installation.py) | Read-only comparison between the running Studio's retained tool identity and the shared selection. Uses verified receipts; never runs another installation or changes desktop settings. |
 | [integration.py](../niri_fx/integration.py) | iNiR base inheritance, ownership-aware registration and backups. Never selects a style. |
+| [inir_serializer.py](../niri_fx/inir_serializer.py) | Checks the installed iNiR serializer API, captures one animation replacement and binds review to the executed source bytes. The helper is trusted installed code; this adapter is not an execution sandbox. |
 | [picker.py](../niri_fx/picker.py), [qml/](../niri_fx/qml/), [gtk/](../niri_fx/gtk/) | Optional desktop launchers and reusable pickers. Toolkit views call the CLI through argument arrays; no shader renderer or configuration writer is duplicated in the UI. |
 | [setup.py](../niri_fx/setup.py), [pack.py](../niri_fx/pack.py) | Inspectable plans, apply/restore snapshots, standalone includes and picker folders. |
 | [storage.py](../niri_fx/storage.py) | Staged, flushed file writes and atomic replacement. Callers decide ownership, locking and symlink policy. |
