@@ -234,10 +234,14 @@ class LibraryHelperReadonlyTests(unittest.TestCase):
 
     def test_relative_expected_config_keeps_supported_absolute_helper_output(self):
         before = tree_snapshot(self.root)
-        with patch("os.getcwd", return_value=str(self.root)):
+        previous = Path.cwd()
+        os.chdir(self.root)
+        try:
             result = serialize_preset(
                 self.shell, "config/niri/config.kdl", {"id": "native", "types": {}}
             )
+        finally:
+            os.chdir(previous)
         self.assertEqual(result.path, self.animation)
         self.assertEqual(tree_snapshot(self.root), before)
 
