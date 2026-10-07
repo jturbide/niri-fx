@@ -239,7 +239,9 @@ are developer regression controls, not separate consumer editions.
       separate rollback of each selection.
 - [x] Verify interruption recovery during shared and frozen bundle copying;
       resume only exact partial files and preserve changed or unexpected content.
-- [ ] Repeat adopted-session upgrade acceptance between published versions.
+- [x] Verify the [0.22.0 to 0.22.1 adopted-package upgrade](docs/validation.md#release-package-upgrade-0220-to-0221),
+      preserving recipes, independent compositor/tools rollback and the second
+      user's retained selection.
 - [x] Verify missing-interpreter and shared-library failure and recovery in
       disposable accounts, preserving retained copies and login entries.
 - [x] Verify retained tools independently of the system package's Python path;
