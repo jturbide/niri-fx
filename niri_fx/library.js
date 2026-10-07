@@ -16,7 +16,8 @@ function createFxLibrary({
   const nativeOptions = catalog.connection?.native;
   let nativeListing = null,
     nativeRestoreAvailable = false,
-    nativeSetupChanged = false;
+    nativeSetupChanged = false,
+    sessionSetupChanged = false;
   const sharedBase = nativeOptions?.shared === true;
   const sharedSelectionChanged = () =>
     nativeSetupChanged ||
@@ -119,6 +120,9 @@ function createFxLibrary({
       doc.fragment_motion ||= structuredClone(fragmentDefaults);
     } else delete doc.fragment_motion;
     doc.schema = doc.fragment_motion ? catalog.profile_schema : 3;
+    browseAction = "movement";
+    if (element("library-collection").value === "customs")
+      element("library-collection").value = "recommended";
     select(core.normalizePreset(doc), "movement", true);
     element("fragment-tuning").open = id === "custom";
   }
@@ -280,7 +284,7 @@ function createFxLibrary({
             ? "Preview and save a separate swap style here. Applying it requires an updated NiriFX compositor; this retained build shares the Move setting."
             : "For Swap window left/right commands. Preserve keeps the underlying swap setting, which follows Move when unset. Dragging and column reordering use Move."
           : browseAction === "movement"
-            ? "Start with Gentle, Tear or Cascade. The canvas previews the material; continuous response follows gestures on a compatible NiriFX desktop. Editing material keeps your response settings."
+            ? "Start with Gentle, Tear or Cascade, then drag the sample window to try its response. Editing the material keeps your response settings. Desktop use requires the NiriFX session."
             : "Click a style to preview it. Your other choices stay the same.";
   }
   for (const choice of ["preserve", "off"])
@@ -728,7 +732,7 @@ function createFxLibrary({
             ? "Move is Preserve. The response stays saved; the underlying desktop movement is used. "
             : "This material does not support continuous fragments. The response stays saved and becomes active again with a compatible Move style. ";
     description +=
-      "The canvas previews the material only; gesture response requires a compatible NiriFX compositor. JSON and My profiles keep the complete recipe.";
+      "Try fragment dragging previews an active response on a sample window. Desktop use requires the NiriFX session. JSON and My profiles keep the complete recipe.";
     element("native-fragment-description").textContent = description;
     for (const key of Object.keys(fragmentControls)) {
       const input = element("fragment-response-" + key);
@@ -891,6 +895,18 @@ function createFxLibrary({
     cards();
   }
   function updateNativeButtons() {
+    if (sessionSetupChanged) {
+      for (const id of [
+        "review-selection",
+        "restore-selection",
+        "apply-selection",
+        "native-reopen",
+        "native-share",
+        "native-recovery",
+      ])
+        element(id).disabled = true;
+      return;
+    }
     if (!native || !nativeListing) return;
     const changed = sharedSelectionChanged();
     element("review-selection").disabled = busy || changed;
@@ -1260,7 +1276,7 @@ function createFxLibrary({
     element("pointer-kdl").textContent = "Export NiriFX session config";
   }
   element("movement-availability").textContent = native
-    ? "Move controls normal movement and dragging. Swap overrides explicit left/right window swaps. Continuous fragments follow your gestures on the desktop; the canvas previews their material only."
+    ? "Move controls normal movement and dragging. Swap overrides explicit left/right window swaps. Use Try fragment dragging to preview a continuous response on the sample window."
     : catalog.connection?.target === "standalone"
       ? "Movement can be designed here. Applying it requires a matching NiriFX session with action-preservation support and verified running support."
       : catalog.connection
@@ -1287,5 +1303,17 @@ function createFxLibrary({
   listing().catch((error) => {
     element("error").textContent = error.message;
   });
-  return { sync, edit: () => view(true) };
+  return {
+    sync,
+    edit: () => view(true),
+    sessionChanged({ uncertain = false } = {}) {
+      sessionSetupChanged = true;
+      invalidate();
+      updateNativeButtons();
+      element("active-look").hidden = false;
+      element("active-look").textContent = uncertain
+        ? "Session setup needs checking. Save your draft and reopen Studio to check the selection before applying effects."
+        : "Session updated. Save your draft and reopen Studio before applying effects.";
+    },
+  };
 }

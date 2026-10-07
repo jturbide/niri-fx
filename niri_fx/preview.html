@@ -27,6 +27,62 @@
       >Review tool setup</a
     >
   </section>
+  <section
+    id="session-setup"
+    class="session-setup"
+    hidden
+    aria-label="Set up or update the NiriFX session"
+  >
+    <div class="session-setup-heading">
+      <strong id="session-setup-title">NiriFX session</strong>
+      <button id="session-refresh" class="button-quiet" type="button">Check status</button>
+    </div>
+    <p id="session-setup-detail"></p>
+    <details>
+      <summary>Installed, running and next login</summary>
+      <dl class="session-versions">
+        <div>
+          <dt>Installed package</dt>
+          <dd id="session-installed"></dd>
+        </div>
+        <div>
+          <dt>Running desktop</dt>
+          <dd id="session-running"></dd>
+        </div>
+        <div>
+          <dt>Next NiriFX login</dt>
+          <dd id="session-next-login"></dd>
+        </div>
+      </dl>
+    </details>
+    <p id="session-config" hidden></p>
+    <button id="session-review" class="button-primary" type="button" hidden>Review setup</button>
+    <a
+      id="session-install-guide"
+      href="https://github.com/jturbide/niri-fx/blob/main/docs/arch-linux.md"
+      target="_blank"
+      rel="noopener noreferrer"
+      hidden
+      >Install the complete NiriFX package</a
+    >
+    <section id="session-plan" hidden aria-label="Review session setup">
+      <h2 id="session-plan-title"></h2>
+      <p id="session-plan-summary"></p>
+      <details>
+        <summary>Changes and recovery details</summary>
+        <p id="session-plan-notes"></p>
+        <ul id="session-plan-files"></ul>
+      </details>
+      <div class="controls">
+        <button id="session-apply" class="button-primary" type="button">
+          Apply for next login
+        </button>
+        <button id="session-cancel" class="button-quiet" type="button">Cancel</button>
+      </div>
+    </section>
+    <p id="session-result" role="status" aria-live="polite"></p>
+    <p id="session-error" role="alert"></p>
+  </section>
   <nav class="tabs" aria-label="Workspace">
     <button id="show-library" aria-pressed="true">Choose effects</button>
     <button id="show-editor" aria-pressed="false">Advanced editor</button>
@@ -95,6 +151,15 @@
       <div class="preview-heading">
         <h2>Preview</h2>
         <span>Try styles on a sample window</span>
+        <button
+          id="try-fragments"
+          class="button-secondary"
+          type="button"
+          aria-pressed="false"
+          hidden
+        >
+          Try fragment dragging
+        </button>
       </div>
       <nav id="preview-modes" class="tabs" aria-label="Preview mode">
         <button data-mode="effect" aria-pressed="true">Open &amp; close</button
@@ -134,6 +199,27 @@
           >Drag the sample window, or play the demo with your keyboard. Escape returns to effects.
           This browser uses the native spring and shader math with synthetic content; it does not
           verify your compositor.</small
+        >
+      </section>
+      <canvas
+        id="fragment-stage"
+        width="1000"
+        height="760"
+        tabindex="0"
+        aria-label="Interactive continuous fragment window"
+        hidden
+      ></canvas>
+      <section id="fragment-preview-tools" aria-label="Fragment dragging preview" hidden>
+        <p id="fragment-preview-status" role="status"></p>
+        <div class="controls">
+          <button id="fragment-demo" class="button-secondary" type="button">Play drag demo</button>
+          <button id="fragment-reset" class="button-quiet" type="button">Reset position</button>
+          <button id="fragment-stop" class="button-quiet" type="button">Return to effects</button>
+        </div>
+        <small
+          >Drag the sample window or press Enter to play the demo. Escape returns to effects. This
+          preview uses the native fragment response and square mesh with synthetic content; it does
+          not measure desktop performance.</small
         >
       </section>
       <div class="controls playback-controls" id="effect-playback-controls">
@@ -314,8 +400,8 @@
           preview uses a simple path. Stock Niri exports omit movement.</small
         >
         <small id="fragment-preview-note" hidden
-          >This recipe also stores continuous fragment response. This canvas shows the material
-          only; it does not simulate that gesture response.</small
+          >This timed preview shows the movement material. Choose Try fragment dragging to grab,
+          hold and release the sample window with your saved response settings.</small
         >
       </div>
       <div class="wide profile-controls">
@@ -486,6 +572,9 @@
   <!--@MOTION_JS@-->
   <!--@LIBRARY_JS@-->
   <!--@POINTER_PREVIEW_JS@-->
+  <!--@FRAGMENT_PREVIEW_JS@-->
+  <!--@FRAGMENT_CONTROLS_JS@-->
   <!--@COMBO_PREVIEW_JS@-->
+  <!--@SESSION_SETUP_JS@-->
   <!--@STUDIO_JS@-->
 </html>

@@ -179,7 +179,7 @@ test("hosted gallery settings load, edit, share and download without local endpo
     assert.equal(await browser.evaluate('byId("native-fragment-preset").value'), "custom");
     assert.match(
       await browser.evaluate('byId("native-fragment-description").textContent'),
-      /canvas previews the material only/,
+      /Try fragment dragging previews an active response/,
     );
     assert.equal(await browser.evaluate('byId("activation-controls").hidden'), true);
     // Browser tests use software rendering: a load batch must still refuse to

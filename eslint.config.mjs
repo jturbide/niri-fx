@@ -23,6 +23,8 @@ export default [
         createPointerSpring: "readonly",
         createPointerDemo: "readonly",
         POINTER_PREVIEW_SHADER: "readonly",
+        createSessionSetup: "readonly",
+        createFragmentPreviewControls: "readonly",
       },
     },
   },
@@ -34,6 +36,23 @@ export default [
   {
     files: ["niri_fx/effect-core.js"],
     rules: { "no-unused-vars": ["error", { varsIgnorePattern: "^createEffectCore$" }] },
+  },
+  {
+    files: ["niri_fx/fragment-controls.js"],
+    languageOptions: {
+      globals: {
+        createFragmentMotion: "readonly",
+        createFragmentRenderer: "readonly",
+        createFragmentDemo: "readonly",
+      },
+    },
+    rules: {
+      "no-unused-vars": ["error", { varsIgnorePattern: "^createFragmentPreviewControls$" }],
+    },
+  },
+  {
+    files: ["niri_fx/session-setup.js"],
+    rules: { "no-unused-vars": ["error", { varsIgnorePattern: "^createSessionSetup$" }] },
   },
   {
     files: ["niri_fx/combo-preview.js"],

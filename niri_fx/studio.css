@@ -83,6 +83,10 @@ html[data-pointer-preview] #stage {
     touch-action: none;
     cursor: grab;
 }
+#fragment-stage {
+    touch-action: none;
+    cursor: grab;
+}
 html[data-pointer-preview="dragging"] #stage {
     cursor: grabbing;
 }
@@ -451,6 +455,52 @@ aside[data-view="basic"] .advanced {
     border-radius: 12px;
     background: #242d2b;
     overflow-wrap: anywhere;
+}
+.session-setup {
+    margin: 0 0 20px;
+    padding: 16px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    background: var(--surface);
+    overflow-wrap: anywhere;
+}
+.session-setup-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+}
+.session-setup p {
+    margin: 10px 0;
+}
+.session-setup p:empty {
+    display: none;
+}
+.session-setup details {
+    margin: 12px 0;
+}
+.session-versions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 12px;
+}
+.session-versions dt {
+    color: var(--muted);
+    font-size: 12px;
+}
+.session-versions dd {
+    margin: 6px 0 0;
+}
+#session-plan {
+    border-top: 1px solid var(--border);
+    margin-top: 16px;
+    padding-top: 8px;
+}
+#session-error {
+    color: #f09494;
+}
+#session-install-guide {
+    color: var(--accent);
 }
 .installation-notice strong {
     color: #e5e5c8;
