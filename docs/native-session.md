@@ -163,6 +163,9 @@ and native effects use a separate include. A frozen recovery copy remains availa
 ## Choose effects in Studio
 
 Inside a managed NiriFX session, `niri-fx studio` detects it automatically.
+The adopted **NiriFX Studio** app also opens its selected native configuration
+from stock Niri in the development version, so you can prepare effects before
+your first NiriFX login.
 You can also prepare choices from another session with an explicit native
 target. Both work independently of iNiR, DMS, Noctalia or another shell:
 
@@ -193,8 +196,10 @@ Move Off, Preserve or an ineligible material leaves those values dormant;
 **Timed movement** removes the response. NiriFX 0.20 instead retains the
 continuous preset in its managed bundle's recipe; see
 [exporting an older recipe](upgrading.md#from-020-to-021).
-The browser preview is still a timed movement preview, not a simulation of the
-continuous fragment renderer.
+The development Studio includes **Try fragment dragging**, using native-checked
+motion and mesh samples for hold, reversal, release and regrab. Released 0.21–0.22
+tools show the timed material preview instead. Browser previews do not establish
+compositor presentation or physical desktop performance.
 
 The following confirmed reload flow applies to frozen configurations. Shared
 setups instead offer **Apply shared settings** and report that files were written,

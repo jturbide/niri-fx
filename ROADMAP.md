@@ -20,6 +20,10 @@ The next 0.x delivery focuses on session setup and motion quality:
       movement, reversals and release; publish paired measurements.
 - [x] Preview continuous fragment dragging with native-checked trajectories,
       including hold, pause, reversal, release and regrab.
+- [x] Open the adopted Studio app before the first NiriFX login and expose reviewed
+      sharing of normal Niri settings without extra launch flags.
+- [x] Check iNiR helper API changes, stale reviews and exact Restore across
+      compatible upgrades with isolated configuration and unchanged shell sources.
 - [ ] Complete the [physical desktop checklist](docs/native-session.md#updates-and-acceptance)
       on the packaged session and publish the tested hardware and limitations.
 
@@ -182,8 +186,10 @@ are developer regression controls, not separate consumer editions.
       unrelated edits and refusing ambiguous or customized files.
 - [x] Load the iNiR serializer without writing bytecode into its checkout;
       verify read-only inspection against complete temporary-tree snapshots.
-- [ ] Test supported shell upgrades with active profiles, changed helper
-      contracts and exact Restore while keeping their checkouts unchanged.
+- [x] Test iNiR helper API changes, compatible upgrades with active profiles,
+      stale-review refusal and exact Restore while keeping the checkout unchanged.
+- [ ] Verify full shell updates with active profiles and shared desktop settings
+      on physical desktops, including helpers for other supported Niri shells.
 - [ ] Add an external iNiR widget or upstream settings extension for one NiriFX
       entry; avoid maintaining a local settings-page patch.
 

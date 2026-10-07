@@ -114,6 +114,8 @@ def make_server(arguments, effect):
                 "base_bundle": library.native_base["bundle_id"],
                 "shared": bool(library.native_base.get("shared")),
                 "shared_config_configured": library.shared_config is not None,
+                "shared_config_path": (library.native_base.get("shared") or {}).get("source_config")
+                or str(library.shared_config),
                 "variant": library.native_base["variant"],
                 "recipe": portable_recipe(
                     library.native_root,

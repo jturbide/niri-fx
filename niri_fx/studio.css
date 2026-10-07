@@ -267,6 +267,11 @@ small {
     overflow-wrap: anywhere;
     margin: 6px 0;
 }
+#native-shared-settings {
+    border-top: 1px solid var(--border);
+    margin-top: 12px;
+    padding-top: 12px;
+}
 #caption {
     font-size: 14px;
     margin-bottom: 0;

@@ -28,7 +28,8 @@ connection={"target":"native","token":"synthetic-shared-test",
     "installation":{"state":"unmanaged","selected_version":None},"native":{
     "base_bundle":"shared-base" if shared else "launch-base","variant":"fragment",
     "recipe":None,"swap_supported":True,
-    "shared":shared,"shared_config_configured":configured}}
+    "shared":shared,"shared_config_configured":configured,
+    "shared_config_path":"/synthetic/normal-niri/config.kdl" if configured else None}}
 print(preview_document(PRESETS["balanced"],connection=connection))
 `,
         JSON.stringify([shared, configured]),
@@ -188,6 +189,18 @@ test("shared settings review preserves drafts and separates file updates from ru
   const { evaluate } = browser;
   const snapshot = () => evaluate("({document:effectDocument(),history:editHistory,historyIndex})");
   assert.equal(await evaluate("byId('native-share').disabled"), false);
+  assert.equal(await evaluate("byId('native-shared-settings').hidden"), false);
+  assert.equal(await evaluate("byId('native-share').closest('details') === null"), true);
+  assert.match(await evaluate("byId('native-config-mode').textContent"), /Using a saved copy/);
+  assert.equal(
+    await evaluate("byId('native-shared-source').textContent"),
+    "Normal Niri configuration: /synthetic/normal-niri/config.kdl",
+  );
+  assert.match(
+    await evaluate("byId('native-shared-help').textContent"),
+    /Changes made through your shell.*do not reach this saved copy/,
+  );
+  assert.equal(requests.length, 0, "Displaying the sharing choice must not review or apply it");
   await evaluate(`
     byId('combo-name').value='Unsaved shared draft';
     byId('combo-name').dispatchEvent(new Event('change'));
@@ -208,7 +221,7 @@ test("shared settings review preserves drafts and separates file updates from ru
   assert.equal(await evaluate("byId('apply-selection').textContent"), "Apply shared settings");
   assert.equal(await evaluate("byId('review-files').children.length"), 1);
   if (process.env.NIRIFX_SHARED_STUDIO_SCREENSHOT) {
-    await evaluate("byId('native-share').closest('details').open=true;window.scrollTo(0,0)");
+    await evaluate("window.scrollTo(0,0)");
     const shot = await browser.rpc("Page.captureScreenshot", { format: "png" });
     writeFileSync(process.env.NIRIFX_SHARED_STUDIO_SCREENSHOT, Buffer.from(shot.data, "base64"));
   }
@@ -256,6 +269,10 @@ test("shared settings review preserves drafts and separates file updates from ru
   // Opening a new document simulates relaunch against the selected shared base.
   // A selector change alone must never switch the source of the existing editor.
   await view.reopen();
+  assert.equal(
+    await evaluate("byId('native-config-mode').textContent"),
+    "Normal Niri settings are shared",
+  );
   assert.equal(await evaluate("byId('review-selection').disabled"), false);
   assert.equal(await evaluate("byId('review-selection').textContent"), "Review & apply");
   assert.match(
@@ -336,7 +353,11 @@ test("shared setup needs a launch-scoped source and an applied recipe", async (t
       assert.equal(await evaluate("byId('native-share').disabled"), true);
       if (options.configured === false) {
         assert.equal(await evaluate("byId('native-share').hidden"), true);
-        assert.equal(await evaluate("byId('native-shared-settings').hidden"), true);
+        assert.equal(await evaluate("byId('native-shared-settings').hidden"), false);
+        assert.match(
+          await evaluate("byId('native-shared-source').textContent"),
+          /No normal Niri configuration was connected/,
+        );
       } else {
         assert.equal(await evaluate("byId('native-share').hidden"), false);
         assert.match(await evaluate("byId('native-shared-help').textContent"), /apply them first/);

@@ -883,13 +883,21 @@ function createFxLibrary({
       const selectedShared = nativeListing.shared_state?.selected === true;
       element("native-share").hidden = !nativeOptions.shared_config_configured || selectedShared;
       element("native-recovery").hidden = !nativeListing.recovery_available;
-      element("native-shared-settings").hidden =
-        !nativeOptions.shared_config_configured && !sharedBase && !selectedShared;
+      element("native-shared-settings").hidden = false;
+      element("native-config-mode").textContent = selectedShared
+        ? "Normal Niri settings are shared"
+        : "Using a saved copy of Niri settings";
+      const sharedSource = nativeOptions.shared_config_path;
+      element("native-shared-source").textContent = sharedSource
+        ? `Normal Niri configuration: ${sharedSource}`
+        : "No normal Niri configuration was connected when Studio opened.";
       element("native-shared-help").textContent = selectedShared
-        ? "Normal Niri settings stay in their original files. NiriFX manages separate effect files. Frozen recovery selects a saved configuration for the next login without undoing your normal settings."
-        : nativeListing.recipe
-          ? "Share the selected saved settings with your normal Niri configuration. Review the connected files first. Your unsaved Studio draft is not used or changed."
-          : "Choose your effects and apply them first, then share the saved settings. Your unsaved Studio draft is not used for sharing.";
+        ? "The selected NiriFX setup follows your normal settings. NiriFX manages separate effect files. Frozen recovery selects a saved copy for the next login while keeping your normal settings."
+        : !nativeOptions.shared_config_configured
+          ? "Changes made through your shell or normal Niri files do not reach this saved copy. Reopen Studio with your normal configuration to review sharing."
+          : nativeListing.recipe
+            ? "Changes made through your shell or normal Niri files do not reach this saved copy. Share settings to keep both sessions in sync. Review the connected files before applying; your unsaved draft is not used."
+            : "Changes made through your shell or normal Niri files do not reach this saved copy. Choose your effects and apply them first, then review sharing the saved settings. Your unsaved draft is not used.";
       updateNativeButtons();
     }
     cards();

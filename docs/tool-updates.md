@@ -99,6 +99,11 @@ full command path until your existing CLI has been adopted.
 Reopen Studio to use the updated tools. Your current compositor and its login
 lease keep running; a tool update does not log you out or replace that process.
 
+The development tools also accept the native storage argument supplied by older
+retained Studio launchers. They open the selected NiriFX configuration from stock
+Niri, so you can prepare effects before logging in without replacing the launcher
+by hand. New dispatchers select the native editor explicitly.
+
 ## Check an open Studio
 
 Local Studio checks its installation when it opens and during its regular

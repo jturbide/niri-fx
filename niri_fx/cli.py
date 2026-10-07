@@ -259,7 +259,7 @@ def parser():
         "--target",
         choices=("auto", "inir", "noctalia", "standalone", "native"),
         default="auto",
-        help="Activation target; auto uses iNiR when its helper is installed, otherwise standalone",
+        help="Activation target; auto follows explicit native options, a managed session or shared setup, then iNiR or standalone",
     )
     studio.add_argument(
         "--browser", action="store_true", help="Open a browser tab instead of an app-style window"
