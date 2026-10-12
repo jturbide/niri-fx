@@ -21,6 +21,38 @@ Use the manifest selection printed after building; newer attempts no longer
 replace the fixed manifests used by older releases and launchers. The versioned
 upgrade notes below describe their original release workflows.
 
+## From 0.22.1 to 0.22.2
+
+0.22.2 fixes managed Studio launchers that exit with
+`--native-root, --native-base and --shared-config require --target native`.
+The fix also supports older retained launchers; keep them and their recovery
+metadata intact instead of editing their files by hand.
+
+For an existing Arch package adoption, update the package, then review and apply
+with the system command:
+
+```sh
+/usr/bin/niri-fx native adopt
+/usr/bin/niri-fx native adopt --apply --expect-plan REVIEWED_SHA256
+```
+
+For a managed wheel or source installation, including 0.20, install the 0.22.2
+wheel in a new persistent virtual environment and follow
+[the tools update workflow](tool-updates.md#subsequent-updates). It preserves
+compositor selections, saved effects and older runtimes. Save any open draft,
+close Studio normally and reopen it through the application launcher.
+
+While preparing the update, an older installation can open Studio explicitly:
+
+```sh
+niri-fx studio --target native
+```
+
+This opens the editor without applying effects or switching the desktop session.
+Compositor patches, effect defaults and document schemas are unchanged from
+0.22.1. The [source-managed package migration](#from-a-source-managed-session-to-an-arch-package)
+remains optional.
+
 ## From 0.22.0 to 0.22.1
 
 0.22.1 fixes interrupted package-adoption recovery and startup diagnostics.

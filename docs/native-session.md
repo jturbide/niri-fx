@@ -164,7 +164,7 @@ and native effects use a separate include. A frozen recovery copy remains availa
 
 Inside a managed NiriFX session, `niri-fx studio` detects it automatically.
 The adopted **NiriFX Studio** app also opens its selected native configuration
-from stock Niri in the development version, so you can prepare effects before
+from stock Niri in 0.22.2 and newer, so you can prepare effects before
 your first NiriFX login.
 You can also prepare choices from another session with an explicit native
 target. Both work independently of iNiR, DMS, Noctalia or another shell:
@@ -362,7 +362,7 @@ In the development version, `niri-fx doctor --text` automatically checks the
 verified running bundle, even if stock Niri is on `PATH` or a newer bundle is
 selected for next login. Explicit `--niri-binary` or `--config` arguments disable
 that automatic choice; provide both to inspect a particular pair. Released
-0.22.1 tools still need those explicit paths. See
+tools through 0.22.2 still need those explicit paths. See
 [diagnostic scope and capabilities](setup.md#movement-support).
 
 Each bundle's `storage` reports logical regular-file bytes and filesystem-allocated

@@ -35,7 +35,7 @@ The complete session is included in the `niri-fx` and `niri-fx-git`
 Stock Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.22.1](https://github.com/jturbide/niri-fx/releases/tag/v0.22.1)
+release. [Download v0.22.2](https://github.com/jturbide/niri-fx/releases/tag/v0.22.2)
 for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.

@@ -127,7 +127,7 @@ bundle, keeping its identity separate from the next-login selection. Explicit
 particular pair. Read `diagnostic_scope` and `native_session` before interpreting
 capability results.
 Core health is not proof that every native action can be activated. Released
-0.22.1 tools require explicit paths for the managed session.
+tools through 0.22.2 require explicit paths for the managed session.
 
 If activation is within the user's requested scope, repeat the **same arguments**
 with the returned fingerprint:

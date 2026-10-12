@@ -47,7 +47,8 @@ The next 0.x delivery focuses on session setup and motion quality:
    independent of files replaced by the package manager.
 4. **Keep delivering focused 0.x releases.** 0.20 brings the integrated session
    tools and shared settings together; 0.21 adds complete recipe portability.
-   0.22 adds complete packages; 0.22.1 focuses on adoption and startup recovery.
+   0.22 adds complete packages; 0.22.1 focuses on adoption and startup recovery,
+   and 0.22.2 repairs managed Studio startup.
    The 1.0 contract stays a separate milestone after its acceptance gates pass.
 
 New presets should demonstrate a distinct useful look, with importable settings
@@ -70,6 +71,9 @@ follow the core controls and reliability work below.
       adoption and unavailable runtime dependencies, preserving selections and
       the existing effect/document contract. Published-version upgrades and
       physical-session acceptance remain separate gates.
+- [x] Repair managed Studio startup in [0.22.2](CHANGELOG.md#0222---2026-10-12),
+      including older retained launchers, without changing compositor patches
+      or saved effect ownership.
 - [ ] Use subsequent 0.x releases for physical reliability and supported packaging;
       publish tested environments and remaining limits with each release.
 - [ ] Complete the [1.0 acceptance criteria](docs/stability.md#acceptance-criteria-for-10)
