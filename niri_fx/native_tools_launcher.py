@@ -193,7 +193,9 @@ def main(arguments=None):
         command += ["--root", str(root), "launch"]
     else:
         if action == "studio":
-            command += ["studio", "--native-root", str(root)]
+            # Open the selected native configuration even while stock Niri is
+            # running, independently of automatic desktop detection.
+            command += ["studio", "--target", "native", "--native-root", str(root)]
         command += arguments
     try:
         os.execv(command[0], command)

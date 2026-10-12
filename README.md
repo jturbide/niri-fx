@@ -30,12 +30,13 @@ adds movement and swaps, pointer deformation, continuous fragments and interrupt
 improvements in one compositor build. Choose which effects to use in Library;
 you do not need to choose individual patches.
 
-The complete session currently uses the source-build and managed-login workflow.
-Full-session packages and signed compositor downloads are being prepared. Stock
+Complete [Arch packages](docs/arch-linux.md) include the compositor and tools;
+the Python wheel provides tools only. Source builds and managed login remain
+available. Supported compositor downloads have separate acceptance gates. Stock
 Niri remains available, and NiriFX does not patch your shell's source files.
 
 This README describes `main`, which can include features newer than the latest
-release. [Download v0.21.0](https://github.com/jturbide/niri-fx/releases/tag/v0.21.0)
+release. [Download v0.22.2](https://github.com/jturbide/niri-fx/releases/tag/v0.22.2)
 for the versioned package, or read [choosing a version](docs/releases.md).
 NiriFX is in 0.x development. See the [path to 1.0](docs/stability.md) for planned
 stability guarantees and acceptance criteria.

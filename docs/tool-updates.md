@@ -99,6 +99,10 @@ full command path until your existing CLI has been adopted.
 Reopen Studio to use the updated tools. Your current compositor and its login
 lease keep running; a tool update does not log you out or replace that process.
 
+Version 0.22.2 also accepts the native storage argument supplied by older
+retained Studio launchers. Updating the tools repairs their startup without
+hand-editing the managed dispatcher or changing configuration ownership.
+
 ## Check an open Studio
 
 Local Studio checks its installation when it opens and during its regular

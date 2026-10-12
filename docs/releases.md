@@ -22,6 +22,18 @@ packages include Studio, CLI, presets and the complete compositor session. The
 Python wheel remains a tools installation. PyPI and Flatpak packages are not
 currently provided by this project.
 
+## 0.22.2 prerelease
+
+0.22.2 is a focused Studio startup repair. Managed launchers select the native
+editor explicitly, and older retained launchers remain compatible after a
+reviewed tools update. Automatic shell detection no longer prevents those
+launchers from opening the selected NiriFX configuration.
+
+Follow [the 0.22.2 upgrade steps](upgrading.md#from-0221-to-0222). The running
+compositor, saved effects and retained recovery copies remain in place during a
+tools update. This patch does not include development-branch preview features or
+compositor changes and does not extend physical desktop acceptance.
+
 ## 0.22.1 prerelease
 
 0.22.1 is a recovery patch for managed sessions. Retrying an interrupted
@@ -312,13 +324,13 @@ signing and publishing a version.
 Maintainers can exercise a published release wheel and a candidate wheel with
 `scripts/test-upgrade.py`. Download the old wheel and its `SHA256SUMS` from
 [v0.20.0](https://github.com/jturbide/niri-fx/releases/tag/v0.20.0), build the
-0.22.1 candidate wheel, then run from the checkout:
+0.22.2 candidate wheel, then run from the checkout:
 
 ```sh
 python3 scripts/test-upgrade.py \
   --from-wheel artifacts/upgrade-v020/niri_fx-0.20.0-py3-none-any.whl \
   --checksums artifacts/upgrade-v020/SHA256SUMS \
-  --to-wheel dist/niri_fx-0.22.1-py3-none-any.whl \
+  --to-wheel dist/niri_fx-0.22.2-py3-none-any.whl \
   --browser
 ```
 

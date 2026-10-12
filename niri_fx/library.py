@@ -41,10 +41,16 @@ def registry_document(preset):
 
 def studio_target(arguments):
     target = getattr(arguments, "target", "auto")
-    if target != "native" and any(
+    native_options = any(
         getattr(arguments, key, None) is not None
         for key in ("native_root", "native_base", "shared_config")
-    ):
+    )
+    # Older retained app dispatchers pass --native-root without --target.
+    # An explicit native scope chooses that editor; automatic desktop detection
+    # remains unchanged when the caller supplied no native options.
+    if target == "auto" and native_options:
+        return "native"
+    if target != "native" and native_options:
         raise ValueError("--native-root, --native-base and --shared-config require --target native")
     if target == "auto":
         from . import native_session

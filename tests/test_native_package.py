@@ -5,6 +5,7 @@ import hashlib
 import io
 import json
 import os
+import runpy
 import shutil
 import tempfile
 import types
@@ -31,6 +32,7 @@ from niri_fx.agent import agent_info
 from niri_fx.cli import main, parser
 from niri_fx.documents import effect_document
 from niri_fx.fragment_motion import PRESETS
+from niri_fx.library import Library, studio_target
 from niri_fx.profiles import Profile
 from niri_fx.storage import digest
 
@@ -284,6 +286,37 @@ class NativePackageTests(unittest.TestCase):
         command = execute.call_args.args[1]
         self.assertEqual(command[0:3], ["/usr/bin/python3", "-I", "-B"])
         self.assertIn(str(Path(record["package"]).parent), command)
+
+    def test_adopted_studio_launcher_opens_native_editor_before_first_login(self):
+        plan = self.plan()
+        self.apply(plan)
+        selected = (self.root / "selection.json").read_bytes()
+        config = self.fixture.fixture.config.read_bytes()
+        # Exercise the copied dispatcher and real CLI parser together. Merely
+        # matching argv missed the incompatible auto-target/native-root pair.
+        launcher = runpy.run_path(str(self.root / "tools/launch.py"))
+        with patch("os.execv") as execute:
+            launcher["main"](["studio"])
+        arguments = execute.call_args.args[1][6:]
+
+        def inspect_editor(args, _effect):
+            target = studio_target(args)
+            self.assertEqual(target, "native")
+            library = Library(args, target)
+            self.assertEqual(library.native_root, self.root)
+            self.assertEqual(library.native_base["bundle_id"], plan["selection"]["selected"])
+            self.assertIsNone(library.native_base.get("customization"))
+
+        for invocation in (arguments, ["studio", "--native-root", str(self.root)]):
+            with (
+                self.subTest(invocation=invocation),
+                patch.dict(os.environ, {"NIRI_SOCKET": ""}),
+                patch("niri_fx.studio.serve", side_effect=inspect_editor) as serve,
+            ):
+                self.assertEqual(main(invocation), 0)
+            serve.assert_called_once()
+        self.assertEqual((self.root / "selection.json").read_bytes(), selected)
+        self.assertEqual(self.fixture.fixture.config.read_bytes(), config)
 
     def test_fingerprint_registration_and_source_drift_refuse_before_writes(self):
         plan = self.plan()

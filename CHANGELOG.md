@@ -7,6 +7,22 @@ prototype's interfaces. Migration notes accompany compatibility changes.
 
 ## Unreleased
 
+## 0.22.2 - 2026-10-12
+
+This focused patch backports the managed Studio launcher fix. Effect defaults,
+compositor patches and document schemas are unchanged from 0.22.1.
+
+### Fixed
+
+- Managed Studio launchers select the native editor explicitly, so Studio opens
+  when automatic detection would otherwise choose a shell adapter.
+- Older retained Studio launchers that supply native storage without an explicit
+  target also open the native editor after a reviewed tools update. Explicit
+  conflicting targets still fail before writing configuration.
+
+Follow [the patch upgrade steps](docs/upgrading.md#from-0221-to-0222); installing
+an update alone does not change an existing retained tools selection.
+
 ## 0.22.1 - 2026-10-07
 
 Effect defaults, compositor patches and document schemas are unchanged. Adopted

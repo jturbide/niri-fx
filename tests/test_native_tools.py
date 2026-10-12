@@ -364,7 +364,7 @@ class NativeToolsTests(unittest.TestCase):
         self.activate()
         for action, suffix in (
             ("cli", ["list"]),
-            ("studio", ["studio", "--native-root", str(self.root)]),
+            ("studio", ["studio", "--target", "native", "--native-root", str(self.root)]),
             ("session", ["--root", str(self.root), "launch"]),
         ):
             with (
