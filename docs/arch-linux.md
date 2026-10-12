@@ -87,12 +87,15 @@ selects them for the next login. Select **NiriFX (package)** when you next log i
 Keep **Niri** available for recovery. Choose your effects in Studio; setup does
 not enable additional effects automatically.
 
-In the development version, reopening the adopted **NiriFX Studio** app also works
-while you are still in stock Niri. It opens the selected NiriFX configuration so
-you can prepare Move, Swap and other effects before logging in. The visible
-settings card offers [sharing normal Niri settings](shared-settings.md); first
-apply your choices for the next login, then review sharing. Neither opening
-this editor nor previewing a style switches your session.
+From 0.22.2, reopening the adopted **NiriFX Studio** app also works while you are
+still in stock Niri. It opens the selected NiriFX configuration so you can prepare
+Move, Swap and other effects before logging in. Opening this editor and previewing
+a style leave your session unchanged.
+
+The development version adds a visible settings card for
+[sharing normal Niri settings](shared-settings.md); first apply your choices for
+the next login, then review sharing. In 0.22.2, follow the guide's explicit
+`--shared-config` launch instructions to access the existing sharing controls.
 
 Existing source-installed managed launchers first need the
 [one-time tool migration](tool-updates.md#migrate-existing-launchers-once).

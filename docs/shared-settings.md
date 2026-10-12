@@ -38,7 +38,7 @@ storage paths are fixed when Studio opens; imported profiles cannot change them.
    `niri-fx studio --target native` to edit the newly selected shared setup.
    Repeat the same `--native-root` argument if you use separate storage.
 
-In released 0.22.1 and earlier tools, pass `--shared-config` as shown above and
+In released 0.22.2 and earlier tools, pass `--shared-config` as shown above and
 expand **Session details and saved recipe** to find the sharing controls.
 The development version also accepts that explicit override; otherwise `--config`
 provides the source. Offering a source does not connect it until you apply the review.
